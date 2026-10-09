@@ -6407,6 +6407,10 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       bClear.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((s.ctrl + s.tally : Nat) : Int) ∧
       bClear.sudo_5Board_4cost.sudo_5Costs_9tally_max =
         b.sudo_5Board_4cost.sudo_5Costs_9tally_max ∧
+      bCube.sudo_5Board_6tally0 = (s.t0 : Int) ∧
+      bRed.sudo_5Board_6tally0 = (s.t0 : Int) ∧
+      bCube.sudo_5Board_1t = bClear.sudo_5Board_1t ∧
+      bRed.sudo_5Board_1t = bClear.sudo_5Board_1t ∧
       (∀ (row : Array Int) (len ctrl high tmax : Int),
         Ecbs.cube (withTally bClear row len ctrl high tmax)
             ((6 : Nat) : Int) ((5 : Nat) : Int) =
@@ -7031,9 +7035,26 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   have hmaxC : bClear.sudo_5Board_4cost.sudo_5Costs_9tally_max =
       b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
     rw [clear_tmax, mulLive_tmax, ← hbPack, pegPack_tmax c c.m c.hm (Nat.le_refl _), hmax0]
+  have ht0Cube : bCube.sudo_5Board_6tally0 = (s.t0 : Int) := by
+    have h1 := cube_live_tally bClear 6 5 L c.n c.k movesC slidesC holeC c.bench
+      peakC peakSC cCube hH5 hD5 hopsC
+    exact h1.trans ht0C
+  have ht0Red : bRed.sudo_5Board_6tally0 = (s.t0 : Int) := by
+    have h1 := mul_live_tally bCube 5 6 base.x ysC c.n c.k mvCube slidesCube holeRed
+      c.bench peakCube peakSRed (cMul + 1) hH6R hD6R hops0R
+    exact h1.trans ht0Cube
+  have htierCube : bCube.sudo_5Board_1t = bClear.sudo_5Board_1t := by
+    simpa [bCube] using
+      cube_live_tier bClear 6 5 L c.n c.k movesC slidesC holeC c.bench
+        peakC peakSC cCube hH5 hD5 hopsC
+  have htierRed : bRed.sudo_5Board_1t = bClear.sudo_5Board_1t := by
+    have h1 := mul_live_tier bCube 5 6 base.x ysC c.n c.k mvCube slidesCube holeRed
+      c.bench peakCube peakSRed (cMul + 1) hH6R hD6R hops0R
+    exact h1.trans htierCube
   refine ⟨bLoop, bMul, bClear, bCube, bRed, hmulG, hclearEq, hcubeEq, hmulEq,
     ⟨mvRed, slRed, ?_, ?_, hmvRedLe, hslRedLe⟩,
-    hlenC, ht0C, hrowC, hctrlN, hhighC, hctrlC, hmaxC, hcubeAny, hmulAny⟩
+    hlenC, ht0C, hrowC, hctrlN, hhighC, hctrlC, hmaxC,
+    ht0Cube, ht0Red, htierCube, htierRed, hcubeAny, hmulAny⟩
   · simpa [ofNat_eq_natCast] using hmvRed
   · simpa [ofNat_eq_natCast] using hslRed
 
@@ -7213,7 +7234,9 @@ theorem red_open_double {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
 /-- Non-final rung. `tally_double` changes only the row, the tally length, the
     control counter, the recorded high, and `tally_max`. The live spare cube and
     the live mul by the input on that doubled board are the final-rung results
-    (`red_cube_mul`) with those fields copied across. -/
+    with those fields copied across. `tally_add_one` then lays the extra white
+    peg at `t0 + 2 · tally`, which was empty, and the recorded high becomes
+    that hole. -/
 theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     {s : ClimbModel} {base : ClimbBudget}
     (h : ClimbInvK done (r :: rest) b s base)
@@ -7222,12 +7245,19 @@ theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
     (hFitC : FitsLen (s.ctrl + 3 * s.tally))
     (hFitI : FitsLen (s.t0 + 2 * s.tally))
     (hFitM : FitsLen (2 * s.tally))
+    (hFitC1 : FitsLen (s.ctrl + s.tally + 2 * s.tally + 1))
+    (hFitL1 : FitsLen (2 * s.tally + 1))
     (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
-    ∃ (bClear bD bCube bRed : Ecbs.Board),
+    ∃ (bClear bD bCube bRed bAdd : Ecbs.Board),
       Ecbs.tally_double bClear = .ok bD ∧
       Ecbs.cube bD ((6 : Nat) : Int) ((5 : Nat) : Int) = .ok bCube ∧
       Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
-          false false false = .ok bRed := by
+          false false false = .ok bRed ∧
+      Ecbs.tally_add_one bRed = .ok bAdd ∧
+      bAdd.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        ((s.t0 + 2 * s.tally : Nat) : Int) ∧
+      ∃ (hix : s.t0 + 2 * s.tally < bRed.sudo_5Board_3row.size),
+        bRed.sudo_5Board_3row[s.t0 + 2 * s.tally] = 0 := by
   have hge : 2 ≤ (r :: rest).length := by
     cases rest with
     | nil => exact absurd rfl hrest
@@ -7237,7 +7267,8 @@ theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   obtain ⟨tmax, hMax, hNote0⟩ := h.tmaxLt
   have hNote : tmax < 2 * s.tally := hNote0 hm
   obtain ⟨_bLoop, _bMul, bClear, bCube0, bRed0, _hmul, _hclear, _hcube, _hred,
-      _hbounds, hlenC, ht0C, hrowC, hctrlN, hhighC, hctrlC, hmaxC, hcubeF, hmulF⟩ :=
+      _hbounds, hlenC, ht0C, hrowC, hctrlN, hhighC, hctrlC, hmaxC,
+      ht0Cube, ht0Red, htierCube, htierRed, hcubeF, hmulF⟩ :=
     red_cube_mul h hm hT hhome hxLen hxT
   let xs := paintRed s.row s.t0 s.tally
   have hRed : ∀ j (hj : j < s.tally),
@@ -7287,10 +7318,79 @@ theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   let bD := withTally bClear rowD lenD ctrlD highD maxD
   let bCube := withTally bCube0 rowD lenD ctrlD highD maxD
   let bRed := withTally bRed0 rowD lenD ctrlD highD maxD
-  refine ⟨bClear, bD, bCube, bRed, ?_, ?_, ?_⟩
+  let wide := paintOnes (paintOnes xs s.t0 s.tally) (s.t0 + s.tally) s.tally
+  have hlenW : wide.length = base.control := by
+    simp [wide, xs, paintOnes_length, paintRed_length, h.shape.rowLen]
+  have hroom2 : s.t0 + s.tally + s.tally < base.control := by
+    simpa [Nat.two_mul, Nat.add_assoc] using hRoom
+  have hixW : s.t0 + s.tally + s.tally < wide.length := by
+    rw [hlenW]; exact hroom2
+  have hcell : wide[s.t0 + s.tally + s.tally]'hixW = 0 := by
+    have hmid : (paintOnes xs s.t0 s.tally).length = base.control := by
+      simp [xs, paintOnes_length, paintRed_length, h.shape.rowLen]
+    have h1 := paintOnes_get_hi (paintOnes xs s.t0 s.tally) (s.t0 + s.tally) s.tally
+      (s.t0 + s.tally + s.tally) (by omega) (by rw [hmid]; exact hroom2)
+    have h2 := paintOnes_get_hi xs s.t0 s.tally (s.t0 + s.tally + s.tally)
+      (by omega) (by simp [xs, paintRed_length, h.shape.rowLen]; exact hroom2)
+    have h3 := paintRed_get_hi s.row s.t0 s.tally (s.t0 + s.tally + s.tally)
+      (by omega) (by rw [h.shape.rowLen]; exact hroom2)
+    have h4 := h.openZero hge s.tally (Nat.le_refl _)
+      (by rw [h.shape.rowLen]; exact hroom2)
+    rw [h1, h2, h3]
+    exact h4
+  have hrowR : bRed.sudo_5Board_3row = embed wide := by
+    simp [bRed, withTally, rowD, wide]
+  have hixR : s.t0 + 2 * s.tally < bRed.sudo_5Board_3row.size := by
+    have hEq : s.t0 + 2 * s.tally = s.t0 + s.tally + s.tally := by
+      rw [Nat.two_mul, Nat.add_assoc]
+    rw [hEq, hrowR, size_embed]; exact hixW
+  have hzeroR : bRed.sudo_5Board_3row[s.t0 + 2 * s.tally]'hixR = 0 := by
+    have hEq : s.t0 + 2 * s.tally = s.t0 + s.tally + s.tally := by
+      rw [Nat.two_mul, Nat.add_assoc]
+    have hixA : s.t0 + s.tally + s.tally < bRed.sudo_5Board_3row.size := by
+      rw [← hEq]; exact hixR
+    have hget := get_embed wide (s.t0 + s.tally + s.tally) (hrowR ▸ hixA)
+    have hidx := idx_get hrowR (s.t0 + s.tally + s.tally) hixA
+    have hA : bRed.sudo_5Board_3row[s.t0 + s.tally + s.tally] = 0 := by
+      rw [hidx, hget, hcell]
+      rfl
+    simpa [hEq] using hA
+  have ht0R : bRed.sudo_5Board_6tally0 = (s.t0 : Int) := by
+    simp [bRed, withTally, ht0Red]
+  have hctrlR : bRed.sudo_5Board_1t.sudo_4Tier_7control = (base.control : Int) := by
+    have h1 : bRed.sudo_5Board_1t = bRed0.sudo_5Board_1t := by
+      simp [bRed, withTally]
+    rw [h1, htierRed, hctrlN]
+  have hlenR : bRed.sudo_5Board_9tally_len = ((2 * s.tally : Nat) : Int) := by
+    simp [bRed, withTally, lenD]
+  have hhighR : bRed.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      ((s.t0 + 2 * s.tally - 1 : Nat) : Int) := by
+    simp [bRed, withTally, highD]
+  have hctrlNum : bRed.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      ((s.ctrl + s.tally + 2 * s.tally : Nat) : Int) := by
+    simp [bRed, withTally, ctrlD]
+  have hmaxR : bRed.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      ((2 * s.tally : Nat) : Int) := by
+    simp [bRed, withTally, maxD]
+  have hadd := tally_add_one_raise bRed s.t0 (2 * s.tally)
+      (s.t0 + 2 * s.tally - 1) base.control
+      (s.ctrl + s.tally + 2 * s.tally) (2 * s.tally)
+      hlenR ht0R hixR hzeroR hctrlR hRoom hhighR (by omega) hFitI
+      hctrlNum hFitC1 hFitL1 hmaxR (by omega)
+  let bAdd := { bRed with
+    sudo_5Board_3row := bRed.sudo_5Board_3row.set ⟨s.t0 + 2 * s.tally, hixR⟩ (1 : Int)
+    sudo_5Board_9tally_len := Int.ofNat (2 * s.tally + 1)
+    sudo_5Board_4cost := { bRed.sudo_5Board_4cost with
+      sudo_5Costs_15control_highest := ((s.t0 + 2 * s.tally : Nat) : Int)
+      sudo_5Costs_4ctrl := Int.ofNat (s.ctrl + s.tally + 2 * s.tally + 1)
+      sudo_5Costs_9tally_max := Int.ofNat (2 * s.tally + 1) } }
+  refine ⟨bClear, bD, bCube, bRed, bAdd, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · simpa [bD] using htallyW
   · simpa [bD, bCube] using hcubeF rowD lenD ctrlD highD maxD
   · simpa [bCube, bRed] using hmulF rowD lenD ctrlD highD maxD
+  · simpa [bAdd] using hadd
+  · simp [bAdd]
+  · exact ⟨hixR, hzeroR⟩
 
 /-- While rungs remain, the tally segment is white, so the scan in the next rung
     leaves the board unchanged. -/

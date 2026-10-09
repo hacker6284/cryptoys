@@ -5669,6 +5669,302 @@ theorem peg_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
     hCtrlB := h.shape.peg.fitCtrl
   }, hmv, hpk, hsl, hmvLe, hslLe, rfl, hcopy, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, hlen0, hmax0⟩
 
+/-- Park writes two, then the peg loop writes one per tally peg. `tally ≥ 1` makes
+    that at most `3 · tally`, which `double_ctrl_fit` already bounds. -/
+theorem ctrl_add_peg_le (ctrl tally : Nat) (hm : 0 < tally) :
+    ctrl + 2 + tally ≤ ctrl + 3 * tally := by
+  omega
+
+theorem ctrl_park_peg_fit {ctrl tally ctrl0 done R mMax : Nat}
+    (hctrl : ctrl ≤ ctrl0 + done * (3 * mMax + 5))
+    (ht : tally ≤ mMax) (hm : 0 < tally) (hd : done ≤ R)
+    (hf : FitsLen (ctrl0 + (R + 1) * (3 * mMax + 5))) :
+    FitsLen (ctrl + 2 + tally) :=
+  FitsLen.of_le (double_ctrl_fit hctrl ht hd hf).1 (ctrl_add_peg_le ctrl tally hm)
+
+/-- The bench-off cube-peg context on the idle `park_rung` board. `peg_of_shape`
+    builds the same context on the entry board, so its row is `s.row` and its
+    counter is `s.ctrl`. Here the copy reads the keep-park board: the row is
+    `afterPark`, the counter has already grown by two, and the parked-from hole,
+    the rung index, and the tally length are the park board's. `place` copies
+    those five. -/
+theorem parked_peg_ctx {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
+    {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false) :
+    ∃ (bPark : Ecbs.Board) (c : PegCtx),
+      Ecbs.park_rung b (r : Int) = .ok bPark ∧
+      Ecbs.copy_band bPark ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok c.b0 ∧
+      c.row0 = afterPark s.row (-1) s.parkAt (climbAt base.ladder0 base.R s.ridx) r ∧
+      c.ctrl0 = s.ctrl + 2 ∧
+      c.m = s.tally ∧
+      c.t0 = s.t0 ∧
+      c.g = s.gap ∧
+      c.n = s.n ∧
+      c.k = s.k ∧
+      c.bench = s.benchlen ∧
+      c.src = 6 ∧
+      c.b0.sudo_5Board_11parked_from =
+        ((climbAt base.ladder0 base.R s.ridx : Nat) : Int) ∧
+      c.b0.sudo_5Board_8rung_idx = ((s.ridx + 1 : Nat) : Int) ∧
+      c.b0.sudo_5Board_9tally_len = (s.tally : Int) := by
+  let hole := climbAt base.ladder0 base.R s.ridx
+  obtain ⟨bPark0, hpark, _hfrom, _hridx, hkeep⟩ := park_of_shape h
+  obtain ⟨hRowP, hRowH, hEq⟩ := hkeep hF
+  let bPark := parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH
+  have hparkEq : Ecbs.park_rung b (r : Int) = .ok bPark := by
+    simpa [bPark, hEq] using hpark
+  have hAP : afterPark s.row (-1) s.parkAt hole r =
+      (s.row.set s.parkAt r).set hole 0 := by
+    unfold afterPark
+    rw [if_pos (by decide : (-1 : Int) < 0)]
+  obtain ⟨mv, hmv, hmvLe⟩ := h.moves
+  obtain ⟨sl, hsl, hslLe⟩ := h.slides
+  obtain ⟨cOps, hcOps⟩ := h.shape.peg.cOps
+  obtain ⟨pkS, hpkS⟩ := h.shape.peg.peakS
+  obtain ⟨holeM, hhole⟩ := h.shape.peg.holeM
+  obtain ⟨pk, hpk, _⟩ := h.peak
+  have hgapH := h.inv.gapHome hhome
+  have hoff0 : b.sudo_5Board_8bench_on = false := h.shape.offWhenHome hhome
+  have hk : done.length + 1 ≤ base.R := by
+    have hlen := h.kLe
+    rw [List.length_append, List.length_cons] at hlen
+    omega
+  have hdoneLe : done.length ≤ base.R := by
+    have hlen := h.kLe
+    simp [List.length_append, List.length_cons] at hlen
+    omega
+  have hpegN : pegCount s.gap ≤ s.n := by
+    rw [← h.shape.gapLen]
+    exact pegCount_le s.gap
+  have hcharge : pegCount s.gap + s.tally * pegCharge s.n s.benchlen ≤
+      rungCharge base.n base.bench base.mMax := by
+    unfold rungCharge
+    have hmul : s.tally * pegCharge s.n s.benchlen ≤
+        (base.mMax + 1) * pegCharge s.n s.benchlen :=
+      Nat.mul_le_mul_right _ (Nat.le_succ_of_le hT)
+    have hsum : pegCount s.gap + s.tally * pegCharge s.n s.benchlen ≤
+        s.n + (base.mMax + 1) * pegCharge s.n s.benchlen := by
+      exact Nat.add_le_add hpegN (Nat.le_trans hmul (Nat.le_refl _))
+    have hrest : s.n + (base.mMax + 1) * pegCharge s.n s.benchlen ≤
+        2 * s.n + (base.mMax + 1) * pegCharge s.n s.benchlen +
+          2 * mulCharge s.n s.benchlen := by
+      omega
+    have hn : s.n = base.n := h.hn
+    have hb : s.benchlen = base.bench := h.hbench
+    exact Nat.le_trans hsum (by simpa [hn, hb] using hrest)
+  have hmovFit : FitsLen (mv + pegCount s.gap + s.tally * pegCharge s.n s.benchlen) := by
+    apply FitsLen.of_le base.fitM
+    have hle : mv + pegCount s.gap + s.tally * pegCharge s.n s.benchlen ≤
+        base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax := by
+      have hstep : (done.length + 1) * rungCharge base.n base.bench base.mMax =
+          done.length * rungCharge base.n base.bench base.mMax +
+            rungCharge base.n base.bench base.mMax := by
+        rw [Nat.succ_mul]
+      omega
+    have hR : (done.length + 1) * rungCharge base.n base.bench base.mMax ≤
+        base.R * rungCharge base.n base.bench base.mMax :=
+      Nat.mul_le_mul_right _ hk
+    omega
+  have hfitCopy : FitsLen (mv + pegCount s.gap) :=
+    FitsLen.of_le hmovFit (by omega)
+  have hmvP : bPark.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) := by
+    simpa [bPark, parkKeepBoard] using hmv
+  have hpkP : bPark.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) := by
+    simpa [bPark, parkKeepBoard] using hpk
+  have hslP : bPark.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) := by
+    simpa [bPark, parkKeepBoard] using hsl
+  have h6H : 6 < bPark.sudo_5Board_4home.size := by
+    simpa [bPark, parkKeepBoard] using h.shape.spareH
+  have h6D : 6 < bPark.sudo_5Board_4held.size := by
+    simpa [bPark, parkKeepBoard] using h.shape.spareD
+  have h5H : 5 < bPark.sudo_5Board_4home.size := by
+    simpa [bPark, parkKeepBoard] using h.inv.hG
+  have h5D : 5 < bPark.sudo_5Board_4held.size := by
+    simpa [bPark, parkKeepBoard] using h.inv.hGs
+  have h7P : 7 ≤ bPark.sudo_5Board_4held.size := by
+    simpa [bPark, parkKeepBoard] using h.shape.h7
+  have hsrcP : bPark.sudo_5Board_4held[5] = true := by
+    simpa [bPark, parkKeepBoard] using hgapH.1
+  have harrP : bPark.sudo_5Board_4home[5] = embed s.gap := by
+    simpa [bPark, parkKeepBoard] using hgapH.2
+  have hemptyP : bPark.sudo_5Board_4held[6] = false := by
+    simpa [bPark, parkKeepBoard] using h.shape.spareE
+  have hnP : bPark.sudo_5Board_1t.sudo_4Tier_1n = (s.gap.length : Int) := by
+    simpa [bPark, parkKeepBoard] using (show b.sudo_5Board_1t.sudo_4Tier_1n =
+      (s.gap.length : Int) by rw [h.shape.gapLen]; exact h.shape.tierN)
+  have hcopy := copy_band_refines bPark 6 5 s.gap mv pk
+    h6H h6D h5H h5D h7P hsrcP harrP hemptyP hnP
+    (by rw [h.shape.gapLen]; exact h.shape.peg.fitN)
+    hmvP hpkP hfitCopy
+  let b1 := placeBoard bPark 6 h6H h6D s.gap mv pk
+  have hbook := place_book bPark 6 h6H h6D s.gap mv pk
+  have hidle := place_idle bPark 6 h6H h6D s.gap mv pk
+  have hlen0 : b1.sudo_5Board_9tally_len = (s.tally : Int) := by
+    rw [hbook.2.2.2.1]
+    simpa [bPark, parkKeepBoard] using h.inv.len
+  have hfromB : b1.sudo_5Board_11parked_from = ((hole : Nat) : Int) := by
+    rw [hbook.2.1]
+    rfl
+  have hridxB : b1.sudo_5Board_8rung_idx = ((s.ridx + 1 : Nat) : Int) := by
+    rw [hbook.2.2.1]
+    exact ofNat_eq_natCast _
+  have hmarkP : bPark.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+    simp [bPark, parkKeepBoard]
+  have hoffP : bPark.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on := by
+    simp [bPark, parkKeepBoard]
+  have hopsP : bPark.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    simp [bPark, parkKeepBoard]
+  have htierP : bPark.sudo_5Board_1t = b.sudo_5Board_1t := by
+    simp [bPark, parkKeepBoard]
+  have hstrictP : bPark.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+    simp [bPark, parkKeepBoard]
+  have hholeP : bPark.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+    simp [bPark, parkKeepBoard]
+  have ht0P : bPark.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 := by
+    simp [bPark, parkKeepBoard]
+  have hhighP : bPark.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+    simp [bPark, parkKeepBoard]
+  let pk1 := if pk < countHeld (bPark.sudo_5Board_4held.set ⟨6, h6D⟩ true) 7
+    then countHeld (bPark.sudo_5Board_4held.set ⟨6, h6D⟩ true) 7 else pk
+  refine ⟨bPark, {
+    b0 := b1
+    src := 6
+    g := s.gap
+    row0 := afterPark s.row (-1) s.parkAt hole r
+    w := base.w
+    h := base.h
+    r := base.r
+    n := s.n
+    k := s.k
+    bench := s.benchlen
+    cg := base.cg
+    moves0 := mv + pegCount s.gap
+    slides0 := sl
+    hole0 := holeM
+    peak0 := pk1
+    peakS0 := pkS
+    cOps0 := cOps
+    t0 := s.t0
+    high := s.high
+    control := base.control
+    ctrl0 := s.ctrl + 2
+    m := s.tally
+    hm := hm
+    hmk := by rw [hidle.1, hmarkP]; exact h.inv.marker
+    hoff := by rw [hidle.2.1, hoffP]; exact hoff0
+    hops0 := by rw [hidle.2.2.1, hopsP]; exact h.shape.peg.opsGt
+    hop10 := by
+      have hsz : 1 < b1.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        rw [hidle.2.2.1, hopsP]; exact h.shape.peg.opsGt
+      have hget := idx_get (hidle.2.2.1.trans hopsP) 1 hsz
+      exact hget.trans hcOps
+    hbl := by rw [hidle.2.2.2.2.1, htierP, h.shape.tierB]; exact ofNat_eq_natCast s.benchlen
+    hcg := by rw [hidle.2.2.2.2.1, htierP, h.shape.tierCg]; exact ofNat_eq_natCast base.cg
+    hspan := h.shape.peg.span
+    hF := by rw [hbook.2.2.2.2.2.2.2.2.2]; exact h6D
+    hHome := by rw [hbook.2.2.2.2.2.2.2.2.1]; exact h6H
+    hHF := by
+      have hF : 6 < b1.sudo_5Board_4held.size := by
+        rw [hbook.2.2.2.2.2.2.2.2.2]; exact h6D
+      simpa using place_held_here bPark 6 h6H h6D s.gap mv pk hF
+    hArr := by
+      have hF : 6 < b1.sudo_5Board_4home.size := by
+        rw [hbook.2.2.2.2.2.2.2.2.1]; exact h6H
+      simpa using place_home_here bPark 6 h6H h6D s.gap mv pk hF
+    h7 := by rw [hbook.2.2.2.2.2.2.2.2.2]; exact h7P
+    hn0 := h.shape.peg.n_pos
+    hn := by rw [hidle.2.2.2.2.1, htierP]; exact h.shape.tierN
+    hlenx := h.shape.gapLen
+    hf := h.shape.peg.fitN
+    hmoves0 := by
+      rw [place_moves bPark 6 h6H h6D s.gap mv pk]
+      exact ofNat_eq_natCast _
+    hpeak0 := by
+      rw [place_peak bPark 6 h6H h6D s.gap mv pk hpkP]
+      exact ofNat_eq_natCast _
+    hpeakS0 := by rw [hidle.2.2.2.2.2.1, hstrictP]; exact hpkS
+    hxsT := h.shape.peg.trits
+    h3 := h.shape.peg.fit3
+    hw0 := h.shape.w0
+    hh0 := h.shape.h0
+    hrR := h.shape.rlt
+    hrP := h.shape.r0
+    hnE := h.shape.n_eq
+    hkLe := h.shape.k_le
+    hgap := h.shape.gap_eq
+    hwF := by rw [hidle.2.2.2.2.1, htierP, h.shape.tierW]; exact ofNat_eq_natCast base.w
+    hhF := by rw [hidle.2.2.2.2.1, htierP, h.shape.tierH]; exact ofNat_eq_natCast base.h
+    hrF := by rw [hidle.2.2.2.2.1, htierP, h.shape.tierR]; exact ofNat_eq_natCast base.r
+    hkF := by rw [hidle.2.2.2.2.1, htierP, h.shape.tierK]; exact ofNat_eq_natCast s.k
+    hHole0 := by rw [hidle.2.2.2.2.2.2, hholeP]; exact hhole
+    hsm := by
+      have hs := h.shape.peg.small
+      have hb : s.benchlen = base.bench := h.hbench
+      simpa [hb] using hs
+    hnsm := h.shape.peg.n_small
+    hfitB := h.shape.peg.fitBn
+    hT0 := by rw [hbook.2.2.2.2.1, ht0P, h.inv.t0]
+    hRow := by
+      rw [hbook.1]
+      rw [parkKeep_row b s.row hole s.parkAt r s.ridx s.ctrl hRowP hRowH h.inv.row
+        h.shape.park.parkLt h.shape.park.holeLt, ← hAP]
+    hRoom := by
+      have hlenR : (afterPark s.row (-1) s.parkAt hole r).length = s.row.length := by
+        rw [hAP]
+        simp [List.length_set]
+      rw [hlenR]
+      exact h.shape.seg.room
+    hCtrlN := by rw [hidle.2.2.2.2.1, htierP]; exact h.shape.tierC
+    hHigh := by rw [hbook.2.2.2.2.2.2.1, hhighP, h.inv.high]
+    hTop := h.shape.peg.top hm
+    hIn := by rw [← h.shape.rowLen]; exact h.shape.seg.room
+    hCtrl0 := by
+      rw [hbook.2.2.2.2.2.2.2.1]
+      exact ofNat_eq_natCast _
+    hslides0 := by rw [hidle.2.2.2.1, hslP]; exact ofNat_eq_natCast sl
+    hfitRow := h.shape.peg.fitRow
+    hfitM := h.shape.peg.fitTall
+    hBudget := hmovFit
+    hSlide := by
+      apply FitsLen.of_le base.fitS
+      have hslide : s.tally * (2 * s.n) ≤ rungSlideCharge base.n base.mMax := by
+        unfold rungSlideCharge
+        have hn : s.n = base.n := h.hn
+        have hmul : s.tally * (2 * s.n) ≤ (base.mMax + 3) * (2 * s.n) :=
+          Nat.mul_le_mul_right _ (Nat.le_trans hT (Nat.le_add_right _ _))
+        simpa [hn] using hmul
+      have hstep : sl + s.tally * (2 * s.n) ≤
+          base.slides0 + (done.length + 1) * rungSlideCharge base.n base.mMax := by
+        have hsucc : (done.length + 1) * rungSlideCharge base.n base.mMax =
+            done.length * rungSlideCharge base.n base.mMax +
+              rungSlideCharge base.n base.mMax := by rw [Nat.succ_mul]
+        omega
+      have hR : (done.length + 1) * rungSlideCharge base.n base.mMax ≤
+          base.R * rungSlideCharge base.n base.mMax :=
+        Nat.mul_le_mul_right _ hk
+      omega
+    hOpsB := by
+      obtain ⟨c0, hc0, hcle⟩ := h.ops 1 h.shape.peg.opsGt
+      have hc : cOps = c0 := ofNat_inj_nat (hcOps.symm.trans hc0)
+      apply FitsLen.of_le base.fitO
+      have hstep : cOps + s.tally ≤
+          base.ops0 + (done.length + 1) * (base.mMax + 3) := by
+        have hsucc : (done.length + 1) * (base.mMax + 3) =
+            done.length * (base.mMax + 3) + (base.mMax + 3) := by rw [Nat.succ_mul]
+        have ht : s.tally ≤ base.mMax + 3 := Nat.le_trans hT (Nat.le_add_right _ _)
+        omega
+      have hR : (done.length + 1) * (base.mMax + 3) ≤ base.R * (base.mMax + 3) :=
+        Nat.mul_le_mul_right _ hk
+      omega
+    hCtrlB := ctrl_park_peg_fit h.ctrlLe hT hm hdoneLe base.fitCtrl
+  }, hparkEq, hcopy, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, hfromB, hridxB, hlen0⟩
+
 /-- A home other than the cube source, and ops slot 0, as read off a board. -/
 structure HomeKeep (b : Ecbs.Board) (first : Nat) (xs0 : List Nat) (cMul : Nat) : Prop where
   heldLt : first < b.sudo_5Board_4held.size

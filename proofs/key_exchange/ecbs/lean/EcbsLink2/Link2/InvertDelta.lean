@@ -2586,4 +2586,44 @@ theorem gap_mul_row
   exact ⟨bM, mulNoLiveBoard bM 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cOps
     hH hD hops, hmul, hkeep⟩
 
+/-- The emitted copy of the idle park, then the emitted cube-peg loop, is the
+    peg context `parked_peg_ctx` names. On a final red rung that loop's board
+    has the model's row, counter, parked-from hole, rung index, and tally length. -/
+theorem parked_final_red
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [2] b s base)
+    (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false) :
+    ∃ (bPark : Ecbs.Board) (c : PegCtx),
+      Ecbs.park_rung b ((2 : Nat) : Int) = .ok bPark ∧
+      Ecbs.copy_band bPark ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok c.b0 ∧
+      SudoRt.runLoopOn (Int.ofNat 0, c.b0)
+          (fuelRange (Int.ofNat 0) (Int.ofNat (c.m - 1)))
+          (cubePegStep c.src (Int.ofNat (c.m - 1)))
+          (fun σ => .ok σ)
+          (fun r => .ok ((0 : Int), r)) =
+        .ok (Int.ofNat (c.m - 1), pegBoard c c.m) ∧
+      let hole := climbAt base.ladder0 base.R s.ridx
+      let st := modelRung s base.x 2 hole true
+      (pegBoard c c.m).sudo_5Board_3row = embed st.row ∧
+      (pegBoard c c.m).sudo_5Board_4cost.sudo_5Costs_4ctrl = (st.ctrl : Int) ∧
+      (pegBoard c c.m).sudo_5Board_11parked_from = st.fromHole ∧
+      (pegBoard c c.m).sudo_5Board_8rung_idx = (st.ridx : Int) ∧
+      (pegBoard c c.m).sudo_5Board_9tally_len = (st.tally : Int) := by
+  obtain ⟨bPark, c, hpark, hcopy, hrow0, hctrl0, hmT, ht0, _, _, _, _, _, hfrom, hridx, hlen⟩ :=
+    parked_peg_ctx h hF hm hT hhome
+  let hole := climbAt base.ladder0 base.R s.ridx
+  have hIdle : s.fromHole = -1 := h.shape.park.fromIdle hF
+  have hrow0' : c.row0 = afterPark s.row s.fromHole s.parkAt hole 2 := by
+    rw [hrow0, hIdle]
+  have hFive := peg_is_final_red s base.x hole hF c c.hm hrow0' hctrl0 hmT ht0 hfrom hridx hlen
+  have hEq : (pegPack c c.m c.hm (Nat.le_refl _)).b = pegBoard c c.m :=
+    (pegPack_board c c.m c.hm (Nat.le_refl _)).1
+  refine ⟨bPark, c, hpark, hcopy, cube_peg_loop_refines c, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [← hEq]; exact hFive.1
+  · rw [← hEq]; exact hFive.2.1
+  · rw [← hEq]; exact hFive.2.2.1
+  · rw [← hEq]; exact hFive.2.2.2.1
+  · rw [← hEq]; exact hFive.2.2.2.2
+
 end EcbsLink2.Link2

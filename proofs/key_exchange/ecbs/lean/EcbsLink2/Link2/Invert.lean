@@ -1491,4 +1491,130 @@ theorem cube_tally_peg_live (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
             a[k] = c[k]'(h ▸ ha) := by subst h; rfl
         exact hget hrowC i (by rw [Array.size_set] at hi1; exact hi1)
 
+/-- The model state one rung of the climb carries: the gap polynomial, where the
+    working value sits, the tally length, the parked colour's hole, and the
+    control row. `invRung` updates the gap and the tally length; it does not
+    mention the control row. -/
+structure ClimbModel where
+  n : Nat
+  k : Nat
+  benchlen : Nat
+  gap : List Nat
+  work : List Nat
+  onBench : Bool
+  tally : Nat
+  t0 : Nat
+  parkAt : Nat
+  parked : Nat
+  ctrl : Nat
+  high : Nat
+  row : List Nat
+
+/-- Board shape for `ClimbModel`. The gap value is in home 5 when `onBench` is
+    false, and on the bench aimed at home 5 when `onBench` is true. The bench
+    list is that value in the first `n` holes and zeros after it. Marker off. -/
+structure ClimbInv (b : Ecbs.Board) (s : ClimbModel) : Prop where
+  hG : 5 < b.sudo_5Board_4home.size
+  hGs : 5 < b.sudo_5Board_4held.size
+  marker : b.sudo_5Board_9marker_on = false
+  len : b.sudo_5Board_9tally_len = (s.tally : Int)
+  ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (s.ctrl : Int)
+  high : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int)
+  t0 : b.sudo_5Board_6tally0 = (s.t0 : Int)
+  row : b.sudo_5Board_3row = embed s.row
+  park : b.sudo_5Board_9park_hole = (s.parkAt : Int)
+  gapHome : s.onBench = false →
+    b.sudo_5Board_4held[5]'(hGs) = true ∧
+      b.sudo_5Board_4home[5]'(hG) = embed s.gap
+  gapBench : s.onBench = true →
+    b.sudo_5Board_8bench_on = true ∧
+      b.sudo_5Board_8bench_to = (5 : Int) ∧
+      b.sudo_5Board_5bench =
+        embed (s.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0) ∧
+      s.work = s.gap
+
+/-- One step of `invRung`: the new gap polynomial and the new tally length.
+    The control row, the park, and the counter stay in the model; the emitted
+    rung repaints the row on its way through the pegs and the double. -/
+def modelRung (n k bench : Nat) (x : List Nat) (s : ClimbModel) (rung : Nat)
+    (last : Bool) : ClimbModel :=
+  let st := invRung n k bench x s.gap s.tally rung last
+  { s with gap := st.1, work := st.1, onBench := true, tally := st.2 }
+
+/-- The board after that model step. The new polynomial is on the bench aimed
+    at the gap, and the tally length is `invRung`'s. Other fields stay. -/
+def postRungBoard (b : Ecbs.Board) (s : ClimbModel) (n k bench : Nat) (x : List Nat)
+    (rung : Nat) (last : Bool) : Ecbs.Board :=
+  let st := invRung n k bench x s.gap s.tally rung last
+  { b with
+    sudo_5Board_9tally_len := (st.2 : Int)
+    sudo_5Board_8bench_on := true
+    sudo_5Board_8bench_to := (5 : Int)
+    sudo_5Board_5bench :=
+      embed (st.1.take s.n ++ List.replicate (s.benchlen - s.n) 0) }
+
+theorem climbInv_post (b : Ecbs.Board) (s : ClimbModel) (x : List Nat)
+    (rung : Nat) (last : Bool) (h : ClimbInv b s) :
+    ClimbInv (postRungBoard b s s.n s.k s.benchlen x rung last)
+      (modelRung s.n s.k s.benchlen x s rung last) := by
+  refine
+    { hG := ?_
+      hGs := ?_
+      marker := ?_
+      len := ?_
+      ctrl := ?_
+      high := ?_
+      t0 := ?_
+      row := ?_
+      park := ?_
+      gapHome := ?_
+      gapBench := ?_ }
+  · simpa [postRungBoard] using h.hG
+  · simpa [postRungBoard] using h.hGs
+  · simpa [postRungBoard] using h.marker
+  · rfl
+  · simpa [postRungBoard] using h.ctrl
+  · simpa [postRungBoard] using h.high
+  · simpa [postRungBoard] using h.t0
+  · simpa [postRungBoard] using h.row
+  · simpa [postRungBoard] using h.park
+  · intro hOff
+    simp [modelRung] at hOff
+  · intro _
+    refine ⟨rfl, rfl, ?_, rfl⟩
+    simp [modelRung, postRungBoard]
+
+/-- The white-peg scan inside one rung. Holes `tally0 .. tally0 + m - 1` are `1`.
+    The board is unchanged. `m > 0`. -/
+theorem white_scan_loop_refines (b : Ecbs.Board) (xs : List Nat) (t0 m : Nat)
+    (hm : 0 < m)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hRow : b.sudo_5Board_3row = embed xs)
+    (hRoom : t0 + m ≤ xs.length)
+    (hWhite : ∀ j (hj : j < m), xs[t0 + j]'(by omega) = 1)
+    (hfit : FitsLen (t0 + m)) (hfitM : FitsLen m) :
+    SudoRt.runLoopOn (Int.ofNat 0) (fuelRange (Int.ofNat 0) (Int.ofNat (m - 1)))
+      (whiteStep b (Int.ofNat (m - 1)))
+      (fun j => .ok (b, j))
+      (fun _ => .ok (b, (0 : Int))) =
+    .ok (b, Int.ofNat (m - 1)) :=
+  tally_whites_hold b xs t0 m (fun j => .ok (b, j)) (fun _ => .ok (b, 0))
+    hm hT0 hRow hRoom hWhite hfit hfitM
+
+/-- The scan does not disturb a climb invariant whose tally segment is white. -/
+theorem climbInv_white (b : Ecbs.Board) (s : ClimbModel) (xs : List Nat)
+    (h : ClimbInv b s) (hm : 0 < s.tally)
+    (hRow : s.row = xs)
+    (hRoom : s.t0 + s.tally ≤ xs.length)
+    (hWhite : ∀ j (hj : j < s.tally), xs[s.t0 + j]'(by omega) = 1)
+    (hfit : FitsLen (s.t0 + s.tally)) (hfitM : FitsLen s.tally) :
+    SudoRt.runLoopOn (Int.ofNat 0) (fuelRange (Int.ofNat 0) (Int.ofNat (s.tally - 1)))
+      (whiteStep b (Int.ofNat (s.tally - 1)))
+      (fun j => .ok (b, j))
+      (fun _ => .ok (b, (0 : Int))) =
+    .ok (b, Int.ofNat (s.tally - 1)) := by
+  have hT0 : b.sudo_5Board_6tally0 = (s.t0 : Int) := h.t0
+  have hR : b.sudo_5Board_3row = embed xs := by rw [h.row, hRow]
+  exact white_scan_loop_refines b xs s.t0 s.tally hm hT0 hR hRoom hWhite hfit hfitM
+
 end EcbsLink2.Link2

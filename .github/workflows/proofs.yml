@@ -466,7 +466,9 @@ jobs:
     # and cube empties only the source home. A bench-off cube returns a named board;
     # a live cube returns that board of the slid state. One cube then a red tally peg
     # and ctrl+1 is tied for both, by rewriting those projections. Nocopy mul, bench
-    # off or live, likewise returns a named board. invert_number, fold and the exchange are not
+    # off or live, likewise returns a named board. One model rung is `invRung`
+    # on a named board, and the white-peg scan leaves the board unchanged.
+    # The cube-peg loop and invert_number are not theorems yet. fold and the exchange are not
     # claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.

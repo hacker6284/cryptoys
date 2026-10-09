@@ -968,6 +968,33 @@ theorem le_cast (n n' b b' : Nat) (hn : n = n') (hb : b = b') (h : n ≤ b) : n'
   exact h
 
 /-- The gap mul's bench list is `fieldMul` of the gap by `cubeTimes`, then zeros. -/
+theorem take_of_pad (a : List Nat) (n bench : Nat) (hn : n ≤ bench)
+    (hlen : (a ++ List.replicate (bench - n) 0).length = bench) :
+    (a ++ List.replicate (bench - n) 0).take n = a := by
+  have hsum : a.length + (bench - n) = bench := by
+    simpa [List.length_append, List.length_replicate] using hlen
+  have hsplit : n + (bench - n) = bench := Nat.add_sub_of_le hn
+  have hlenA : a.length = n := Nat.add_right_cancel (hsum.trans hsplit.symm)
+  rw [List.take_append_of_le_length (Nat.le_of_eq hlenA.symm)]
+  rw [← hlenA]
+  exact List.take_length a
+
+theorem take_eq_of_eq (xs pad a : List Nat) (n : Nat) (hxs : xs = pad) (ht : pad.take n = a) :
+    xs.take n = a := by
+  rw [hxs, ht]
+
+theorem prefix_cube (n k k' bench : Nat) (xs a : List Nat) (hk : k = k') (ht : xs.take n = a) :
+    (cubeBench n k bench xs).take n = fieldCube n k' bench a := by
+  rw [hk]
+  have h := cubeBench_prefix n k' bench xs
+  rw [ht] at h
+  exact h
+
+theorem embed_mul_cast (n k k' bench : Nat) (x p p' : List Nat) (hk : k = k') (hp : p = p') :
+    embed (fieldMul n k bench x p ++ List.replicate (bench - n) 0) =
+      embed (fieldMul n k' bench x p' ++ List.replicate (bench - n) 0) := by
+  rw [hk, hp]
+
 theorem gap_list_cast (n k k' bench : Nat) (g g' : List Nat) (m m' : Nat) (xs : List Nat)
     (hk : k = k') (hg : g = g') (hm : m = m')
     (hn0 : 0 < n) (hgap0 : 0 < n - k) (hn : n ≤ bench)
@@ -2057,11 +2084,17 @@ theorem red_mul_emit
     (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
     ∃ (bCube bRed : Ecbs.Board),
       Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
-          false false false = .ok bRed := by
+          false false false = .ok bRed ∧
+      bRed.sudo_5Board_5bench =
+        embed (fieldMul base.n s.k base.bench base.x
+          (fieldCube base.n s.k base.bench
+            (fieldMul base.n s.k base.bench s.gap
+              (cubeTimes base.n s.k base.bench s.gap s.tally))) ++
+          List.replicate (base.bench - base.n) 0) := by
   obtain ⟨bClear, k, mv, sl, pk, mvC, slC, pkC, hole, peakS, xs, hk, hmv, hsl, hpk,
       hmvC, hslC, hpkC, _hpkLe, hMovW, hSldW, h5H, h5D, h6H, h6D, hops1, _hopsSz, hslots,
       _hbench, hhole, hstrict, hnle, _hmk, _hon, _hto, h7, _hempty, htier, hlen, hzero, htri,
-      _hpre, hempty6, hX, _hδ⟩ :=
+      hpre, hempty6, hX, _hδ⟩ :=
     rung_delta_clear h hm hT hhome
   have hi0 : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     have h0c : 0 < bClear.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
@@ -2139,8 +2172,22 @@ theorem red_mul_emit
     rw [natCast_inj (hcE0.symm.trans hcSlot0)]; exact hcLe0
   have hOpsFit : cOps0 + 1 ≤ base.ops0 + base.R * (base.mMax + 3) :=
     mul_ops_fit base.ops0 base.R done.length base.mMax cE0 cOps0 hstepR hent0 hc0
+  let gapA := fieldMul base.n s.k base.bench s.gap
+    (cubeTimes base.n s.k base.bench s.gap s.tally)
+  have hpad := take_of_pad gapA base.n base.bench hnle (hpre ▸ hlen)
+  have hxsTake := take_eq_of_eq xs _ gapA base.n hpre hpad
+  have hysTake := prefix_cube base.n k s.k base.bench xs gapA hk hxsTake
+  have hraw := mul_live_bench_gap bCube 5 6 base.x ys base.n k mvCube slCube holeRed base.bench
+    pkCube peakSRed cOps0 h6 hD6 hops0 hn0 hgap0 hnle
+  have hRed : (mulNoLiveBoard bCube 5 6 base.x ys base.n k mvCube slCube holeRed base.bench
+      pkCube peakSRed cOps0 h6 hD6 hops0).sudo_5Board_5bench =
+      embed (fieldMul base.n s.k base.bench base.x
+        (fieldCube base.n s.k base.bench gapA) ++
+        List.replicate (base.bench - base.n) 0) :=
+    hraw.trans (embed_mul_cast base.n k s.k base.bench base.x (ys.take base.n)
+      (fieldCube base.n s.k base.bench gapA) hk hysTake)
   refine ⟨bCube, mulNoLiveBoard bCube 5 6 base.x ys base.n k mvCube slCube holeRed base.bench
-      pkCube peakSRed cOps0 h6 hD6 hops0, ?_⟩
+      pkCube peakSRed cOps0 h6 hD6 hops0, ?_, hRed⟩
   apply mul_eq_live bCube 5 base.xHome 6 base.x ys base.w base.h base.r base.n k mvCube slCube
     holeRed base.bench pkCube peakSRed cOps0
   · exact cube_live_marker bClear 6 5 xs base.n k mvC slC hole base.bench pkC peakS cOps1

@@ -503,8 +503,10 @@ jobs:
     # for, invert_number, fold, and the exchange are not tied yet.
     # The live tally peg after a named live cube is.
     # The cube-peg loop leaves ops slot 1 equal to the incoming count plus the
-    # peg count, and leaves every other slot equal to the input. The climb
-    # step hypothesis and the ladder for are still open.
+    # peg count, and leaves every other slot equal to the input. From the rung
+    # entry, that loop and the white rung through the gap mul and the clear are
+    # one counter delta within the rung charge. The red branch, the climb step
+    # hypothesis, and the ladder for are still open.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

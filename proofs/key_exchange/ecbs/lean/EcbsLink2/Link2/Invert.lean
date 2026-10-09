@@ -2211,6 +2211,34 @@ theorem PegCtx.span3 (c : PegCtx) : 3 * (c.n - 1) < c.bench := by
   have h := c.hspan
   omega
 
+/-- `raisedPeak` against a count of at most seven homes stays at most `max(peak, 7)`. -/
+theorem raisedPeak_carry (peak occ : Nat) (ho : occ ≤ 7) :
+    raisedPeak peak occ ≤ max peak 7 := by
+  unfold raisedPeak
+  by_cases h : peak < occ
+  · simp [h]
+    exact Nat.le_trans ho (Nat.le_max_right peak 7)
+  · simp [h]
+    exact Nat.le_max_left _ _
+
+theorem countHeld_seven (held : Array Bool) : countHeld held 7 ≤ 7 := by
+  have : ∀ i, countHeld held i ≤ i := by
+    intro i
+    induction i with
+    | zero => simp [countHeld]
+    | succ i ih =>
+      unfold countHeld
+      have : (if held.getD i false then 1 else 0) ≤ 1 := by split <;> decide
+      omega
+  exact this 7
+
+theorem peak_carry (peak0 pk pk' : Nat) (h : pk ≤ max peak0 7) (h' : pk' ≤ max pk 7) :
+    pk' ≤ max peak0 7 := by
+  have hmax : max pk 7 ≤ max peak0 7 := by
+    apply Nat.max_le.mpr
+    exact ⟨h, Nat.le_max_right _ _⟩
+  exact Nat.le_trans h' hmax
+
 /-- The state after `i` cube-then-red-peg steps, `i > 0`. The bench holds
     `cubeBenchIter i` and is aimed at `src`. Step 0 is the bench-off peg;
     every later step is the live one. -/
@@ -2248,6 +2276,9 @@ structure LivePeg (c : PegCtx) (i : Nat) where
   hsldB : slides ≤ c.slides0 + i * (2 * c.n)
   hcOps : cOps = c.cOps0 + i
   hctrlN : ctrl = c.ctrl0 + i
+  /-- Each peg raises peak against at most seven homes, so it stays under the
+      cap the loop started with. -/
+  hpeakB : peak ≤ max c.peak0 7
 
 private theorem idx_get {α : Type} {a b : Array α} (h : a = b) (i : Nat) (ha : i < a.size) :
     a[i] = b[i]'(h ▸ ha) := by
@@ -2394,6 +2425,10 @@ def pegFromOff (c : PegCtx) : LivePeg c 1 where
   hsldB := by omega
   hcOps := rfl
   hctrlN := rfl
+  hpeakB :=
+    raisedPeak_carry c.peak0
+      (countHeld (c.b0.sudo_5Board_4held.set ⟨c.src, c.hF⟩ false) 7)
+      (countHeld_seven _)
 
 def liveRowPr (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) :
     c.t0 + i <
@@ -2555,6 +2590,15 @@ def pegNext (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) : LivePeg c 
     omega
   hcOps := by rw [d.hcOps]; omega
   hctrlN := by rw [d.hctrlN]; omega
+  hpeakB :=
+    peak_carry c.peak0 _ _
+      (peak_carry c.peak0 d.peak _
+        d.hpeakB
+        (raisedPeak_carry d.peak
+          (countHeld (d.b.sudo_5Board_4held.set ⟨c.src, d.hD⟩ true) 7)
+          (countHeld_seven _)))
+      (raisedPeak_carry _ _
+        (countHeld_seven _))
 
 /-- After `i` steps. `i = 0` is the bench-off start; `i > 0` is `pegPack`. -/
 def pegPack (c : PegCtx) : ∀ i, 0 < i → i ≤ c.m → LivePeg c i
@@ -4445,34 +4489,6 @@ theorem modelClimb_tally (s : ClimbModel) (x : List Nat)
     (hole : ClimbModel → Nat → Bool → Nat) (rs : List Nat) :
     (modelClimb s x hole rs).tally = climbTally s.tally rs := by
   rw [← invClimb_tally, ← modelClimb_spec]
-
-/-- `raisedPeak` against a count of at most seven homes stays at most `max(peak, 7)`. -/
-theorem raisedPeak_carry (peak occ : Nat) (ho : occ ≤ 7) :
-    raisedPeak peak occ ≤ max peak 7 := by
-  unfold raisedPeak
-  by_cases h : peak < occ
-  · simp [h]
-    exact Nat.le_trans ho (Nat.le_max_right peak 7)
-  · simp [h]
-    exact Nat.le_max_left _ _
-
-theorem countHeld_seven (held : Array Bool) : countHeld held 7 ≤ 7 := by
-  have : ∀ i, countHeld held i ≤ i := by
-    intro i
-    induction i with
-    | zero => simp [countHeld]
-    | succ i ih =>
-      unfold countHeld
-      have : (if held.getD i false then 1 else 0) ≤ 1 := by split <;> decide
-      omega
-  exact this 7
-
-theorem peak_carry (peak0 pk pk' : Nat) (h : pk ≤ max peak0 7) (h' : pk' ≤ max pk 7) :
-    pk' ≤ max peak0 7 := by
-  have hmax : max pk 7 ≤ max peak0 7 := by
-    apply Nat.max_le.mpr
-    exact ⟨h, Nat.le_max_right _ _⟩
-  exact Nat.le_trans h' hmax
 
 /-- Budgets for one climb. `mMax` bounds the tally. It is at most the geometric
     envelope `(tally0 + 1) · 2 ^ R`, which `climbTallyPrefix_le` always gives.

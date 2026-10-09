@@ -483,7 +483,7 @@ jobs:
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 537344 kB (about 0.51 GB). The job builds `place`, the schoolbook loop
+    # 607620 kB (about 0.58 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,
@@ -491,8 +491,12 @@ jobs:
     # `cube_refines`, `folded_read`, `value_after_set`, `settle_refines`, and
     # `new_board_refines`, `multiply_refines`, and `cube_number_refines`,
     # plus park / unpark, the one-peg tally steps, and emitted doubling.
-    # The climb induction carries the per-rung charge. invert_number, fold, and the
-    # exchange are not theorems yet.
+    # The climb induction carries the per-rung charge. The geometric tally cap
+    # does not fit the control row on Demo, Toy, Hobby, or Serious; the domain
+    # cap is the row room, and the concrete climb fits it. The R-charge i64
+    # checks hold at both caps. A later rung copies off the bench and slides
+    # that bench into the gap before the peg loop. The per-rung obligation,
+    # the ladder for, invert_number, fold, and the exchange are not tied yet.
     # The live tally peg after a named live cube is.
     runs-on: ubuntu-latest
     steps:

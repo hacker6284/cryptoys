@@ -171,6 +171,55 @@ theorem copy_band_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     simp only [hlt, ite_true, pure_eq_ok]
   · simp only [decide_False, Bool.false_eq_true, if_false, ok_bind, pure_eq_ok, hlt]
 
+/-- `copy_band` with `mirror = false` when the source home is empty and the bench
+    is on, aimed at that home. The written prefix is the first `n` bench entries.
+    `place` does not clear `bench_on`, so the bench stays aimed at the source. -/
+theorem copy_band_bench_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n moves peak : Nat)
+    (hHd : dst < b.sudo_5Board_4home.size)
+    (hDd : dst < b.sudo_5Board_4held.size)
+    (hDs : src < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hsrc : b.sudo_5Board_4held[src] = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (src : Int))
+    (hbench : b.sudo_5Board_5bench = embed xs)
+    (hempty : b.sudo_5Board_4held[dst] = false)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlen : n ≤ xs.length)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hfit : FitsLen (moves + pegCount (xs.take n))) :
+    Ecbs.copy_band b (dst : Int) (src : Int) false =
+      .ok (placeBoard b dst hHd hDd (xs.take n) moves peak) := by
+  unfold Ecbs.copy_band Ecbs.need_empty Ecbs.note_peak placeBoard
+  simp only [Bool.false_eq_true, if_false]
+  have hv := value_bench_refines b src xs n hDs hsrc hon hto hbench hn hlen hf
+  rw [hv, ok_bind]
+  rw [atL_cast _ _ hDd, hempty]
+  simp only [Bool.not_false, sudoAssert_true, ok_bind, pure_eq_ok, ok_bind]
+  rw [putL_cast _ _ _ hHd, ok_bind, putL_cast _ _ _ hDd, ok_bind]
+  have htake : (xs.take n).length = n := by rw [List.length_take, Nat.min_eq_left hlen]
+  have hfs : FitsLen (embed (xs.take n)).size := by rw [size_embed, htake]; exact hf
+  rw [npeg_refines (embed (xs.take n)) hfs, pegCount_embed, ok_bind, hmoves,
+    addI_cast_ofNat _ _ hfit, ok_bind]
+  have h7' : 7 ≤ (b.sudo_5Board_4held.set ⟨dst, hDd⟩ true).size := by
+    rw [Array.size_set]; exact h7
+  have hocc := occupied_refines
+    ({ b with
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨dst, hHd⟩ (embed (xs.take n))
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨dst, hDd⟩ true
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_5moves := Int.ofNat (moves + pegCount (xs.take n)) } }) h7'
+  rw [hocc, ok_bind, hpeak, decide_gt_ofNat]
+  by_cases hlt : peak < countHeld (b.sudo_5Board_4held.set ⟨dst, hDd⟩ true) 7
+  · have hcI : decide (peak < countHeld (b.sudo_5Board_4held.set ⟨dst, hDd⟩ true) 7) = true := by
+      rw [decide_eq_true_eq]; exact hlt
+    rw [hcI, if_pos rfl, ok_bind]
+    simp only [hlt, ite_true, pure_eq_ok]
+  · simp only [decide_False, Bool.false_eq_true, if_false, ok_bind, pure_eq_ok, hlt]
+
 /-- `place` is `put` and then the board. -/
 theorem put_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat)
     (moves peak : Nat)

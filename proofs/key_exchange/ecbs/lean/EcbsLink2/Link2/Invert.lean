@@ -2689,6 +2689,125 @@ theorem cube_peg_loop_refines (c : PegCtx) :
     have hm1 : c.m - 1 + 1 = c.m := Nat.sub_add_cancel (Nat.succ_le_of_lt c.hm)
     rw [hI, hm1]
 
+/-- The same cube-peg loop, started from a board whose first cube equals the
+    bench-off first peg. A later rung starts with the bench aimed at the gap.
+    `cube_settle_other` makes that first cube the bench-off cube of the slid
+    board, so the loop is `pegBoard` of a `PegCtx` whose `b0` is that slide
+    and whose `hoff` holds. -/
+theorem cube_peg_loop_from (c : PegCtx) (b : Ecbs.Board)
+    (hbody0 : cubePegBody c.src b ((0 : Nat) : Int) = .ok (offPeg c)) :
+    SudoRt.runLoopOn (Int.ofNat 0, b)
+        (fuelRange (Int.ofNat 0) (Int.ofNat (c.m - 1)))
+        (cubePegStep c.src (Int.ofNat (c.m - 1)))
+        (fun σ => .ok σ)
+        (fun r => .ok ((0 : Int), r)) =
+      .ok (Int.ofNat (c.m - 1), pegBoard c c.m) := by
+  refine asc_goal (fromN := 0) (toN := c.m - 1)
+      (fun i s => if i = 0 then s = b else s = pegBoard c i)
+      (Nat.zero_le _) (by simp) ?_ ?_
+  · intro i s _ hi hI
+    have hle1 : i + 1 ≤ c.m := by
+      have h := Nat.add_le_add_right hi 1
+      rwa [Nat.sub_add_cancel (Nat.succ_le_of_lt c.hm)] at h
+    have hfit : FitsLen (i + 1) := FitsLen.of_le c.hfitM hle1
+    have hng : ¬ Int.ofNat i > Int.ofNat (c.m - 1) := not_gt_cast hi
+    cases i with
+    | zero =>
+      have hs : s = b := by simpa using hI
+      rw [hs]
+      have hstep := peg_tail c.src (c.m - 1) 0 b (offPeg c) hfit hng hbody0
+      rw [hstep]
+      refine ⟨offPeg c, ?_, rfl⟩
+      show (if (1 : Nat) = 0 then offPeg c = b else offPeg c = pegBoard c 1)
+      rw [if_neg (by decide : (1 : Nat) ≠ 0)]
+      exact (pegBoard_one c).symm
+    | succ k =>
+      have hlt : k + 1 < c.m :=
+        Nat.lt_of_le_of_lt hi (Nat.sub_lt c.hm (by decide))
+      have hle : k + 1 ≤ c.m := Nat.le_of_lt hlt
+      let d := pegPack c (k + 1) (Nat.succ_pos k) hle
+      have hI' : s = pegBoard c (k + 1) := by
+        have hne : k + 1 ≠ 0 := by omega
+        simpa [hne] using hI
+      have hsB : s = d.b := by
+        rw [hI']
+        cases k with
+        | zero =>
+          simp [pegBoard, pegPack, hle]
+          rfl
+        | succ j =>
+          rw [pegBoard_succ c j hle]
+          conv =>
+            rhs
+            unfold pegPack
+          rfl
+      rw [hsB]
+      have hbody := live_body c d (Nat.succ_pos k) hlt
+      have hstep := peg_tail c.src (c.m - 1) (k + 1) d.b (livePegBoard c d hlt)
+        (by simpa using hfit) hng hbody
+      rw [hstep]
+      refine ⟨livePegBoard c d hlt, ?_, rfl⟩
+      rw [show k + 1 + 1 = k + 2 from rfl]
+      have hne : k + 2 ≠ 0 := by omega
+      change (if k + 2 = 0 then livePegBoard c d hlt = b
+        else livePegBoard c d hlt = pegBoard c (k + 2))
+      rw [if_neg hne]
+      exact (pegBoard_succ c k hle1).symm
+  · intro s hI
+    have hm1 : c.m - 1 + 1 = c.m := Nat.sub_add_cancel (Nat.succ_le_of_lt c.hm)
+    have hne : c.m - 1 + 1 ≠ 0 := by
+      rw [hm1]
+      omega
+    change (if c.m - 1 + 1 = 0 then s = b else s = pegBoard c (c.m - 1 + 1)) at hI
+    rw [if_neg hne] at hI
+    rw [hI, hm1]
+
+theorem cubePegBody_cube (src : Nat) (b b' : Ecbs.Board) (j : Int)
+    (h : Ecbs.cube b (src : Int) (src : Int) = Ecbs.cube b' (src : Int) (src : Int)) :
+    cubePegBody src b j = cubePegBody src b' j := by
+  unfold cubePegBody
+  rw [h]
+
+/-- A later rung's cube-peg loop. The bench is on and aimed at `home` (the gap),
+    not at `src` (the spare). `c.b0` is that bench slid into `home`, so `c.hoff`
+    holds, and the emitted loop is `pegBoard c`. -/
+theorem cube_peg_loop_settled (c : PegCtx) (b : Ecbs.Board) (home : Nat) (xs : List Nat)
+    (n moves slides peak : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (home : Int))
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[home] = false)
+    (hbench : b.sudo_5Board_5bench = embed xs)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hpos : 0 < xs.length) (hnle : n ≤ xs.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen xs.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (xs.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (xs.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (xs.take n)))
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (c.cOps0 : Int))
+    (hfops : FitsLen (c.cOps0 + 1))
+    (hS : c.b0 = settleBoard b home hH hD xs n moves slides peak) :
+    SudoRt.runLoopOn (Int.ofNat 0, b)
+        (fuelRange (Int.ofNat 0) (Int.ofNat (c.m - 1)))
+        (cubePegStep c.src (Int.ofNat (c.m - 1)))
+        (fun σ => .ok σ)
+        (fun r => .ok ((0 : Int), r)) =
+      .ok (Int.ofNat (c.m - 1), pegBoard c c.m) := by
+  have hcube := cube_settle_other b c.src c.src home xs n moves slides peak c.cOps0
+    hmk hon hto hH hD h7 hempty hbench hn hpos hnle hzero hf hfitL
+    hmoves hslides hpeak hpeg hfitM hfitS hops hop1 hfops
+  rw [← hS] at hcube
+  have hbody := cubePegBody_cube c.src b c.b0 ((0 : Nat) : Int) hcube
+  exact cube_peg_loop_from c b (hbody.trans (off_body c))
+
 /-- The polynomial on the bench after `m` cube-peg steps is `cubeTimes m` of the home value. -/
 theorem pegPack_times (c : PegCtx) :
     ((pegPack c c.m c.hm (Nat.le_refl _)).xs).take c.n =
@@ -3950,10 +4069,12 @@ theorem peak_carry (peak0 pk pk' : Nat) (h : pk ≤ max peak0 7) (h' : pk' ≤ m
     exact ⟨h, Nat.le_max_right _ _⟩
   exact Nat.le_trans h' hmax
 
-/-- Budgets for one climb. `mMax` is the tally bound proved from a list of
-    length `R` that starts at `tally0`: `(tally0 + 1) · 2 ^ R`. The three
-    `FitsLen` facts are the moves, slides, and ops fit in the domain of
-    `invert_number_refines`. -/
+/-- Budgets for one climb. `mMax` bounds the tally. It is at most the geometric
+    envelope `(tally0 + 1) · 2 ^ R`, which `climbTallyPrefix_le` always gives.
+    A shipped tier uses a smaller cap, the holes left in the control row after
+    the tally origin: that envelope does not fit the control row of Demo, Toy,
+    Hobby, or Serious. The three `FitsLen` facts are the moves, slides, and ops
+    fit in the domain of `invert_number_refines`, taken at this cap. -/
 structure ClimbBudget where
   n : Nat
   bench : Nat
@@ -3964,7 +4085,7 @@ structure ClimbBudget where
   tally0 : Nat
   R : Nat
   mMax : Nat
-  mMax_eq : mMax = (tally0 + 1) * 2 ^ R
+  mMax_le : mMax ≤ (tally0 + 1) * 2 ^ R
   fitM : FitsLen (moves0 + R * rungCharge n bench mMax)
   fitS : FitsLen (slides0 + R * rungSlideCharge n mMax)
   fitO : FitsLen (ops0 + R * (mMax + 3))
@@ -4017,18 +4138,28 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     pk ≤ max base.peak0 7
 
-theorem ClimbInvK.tally_le {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
-    {base : ClimbBudget} (h : ClimbInvK done rest b s base) :
-    s.tally ≤ base.mMax := by
-  rw [h.htally0, base.mMax_eq]
-  have hpre := climbTallyPrefix_le base.tally0 done rest
-  have hlen : done.length ≤ base.R := by
-    have := h.kLe
-    simp at this
+/-- The geometric envelope is a legal cap for whatever list is being climbed. -/
+theorem climbCap_geom (tally0 R mMax : Nat) (rs done rest : List Nat)
+    (hm : mMax = (tally0 + 1) * 2 ^ R)
+    (hR : rs.length = R)
+    (hrs : rs = done ++ rest) :
+    climbTallyPrefix tally0 done rest ≤ mMax := by
+  rw [hm]
+  have hpre := climbTallyPrefix_le tally0 done rest
+  have hlen : done.length ≤ R := by
+    have hlenr : (done ++ rest).length = rs.length := by rw [hrs]
+    simp at hlenr
     omega
-  have hpow : 2 ^ done.length ≤ 2 ^ base.R :=
+  have hpow : 2 ^ done.length ≤ 2 ^ R :=
     Nat.pow_le_pow_right (by decide : 0 < 2) hlen
   exact Nat.le_trans hpre (Nat.mul_le_mul_left _ hpow)
+
+theorem ClimbInvK.tally_le {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget} (h : ClimbInvK done rest b s base)
+    (hCap : climbTallyPrefix base.tally0 done rest ≤ base.mMax) :
+    s.tally ≤ base.mMax := by
+  rw [h.htally0]
+  exact hCap
 
 theorem ClimbInvK.moves_fit {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
     {base : ClimbBudget} (h : ClimbInvK done rest b s base) :
@@ -4047,9 +4178,10 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     {s : ClimbModel} {base : ClimbBudget} {x : List Nat} {hole : Nat}
     (h : ClimbInvK done (r :: rest) b s base)
     (hinv : ClimbInv b' (modelRung s x r hole rest.isEmpty))
-    (hδ : RungDelta b b' base s.tally) :
+    (hδ : RungDelta b b' base s.tally)
+    (hCap : climbTallyPrefix base.tally0 done (r :: rest) ≤ base.mMax) :
     ClimbInvK (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
-  have hT := h.tally_le
+  have hT := h.tally_le hCap
   have hm : rungCharge base.n base.bench s.tally ≤
       rungCharge base.n base.bench base.mMax :=
     rungCharge_mono base.n base.bench s.tally base.mMax hT
@@ -4142,6 +4274,8 @@ theorem climb_refines
     (h0 : ClimbInvK [] rs b0 s0 base)
     (hR : rs.length = base.R)
     (hn : s0.n = base.n) (hbench : s0.benchlen = base.bench)
+    (hCap : ∀ done rest, rs = done ++ rest →
+      climbTallyPrefix base.tally0 done rest ≤ base.mMax)
     (hstep : ∀ (done rest : List Nat) (r : Nat) (b : Ecbs.Board) (s : ClimbModel),
       rs = done ++ r :: rest →
       ClimbInvK done (r :: rest) b s base →
@@ -4166,7 +4300,7 @@ theorem climb_refines
     | cons r rest ih =>
       intro b s hrs h
       obtain ⟨b1, hb1, hinv, hδ⟩ := hstep done rest r b s hrs h
-      have hK := climbInvK_succ h hinv hδ
+      have hK := climbInvK_succ h hinv hδ (hCap done (r :: rest) hrs)
       have hrs' : rs = (done ++ [r]) ++ rest := by
         simp [hrs, List.append_assoc]
       obtain ⟨b', s', hfold, hs', hK'⟩ := ih (done ++ [r]) b1
@@ -4177,8 +4311,234 @@ theorem climb_refines
       · simp [modelClimb, hs']
       · simpa [List.append_assoc] using hK'
   obtain ⟨b', s', hfold, hs', hK⟩ := hmain [] rs b0 s0 (by simp) h0
-  refine ⟨b', s', hfold, hs', hK, ?_, hK.tally_le⟩
+  refine ⟨b', s', hfold, hs', hK, ?_, hK.tally_le (hCap rs [] (by simp))⟩
   rw [hs']
   exact modelClimb_spec s0 x hole rs
+
+/-- Running tally along a rung list, checked before every rung and on the value
+    that rung leaves. `room` is how many control-row holes sit at the tally origin. -/
+def tallyPrefixesLe (tally room : Nat) : List Nat → Bool
+  | [] => decide (tally ≤ room)
+  | r :: rs =>
+    decide (tally ≤ room) &&
+      tallyPrefixesLe (tallyAfter tally r rs.isEmpty) room rs
+
+theorem tallyPrefixesLe_spec (tally room : Nat) (done rest : List Nat)
+    (h : tallyPrefixesLe tally room (done ++ rest) = true) :
+    climbTallyPrefix tally done rest ≤ room := by
+  induction done generalizing tally rest with
+  | nil =>
+    simp [climbTallyPrefix]
+    cases rest with
+    | nil =>
+      simpa [tallyPrefixesLe] using h
+    | cons r rs =>
+      have h' : tally ≤ room ∧
+          tallyPrefixesLe (tallyAfter tally r rs.isEmpty) room rs = true := by
+        simpa [tallyPrefixesLe] using h
+      exact h'.1
+  | cons r done ih =>
+    simp [climbTallyPrefix]
+    have h' : tally ≤ room ∧
+        tallyPrefixesLe (tallyAfter tally r ((done ++ rest).isEmpty)) room
+          (done ++ rest) = true := by
+      simpa [tallyPrefixesLe, List.cons_append] using h
+    exact ih (tallyAfter tally r ((done ++ rest).isEmpty)) rest h'.2
+
+/-- How many rungs `invert` climbs on this tier. -/
+def tierR (t : Spec.Tier) : Nat := (rungList (t.n - 1)).length
+
+/-- Climb order: the ladder `new_board` stores, which is build order reversed. -/
+def tierClimb (t : Spec.Tier) : List Nat := (rungList (t.n - 1)).reverse
+
+/-- Control-row index of the first tally peg on a fresh board. `ladder0` is
+    `script + 2`, the park hole is the next hole after the rungs, and tally
+    starts at the hole after the park. -/
+def tallyOrigin (t : Spec.Tier) : Nat := t.script + 3 + tierR t
+
+/-- Holes left in the control row at that origin. -/
+def rowRoom (t : Spec.Tier) : Nat := t.control - tallyOrigin t
+
+/-- Geometric tally cap `(1 + 1) · 2 ^ R` for a climb that starts at length 1. -/
+def geomCap (t : Spec.Tier) : Nat := (1 + 1) * 2 ^ tierR t
+
+def tierChargeMoves (t : Spec.Tier) (m : Nat) : Nat :=
+  tierR t * rungCharge t.n t.benchlen m
+
+def tierChargeSlides (t : Spec.Tier) (m : Nat) : Nat :=
+  tierR t * rungSlideCharge t.n m
+
+def tierChargeOps (t : Spec.Tier) (m : Nat) : Nat :=
+  tierR t * (m + 3)
+
+/-- The tally and charge side of the `invert_number` domain on one tier.
+    `geom_miss` is why the geometric cap is not the cap: it does not fit the
+    control row. `room_fit` and `prefixes` are the tightened cap, the holes
+    `BoardOk` leaves after the tally origin. The charge `FitsLen` facts hold
+    at that room and, separately, at the geometric cap, so the i64 bound was
+    not what failed. `cube_span` and `mul_span` are the reaches `cube_number`
+    and `multiply` assert; `FieldLay` already packages the mul reach. -/
+structure TierSat (t : Spec.Tier) : Prop where
+  geom_miss : tallyOrigin t + geomCap t > t.control
+  origin_le : tallyOrigin t ≤ t.control
+  room_le_geom : rowRoom t ≤ geomCap t
+  room_fit : tallyOrigin t + rowRoom t ≤ t.control
+  prefixes : tallyPrefixesLe 1 (rowRoom t) (tierClimb t) = true
+  fitRoomM : FitsLen (tierChargeMoves t (rowRoom t))
+  fitRoomS : FitsLen (tierChargeSlides t (rowRoom t))
+  fitRoomO : FitsLen (tierChargeOps t (rowRoom t))
+  fitGeomM : FitsLen (tierChargeMoves t (geomCap t))
+  fitGeomS : FitsLen (tierChargeSlides t (geomCap t))
+  fitGeomO : FitsLen (tierChargeOps t (geomCap t))
+  cube_span : 3 * (t.n - 1) + t.combgap < t.benchlen
+  mul_span : 2 * (t.n - 1) < t.benchlen
+
+/-- `rungList` is well-founded, so `decide` does not unfold it. Each shipped
+    tier's list is the `rungList_gt` / `rungList_le` chain, and the numeric
+    checks below are `decide` on the resulting numerals. -/
+theorem demo_rungs : rungList (Spec.demo.n - 1) = [1, 2] := by
+  have h6 : Spec.demo.n - 1 = 6 := by decide
+  rw [h6, rungList_gt (by decide : 1 < 6), show (6 : Nat) / 2 = 3 by decide,
+    rungList_gt (by decide : 1 < 3), show (3 : Nat) / 2 = 1 by decide,
+    rungList_le (by decide : (1 : Nat) ≤ 1)]
+  unfold rungColour
+  decide
+
+theorem toy_rungs : rungList (Spec.toy.n - 1) = [1, 2, 2, 1] := by
+  have h : Spec.toy.n - 1 = 22 := by decide
+  rw [h, rungList_gt (by decide : 1 < 22), show (22 : Nat) / 2 = 11 by decide,
+    rungList_gt (by decide : 1 < 11), show (11 : Nat) / 2 = 5 by decide,
+    rungList_gt (by decide : 1 < 5), show (5 : Nat) / 2 = 2 by decide,
+    rungList_gt (by decide : 1 < 2), show (2 : Nat) / 2 = 1 by decide,
+    rungList_le (by decide : (1 : Nat) ≤ 1)]
+  unfold rungColour
+  decide
+
+theorem hobby_rungs : rungList (Spec.hobby.n - 1) = [1, 2, 1, 2, 2] := by
+  have h : Spec.hobby.n - 1 = 58 := by decide
+  rw [h, rungList_gt (by decide : 1 < 58), show (58 : Nat) / 2 = 29 by decide,
+    rungList_gt (by decide : 1 < 29), show (29 : Nat) / 2 = 14 by decide,
+    rungList_gt (by decide : 1 < 14), show (14 : Nat) / 2 = 7 by decide,
+    rungList_gt (by decide : 1 < 7), show (7 : Nat) / 2 = 3 by decide,
+    rungList_gt (by decide : 1 < 3), show (3 : Nat) / 2 = 1 by decide,
+    rungList_le (by decide : (1 : Nat) ≤ 1)]
+  unfold rungColour
+  decide
+
+theorem serious_rungs : rungList (Spec.serious.n - 1) = [1, 2, 1, 1, 2, 2, 1] := by
+  have h : Spec.serious.n - 1 = 178 := by decide
+  rw [h, rungList_gt (by decide : 1 < 178), show (178 : Nat) / 2 = 89 by decide,
+    rungList_gt (by decide : 1 < 89), show (89 : Nat) / 2 = 44 by decide,
+    rungList_gt (by decide : 1 < 44), show (44 : Nat) / 2 = 22 by decide,
+    rungList_gt (by decide : 1 < 22), show (22 : Nat) / 2 = 11 by decide,
+    rungList_gt (by decide : 1 < 11), show (11 : Nat) / 2 = 5 by decide,
+    rungList_gt (by decide : 1 < 5), show (5 : Nat) / 2 = 2 by decide,
+    rungList_gt (by decide : 1 < 2), show (2 : Nat) / 2 = 1 by decide,
+    rungList_le (by decide : (1 : Nat) ≤ 1)]
+  unfold rungColour
+  decide
+
+theorem tierSat_num (t : Spec.Tier) (origin room geom r : Nat) (climb : List Nat)
+    (hO : tallyOrigin t = origin) (hRoom : rowRoom t = room) (hG : geomCap t = geom)
+    (hR : tierR t = r) (hClimb : tierClimb t = climb)
+    (hmiss : origin + geom > t.control) (horigin : origin ≤ t.control)
+    (hroomG : room ≤ geom) (hroom : origin + room ≤ t.control)
+    (hpre : tallyPrefixesLe 1 room climb = true)
+    (hRm : r * rungCharge t.n t.benchlen room ≤ i64MaxNat)
+    (hRs : r * rungSlideCharge t.n room ≤ i64MaxNat)
+    (hRo : r * (room + 3) ≤ i64MaxNat)
+    (hGm : r * rungCharge t.n t.benchlen geom ≤ i64MaxNat)
+    (hGs : r * rungSlideCharge t.n geom ≤ i64MaxNat)
+    (hGo : r * (geom + 3) ≤ i64MaxNat)
+    (hcube : 3 * (t.n - 1) + t.combgap < t.benchlen)
+    (hmul : 2 * (t.n - 1) < t.benchlen) : TierSat t := by
+  refine
+    { geom_miss := by rw [hO, hG]; exact hmiss
+      origin_le := by rw [hO]; exact horigin
+      room_le_geom := by rw [hRoom, hG]; exact hroomG
+      room_fit := by rw [hO, hRoom]; exact hroom
+      prefixes := by rw [hRoom, hClimb]; exact hpre
+      fitRoomM := by unfold FitsLen tierChargeMoves; rw [hR, hRoom]; exact hRm
+      fitRoomS := by unfold FitsLen tierChargeSlides; rw [hR, hRoom]; exact hRs
+      fitRoomO := by unfold FitsLen tierChargeOps; rw [hR, hRoom]; exact hRo
+      fitGeomM := by unfold FitsLen tierChargeMoves; rw [hR, hG]; exact hGm
+      fitGeomS := by unfold FitsLen tierChargeSlides; rw [hR, hG]; exact hGs
+      fitGeomO := by unfold FitsLen tierChargeOps; rw [hR, hG]; exact hGo
+      cube_span := hcube
+      mul_span := hmul }
+
+theorem demo_tier_sat : TierSat Spec.demo := by
+  have hR : tierR Spec.demo = 2 := by unfold tierR; rw [demo_rungs]; decide
+  have hClimb : tierClimb Spec.demo = [2, 1] := by unfold tierClimb; rw [demo_rungs]; decide
+  have hO : tallyOrigin Spec.demo = 10 := by unfold tallyOrigin; rw [hR]; decide
+  have hRoom : rowRoom Spec.demo = 6 := by unfold rowRoom; rw [hO]; decide
+  have hG : geomCap Spec.demo = 8 := by unfold geomCap; rw [hR]
+  exact tierSat_num Spec.demo 10 6 8 2 [2, 1] hO hRoom hG hR hClimb
+    (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide)
+
+theorem toy_tier_sat : TierSat Spec.toy := by
+  have hR : tierR Spec.toy = 4 := by unfold tierR; rw [toy_rungs]; decide
+  have hClimb : tierClimb Spec.toy = [1, 2, 2, 1] := by unfold tierClimb; rw [toy_rungs]; decide
+  have hO : tallyOrigin Spec.toy = 22 := by unfold tallyOrigin; rw [hR]; decide
+  have hRoom : rowRoom Spec.toy = 18 := by unfold rowRoom; rw [hO]; decide
+  have hG : geomCap Spec.toy = 32 := by unfold geomCap; rw [hR]
+  exact tierSat_num Spec.toy 22 18 32 4 [1, 2, 2, 1] hO hRoom hG hR hClimb
+    (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide)
+
+theorem hobby_tier_sat : TierSat Spec.hobby := by
+  have hR : tierR Spec.hobby = 5 := by unfold tierR; rw [hobby_rungs]; decide
+  have hClimb : tierClimb Spec.hobby = [2, 2, 1, 2, 1] := by
+    unfold tierClimb; rw [hobby_rungs]; decide
+  have hO : tallyOrigin Spec.hobby = 23 := by unfold tallyOrigin; rw [hR]; decide
+  have hRoom : rowRoom Spec.hobby = 57 := by unfold rowRoom; rw [hO]; decide
+  have hG : geomCap Spec.hobby = 64 := by unfold geomCap; rw [hR]
+  exact tierSat_num Spec.hobby 23 57 64 5 [2, 2, 1, 2, 1] hO hRoom hG hR hClimb
+    (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide)
+
+theorem serious_tier_sat : TierSat Spec.serious := by
+  have hR : tierR Spec.serious = 7 := by unfold tierR; rw [serious_rungs]; decide
+  have hClimb : tierClimb Spec.serious = [1, 2, 2, 1, 1, 2, 1] := by
+    unfold tierClimb; rw [serious_rungs]; decide
+  have hO : tallyOrigin Spec.serious = 25 := by unfold tallyOrigin; rw [hR]; decide
+  have hRoom : rowRoom Spec.serious = 175 := by unfold rowRoom; rw [hO]; decide
+  have hG : geomCap Spec.serious = 256 := by unfold geomCap; rw [hR]
+  exact tierSat_num Spec.serious 25 175 256 7 [1, 2, 2, 1, 1, 2, 1] hO hRoom hG hR hClimb
+    (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide)
+
+theorem demo_climb_cap (done rest : List Nat)
+    (hrs : tierClimb Spec.demo = done ++ rest) :
+    climbTallyPrefix 1 done rest ≤ rowRoom Spec.demo := by
+  have h := demo_tier_sat.prefixes
+  rw [hrs] at h
+  exact tallyPrefixesLe_spec 1 (rowRoom Spec.demo) done rest h
+
+theorem toy_climb_cap (done rest : List Nat)
+    (hrs : tierClimb Spec.toy = done ++ rest) :
+    climbTallyPrefix 1 done rest ≤ rowRoom Spec.toy := by
+  have h := toy_tier_sat.prefixes
+  rw [hrs] at h
+  exact tallyPrefixesLe_spec 1 (rowRoom Spec.toy) done rest h
+
+theorem hobby_climb_cap (done rest : List Nat)
+    (hrs : tierClimb Spec.hobby = done ++ rest) :
+    climbTallyPrefix 1 done rest ≤ rowRoom Spec.hobby := by
+  have h := hobby_tier_sat.prefixes
+  rw [hrs] at h
+  exact tallyPrefixesLe_spec 1 (rowRoom Spec.hobby) done rest h
+
+theorem serious_climb_cap (done rest : List Nat)
+    (hrs : tierClimb Spec.serious = done ++ rest) :
+    climbTallyPrefix 1 done rest ≤ rowRoom Spec.serious := by
+  have h := serious_tier_sat.prefixes
+  rw [hrs] at h
+  exact tallyPrefixesLe_spec 1 (rowRoom Spec.serious) done rest h
 
 end EcbsLink2.Link2

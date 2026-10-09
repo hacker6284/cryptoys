@@ -1275,6 +1275,109 @@ theorem cube_live_eq (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   rw [hbR]
   rw [settle_off (bumpOp bS 1 cOps hopsS) (by simp [bumpOp, hoffS]), ok_bind]
 
+/-- Bench on and aimed at `home`, which need not be the cube's source. `Ecbs.cube`
+    slides that bench into `home` and then cubes `src` on the bench-off board.
+    A later rung's first cube is this shape: the previous product sits on the
+    bench aimed at the gap, and the cube reads the spare. -/
+theorem cube_settle_other (b : Ecbs.Board) (dst src home : Nat) (xs : List Nat)
+    (n moves slides peak cOps : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (home : Int))
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[home] = false)
+    (hbench : b.sudo_5Board_5bench = embed xs)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hpos : 0 < xs.length) (hnle : n ≤ xs.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen xs.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (xs.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (xs.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (xs.take n)))
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1)) :
+    Ecbs.cube b (dst : Int) (src : Int) =
+      Ecbs.cube (settleBoard b home hH hD xs n moves slides peak) (dst : Int) (src : Int) := by
+  let bS := settleBoard b home hH hD xs n moves slides peak
+  have hmkS : bS.sudo_5Board_9marker_on = false := by
+    by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+    · rw [show bS = settleBoard b home hH hD xs n moves slides peak from rfl,
+        settle_peak b home hH hD xs n moves slides peak hpk, hmk]
+    · rw [show bS = settleBoard b home hH hD xs n moves slides peak from rfl,
+        settle_keep b home hH hD xs n moves slides peak hpk, hmk]
+  have hmkRaw :
+      (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_9marker_on = false :=
+    hmkS
+  unfold Ecbs.cube Ecbs.log_op
+  simp only [hmk, hmkRaw, Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
+  have hopsS : 1 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
+    settle_ops_lt b 1 home hops hH hD xs n moves slides peak
+  have hop1S : bS.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hopsS = (cOps : Int) := by
+    have hget := array_get_congr (settle_ops b home hH hD xs n moves slides peak) 1 hopsS
+    exact hget.trans hop1
+  conv =>
+    lhs
+    rw [show Ecbs.op_cube = Int.ofNat 1 from rfl, atL_ofNat _ 1 hops, hop1, ok_bind,
+      ← ofNat_eq_natCast cOps, addI_ofNat_one cOps hfops, ok_bind,
+      putL_ofNat _ 1 (Int.ofNat (cOps + 1)) hops, ok_bind]
+  conv =>
+    rhs
+    rw [show Ecbs.op_cube = Int.ofNat 1 from rfl, atL_ofNat _ 1 hopsS, hop1S, ok_bind,
+      ← ofNat_eq_natCast cOps, addI_ofNat_one cOps hfops, ok_bind,
+      putL_ofNat _ 1 (Int.ofNat (cOps + 1)) hopsS, ok_bind]
+  let bL : Ecbs.Board :=
+    { b with
+      sudo_5Board_9marker_on := false
+      sudo_5Board_4cost := { b.sudo_5Board_4cost with
+        sudo_5Costs_3ops :=
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) } }
+  conv =>
+    lhs
+    pattern (Ecbs.settle _)
+    change Ecbs.settle bL
+  have hbL : bL = bumpOp b 1 cOps hops := by
+    apply board_ext
+    case hmon => simp [bL, bumpOp, hmk]
+    all_goals simp [bL, bumpOp]
+  rw [hbL]
+  have hsetL := settle_refines (bumpOp b 1 cOps hops) home xs n moves slides peak
+      (bump_home_lt b 1 cOps home hops hH) (bump_held_lt b 1 cOps home hops hD) h7
+      (by simp [bumpOp, hon]) (by simp [bumpOp, hto]) (by simpa [bumpOp] using hempty)
+      (by simp [bumpOp, hbench]) hn hpos hnle hzero hf hfitL
+      (by simp [bumpOp, hmoves]) (by simp [bumpOp, hslides]) (by simp [bumpOp, hpeak])
+      hpeg hfitM hfitS
+  rw [hsetL, ok_bind]
+  rw [settle_bump_comm b 1 cOps hops home hH hD xs n moves slides peak]
+  have hoffS : bS.sudo_5Board_8bench_on = false := by
+    by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+    · rw [show bS = settleBoard b home hH hD xs n moves slides peak from rfl,
+        settle_peak b home hH hD xs n moves slides peak hpk]
+    · rw [show bS = settleBoard b home hH hD xs n moves slides peak from rfl,
+        settle_keep b home hH hD xs n moves slides peak hpk]
+  let bR : Ecbs.Board :=
+    { bS with
+      sudo_5Board_9marker_on := false
+      sudo_5Board_4cost := { bS.sudo_5Board_4cost with
+        sudo_5Costs_3ops :=
+          bS.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hopsS⟩ (Int.ofNat (cOps + 1)) } }
+  conv =>
+    rhs
+    zeta
+    pattern (Ecbs.settle _)
+    change Ecbs.settle bR
+  have hbR : bR = bumpOp bS 1 cOps hopsS := by
+    apply board_ext
+    case hmon => simp [bR, bumpOp, hmkS]
+    all_goals simp [bR, bumpOp]
+  rw [hbR]
+  rw [settle_off (bumpOp bS 1 cOps hopsS) (by simp [bumpOp, hoffS]), ok_bind]
+
 /-- `Ecbs.cube` on a live bench: slide into `src`, then the bench-off cube.
     The op-count bump is the one inside `cubeOffBoard`, applied to the slid board. -/
 def cubeLiveBoard (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)

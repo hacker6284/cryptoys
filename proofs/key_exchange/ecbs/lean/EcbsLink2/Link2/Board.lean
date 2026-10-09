@@ -146,6 +146,21 @@ theorem band_bench_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat) (n : Na
     prefix_cast xs n hlen hf, ok_bind, pure_eq_ok, ok_bind]
   rw [pure_eq_ok]
 
+/-- `value` of an empty home the bench is aimed at: the first `n` bench entries. -/
+theorem value_bench_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat) (n : Nat)
+    (hheldSz : home < b.sudo_5Board_4held.size)
+    (hheld : b.sudo_5Board_4held[home] = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (home : Int))
+    (hbench : b.sudo_5Board_5bench = embed xs)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlen : n ≤ xs.length) (hf : FitsLen n) :
+    Ecbs.value b (home : Int) = .ok (embed (xs.take n)) := by
+  have hb := band_bench_refines b home xs n hheldSz hheld hon hto hbench hn hlen hf
+  unfold Ecbs.band at hb
+  rw [except_bind_pure] at hb
+  exact hb
+
 /-- `band` is `value` and then the array. -/
 theorem value_held_refines (b : Ecbs.Board) (home : Nat) (xs : List Nat) (n : Nat)
     (hheldSz : home < b.sudo_5Board_4held.size)

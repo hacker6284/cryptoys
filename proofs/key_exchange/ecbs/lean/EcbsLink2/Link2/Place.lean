@@ -32,6 +32,24 @@ private theorem decide_gt_ofNat (a b : Nat) :
 /-- Pegs placed: the nonzeros of `xs`. -/
 def pegCount (xs : List Nat) : Nat := (xs.filter (· ≠ 0)).length
 
+theorem pegCount_le (xs : List Nat) : pegCount xs ≤ xs.length := by
+  unfold pegCount
+  induction xs with
+  | nil => simp [List.filter]
+  | cons x xs ih =>
+    simp only [List.filter, List.length_cons]
+    split
+    · simp only [List.length_cons]
+      omega
+    · exact Nat.le_succ_of_le ih
+
+theorem pegCount_take_le (xs : List Nat) (n : Nat) : pegCount (xs.take n) ≤ n := by
+  have h1 := pegCount_le (xs.take n)
+  have h2 : (xs.take n).length ≤ n := by
+    rw [List.length_take]
+    exact Nat.min_le_left _ _
+  exact Nat.le_trans h1 h2
+
 /-- The board after `place` writes `xs` at `home` on an empty home whose moves and
     peak are the naturals `moves` and `peak`. Peak becomes the held-count of homes
     `0 .. 6` when that count is strictly larger. -/

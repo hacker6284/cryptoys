@@ -54,6 +54,15 @@ def allTritList (xs : List Nat) : Prop := ∀ x ∈ xs, x ≤ 2
 theorem trit_get {xs : List Nat} (h : allTritList xs) {j : Nat} (hj : j < xs.length) :
     xs[j] ≤ 2 := h xs[j] (List.getElem_mem hj)
 
+theorem coeff_eq_get (xs : List Nat) (j : Nat) (hj : j < xs.length) : coeff xs j = xs[j] := by
+  unfold coeff
+  simp [hj]
+
+theorem allTritList_take {xs : List Nat} (h : allTritList xs) (k : Nat) :
+    allTritList (xs.take k) := by
+  intro x hx
+  exact h x (List.mem_of_mem_take hx)
+
 theorem embed_set (xs : List Nat) (i v : Nat) (h : i < xs.length) :
     (embed xs).set ⟨i, by rw [size_embed]; exact h⟩ (Int.ofNat v) = embed (xs.set i v) := by
   apply Array.ext

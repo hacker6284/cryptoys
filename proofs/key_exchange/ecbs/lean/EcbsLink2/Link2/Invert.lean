@@ -1726,4 +1726,887 @@ theorem climbInv_white (b : Ecbs.Board) (s : ClimbModel) (xs : List Nat)
   have hR : b.sudo_5Board_3row = embed xs := by rw [h.row, hRow]
   exact white_scan_loop_refines b xs s.t0 s.tally hm hT0 hR hRoom hWhite hfit hfitM
 
+/-- Paint `count` tally pegs red, starting at `start`. -/
+def paintRed (xs : List Nat) (start : Nat) : Nat → List Nat
+  | 0 => xs
+  | k + 1 => (paintRed xs start k).set (start + k) 2
+
+theorem paintRed_length (xs : List Nat) (start k : Nat) :
+    (paintRed xs start k).length = xs.length := by
+  induction k with
+  | zero => rfl
+  | succ k ih => simp [paintRed, ih, List.length_set]
+
+theorem paintRed_succ (xs : List Nat) (start k : Nat) :
+    paintRed xs start (k + 1) = (paintRed xs start k).set (start + k) 2 := rfl
+
+/-- Moves one live cube can add: two per prefix peg, two per comb peg, three per folded hole. -/
+def pegCharge (n bench : Nat) : Nat := 4 * n + 3 * (bench - n)
+
+theorem liveCubeMoves_le (moves : Nat) (xs : List Nat) (n k bench : Nat) :
+    cubeMoves (moves + 2 * pegCount (xs.take n)) (xs.take n) n k bench ≤
+      moves + pegCharge n bench := by
+  have h := cubeMoves_le (moves + 2 * pegCount (xs.take n)) (xs.take n) n k bench
+  have hp := pegCount_take_le xs n
+  unfold pegCharge
+  omega
+
+theorem span_n_le (n cg bench : Nat) (hn : 0 < n) (h : 3 * (n - 1) + cg < bench) :
+    n ≤ bench := by omega
+
+/-- The bench list `Ecbs.cube` leaves for a strip whose first `n` holes are the input. -/
+def cubeBench (n k bench : Nat) (xs : List Nat) : List Nat :=
+  laneFold n (n - k) (combStrip n bench (xs.take n))
+
+theorem cubeBench_off (n k bench : Nat) (g : List Nat) (hlen : g.length = n) :
+    laneFold n (n - k) (combStrip n bench g) = cubeBench n k bench g := by
+  unfold cubeBench
+  have htake : g.take n = g := by
+    rw [← hlen]
+    exact List.take_length g
+  rw [htake]
+
+theorem cubeBench_length (n k bench : Nat) (xs : List Nat) (hn : n ≤ bench) :
+    (cubeBench n k bench xs).length = bench := by
+  unfold cubeBench
+  rw [laneFold_length _ _ _ (by rw [combStrip_length]; exact hn), combStrip_length]
+
+theorem cubeBench_prefix (n k bench : Nat) (xs : List Nat) :
+    (cubeBench n k bench xs).take n = fieldCube n k bench (xs.take n) :=
+  cube_live_prefix n k bench xs
+
+theorem cubeBench_zero (n k bench : Nat) (xs : List Nat)
+    (hn0 : 0 < n) (hgap0 : 0 < n - k) (hn : n ≤ bench) :
+    ∀ i, n ≤ i → (hi : i < (cubeBench n k bench xs).length) →
+      (cubeBench n k bench xs)[i] = 0 := by
+  intro i hlo hi
+  have hlen := cubeBench_length n k bench xs hn
+  have hc := cube_live_high xs n k bench hn0 hgap0 i hlo (by rw [hlen] at hi; exact hi)
+  rw [← coeff_eq_get _ _ hi]
+  simpa [cubeBench] using hc
+
+theorem cubeBench_trits (n k bench : Nat) (xs : List Nat)
+    (hxs : allTritList (xs.take n)) (hspan : 3 * (n - 1) < bench) (hn : n ≤ bench) :
+    allTritList (cubeBench n k bench xs) := by
+  unfold cubeBench
+  have hcs := combStrip_trits (xs.take n) n bench hxs hspan
+  exact laneFold_trits n (n - k) (combStrip n bench (xs.take n)) hcs (Nat.sub_le _ _)
+    (by rw [combStrip_length]; exact hn)
+
+/-- `j` cubes of `g`, as the bench list. Zero cubes is `g` itself. -/
+def cubeBenchIter (n k bench : Nat) (g : List Nat) : Nat → List Nat
+  | 0 => g
+  | j + 1 => cubeBench n k bench (cubeBenchIter n k bench g j)
+
+theorem cubeBenchIter_prefix (n k bench : Nat) (g : List Nat) (hlen : g.length = n) :
+    ∀ j, (cubeBenchIter n k bench g j).take n = cubeTimes n k bench g j
+  | 0 => by
+    simp [cubeBenchIter, cubeTimes]
+    rw [← hlen, List.take_length]
+  | j + 1 => by
+    rw [cubeBenchIter, cubeBench_prefix, cubeBenchIter_prefix n k bench g hlen j, cubeTimes]
+
+theorem cubeBenchIter_take_trits (n k bench : Nat) (g : List Nat)
+    (hlen : g.length = n) (hxs : allTritList g)
+    (hspan : 3 * (n - 1) < bench) (hn : n ≤ bench) :
+    ∀ j, allTritList ((cubeBenchIter n k bench g j).take n)
+  | 0 => by
+    rw [cubeBenchIter, ← hlen, List.take_length]
+    exact hxs
+  | j + 1 => by
+    rw [cubeBenchIter]
+    exact allTritList_take
+      (cubeBench_trits n k bench (cubeBenchIter n k bench g j)
+        (cubeBenchIter_take_trits n k bench g hlen hxs hspan hn j) hspan hn) n
+
+theorem cubeBenchIter_length (n k bench : Nat) (g : List Nat) (hn : n ≤ bench) :
+    ∀ j, 0 < j → (cubeBenchIter n k bench g j).length = bench
+  | j + 1, _ => by
+    rw [cubeBenchIter, cubeBench_length _ _ _ _ hn]
+
+theorem cubeBenchIter_zero (n k bench : Nat) (g : List Nat)
+    (hn0 : 0 < n) (hgap0 : 0 < n - k) (hn : n ≤ bench) :
+    ∀ j, 0 < j → ∀ i, n ≤ i →
+      (hi : i < (cubeBenchIter n k bench g j).length) →
+        (cubeBenchIter n k bench g j)[i] = 0
+  | j + 1, _ => by
+    intro i hlo hi
+    unfold cubeBenchIter at hi
+    unfold cubeBenchIter
+    exact cubeBench_zero n k bench (cubeBenchIter n k bench g j) hn0 hgap0 hn i hlo hi
+
+/-- The cube-then-red-peg step with the bench off. Same record as `pegStep`, on `cubeOffBoard`. -/
+theorem peg_off_eq (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (w h r n k moves hole bench peak peakS cOps cg : Nat)
+    (t0 j high control ctrl : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hcg : b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg)
+    (hspan : 3 * (n - 1) + cg < bench)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[src] = true)
+    (hArr : b.sudo_5Board_4home[src] = embed xs)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hn0 : 0 < n)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenx : xs.length = n)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hxsT : allTritList xs)
+    (h3 : FitsLen (3 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * n))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hkF : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * n + 3 * (bench - n)))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 + j < b.sudo_5Board_3row.size)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + j < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 + j ≤ high)
+    (hfitJ : FitsLen (t0 + j))
+    (hCtrlV : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hfctrl : FitsLen (ctrl + 1)) :
+    (do
+        let b1 ← Ecbs.cube b (dst : Int) (src : Int)
+        let b2 ← Ecbs.tally_put b1 (j : Int) (2 : Int)
+        let v ← SudoRt.addI b2.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+        pure { b2 with sudo_5Board_4cost :=
+          { b2.sudo_5Board_4cost with sudo_5Costs_4ctrl := v } }) =
+      .ok (pegStep
+        (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome)
+        t0 j
+        (by rw [cube_off_row b dst src xs n k moves hole bench peak peakS cOps hops hF hHome]; exact hrow)
+        ctrl) := by
+  let bC := cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome
+  rw [cube_off_eq b dst src xs w h r n k moves hole bench peak peakS cOps cg
+      hmk hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf
+      hmoves hpeak hpeakS hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF hHole
+      hsm hnsm hfitB hfold]
+  conv =>
+    lhs
+    rw [show cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome = bC from rfl]
+  have hT0' : bC.sudo_5Board_6tally0 = (t0 : Int) := by
+    rw [cube_off_tally b dst src xs n k moves hole bench peak peakS cOps hops hF hHome]
+    exact hT0
+  have hrowC := cube_off_row b dst src xs n k moves hole bench peak peakS cOps hops hF hHome
+  have hrow1 : t0 + j < bC.sudo_5Board_3row.size := by rw [hrowC]; exact hrow
+  have hCtrl' : bC.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
+    rw [cube_off_tier b dst src xs n k moves hole bench peak peakS cOps hops hF hHome]
+    exact hCtrlN
+  have hHigh' : bC.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) := by
+    rw [cube_off_highest b dst src xs n k moves hole bench peak peakS cOps hops hF hHome]
+    exact hHigh
+  conv =>
+    lhs
+    rw [show (2 : Int) = ((2 : Nat) : Int) from rfl]
+  simp only [ok_bind]
+  rw [tally_put_keep bC t0 j 2 high control hT0' hrow1 hCtrl' hic hHigh' hle hfitJ, ok_bind]
+  have hctrl2 :
+      ({ bC with sudo_5Board_3row :=
+          bC.sudo_5Board_3row.set ⟨t0 + j, hrow1⟩ (2 : Int) }).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        Int.ofNat ctrl := by
+    rw [cube_off_ctrl b dst src xs n k moves hole bench peak peakS cOps hops hF hHome,
+      hCtrlV, ofNat_eq_natCast]
+  rw [hctrl2, addI_ofNat_one ctrl hfctrl, ok_bind, pure_eq_ok]
+  unfold pegStep
+  rfl
+
+theorem pegStep_hrow (bC : Ecbs.Board) (t0 j : Nat)
+    (h1 h2 : t0 + j < bC.sudo_5Board_3row.size) (ctrl : Nat) :
+    pegStep bC t0 j h1 ctrl = pegStep bC t0 j h2 ctrl := by
+  unfold pegStep
+  apply board_ext <;> rfl
+
+/-- Fixed data for one climb rung's cube-peg loop. The value starts in home `src`
+    with the bench off. `m` is the tally length, so the loop runs `j = 0 .. m - 1`. -/
+structure PegCtx where
+  b0 : Ecbs.Board
+  src : Nat
+  (g row0 : List Nat)
+  (w h r n k bench cg : Nat)
+  (moves0 slides0 hole0 peak0 peakS0 cOps0 : Nat)
+  (t0 high control ctrl0 m : Nat)
+  hm : 0 < m
+  hmk : b0.sudo_5Board_9marker_on = false
+  hoff : b0.sudo_5Board_8bench_on = false
+  hops0 : 1 < b0.sudo_5Board_4cost.sudo_5Costs_3ops.size
+  hop10 : b0.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops0) = (cOps0 : Int)
+  hbl : b0.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench
+  hcg : b0.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg
+  hspan : 3 * (n - 1) + cg < bench
+  hF : src < b0.sudo_5Board_4held.size
+  hHome : src < b0.sudo_5Board_4home.size
+  hHF : b0.sudo_5Board_4held[src]'(hF) = true
+  hArr : b0.sudo_5Board_4home[src]'(hHome) = embed g
+  h7 : 7 ≤ b0.sudo_5Board_4held.size
+  hn0 : 0 < n
+  hn : b0.sudo_5Board_1t.sudo_4Tier_1n = (n : Int)
+  hlenx : g.length = n
+  hf : FitsLen n
+  hmoves0 : b0.sudo_5Board_4cost.sudo_5Costs_5moves = (moves0 : Int)
+  hpeak0 : b0.sudo_5Board_4cost.sudo_5Costs_4peak = (peak0 : Int)
+  hpeakS0 : b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS0 : Int)
+  hxsT : allTritList g
+  h3 : FitsLen (3 * (n - 1))
+  hw0 : 0 < w
+  hh0 : 0 < h
+  hrR : r < h
+  hrP : 0 < r
+  hnE : n = w * h - 1
+  hkLe : k ≤ n
+  hgap : n - k = w * r
+  hwF : b0.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w
+  hhF : b0.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h
+  hrF : b0.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r
+  hkF : b0.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k
+  hHole0 : b0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole0
+  hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001
+  hnsm : n ≤ 1000000
+  hfitB : FitsLen bench
+  hT0 : b0.sudo_5Board_6tally0 = (t0 : Int)
+  hRow : b0.sudo_5Board_3row = embed row0
+  hRoom : t0 + m ≤ row0.length
+  hCtrlN : b0.sudo_5Board_1t.sudo_4Tier_7control = (control : Int)
+  hHigh : b0.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int)
+  hTop : t0 + m - 1 ≤ high
+  hIn : t0 + m ≤ control
+  hCtrl0 : b0.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl0 : Int)
+  hslides0 : b0.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides0
+  hfitRow : FitsLen (t0 + m)
+  hfitM : FitsLen m
+  hBudget : FitsLen (moves0 + m * pegCharge n bench)
+  hSlide : FitsLen (slides0 + m * (2 * n))
+  hOpsB : FitsLen (cOps0 + m)
+  hCtrlB : FitsLen (ctrl0 + m)
+
+theorem PegCtx.gap_pos (c : PegCtx) : 0 < c.n - c.k := by
+  rw [c.hgap]
+  exact Nat.mul_pos c.hw0 c.hrP
+
+theorem PegCtx.n_le (c : PegCtx) : c.n ≤ c.bench :=
+  span_n_le c.n c.cg c.bench c.hn0 c.hspan
+
+theorem PegCtx.span3 (c : PegCtx) : 3 * (c.n - 1) < c.bench := by
+  have h := c.hspan
+  omega
+
+/-- The state after `i` cube-then-red-peg steps, `i > 0`. The bench holds
+    `cubeBenchIter i` and is aimed at `src`. Step 0 is the bench-off peg;
+    every later step is the live one. -/
+structure LivePeg (c : PegCtx) (i : Nat) where
+  b : Ecbs.Board
+  xs : List Nat
+  (moves slides hole peak peakS cOps ctrl : Nat)
+  tier : b.sudo_5Board_1t = c.b0.sudo_5Board_1t
+  marker : b.sudo_5Board_9marker_on = false
+  onB : b.sudo_5Board_8bench_on = true
+  toB : b.sudo_5Board_8bench_to = (c.src : Int)
+  hH : c.src < b.sudo_5Board_4home.size
+  hD : c.src < b.sudo_5Board_4held.size
+  h7 : 7 ≤ b.sudo_5Board_4held.size
+  hempty : b.sudo_5Board_4held[c.src]'(hD) = false
+  hbench : b.sudo_5Board_5bench = embed xs
+  hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves
+  hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides
+  hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak
+  hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int)
+  hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole
+  hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+  hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int)
+  htally : b.sudo_5Board_6tally0 = c.b0.sudo_5Board_6tally0
+  hhigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+    c.b0.sudo_5Board_4cost.sudo_5Costs_15control_highest
+  hrow : b.sudo_5Board_3row = embed (paintRed c.row0 c.t0 i)
+  hctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int)
+  hxs : xs = cubeBenchIter c.n c.k c.bench c.g i
+  hzero : ∀ j, c.n ≤ j → (hj : j < xs.length) → xs[j] = 0
+  htri : allTritList (xs.take c.n)
+  hpos : 0 < xs.length
+  hnle : c.n ≤ xs.length
+  hmovB : moves ≤ c.moves0 + i * pegCharge c.n c.bench
+  hsldB : slides ≤ c.slides0 + i * (2 * c.n)
+  hcOps : cOps = c.cOps0 + i
+  hctrlN : ctrl = c.ctrl0 + i
+
+private theorem idx_get {α : Type} {a b : Array α} (h : a = b) (i : Nat) (ha : i < a.size) :
+    a[i] = b[i]'(h ▸ ha) := by
+  subst h
+  rfl
+
+def offRowPr (c : PegCtx) :
+    c.t0 <
+      (cubeOffBoard c.b0 c.src c.src c.g c.n c.k c.moves0 c.hole0 c.bench
+        c.peak0 c.peakS0 c.cOps0 c.hops0 c.hF c.hHome).sudo_5Board_3row.size := by
+  rw [cube_off_row c.b0 c.src c.src c.g c.n c.k c.moves0 c.hole0 c.bench
+      c.peak0 c.peakS0 c.cOps0 c.hops0 c.hF c.hHome, c.hRow, size_embed]
+  exact Nat.lt_of_lt_of_le (Nat.lt_add_of_pos_right c.hm) c.hRoom
+
+/-- Bench-off cube of the home value, then the red peg at tally index 0. -/
+def offPeg (c : PegCtx) : Ecbs.Board :=
+  pegStep
+    (cubeOffBoard c.b0 c.src c.src c.g c.n c.k c.moves0 c.hole0 c.bench
+      c.peak0 c.peakS0 c.cOps0 c.hops0 c.hF c.hHome)
+    c.t0 0 (offRowPr c) c.ctrl0
+
+def pegFromOff (c : PegCtx) : LivePeg c 1 where
+  b := offPeg c
+  xs := cubeBench c.n c.k c.bench c.g
+  moves := cubeMoves c.moves0 c.g c.n c.k c.bench
+  slides := c.slides0
+  hole := raisedHole c.hole0 (topIdx (combStrip c.n c.bench c.g))
+  peak := raisedPeak c.peak0 (countHeld (c.b0.sudo_5Board_4held.set ⟨c.src, c.hF⟩ false) 7)
+  peakS := raisedPeak c.peakS0 (countHeld c.b0.sudo_5Board_4held 7)
+  cOps := c.cOps0 + 1
+  ctrl := c.ctrl0 + 1
+  tier := by
+    unfold offPeg pegStep
+    rw [cube_off_tier]
+  marker := by
+    unfold offPeg pegStep
+    rw [cube_off_marker]
+  onB := by
+    unfold offPeg pegStep
+    rw [cube_off_on]
+  toB := by
+    unfold offPeg pegStep
+    rw [cube_off_to]
+  hH := by
+    unfold offPeg pegStep
+    rw [cube_off_home, Array.size_set]
+    exact c.hHome
+  hD := by
+    unfold offPeg pegStep
+    rw [cube_off_held, Array.size_set]
+    exact c.hF
+  h7 := by
+    unfold offPeg pegStep
+    rw [cube_off_held, Array.size_set]
+    exact c.h7
+  hempty := by
+    have hHeld : c.src < (offPeg c).sudo_5Board_4held.size := by
+      unfold offPeg pegStep
+      rw [cube_off_held, Array.size_set]
+      exact c.hF
+    have hb : (offPeg c).sudo_5Board_4held =
+        c.b0.sudo_5Board_4held.set ⟨c.src, c.hF⟩ false := by
+      unfold offPeg pegStep
+      rw [cube_off_held]
+    simpa [Array.getElem_set] using idx_get hb c.src hHeld
+  hbench := by
+    unfold offPeg pegStep
+    rw [cube_off_bench, cubeBench_off c.n c.k c.bench c.g c.hlenx]
+  hmoves := by
+    unfold offPeg pegStep
+    rw [cube_off_moves]
+  hslides := by
+    unfold offPeg pegStep
+    rw [cube_off_slides, c.hslides0]
+  hpeak := by
+    unfold offPeg pegStep
+    rw [cube_off_peak]
+  hpeakS := by
+    unfold offPeg pegStep
+    rw [cube_off_strict, ofNat_eq_natCast]
+  hHole := by
+    unfold offPeg pegStep
+    rw [cube_off_hole]
+  hops := by
+    unfold offPeg pegStep
+    rw [cube_off_ops, Array.size_set]
+    exact c.hops0
+  hop1 := by
+    have hOps : 1 < (offPeg c).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      unfold offPeg pegStep
+      rw [cube_off_ops, Array.size_set]
+      exact c.hops0
+    have hb : (offPeg c).sudo_5Board_4cost.sudo_5Costs_3ops =
+        c.b0.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, c.hops0⟩
+          (Int.ofNat (c.cOps0 + 1)) := by
+      unfold offPeg pegStep
+      rw [cube_off_ops]
+    simpa [Array.getElem_set, ofNat_eq_natCast] using idx_get hb 1 hOps
+  htally := by
+    unfold offPeg pegStep
+    rw [cube_off_tally]
+  hhigh := by
+    unfold offPeg pegStep
+    rw [cube_off_highest]
+  hrow := by
+    unfold offPeg pegStep
+    have hbase :
+        (cubeOffBoard c.b0 c.src c.src c.g c.n c.k c.moves0 c.hole0 c.bench
+          c.peak0 c.peakS0 c.cOps0 c.hops0 c.hF c.hHome).sudo_5Board_3row =
+          embed c.row0 := by
+      rw [cube_off_row, c.hRow]
+    rw [array_set_congr hbase (c.t0 + 0) (offRowPr c) ((2 : Nat) : Int)]
+    apply Array.ext
+    · simp [Array.size_set, embed, size_embed, paintRed_length]
+    · intro i hi1 hi2
+      by_cases hi : i = c.t0
+      · simp [hi, Array.getElem_set, embed, paintRed, ofNat_eq_natCast]
+      · have hne : c.t0 ≠ i := fun h => hi h.symm
+        simp [Array.getElem_set, embed, paintRed, hne, List.getElem_set]
+  hctrl := by
+    unfold offPeg pegStep
+    rw [ofNat_eq_natCast]
+  hxs := by
+    unfold cubeBenchIter
+    rfl
+  hzero := by
+    intro j hlo hj
+    exact cubeBench_zero c.n c.k c.bench c.g c.hn0 c.gap_pos c.n_le j hlo hj
+  htri := by
+    rw [show cubeBench c.n c.k c.bench c.g = cubeBenchIter c.n c.k c.bench c.g 1 from by
+      unfold cubeBenchIter; rfl]
+    exact cubeBenchIter_take_trits c.n c.k c.bench c.g c.hlenx c.hxsT c.span3 c.n_le 1
+  hpos := by
+    have hlen := cubeBench_length c.n c.k c.bench c.g c.n_le
+    rw [hlen]
+    exact Nat.lt_of_lt_of_le c.hn0 c.n_le
+  hnle := by
+    rw [cubeBench_length c.n c.k c.bench c.g c.n_le]
+    exact c.n_le
+  hmovB := by
+    have h := cubeMoves_le c.moves0 c.g c.n c.k c.bench
+    unfold pegCharge
+    omega
+  hsldB := by omega
+  hcOps := rfl
+  hctrlN := rfl
+
+def liveRowPr (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) :
+    c.t0 + i <
+      (cubeLiveBoard d.b c.src c.src d.xs c.n c.k d.moves d.slides d.hole c.bench
+        d.peak d.peakS d.cOps d.hH d.hD d.hops).sudo_5Board_3row.size := by
+  rw [cube_live_row d.b c.src c.src d.xs c.n c.k d.moves d.slides d.hole c.bench
+      d.peak d.peakS d.cOps d.hH d.hD d.hops,
+    d.hrow, size_embed, paintRed_length]
+  exact Nat.lt_of_lt_of_le (Nat.add_lt_add_left hi c.t0) c.hRoom
+
+/-- One live cube of the bench onto `src`, then the red peg at tally index `i`. -/
+def livePegBoard (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) : Ecbs.Board :=
+  pegStep
+    (cubeLiveBoard d.b c.src c.src d.xs c.n c.k d.moves d.slides d.hole c.bench
+      d.peak d.peakS d.cOps d.hH d.hD d.hops)
+    c.t0 i (liveRowPr c d hi) d.ctrl
+
+def pegNext (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) : LivePeg c (i + 1) where
+  b := livePegBoard c d hi
+  xs := cubeBench c.n c.k c.bench d.xs
+  moves := cubeMoves (d.moves + 2 * pegCount (d.xs.take c.n)) (d.xs.take c.n) c.n c.k c.bench
+  slides := d.slides + 2 * pegCount (d.xs.take c.n)
+  hole := raisedHole d.hole (topIdx (combStrip c.n c.bench (d.xs.take c.n)))
+  peak :=
+    let bS := settleBoard d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak
+    let pk := raisedPeak d.peak (countHeld (d.b.sudo_5Board_4held.set ⟨c.src, d.hD⟩ true) 7)
+    let hFs := settle_held_lt d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak
+    raisedPeak pk (countHeld (bS.sudo_5Board_4held.set ⟨c.src, hFs⟩ false) 7)
+  peakS :=
+    let bS := settleBoard d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak
+    raisedPeak d.peakS (countHeld bS.sudo_5Board_4held 7)
+  cOps := d.cOps + 1
+  ctrl := d.ctrl + 1
+  tier := by
+    unfold livePegBoard pegStep
+    rw [cube_live_tier, d.tier]
+  marker := by
+    unfold livePegBoard pegStep
+    rw [cube_live_marker]
+  onB := by
+    unfold livePegBoard pegStep
+    rw [cube_live_on]
+  toB := by
+    unfold livePegBoard pegStep
+    rw [cube_live_to]
+  hH := by
+    unfold livePegBoard pegStep
+    rw [cube_live_home, Array.size_set]
+    exact d.hH
+  hD := by
+    unfold livePegBoard pegStep
+    rw [cube_live_held, Array.size_set]
+    exact settle_held_lt d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak
+  h7 := by
+    unfold livePegBoard pegStep
+    rw [cube_live_held, Array.size_set, settle_held_eq, Array.size_set]
+    exact d.h7
+  hempty := by
+    have hHeld : c.src < (livePegBoard c d hi).sudo_5Board_4held.size := by
+      unfold livePegBoard pegStep
+      rw [cube_live_held, Array.size_set]
+      exact settle_held_lt d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak
+    have hb : (livePegBoard c d hi).sudo_5Board_4held =
+        (settleBoard d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak).sudo_5Board_4held.set
+          ⟨c.src, settle_held_lt d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak⟩ false := by
+      unfold livePegBoard pegStep
+      rw [cube_live_held]
+    simpa [Array.getElem_set] using idx_get hb c.src hHeld
+  hbench := by
+    unfold livePegBoard pegStep
+    rw [cube_live_bench]
+    rfl
+  hmoves := by
+    unfold livePegBoard pegStep
+    rw [cube_live_moves]
+  hslides := by
+    unfold livePegBoard pegStep
+    rw [cube_live_slides]
+  hpeak := by
+    unfold livePegBoard pegStep
+    simpa using
+      cube_live_peak d.b c.src c.src d.xs c.n c.k d.moves d.slides d.hole c.bench
+        d.peak d.peakS d.cOps d.hH d.hD d.hops
+  hpeakS := by
+    unfold livePegBoard pegStep
+    simpa using
+      cube_live_strict d.b c.src c.src d.xs c.n c.k d.moves d.slides d.hole c.bench
+        d.peak d.peakS d.cOps d.hH d.hD d.hops
+  hHole := by
+    unfold livePegBoard pegStep
+    rw [cube_live_hole]
+  hops := by
+    unfold livePegBoard pegStep
+    rw [cube_live_ops, Array.size_set]
+    exact d.hops
+  hop1 := by
+    have hOps : 1 < (livePegBoard c d hi).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      unfold livePegBoard pegStep
+      rw [cube_live_ops, Array.size_set]
+      exact d.hops
+    have hb : (livePegBoard c d hi).sudo_5Board_4cost.sudo_5Costs_3ops =
+        d.b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, d.hops⟩ (Int.ofNat (d.cOps + 1)) := by
+      unfold livePegBoard pegStep
+      rw [cube_live_ops]
+    simpa [Array.getElem_set, ofNat_eq_natCast] using idx_get hb 1 hOps
+  htally := by
+    unfold livePegBoard pegStep
+    rw [cube_live_tally, d.htally]
+  hhigh := by
+    unfold livePegBoard pegStep
+    rw [cube_live_highest, d.hhigh]
+  hrow := by
+    unfold livePegBoard pegStep
+    have hbase :
+        (cubeLiveBoard d.b c.src c.src d.xs c.n c.k d.moves d.slides d.hole c.bench
+          d.peak d.peakS d.cOps d.hH d.hD d.hops).sudo_5Board_3row =
+          embed (paintRed c.row0 c.t0 i) := by
+      rw [cube_live_row, d.hrow]
+    rw [array_set_congr hbase (c.t0 + i) (liveRowPr c d hi) ((2 : Nat) : Int)]
+    apply Array.ext
+    · simp [Array.size_set, embed, size_embed, paintRed_length]
+    · intro j hj1 hj2
+      by_cases hj : j = c.t0 + i
+      · simp [hj, Array.getElem_set, embed, paintRed, ofNat_eq_natCast]
+      · have hne : c.t0 + i ≠ j := fun h => hj h.symm
+        simp [Array.getElem_set, embed, paintRed, hne, List.getElem_set]
+  hctrl := by
+    unfold livePegBoard pegStep
+    rw [ofNat_eq_natCast, d.hctrlN]
+  hxs := by
+    rw [d.hxs]
+    conv =>
+      rhs
+      unfold cubeBenchIter
+  hzero := by
+    intro j hlo hj
+    exact cubeBench_zero c.n c.k c.bench d.xs c.hn0 c.gap_pos c.n_le j hlo hj
+  htri := by
+    exact allTritList_take
+      (cubeBench_trits c.n c.k c.bench d.xs d.htri c.span3 c.n_le) c.n
+  hpos := by
+    rw [cubeBench_length c.n c.k c.bench d.xs c.n_le]
+    exact Nat.lt_of_lt_of_le c.hn0 c.n_le
+  hnle := by
+    rw [cubeBench_length c.n c.k c.bench d.xs c.n_le]
+    exact c.n_le
+  hmovB := by
+    have h := liveCubeMoves_le d.moves d.xs c.n c.k c.bench
+    have hprev := d.hmovB
+    have hmul : (i + 1) * pegCharge c.n c.bench =
+        i * pegCharge c.n c.bench + pegCharge c.n c.bench := by
+      rw [Nat.succ_mul]
+    omega
+  hsldB := by
+    have hp := pegCount_take_le d.xs c.n
+    have hprev := d.hsldB
+    have hmul : (i + 1) * (2 * c.n) = i * (2 * c.n) + 2 * c.n := by
+      rw [Nat.succ_mul]
+    omega
+  hcOps := by rw [d.hcOps]; omega
+  hctrlN := by rw [d.hctrlN]; omega
+
+/-- After `i` steps. `i = 0` is the bench-off start; `i > 0` is `pegPack`. -/
+def pegPack (c : PegCtx) : ∀ i, 0 < i → i ≤ c.m → LivePeg c i
+  | 0, h, _ => absurd h (Nat.not_lt_zero 0)
+  | 1, _, _ => pegFromOff c
+  | i + 2, _, hle =>
+    pegNext c (pegPack c (i + 1) (Nat.succ_pos i) (Nat.le_of_succ_le hle))
+      (Nat.lt_of_succ_le hle)
+
+def pegBoard : PegCtx → Nat → Ecbs.Board
+  | c, 0 => c.b0
+  | c, 1 => if _h : 1 ≤ c.m then offPeg c else c.b0
+  | c, i + 2 =>
+    if h : i + 2 ≤ c.m then
+      livePegBoard c (pegPack c (i + 1) (Nat.succ_pos i) (Nat.le_of_succ_le h))
+        (Nat.lt_of_succ_le h)
+    else
+      c.b0
+
+theorem pegBoard_zero (c : PegCtx) : pegBoard c 0 = c.b0 := by
+  simp [pegBoard]
+
+theorem pegBoard_one (c : PegCtx) : pegBoard c 1 = offPeg c := by
+  have hle : 1 ≤ c.m := Nat.succ_le_of_lt c.hm
+  simp [pegBoard, hle]
+
+theorem cont_of_board (c : Except SudoRt.Trap Ecbs.Board) (b : Ecbs.Board) (h : c = .ok b) :
+    (Except.bind c fun b' => pure (SudoRt.Flow.cont (ρ := Ecbs.Board) b')) =
+      .ok (SudoRt.Flow.cont (ρ := Ecbs.Board) b) := by
+  subst h
+  rfl
+
+/-- Cube `src` onto itself, paint tally index `j` red, then add one to the control counter.
+    This is the body of the `for` in `invert`, before the loop decides to break or continue. -/
+def cubePegBody (src : Nat) (b : Ecbs.Board) (j : Int) : Except SudoRt.Trap Ecbs.Board :=
+  do
+    let b1 ← Ecbs.cube b (src : Int) (src : Int)
+    let b2 ← Ecbs.tally_put b1 j (2 : Int)
+    let v ← SudoRt.addI b2.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+    pure { b2 with sudo_5Board_4cost :=
+      { b2.sudo_5Board_4cost with sudo_5Costs_4ctrl := v } }
+
+/-- The `for j` in `invert`: that body, then break on the last index. -/
+def cubePegStep (src : Nat) (toV : Int) (σ : Int × Ecbs.Board) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Ecbs.Board) Ecbs.Board) :=
+  do
+    let j := σ.1
+    let b := σ.2
+    if j > toV then
+      pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (j, b))
+    else
+      match ← (cubePegBody src b j >>= fun b' =>
+          pure (SudoRt.Flow.cont (ρ := Ecbs.Board) b')) with
+      | .ret r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r)
+      | .brk fs => pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (j, fs))
+      | .cont fs => do
+          if j == toV then
+            pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (j, fs))
+          else do
+            let j' ← SudoRt.addI j (1 : Int)
+            pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (j', fs))
+
+theorem pegBoard_succ (c : PegCtx) (i : Nat) (h : i + 2 ≤ c.m) :
+    pegBoard c (i + 2) =
+      livePegBoard c (pegPack c (i + 1) (Nat.succ_pos i) (Nat.le_of_succ_le h))
+        (Nat.lt_of_succ_le h) := by
+  simp [pegBoard, h]
+
+theorem peg_tail (src toN i : Nat) (b b' : Ecbs.Board)
+    (hfit : FitsLen (i + 1))
+    (hng : ¬ Int.ofNat i > Int.ofNat toN)
+    (hbody : cubePegBody src b (i : Int) = .ok b') :
+    cubePegStep src (Int.ofNat toN) (Int.ofNat i, b) =
+      (if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, b'))
+        else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), b'))) := by
+  unfold cubePegStep
+  dsimp
+  rw [if_neg (show ¬ ((i : Int) > (toN : Int)) from hng)]
+  rw [hbody, ok_bind, pure_eq_ok]
+  exact asc_tail toN i hfit b'
+
+theorem off_body (c : PegCtx) : cubePegBody c.src c.b0 ((0 : Nat) : Int) = .ok (offPeg c) := by
+  have hrow : c.t0 + 0 < c.b0.sudo_5Board_3row.size := by
+    rw [c.hRow, size_embed]
+    exact Nat.lt_of_lt_of_le (Nat.lt_add_of_pos_right c.hm) c.hRoom
+  have h1 : 1 ≤ c.m := Nat.succ_le_of_lt c.hm
+  have hfops : FitsLen (c.cOps0 + 1) := FitsLen.of_le c.hOpsB (by omega)
+  have hfctrl : FitsLen (c.ctrl0 + 1) := FitsLen.of_le c.hCtrlB (by omega)
+  have hfold : FitsLen (c.moves0 + 2 * c.n + 3 * (c.bench - c.n)) := by
+    refine FitsLen.of_le c.hBudget ?_
+    have hpiece : 2 * c.n + 3 * (c.bench - c.n) ≤ pegCharge c.n c.bench := by
+      unfold pegCharge
+      omega
+    have hmul : pegCharge c.n c.bench ≤ c.m * pegCharge c.n c.bench := by
+      simpa using Nat.mul_le_mul_right (pegCharge c.n c.bench) h1
+    have hassoc : c.moves0 + 2 * c.n + 3 * (c.bench - c.n) =
+        c.moves0 + (2 * c.n + 3 * (c.bench - c.n)) := by omega
+    rw [hassoc]
+    exact Nat.add_le_add_left (Nat.le_trans hpiece hmul) c.moves0
+  have hfm : FitsLen (c.moves0 + 2 * c.n) := FitsLen.of_le hfold (by omega)
+  have hfitJ : FitsLen (c.t0 + 0) := FitsLen.of_le c.hfitRow (by omega)
+  have hic : c.t0 + 0 < c.control := by
+    exact Nat.lt_of_lt_of_le (Nat.lt_add_of_pos_right c.hm) c.hIn
+  have hle : c.t0 + 0 ≤ c.high := by
+    exact Nat.le_trans (Nat.le_sub_of_add_le (Nat.add_le_add_left h1 c.t0)) c.hTop
+  refine Eq.trans (peg_off_eq c.b0 c.src c.src c.g c.w c.h c.r c.n c.k c.moves0 c.hole0
+      c.bench c.peak0 c.peakS0 c.cOps0 c.cg c.t0 0 c.high c.control c.ctrl0
+      c.hmk c.hoff c.hops0 c.hop10 hfops c.hbl c.hcg c.hspan c.hF c.hHome c.hHF c.hArr
+      c.h7 c.hn0 c.hn c.hlenx c.hf c.hmoves0 c.hpeak0 c.hpeakS0 c.hxsT c.h3 hfm
+      c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap c.hwF c.hhF c.hrF c.hkF c.hHole0
+      c.hsm c.hnsm c.hfitB hfold c.hT0 hrow c.hCtrlN hic c.hHigh hle hfitJ c.hCtrl0 hfctrl) ?_
+  apply congrArg Except.ok
+  apply pegStep_hrow
+
+theorem live_body (c : PegCtx) {i : Nat} (d : LivePeg c i) (h0 : 0 < i) (hi : i < c.m) :
+    cubePegBody c.src d.b (i : Int) = .ok (livePegBoard c d hi) := by
+  have hlen : d.xs.length = c.bench := by
+    rw [d.hxs, cubeBenchIter_length c.n c.k c.bench c.g c.n_le i h0]
+  have hfitL : FitsLen d.xs.length := by rw [hlen]; exact c.hfitB
+  have hp := pegCount_take_le d.xs c.n
+  have hpiece : 2 * pegCount (d.xs.take c.n) + 2 * c.n + 3 * (c.bench - c.n) ≤
+      pegCharge c.n c.bench := by
+    unfold pegCharge
+    omega
+  have hi1 : i + 1 ≤ c.m := Nat.succ_le_of_lt hi
+  have hmul : (i + 1) * pegCharge c.n c.bench =
+      i * pegCharge c.n c.bench + pegCharge c.n c.bench := by rw [Nat.succ_mul]
+  have htail : (i + 1) * pegCharge c.n c.bench ≤ c.m * pegCharge c.n c.bench :=
+    Nat.mul_le_mul_right _ hi1
+  have hmov : d.moves + 2 * pegCount (d.xs.take c.n) + 2 * c.n + 3 * (c.bench - c.n) ≤
+      c.moves0 + c.m * pegCharge c.n c.bench := by
+    have hprev := d.hmovB
+    have hassoc : d.moves + 2 * pegCount (d.xs.take c.n) + 2 * c.n + 3 * (c.bench - c.n) =
+        d.moves + (2 * pegCount (d.xs.take c.n) + 2 * c.n + 3 * (c.bench - c.n)) := by omega
+    rw [hassoc]
+    have h1 : d.moves + pegCharge c.n c.bench ≤
+        c.moves0 + (i + 1) * pegCharge c.n c.bench := by
+      rw [hmul, ← Nat.add_assoc]
+      exact Nat.add_le_add hprev (Nat.le_refl _)
+    exact Nat.le_trans (Nat.add_le_add_left hpiece d.moves)
+      (Nat.le_trans h1 (Nat.add_le_add_left htail c.moves0))
+  have hfold : FitsLen (d.moves + 2 * pegCount (d.xs.take c.n) + 2 * c.n +
+      3 * (c.bench - c.n)) := FitsLen.of_le c.hBudget hmov
+  have hfm : FitsLen (d.moves + 2 * pegCount (d.xs.take c.n) + 2 * c.n) :=
+    FitsLen.of_le hfold (by omega)
+  have hfitM : FitsLen (d.moves + 2 * pegCount (d.xs.take c.n)) :=
+    FitsLen.of_le hfm (by omega)
+  have hpeg : FitsLen (2 * pegCount (d.xs.take c.n)) := FitsLen.of_le hfitM (by omega)
+  have hsld : d.slides + 2 * pegCount (d.xs.take c.n) ≤ c.slides0 + c.m * (2 * c.n) := by
+    have hprev := d.hsldB
+    have h2 : 2 * pegCount (d.xs.take c.n) ≤ 2 * c.n := by omega
+    have hm2 : (i + 1) * (2 * c.n) = i * (2 * c.n) + 2 * c.n := by rw [Nat.succ_mul]
+    have ht2 : (i + 1) * (2 * c.n) ≤ c.m * (2 * c.n) := Nat.mul_le_mul_right _ hi1
+    omega
+  have hfitS : FitsLen (d.slides + 2 * pegCount (d.xs.take c.n)) :=
+    FitsLen.of_le c.hSlide hsld
+  have hfops : FitsLen (d.cOps + 1) := by
+    rw [d.hcOps]
+    exact FitsLen.of_le c.hOpsB (Nat.add_le_add_left hi1 c.cOps0)
+  have hfctrl : FitsLen (d.ctrl + 1) := by
+    rw [d.hctrlN]
+    exact FitsLen.of_le c.hCtrlB (Nat.add_le_add_left hi1 c.ctrl0)
+  have hrow : c.t0 + i < d.b.sudo_5Board_3row.size := by
+    rw [d.hrow, size_embed, paintRed_length]
+    exact Nat.lt_of_lt_of_le (Nat.add_lt_add_left hi c.t0) c.hRoom
+  have hic : c.t0 + i < c.control :=
+    Nat.lt_of_lt_of_le (Nat.add_lt_add_left hi c.t0) c.hIn
+  have hle : c.t0 + i ≤ c.high := by
+    have : c.t0 + i ≤ c.t0 + c.m - 1 := by omega
+    exact Nat.le_trans this c.hTop
+  have hfitJ : FitsLen (c.t0 + i) :=
+    FitsLen.of_le c.hfitRow (Nat.add_le_add_left (Nat.le_of_lt hi) c.t0)
+  have hn : d.b.sudo_5Board_1t.sudo_4Tier_1n = (c.n : Int) := by rw [d.tier]; exact c.hn
+  have hbl : d.b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat c.bench := by
+    rw [d.tier]; exact c.hbl
+  have hcg : d.b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat c.cg := by
+    rw [d.tier]; exact c.hcg
+  have hwF : d.b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat c.w := by rw [d.tier]; exact c.hwF
+  have hhF : d.b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat c.h := by rw [d.tier]; exact c.hhF
+  have hrF : d.b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat c.r := by rw [d.tier]; exact c.hrF
+  have hkF : d.b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat c.k := by rw [d.tier]; exact c.hkF
+  have hCtrlN : d.b.sudo_5Board_1t.sudo_4Tier_7control = (c.control : Int) := by
+    rw [d.tier]; exact c.hCtrlN
+  have hT0 : d.b.sudo_5Board_6tally0 = (c.t0 : Int) := by rw [d.htally]; exact c.hT0
+  have hHigh : d.b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (c.high : Int) := by
+    rw [d.hhigh]; exact c.hHigh
+  refine Eq.trans (peg_step_eq d.b c.src c.src d.xs c.w c.h c.r c.n c.k d.moves d.slides d.hole
+      c.bench d.peak d.peakS d.cOps c.cg c.t0 i c.high c.control d.ctrl
+      d.marker d.onB d.toB d.hH d.hD d.h7 d.hempty d.hbench hn c.hn0 d.hpos d.hnle d.hzero
+      c.hf hfitL d.hmoves d.hslides d.hpeak hpeg hfitM hfitS d.hops d.hop1 hfops hbl hcg c.hspan
+      d.htri c.h3 hfm c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap hwF hhF hrF hkF d.hHole d.hpeakS
+      c.hsm c.hnsm c.hfitB hfold hT0 hrow hCtrlN hic hHigh hle hfitJ d.hctrl hfctrl) ?_
+  apply congrArg Except.ok
+  apply pegStep_hrow
+
+/-- `j = 0 .. m - 1` cubes of the value in home `src`, each followed by a red tally peg.
+    The first cube reads the home (bench off). Every later cube is the named live board.
+    The bench prefix is `Spec.cubeTimes`. -/
+theorem cube_peg_loop_refines (c : PegCtx) :
+    SudoRt.runLoopOn (Int.ofNat 0, c.b0)
+        (fuelRange (Int.ofNat 0) (Int.ofNat (c.m - 1)))
+        (cubePegStep c.src (Int.ofNat (c.m - 1)))
+        (fun σ => .ok σ)
+        (fun r => .ok ((0 : Int), r)) =
+      .ok (Int.ofNat (c.m - 1), pegBoard c c.m) := by
+  refine asc_goal (fromN := 0) (toN := c.m - 1)
+      (fun i s => s = pegBoard c i)
+      (Nat.zero_le _) (pegBoard_zero c).symm ?_ ?_
+  · intro i s _ hi hI
+    have hle1 : i + 1 ≤ c.m := by
+      have h := Nat.add_le_add_right hi 1
+      rwa [Nat.sub_add_cancel (Nat.succ_le_of_lt c.hm)] at h
+    have hfit : FitsLen (i + 1) := FitsLen.of_le c.hfitM hle1
+    have hng : ¬ Int.ofNat i > Int.ofNat (c.m - 1) := not_gt_cast hi
+    cases i with
+    | zero =>
+      have hs : s = c.b0 := by rw [hI, pegBoard_zero]
+      rw [hs]
+      have hbody := off_body c
+      have hstep := peg_tail c.src (c.m - 1) 0 c.b0 (offPeg c) hfit hng hbody
+      rw [hstep]
+      refine ⟨offPeg c, ?_, rfl⟩
+      exact (pegBoard_one c).symm
+    | succ k =>
+      have hlt : k + 1 < c.m :=
+        Nat.lt_of_le_of_lt hi (Nat.sub_lt c.hm (by decide))
+      have hle : k + 1 ≤ c.m := Nat.le_of_lt hlt
+      let d := pegPack c (k + 1) (Nat.succ_pos k) hle
+      have hsB : s = d.b := by
+        rw [hI]
+        cases k with
+        | zero =>
+          simp [pegBoard, pegPack, hle]
+          rfl
+        | succ j =>
+          rw [pegBoard_succ c j hle]
+          conv =>
+            rhs
+            unfold pegPack
+          rfl
+      rw [hsB]
+      have hbody := live_body c d (Nat.succ_pos k) hlt
+      have hstep := peg_tail c.src (c.m - 1) (k + 1) d.b (livePegBoard c d hlt)
+        (by simpa using hfit) hng hbody
+      rw [hstep]
+      refine ⟨livePegBoard c d hlt, ?_, rfl⟩
+      rw [show k + 1 + 1 = k + 2 from rfl]
+      exact (pegBoard_succ c k hle1).symm
+  · intro s hI
+    have hm1 : c.m - 1 + 1 = c.m := Nat.sub_add_cancel (Nat.succ_le_of_lt c.hm)
+    rw [hI, hm1]
+
+/-- The polynomial on the bench after `m` cube-peg steps is `cubeTimes m` of the home value. -/
+theorem pegPack_times (c : PegCtx) :
+    ((pegPack c c.m c.hm (Nat.le_refl _)).xs).take c.n =
+      cubeTimes c.n c.k c.bench c.g c.m := by
+  rw [(pegPack c c.m c.hm (Nat.le_refl _)).hxs,
+    cubeBenchIter_prefix c.n c.k c.bench c.g c.hlenx]
+
 end EcbsLink2.Link2

@@ -454,6 +454,13 @@ private theorem foldDown_trits (n gap : Nat) (strip : List Nat)
     exact foldHigh_trits (ih hk') n gap (strip.length - 1 - k) hidx_lt hidx_ge
       (Nat.le_trans hg hidx_ge)
 
+/-- Folding preserves trits. `gap ≤ n` is the lane geometry `n - k ≤ n`. -/
+theorem laneFold_trits (n gap : Nat) (strip : List Nat)
+    (hs : allTritList strip) (hg : gap ≤ n) (hn : n ≤ strip.length) :
+    allTritList (laneFold n gap strip) := by
+  rw [← foldDown_lane n gap strip hn]
+  exact foldDown_trits n gap strip hs hg hn (strip.length - n) (Nat.le_refl _)
+
 def topAt (xs : List Nat) : Nat → Nat
   | 0 => 0
   | k + 1 => if coeff xs k = 0 then topAt xs k else k

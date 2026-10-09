@@ -468,13 +468,15 @@ jobs:
     # and ctrl+1 is tied for both, by rewriting those projections. Nocopy mul, bench
     # off or live, likewise returns a named board. One model rung is `invRung`
     # on a named board, and the white-peg scan leaves the board unchanged.
-    # One live cube then a red peg is a named board. The peg loop and invert_number
+    # One live cube then a red peg is a named board. The cube-then-red-peg loop
+    # is tied (first peg bench-off, later pegs the named live cube; the prefix
+    # is cubeTimes). The rung and invert_number
     # are not theorems yet. fold and the exchange are not
     # claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 537356 kB (about 0.51 GB). The job builds `place`, the schoolbook loop
+    # 537432 kB (about 0.51 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,

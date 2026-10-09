@@ -120,17 +120,6 @@ private theorem boardAcross_eq (t : Spec.Tier) (xs : List Nat) :
   rw [place_across_peak]
   rfl
 
-private theorem pegCount_le (xs : List Nat) : pegCount xs ≤ xs.length := by
-  unfold pegCount
-  induction xs with
-  | nil => simp [List.filter]
-  | cons x xs ih =>
-    simp only [List.filter, List.length_cons]
-    split
-    · simp only [List.length_cons]
-      omega
-    · exact Nat.le_succ_of_le ih
-
 /-- A sum bounded by the schoolbook of a million-trit number, plus a short bench, fits an i64. -/
 private theorem fits_budget {k : Nat}
     (hk : k ≤ 1000000 * 1000001 + 10 * 1000001) : FitsLen k := by

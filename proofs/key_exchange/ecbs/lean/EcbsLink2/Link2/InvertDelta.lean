@@ -2313,6 +2313,37 @@ theorem parkKeep_fields (b : Ecbs.Board) (xs : List Nat)
   refine ⟨?_, rfl, rfl, rfl, rfl⟩
   rw [parkKeep_row b xs hole park rung i ctrl hRowP hRowH hrow hp hh, afterPark_idle]
 
+/-- Emitted keep-park, from `ClimbInvK` with nothing parked. The row is `afterPark`,
+    the counter has grown by two, the parked-from hole is the climb hole, the rung
+    index has advanced, and the tally length is the model's. -/
+theorem parked_fields
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hF : s.fromHole < 0) :
+    ∃ bPark : Ecbs.Board,
+      Ecbs.park_rung b (r : Int) = .ok bPark ∧
+      bPark.sudo_5Board_3row =
+        embed (afterPark s.row (-1) s.parkAt (climbAt base.ladder0 base.R s.ridx) r) ∧
+      bPark.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((s.ctrl + 2 : Nat) : Int) ∧
+      bPark.sudo_5Board_11parked_from =
+        ((climbAt base.ladder0 base.R s.ridx : Nat) : Int) ∧
+      bPark.sudo_5Board_8rung_idx = ((s.ridx + 1 : Nat) : Int) ∧
+      bPark.sudo_5Board_9tally_len = (s.tally : Int) := by
+  let hole := climbAt base.ladder0 base.R s.ridx
+  obtain ⟨bPark, hpark, hfrom, hridx, hkeep⟩ := park_of_shape h
+  obtain ⟨hRowP, hRowH, hEq⟩ := hkeep hF
+  have hp : s.parkAt < s.row.length := h.shape.park.parkLt
+  have hh : hole < s.row.length := h.shape.park.holeLt
+  have hfields := parkKeep_fields b s.row hole s.parkAt r s.ridx s.ctrl hRowP hRowH h.inv.row hp hh
+  have hlen : b.sudo_5Board_9tally_len = (s.tally : Int) := h.inv.len
+  refine ⟨bPark, hpark, ?_, ?_, hfrom, hridx, ?_⟩
+  · rw [hEq]
+    exact hfields.1
+  · rw [hEq]
+    exact hfields.2.1
+  · rw [hEq, hfields.2.2.2.2, hlen]
+
 /-- After the cube-peg loop the row is the start row painted red, the counter has
     grown by the peg count, and the park, rung index, and tally length are the
     ones the loop started with. -/

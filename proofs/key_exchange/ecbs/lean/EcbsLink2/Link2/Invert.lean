@@ -3445,4 +3445,377 @@ theorem rung_double_refines (step : Except SudoRt.Trap Ecbs.Board) (b : Ecbs.Boa
     tally_double_refines b xs t0 m c0 high control tmax hm hLen hT0 hRow hRoom hRed hZero
       hCtrlN hHigh hTop hCtrl hIn hfit hfitC hfitM hMax hNote]
 
+/-- The board `unpark` leaves when a colour is parked: that colour goes back to
+    `src`, the parking hole is cleared, and the counter grows by two. -/
+def unparkedBoard (b : Ecbs.Board) (src park prev ctrl : Nat)
+    (hRowS : src < b.sudo_5Board_3row.size)
+    (hRowP : park < b.sudo_5Board_3row.size) : Ecbs.Board :=
+  { b with
+    sudo_5Board_3row :=
+      (b.sudo_5Board_3row.set ⟨src, hRowS⟩ (prev : Int)).set
+        ⟨park, by rw [Array.size_set]; exact hRowP⟩ (0 : Int)
+    sudo_5Board_11parked_from := -1
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := Int.ofNat (ctrl + 2) } }
+
+/-- `park` when a colour is already parked. Unpark restores it, then the keep-park
+    lifts `rung` from `hole`. The counter grows by four. `hole` is neither the
+    restored hole nor the parking hole, so its colour survives the restore. -/
+theorem park_resume (b : Ecbs.Board) (src hole park prev rung high control ctrl : Nat)
+    (hFrom : b.sudo_5Board_11parked_from = (src : Int))
+    (hParkF : b.sudo_5Board_9park_hole = (park : Int))
+    (hRowS : src < b.sudo_5Board_3row.size)
+    (hRowH : hole < b.sudo_5Board_3row.size)
+    (hRowP : park < b.sudo_5Board_3row.size)
+    (hPrev : b.sudo_5Board_3row[park] = (prev : Int))
+    (hColour : b.sudo_5Board_3row[hole] = (rung : Int))
+    (hRung : rung ≠ 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hSrcC : src < control) (hParkC : park < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hLeS : src ≤ high) (hLeP : park ≤ high)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitU : FitsLen (ctrl + 2)) (hFit : FitsLen ((ctrl + 2) + 2))
+    (hneP : hole ≠ park) (hneS : hole ≠ src) :
+    Ecbs.park b (hole : Int) =
+      .ok ((rung : Int),
+        { unparkedBoard b src park prev ctrl hRowS hRowP with
+          sudo_5Board_3row :=
+            ((unparkedBoard b src park prev ctrl hRowS hRowP).sudo_5Board_3row.set
+              ⟨park, by
+                simp [unparkedBoard, Array.size_set]; exact hRowP⟩ (rung : Int)).set
+              ⟨hole, by
+                simp [unparkedBoard, Array.size_set]; exact hRowH⟩ (0 : Int)
+          sudo_5Board_4cost :=
+            { (unparkedBoard b src park prev ctrl hRowS hRowP).sudo_5Board_4cost with
+              sudo_5Costs_4ctrl := Int.ofNat ((ctrl + 2) + 2) }
+          sudo_5Board_11parked_from := (hole : Int) }) := by
+  let bU := unparkedBoard b src park prev ctrl hRowS hRowP
+  have hRowHU : hole < bU.sudo_5Board_3row.size := by
+    simp [bU, unparkedBoard, Array.size_set]; exact hRowH
+  have hRowPU : park < bU.sudo_5Board_3row.size := by
+    simp [bU, unparkedBoard, Array.size_set]; exact hRowP
+  have hpN : park ≠ hole := fun h => hneP h.symm
+  have hsN : src ≠ hole := fun h => hneS h.symm
+  have hColourU : bU.sudo_5Board_3row[hole] = (rung : Int) := by
+    simp [bU, unparkedBoard, Array.getElem_set, hpN, hsN, hColour]
+  have hZeroU : bU.sudo_5Board_3row[park] = 0 := by
+    simp [bU, unparkedBoard, Array.getElem_set]
+  have hCtrlU : bU.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((ctrl + 2 : Nat) : Int) := by
+    simp [bU, unparkedBoard, ofNat_eq_natCast]
+  have hIdle : bU.sudo_5Board_11parked_from = -1 := by simp [bU, unparkedBoard]
+  have hParkU : bU.sudo_5Board_9park_hole = (park : Int) := by simp [bU, unparkedBoard, hParkF]
+  have hHighU : bU.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) := by
+    simp [bU, unparkedBoard, hHigh]
+  have hCtrlNU : bU.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
+    simp [bU, unparkedBoard, hCtrlN]
+  unfold Ecbs.park
+  rw [unpark_back b src park prev high control ctrl hFrom hParkF hRowS hRowP hPrev
+      hCtrlN hSrcC hHigh hLeS hCtrl hFitU, ok_bind]
+  exact park_keep bU hole park rung high control (ctrl + 2)
+      hIdle hParkU hRowHU hRowPU hColourU hZeroU hRung hCtrlNU hParkC hHighU hLeP
+      hCtrlU hFit hneP
+
+/-- `park_rung` when a colour is already parked: unpark, then the keep-park, then
+    the rung index steps. -/
+theorem park_rung_resume (b : Ecbs.Board) (holes : List Nat)
+    (i src hole park prev rung high control ctrl : Nat)
+    (hClimb : Ecbs.climb_holes b = .ok (embed holes))
+    (hIdx : b.sudo_5Board_8rung_idx = (i : Int))
+    (hAt : i < holes.length) (hHole : holes[i] = hole)
+    (hFrom : b.sudo_5Board_11parked_from = (src : Int))
+    (hParkF : b.sudo_5Board_9park_hole = (park : Int))
+    (hRowS : src < b.sudo_5Board_3row.size)
+    (hRowH : hole < b.sudo_5Board_3row.size)
+    (hRowP : park < b.sudo_5Board_3row.size)
+    (hPrev : b.sudo_5Board_3row[park] = (prev : Int))
+    (hColour : b.sudo_5Board_3row[hole] = (rung : Int))
+    (hRung : rung ≠ 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hSrcC : src < control) (hParkC : park < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hLeS : src ≤ high) (hLeP : park ≤ high)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitU : FitsLen (ctrl + 2)) (hFit : FitsLen ((ctrl + 2) + 2))
+    (hneP : hole ≠ park) (hneS : hole ≠ src)
+    (hFitI : FitsLen (i + 1)) :
+    Ecbs.park_rung b (rung : Int) =
+      .ok { unparkedBoard b src park prev ctrl hRowS hRowP with
+        sudo_5Board_3row :=
+          ((unparkedBoard b src park prev ctrl hRowS hRowP).sudo_5Board_3row.set
+            ⟨park, by simp [unparkedBoard, Array.size_set]; exact hRowP⟩ (rung : Int)).set
+            ⟨hole, by simp [unparkedBoard, Array.size_set]; exact hRowH⟩ (0 : Int)
+        sudo_5Board_4cost :=
+          { (unparkedBoard b src park prev ctrl hRowS hRowP).sudo_5Board_4cost with
+            sudo_5Costs_4ctrl := Int.ofNat ((ctrl + 2) + 2) }
+        sudo_5Board_11parked_from := (hole : Int)
+        sudo_5Board_8rung_idx := Int.ofNat (i + 1) } := by
+  unfold Ecbs.park_rung
+  rw [hClimb, ok_bind]
+  conv => zeta
+  rw [hIdx, ← ofNat_eq_natCast i, atL_embed holes i hAt, hHole, ok_bind]
+  rw [ofNat_eq_natCast hole]
+  rw [park_resume b src hole park prev rung high control ctrl
+      hFrom hParkF hRowS hRowH hRowP hPrev hColour hRung hCtrlN hSrcC hParkC
+      hHigh hLeS hLeP hCtrl hFitU hFit hneP hneS, ok_bind]
+  dsimp only
+  rw [sudoAssertEq_int rfl 305, ok_bind]
+  have hIdxU : (unparkedBoard b src park prev ctrl hRowS hRowP).sudo_5Board_8rung_idx =
+      b.sudo_5Board_8rung_idx := by simp [unparkedBoard]
+  rw [hIdxU, hIdx, ← ofNat_eq_natCast i, show (1 : Int) = Int.ofNat 1 from rfl,
+    addI_ofNat i 1 hFitI, ok_bind, pure_eq_ok]
+
+/-- Moves one live nocopy mul can add: the settle into the spare, the schoolbook,
+    and the lane fold. -/
+def mulCharge (n bench : Nat) : Nat :=
+  2 * n + n * (n + 1) + 3 * (bench - n)
+
+/-- Moves of the heaviest rung: a non-final red rung that unparks first.
+    Unpark and park add none. The copy and the clear add at most `n` each.
+    The `m` cube-pegs add at most `pegCharge` each, which also covers a settle
+    into a different home before the first cube. One live mul adds at most
+    `mulCharge`. The red cube and the red mul add one more of each. Doubling
+    and the extra white peg add no moves. -/
+def rungCharge (n bench m : Nat) : Nat :=
+  2 * n + (m + 1) * pegCharge n bench + 2 * mulCharge n bench
+
+/-- Slides of that rung: `2 · n` for each of the `m` pegs, the gap mul, the red
+    cube, and the red mul. -/
+def rungSlideCharge (n m : Nat) : Nat :=
+  (m + 3) * (2 * n)
+
+/-- Ops of that rung. The cube slot grows by `m + 1` and the mul slot by `2`,
+    so every slot grows by at most `m + 3`. -/
+def rungOpCharge (m : Nat) : Nat :=
+  m + 3
+
+theorem mulCharge_ge (n bench : Nat) (moves : Nat) (xs ys : List Nat) (k : Nat)
+    (hn : n ≤ bench) (hp : pegCount (ys.take n) ≤ n) :
+    moves + 2 * pegCount (ys.take n) + n * (n + 1) + 3 * (bench - n) ≤
+      moves + mulCharge n bench := by
+  unfold mulCharge
+  omega
+
+theorem charge_final_white (n bench m : Nat) :
+    n + m * pegCharge n bench + mulCharge n bench + n ≤ rungCharge n bench m := by
+  unfold rungCharge
+  have hp : m * pegCharge n bench ≤ (m + 1) * pegCharge n bench :=
+    Nat.mul_le_mul_right _ (Nat.le_succ m)
+  have hc : mulCharge n bench ≤ mulCharge n bench + mulCharge n bench :=
+    Nat.le_add_right _ _
+  have h2 : mulCharge n bench + mulCharge n bench = 2 * mulCharge n bench := by
+    rw [Nat.two_mul]
+  have hsum : n + n = 2 * n := by rw [Nat.two_mul]
+  omega
+
+theorem charge_open_white (n bench m : Nat) :
+    n + m * pegCharge n bench + mulCharge n bench + n ≤ rungCharge n bench m :=
+  charge_final_white n bench m
+
+theorem charge_final_red (n bench m : Nat) :
+    n + m * pegCharge n bench + mulCharge n bench + n + pegCharge n bench +
+        mulCharge n bench ≤
+      rungCharge n bench m := by
+  unfold rungCharge
+  have hsum : n + n = 2 * n := by rw [Nat.two_mul]
+  have hpeg : m * pegCharge n bench + pegCharge n bench = (m + 1) * pegCharge n bench := by
+    rw [Nat.succ_mul]
+  have hmul : mulCharge n bench + mulCharge n bench = 2 * mulCharge n bench := by
+    rw [Nat.two_mul]
+  omega
+
+theorem charge_open_red (n bench m : Nat) :
+    n + m * pegCharge n bench + mulCharge n bench + n + pegCharge n bench +
+        mulCharge n bench ≤
+      rungCharge n bench m :=
+  charge_final_red n bench m
+
+theorem slide_open_red (n m : Nat) :
+    m * (2 * n) + 2 * n + 2 * n + 2 * n ≤ rungSlideCharge n m := by
+  unfold rungSlideCharge
+  have h : (m + 3) * (2 * n) = m * (2 * n) + 3 * (2 * n) := by rw [Nat.add_mul]
+  have h3 : 3 * (2 * n) = 2 * n + 2 * n + 2 * n := by omega
+  omega
+
+theorem op_open_red (m : Nat) : m + 1 + 2 ≤ rungOpCharge m := by
+  unfold rungOpCharge
+  omega
+
+theorem rungCharge_mono (n bench m mMax : Nat) (h : m ≤ mMax) :
+    rungCharge n bench m ≤ rungCharge n bench mMax := by
+  unfold rungCharge
+  have h1 : (m + 1) * pegCharge n bench ≤ (mMax + 1) * pegCharge n bench :=
+    Nat.mul_le_mul_right _ (Nat.add_le_add_right h 1)
+  omega
+
+theorem rungSlideCharge_mono (n m mMax : Nat) (h : m ≤ mMax) :
+    rungSlideCharge n m ≤ rungSlideCharge n mMax := by
+  unfold rungSlideCharge
+  exact Nat.mul_le_mul_right _ (Nat.add_le_add_right h 3)
+
+theorem rungOpCharge_mono (m mMax : Nat) (h : m ≤ mMax) :
+    rungOpCharge m ≤ rungOpCharge mMax := by
+  unfold rungOpCharge
+  omega
+
+/-- After `k` rungs, `k ≤ R`, a counter that stayed under `k` charges still fits
+    the `R`-charge budget. This is the moves, slides, and ops fit in the domain
+    of `invert_number_refines`. -/
+theorem rung_budget_fit (base k R charge value : Nat)
+    (hk : k ≤ R) (hval : value ≤ base + k * charge)
+    (hFit : FitsLen (base + R * charge)) : FitsLen value := by
+  apply FitsLen.of_le hFit
+  have hk' : k * charge ≤ R * charge := Nat.mul_le_mul_right _ hk
+  omega
+
+/-- Park, copy, the white scan, the cube-peg loop, the live nocopy mul, and
+    clear. `hPark` is either the idle keep-park or the unpark-then-park. -/
+theorem rung_prefix_refines (b bPark : Ecbs.Board) (rung : Nat)
+    (hPark : Ecbs.park_rung b (rung : Int) = .ok bPark)
+    (g : List Nat) (moves peak : Nat)
+    (hHs : 6 < bPark.sudo_5Board_4home.size)
+    (hDs : 6 < bPark.sudo_5Board_4held.size)
+    (hH5s : 5 < bPark.sudo_5Board_4home.size)
+    (hD5s : 5 < bPark.sudo_5Board_4held.size)
+    (h7 : 7 ≤ bPark.sudo_5Board_4held.size)
+    (hsrc : bPark.sudo_5Board_4held[5] = true)
+    (harr : bPark.sudo_5Board_4home[5] = embed g)
+    (hempty : bPark.sudo_5Board_4held[6] = false)
+    (hn : bPark.sudo_5Board_1t.sudo_4Tier_1n = (g.length : Int))
+    (hf : FitsLen g.length)
+    (hmoves : bPark.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : bPark.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hfit : FitsLen (moves + pegCount g))
+    (c : PegCtx)
+    (hCopy : c.b0 = placeBoard bPark 6 hHs hDs g moves peak)
+    (rowXs : List Nat)
+    (hT0 : c.b0.sudo_5Board_6tally0 = (c.t0 : Int))
+    (hRow : c.b0.sudo_5Board_3row = embed rowXs)
+    (hRoom : c.t0 + c.m ≤ rowXs.length)
+    (hWhite : ∀ j (hj : j < c.m), rowXs[c.t0 + j]'(by omega) = 1)
+    (hfitW : FitsLen (c.t0 + c.m))
+    (xs ys : List Nat)
+    (n k mvs slides holeM bench pk pkS cOps : Nat)
+    (hH6 : 6 < (pegBoard c c.m).sudo_5Board_4home.size)
+    (hD6 : 6 < (pegBoard c c.m).sudo_5Board_4held.size)
+    (hops0 : 0 < (pegBoard c c.m).sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (mulHyps : Ecbs.mul (pegBoard c c.m) (5 : Int) (5 : Int) (6 : Int) false false false =
+      .ok (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
+        pk pkS cOps hH6 hD6 hops0))
+    (hH5 : 5 < (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
+        pk pkS cOps hH6 hD6 hops0).sudo_5Board_4home.size)
+    (hD5 : 5 < (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
+        pk pkS cOps hH6 hD6 hops0).sudo_5Board_4held.size)
+    (movesC : Nat)
+    (hClear : Ecbs.clear (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
+        pk pkS cOps hH6 hD6 hops0) (5 : Int) =
+      .ok (clearHeldBoard (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
+        pk pkS cOps hH6 hD6 hops0) 5 xs movesC hH5 hD5)) :
+    (do
+        let b ← Ecbs.park_rung b (rung : Int)
+        let b ← Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false
+        let _ ← SudoRt.runLoopOn (Int.ofNat 0)
+            (fuelRange (Int.ofNat 0) (Int.ofNat (c.m - 1)))
+            (whiteStep b (Int.ofNat (c.m - 1)))
+            (fun j => .ok (b, j))
+            (fun _ => .ok (b, (0 : Int)))
+        let out ← SudoRt.runLoopOn (Int.ofNat 0, b)
+            (fuelRange (Int.ofNat 0) (Int.ofNat (c.m - 1)))
+            (cubePegStep c.src (Int.ofNat (c.m - 1)))
+            (fun σ => .ok σ)
+            (fun r => .ok ((0 : Int), r))
+        let b := out.2
+        let b ← Ecbs.mul b (5 : Int) (5 : Int) (6 : Int) false false false
+        Ecbs.clear b (5 : Int)) =
+      .ok (clearHeldBoard (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
+        pk pkS cOps hH6 hD6 hops0) 5 xs movesC hH5 hD5) := by
+  rw [hPark, ok_bind]
+  rw [copy_band_refines bPark 6 5 g moves peak hHs hDs hH5s hD5s h7 hsrc harr hempty
+      hn hf hmoves hpeak hfit, ok_bind]
+  rw [← hCopy]
+  rw [white_scan_loop_refines c.b0 rowXs c.t0 c.m c.hm hT0 hRow hRoom hWhite hfitW c.hfitM,
+    ok_bind]
+  rw [cube_peg_loop_refines c, ok_bind]
+  dsimp only
+  rw [mulHyps, ok_bind, hClear]
+
+/-- The board after the clear, once the final/non-final and white/red branches
+    have run. `bD` is the doubled board, `bMulF` the final red product, `bAdd`
+    the non-final red board after the extra white peg. -/
+def rungStepBoard (bC bD bMulF bAdd : Ecbs.Board) (last : Bool) (rung : Nat) : Ecbs.Board :=
+  if last then
+    if rung = 2 then bMulF else bC
+  else
+    if rung = 2 then bAdd else bD
+
+private theorem beq_rung_two (rung : Nat) (h : rung = 2) :
+    SudoRt.SEq.beq (rung : Int) (2 : Int) = true := by
+  rw [sEq_int, ← ofNat_eq_natCast rung, show (2 : Int) = Int.ofNat 2 from rfl, h]
+  exact decide_eq_true rfl
+
+private theorem beq_rung_not_two (rung : Nat) (h : rung ≠ 2) :
+    SudoRt.SEq.beq (rung : Int) (2 : Int) = false := by
+  rw [sEq_int, ← ofNat_eq_natCast rung, show (2 : Int) = Int.ofNat 2 from rfl]
+  rw [decide_eq_false_iff_not]
+  intro hEq
+  exact h (Int.ofNat.inj hEq)
+
+/-- One emitted rung after the park-through-clear prefix, for every
+    final/non-final and white/red combination. `pre` is that prefix, so the
+    park is the idle keep or the unpark-then-park, whichever proved `pre`.
+    A non-final rung doubles. A red rung cubes the gap and multiplies by `x`.
+    A non-final red rung then lays one white peg. -/
+theorem rung_step_refines (pre : Except SudoRt.Trap Ecbs.Board) (bC bD bCubeF bMulF
+    bCubeO bMulO bAdd : Ecbs.Board) (last : Bool) (rung : Nat) (x : Int)
+    (hPre : pre = .ok bC)
+    (hDouble : Ecbs.tally_double bC = .ok bD)
+    (hCubeF : Ecbs.cube bC (6 : Int) (5 : Int) = .ok bCubeF)
+    (hMulF : Ecbs.mul bCubeF (5 : Int) x (6 : Int) false false false = .ok bMulF)
+    (hCubeO : Ecbs.cube bD (6 : Int) (5 : Int) = .ok bCubeO)
+    (hMulO : Ecbs.mul bCubeO (5 : Int) x (6 : Int) false false false = .ok bMulO)
+    (hAdd : Ecbs.tally_add_one bMulO = .ok bAdd) :
+    (do
+        let b ← pre
+        if !last then
+          do
+            let b ← Ecbs.tally_double b
+            if SudoRt.SEq.beq (rung : Int) (2 : Int) then
+              do
+                let b ← Ecbs.cube b (6 : Int) (5 : Int)
+                let b ← Ecbs.mul b (5 : Int) x (6 : Int) false false false
+                if !last then Ecbs.tally_add_one b else pure b
+            else pure b
+        else if SudoRt.SEq.beq (rung : Int) (2 : Int) then
+          do
+            let b ← Ecbs.cube b (6 : Int) (5 : Int)
+            let b ← Ecbs.mul b (5 : Int) x (6 : Int) false false false
+            if !last then Ecbs.tally_add_one b else pure b
+        else pure b) =
+      .ok (rungStepBoard bC bD bMulF bAdd last rung) := by
+  rw [hPre, ok_bind]
+  by_cases hL : last
+  · rw [hL]
+    simp only [Bool.not_true, if_false]
+    by_cases hR : rung = 2
+    · rw [beq_rung_two rung hR]
+      simp only [if_true]
+      rw [hCubeF, ok_bind, hMulF, ok_bind]
+      simp only [Bool.not_true, if_false, pure_eq_ok]
+      simp [rungStepBoard, hL, hR]
+    · rw [beq_rung_not_two rung hR]
+      simp only [Bool.false_eq_true, if_false, pure_eq_ok]
+      simp [rungStepBoard, hL, hR]
+  · have hLf : last = false := by simpa using hL
+    rw [hLf]
+    simp only [Bool.not_false, if_true]
+    rw [hDouble, ok_bind]
+    by_cases hR : rung = 2
+    · rw [beq_rung_two rung hR]
+      simp only [if_true]
+      rw [hCubeO, ok_bind, hMulO, ok_bind, hAdd]
+      simp [rungStepBoard, hLf, hR]
+    · rw [beq_rung_not_two rung hR]
+      simp only [Bool.false_eq_true, if_false, pure_eq_ok]
+      simp [rungStepBoard, hLf, hR]
+
 end EcbsLink2.Link2

@@ -474,15 +474,16 @@ jobs:
     # is tied (first peg bench-off, later pegs the named live cube; the prefix
     # is cubeTimes). A final white rung with nothing parked is that loop, the
     # named live nocopy mul, and clear, and the climb invariant holds for one
-    # model step on that board. A non-final rung then doubles the tally.
-    # Moves, slides, peak, and ops are bounded by the
-    # existing fit checks, not pinned. A red rung, unpark-first,
+    # model step on that board. A non-final rung doubles. A red rung cubes
+    # and multiplies, and lays one more peg when it is not final. A later
+    # rung unparks before it parks. One charge covers the heaviest rung.
+    # Moves, slides, peak, and ops are bounded by that charge, not pinned.
     # and invert_number are not theorems yet. fold and the exchange are not
     # claimed yet. Short: no heavy checks.
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 537352 kB (about 0.51 GB). The job builds `place`, the schoolbook loop
+    # 544396 kB (about 0.52 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,
@@ -490,7 +491,7 @@ jobs:
     # `cube_refines`, `folded_read`, `value_after_set`, `settle_refines`, and
     # `new_board_refines`, `multiply_refines`, and `cube_number_refines`,
     # plus park / unpark, the one-peg tally steps, and emitted doubling.
-    # A red rung, unpark-first, invert_number, fold, and the exchange are not theorems yet.
+    # The climb induction, invert_number, fold, and the exchange are not theorems yet.
     # The live tally peg after a named live cube is.
     runs-on: ubuntu-latest
     steps:

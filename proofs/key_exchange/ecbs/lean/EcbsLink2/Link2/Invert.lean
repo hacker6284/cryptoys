@@ -542,6 +542,22 @@ theorem paintOnes_get_hi (xs : List Nat) (start k j : Nat)
     have hne : start + k ≠ j := by omega
     simp [paintOnes, List.getElem_set, hne, ih (by omega)]
 
+theorem paintOnes_get_lo (xs : List Nat) (start k j : Nat)
+    (hj : j < k) (hk : start + k ≤ xs.length) :
+    (paintOnes xs start k)[start + j]'(by
+      rw [paintOnes_length]
+      exact Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj start) hk) = 1 := by
+  induction k generalizing j with
+  | zero => omega
+  | succ k ih =>
+    simp only [paintOnes]
+    by_cases hlast : j = k
+    · subst hlast
+      simp [List.getElem_set]
+    · have hne : start + k ≠ start + j := by omega
+      simp [List.getElem_set, hne]
+      exact ih j (Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hj) hlast) (Nat.le_of_succ_le hk)
+
 /-- One red tally peg turned white. The hole does not beat the recorded high. -/
 theorem tally_mark_white (b : Ecbs.Board) (xs : List Nat) (t0 j ctrl high control : Nat)
     (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
@@ -1614,6 +1630,31 @@ theorem paintRed_length (xs : List Nat) (start k : Nat) :
 theorem paintRed_succ (xs : List Nat) (start k : Nat) :
     paintRed xs start (k + 1) = (paintRed xs start k).set (start + k) 2 := rfl
 
+theorem paintRed_get_hi (xs : List Nat) (start k j : Nat)
+    (hk : start + k ≤ j) (hj : j < xs.length) :
+    (paintRed xs start k)[j]'(by rw [paintRed_length]; exact hj) = xs[j] := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    have hne : start + k ≠ j := by omega
+    simp [paintRed, List.getElem_set, hne, ih (by omega)]
+
+theorem paintRed_get_lo (xs : List Nat) (start k j : Nat)
+    (hj : j < k) (hk : start + k ≤ xs.length) :
+    (paintRed xs start k)[start + j]'(by
+      rw [paintRed_length]
+      exact Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj start) hk) = 2 := by
+  induction k generalizing j with
+  | zero => omega
+  | succ k ih =>
+    simp only [paintRed]
+    by_cases hlast : j = k
+    · subst hlast
+      simp [List.getElem_set]
+    · have hne : start + k ≠ start + j := by omega
+      simp [List.getElem_set, hne]
+      exact ih j (Nat.lt_of_le_of_ne (Nat.le_of_lt_succ hj) hlast) (Nat.le_of_succ_le hk)
+
 /-- Control counter added by one emitted rung. A later rung unparks first (`+2`)
     and then parks (`+2`); the first rung only parks. The cube loop adds one per
     tally peg. A non-final rung doubles the tally (`+2 · tally`). A non-final red
@@ -1651,6 +1692,74 @@ def afterTally (row : List Nat) (t0 tally colour : Nat) (last : Bool) : List Nat
 def rungRow (row : List Nat) (fromHole : Int) (park hole t0 tally colour : Nat)
     (last : Bool) : List Nat :=
   afterTally (afterPark row fromHole park hole colour) t0 tally colour last
+
+theorem afterPark_length (row : List Nat) (fromHole : Int) (park hole colour : Nat) :
+    (afterPark row fromHole park hole colour).length = row.length := by
+  unfold afterPark
+  by_cases hF : fromHole < 0
+  · simp [hF, List.length_set]
+  · simp [hF, List.length_set]
+
+theorem afterTally_length (row : List Nat) (t0 tally colour : Nat) (last : Bool) :
+    (afterTally row t0 tally colour last).length = row.length := by
+  unfold afterTally
+  by_cases hL : last
+  · simp [hL, paintRed_length]
+  · simp only [hL, Bool.false_eq_true, if_false]
+    by_cases hR : colour = 2
+    · simp [hR, List.length_set, paintOnes_length, paintRed_length]
+    · simp [hR, paintOnes_length, paintRed_length]
+
+theorem rungRow_length (row : List Nat) (fromHole : Int) (park hole t0 tally colour : Nat)
+    (last : Bool) :
+    (rungRow row fromHole park hole t0 tally colour last).length = row.length := by
+  unfold rungRow
+  rw [afterTally_length, afterPark_length]
+
+/-- Writes of `afterPark` sit strictly before the tally origin, so the tally
+    segment and everything past it are unchanged. -/
+theorem afterPark_get (row : List Nat) (fromHole : Int) (park hole colour j : Nat)
+    (hp : park < j) (hh : hole < j)
+    (hfrom : fromHole < 0 ∨ fromHole.toNat < j)
+    (hj : j < row.length) :
+    (afterPark row fromHole park hole colour)[j]'(by
+      rw [afterPark_length]; exact hj) = row[j] := by
+  unfold afterPark
+  by_cases hF : fromHole < 0
+  · have hneP : park ≠ j := by omega
+    have hneH : hole ≠ j := by omega
+    simp [hF, List.getElem_set, hneP, hneH]
+  · have hneS : fromHole.toNat ≠ j := by
+      cases hfrom with
+      | inl h => exact absurd h hF
+      | inr h => omega
+    have hneP : park ≠ j := by omega
+    have hneH : hole ≠ j := by omega
+    simp [hF, List.getElem_set, hneS, hneP, hneH]
+
+/-- While rungs remain, the tally segment is white and every later hole is empty.
+    After the final rung the segment is red. "Beyond the current length" is the
+    empty tail. -/
+structure RowSeg (row : List Nat) (t0 tally : Nat) (finished : Bool) : Prop where
+  room : t0 + tally ≤ row.length
+  colour : ∀ j (hj : j < tally),
+    row[t0 + j]'(Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj t0) room) =
+      if finished then 2 else 1
+  beyond : finished = false → ∀ j, tally ≤ j → ∀ (h : t0 + j < row.length),
+    row[t0 + j]'h = 0
+
+theorem paintRed_seg (row : List Nat) (t0 tally : Nat)
+    (hroom : t0 + tally ≤ row.length)
+    (hwhite : ∀ j (hj : j < tally),
+      row[t0 + j]'(Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj t0) hroom) = 1)
+    (htail : ∀ j, tally ≤ j → ∀ (h : t0 + j < row.length), row[t0 + j]'h = 0) :
+    RowSeg (paintRed row t0 tally) t0 tally true := by
+  refine ⟨by rw [paintRed_length]; exact hroom, ?_, ?_⟩
+  · intro j hj
+    have hget := paintRed_get_lo row t0 tally j hj hroom
+    simpa using hget
+  · intro hfin
+    cases hfin
 
 /-- The model state one rung of the climb carries: the gap polynomial, where the
     working value sits, the tally length, the park, and the control row the
@@ -3957,6 +4066,124 @@ theorem tallyAfter_le (tally rung : Nat) (last : Bool) :
   unfold tallyAfter
   by_cases hL : last <;> by_cases hR : rung = 2 <;> simp [hL, hR] <;> omega
 
+theorem paintOnes_get_before (xs : List Nat) (start k j : Nat)
+    (hj : j < start) (hlen : j < xs.length) :
+    (paintOnes xs start k)[j]'(by rw [paintOnes_length]; exact hlen) = xs[j] := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    have hne : start + k ≠ j := Nat.ne_of_gt (Nat.lt_of_lt_of_le hj (Nat.le_add_right _ _))
+    simp [paintOnes, List.getElem_set, hne, ih]
+
+/-- A non-final white rung doubles the tally: both halves are white, and holes
+    past `2 · tally` stay empty. -/
+theorem openWhite_seg (row : List Nat) (t0 tally : Nat)
+    (hroom : t0 + 2 * tally ≤ row.length)
+    (htail : ∀ j, tally ≤ j → ∀ (h : t0 + j < row.length), row[t0 + j]'h = 0) :
+    RowSeg (paintOnes (paintOnes (paintRed row t0 tally) t0 tally) (t0 + tally) tally)
+      t0 (2 * tally) false := by
+  let reds := paintRed row t0 tally
+  let back := paintOnes reds t0 tally
+  let wide := paintOnes back (t0 + tally) tally
+  have htwo : 2 * tally = tally + tally := Nat.two_mul tally
+  have hroom' : t0 + tally + tally ≤ row.length := by
+    simpa [htwo, Nat.add_assoc] using hroom
+  have hhalf : t0 + tally ≤ row.length := Nat.le_trans (Nat.le_add_right _ _) hroom'
+  have hlenW : t0 + 2 * tally ≤ wide.length := by
+    simpa [wide, back, reds, paintOnes_length, paintRed_length] using hroom
+  refine ⟨hlenW, ?_, ?_⟩
+  · intro j hj
+    by_cases hfst : j < tally
+    · have hback := paintOnes_get_lo reds t0 tally j hfst
+        (by simpa [reds, paintRed_length] using hhalf)
+      have hpre : t0 + j < t0 + tally := Nat.add_lt_add_left hfst t0
+      have hlenB : t0 + j < back.length := by
+        simpa [back, reds, paintOnes_length, paintRed_length] using
+          (Nat.lt_of_lt_of_le hpre hhalf)
+      have hbefore := paintOnes_get_before back (t0 + tally) tally (t0 + j) hpre hlenB
+      have : wide[t0 + j]'(by
+          simpa [wide, back, reds, paintOnes_length, paintRed_length] using
+            (Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj t0) hroom)) = 1 := by
+        simpa [wide, hbefore] using hback
+      simpa [wide] using this
+    · have hsec : j - tally < tally := by omega
+      have hidx : (t0 + tally) + (j - tally) = t0 + j := by omega
+      have hlo := paintOnes_get_lo back (t0 + tally) tally (j - tally) hsec
+        (by simpa [back, reds, paintOnes_length, paintRed_length] using hroom')
+      have : wide[(t0 + tally) + (j - tally)] = 1 := hlo
+      simpa [wide, hidx] using this
+  · intro _ j hj h
+    have hrow : t0 + j < row.length := by
+      simpa [wide, back, reds, paintOnes_length, paintRed_length] using h
+    have h0 := htail j (by omega) hrow
+    have hr := paintRed_get_hi row t0 tally (t0 + j) (by omega) hrow
+    have hb := paintOnes_get_hi reds t0 tally (t0 + j) (by omega)
+      (by simpa [reds, paintRed_length] using hrow)
+    have hw := paintOnes_get_hi back (t0 + tally) tally (t0 + j) (by omega)
+      (by simpa [back, reds, paintOnes_length, paintRed_length] using hrow)
+    simpa [wide, hw, hb, hr] using h0
+
+theorem afterPark_seg (row : List Nat) (fromHole : Int) (park hole colour t0 tally : Nat)
+    (hseg : RowSeg row t0 tally false) (hp : park < t0) (hh : hole < t0)
+    (hfrom : fromHole < 0 ∨ fromHole.toNat < t0) :
+    RowSeg (afterPark row fromHole park hole colour) t0 tally false := by
+  have hlen : t0 + tally ≤ (afterPark row fromHole park hole colour).length := by
+    rw [afterPark_length]; exact hseg.room
+  refine ⟨hlen, ?_, ?_⟩
+  · intro j hj
+    have hget := afterPark_get row fromHole park hole colour (t0 + j)
+      (Nat.lt_of_lt_of_le hp (Nat.le_add_right _ _))
+      (Nat.lt_of_lt_of_le hh (Nat.le_add_right _ _))
+      (by
+        cases hfrom with
+        | inl h => exact Or.inl h
+        | inr h => exact Or.inr (Nat.lt_of_lt_of_le h (Nat.le_add_right _ _)))
+      (Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj t0) hseg.room)
+    simpa [hget] using hseg.colour j hj
+  · intro _ j hj h
+    have hrow : t0 + j < row.length := by rw [afterPark_length] at h; exact h
+    have hget := afterPark_get row fromHole park hole colour (t0 + j)
+      (by omega) (by omega)
+      (by
+        cases hfrom with
+        | inl hf => exact Or.inl hf
+        | inr hf => exact Or.inr (by omega))
+      hrow
+    have hz := hseg.beyond rfl j hj hrow
+    rw [hget, hz]
+
+/-- One model rung, park writes before `t0`. A final rung turns the white segment
+    red. A non-final white rung doubles it. The empty tail past the new length
+    stays empty when the row has room for that write. -/
+theorem rungRow_final_seg (row : List Nat) (fromHole : Int) (park hole t0 tally colour : Nat)
+    (hseg : RowSeg row t0 tally false) (hp : park < t0) (hh : hole < t0)
+    (hfrom : fromHole < 0 ∨ fromHole.toNat < t0) :
+    RowSeg (rungRow row fromHole park hole t0 tally colour true) t0 tally true := by
+  have hpark := afterPark_seg row fromHole park hole colour t0 tally hseg hp hh hfrom
+  have hred := paintRed_seg (afterPark row fromHole park hole colour) t0 tally hpark.room
+    (by
+      intro j hj
+      simpa using hpark.colour j hj)
+    (by
+      intro j hj h
+      exact hpark.beyond rfl j hj h)
+  simpa [rungRow, afterTally] using hred
+
+theorem rungRow_open_white_seg (row : List Nat) (fromHole : Int)
+    (park hole t0 tally colour : Nat) (hseg : RowSeg row t0 tally false)
+    (hp : park < t0) (hh : hole < t0) (hfrom : fromHole < 0 ∨ fromHole.toNat < t0)
+    (hroom : t0 + 2 * tally ≤ row.length) (hcolour : colour ≠ 2) :
+    RowSeg (rungRow row fromHole park hole t0 tally colour false) t0 (2 * tally) false := by
+  have hpark := afterPark_seg row fromHole park hole colour t0 tally hseg hp hh hfrom
+  have htail : ∀ j, tally ≤ j → ∀ (h : t0 + j < (afterPark row fromHole park hole colour).length),
+      (afterPark row fromHole park hole colour)[t0 + j]'h = 0 := by
+    intro j hj h
+    exact hpark.beyond rfl j hj h
+  have hwhite := openWhite_seg (afterPark row fromHole park hole colour) t0 tally
+    (by rw [afterPark_length]; exact hroom) htail
+  have hne : (colour = 2) = False := by simpa using hcolour
+  simpa [rungRow, afterTally, hne] using hwhite
+
 /-- Tally length along a rung list. The head is the next rung; `last` is the
     empty tail, so the final element of the list is the final rung. -/
 def climbTally (tally : Nat) : List Nat → Nat
@@ -4089,6 +4316,13 @@ structure ClimbBudget where
   fitM : FitsLen (moves0 + R * rungCharge n bench mMax)
   fitS : FitsLen (slides0 + R * rungSlideCharge n mMax)
   fitO : FitsLen (ops0 + R * (mMax + 3))
+  x : List Nat
+  xHome : Nat
+  w : Nat
+  h : Nat
+  r : Nat
+  cg : Nat
+  control : Nat
 
 /-- One rung's counter growth: at most one `rungCharge` of the current tally,
     one slide charge, `mMax + 3` on every ops slot, and a peak that is
@@ -4114,9 +4348,50 @@ structure RungDelta (b b' : Ecbs.Board) (base : ClimbBudget) (m : Nat) : Prop wh
     b'.sudo_5Board_4cost.sudo_5Costs_4peak = (pk' : Int) ∧
     pk' ≤ max pk 7
 
+/-- What one rung reads off the board, beyond the gap polynomial and the counters.
+    The spare (home 6) is empty. When the gap sits on the bench, home 5 is clear.
+    When it sits in the home, the bench is off. The input home stays held. The
+    tier layout is the board's. `seg` is the white tally and the empty holes
+    past it, or the red segment once the final rung has run. -/
+structure ClimbShape (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
+    (base : ClimbBudget) : Prop where
+  spareH : 6 < b.sudo_5Board_4home.size
+  spareD : 6 < b.sudo_5Board_4held.size
+  spareE : b.sudo_5Board_4held[6] = false
+  h7 : 7 ≤ b.sudo_5Board_4held.size
+  gapClear : s.onBench = true →
+    b.sudo_5Board_4held[5]'(Nat.lt_of_lt_of_le (by decide : (5 : Nat) < 7) h7) = false
+  offWhenHome : s.onBench = false → b.sudo_5Board_8bench_on = false
+  xD : base.xHome < b.sudo_5Board_4held.size
+  xH : base.xHome < b.sudo_5Board_4home.size
+  xHeld : b.sudo_5Board_4held[base.xHome] = true
+  xArr : b.sudo_5Board_4home[base.xHome] = embed base.x
+  xNe5 : base.xHome ≠ 5
+  xNe6 : base.xHome ≠ 6
+  gapLen : s.gap.length = s.n
+  seg : RowSeg s.row s.t0 s.tally rest.isEmpty
+  tierN : b.sudo_5Board_1t.sudo_4Tier_1n = (s.n : Int)
+  tierK : b.sudo_5Board_1t.sudo_4Tier_1k = (s.k : Int)
+  tierB : b.sudo_5Board_1t.sudo_4Tier_8benchlen = (s.benchlen : Int)
+  tierW : b.sudo_5Board_1t.sudo_4Tier_1w = (base.w : Int)
+  tierH : b.sudo_5Board_1t.sudo_4Tier_1h = (base.h : Int)
+  tierR : b.sudo_5Board_1t.sudo_4Tier_1r = (base.r : Int)
+  tierCg : b.sudo_5Board_1t.sudo_4Tier_7combgap = (base.cg : Int)
+  tierC : b.sudo_5Board_1t.sudo_4Tier_7control = (base.control : Int)
+  rowLen : s.row.length = base.control
+  w0 : 0 < base.w
+  h0 : 0 < base.h
+  r0 : 0 < base.r
+  rlt : base.r < base.h
+  n_eq : s.n = base.w * base.h - 1
+  k_le : s.k ≤ s.n
+  gap_eq : s.n - s.k = base.w * base.r
+
 /-- Induction hypothesis after the prefix `done`, with `rest` still to run.
     The tally length is `climbTallyPrefix`, proved from the rung list. The
-    counters are at most `done.length` charges. -/
+    counters are at most `done.length` charges. `shape` is the spare, the gap
+    home, the tally segment past the current length, the held input, and the
+    tier layout. -/
 structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
     (base : ClimbBudget) : Prop where
   inv : ClimbInv b s
@@ -4125,6 +4400,7 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   hbench : s.benchlen = base.bench
   htally0 : s.tally = climbTallyPrefix base.tally0 done rest
   kLe : (done ++ rest).length ≤ base.R
+  shape : ClimbShape b s rest base
   moves : ∃ (mv : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
     mv ≤ base.moves0 + done.length * rungCharge base.n base.bench base.mMax
@@ -4179,7 +4455,8 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     (h : ClimbInvK done (r :: rest) b s base)
     (hinv : ClimbInv b' (modelRung s x r hole rest.isEmpty))
     (hδ : RungDelta b b' base s.tally)
-    (hCap : climbTallyPrefix base.tally0 done (r :: rest) ≤ base.mMax) :
+    (hCap : climbTallyPrefix base.tally0 done (r :: rest) ≤ base.mMax)
+    (hshape : ClimbShape b' (modelRung s x r hole rest.isEmpty) rest base) :
     ClimbInvK (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
   have hT := h.tally_le hCap
   have hm : rungCharge base.n base.bench s.tally ≤
@@ -4194,6 +4471,7 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       hbench := ?_
       htally0 := ?_
       kLe := ?_
+      shape := hshape
       moves := ?_
       slides := ?_
       ops := ?_
@@ -4278,10 +4556,11 @@ theorem climb_refines
       climbTallyPrefix base.tally0 done rest ≤ base.mMax)
     (hstep : ∀ (done rest : List Nat) (r : Nat) (b : Ecbs.Board) (s : ClimbModel),
       rs = done ++ r :: rest →
-      ClimbInvK done (r :: rest) b s base →
+      ∀ (hK : ClimbInvK done (r :: rest) b s base),
       ∃ b', step b r rest.isEmpty = .ok b' ∧
         ClimbInv b' (modelRung s x r (hole s r rest.isEmpty) rest.isEmpty) ∧
-        RungDelta b b' base s.tally) :
+        RungDelta b b' base s.tally ∧
+        ClimbShape b' (modelRung s x r (hole s r rest.isEmpty) rest.isEmpty) rest base) :
     ∃ b' s', climbEmit step b0 rs = .ok b' ∧ s' = modelClimb s0 x hole rs ∧
       ClimbInvK rs [] b' s' base ∧
       (s'.gap, s'.tally) = invClimb s0.n s0.k s0.benchlen x (s0.gap, s0.tally) rs ∧
@@ -4299,8 +4578,8 @@ theorem climb_refines
       exact ⟨b, s, by simp [climbEmit], rfl, by simpa using h⟩
     | cons r rest ih =>
       intro b s hrs h
-      obtain ⟨b1, hb1, hinv, hδ⟩ := hstep done rest r b s hrs h
-      have hK := climbInvK_succ h hinv hδ (hCap done (r :: rest) hrs)
+      obtain ⟨b1, hb1, hinv, hδ, hshape⟩ := hstep done rest r b s hrs h
+      have hK := climbInvK_succ h hinv hδ (hCap done (r :: rest) hrs) hshape
       have hrs' : rs = (done ++ [r]) ++ rest := by
         simp [hrs, List.append_assoc]
       obtain ⟨b', s', hfold, hs', hK'⟩ := ih (done ++ [r]) b1
@@ -4540,5 +4819,144 @@ theorem serious_climb_cap (done rest : List Nat)
   have h := serious_tier_sat.prefixes
   rw [hrs] at h
   exact tallyPrefixesLe_spec 1 (rowRoom Spec.serious) done rest h
+
+/-- Clear home 5. The spare and every other home stay. The gap home is empty. -/
+theorem clearHeld_gap (b : Ecbs.Board) (xs : List Nat) (moves : Nat)
+    (hH : 5 < b.sudo_5Board_4home.size) (hD : 5 < b.sudo_5Board_4held.size) :
+    (clearHeldBoard b 5 xs moves hH hD).sudo_5Board_4held[5]'(by
+      simp [clearHeldBoard, Array.size_set]; exact hD) = false := by
+  simp [clearHeldBoard, Array.getElem_set]
+
+theorem clearHeld_keep (b : Ecbs.Board) (home other : Nat) (xs : List Nat) (moves : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hO : other < b.sudo_5Board_4held.size) (hne : other ≠ home)
+    (h : b.sudo_5Board_4held[other] = false) :
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_4held[other]'(by
+      simp [clearHeldBoard, Array.size_set]; exact hO) = false := by
+  simp [clearHeldBoard, Array.getElem_set, Ne.symm hne, h]
+
+theorem clearHeld_keep_held (b : Ecbs.Board) (home other : Nat) (xs : List Nat) (moves : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hO : other < b.sudo_5Board_4held.size) (hne : other ≠ home)
+    (h : b.sudo_5Board_4held[other] = true) :
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_4held[other]'(by
+      simp [clearHeldBoard, Array.size_set]; exact hO) = true := by
+  simp [clearHeldBoard, Array.getElem_set, Ne.symm hne, h]
+
+/-- Re-establish the shape on a board that still holds the input, still has an
+    empty spare, and has cleared the gap, with the model's new tally segment. -/
+theorem shape_refresh {b : Ecbs.Board} {s : ClimbModel} {done : List Nat}
+    {base : ClimbBudget} (h : ClimbShape b s done base)
+    (b' : Ecbs.Board) (s' : ClimbModel) (rest : List Nat)
+    (hn : s'.n = s.n) (hk : s'.k = s.k) (hb : s'.benchlen = s.benchlen)
+    (hgap : s'.gap.length = s'.n)
+    (hseg : RowSeg s'.row s'.t0 s'.tally rest.isEmpty)
+    (hspareD : 6 < b'.sudo_5Board_4held.size)
+    (hspareH : 6 < b'.sudo_5Board_4home.size)
+    (hspare : b'.sudo_5Board_4held[6] = false)
+    (h7 : 7 ≤ b'.sudo_5Board_4held.size)
+    (hclear : s'.onBench = true →
+      b'.sudo_5Board_4held[5]'(Nat.lt_of_lt_of_le (by decide : (5 : Nat) < 7) h7) = false)
+    (hoff : s'.onBench = false → b'.sudo_5Board_8bench_on = false)
+    (hxD : base.xHome < b'.sudo_5Board_4held.size)
+    (hxH : base.xHome < b'.sudo_5Board_4home.size)
+    (hx : b'.sudo_5Board_4held[base.xHome] = true)
+    (harr : b'.sudo_5Board_4home[base.xHome] = embed base.x)
+    (hN : b'.sudo_5Board_1t.sudo_4Tier_1n = (s'.n : Int))
+    (hK : b'.sudo_5Board_1t.sudo_4Tier_1k = (s'.k : Int))
+    (hB : b'.sudo_5Board_1t.sudo_4Tier_8benchlen = (s'.benchlen : Int))
+    (hW : b'.sudo_5Board_1t.sudo_4Tier_1w = (base.w : Int))
+    (hHt : b'.sudo_5Board_1t.sudo_4Tier_1h = (base.h : Int))
+    (hR : b'.sudo_5Board_1t.sudo_4Tier_1r = (base.r : Int))
+    (hCg : b'.sudo_5Board_1t.sudo_4Tier_7combgap = (base.cg : Int))
+    (hC : b'.sudo_5Board_1t.sudo_4Tier_7control = (base.control : Int))
+    (hrow : s'.row.length = base.control) :
+    ClimbShape b' s' rest base := by
+  refine
+    { spareH := hspareH
+      spareD := hspareD
+      spareE := hspare
+      h7 := h7
+      gapClear := hclear
+      offWhenHome := hoff
+      xD := hxD
+      xH := hxH
+      xHeld := hx
+      xArr := harr
+      xNe5 := h.xNe5
+      xNe6 := h.xNe6
+      gapLen := hgap
+      seg := hseg
+      tierN := hN
+      tierK := hK
+      tierB := hB
+      tierW := hW
+      tierH := hHt
+      tierR := hR
+      tierCg := hCg
+      tierC := hC
+      rowLen := hrow
+      w0 := h.w0
+      h0 := h.h0
+      r0 := h.r0
+      rlt := h.rlt
+      n_eq := by rw [hn]; exact h.n_eq
+      k_le := by rw [hk, hn]; exact h.k_le
+      gap_eq := by rw [hn, hk]; exact h.gap_eq }
+
+/-- Later rung: the gap is on the bench and home 5 is clear, so the spare copy
+    reads the bench. The spare is empty. `place` leaves the bench aimed at the gap. -/
+theorem copy_gap_bench (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
+    (base : ClimbBudget) (moves peak : Nat)
+    (hinv : ClimbInv b s) (hshape : ClimbShape b s rest base)
+    (hon : s.onBench = true)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hf : FitsLen s.n)
+    (hnb : s.n ≤ s.benchlen)
+    (hfit : FitsLen (moves + pegCount s.gap)) :
+    Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false =
+      .ok (placeBoard b 6 hshape.spareH hshape.spareD s.gap moves peak) := by
+  have hpad : (s.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0).take s.n = s.gap := by
+    have hlen : s.gap.length = s.n := hshape.gapLen
+    rw [List.take_append_of_le_length (by rw [List.length_take, hlen]; omega),
+      List.take_take, Nat.min_self]
+    rw [← hlen]
+    exact List.take_length s.gap
+  have hbench := hinv.gapBench hon
+  have hcopy := copy_band_bench_refines b 6 5
+      (s.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0) s.n moves peak
+      hshape.spareH hshape.spareD hinv.hGs hshape.h7 (hshape.gapClear hon)
+      hbench.1 hbench.2.1 hbench.2.2.1 hshape.spareE
+      (by rw [hshape.tierN])
+      (by
+        rw [List.length_append, List.length_take, List.length_replicate, hshape.gapLen]
+        omega)
+      hf hmoves hpeak
+      (by simpa [hpad] using hfit)
+  simpa [hpad] using hcopy
+
+/-- While rungs remain, the tally segment is white, so the scan in the next rung
+    leaves the board unchanged. -/
+theorem white_of_shape (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
+    (base : ClimbBudget) (hinv : ClimbInv b s) (hshape : ClimbShape b s rest base)
+    (hrest : rest ≠ []) (hm : 0 < s.tally)
+    (hfit : FitsLen (s.t0 + s.tally)) (hfitM : FitsLen s.tally) :
+    SudoRt.runLoopOn (Int.ofNat 0) (fuelRange (Int.ofNat 0) (Int.ofNat (s.tally - 1)))
+      (whiteStep b (Int.ofNat (s.tally - 1)))
+      (fun j => .ok (b, j))
+      (fun _ => .ok (b, (0 : Int))) =
+    .ok (b, Int.ofNat (s.tally - 1)) := by
+  have hfin : rest.isEmpty = false := by
+    cases rest with
+    | nil => exact absurd rfl hrest
+    | cons _ _ => rfl
+  have hwhite : ∀ j (hj : j < s.tally), s.row[s.t0 + j]'(by
+      exact Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj s.t0) hshape.seg.room) = 1 := by
+    intro j hj
+    have hc := hshape.seg.colour j hj
+    simpa [hfin] using hc
+  exact white_scan_loop_refines b s.row s.t0 s.tally hm hinv.t0 hinv.row hshape.seg.room
+    hwhite hfit hfitM
 
 end EcbsLink2.Link2

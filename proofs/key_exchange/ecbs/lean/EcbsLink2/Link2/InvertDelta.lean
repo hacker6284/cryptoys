@@ -807,4 +807,20 @@ theorem rung_delta_clear
     refine ⟨pk, _, hpk, ?_, hpkLe⟩
     rw [hpkC, hpkM, ofNat_eq_natCast]
 
+/-- The red cube and the red mul add one peg charge and one mul charge on top
+    of the white piece. That is still one `rungCharge`. -/
+theorem red_extends_white (mv n bench m pegG mvPeg mvMul pegGap mvClear mvCube mvRed : Nat)
+    (hG : pegG ≤ n) (hPeg : mvPeg ≤ mv + pegG + m * pegCharge n bench)
+    (hMul : mvMul ≤ mvPeg + mulCharge n bench) (hGap : pegGap ≤ n)
+    (hClear : mvClear ≤ mvMul + pegGap) (hCube : mvCube ≤ mvClear + pegCharge n bench)
+    (hRed : mvRed ≤ mvCube + mulCharge n bench) :
+    mvRed ≤ mv + rungCharge n bench m := by
+  have hfinal := charge_final_red n bench m
+  have h1 : mvClear ≤ mv + pegG + m * pegCharge n bench + mulCharge n bench + n := by
+    omega
+  have h2 : mvRed ≤ mv + pegG + m * pegCharge n bench + mulCharge n bench + n +
+      pegCharge n bench + mulCharge n bench := by
+    omega
+  omega
+
 end EcbsLink2.Link2

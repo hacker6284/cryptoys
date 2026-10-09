@@ -507,8 +507,7 @@ jobs:
     # entry, that loop and the white rung through the gap mul and the clear are
     # one counter delta within the rung charge. The red cube and red mul add
     # one peg charge and one mul charge on top of that piece. The red board,
-    # the climb step
-    # hypothesis, and the ladder for are still open.
+    # the climb step hypothesis, and the ladder for are still open.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

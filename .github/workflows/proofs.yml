@@ -483,7 +483,7 @@ jobs:
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 622420 kB (about 0.59 GB). The job builds `place`, the schoolbook loop
+    # 628236 kB (about 0.60 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,
@@ -497,7 +497,8 @@ jobs:
     # checks hold at both caps. A later rung copies off the bench and slides
     # that bench into the gap before the peg loop. The induction carries the
     # spare, the gap home, the held input, the tier layout, and the tally
-    # segment. The park, the peg context, the mul, the red branch, the ladder
+    # segment. park_rung is the idle keep on rung 0 and the unpark-then-park
+    # later. The peg context, the mul, the red branch, the ladder
     # for, invert_number, fold, and the exchange are not tied yet.
     # The live tally peg after a named live cube is.
     runs-on: ubuntu-latest

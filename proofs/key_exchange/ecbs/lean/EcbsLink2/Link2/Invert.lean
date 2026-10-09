@@ -3,6 +3,7 @@
   Not a security claim.
 -/
 import EcbsLink2.Link2.Board
+import EcbsLink2.Link2.BoardBuild
 import EcbsLink2.Link2.Cube
 
 namespace EcbsLink2.Link2
@@ -4323,6 +4324,7 @@ structure ClimbBudget where
   r : Nat
   cg : Nat
   control : Nat
+  ladder0 : Nat
 
 /-- One rung's counter growth: at most one `rungCharge` of the current tally,
     one slide charge, `mMax + 3` on every ops slot, and a peak that is
@@ -4348,6 +4350,38 @@ structure RungDelta (b b' : Ecbs.Board) (base : ClimbBudget) (m : Nat) : Prop wh
     b'.sudo_5Board_4cost.sudo_5Costs_4peak = (pk' : Int) ∧
     pk' ≤ max pk 7
 
+/-- The climb hole `park_rung` reads, and the colour sitting there.
+    `climb_holes` walks `ladder0 + R - 1` down to `ladder0`. The hole for
+    rung index `ridx` is that list at `ridx`. -/
+def climbAt (ladder0 len i : Nat) : Nat := ladder0 + len - 1 - i
+
+structure ParkRead (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
+    (base : ClimbBudget) : Prop where
+  ladder0B : b.sudo_5Board_7ladder0 = (base.ladder0 : Int)
+  nrungsB : b.sudo_5Board_6nrungs = (base.R : Int)
+  climbH : Ecbs.climb_holes b =
+    .ok (embed (downFrom (base.ladder0 + base.R - 1) base.R))
+  holeLt : climbAt base.ladder0 base.R s.ridx < s.row.length
+  parkLt : s.parkAt < s.row.length
+  parkNe : climbAt base.ladder0 base.R s.ridx ≠ s.parkAt
+  parkLe : s.parkAt ≤ s.high
+  parkIn : s.parkAt < base.control
+  parkCell : s.fromHole < 0 → s.row[s.parkAt]'(parkLt) = 0
+  fromIdle : s.fromHole < 0 → s.fromHole = -1
+  fromNat : 0 ≤ s.fromHole → s.fromHole = ((s.fromHole.toNat : Nat) : Int)
+  srcOk : 0 ≤ s.fromHole →
+    s.fromHole.toNat < s.row.length ∧ s.fromHole.toNat < base.control ∧
+      s.fromHole.toNat ≤ s.high ∧
+      s.fromHole.toNat ≠ climbAt base.ladder0 base.R s.ridx
+  parkHeld : 0 ≤ s.fromHole → ∃ prev, s.row[s.parkAt]'(parkLt) = prev
+  nextRung : ∀ r rs, rest = r :: rs →
+    s.row[climbAt base.ladder0 base.R s.ridx]'(holeLt) = r ∧ r ≠ 0
+  fit2 : FitsLen (s.ctrl + 2)
+  fit4 : FitsLen ((s.ctrl + 2) + 2)
+  fitI : FitsLen (s.ridx + 1)
+  l0pos : 0 < base.ladder0
+  fitL0 : FitsLen base.ladder0
+  fitLR : FitsLen (base.ladder0 + base.R)
 /-- What one rung reads off the board, beyond the gap polynomial and the counters.
     The spare (home 6) is empty. When the gap sits on the bench, home 5 is clear.
     When it sits in the home, the bench is off. The input home stays held. The
@@ -4386,6 +4420,8 @@ structure ClimbShape (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
   n_eq : s.n = base.w * base.h - 1
   k_le : s.k ≤ s.n
   gap_eq : s.n - s.k = base.w * base.r
+  park : ParkRead b s rest base
+
 
 /-- Induction hypothesis after the prefix `done`, with `rest` still to run.
     The tally length is `climbTallyPrefix`, proved from the rung list. The
@@ -4870,7 +4906,8 @@ theorem shape_refresh {b : Ecbs.Board} {s : ClimbModel} {done : List Nat}
     (hR : b'.sudo_5Board_1t.sudo_4Tier_1r = (base.r : Int))
     (hCg : b'.sudo_5Board_1t.sudo_4Tier_7combgap = (base.cg : Int))
     (hC : b'.sudo_5Board_1t.sudo_4Tier_7control = (base.control : Int))
-    (hrow : s'.row.length = base.control) :
+    (hrow : s'.row.length = base.control)
+    (hpark : ParkRead b' s' rest base) :
     ClimbShape b' s' rest base := by
   refine
     { spareH := hspareH
@@ -4902,7 +4939,8 @@ theorem shape_refresh {b : Ecbs.Board} {s : ClimbModel} {done : List Nat}
       rlt := h.rlt
       n_eq := by rw [hn]; exact h.n_eq
       k_le := by rw [hk, hn]; exact h.k_le
-      gap_eq := by rw [hn, hk]; exact h.gap_eq }
+      gap_eq := by rw [hn, hk]; exact h.gap_eq
+      park := hpark }
 
 /-- Later rung: the gap is on the bench and home 5 is clear, so the spare copy
     reads the bench. The spare is empty. `place` leaves the bench aimed at the gap. -/
@@ -4935,6 +4973,103 @@ theorem copy_gap_bench (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
       hf hmoves hpeak
       (by simpa [hpad] using hfit)
   simpa [hpad] using hcopy
+
+theorem downFromLen (hi k : Nat) : (downFrom hi k).length = k := by
+  induction k generalizing hi with
+  | zero => rfl
+  | succ k ih => simp [downFrom, ih]
+
+theorem downFromAt (hi k i : Nat) (hik : i < k) :
+    (downFrom hi k)[i]'(by rw [downFromLen]; exact hik) = hi - i := by
+  induction k generalizing hi i with
+  | zero => cases hik
+  | succ k ih =>
+    cases i with
+    | zero => simp [downFrom]
+    | succ i =>
+      have ih' := ih (hi - 1) i (Nat.lt_of_succ_lt_succ hik)
+      simp [downFrom, List.getElem_cons_succ, ih']
+      omega
+
+theorem embed_nat (xs : List Nat) (i : Nat) (hi : i < xs.length) :
+    (embed xs)[i]'(by rw [size_embed]; exact hi) = (xs[i] : Int) := by
+  simp [embed, Array.getElem_mk, ofNat_eq_natCast]
+
+private theorem row_nat (b : Ecbs.Board) (xs : List Nat) (i c : Nat)
+    (hrow : b.sudo_5Board_3row = embed xs)
+    (hi : i < xs.length) (hc : xs[i]'hi = c) :
+    b.sudo_5Board_3row[i]'(by rw [hrow, size_embed]; exact hi) = (c : Int) := by
+  have hget := embed_nat xs i hi
+  simp [hrow, hget, hc]
+
+/-- Rung 0 keeps the park. A later rung is `park_rung_resume`. -/
+theorem park_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
+    {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base) :
+    ∃ bPark, Ecbs.park_rung b (r : Int) = .ok bPark ∧
+      bPark.sudo_5Board_11parked_from =
+        ((climbAt base.ladder0 base.R s.ridx : Nat) : Int) ∧
+      bPark.sudo_5Board_8rung_idx = Int.ofNat (s.ridx + 1) ∧
+      (s.fromHole < 0 →
+        ∃ (hRowP : s.parkAt < b.sudo_5Board_3row.size)
+          (hRowH : climbAt base.ladder0 base.R s.ridx < b.sudo_5Board_3row.size),
+          bPark = parkKeepBoard b (climbAt base.ladder0 base.R s.ridx) s.parkAt r
+            s.ridx s.ctrl hRowP hRowH) := by
+  let hole := climbAt base.ladder0 base.R s.ridx
+  let holes := downFrom (base.ladder0 + base.R - 1) base.R
+  have hidxN : s.ridx < base.R := by
+    rw [h.idx]
+    have hk := h.kLe
+    simp [List.length_append, List.length_cons] at hk
+    omega
+  have hAt : s.ridx < holes.length := by
+    simpa [holes, downFromLen] using hidxN
+  have hHole : holes[s.ridx] = hole := by
+    simpa [holes, hole, climbAt] using
+      downFromAt (base.ladder0 + base.R - 1) base.R s.ridx hidxN
+  have hr := h.shape.park.nextRung r rest rfl
+  have hRowH : hole < b.sudo_5Board_3row.size := by
+    rw [h.inv.row, size_embed]; exact h.shape.park.holeLt
+  have hRowP : s.parkAt < b.sudo_5Board_3row.size := by
+    rw [h.inv.row, size_embed]; exact h.shape.park.parkLt
+  have hColour : b.sudo_5Board_3row[hole] = (r : Int) := by
+    simpa [hole] using row_nat b s.row hole r h.inv.row h.shape.park.holeLt hr.1
+  have hpos : r ≠ 0 := hr.2
+  by_cases hF : s.fromHole < 0
+  · have hIdleB : b.sudo_5Board_11parked_from = -1 := by
+      rw [h.inv.fromP, h.shape.park.fromIdle hF]
+    have hZero : b.sudo_5Board_3row[s.parkAt] = 0 := by
+      simpa using row_nat b s.row s.parkAt 0 h.inv.row h.shape.park.parkLt
+        (h.shape.park.parkCell hF)
+    have hkeep := park_rung_keep_eq b holes s.ridx hole s.parkAt r s.high base.control s.ctrl
+      h.shape.park.climbH h.inv.ridx hAt hHole hIdleB h.inv.park hRowH hRowP hColour hZero
+      hpos h.shape.tierC h.shape.park.parkIn h.inv.high h.shape.park.parkLe h.inv.ctrl
+      h.shape.park.fit2 h.shape.park.parkNe h.shape.park.fitI
+    refine ⟨parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH, hkeep, ?_, ?_, ?_⟩
+    · simp [parkKeepBoard]
+    · simp [parkKeepBoard, ofNat_eq_natCast]
+    · intro _
+      exact ⟨hRowP, hRowH, rfl⟩
+  · have hge : 0 ≤ s.fromHole := by omega
+    obtain ⟨prev, hprev⟩ := h.shape.park.parkHeld hge
+    have hsrc := h.shape.park.srcOk hge
+    have hFrom : b.sudo_5Board_11parked_from = (s.fromHole.toNat : Int) := by
+      rw [h.inv.fromP]
+      exact h.shape.park.fromNat hge
+    have hPrevB : b.sudo_5Board_3row[s.parkAt] = (prev : Int) := by
+      simpa using row_nat b s.row s.parkAt prev h.inv.row h.shape.park.parkLt hprev
+    have hRowS : s.fromHole.toNat < b.sudo_5Board_3row.size := by
+      rw [h.inv.row, size_embed]; exact hsrc.1
+    have hres := park_rung_resume b holes s.ridx s.fromHole.toNat hole s.parkAt prev r
+      s.high base.control s.ctrl h.shape.park.climbH h.inv.ridx hAt hHole hFrom h.inv.park
+      hRowS hRowH hRowP hPrevB hColour hpos h.shape.tierC hsrc.2.1 h.shape.park.parkIn
+      h.inv.high hsrc.2.2.1 h.shape.park.parkLe h.inv.ctrl h.shape.park.fit2 h.shape.park.fit4
+      h.shape.park.parkNe (Ne.symm hsrc.2.2.2) h.shape.park.fitI
+    refine ⟨_, hres, ?_, ?_, ?_⟩
+    · simp [unparkedBoard]
+    · simp [unparkedBoard, ofNat_eq_natCast]
+    · intro hlt
+      omega
 
 /-- While rungs remain, the tally segment is white, so the scan in the next rung
     leaves the board unchanged. -/

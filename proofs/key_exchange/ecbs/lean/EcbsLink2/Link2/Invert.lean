@@ -5561,6 +5561,13 @@ private theorem pegPack_keep (c : PegCtx) (first : Nat) (xs0 : List Nat) (cMul :
       ih.heldLt ih.homeLt hne ih.held ih.arr ih.opsLt ih.op0
     simpa [pegPack, pegNext] using hlive
 
+/-- One home and the array it holds. -/
+structure CellKeep (b : Ecbs.Board) (first : Nat) (xs0 : List Nat) : Prop where
+  heldLt : first < b.sudo_5Board_4held.size
+  held : b.sudo_5Board_4held[first] = true
+  homeLt : first < b.sudo_5Board_4home.size
+  arr : b.sudo_5Board_4home[first] = embed xs0
+
 /-- After the bench-off cube-peg loop, `mul gap gap spare` is the live nocopy mul.
     The gap is still held at home 5. The spare is empty and the bench is on, aimed
     at the spare, holding `cubeBenchIter` of that gap. The move, slide, and mul-op
@@ -5579,6 +5586,7 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
       c.n = s.n ∧ c.k = s.k ∧ c.bench = s.benchlen ∧
       bM = pegBoard c c.m ∧
       ys = cubeBenchIter c.n c.k c.bench c.g c.m ∧
+      CellKeep bM 5 c.g ∧
       Ecbs.mul bM ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
           false false false =
         .ok (mulNoLiveBoard bM 5 6 c.g ys c.n c.k moves slides hole c.bench
@@ -5765,7 +5773,50 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
     c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap hwF hhF hrF hkF
     d.hHole d.hpeakS c.hsm c.hnsm c.hfitB hfold
   refine ⟨c, d.b, d.xs, d.moves, d.slides, d.hole, d.peak, d.peakS, cMul,
-    hH6, hD6, hkeep.opsLt, hcopy, hsrc, hg, hmEq, hn, hkN, hbch, hPack.1, d.hxs, hmul⟩
+    hH6, hD6, hkeep.opsLt, hcopy, hsrc, hg, hmEq, hn, hkN, hbch, hPack.1, d.hxs,
+    { heldLt := hkeep.heldLt, held := hkeep.held, homeLt := hkeep.homeLt, arr := hkeep.arr },
+    hmul⟩
+
+/-- A live nocopy mul clears the second home. A different home, and the array it holds, stay. -/
+private theorem mulLive_keep (b : Ecbs.Board) (dst second first : Nat) (xs ys : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat) (xs0 : List Nat)
+    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hne : first ≠ second)
+    (hFD : first < b.sudo_5Board_4held.size)
+    (hFH : first < b.sudo_5Board_4home.size)
+    (hHeld : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs0) :
+    CellKeep (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps
+      hH hD hops) first xs0 := by
+  let bM := mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops
+  have hHeldM := mul_live_held b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops
+  have hS := settle_held_eq b second hH hD ys n moves slides peak
+  have hHomeM := mul_live_home b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops
+  have heldLt : first < bM.sudo_5Board_4held.size := by
+    have hsz : bM.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+      rw [hHeldM]
+      simp only [Array.size_set]
+      rw [hS]
+      simp only [Array.size_set]
+    rw [hsz]
+    exact hFD
+  have held : bM.sudo_5Board_4held[first]'heldLt = true := by
+    have h1 := idx_get hHeldM first heldLt
+    rw [h1, Array.getElem_set, if_neg (Ne.symm hne)]
+    have hsz : first <
+        (settleBoard b second hH hD ys n moves slides peak).sudo_5Board_4held.size := by
+      rw [hS, Array.size_set]; exact hFD
+    have h2 := idx_get hS first hsz
+    rw [h2, Array.getElem_set, if_neg (Ne.symm hne)]
+    exact hHeld
+  have homeLt : first < bM.sudo_5Board_4home.size := by
+    rw [hHomeM, Array.size_set]; exact hFH
+  have arr : bM.sudo_5Board_4home[first]'homeLt = embed xs0 := by
+    have h1 := idx_get hHomeM first homeLt
+    rw [h1, Array.getElem_set, if_neg (Ne.symm hne)]
+    exact hArr
+  exact { heldLt, held, homeLt, arr }
 
 /-- While rungs remain, the tally segment is white, so the scan in the next rung
     leaves the board unchanged. -/

@@ -5600,6 +5600,9 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
         bM.sudo_5Board_4cost.sudo_5Costs_3ops[1] = (cCube : Int) ∧
           FitsLen (cCube + 1)) ∧
       bM.sudo_5Board_3row = embed (paintRed s.row s.t0 s.tally) ∧
+      bM.sudo_5Board_1t = c.b0.sudo_5Board_1t ∧
+      bM.sudo_5Board_9marker_on = false ∧
+      7 ≤ bM.sudo_5Board_4held.size ∧
       Ecbs.mul bM ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
           false false false =
         .ok (mulNoLiveBoard bM 5 6 c.g ys c.n c.k moves slides hole c.bench
@@ -5860,6 +5863,10 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
       exact Nat.le_trans d.hsldB hbound),
     ⟨d.cOps, d.hops, d.hop1, hCubeFit⟩,
     (by rw [d.hrow, _hrow0, ht0, hmEq]),
+    d.tier, d.marker,
+    (by
+      rw [hPack.2.2.2.2.2.2.2.2]
+      exact c.h7),
     hmul⟩
 
 /-- A live nocopy mul clears the second home. A different home, and the array it holds, stay. -/
@@ -5951,6 +5958,16 @@ private theorem mulMovesNo_bound (moves n k bench : Nat) (xs ys : List Nat)
     Nat.add_le_add_left hs _
   exact Nat.le_trans (Nat.add_le_add_left hf _) (Nat.add_le_add h1 (Nat.le_refl _))
 
+private theorem mul_live_hole (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      Int.ofNat (raisedHole hole (topIdx
+        (school n xs (ys.take n) (List.replicate bench 0) false))) := by
+  unfold mulNoLiveBoard mulNoOffBoard
+  rfl
+
 /-- The gap mul leaves home 5 held. `clear` of that home is the named clear board.
     Its move counter stays inside the climb's move budget: one `mulCharge` has
     been spent and the clear adds at most `n`, both of which sit in `rungCharge`. -/
@@ -5965,7 +5982,7 @@ theorem clear_after_gap_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClear := by
   obtain ⟨c, bLoop, ys, moves, slides, hole, peak, peakS, cMul, hH, hD, hops,
       _hcopy, _hsrc, _hg, hmEq, hn, _hkN, hbch, _hpeg, _hys, hGap, _hX, _hFit, hMov,
-      _hSFit, _hSLe, _hOp, _hRow, hmul⟩ :=
+      _hSFit, _hSLe, _hOp, _hRow, _htier, _hmk, _h7, hmul⟩ :=
     mul_of_shape h hm hT hhome
   let bMul := mulNoLiveBoard bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
     peak peakS cMul hH hD hops
@@ -6040,6 +6057,7 @@ theorem clear_after_gap_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   have hclear := clear_held_refines bMul 5 c.g mvC hKeep.homeLt hKeep.heldLt
     hKeep.held hKeep.arr hmvC hfitN hfitC
   exact ⟨bLoop, bMul, _, hmul, hclear⟩
+
 
 /-- While rungs remain, the tally segment is white, so the scan in the next rung
     leaves the board unchanged. -/

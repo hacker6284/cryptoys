@@ -807,6 +807,78 @@ theorem rung_delta_clear
     refine ⟨pk, _, hpk, ?_, hpkLe⟩
     rw [hpkC, hpkM, ofNat_eq_natCast]
 
+/-- Same moves, slides, ops, and peak: a `RungDelta` carries from one board to the other. -/
+theorem rungDelta_eq {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (hδ : RungDelta b b1 base m)
+    (hmoves : b2.sudo_5Board_4cost.sudo_5Costs_5moves = b1.sudo_5Board_4cost.sudo_5Costs_5moves)
+    (hslides : b2.sudo_5Board_4cost.sudo_5Costs_6slides = b1.sudo_5Board_4cost.sudo_5Costs_6slides)
+    (hops : b2.sudo_5Board_4cost.sudo_5Costs_3ops = b1.sudo_5Board_4cost.sudo_5Costs_3ops)
+    (hpeak : b2.sudo_5Board_4cost.sudo_5Costs_4peak = b1.sudo_5Board_4cost.sudo_5Costs_4peak) :
+    RungDelta b b2 base m := by
+  refine
+    { moves := ?_
+      slides := ?_
+      opsSize := ?_
+      ops := ?_
+      peak := ?_ }
+  · obtain ⟨mv, mv', hb, hb', hle⟩ := hδ.moves
+    exact ⟨mv, mv', hb, hmoves.trans hb', hle⟩
+  · obtain ⟨sl, sl', hb, hb', hle⟩ := hδ.slides
+    exact ⟨sl, sl', hb, hslides.trans hb', hle⟩
+  · rw [hops, hδ.opsSize]
+  · intro i hi
+    obtain ⟨c, c', hc, hc', hle⟩ := hδ.ops i hi
+    have hget {a c : Array Int} (eq : a = c) (j : Nat) (ha : j < a.size) :
+        a[j] = c[j]'(eq ▸ ha) := by subst eq; rfl
+    have hi1 : i < b1.sudo_5Board_4cost.sudo_5Costs_3ops.size := hδ.opsSize ▸ hi
+    have hi2 : i < b2.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
+      congrArg Array.size hops ▸ hi1
+    exact ⟨c, c', hc, (hget hops i hi2).trans hc', hle⟩
+  · obtain ⟨pk, pk', hb, hb', hle⟩ := hδ.peak
+    exact ⟨pk, pk', hb, hpeak.trans hb', hle⟩
+
+/-- Doubling replaces the tally fields and leaves the four `RungDelta` counters. -/
+theorem rungDelta_withTally {b b1 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (hδ : RungDelta b b1 base m) (row : Array Int) (len ctrl high tmax : Int) :
+    RungDelta b (withTally b1 row len ctrl high tmax) base m := by
+  have h3 := withTally_counters b1 row len ctrl high tmax
+  apply rungDelta_eq hδ h3.1 h3.2.1 h3.2.2
+  simp [withTally]
+
+/-- The extra white peg replaces the tally fields and leaves the four counters. -/
+theorem rungDelta_add_one {b b1 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (hδ : RungDelta b b1 base m) (i : Nat) (hi : i < b1.sudo_5Board_3row.size)
+    (len high ctrl tmax : Int) :
+    RungDelta b ({ b1 with
+      sudo_5Board_3row := b1.sudo_5Board_3row.set ⟨i, hi⟩ (1 : Int)
+      sudo_5Board_9tally_len := len
+      sudo_5Board_4cost := { b1.sudo_5Board_4cost with
+        sudo_5Costs_15control_highest := high
+        sudo_5Costs_4ctrl := ctrl
+        sudo_5Costs_9tally_max := tmax } }) base m := by
+  have h3 := add_one_counters b1 i hi len high ctrl tmax
+  apply rungDelta_eq hδ h3.1 h3.2.1 h3.2.2
+  rfl
+
+/-- Ops size through a live cube and a live mul, for an arbitrary incoming board.
+    Both steps only `set` one slot, so the length is the incoming length. -/
+theorem cube_mul_ops_size (b : Ecbs.Board) (dst src second : Nat) (xs ys : List Nat)
+    (n k moves slides hole bench peak peakS cOps cOps' : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h6H : second <
+      (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4home.size)
+    (h6D : second <
+      (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4held.size)
+    (hops0 : 0 <
+      (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (mulNoLiveBoard
+        (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops)
+        dst second xs ys n k moves slides hole bench peak peakS cOps' h6H h6D hops0).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  rw [mul_live_ops, Array.size_set,
+    settle_ops, cube_live_ops, Array.size_set]
+
 /-- The red cube and the red mul add one peg charge and one mul charge on top
     of the white piece. That is still one `rungCharge`. -/
 theorem red_extends_white (mv n bench m pegG mvPeg mvMul pegGap mvClear mvCube mvRed : Nat)
@@ -822,5 +894,6 @@ theorem red_extends_white (mv n bench m pegG mvPeg mvMul pegGap mvClear mvCube m
       pegCharge n bench + mulCharge n bench := by
     omega
   omega
+
 
 end EcbsLink2.Link2

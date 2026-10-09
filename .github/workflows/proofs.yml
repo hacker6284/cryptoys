@@ -483,7 +483,7 @@ jobs:
     # Rebuilds the MegaDreifach Link 2 runtime lemmas it uses (Embed, Sudo, Loop) against
     # this package's own emitted SudoRt.
     # Measured on a clean `lake build EcbsLink2` under ulimit -v 7000000: peak RSS
-    # 1382812 kB (about 1.32 GB). The job builds `place`, the schoolbook loop
+    # 1382852 kB (about 1.32 GB). The job builds `place`, the schoolbook loop
     # (`schoolCol_refines`, `school_loop_refines`), the lane-fold index block
     # (`foldGeom_refines`), the descending accumulation
     # (`fold_loop_refines`, `lane_fold_refines`, `lane_fold_eq`), `mulSchool_step`,
@@ -506,8 +506,10 @@ jobs:
     # peg count, and leaves every other slot equal to the input. From the rung
     # entry, that loop and the white rung through the gap mul and the clear are
     # one counter delta within the rung charge. The red cube and red mul add
-    # one peg charge and one mul charge on top of that piece. The red board,
-    # the climb step hypothesis, and the ladder for are still open.
+    # one peg charge and one mul charge on top of that piece. Doubling and the
+    # extra peg preserve an entry delta, and a cube followed by a mul keeps the
+    # ops length. Reading that ops array on the cleared peg board times out.
+    # The climb step hypothesis and the ladder for are still open.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

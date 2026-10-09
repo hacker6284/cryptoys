@@ -3287,6 +3287,20 @@ private theorem cubeLive_book (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     hC.2.2.2.1.trans hS.2.2.2.1, hC.2.2.2.2.1.trans hS.2.2.2.2.1,
     hC.2.2.2.2.2.trans hS.2.2.2.2.2.1⟩
 
+/-- A live cube leaves the parked-from hole, the rung index, and the tally length. -/
+theorem cubeLive_carries (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_11parked_from
+      = b.sudo_5Board_11parked_from ∧
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_8rung_idx
+      = b.sudo_5Board_8rung_idx ∧
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9tally_len
+      = b.sudo_5Board_9tally_len := by
+  have h := cubeLive_book b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  exact ⟨h.1, h.2.1, h.2.2.1⟩
+
 private theorem livePeg_book (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) :
     (livePegBoard c d hi).sudo_5Board_11parked_from = d.b.sudo_5Board_11parked_from ∧
     (livePegBoard c d hi).sudo_5Board_8rung_idx = d.b.sudo_5Board_8rung_idx ∧
@@ -3594,8 +3608,27 @@ private theorem mulLive_book (b : Ecbs.Board) (dst second : Nat) (xs ys : List N
     hM.2.2.2.2.2.1.trans hS.2.2.2.2.2.1, hM.2.2.2.2.2.2.1.trans hS.2.2.2.2.2.2.1,
     hM.2.2.2.2.2.2.2.trans hS.2.2.2.2.2.2.2⟩
 
+/-- A live nocopy mul leaves the park, the rung index, the tally length, the
+    control counter, and the row. -/
+theorem mulLive_carries (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_11parked_from
+      = b.sudo_5Board_11parked_from ∧
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_8rung_idx
+      = b.sudo_5Board_8rung_idx ∧
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9tally_len
+      = b.sudo_5Board_9tally_len ∧
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_4ctrl
+      = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_3row
+      = b.sudo_5Board_3row := by
+  have h := mulLive_book b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops
+  exact ⟨h.1, h.2.1, h.2.2.1, h.2.2.2.2.2.2.1, h.2.2.2.2.2.2.2⟩
+
 /-- Parking on the keep branch is `afterPark` when nothing is parked yet. -/
-private theorem parkKeep_row (b : Ecbs.Board) (xs : List Nat)
+theorem parkKeep_row (b : Ecbs.Board) (xs : List Nat)
     (hole park rung i ctrl : Nat)
     (hRowP : park < b.sudo_5Board_3row.size)
     (hRowH : hole < b.sudo_5Board_3row.size)

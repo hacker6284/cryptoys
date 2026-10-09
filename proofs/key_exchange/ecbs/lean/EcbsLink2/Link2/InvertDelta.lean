@@ -2260,6 +2260,140 @@ theorem red_mul_emit
   · rw [← h.hbench]; exact h.shape.peg.fitBn
   · exact FitsLen.of_le base.fitM hMulFit.2.2.2
 
+/-- Nothing parked: `afterPark` writes the rung colour into the parking hole and
+    clears the climb hole. -/
+theorem afterPark_idle (row : List Nat) (park hole colour : Nat) :
+    afterPark row (-1) park hole colour = (row.set park colour).set hole 0 := by
+  simp [afterPark]
+
+/-- A final red rung, nothing parked yet. The gap is the product of the input by
+    the cube of the gap product. The tally length stays. The counter is the park
+    write plus one per tally peg. The row is that park write, then the red tally.
+    The parked-from hole is the climb hole and the rung index advances by one. -/
+theorem model_final_red (s : ClimbModel) (x : List Nat) (hole : Nat)
+    (hFrom : s.fromHole < 0) :
+    (modelRung s x 2 hole true).gap =
+      fieldMul s.n s.k s.benchlen x
+        (fieldCube s.n s.k s.benchlen
+          (fieldMul s.n s.k s.benchlen s.gap
+            (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ∧
+    (modelRung s x 2 hole true).tally = s.tally ∧
+    (modelRung s x 2 hole true).onBench = true ∧
+    (modelRung s x 2 hole true).work =
+      fieldMul s.n s.k s.benchlen x
+        (fieldCube s.n s.k s.benchlen
+          (fieldMul s.n s.k s.benchlen s.gap
+            (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ∧
+    (modelRung s x 2 hole true).ctrl = s.ctrl + 2 + s.tally ∧
+    (modelRung s x 2 hole true).high = s.high ∧
+    (modelRung s x 2 hole true).row =
+      paintRed (afterPark s.row s.fromHole s.parkAt hole 2) s.t0 s.tally ∧
+    (modelRung s x 2 hole true).fromHole = (hole : Int) ∧
+    (modelRung s x 2 hole true).ridx = s.ridx + 1 ∧
+    (modelRung s x 2 hole true).t0 = s.t0 ∧
+    (modelRung s x 2 hole true).parkAt = s.parkAt := by
+  have hpark : decide (0 ≤ s.fromHole) = false := by
+    rw [decide_eq_false_iff_not]
+    omega
+  simp [modelRung, invRung, rungCtrl, rungHigh, rungRow, afterTally, hpark]
+
+/-- The keep-park board: the row is `afterPark`, the counter grows by two, the
+    parked-from hole is the climb hole, the rung index advances, and the tally
+    length is unchanged. -/
+theorem parkKeep_fields (b : Ecbs.Board) (xs : List Nat)
+    (hole park rung i ctrl : Nat)
+    (hRowP : park < b.sudo_5Board_3row.size) (hRowH : hole < b.sudo_5Board_3row.size)
+    (hrow : b.sudo_5Board_3row = embed xs) (hp : park < xs.length) (hh : hole < xs.length) :
+    let bP := parkKeepBoard b hole park rung i ctrl hRowP hRowH
+    bP.sudo_5Board_3row = embed (afterPark xs (-1) park hole rung) ∧
+    bP.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((ctrl + 2 : Nat) : Int) ∧
+    bP.sudo_5Board_11parked_from = (hole : Int) ∧
+    bP.sudo_5Board_8rung_idx = ((i + 1 : Nat) : Int) ∧
+    bP.sudo_5Board_9tally_len = b.sudo_5Board_9tally_len := by
+  refine ⟨?_, rfl, rfl, rfl, rfl⟩
+  rw [parkKeep_row b xs hole park rung i ctrl hRowP hRowH hrow hp hh, afterPark_idle]
+
+/-- After the cube-peg loop the row is the start row painted red, the counter has
+    grown by the peg count, and the park, rung index, and tally length are the
+    ones the loop started with. -/
+theorem peg_loop_book (c : PegCtx) (hm : 0 < c.m) :
+    let d := pegPack c c.m hm (Nat.le_refl _)
+    d.b.sudo_5Board_3row = embed (paintRed c.row0 c.t0 c.m) ∧
+    d.b.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((c.ctrl0 + c.m : Nat) : Int) ∧
+    d.b.sudo_5Board_11parked_from = c.b0.sudo_5Board_11parked_from ∧
+    d.b.sudo_5Board_8rung_idx = c.b0.sudo_5Board_8rung_idx ∧
+    d.b.sudo_5Board_9tally_len = c.b0.sudo_5Board_9tally_len := by
+  let d := pegPack c c.m hm (Nat.le_refl _)
+  have hB := pegPack_board c c.m hm (Nat.le_refl _)
+  refine ⟨d.hrow, ?_, hB.2.1, hB.2.2.1, hB.2.2.2.1⟩
+  rw [d.hctrl, d.hctrlN]
+
+theorem afterPark_neg (row : List Nat) (f : Int) (park hole colour : Nat) (hf : f < 0) :
+    afterPark row f park hole colour = afterPark row (-1) park hole colour := by
+  simp [afterPark, hf]
+
+/-- The peg-loop board of a context that started on the keep-park board has the
+    final red rung's row, counter, parked-from hole, rung index, and tally length. -/
+theorem peg_is_final_red (s : ClimbModel) (x : List Nat) (hole : Nat)
+    (hFrom : s.fromHole < 0) (c : PegCtx) (hm : 0 < c.m)
+    (hrow0 : c.row0 = afterPark s.row s.fromHole s.parkAt hole 2)
+    (hctrl0 : c.ctrl0 = s.ctrl + 2) (hmT : c.m = s.tally) (ht0 : c.t0 = s.t0)
+    (hfrom : c.b0.sudo_5Board_11parked_from = (hole : Int))
+    (hridx : c.b0.sudo_5Board_8rung_idx = ((s.ridx + 1 : Nat) : Int))
+    (hlen : c.b0.sudo_5Board_9tally_len = (s.tally : Int)) :
+    let d := pegPack c c.m hm (Nat.le_refl _)
+    let st := modelRung s x 2 hole true
+    d.b.sudo_5Board_3row = embed st.row ∧
+    d.b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (st.ctrl : Int) ∧
+    d.b.sudo_5Board_11parked_from = st.fromHole ∧
+    d.b.sudo_5Board_8rung_idx = (st.ridx : Int) ∧
+    d.b.sudo_5Board_9tally_len = (st.tally : Int) := by
+  have hM := model_final_red s x hole hFrom
+  have hP := peg_loop_book c hm
+  refine ⟨?_, ?_, ?_, ?_, ?_⟩
+  · rw [hP.1, hrow0, ht0, hmT, hM.2.2.2.2.2.2.1]
+  · rw [hP.2.1, hctrl0, hmT, hM.2.2.2.2.1]
+  · rw [hP.2.2.1, hfrom, hM.2.2.2.2.2.2.2.1]
+  · rw [hP.2.2.2.1, hridx, hM.2.2.2.2.2.2.2.2.1]
+  · rw [hP.2.2.2.2, hlen, hM.2.1]
+
+/-- `clear` of one home leaves the row, the counter, the park, the rung index,
+    and the tally length. -/
+theorem clear_keeps (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size) :
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_3row = b.sudo_5Board_3row ∧
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_11parked_from =
+      b.sudo_5Board_11parked_from ∧
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_8rung_idx =
+      b.sudo_5Board_8rung_idx ∧
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_9tally_len =
+      b.sudo_5Board_9tally_len := by
+  unfold clearHeldBoard
+  exact ⟨rfl, rfl, rfl, rfl, rfl⟩
+
+/-- A live cube leaves the row, the counter, the park, the rung index, and the
+    tally length. -/
+theorem cube_keeps (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_3row =
+      b.sudo_5Board_3row ∧
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_11parked_from =
+      b.sudo_5Board_11parked_from ∧
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_8rung_idx =
+      b.sudo_5Board_8rung_idx ∧
+    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9tally_len =
+      b.sudo_5Board_9tally_len := by
+  have hC := cubeLive_carries b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops
+  exact ⟨cube_live_row b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+    cube_live_ctrl b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops,
+    hC.1, hC.2.1, hC.2.2⟩
+
 /-- A final red rung stores the product of the input by the cube of the gap product.
     The tally length does not change. The polynomial sits on the bench. -/
 theorem model_red_gap (s : ClimbModel) (x : List Nat) (hole : Nat) :

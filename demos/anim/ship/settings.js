@@ -20,6 +20,6 @@ export default {
     place: { ms: 420, dropM: 0.03 },
     lift: { ms: 340, dropM: 0.03 },
     move: { ms: 260 },
-    tempos: { play: 2.2, step: 4 },
+    tempos: { play: 3.2, step: 4 },
     sounds: {},
 };

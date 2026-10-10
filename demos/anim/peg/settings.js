@@ -26,6 +26,6 @@ export default {
     remove: { ms: 320, hoverM: 0.028 },
     slide: { ms: 560, hopM: 0.02 },
     // Tempo multipliers the BS stage plays them at (1× dock speed).
-    tempos: { play: 2.2, step: 9 },
+    tempos: { play: 3.2, step: 12 },
     sounds: {},
 };

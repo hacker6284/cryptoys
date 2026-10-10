@@ -3830,6 +3830,32 @@ theorem parkKeep_row (b : Ecbs.Board) (xs : List Nat)
 
 /-- On a final rung the model does not double and does not lay the extra peg.
     A non-red rung's gap is `fieldMul` of the gap by `cubeTimes`. -/
+theorem model_final_white_ge (s : ClimbModel) (x : List Nat) (rung hole : Nat)
+    (hNe : rung ≠ 2) (hge : 0 ≤ s.fromHole) :
+    (modelRung s x rung hole true).gap =
+      fieldMul s.n s.k s.benchlen s.gap
+        (cubeTimes s.n s.k s.benchlen s.gap s.tally) ∧
+    (modelRung s x rung hole true).tally = s.tally ∧
+    (modelRung s x rung hole true).onBench = true ∧
+    (modelRung s x rung hole true).work =
+      fieldMul s.n s.k s.benchlen s.gap
+        (cubeTimes s.n s.k s.benchlen s.gap s.tally) ∧
+    (modelRung s x rung hole true).ctrl = s.ctrl + 4 + s.tally ∧
+    (modelRung s x rung hole true).high = s.high ∧
+    (modelRung s x rung hole true).row =
+      paintRed (afterPark s.row s.fromHole s.parkAt hole rung) s.t0 s.tally ∧
+    (modelRung s x rung hole true).fromHole = (hole : Int) ∧
+    (modelRung s x rung hole true).ridx = s.ridx + 1 ∧
+    (modelRung s x rung hole true).t0 = s.t0 ∧
+    (modelRung s x rung hole true).parkAt = s.parkAt ∧
+    (modelRung s x rung hole true).n = s.n ∧
+    (modelRung s x rung hole true).k = s.k ∧
+    (modelRung s x rung hole true).benchlen = s.benchlen := by
+  have hpark : decide (0 ≤ s.fromHole) = true := by
+    rw [decide_eq_true_iff]
+    exact hge
+  simp [modelRung, invRung, rungCtrl, rungHigh, rungRow, afterTally, hNe, hpark]
+
 theorem model_final_white (s : ClimbModel) (x : List Nat) (rung hole : Nat)
     (hNe : rung ≠ 2) (hFrom : s.fromHole < 0) :
     (modelRung s x rung hole true).gap =

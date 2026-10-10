@@ -37,6 +37,32 @@ export const REAL_SIZES = {
     // Wooden toy chest: IKEA SMÅSTAD 90 × 52 × 48 cm (ikea.com); KALIX
     // 93.5 × 53 × 34.5 cm (nateoconcept.com).
     chest: { m: 0.95, measure: "longest" },
+    // BS (Battleship travel unit, Hasbro 2015 edition #B7447/E6445): measured
+    // by Zachary, 2026-10-07, on his own set (Scrounger's asset pack README
+    // §2, battleship-assets/README.md). Closed 230 × 170 × 35 mm; the GLB is
+    // modelled from these numbers with the lid open 90° (230 × 177 × 173.6 mm).
+    bsUnit: { w: 0.230, h: 0.035, d: 0.170, measure: "box" },
+    // Grid holes Ø 4 mm at 13.333 mm pitch (hole 1 to hole 10 = 120 mm), same source.
+    bsPitch: { m: 0.12 / 9, measure: "pitch" },
+    // Peg 18 mm long: head 12 mm × Ø 5 mm, shank 6 mm × Ø 3 mm, same source.
+    bsPeg: { m: 0.018, measure: "longest" },
+    // Ships 10 mm wide; carrier 65, battleship 52, cruiser 41, submarine 41,
+    // destroyer 27 mm long, same source.
+    bsShip: { w: 0.010, carrier: 0.065, battleship: 0.052, cruiser: 0.041, sub: 0.041, destroyer: 0.027, measure: "longest" },
+    // d6 16 mm face to face: Chessex's standard "16mm d6" (Chessex 2019
+    // catalogue, chessex.com/images/2019%20CAT06.pdf); size measured face to
+    // face (diceemporium.com/dice-sizes-explained/).
+    d6: { m: 0.016, measure: "face-to-face" },
+    // d10 22 mm pole to pole: measured d10s are 21–24 mm tip to tip (Chessex
+    // 22–24, Koplow 21, Bescon 21–22; DiceDB mould table, db.drnod.de/dice_molds.php).
+    d10: { m: 0.022, measure: "pole-to-pole" },
+    // d12 20.3 mm vertex to vertex: measured d12s are 20–22 mm tip to tip
+    // (Chessex 22, Koplow 21, Bescon 21; DiceDB, same page).
+    d12: { m: 0.0203, measure: "vertex-to-vertex" },
+    // Leather dice cup, 3 1/4" × 4" (82.6 × 101.6 mm), "perfect for 5 dice"
+    // (dicegames.com/products/deluxe-leather-dice-cup-3-1-4-x-4); cf.
+    // myleathergoods.com 3.1" × 3.6", Julia Moss 3" × 3.5".
+    diceCup: { m: 0.1016, w: 0.0826, measure: "height" },
 };
 
 /** A puzzle's real size: { m, measure } (unknown ids get the 3×3's). */
@@ -90,6 +116,38 @@ export const DREI_DEAL = {
 export const DREI_EXTRA = { dreiB: "B", dreiC: "C" };
 // Standing deck box in world.makeDeckBox (bw × bh × bd).
 export const DECK_H = REAL_SIZES.deckBox.h;
+
+// BS layout (metres; x from DEN.x, z from DEN.z, +z toward the seat). Real
+// size, nothing overlapping (playroom/bs-layout.test.mjs checks it):
+//   - the two units side by side, lids up (T1: each player's ocean grid is
+//     the key grid, the lid's target grid the workspace, SPEC §6): Alice's
+//     red unit left, Bob's blue right, BS_GAP apart; an open unit's
+//     footprint is 230 × 173.5 mm (BS_UNIT_FOOT, from its origin);
+//   - the dice cup (Ø 83.7 mm at 101.6 mm tall) one gap left of Alice's
+//     unit, its front in line with the units' (in front of them it would
+//     hide their trays from the seat);
+//   - the key dice one gap in front of the units, in a row: the row cup's
+//     five d10s (rainbow), the d12 and the d6.
+// No tray, no box, no labels: only toys on the table.
+export const BS_GAP = 0.04;
+export const BS_UNIT_FOOT = { x0: -0.115, x1: 0.115, z0: -0.0901, z1: 0.0834 };
+export const BS_UNIT_Z = -0.12;
+// The dice row on the bsDice toy's origin (on the felt): x of each die.
+// Footprints (radius on the felt): cup 41.9 mm (the model's 41 mm rim at
+// the sourced 101.6 mm height), d10 ≤ 12.5, d12 ≤ 10.2, d6 ≤ 11.3.
+export const BS_DICE = {
+    d10: [-0.1, -0.068, -0.036, -0.004, 0.028],
+    d12: 0.066,
+    d6: 0.1,
+    reach: { cup: 0.0419, d10: 0.0125, d12: 0.0102, d6: 0.0114 },
+};
+export const BS_SEAT_XZ = {
+    bs: [-(BS_UNIT_FOOT.x1 + BS_GAP / 2), BS_UNIT_Z],
+    bsB: [BS_UNIT_FOOT.x1 + BS_GAP / 2, BS_UNIT_Z],
+    bsDice: [0, BS_UNIT_Z + BS_UNIT_FOOT.z1 + BS_GAP + BS_DICE.reach.d10],
+    bsCup: [-(2 * BS_UNIT_FOOT.x1 + BS_GAP / 2 + BS_GAP + BS_DICE.reach.cup), BS_UNIT_Z + BS_UNIT_FOOT.z1 - BS_DICE.reach.cup],
+};
+export const BS_SHELF = { x: 0.55, z: -2.165 };
 
 // Fallback only, when a toy cannot be measured: seatOnSurface seats from
 // the live post-scale shape (a megaminx's own height, not the cube's).

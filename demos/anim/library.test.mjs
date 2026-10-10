@@ -15,7 +15,7 @@ const walk = (dir, rel = "") => readdirSync(dir, { withFileTypes: true }).flatMa
     return [...(existsSync(new URL("settings.js", sub)) ? [name] : []), ...walk(sub, `${name}/`)];
 });
 const entries = walk(here);
-assert.deepEqual([...entries].sort(), ["chest", "cube", "deck/box", "deck/card", "deck/carry", "deck/deal", "megaminx"], "the library's entries, by object");
+assert.deepEqual([...entries].sort(), ["chest", "cube", "deck/box", "deck/card", "deck/carry", "deck/deal", "dice", "megaminx", "peg", "ship"], "the library's entries, by object");
 assert.ok(!existsSync(new URL("hinge/", here)), "no generic hinge entry");
 for (const name of entries) {
     assert.ok(existsSync(new URL(`${name}/index.js`, here)), `${name}: index.js`);
@@ -408,6 +408,7 @@ assert.match(readme, /\| `deck\/deal` \|[^\n]*Animation APPROVED and LOCKED at `
     const pages = {
         "deck/carry": "deck/carry", "deck/deal": "deck/deal", "deck/box/open-close-flap": "deck/box",
         "chest/open-close-lid": "chest", "cube/face-turn": "cube", "cube/rotate": "cube", "megaminx/face-turn": "megaminx",
+        "peg/insert-slide-remove": "peg", "ship/place-move-lift": "ship", "dice/roll": "dice",
     };
     for (const [page, entry] of Object.entries(pages)) {
         const url = new URL(`${page}/page.js`, micro);

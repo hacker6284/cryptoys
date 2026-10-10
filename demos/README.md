@@ -15,6 +15,14 @@ Every toy in the room is at real-life scale; never fit a toy to another toy's bo
 | Playing card | 63 × 88 mm | face | poker size 2.5 × 3.5 in (63.5 × 88.9 mm) |
 | Deck box | 67 × 92 × 20 mm | box | poker tuck box 66 × 91 × 19 mm; Bicycle 807 70 × 95 × 20 mm |
 | Toy chest | 95 cm | longest side | IKEA SMÅSTAD 90 cm; KALIX 93.5 cm |
+| Battleship unit | 230 × 170 × 35 mm closed (open: 230 × 177 × 174 mm) | box | Hasbro travel unit B7447/E6445, measured by Zachary on his set (Scrounger's asset pack README §2) |
+| Battleship grid | 13.33 mm pitch (holes 1–10 = 120 mm), Ø 4 mm holes | pitch | same |
+| Battleship peg | 18 mm (head 12 × Ø 5, shank 6 × Ø 3 mm) | longest | same |
+| Battleship ships | carrier 65, battleship 52, cruiser 41, submarine 41, destroyer 27 mm; 10 mm wide | longest | same |
+| d6 | 16 mm | face to face | Chessex "16mm d6" (2019 catalogue); Dice Emporium sizes guide |
+| d10 | 22 mm | pole to pole | DiceDB mould table (db.drnod.de): Chessex 22–24, Koplow 21, Bescon 21–22 mm |
+| d12 | 20.3 mm | vertex to vertex | DiceDB mould table: Chessex 22, Koplow 21, Bescon 21 mm |
+| Dice cup | 101.6 mm tall, Ø 82.6 mm | height | dicegames.com leather cup 3¼ × 4 in, "perfect for 5 dice"; myleathergoods 3.1 × 3.6 in |
 
 Twisty puzzles are fitted on that true measure ([`playroom/motion.js`](playroom/motion.js) `fitToRealSize`: face to face is the narrowest width across the puzzle's face normals; edge is the longest line across it), not on their bounding box, and `seatOnSurface` seats the live post-scale shape. Known exceptions, waiting on a decision: the playroom DoubleDeal 4×13 grid (`DEAL_SCALE`) draws its cards at 38 × 55 mm (real scale would make the two grids ~1.96 m wide on the 2.05 m table); the DoubleDeal moves that have moved into the animation library use the real-size layout instead ([`doubledeal/real-layout.js`](doubledeal/real-layout.js): 63 × 88 × 0.3 mm cards with the card art redrawn undistorted at 63 : 88, the two grids 8 columns × 13 rows with 4 mm gaps and a 40 mm gutter, 568 × 1192 mm), and the unbox stand-in packets use 1.35 mm thick cards (real ~0.3 mm) so eight cards read as a deck. Shelf plants are set dressing, each fitted to its own height.
 

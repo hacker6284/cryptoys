@@ -18,3 +18,7 @@ build_one doubledeal "$root/primitives/cipher/doubledeal/doubledeal.sudo"
 build_one megadreifach "$root/primitives/hash/megadreifach/v3/megadreifach.sudo"
 # The KAT button checks the live digest against the v3 known-answer file.
 cp "$root/primitives/hash/megadreifach/kats/megaminx_hash_kats_v3.json" "$root/demos/megadreifach/generated/kats.json"
+# BS: the generated module (bs.sudo, its demo-only trace_exchange included);
+# the KAT menu replays bs_vectors.json.
+build_one bs "$root/primitives/key_exchange/bs/bs.sudo"
+cp "$root/proofs/key_exchange/bs/vectors/bs_vectors.json" "$root/demos/bs/generated/kats.json"

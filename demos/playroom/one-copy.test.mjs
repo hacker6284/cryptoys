@@ -12,7 +12,7 @@ stubThree();
 const { DEMOS } = await import("./demos.js");
 const here = (path) => new URL(path, import.meta.url);
 const ids = Object.keys(DEMOS).sort();
-assert.deepEqual(ids, ["doubledeal", "megadreifach", "scramble"]);
+assert.deepEqual(ids, ["bs", "doubledeal", "megadreifach", "scramble"]);
 
 // ---- each standalone URL forwards to the playroom --------------------------
 
@@ -87,7 +87,7 @@ assert.doesNotMatch(adapters, /type="range"/, "no slider of a demo's own");
 assert.doesNotMatch(adapters, /speed: \{/, "no per-demo slider range");
 assert.equal((adapters.match(/createDock\("(\w+)"/g) || []).length, ids.length, "every demo docks through createDock");
 for (const id of ids) assert.match(adapters, new RegExp(`createDock\\("${id}"`), `${id} docks the shared dock`);
-for (const file of ["../scramble/session.js", "../doubledeal/session.js", "../megadreifach/session.js"]) {
+for (const file of ["../scramble/session.js", "../doubledeal/session.js", "../megadreifach/session.js", "../bs/session.js"]) {
     const src = readFileSync(here(file), "utf8");
     assert.match(src, /bindSpeedSlider\(root, /, `${file} reads the shared slider`);
     assert.match(src, /view\.setSpeed\?\.\(/, `${file} hands the view the multiplier`);

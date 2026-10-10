@@ -1900,6 +1900,20 @@ theorem afterPark_get (row : List Nat) (fromHole : Int) (park hole colour j : Na
 /-- `afterPark` writes only the parked-from hole, the park, and the climb hole.
     An idle park (`fromHole < 0`) leaves every other cell alone, including the
     climb holes still below the one just read. -/
+theorem afterPark_other (row : List Nat) (fromHole : Int) (park hole colour j : Nat)
+    (hp : park ≠ j) (hh : hole ≠ j)
+    (hfrom : fromHole < 0 ∨ fromHole.toNat ≠ j) (hj : j < row.length) :
+    (afterPark row fromHole park hole colour)[j]'(by
+      rw [afterPark_length]; exact hj) = row[j] := by
+  unfold afterPark
+  by_cases hF : fromHole < 0
+  · simp [hF, List.getElem_set, hp, hh]
+  · have hneS : fromHole.toNat ≠ j := by
+      cases hfrom with
+      | inl h => exact absurd h hF
+      | inr h => exact h
+    simp [hF, List.getElem_set, hneS, hp, hh]
+
 theorem afterPark_off (row : List Nat) (fromHole : Int) (park hole colour j : Nat)
     (hF : fromHole < 0) (hp : park ≠ j) (hh : hole ≠ j) (hj : j < row.length) :
     (afterPark row fromHole park hole colour)[j]'(by
@@ -3884,6 +3898,48 @@ theorem model_final_white (s : ClimbModel) (x : List Nat) (rung hole : Nat)
 
 /-- A non-final white rung doubles the tally and leaves it white. The gap is
     still `fieldMul` of `cubeTimes`; the extra red cube is not this rung. -/
+theorem model_open_white_ge (s : ClimbModel) (x : List Nat) (rung hole : Nat)
+    (hNe : rung ≠ 2) (hge : 0 ≤ s.fromHole) :
+    (modelRung s x rung hole false).gap =
+      fieldMul s.n s.k s.benchlen s.gap
+        (cubeTimes s.n s.k s.benchlen s.gap s.tally) ∧
+    (modelRung s x rung hole false).tally = 2 * s.tally ∧
+    (modelRung s x rung hole false).onBench = true ∧
+    (modelRung s x rung hole false).work =
+      fieldMul s.n s.k s.benchlen s.gap
+        (cubeTimes s.n s.k s.benchlen s.gap s.tally) ∧
+    (modelRung s x rung hole false).ctrl = s.ctrl + 4 + 3 * s.tally ∧
+    (modelRung s x rung hole false).high = s.t0 + 2 * s.tally - 1 ∧
+    (modelRung s x rung hole false).row =
+      paintOnes (paintOnes (paintRed (afterPark s.row s.fromHole s.parkAt hole rung)
+        s.t0 s.tally) s.t0 s.tally) (s.t0 + s.tally) s.tally ∧
+    (modelRung s x rung hole false).fromHole = (hole : Int) ∧
+    (modelRung s x rung hole false).ridx = s.ridx + 1 ∧
+    (modelRung s x rung hole false).t0 = s.t0 ∧
+    (modelRung s x rung hole false).parkAt = s.parkAt ∧
+    (modelRung s x rung hole false).n = s.n ∧
+    (modelRung s x rung hole false).k = s.k ∧
+    (modelRung s x rung hole false).benchlen = s.benchlen := by
+  have hpark : decide (0 ≤ s.fromHole) = true := by
+    rw [decide_eq_true_iff]
+    exact hge
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · simp [modelRung, invRung, hNe, hpark]
+  · simp [modelRung, invRung, hNe, hpark]
+  · simp [modelRung]
+  · simp [modelRung, invRung, hNe, hpark]
+  · simp [modelRung, rungCtrl, hNe, hpark]
+    omega
+  · simp [modelRung, rungHigh, hNe]
+  · simp [modelRung, rungRow, afterTally, hNe, hpark]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+
 theorem model_open_white (s : ClimbModel) (x : List Nat) (rung hole : Nat)
     (hNe : rung ≠ 2) (hFrom : s.fromHole < 0) :
     (modelRung s x rung hole false).gap =
@@ -3926,6 +3982,38 @@ theorem model_open_white (s : ClimbModel) (x : List Nat) (rung hole : Nat)
   · simp [modelRung]
   · simp [modelRung]
 
+/-- A parked final red rung. The counter is the parked park (`+4`) plus one
+    per tally peg. The gap is the input times the cube of the gap product. -/
+theorem model_final_red_ge (s : ClimbModel) (x : List Nat) (hole : Nat)
+    (hge : 0 ≤ s.fromHole) :
+    (modelRung s x 2 hole true).gap =
+      fieldMul s.n s.k s.benchlen x
+        (fieldCube s.n s.k s.benchlen
+          (fieldMul s.n s.k s.benchlen s.gap
+            (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ∧
+    (modelRung s x 2 hole true).tally = s.tally ∧
+    (modelRung s x 2 hole true).onBench = true ∧
+    (modelRung s x 2 hole true).work =
+      fieldMul s.n s.k s.benchlen x
+        (fieldCube s.n s.k s.benchlen
+          (fieldMul s.n s.k s.benchlen s.gap
+            (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ∧
+    (modelRung s x 2 hole true).ctrl = s.ctrl + 4 + s.tally ∧
+    (modelRung s x 2 hole true).high = s.high ∧
+    (modelRung s x 2 hole true).row =
+      paintRed (afterPark s.row s.fromHole s.parkAt hole 2) s.t0 s.tally ∧
+    (modelRung s x 2 hole true).fromHole = (hole : Int) ∧
+    (modelRung s x 2 hole true).ridx = s.ridx + 1 ∧
+    (modelRung s x 2 hole true).t0 = s.t0 ∧
+    (modelRung s x 2 hole true).parkAt = s.parkAt ∧
+    (modelRung s x 2 hole true).n = s.n ∧
+    (modelRung s x 2 hole true).k = s.k ∧
+    (modelRung s x 2 hole true).benchlen = s.benchlen := by
+  have hpark : decide (0 ≤ s.fromHole) = true := by
+    rw [decide_eq_true_iff]
+    exact hge
+  simp [modelRung, invRung, rungCtrl, rungHigh, rungRow, afterTally, hpark]
+
 /-- A non-final red rung doubles, cubes the gap, multiplies by the input, and
     lays one white peg. The counter is the idle park (`+2`) plus the white
     double plus that peg. -/
@@ -3959,6 +4047,55 @@ theorem model_open_red (s : ClimbModel) (x : List Nat) (rung hole : Nat)
   have hpark : decide (0 ≤ s.fromHole) = false := by
     rw [decide_eq_false_iff_not]
     omega
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · simp [modelRung, invRung, hr, hpark]
+  · simp [modelRung, invRung, hr, hpark]
+  · simp [modelRung]
+  · simp [modelRung, invRung, hr, hpark]
+  · simp [modelRung, rungCtrl, hr, hpark]
+    omega
+  · simp [modelRung, rungHigh, hr]
+  · simp [modelRung, rungRow, afterTally, hr, hpark]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+  · simp [modelRung]
+
+/-- A parked non-final red rung. The counter is the parked park (`+4`) plus
+    the white double plus the extra peg. -/
+theorem model_open_red_ge (s : ClimbModel) (x : List Nat) (rung hole : Nat)
+    (hr : rung = 2) (hge : 0 ≤ s.fromHole) :
+    (modelRung s x rung hole false).gap =
+      fieldMul s.n s.k s.benchlen x
+        (fieldCube s.n s.k s.benchlen
+          (fieldMul s.n s.k s.benchlen s.gap
+            (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ∧
+    (modelRung s x rung hole false).tally = 2 * s.tally + 1 ∧
+    (modelRung s x rung hole false).onBench = true ∧
+    (modelRung s x rung hole false).work =
+      fieldMul s.n s.k s.benchlen x
+        (fieldCube s.n s.k s.benchlen
+          (fieldMul s.n s.k s.benchlen s.gap
+            (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ∧
+    (modelRung s x rung hole false).ctrl = s.ctrl + 4 + 3 * s.tally + 1 ∧
+    (modelRung s x rung hole false).high = s.t0 + 2 * s.tally ∧
+    (modelRung s x rung hole false).row =
+      (paintOnes (paintOnes (paintRed (afterPark s.row s.fromHole s.parkAt hole rung)
+        s.t0 s.tally) s.t0 s.tally) (s.t0 + s.tally) s.tally).set
+        (s.t0 + 2 * s.tally) 1 ∧
+    (modelRung s x rung hole false).fromHole = (hole : Int) ∧
+    (modelRung s x rung hole false).ridx = s.ridx + 1 ∧
+    (modelRung s x rung hole false).t0 = s.t0 ∧
+    (modelRung s x rung hole false).parkAt = s.parkAt ∧
+    (modelRung s x rung hole false).n = s.n ∧
+    (modelRung s x rung hole false).k = s.k ∧
+    (modelRung s x rung hole false).benchlen = s.benchlen := by
+  have hpark : decide (0 ≤ s.fromHole) = true := by
+    rw [decide_eq_true_iff]
+    exact hge
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · simp [modelRung, invRung, hr, hpark]
   · simp [modelRung, invRung, hr, hpark]
@@ -5358,6 +5495,32 @@ theorem rungRow_past
 
 /-- A non-final white rung's paints start at `t0`, so a cell before the tally
     that is neither the park nor the climb hole is unchanged. -/
+theorem rungRow_white_below_ge
+    (row : List Nat) (fromHole : Int) (park hole t0 tally colour j : Nat)
+    (hwhite : colour ≠ 2) (hp : park ≠ j) (hh : hole ≠ j)
+    (hfrom : fromHole < 0 ∨ fromHole.toNat ≠ j)
+    (hj0 : j < t0) (hj : j < row.length) :
+    (rungRow row fromHole park hole t0 tally colour false)[j]'(by
+      rw [rungRow_length]; exact hj) = row[j] := by
+  have hAp := afterPark_other row fromHole park hole colour j hp hh hfrom hj
+  unfold rungRow afterTally
+  have hC : (colour = 2) = False := by simpa using hwhite
+  have hL : (false = true) = False := by decide
+  simp only [hL, hC, ite_false]
+  have hlenA : j < (afterPark row fromHole park hole colour).length := by
+    rw [afterPark_length]; exact hj
+  have hred := paintRed_get_before (afterPark row fromHole park hole colour) t0 tally j hj0 hlenA
+  let reds := paintRed (afterPark row fromHole park hole colour) t0 tally
+  have hlenR : j < reds.length := by
+    simpa [reds, paintRed_length, afterPark_length] using hj
+  have hback := paintOnes_get_before reds t0 tally j hj0 hlenR
+  let back := paintOnes reds t0 tally
+  have hpre : j < t0 + tally := Nat.lt_of_lt_of_le hj0 (Nat.le_add_right _ _)
+  have hlenB : j < back.length := by
+    simpa [back, reds, paintOnes_length, paintRed_length, afterPark_length] using hj
+  have hone := paintOnes_get_before back (t0 + tally) tally j hpre hlenB
+  exact hone.trans (hback.trans (hred.trans hAp))
+
 theorem rungRow_white_below
     (row : List Nat) (fromHole : Int) (park hole t0 tally colour j : Nat)
     (hF : fromHole < 0) (hwhite : colour ≠ 2)
@@ -5393,6 +5556,42 @@ theorem rungRow_red_below
     (rungRow row fromHole park hole t0 tally 2 false)[j]'(by
       rw [rungRow_length]; exact hj) = row[j] := by
   have hAp := afterPark_off row fromHole park hole 2 j hF hp hh hj
+  unfold rungRow afterTally
+  have hR : ((2 : Nat) = 2) = True := by decide
+  have hL : (false = true) = False := by decide
+  simp only [hL, hR, ite_false, ite_true]
+  have hlenA : j < (afterPark row fromHole park hole 2).length := by
+    rw [afterPark_length]; exact hj
+  have hred := paintRed_get_before (afterPark row fromHole park hole 2) t0 tally j hj0 hlenA
+  let reds := paintRed (afterPark row fromHole park hole 2) t0 tally
+  have hlenR : j < reds.length := by
+    simpa [reds, paintRed_length, afterPark_length] using hj
+  have hback := paintOnes_get_before reds t0 tally j hj0 hlenR
+  let back := paintOnes reds t0 tally
+  have hpre : j < t0 + tally := Nat.lt_of_lt_of_le hj0 (Nat.le_add_right _ _)
+  have hlenB : j < back.length := by
+    simpa [back, reds, paintOnes_length, paintRed_length, afterPark_length] using hj
+  have hone := paintOnes_get_before back (t0 + tally) tally j hpre hlenB
+  let wide := paintOnes back (t0 + tally) tally
+  have hlenW : j < wide.length := by
+    simpa [wide, back, reds, paintOnes_length, paintRed_length, afterPark_length] using hj
+  have hne : t0 + 2 * tally ≠ j := by omega
+  have hset : (wide.set (t0 + 2 * tally) 1)[j]'(by
+      rw [List.length_set]; exact hlenW) = wide[j] := by
+    simp [List.getElem_set, hne]
+  exact hset.trans (hone.trans (hback.trans (hred.trans hAp)))
+
+/-- A parked non-final red rung's extra peg sits at `t0 + 2 · tally`. A climb
+    hole before the tally is neither that peg, the park, the source, nor the
+    hole just read. -/
+theorem rungRow_red_below_ge
+    (row : List Nat) (fromHole : Int) (park hole t0 tally j : Nat)
+    (hp : park ≠ j) (hh : hole ≠ j)
+    (hfrom : fromHole < 0 ∨ fromHole.toNat ≠ j)
+    (hj0 : j < t0) (hj : j < row.length) :
+    (rungRow row fromHole park hole t0 tally 2 false)[j]'(by
+      rw [rungRow_length]; exact hj) = row[j] := by
+  have hAp := afterPark_other row fromHole park hole 2 j hp hh hfrom hj
   unfold rungRow afterTally
   have hR : ((2 : Nat) = 2) = True := by decide
   have hL : (false = true) = False := by decide

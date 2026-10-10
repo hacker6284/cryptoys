@@ -8511,7 +8511,10 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
         mvR ≤ mvE + rungCharge base.n base.bench s.tally ∧
         b.sudo_5Board_4cost.sudo_5Costs_6slides = (slE : Int) ∧
         bRed.sudo_5Board_4cost.sudo_5Costs_6slides = (slR : Int) ∧
-        slR ≤ slE + rungSlideCharge base.n s.tally) := by
+        slR ≤ slE + rungSlideCharge base.n s.tally) ∧
+      bRed.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) ∧
+      bRed.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+        b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
   obtain ⟨c, bLoop, ys, moves, slides, hole, peak, peakS, cMul, hH, hD, hops,
       hcopy, hsrc, hg, hmEq, hn, hkN, hbch, hpegB, hysEq, hGap, hX, _hFit, hMov,
       _hSFit, hSLe, hOp, hRow, htier, _hmk, h7, _hop0, hOpsLe, hctrl0, hhighS,
@@ -9355,6 +9358,19 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
         slE + (s.tally * (2 * base.n) + 2 * base.n + 2 * base.n + 2 * base.n) := by
       simp only [Nat.add_assoc]
     exact Nat.le_trans hY (heq.symm ▸ Nat.add_le_add_left hpiece slE)
+  have hhighRed : bRed.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) := by
+    rw [mul_live_highest bCube 5 6 base.x ysC c.n c.k mvCube slidesCube holeRed c.bench
+        peakCube peakSRed (cMul + 1) hH6R hD6R hops0R,
+      cube_live_highest bClear 6 5 L c.n c.k movesC slidesC holeC c.bench
+        peakC peakSC cCube hH5 hD5 hopsC,
+      hhighC]
+  have htmaxRed : bRed.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+    rw [mulLive_tmax bCube 5 6 base.x ysC c.n c.k mvCube slidesCube holeRed c.bench
+        peakCube peakSRed (cMul + 1) hH6R hD6R hops0R,
+      cubeLive_tmax bClear 6 5 L c.n c.k movesC slidesC holeC c.bench
+        peakC peakSC cCube hH5 hD5 hopsC,
+      hmaxC]
   have hRel : ∃ (mvE' mvR slE' slR : Nat),
       b.sudo_5Board_4cost.sudo_5Costs_5moves = (mvE' : Int) ∧
       bRed.sudo_5Board_4cost.sudo_5Costs_5moves = (mvR : Int) ∧
@@ -9408,7 +9424,7 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
         have hB : (pegPack c c.m c.hm (Nat.le_refl _)).b = bLoop :=
           (pegPack_board c c.m c.hm (Nat.le_refl _)).1.trans hpegB.symm
         rw [hB] at hP
-        exact (hP.symm.trans hpsB).symm), hcopy⟩, hRel⟩
+        exact (hP.symm.trans hpsB).symm), hcopy⟩, hRel, hhighRed, htmaxRed⟩
   · simpa [ofNat_eq_natCast] using hmvRed
   · simpa [ofNat_eq_natCast] using hslRed
 

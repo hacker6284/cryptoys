@@ -4186,7 +4186,14 @@ theorem resume_park_row
       bPark.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((s.ctrl + 4 : Nat) : Int) ∧
       bPark.sudo_5Board_11parked_from =
         ((climbAt base.ladder0 base.R s.ridx : Nat) : Int) ∧
-      bPark.sudo_5Board_8rung_idx = ((s.ridx + 1 : Nat) : Int) := by
+      bPark.sudo_5Board_8rung_idx = ((s.ridx + 1 : Nat) : Int) ∧
+      bPark.sudo_5Board_4home = b.sudo_5Board_4home ∧
+      bPark.sudo_5Board_4held = b.sudo_5Board_4held ∧
+      bPark.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      bPark.sudo_5Board_4cost.sudo_5Costs_5moves =
+        b.sudo_5Board_4cost.sudo_5Costs_5moves ∧
+      bPark.sudo_5Board_4cost.sudo_5Costs_4peak =
+        b.sudo_5Board_4cost.sudo_5Costs_4peak := by
   let hole := climbAt base.ladder0 base.R s.ridx
   let holes := downFrom (base.ladder0 + base.R - 1) base.R
   have hidxN : s.ridx < base.R := by
@@ -4245,7 +4252,7 @@ theorem resume_park_row
     h.shape.park.parkNe (Ne.symm hsrc.2.2.2) h.shape.park.fitI
   have hrun : Ecbs.park_rung b (r : Int) = .ok bPark := by
     simpa [bPark, bU, src] using hres
-  refine ⟨bPark, hrun, ?_, ?_, ?_, ?_⟩
+  refine ⟨bPark, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · have hlist := afterPark_resume s.row src s.parkAt hole r prev
       hsrc.1 h.shape.park.parkLt hprev
     have hfromRow : afterPark s.row s.fromHole s.parkAt hole r =
@@ -4269,6 +4276,11 @@ theorem resume_park_row
   · dsimp [bPark, bU, unparkedBoard]
   · dsimp [bPark]
   · dsimp [bPark]
+  · dsimp [bPark, bU, unparkedBoard]
+  · dsimp [bPark, bU, unparkedBoard]
+  · dsimp [bPark, bU, unparkedBoard]
+  · dsimp [bPark, bU, unparkedBoard]
+  · dsimp [bPark, bU, unparkedBoard]
 
 
 end EcbsLink2.Link2

@@ -2057,4 +2057,110 @@ theorem mul_eq_live_withPark (b : Ecbs.Board) (dst first second : Nat)
   rw [hmul]
   exact congrArg Except.ok hlive
 
+/-- Mul commutes with park fields and tally fields together. The final row and
+    counter are the parked ones. The live mul does not read either family. -/
+theorem mul_eq_live_withPark_withTally
+    (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
+    (w h r n k moves slides hole bench peak peakS cOps : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (second : Int))
+    (hH : second < b.sudo_5Board_4home.size)
+    (hD : second < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[second] = false)
+    (hbench : b.sudo_5Board_5bench = embed ys)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hn0 : 0 < n)
+    (hpos : 0 < ys.length) (hnle : n ≤ ys.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen ys.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (ys.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (ys.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (ys.take n)))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hF : first < b.sudo_5Board_4held.size) (hHome : first < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs)
+    (hne : first ≠ second)
+    (hlenx : xs.length = n)
+    (hspan : 2 * (n - 1) < bench)
+    (hxsT : allTritList xs)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * pegCount (ys.take n) + n * (n + 1)))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hkF : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * pegCount (ys.take n) + n * (n + 1) + 3 * (bench - n)))
+    (rowD rowP : Array Int) (len high tmax : Int) (ctrlD ctrlP fromHole ridx : Int) :
+    Ecbs.mul (withPark (withTally b rowD len ctrlD high tmax) rowP ctrlP fromHole ridx)
+        (dst : Int) (first : Int) (second : Int) false false false =
+      .ok (withPark
+        (withTally
+          (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops)
+          rowD len ctrlD high tmax)
+        rowP ctrlP fromHole ridx) := by
+  rw [withPark_withTally]
+  let bW := withPark b rowP ctrlP fromHole ridx
+  have hmkW : bW.sudo_5Board_9marker_on = false := by simpa [bW, withPark] using hmk
+  have honW : bW.sudo_5Board_8bench_on = true := by simpa [bW, withPark] using hon
+  have htoW : bW.sudo_5Board_8bench_to = (second : Int) := by simpa [bW, withPark] using hto
+  have hHW : second < bW.sudo_5Board_4home.size := by simpa [bW, withPark] using hH
+  have hDW : second < bW.sudo_5Board_4held.size := by simpa [bW, withPark] using hD
+  have h7W : 7 ≤ bW.sudo_5Board_4held.size := by simpa [bW, withPark] using h7
+  have hemptyW : bW.sudo_5Board_4held[second]'hDW = false := by simpa [bW, withPark] using hempty
+  have hbenchW : bW.sudo_5Board_5bench = embed ys := by simpa [bW, withPark] using hbench
+  have hnW : bW.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by simpa [bW, withPark] using hn
+  have hmovesW : bW.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves := by
+    simpa [bW, withPark] using hmoves
+  have hslidesW : bW.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides := by
+    simpa [bW, withPark] using hslides
+  have hpeakW : bW.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+    simpa [bW, withPark] using hpeak
+  have hopsW : 0 < bW.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    simpa [bW, withPark] using hops
+  have hop0W : bW.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsW = (cOps : Int) := by
+    simpa [bW, withPark] using hop0
+  have hblW : bW.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by
+    simpa [bW, withPark] using hbl
+  have hFW : first < bW.sudo_5Board_4held.size := by simpa [bW, withPark] using hF
+  have hHomeW : first < bW.sudo_5Board_4home.size := by simpa [bW, withPark] using hHome
+  have hHFW : bW.sudo_5Board_4held[first]'hFW = true := by simpa [bW, withPark] using hHF
+  have hArrW : bW.sudo_5Board_4home[first]'hHomeW = embed xs := by simpa [bW, withPark] using hArr
+  have hwW : bW.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by simpa [bW, withPark] using hwF
+  have hhW : bW.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h := by simpa [bW, withPark] using hhF
+  have hrW : bW.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by simpa [bW, withPark] using hrF
+  have hkW : bW.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by simpa [bW, withPark] using hkF
+  have hHoleW : bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
+    simpa [bW, withPark] using hHole
+  have hpeakSW : bW.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
+    simpa [bW, withPark] using hpeakS
+  have hrun := mul_eq_live_withTally bW dst first second xs ys w h r n k moves slides hole bench
+    peak peakS cOps hmkW honW htoW hHW hDW h7W hemptyW hbenchW hnW hn0 hpos hnle hzero
+    hf hfitL hmovesW hslidesW hpeakW hpeg hfitM hfitS hopsW hop0W hfops hblW hFW hHomeW
+    hHFW hArrW hne hlenx hspan hxsT hfi hfm hw0 hh0 hrR hrP hnE hkLe hgap hwW hhW hrW hkW
+    hHoleW hpeakSW hsm hnsm hfitB hfold rowP len ctrlP high tmax
+  rw [hrun]
+  have hlive := mulNoLiveBoard_withPark b rowP ctrlP fromHole ridx dst second xs ys n k moves
+    slides hole bench peak peakS cOps hH hD hops
+  rw [hlive]
+  exact congrArg Except.ok
+    (withPark_withTally
+      (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops)
+      rowD rowP len ctrlD high tmax ctrlP fromHole ridx).symm
+
 end EcbsLink2.Link2

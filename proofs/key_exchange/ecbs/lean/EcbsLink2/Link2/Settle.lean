@@ -816,6 +816,19 @@ theorem withPark_from (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : I
 theorem withPark_ridx (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
     (withPark b row ctrl fromHole ridx).sudo_5Board_8rung_idx = ridx := rfl
 
+/-- Park fields and tally fields write disjoint slots. The final row and counter
+    are the ones named last: `withPark` overwrites the row and the counter,
+    `withTally` overwrites the length, the high, and `tally_max`. -/
+theorem withPark_withTally (b : Ecbs.Board)
+    (rowT rowP : Array Int) (len ctrlT high tmax ctrlP fromHole ridx : Int) :
+    withPark (withTally b rowT len ctrlT high tmax) rowP ctrlP fromHole ridx =
+      withTally (withPark b rowP ctrlP fromHole ridx) rowP len ctrlP high tmax := by
+  apply board_ext
+  case hcost =>
+    apply cost_ext
+    all_goals simp [withPark, withTally]
+  all_goals simp [withPark, withTally]
+
 theorem placeBoard_irrel (b : Ecbs.Board) (home : Nat)
     (hH hH' : home < b.sudo_5Board_4home.size) (hD hD' : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) :

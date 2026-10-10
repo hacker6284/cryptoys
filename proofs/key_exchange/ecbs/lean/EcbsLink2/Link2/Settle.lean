@@ -743,4 +743,147 @@ theorem settleBoard_withTally (b : Ecbs.Board) (row : Array Int) (len ctrl high 
       settle_keep b home hH hD xs n moves slides peak hpk]
     simp [bT, withTally]
 
+/-- Replace the row, the control counter, the parked-from hole, and the rung index.
+    `clear`, a live cube, and a live nocopy mul do not read them; they copy them. -/
+def withPark (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) : Ecbs.Board :=
+  { b with
+    sudo_5Board_3row := row
+    sudo_5Board_11parked_from := fromHole
+    sudo_5Board_8rung_idx := ridx
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := ctrl } }
+
+theorem withPark_home (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4home = b.sudo_5Board_4home := rfl
+
+theorem withPark_held (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4held = b.sudo_5Board_4held := rfl
+
+theorem withPark_ops (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
+
+theorem withPark_marker (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := rfl
+
+theorem withPark_on (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_8bench_on = b.sudo_5Board_8bench_on := rfl
+
+theorem withPark_to (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_8bench_to = b.sudo_5Board_8bench_to := rfl
+
+theorem withPark_bench (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_5bench = b.sudo_5Board_5bench := rfl
+
+theorem withPark_tier (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_1t = b.sudo_5Board_1t := rfl
+
+theorem withPark_moves (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_5moves =
+      b.sudo_5Board_4cost.sudo_5Costs_5moves := rfl
+
+theorem withPark_slides (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_6slides =
+      b.sudo_5Board_4cost.sudo_5Costs_6slides := rfl
+
+theorem withPark_peak (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_4peak =
+      b.sudo_5Board_4cost.sudo_5Costs_4peak := rfl
+
+theorem withPark_hole (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := rfl
+
+theorem withPark_strict (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := rfl
+
+theorem withPark_tally0 (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_6tally0 = b.sudo_5Board_6tally0 := rfl
+
+theorem withPark_len (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_9tally_len = b.sudo_5Board_9tally_len := rfl
+
+theorem withPark_row (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_3row = row := rfl
+
+theorem withPark_ctrl (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_4ctrl = ctrl := rfl
+
+theorem withPark_from (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_11parked_from = fromHole := rfl
+
+theorem withPark_ridx (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_8rung_idx = ridx := rfl
+
+theorem placeBoard_irrel (b : Ecbs.Board) (home : Nat)
+    (hH hH' : home < b.sudo_5Board_4home.size) (hD hD' : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    placeBoard b home hH hD xs moves peak = placeBoard b home hH' hD' xs moves peak := by
+  unfold placeBoard
+  have hFinH : (⟨home, hH⟩ : Fin _) = ⟨home, hH'⟩ := Fin.ext rfl
+  have hFinD : (⟨home, hD⟩ : Fin _) = ⟨home, hD'⟩ := Fin.ext rfl
+  simp [hFinH, hFinD]
+
+theorem settleBoard_irrel (b : Ecbs.Board) (home : Nat)
+    (hH hH' : home < b.sudo_5Board_4home.size) (hD hD' : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    settleBoard b home hH hD xs n moves slides peak =
+      settleBoard b home hH' hD' xs n moves slides peak := by
+  unfold settleBoard
+  have hFinH : (⟨home, hH⟩ : Fin _) = ⟨home, hH'⟩ := Fin.ext rfl
+  have hFinD : (⟨home, hD⟩ : Fin _) = ⟨home, hD'⟩ := Fin.ext rfl
+  simp [hFinH, hFinD]
+
+/-- `place` does not read the park fields, and it copies them onto the result. -/
+theorem placeBoard_withPark (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int)
+    (home : Nat) (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    placeBoard (withPark b row ctrl fromHole ridx) home
+        (withPark_home b row ctrl fromHole ridx ▸ hH)
+        (withPark_held b row ctrl fromHole ridx ▸ hD) xs moves peak =
+      withPark (placeBoard b home hH hD xs moves peak) row ctrl fromHole ridx := by
+  unfold placeBoard
+  let bW := withPark b row ctrl fromHole ridx
+  let hHW := withPark_home b row ctrl fromHole ridx ▸ hH
+  let hDW := withPark_held b row ctrl fromHole ridx ▸ hD
+  have hcount :
+      countHeld (bW.sudo_5Board_4held.set ⟨home, hDW⟩ true) 7 =
+        countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7 := by
+    simp [bW, withPark]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  · have hpkW : peak < countHeld (bW.sudo_5Board_4held.set ⟨home, hDW⟩ true) 7 := by
+      simpa [hcount] using hpk
+    simp [hpk, hpkW, bW, withPark]
+  · have hpkW : ¬ peak < countHeld (bW.sudo_5Board_4held.set ⟨home, hDW⟩ true) 7 := by
+      simpa [hcount] using hpk
+    simp [hpk, hpkW, bW, withPark]
+
+/-- `settleBoard` does not read the park fields, and it copies them onto the result. -/
+theorem settleBoard_withPark (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int)
+    (home : Nat) (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    settleBoard (withPark b row ctrl fromHole ridx) home
+        (withPark_home b row ctrl fromHole ridx ▸ hH)
+        (withPark_held b row ctrl fromHole ridx ▸ hD) xs n moves slides peak =
+      withPark (settleBoard b home hH hD xs n moves slides peak) row ctrl fromHole ridx := by
+  let bT := withPark b row ctrl fromHole ridx
+  let hHT : home < bT.sudo_5Board_4home.size := withPark_home b row ctrl fromHole ridx ▸ hH
+  let hDT : home < bT.sudo_5Board_4held.size := withPark_held b row ctrl fromHole ridx ▸ hD
+  have hcount :
+      countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 =
+        countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7 := by
+    simp [bT, withPark]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  · have hpkT : peak < countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 := by
+      simpa [hcount] using hpk
+    rw [settle_peak bT home hHT hDT xs n moves slides peak hpkT,
+      settle_peak b home hH hD xs n moves slides peak hpk]
+    simp [bT, withPark]
+  · have hpkT : ¬ peak < countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 := by
+      simpa [hcount] using hpk
+    rw [settle_keep bT home hHT hDT xs n moves slides peak hpkT,
+      settle_keep b home hH hD xs n moves slides peak hpk]
+    simp [bT, withPark]
+
 end EcbsLink2.Link2

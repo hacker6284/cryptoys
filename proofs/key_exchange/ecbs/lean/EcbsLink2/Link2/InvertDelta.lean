@@ -2463,7 +2463,7 @@ theorem gap_bench_prefix
   obtain ⟨c, bM, ys, moves, slides, hole, peak, peakS, cOps, hH, hD, hops,
       _hcopy, _hsrc, hg, hmEq, hn, hk, hbch, _hbM, hysEq, _hGap, _hX, _hFit, _hMov,
       _hSFit, _hSLe, _hOp, _hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, _hctrl0, _hhigh0,
-      _hcontrol, _hlen0, _hmax0, _ht0, hmul⟩ :=
+      _hcontrol, _hlen0, _hmax0, _ht0, hmul, _hrow0, _hmvB, _hslB, _hhoB, _hpkB, _hpsB⟩ :=
     mul_of_shape h hm hT hhome
   have hpre : ys.take c.n = cubeTimes c.n c.k c.bench c.g c.m := by
     rw [hysEq]
@@ -2579,7 +2579,7 @@ theorem gap_mul_row
   obtain ⟨c, bM, ys, moves, slides, hole, peak, peakS, cOps, hH, hD, hops,
       _hcopy, _hsrc, _hg, _hmEq, _hn, _hk, _hbch, _hbM, _hys, _hGap, _hX, _hFit, _hMov,
       _hSFit, _hSLe, _hOp, hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, _hctrl0, _hhigh0,
-      _hcontrol, _hlen0, _hmax0, _ht0, hmul⟩ :=
+      _hcontrol, _hlen0, _hmax0, _ht0, hmul, _hrow0, _hmvB, _hslB, _hhoB, _hpkB, _hpsB⟩ :=
     mul_of_shape h hm hT hhome
   have hkeep := (mul_live_row bM 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cOps
     hH hD hops).trans hRow
@@ -2610,7 +2610,7 @@ theorem parked_final_red
       (pegBoard c c.m).sudo_5Board_11parked_from = st.fromHole ∧
       (pegBoard c c.m).sudo_5Board_8rung_idx = (st.ridx : Int) ∧
       (pegBoard c c.m).sudo_5Board_9tally_len = (st.tally : Int) := by
-  obtain ⟨bPark, c, hpark, hcopy, hrow0, hctrl0, hmT, ht0, _, _, _, _, _, hfrom, hridx, hlen⟩ :=
+  obtain ⟨bPark, c, hpark, hcopy, hrow0, hctrl0, hmT, ht0, _, _, _, _, _, hfrom, hridx, hlen, _⟩ :=
     parked_peg_ctx h hF hm hT hhome
   let hole := climbAt base.ladder0 base.R s.ridx
   have hIdle : s.fromHole = -1 := h.shape.park.fromIdle hF
@@ -2644,7 +2644,7 @@ theorem parked_gap_mul_fields
       bMul.sudo_5Board_8rung_idx = (st.ridx : Int) ∧
       bMul.sudo_5Board_9tally_len = (st.tally : Int) := by
   obtain ⟨c, bMul, hmul, hrow, hctrl, hfromB, hridxB, hlenB, hrow0, hctrl0, hmT, ht0,
-      hfrom, hridx, hlen⟩ := parked_gap_mul h hF hm hT hhome
+      hfrom, hridx, hlen, _hlive⟩ := parked_gap_mul h hF hm hT hhome
   let hole := climbAt base.ladder0 base.R s.ridx
   have hIdle : s.fromHole = -1 := h.shape.park.fromIdle hF
   have hrow0' : c.row0 = afterPark s.row s.fromHole s.parkAt hole 2 := by

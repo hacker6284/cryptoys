@@ -21,7 +21,7 @@ python3 ../../../doubledeal/check_axioms.py ecbs # every EcbsLink2 theorem: prop
 python3 ../../../doubledeal/security/checks/scan_sorry.py --root . --exclude Generated
 ```
 
-No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeds. The compile of the climb-step file, which had peaked at 2987508 kB after the red program, peaked at 1140088 kB after the park proof was split. The split is the pattern that brought the memory down: the giant obtains run once in a separate view, and ops and peak are read by naming the live board only long enough to project one field, not by rewriting the board inside the theorem that built it. The full-package peak before that red program was 1808500 kB. On this head `lake build EcbsLink2` peaked at 1248084 kB.
+No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeds. The compile of the climb-step file, which had peaked at 2987508 kB after the red program, peaked at 1140088 kB after the park proof was split. The split is the pattern that brought the memory down: the giant obtains run once in a separate view, and ops and peak are read by naming the live board only long enough to project one field, not by rewriting the board inside the theorem that built it. The full-package peak before that red program was 1808500 kB. On this head `lake build EcbsLink2` peaked at 1262664 kB.
 
 ## Generated Lean
 

@@ -4641,6 +4641,12 @@ structure ParkRead (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
   parkHeld : 0 ≤ s.fromHole → ∃ prev, s.row[s.parkAt]'(parkLt) = prev
   nextRung : ∀ r rs, rest = r :: rs →
     s.row[climbAt base.ladder0 base.R s.ridx]'(holeLt) = r ∧ r ≠ 0
+  /-- Every still-pending rung, not only the head, sits on its climb hole.
+      A successor reads the tail after the hole just consumed. -/
+  ladderTail : ∀ k (hk : k < rest.length)
+      (hlt : climbAt base.ladder0 base.R (s.ridx + k) < s.row.length),
+    s.row[climbAt base.ladder0 base.R (s.ridx + k)]'hlt = rest[k]'(hk) ∧
+      rest[k]'(hk) ≠ 0
   fit2 : FitsLen (s.ctrl + 2)
   fit4 : FitsLen ((s.ctrl + 2) + 2)
   fitI : FitsLen (s.ridx + 1)

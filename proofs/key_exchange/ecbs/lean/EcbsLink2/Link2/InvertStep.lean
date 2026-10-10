@@ -1,7 +1,9 @@
 /-
   One climb rung after the idle park: the emitted prefix, then the final white
   successor. Proof-only. Not a security claim. The park hole sits immediately
-  after the climb holes (`ladder0 + nrungs`).
+  after the climb holes (`ladder0 + nrungs`). `pegPack` is irreducible below
+  `pegPack_fixed`: unfolding that recursion under the clear exceeds the
+  heartbeat limit.
 -/
 import EcbsLink2.Link2.InvertDelta
 
@@ -55,6 +57,115 @@ theorem climbAt_ne_sum (L R i park : Nat) (hL : 0 < L) (hi : i ≤ R) (hp : park
   intro h
   unfold climbAt at h
   omega
+
+/-- The climb hole after one more rung, when the park is the cell past the ladder.
+    It stays on the row, it is not the park, and it is not the hole just read. -/
+theorem successor_hole (L R i park rowLen : Nat)
+    (hL : 0 < L) (hi : i < R) (hp : park = L + R)
+    (hold : climbAt L R i < rowLen) :
+    climbAt L R (i + 1) < rowLen ∧
+    climbAt L R (i + 1) ≠ park ∧
+    climbAt L R i ≠ climbAt L R (i + 1) := by
+  have hle : i + 1 ≤ R := Nat.succ_le_of_lt hi
+  refine ⟨?_, climbAt_ne_sum L R (i + 1) park hL hle hp, ?_⟩
+  · by_cases hlt : i + 1 < R
+    · rw [climbAt_pred L R i hlt]
+      have hpos : 0 < climbAt L R i := by
+        have hge := climbAt_ge L R i hi
+        omega
+      omega
+    · have heq : i + 1 = R := by omega
+      rw [climbAt_end L R i hL heq]
+      have holdEq : climbAt L R i = L := by
+        unfold climbAt
+        omega
+      omega
+  · by_cases hlt : i + 1 < R
+    · rw [climbAt_pred L R i hlt]
+      have hpos : 0 < climbAt L R i := by
+        have hge := climbAt_ge L R i hi
+        omega
+      omega
+    · have heq : i + 1 = R := by omega
+      rw [climbAt_end L R i hL heq]
+      have holdEq : climbAt L R i = L := by
+        unfold climbAt
+        omega
+      omega
+
+/-- A final rung's control fits the budget's counter room. The new counter is
+    the park write plus one per tally peg; the peg-loop fit is that counter
+    plus one more tally. -/
+theorem final_white_ctrl_fit (ctrl tally ctrl0 done R mMax : Nat)
+    (hctrl : ctrl ≤ ctrl0 + done * (3 * mMax + 5))
+    (ht : tally ≤ mMax) (hd : done + 1 ≤ R)
+    (hf : FitsLen (ctrl0 + (R + 1) * (3 * mMax + 5))) :
+    FitsLen ((ctrl + 2 + tally) + 2) ∧
+    FitsLen (((ctrl + 2 + tally) + 2) + 2) ∧
+    FitsLen ((ctrl + 2 + tally) + tally) := by
+  have hx : 2 * (3 * mMax + 5) = 6 * mMax + 10 := by omega
+  have hsplit : done * (3 * mMax + 5) + 2 * (3 * mMax + 5) =
+      (done + 2) * (3 * mMax + 5) := (Nat.add_mul done 2 (3 * mMax + 5)).symm
+  have hge : (done + 2) * (3 * mMax + 5) ≤ (R + 1) * (3 * mMax + 5) :=
+    Nat.mul_le_mul_right _ (by omega : done + 2 ≤ R + 1)
+  have hcap : ctrl + (6 * mMax + 10) ≤ ctrl0 + (R + 1) * (3 * mMax + 5) := by
+    have h1 : ctrl + (6 * mMax + 10) ≤
+        ctrl0 + done * (3 * mMax + 5) + (6 * mMax + 10) := by omega
+    have h2 : ctrl0 + done * (3 * mMax + 5) + (6 * mMax + 10) =
+        ctrl0 + (done * (3 * mMax + 5) + 2 * (3 * mMax + 5)) := by
+      rw [← hx]
+      exact Nat.add_assoc _ _ _
+    have h3 : ctrl0 + (done * (3 * mMax + 5) + 2 * (3 * mMax + 5)) ≤
+        ctrl0 + (R + 1) * (3 * mMax + 5) := by
+      rw [hsplit]
+      exact Nat.add_le_add_left hge _
+    exact Nat.le_trans (Nat.le_trans h1 (Nat.le_of_eq h2)) h3
+  refine ⟨FitsLen.of_le hf (by omega), FitsLen.of_le hf (by omega),
+    FitsLen.of_le hf (by omega)⟩
+
+/-- The row a final white rung leaves: the park write, then the tally painted red.
+    The segment is the finished one. -/
+theorem final_white_row_seg (s : ClimbModel) (x : List Nat) (r hole : Nat)
+    (hseg : RowSeg s.row s.t0 s.tally false)
+    (hF : s.fromHole < 0) (hwhite : r ≠ 2)
+    (hp : s.parkAt < s.t0) (hh : hole < s.t0) :
+    RowSeg (modelRung s x r hole true).row (modelRung s x r hole true).t0
+      (modelRung s x r hole true).tally true := by
+  let s' := modelRung s x r hole true
+  have hMod := model_final_white s x r hole hwhite hF
+  obtain ⟨_hgap, ht, _hon, _hwork, _hctrl, _hhigh, hrow, _hfrom, _hridx, ht0,
+      _hpark, _hn, _hk, _hb⟩ := hMod
+  have hsegR := rungRow_final_seg s.row s.fromHole s.parkAt hole s.t0 s.tally r
+    hseg hp hh (Or.inl hF)
+  have hEq : s'.row =
+      rungRow s.row s.fromHole s.parkAt hole s.t0 s.tally r true := by
+    rw [hrow, rungRow, afterTally]
+    simp
+  simpa [hEq, ht0, ht, s'] using hsegR
+
+/-- A non-final white rung doubles the red tally. The segment is white of length
+    `2 · tally`, provided the row has room for that double. -/
+theorem open_white_row_seg (s : ClimbModel) (x : List Nat) (r hole : Nat)
+    (hseg : RowSeg s.row s.t0 s.tally false)
+    (hF : s.fromHole < 0) (hwhite : r ≠ 2)
+    (hp : s.parkAt < s.t0) (hh : hole < s.t0)
+    (hroom : s.t0 + 2 * s.tally ≤ s.row.length) :
+    let s' := modelRung s x r hole false
+    RowSeg s'.row s'.t0 s'.tally false := by
+  intro s'
+  have hparked : decide (0 ≤ s.fromHole) = false := by
+    rw [decide_eq_false_iff_not]
+    omega
+  have hrow : s'.row =
+      rungRow s.row s.fromHole s.parkAt hole s.t0 s.tally r false := by
+    simp [s', modelRung, rungRow]
+  have ht0 : s'.t0 = s.t0 := by simp [s', modelRung]
+  have ht : s'.tally = 2 * s.tally := by
+    simp [s', modelRung, invRung, hwhite, hparked]
+  have hsegR := rungRow_open_white_seg s.row s.fromHole s.parkAt hole s.t0 s.tally r
+    hseg hp hh (Or.inl hF) hroom hwhite
+  rw [hrow, ht0, ht]
+  exact hsegR
 
 /-- Copy, the pegs, the gap mul, and `clear` stay inside one `rungCharge`. -/
 theorem white_clear_move_le (mv moves0 pegC m n bench pegG mvM : Nat)
@@ -1065,5 +1176,285 @@ theorem gap_clear_emit
     · intro i hi
       exact hbump.2 i hi (hbump.1 ▸ hi)
     · rw [hpkId]; exact hpkE
+
+/-- Idle final white rung. The park hole is the cell after the ladder
+    (`ladder0 + R`). The emitted park-through-clear is the `ClimbInvK`
+    successor: the row segment is the finished tally, and `ParkRead` is the
+    climb hole just parked, with nothing left on the ladder. -/
+theorem white_final_k
+    {done : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [r] b s base)
+    (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false)
+    (hp : s.parkAt < s.t0)
+    (hh : climbAt base.ladder0 base.R s.ridx < s.t0)
+    (hwhite : r ≠ 2)
+    (hParkAt : s.parkAt = base.ladder0 + base.R)
+    (hCap : climbTallyPrefix base.tally0 done [r] ≤ base.mMax) :
+    ∃ b',
+      (do
+          let b ← Ecbs.park_rung b (r : Int)
+          let b ← Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false
+          let _ ← SudoRt.runLoopOn (Int.ofNat 0)
+              (fuelRange (Int.ofNat 0) (Int.ofNat (s.tally - 1)))
+              (whiteStep b (Int.ofNat (s.tally - 1)))
+              (fun j => .ok (b, j))
+              (fun _ => .ok (b, (0 : Int)))
+          let out ← SudoRt.runLoopOn (Int.ofNat 0, b)
+              (fuelRange (Int.ofNat 0) (Int.ofNat (s.tally - 1)))
+              (cubePegStep 6 (Int.ofNat (s.tally - 1)))
+              (fun σ => .ok σ)
+              (fun r => .ok ((0 : Int), r))
+          let b := out.2
+          let b ← Ecbs.mul b (5 : Int) (5 : Int) (6 : Int) false false false
+          Ecbs.clear b (5 : Int)) = .ok b' ∧
+      ClimbInvK (done ++ [r]) [] b'
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) true) base := by
+  let hole := climbAt base.ladder0 base.R s.ridx
+  let s' := modelRung s base.x r hole true
+  obtain ⟨b', hAll⟩ := gap_clear_emit h hF hm hT hhome hp hh
+  rcases hAll with ⟨hrun, hrowE, hctrlE, hfromE, hridxE, hlenE, ht0E, hparkE,
+      hhighE, hmarkE, hbonE, htoE, hbenchE, htierE, hladE, hnrE, htmaxE,
+      h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, htrits, hopsE, hc1E, hpkSE,
+      hholeE, hδ⟩
+  have hFrom : s.fromHole = -1 := h.shape.park.fromIdle hF
+  have hMod := model_final_white s base.x r hole hwhite hF
+  obtain ⟨hgap, htall, hon, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
+      hparkM, hnM, hkM, hbM⟩ := hMod
+  have hidx : s.ridx < base.R := by
+    rw [h.idx]
+    have hk := h.kLe
+    simp [List.length_append] at hk
+    omega
+  have hlenRow : s'.row.length = s.row.length := by
+    rw [hrowM, paintRed_length, afterPark_length]
+  have hStep := successor_hole base.ladder0 base.R s.ridx s.parkAt s.row.length
+    h.shape.park.l0pos hidx hParkAt h.shape.park.holeLt
+  have hinv : ClimbInv b' s' := by
+    refine
+      { hG := h5H
+        hGs := h5D
+        marker := hmarkE
+        len := ?_
+        ctrl := ?_
+        high := ?_
+        t0 := ?_
+        row := ?_
+        park := ?_
+        fromP := ?_
+        ridx := ?_
+        gapHome := ?_
+        gapBench := ?_ }
+    · rw [hlenE, htall]
+    · rw [hctrlE, hctrlM]
+    · rw [hhighE, hhighM]
+    · rw [ht0E, ht0M]
+    · rw [hrowE, hrowM, hFrom]
+    · rw [hparkE, hparkM]
+    · rw [hfromE, hfromM]
+    · rw [hridxE, hridxM]
+    · intro hOff
+      rw [hon] at hOff
+      cases hOff
+    · intro _
+      have hnle : s.n ≤ s.benchlen := by
+        have hsp := h.shape.peg.span
+        omega
+      have hprod := fieldMul_len s.n s.k s.benchlen s.gap
+        (cubeTimes s.n s.k s.benchlen s.gap s.tally) hnle
+      have htake : (fieldMul s.n s.k s.benchlen s.gap
+          (cubeTimes s.n s.k s.benchlen s.gap s.tally)).take s.n =
+          fieldMul s.n s.k s.benchlen s.gap
+            (cubeTimes s.n s.k s.benchlen s.gap s.tally) :=
+        List.take_of_length_le (Nat.le_of_eq hprod)
+      refine ⟨hbonE, htoE, ?_, ?_⟩
+      · rw [hbenchE, hgap, hnM, hbM, htake]
+      · rw [hwork, hgap]
+  have hseg : RowSeg s'.row s'.t0 s'.tally true :=
+    final_white_row_seg s base.x r hole h.shape.seg hF hwhite hp hh
+  have hdone : done.length + 1 ≤ base.R := by
+    have hk := h.kLe
+    simp [List.length_append] at hk
+    exact hk
+  have hfits := final_white_ctrl_fit s.ctrl s.tally base.ctrl0 done.length base.R
+    base.mMax h.ctrlLe hT hdone base.fitCtrl
+  have hpark' : ParkRead b' s' [] base := by
+    refine
+      { ladder0B := ?_
+        nrungsB := ?_
+        climbH := ?_
+        holeLt := ?_
+        parkLt := ?_
+        parkNe := ?_
+        parkLe := ?_
+        parkIn := ?_
+        parkCell := ?_
+        fromIdle := ?_
+        fromNat := ?_
+        srcOk := ?_
+        parkHeld := ?_
+        nextRung := ?_
+        ladderTail := ?_
+        fit2 := ?_
+        fit4 := ?_
+        fitI := ?_
+        l0pos := h.shape.park.l0pos
+        fitL0 := h.shape.park.fitL0
+        fitLR := h.shape.park.fitLR }
+    · rw [hladE, h.shape.park.ladder0B]
+    · rw [hnrE, h.shape.park.nrungsB]
+    · have hL : b'.sudo_5Board_7ladder0 = Int.ofNat base.ladder0 := by
+        rw [hladE, h.shape.park.ladder0B, ← ofNat_eq_natCast]
+      have hN : b'.sudo_5Board_6nrungs = Int.ofNat base.R := by
+        rw [hnrE, h.shape.park.nrungsB, ← ofNat_eq_natCast]
+      exact climb_holes_refines b' base.ladder0 base.R hL hN h.shape.park.l0pos
+        h.shape.park.fitL0 h.shape.park.fitLR
+    · have hlt : climbAt base.ladder0 base.R (s.ridx + 1) < s.row.length := hStep.1
+      rw [← hridxM, ← hlenRow] at hlt
+      exact hlt
+    · have hlt : s.parkAt < s.row.length := h.shape.park.parkLt
+      rw [← hparkM, ← hlenRow] at hlt
+      exact hlt
+    · have hne : climbAt base.ladder0 base.R (s.ridx + 1) ≠ s.parkAt := hStep.2.1
+      rw [← hridxM, ← hparkM] at hne
+      exact hne
+    · rw [hparkM, hhighM]
+      exact h.shape.park.parkLe
+    · rw [hparkM]
+      exact h.shape.park.parkIn
+    · intro hneg
+      rw [hfromM] at hneg
+      exact absurd hneg (by
+        have hnn : 0 ≤ ((hole : Nat) : Int) := Int.ofNat_nonneg hole
+        omega)
+    · intro hneg
+      rw [hfromM] at hneg
+      exact absurd hneg (by
+        have hnn : 0 ≤ ((hole : Nat) : Int) := Int.ofNat_nonneg hole
+        omega)
+    · intro _hnn
+      rw [hfromM]
+      rfl
+    · intro hnn
+      rw [hfromM] at hnn
+      refine ⟨?_, ?_, ?_, ?_⟩
+      · have hlt : hole < s.row.length := h.shape.park.holeLt
+        rw [← hlenRow] at hlt
+        simpa [Int.toNat_ofNat] using hlt
+      · have hlt : hole < s.row.length := h.shape.park.holeLt
+        rw [h.shape.rowLen] at hlt
+        simpa [Int.toNat_ofNat] using hlt
+      · have hle : hole ≤ s.high := by
+          have hhi : hole < s.t0 := hh
+          have htop : s.high = s.t0 + s.tally - 1 := h.highTop hm
+          omega
+        rw [hhighM]
+        simpa [Int.toNat_ofNat] using hle
+      · have hne : hole ≠ climbAt base.ladder0 base.R (s.ridx + 1) := hStep.2.2
+        rw [← hridxM] at hne
+        simpa [Int.toNat_ofNat] using hne
+    · intro _
+      have hlt : s'.parkAt < s'.row.length := by
+        have h0 : s.parkAt < s.row.length := h.shape.park.parkLt
+        rw [← hparkM, ← hlenRow] at h0
+        exact h0
+      exact ⟨s'.row[s'.parkAt]'hlt, rfl⟩
+    · intro r2 rs hrs
+      cases hrs
+    · intro k hk _hlt
+      simp at hk
+    · rw [hctrlM]
+      exact hfits.1
+    · rw [hctrlM]
+      exact hfits.2.1
+    · have hri : s.ridx + 2 ≤ base.R + 1 := by
+        rw [h.idx]
+        omega
+      have hfitR : FitsLen (base.R + 1) := by
+        have hmul : base.R + 1 ≤ (base.R + 1) * (3 * base.mMax + 5) := by
+          apply Nat.le_mul_of_pos_right
+          omega
+        exact FitsLen.of_le base.fitCtrl (by omega)
+      have hle : s'.ridx + 1 ≤ base.R + 1 := by
+        rw [hridxM, h.idx]
+        omega
+      exact FitsLen.of_le hfitR hle
+  obtain ⟨c1, hc1⟩ := hc1E
+  have hpeg' : PegRead b' s' base := by
+    refine
+      { opsGt := hopsE
+        cOps := ⟨c1, hc1 hopsE⟩
+        peakS := hpkSE
+        holeM := hholeE
+        trits := ?_
+        top := ?_
+        fitRow := ?_
+        fitTall := ?_
+        fitCtrl := ?_
+        n_pos := ?_
+        span := ?_
+        small := ?_
+        n_small := ?_
+        fitN := ?_
+        fitBn := ?_
+        fit3 := ?_ }
+    · rw [hgap]; exact htrits
+    · intro hpos
+      rw [ht0M, htall, hhighM]
+      have htop : s.high = s.t0 + s.tally - 1 := h.highTop (by
+        rw [htall] at hpos
+        exact hpos)
+      omega
+    · rw [ht0M, htall]; exact h.shape.peg.fitRow
+    · rw [htall]; exact h.shape.peg.fitTall
+    · rw [hctrlM, htall]; exact hfits.2.2
+    · rw [hnM]; exact h.shape.peg.n_pos
+    · rw [hnM, hbM]; exact h.shape.peg.span
+    · rw [hbM]; exact h.shape.peg.small
+    · rw [hnM]; exact h.shape.peg.n_small
+    · rw [hnM]; exact h.shape.peg.fitN
+    · rw [hbM]; exact h.shape.peg.fitBn
+    · exact h.shape.peg.fit3
+  have hnle : s.n ≤ s.benchlen := by
+    have hsp := h.shape.peg.span
+    omega
+  have hgapLen : s'.gap.length = s'.n := by
+    rw [hgap, hnM]
+    exact fieldMul_len s.n s.k s.benchlen s.gap
+      (cubeTimes s.n s.k s.benchlen s.gap s.tally) hnle
+  have hshape : ClimbShape b' s' [] base :=
+    shape_refresh h.shape b' s' [] hnM hkM hbM hgapLen
+      hseg h6D h6H (h6f (Nat.lt_of_lt_of_le (by decide : (6 : Nat) < 7) h7E)) h7E
+      (by intro _; exact h5f (Nat.lt_of_lt_of_le (by decide : (5 : Nat) < 7) h7E))
+      (by intro hOff; rw [hon] at hOff; cases hOff)
+      hkeep.heldLt hkeep.homeLt hkeep.held hkeep.arr
+      (by rw [htierE, hnM]; exact h.shape.tierN)
+      (by rw [htierE, hkM]; exact h.shape.tierK)
+      (by rw [htierE, hbM]; exact h.shape.tierB)
+      (by rw [htierE]; exact h.shape.tierW)
+      (by rw [htierE]; exact h.shape.tierH)
+      (by rw [htierE]; exact h.shape.tierR)
+      (by rw [htierE]; exact h.shape.tierCg)
+      (by rw [htierE]; exact h.shape.tierC)
+      (by rw [hlenRow]; exact h.shape.rowLen)
+      hpark' hpeg'
+  have htmax : ∃ tmax : Nat,
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
+        (0 < s'.tally → tmax < 2 * s'.tally) := by
+    obtain ⟨tmax, htm, hnote⟩ := h.tmaxLt
+    refine ⟨tmax, by rw [htmaxE, htm], ?_⟩
+    intro hpos
+    have hlt := hnote (by rw [← htall]; exact hpos)
+    rw [htall]
+    exact hlt
+  have hK := climbInvK_succ h hinv hδ hCap hshape
+    (by
+      intro hle
+      simp [List.length_nil] at hle)
+    (by
+      intro hle
+      simp [List.length_nil] at hle)
+    htmax
+  exact ⟨b', hrun, hK⟩
 
 end EcbsLink2.Link2

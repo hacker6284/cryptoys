@@ -639,5 +639,97 @@ def test_b8_squares_into_c_and_tidies_c : Except SudoRt.Trap Unit :=
     let _as339 ← SudoRt.sudoAssertEq _t338 (some nine) 999
     pure ()
 
+def test_trace_build_build_hole_by_hole_gives_build_key_grid_s_grid_and_its_dice : Except SudoRt.Trap Unit :=
+  do
+    let _t340 ← SudoRt.filledL (96 : Int) (1 : Int)
+    let _t342 ← SudoRt.filledL (48 : Int) (5 : Int)
+    let _t344 ← dice (SudoRt.concatL (#[(1 : Int), (5 : Int)] : Array (Int)) _t340) (#[(1 : Int)] : Array (Int)) (SudoRt.concatL (#[(6 : Int), (2 : Int)] : Array (Int)) _t342)
+    let _t345 ← check_trace_build _t344
+    let g := _t345
+    let _as346 ← SudoRt.sudoAssertEq (g).sudo_7KeyGrid_5ships (#[({ sudo_4Ship_4kind := Kind.Sudo_4Kind_9Destroyer, sudo_4Ship_4down := false, sudo_4Ship_3row := (0 : Int), sudo_4Ship_3col := (1 : Int), sudo_4Ship_8bow_last := false } : Ship)] : Array (Ship)) 1448
+    let _t347 ← SudoRt.filledL (99 : Int) (1 : Int)
+    let _t348 ← SudoRt.filledL (50 : Int) (5 : Int)
+    let _t349 ← dice _t347 (#[] : Array (Int)) _t348
+    let _t350 ← check_trace_build _t349
+    let g := _t350
+    let _as352 ← SudoRt.sudoAssertEq (SudoRt.listLen (g).sudo_7KeyGrid_5ships) (0 : Int) 1450
+    pure ()
+
+def test_cell_holes_one_hole_per_cell_of_read_key_the_extra_cell_at_the_3_holer_s_last_hole : Except SudoRt.Trap Unit :=
+  do
+    let _t353 ← cell_holes sample_grid_a
+    let holes := _t353
+    let _t354 ← read_key (#[sample_grid_a] : Array (KeyGrid))
+    let cells := _t354
+    let _as357 ← SudoRt.sudoAssertEq (SudoRt.listLen holes) (SudoRt.listLen cells) 1455
+    let _t358 ← SudoRt.atL holes (0 : Int)
+    let _t359 ← SudoRt.negI (1 : Int)
+    let _as360 ← SudoRt.sudoAssertEq _t358 _t359 1456
+    let _t361 ← SudoRt.atL holes (1 : Int)
+    let _t363 ← (if (SudoRt.SEq.beq _t361 (0 : Int)) then (do
+  let _t364 ← SudoRt.atL holes (3 : Int)
+  pure (SudoRt.SEq.beq _t364 (2 : Int))) else pure false)
+    let _t366 ← (if _t363 then (do
+  let _t367 ← SudoRt.atL holes (4 : Int)
+  pure (SudoRt.SEq.beq _t367 (2 : Int))) else pure false)
+    let _t369 ← (if _t366 then (do
+  let _t370 ← SudoRt.atL holes (5 : Int)
+  pure (SudoRt.SEq.beq _t370 (3 : Int))) else pure false)
+    let _as372 ← SudoRt.sudoAssert _t369 1458
+    let _t374 ← SudoRt.subI (SudoRt.listLen holes) (1 : Int)
+    let _t375 ← SudoRt.atL holes _t374
+    let _as376 ← SudoRt.sudoAssertEq _t375 (199 : Int) 1459
+    let _t377 ← cell_holes sample_grid_b
+    let _t379 ← read_key (#[sample_grid_b] : Array (KeyGrid))
+    let _as381 ← SudoRt.sudoAssertEq (SudoRt.listLen _t377) (SudoRt.listLen _t379) 1460
+    pure ()
+
+def test_trace_keys_matches_exchange_on_the_sample_grids_step_by_step : Except SudoRt.Trap Unit :=
+  do
+    let reads := (#[] : Array (BuildRead))
+    let _t382 ← trace_keys t1 sample_grid_a sample_grid_b reads reads
+    let tr := _t382
+    let _t383 ← check_trace_steps t1 tr
+    let _u384 := _t383
+    let _t385 ← exchange t1 (#[sample_grid_a] : Array (KeyGrid)) (#[sample_grid_b] : Array (KeyGrid))
+    let _t386 ← SudoRt.resUnwrap _t385
+    let e := _t386
+    let _as387 ← SudoRt.sudoAssert (tr).sudo_5Trace_2ok 1467
+    let _t389 ← (if (SudoRt.SEq.beq (tr).sudo_5Trace_8public_a (e).sudo_8Exchange_8public_a) then (do
+  pure (SudoRt.SEq.beq (tr).sudo_5Trace_8public_b (e).sudo_8Exchange_8public_b)) else pure false)
+    let _as391 ← SudoRt.sudoAssert _t389 1468
+    let _t393 ← (if (SudoRt.SEq.beq (tr).sudo_5Trace_8secret_a (e).sudo_8Exchange_8secret_a) then (do
+  pure (SudoRt.SEq.beq (tr).sudo_5Trace_8secret_b (e).sudo_8Exchange_8secret_b)) else pure false)
+    let _as395 ← SudoRt.sudoAssert _t393 1469
+    pure ()
+
+def test_trace_exchange_matches_build_key_grid_and_exchange_on_the_t1_exchange_vectors : Except SudoRt.Trap Unit :=
+  do
+    let _t396 ← dice_exchange_t1_run0_a
+    let _t397 ← dice_exchange_t1_run0_b
+    let _t398 ← check_trace_exchange t1 _t396 _t397
+    let _u399 := _t398
+    let _t400 ← dice_exchange_t1_run3_a
+    let _t401 ← dice_exchange_t1_run3_b
+    let _t402 ← check_trace_exchange t1 _t400 _t401
+    let _u403 := _t402
+    pure ()
+
+def test_trace_exchange_matches_build_key_grid_and_exchange_on_the_t2_exchange_vector : Except SudoRt.Trap Unit :=
+  do
+    let _t404 ← dice_exchange_t2_run3_a
+    let _t405 ← dice_exchange_t2_run3_b
+    let _t406 ← check_trace_exchange t2 _t404 _t405
+    let _u407 := _t406
+    pure ()
+
+def test_trace_exchange_matches_build_key_grid_and_exchange_on_the_t6_exchange_vector : Except SudoRt.Trap Unit :=
+  do
+    let _t408 ← dice_exchange_t6_run0_a
+    let _t409 ← dice_exchange_t6_run0_b
+    let _t410 ← check_trace_exchange t6 _t408 _t409
+    let _u411 := _t410
+    pure ()
+
 def main : IO UInt32 :=
-  SudoRt.runTests [("test_b1_drop_examples_carry_like_an_odometer", fun _ => test_b1_drop_examples_carry_like_an_odometer), ("test_b1_a_carry_past_the_strip_s_last_hole_fails_drop_s_final_assert", fun _ => test_b1_a_carry_past_the_strip_s_last_hole_fails_drop_s_final_assert), ("test_b4_pay_toll_rejects_a_toll_of_n_or_more_trits", fun _ => test_b4_pay_toll_rejects_a_toll_of_n_or_more_trits), ("test_b4_t1_example_a_white_at_hole_20_folds_to_whites_at_holes_2_and_4", fun _ => test_b4_t1_example_a_white_at_hole_20_folds_to_whites_at_holes_2_and_4), ("test_b3_one_times_x_is_x_and_x_times_one_is_x", fun _ => test_b3_one_times_x_is_x_and_x_times_one_is_x), ("test_b3_worst_case_all_red_times_all_red_with_nudge_2_does_not_overflow", fun _ => test_b3_worst_case_all_red_times_all_red_with_nudge_2_does_not_overflow), ("test_b5_p_tidies_to_the_empty_register_in_t1_and_t2", fun _ => test_b5_p_tidies_to_the_empty_register_in_t1_and_t2), ("test_b8_rejects_0_1_p_1_p_1_and_a_wrong_length", fun _ => test_b8_rejects_0_1_p_1_p_1_and_a_wrong_length), ("test_3_1_calling_the_shots_copies_the_value_into_y_misfires_and_all", fun _ => test_3_1_calling_the_shots_copies_the_value_into_y_misfires_and_all), ("test_3_1_clear_y_the_public_walk_leaves_x_x_x_in_y_and_the_call_clears_it_first", fun _ => test_3_1_clear_y_the_public_walk_leaves_x_x_x_in_y_and_the_call_clears_it_first), ("test_b6_the_public_walk_leaves_the_last_square_x_x_x_in_y_unnudged", fun _ => test_b6_the_public_walk_leaves_the_last_square_x_x_x_in_y_unnudged), ("test_b3_slide_lifts_the_register_s_old_pegs_then_slides_the_answer_in", fun _ => test_b3_slide_lifts_the_register_s_old_pegs_then_slides_the_answer_in), ("test_b6_stale_pegs_in_y_are_lifted_before_the_square_slides_in", fun _ => test_b6_stale_pegs_in_y_are_lifted_before_the_square_slides_in), ("test_b5_on_a_spill_the_tidy_answer_slides_back_into_the_register", fun _ => test_b5_on_a_spill_the_tidy_answer_slides_back_into_the_register), ("test_3_1_an_empty_register_is_eighteen_misfires", fun _ => test_3_1_an_empty_register_is_eighteen_misfires), ("test_4_3_read_start_marker_ship_pass_peg_pass", fun _ => test_4_3_read_start_marker_ship_pass_peg_pass), ("test_4_3_read_rejects_overlapping_ships", fun _ => test_4_3_read_rejects_overlapping_ships), ("test_b9_t1_exchange_with_the_sample_grids", fun _ => test_b9_t1_exchange_with_the_sample_grids), ("test_4_2_keypad_row_for_the_first_hole_column_for_the_second", fun _ => test_4_2_keypad_row_for_the_first_hole_column_for_the_second), ("test_4_2_a_row_cup_d10_is_thrown_again_on_its_zero_face", fun _ => test_4_2_a_row_cup_d10_is_thrown_again_on_its_zero_face), ("test_4_2_running_out_of_d10_faces_before_a_non_zero_one_fails_throw_d10_s_assert", fun _ => test_4_2_running_out_of_d10_faces_before_a_non_zero_one_fails_throw_d10_s_assert), ("test_4_2_the_row_cup_is_five_dice_in_rainbow_order_zero_faces_thrown_again", fun _ => test_4_2_the_row_cup_is_five_dice_in_rainbow_order_zero_faces_thrown_again), ("test_4_2_grow_until_it_bumps", fun _ => test_4_2_grow_until_it_bumps), ("test_4_2_build_all_sea_and_all_white_pegs", fun _ => test_4_2_build_all_sea_and_all_white_pegs), ("test_4_2_build_a_ship_across_a_die_pair_takes_both_pairs_pegs", fun _ => test_4_2_build_a_ship_across_a_die_pair_takes_both_pairs_pegs), ("test_b8_squares_into_c_and_tidies_c", fun _ => test_b8_squares_into_c_and_tidies_c)]
+  SudoRt.runTests [("test_b1_drop_examples_carry_like_an_odometer", fun _ => test_b1_drop_examples_carry_like_an_odometer), ("test_b1_a_carry_past_the_strip_s_last_hole_fails_drop_s_final_assert", fun _ => test_b1_a_carry_past_the_strip_s_last_hole_fails_drop_s_final_assert), ("test_b4_pay_toll_rejects_a_toll_of_n_or_more_trits", fun _ => test_b4_pay_toll_rejects_a_toll_of_n_or_more_trits), ("test_b4_t1_example_a_white_at_hole_20_folds_to_whites_at_holes_2_and_4", fun _ => test_b4_t1_example_a_white_at_hole_20_folds_to_whites_at_holes_2_and_4), ("test_b3_one_times_x_is_x_and_x_times_one_is_x", fun _ => test_b3_one_times_x_is_x_and_x_times_one_is_x), ("test_b3_worst_case_all_red_times_all_red_with_nudge_2_does_not_overflow", fun _ => test_b3_worst_case_all_red_times_all_red_with_nudge_2_does_not_overflow), ("test_b5_p_tidies_to_the_empty_register_in_t1_and_t2", fun _ => test_b5_p_tidies_to_the_empty_register_in_t1_and_t2), ("test_b8_rejects_0_1_p_1_p_1_and_a_wrong_length", fun _ => test_b8_rejects_0_1_p_1_p_1_and_a_wrong_length), ("test_3_1_calling_the_shots_copies_the_value_into_y_misfires_and_all", fun _ => test_3_1_calling_the_shots_copies_the_value_into_y_misfires_and_all), ("test_3_1_clear_y_the_public_walk_leaves_x_x_x_in_y_and_the_call_clears_it_first", fun _ => test_3_1_clear_y_the_public_walk_leaves_x_x_x_in_y_and_the_call_clears_it_first), ("test_b6_the_public_walk_leaves_the_last_square_x_x_x_in_y_unnudged", fun _ => test_b6_the_public_walk_leaves_the_last_square_x_x_x_in_y_unnudged), ("test_b3_slide_lifts_the_register_s_old_pegs_then_slides_the_answer_in", fun _ => test_b3_slide_lifts_the_register_s_old_pegs_then_slides_the_answer_in), ("test_b6_stale_pegs_in_y_are_lifted_before_the_square_slides_in", fun _ => test_b6_stale_pegs_in_y_are_lifted_before_the_square_slides_in), ("test_b5_on_a_spill_the_tidy_answer_slides_back_into_the_register", fun _ => test_b5_on_a_spill_the_tidy_answer_slides_back_into_the_register), ("test_3_1_an_empty_register_is_eighteen_misfires", fun _ => test_3_1_an_empty_register_is_eighteen_misfires), ("test_4_3_read_start_marker_ship_pass_peg_pass", fun _ => test_4_3_read_start_marker_ship_pass_peg_pass), ("test_4_3_read_rejects_overlapping_ships", fun _ => test_4_3_read_rejects_overlapping_ships), ("test_b9_t1_exchange_with_the_sample_grids", fun _ => test_b9_t1_exchange_with_the_sample_grids), ("test_4_2_keypad_row_for_the_first_hole_column_for_the_second", fun _ => test_4_2_keypad_row_for_the_first_hole_column_for_the_second), ("test_4_2_a_row_cup_d10_is_thrown_again_on_its_zero_face", fun _ => test_4_2_a_row_cup_d10_is_thrown_again_on_its_zero_face), ("test_4_2_running_out_of_d10_faces_before_a_non_zero_one_fails_throw_d10_s_assert", fun _ => test_4_2_running_out_of_d10_faces_before_a_non_zero_one_fails_throw_d10_s_assert), ("test_4_2_the_row_cup_is_five_dice_in_rainbow_order_zero_faces_thrown_again", fun _ => test_4_2_the_row_cup_is_five_dice_in_rainbow_order_zero_faces_thrown_again), ("test_4_2_grow_until_it_bumps", fun _ => test_4_2_grow_until_it_bumps), ("test_4_2_build_all_sea_and_all_white_pegs", fun _ => test_4_2_build_all_sea_and_all_white_pegs), ("test_4_2_build_a_ship_across_a_die_pair_takes_both_pairs_pegs", fun _ => test_4_2_build_a_ship_across_a_die_pair_takes_both_pairs_pegs), ("test_b8_squares_into_c_and_tidies_c", fun _ => test_b8_squares_into_c_and_tidies_c), ("test_trace_build_build_hole_by_hole_gives_build_key_grid_s_grid_and_its_dice", fun _ => test_trace_build_build_hole_by_hole_gives_build_key_grid_s_grid_and_its_dice), ("test_cell_holes_one_hole_per_cell_of_read_key_the_extra_cell_at_the_3_holer_s_last_hole", fun _ => test_cell_holes_one_hole_per_cell_of_read_key_the_extra_cell_at_the_3_holer_s_last_hole), ("test_trace_keys_matches_exchange_on_the_sample_grids_step_by_step", fun _ => test_trace_keys_matches_exchange_on_the_sample_grids_step_by_step), ("test_trace_exchange_matches_build_key_grid_and_exchange_on_the_t1_exchange_vectors", fun _ => test_trace_exchange_matches_build_key_grid_and_exchange_on_the_t1_exchange_vectors), ("test_trace_exchange_matches_build_key_grid_and_exchange_on_the_t2_exchange_vector", fun _ => test_trace_exchange_matches_build_key_grid_and_exchange_on_the_t2_exchange_vector), ("test_trace_exchange_matches_build_key_grid_and_exchange_on_the_t6_exchange_vector", fun _ => test_trace_exchange_matches_build_key_grid_and_exchange_on_the_t6_exchange_vector)]

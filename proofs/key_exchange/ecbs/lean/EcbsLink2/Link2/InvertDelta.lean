@@ -2657,4 +2657,56 @@ theorem parked_gap_mul_fields
   · rw [hridxB, hridx, hM.2.2.2.2.2.2.2.2.1]
   · rw [hlenB, hlen, hM.2.1]
 
+/-- On a final red rung, clear of home 5, the cube spare→gap, and the mul by the
+    input succeed on the parked gap-mul board. The result's row, counter,
+    parked-from hole, rung index, and tally length are the model rung, the bench
+    is on and aimed at the gap, and the bench is that model's gap padded with zeros. -/
+theorem final_red_fields
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [2] b s base)
+    (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false)
+    (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
+    ∃ (bMul bClear bCube bRed : Ecbs.Board),
+      Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClear ∧
+      Ecbs.cube bClear ((6 : Nat) : Int) ((5 : Nat) : Int) = .ok bCube ∧
+      Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
+          false false false = .ok bRed ∧
+      let hole := climbAt base.ladder0 base.R s.ridx
+      let st := modelRung s base.x 2 hole true
+      bRed.sudo_5Board_3row = embed st.row ∧
+      bRed.sudo_5Board_4cost.sudo_5Costs_4ctrl = (st.ctrl : Int) ∧
+      bRed.sudo_5Board_11parked_from = st.fromHole ∧
+      bRed.sudo_5Board_8rung_idx = (st.ridx : Int) ∧
+      bRed.sudo_5Board_9tally_len = (st.tally : Int) ∧
+      bRed.sudo_5Board_8bench_on = true ∧
+      bRed.sudo_5Board_8bench_to = (5 : Int) ∧
+      bRed.sudo_5Board_5bench =
+        embed (st.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0) := by
+  obtain ⟨bMul, bClear, bCube, bRed, hclear, hcube, hmul, hrow, hctrl, hfrom, hridx,
+      hlen, hon, hto, hbench⟩ :=
+    final_red_emit h hF hm hT hhome hxLen hxT
+  let hole := climbAt base.ladder0 base.R s.ridx
+  let st := modelRung s base.x 2 hole true
+  have hM := model_final_red s base.x hole hF
+  have hIdle : s.fromHole = -1 := h.shape.park.fromIdle hF
+  have hnle : s.n ≤ s.benchlen :=
+    span_n_le s.n base.cg s.benchlen h.shape.peg.n_pos h.shape.peg.span
+  have hlenG : st.gap.length = s.n := by
+    rw [show st.gap = (modelRung s base.x 2 hole true).gap from rfl, hM.1]
+    exact fieldMul_len s.n s.k s.benchlen base.x
+      (fieldCube s.n s.k s.benchlen
+        (fieldMul s.n s.k s.benchlen s.gap
+          (cubeTimes s.n s.k s.benchlen s.gap s.tally))) hnle
+  have htake : st.gap.take s.n = st.gap := by
+    rw [← hlenG]
+    exact List.take_length _
+  refine ⟨bMul, bClear, bCube, bRed, hclear, hcube, hmul, ?_, ?_, ?_, ?_, ?_, hon, hto, ?_⟩
+  · rw [hrow, hM.2.2.2.2.2.2.1, hIdle]
+  · rw [hctrl, hM.2.2.2.2.1]
+  · rw [hfrom, hM.2.2.2.2.2.2.2.1]
+  · rw [hridx, hM.2.2.2.2.2.2.2.2.1, ofNat_eq_natCast]
+  · rw [hlen, hM.2.1]
+  · rw [hbench, htake, hM.1]
+
 end EcbsLink2.Link2

@@ -7319,9 +7319,10 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
         slides = (pegPack cU cU.m cU.hm (Nat.le_refl _)).slides ∧
         hole = (pegPack cU cU.m cU.hm (Nat.le_refl _)).hole ∧
         peak = (pegPack cU cU.m cU.hm (Nat.le_refl _)).peak ∧
-        peakS = (pegPack cU cU.m cU.hm (Nat.le_refl _)).peakS) := by
+        peakS = (pegPack cU cU.m cU.hm (Nat.le_refl _)).peakS ∧
+        Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok cU.b0) := by
   obtain ⟨c, bLoop, ys, moves, slides, hole, peak, peakS, cMul, hH, hD, hops,
-      _hcopy, hsrc, hg, hmEq, hn, hkN, hbch, hpegB, hysEq, hGap, hX, _hFit, hMov,
+      hcopy, hsrc, hg, hmEq, hn, hkN, hbch, hpegB, hysEq, hGap, hX, _hFit, hMov,
       _hSFit, hSLe, hOp, hRow, htier, _hmk, h7, _hop0, hOpsLe, hctrl0, hhighS,
       hcontrol, hlen0, hmax0, ht0, hmulG, hrow0, hmvB, hslB, hhoB, hpkB, hpsB⟩ :=
     mul_of_shape h hm hT hhome
@@ -8081,7 +8082,7 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
         have hB : (pegPack c c.m c.hm (Nat.le_refl _)).b = bLoop :=
           (pegPack_board c c.m c.hm (Nat.le_refl _)).1.trans hpegB.symm
         rw [hB] at hP
-        exact (hP.symm.trans hpsB).symm)⟩⟩
+        exact (hP.symm.trans hpsB).symm), hcopy⟩⟩
   · simpa [ofNat_eq_natCast] using hmvRed
   · simpa [ofNat_eq_natCast] using hslRed
 
@@ -8887,6 +8888,83 @@ private theorem mulNoLive_eq_args (b : Ecbs.Board) (dst second : Nat)
   cases hop
   rfl
 
+/-- Two peg contexts with the same start board and the same scalars the loop
+    reads end on the same peg board. -/
+private theorem pegBoard_same_copy (c d : PegCtx)
+    (hb0 : c.b0 = d.b0)
+    (hsrc : d.src = c.src) (hg : d.g = c.g) (hn : d.n = c.n)
+    (hk : d.k = c.k) (hbench : d.bench = c.bench)
+    (hrow0 : d.row0 = c.row0) (ht0 : d.t0 = c.t0)
+    (hctrl0 : d.ctrl0 = c.ctrl0) (hm : d.m = c.m) :
+    pegBoard d d.m = pegBoard c c.m := by
+  have hmov : d.moves0 = c.moves0 := by
+    apply ofNat_inj_nat
+    have hd := d.hmoves0
+    rw [← hb0] at hd
+    exact hd.symm.trans c.hmoves0
+  have hslide : d.slides0 = c.slides0 := by
+    apply ofNat_inj_nat
+    have hd := d.hslides0
+    rw [← hb0] at hd
+    have h := hd.symm.trans c.hslides0
+    exact ((ofNat_eq_natCast _).symm).trans (h.trans (ofNat_eq_natCast _))
+  have hhole : d.hole0 = c.hole0 := by
+    apply ofNat_inj_nat
+    have hd := d.hHole0
+    rw [← hb0] at hd
+    have h := hd.symm.trans c.hHole0
+    exact ((ofNat_eq_natCast _).symm).trans (h.trans (ofNat_eq_natCast _))
+  have hpeak : d.peak0 = c.peak0 := by
+    apply ofNat_inj_nat
+    have hd := d.hpeak0
+    rw [← hb0] at hd
+    exact hd.symm.trans c.hpeak0
+  have hps : d.peakS0 = c.peakS0 := by
+    apply ofNat_inj_nat
+    have hd := d.hpeakS0
+    rw [← hb0] at hd
+    exact hd.symm.trans c.hpeakS0
+  have hcops : d.cOps0 = c.cOps0 := by
+    apply ofNat_inj_nat
+    have hopsEq : d.b0.sudo_5Board_4cost.sudo_5Costs_3ops =
+        c.b0.sudo_5Board_4cost.sudo_5Costs_3ops := by rw [← hb0]
+    have hget := idx_get hopsEq 1 d.hops0
+    have hopC : c.b0.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hopsEq ▸ d.hops0) =
+        (c.cOps0 : Int) := by
+      cases Subsingleton.elim (hopsEq ▸ d.hops0) c.hops0
+      exact c.hop10
+    exact d.hop10.symm.trans (hget.trans hopC)
+  have hb0w : d.b0 = withPark c.b0 (embed d.row0) ((d.ctrl0 : Nat) : Int)
+      c.b0.sudo_5Board_11parked_from c.b0.sudo_5Board_8rung_idx := by
+    rw [← hb0]
+    have hrowE : c.b0.sudo_5Board_3row = embed d.row0 := by
+      rw [c.hRow, ← hrow0]
+    have hctrlE : c.b0.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        ((d.ctrl0 : Nat) : Int) := by
+      rw [c.hCtrl0, ← hctrl0]
+    have hid := (withPark_id c.b0).symm
+    rw [hrowE, hctrlE] at hid
+    exact hid
+  let t : PegTwin c d := {
+    src := hsrc
+    g := hg
+    n := hn
+    k := hk
+    bench := hbench
+    moves0 := hmov
+    slides0 := hslide
+    hole0 := hhole
+    peak0 := hpeak
+    peakS0 := hps
+    cOps0 := hcops
+    t0 := ht0
+    m := hm
+    fromHole := c.b0.sudo_5Board_11parked_from
+    ridx := c.b0.sudo_5Board_8rung_idx
+    b0 := hb0w
+  }
+  exact twin_boards_eq c d t rfl rfl hrow0 ht0 hctrl0
+
 /-- The emitted gap mul on the idle park is the unparked gap mul with the park
     row, the parked counter, the climb hole, and the advanced rung index. -/
 theorem parked_gap_is_withPark
@@ -8895,8 +8973,13 @@ theorem parked_gap_is_withPark
     (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false) :
     ∃ (bMulU bMulP : Ecbs.Board),
-      (∃ bLoop, Ecbs.mul bLoop ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
-          false false false = .ok bMulU) ∧
+      (∃ (c : PegCtx) (bLoop : Ecbs.Board),
+        Ecbs.mul bLoop ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+            false false false = .ok bMulU ∧
+        bLoop = pegBoard c c.m ∧
+        Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok c.b0 ∧
+        c.row0 = s.row ∧ c.ctrl0 = s.ctrl ∧ c.g = s.gap ∧ c.m = s.tally ∧
+        c.n = s.n ∧ c.k = s.k ∧ c.bench = s.benchlen ∧ c.src = 6 ∧ c.t0 = s.t0) ∧
       (∃ (c : PegCtx), Ecbs.mul (pegBoard c c.m) ((5 : Nat) : Int) ((5 : Nat) : Int)
           ((6 : Nat) : Int) false false false = .ok bMulP) ∧
       bMulP = withPark bMulU
@@ -9308,7 +9391,97 @@ theorem parked_gap_is_withPark
     rw [hctrlD, hmE]
     exact ofNat_eq_natCast _
   rw [hrowA, hctrlA] at hfin0
-  exact ⟨bMulU, bMulP, ⟨bLoop, by simpa [bMulU] using hmul⟩, ⟨dp, hmulP⟩, hfin0⟩
+  exact ⟨bMulU, bMulP,
+    ⟨cu, bLoop, by simpa [bMulU] using hmul, hpegB, hcopyU, hrow0U, hctrlU, hgU, hmU,
+      hnU, hkU, hbU, hsrcU, ht0U⟩,
+    ⟨dp, hmulP⟩, hfin0⟩
+
+/-- On a final red rung, clear of the parked gap, the cube spare→gap, and the mul
+    by the input are the unparked results with the park row, counter, hole, and
+    rung index. The bench is the product list the unparked mul leaves. -/
+theorem final_red_emit
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [2] b s base)
+    (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false)
+    (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
+    ∃ (bMul bClear bCube bRed : Ecbs.Board),
+      Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClear ∧
+      Ecbs.cube bClear ((6 : Nat) : Int) ((5 : Nat) : Int) = .ok bCube ∧
+      Ecbs.mul bCube ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
+          false false false = .ok bRed ∧
+      bRed.sudo_5Board_3row =
+        embed (paintRed (afterPark s.row (-1) s.parkAt
+          (climbAt base.ladder0 base.R s.ridx) 2) s.t0 s.tally) ∧
+      bRed.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        ((s.ctrl + 2 + s.tally : Nat) : Int) ∧
+      bRed.sudo_5Board_11parked_from =
+        ((climbAt base.ladder0 base.R s.ridx : Nat) : Int) ∧
+      bRed.sudo_5Board_8rung_idx = Int.ofNat (s.ridx + 1) ∧
+      bRed.sudo_5Board_9tally_len = (s.tally : Int) ∧
+      bRed.sudo_5Board_8bench_on = true ∧
+      bRed.sudo_5Board_8bench_to = (5 : Int) ∧
+      bRed.sudo_5Board_5bench =
+        embed (fieldMul s.n s.k s.benchlen base.x
+          (fieldCube s.n s.k s.benchlen
+            (fieldMul s.n s.k s.benchlen s.gap
+              (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ++
+          List.replicate (s.benchlen - s.n) 0) := by
+  obtain ⟨bLoopR, bMulR, bClearR, bCubeR, bRedR, hmulR, _hclearR, _hcubeR, _hredR,
+      _bud, _lenC, _t0C, _rowC, _tierC, _highC, _ctrlC, _maxC, _t0Cu, _t0R,
+      _tierCu, _tierR, _fCube, _fMul, hon, hto, hlenR, hbench, hclearF, hcubeF,
+      hmulF, hpack⟩ := red_cube_mul h hm hT hhome hxLen hxT
+  obtain ⟨cU, _ys, _moves, _slides, _holeM, _peak, _peakS, _cOps, _hH, _hD, _hops,
+      hloopR, hrowU, hctrlU, hgU, hmU, hnU, hkU, hbU, hsrcU, ht0U, _hnamed,
+      _hys, _hmv, _hsl, _hho, _hpk, _hps, hcopyU⟩ := hpack
+  obtain ⟨bMulU, bMulP, ⟨cP, bLoopP, hmulP, hloopP, hcopyP, hrowP, hctrlP, hgP,
+      hmP, hnP, hkP, hbP, hsrcP, ht0P⟩, _parked, hrel⟩ :=
+    parked_gap_is_withPark h hF hm hT hhome
+  have hb0 : cP.b0 = cU.b0 := by
+    injection hcopyP.symm.trans hcopyU
+  have hboards := pegBoard_same_copy cP cU hb0
+    (hsrcU.trans hsrcP.symm) (hgU.trans hgP.symm) (hnU.trans hnP.symm)
+    (hkU.trans hkP.symm) (hbU.trans hbP.symm) (hrowU.trans hrowP.symm)
+    (ht0U.trans ht0P.symm) (hctrlU.trans hctrlP.symm) (hmU.trans hmP.symm)
+  have hloops : bLoopR = bLoopP := by
+    rw [hloopR, hloopP, hboards]
+  have hmulSame : bMulR = bMulU := by
+    have hmulR' := hmulR
+    rw [hloops] at hmulR'
+    injection hmulR'.symm.trans hmulP
+  have hpark : bMulP = withPark bMulR
+      (embed (paintRed (afterPark s.row (-1) s.parkAt
+        (climbAt base.ladder0 base.R s.ridx) 2) s.t0 s.tally))
+      (((s.ctrl + 2 + s.tally : Nat) : Int))
+      ((climbAt base.ladder0 base.R s.ridx : Nat) : Int)
+      (Int.ofNat (s.ridx + 1)) := by
+    simpa [hmulSame] using hrel
+  let row := embed (paintRed (afterPark s.row (-1) s.parkAt
+    (climbAt base.ladder0 base.R s.ridx) 2) s.t0 s.tally)
+  let ctrl := ((s.ctrl + 2 + s.tally : Nat) : Int)
+  let fromHole := ((climbAt base.ladder0 base.R s.ridx : Nat) : Int)
+  let ridx := Int.ofNat (s.ridx + 1)
+  have hclear := hclearF row ctrl fromHole ridx
+  have hcube := hcubeF row ctrl fromHole ridx
+  have hmul := hmulF row ctrl fromHole ridx
+  rw [← hpark] at hclear
+  have hcube' : Ecbs.cube (withPark bClearR row ctrl fromHole ridx)
+      ((6 : Nat) : Int) ((5 : Nat) : Int) =
+      .ok (withPark bCubeR row ctrl fromHole ridx) := hcube
+  have hmul' : Ecbs.mul (withPark bCubeR row ctrl fromHole ridx)
+      ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int) false false false =
+      .ok (withPark bRedR row ctrl fromHole ridx) := hmul
+  refine ⟨bMulP, withPark bClearR row ctrl fromHole ridx,
+      withPark bCubeR row ctrl fromHole ridx, withPark bRedR row ctrl fromHole ridx,
+      hclear, hcube', hmul', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · simp [withPark, row]
+  · simp [withPark, ctrl]
+  · simp [withPark, fromHole]
+  · simp [withPark, ridx]
+  · simp [withPark, hlenR]
+  · simp [withPark, hon]
+  · simp [withPark, hto]
+  · simp [withPark, hbench]
 
 /-- While rungs remain, the tally segment is white, so the scan in the next rung
     leaves the board unchanged. -/

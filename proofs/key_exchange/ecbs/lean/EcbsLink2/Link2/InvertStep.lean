@@ -4193,7 +4193,17 @@ theorem resume_park_row
       bPark.sudo_5Board_4cost.sudo_5Costs_5moves =
         b.sudo_5Board_4cost.sudo_5Costs_5moves ∧
       bPark.sudo_5Board_4cost.sudo_5Costs_4peak =
-        b.sudo_5Board_4cost.sudo_5Costs_4peak := by
+        b.sudo_5Board_4cost.sudo_5Costs_4peak ∧
+      ∃ (hRowP : s.parkAt < b.sudo_5Board_3row.size)
+        (hRowH : climbAt base.ladder0 base.R s.ridx < b.sudo_5Board_3row.size),
+        bPark = withPark
+          (parkKeepBoard b (climbAt base.ladder0 base.R s.ridx) s.parkAt r
+            s.ridx s.ctrl hRowP hRowH)
+          (embed (afterPark s.row s.fromHole s.parkAt
+            (climbAt base.ladder0 base.R s.ridx) r))
+          (((s.ctrl + 4 : Nat) : Int))
+          (((climbAt base.ladder0 base.R s.ridx : Nat) : Int))
+          (Int.ofNat (s.ridx + 1)) := by
   let hole := climbAt base.ladder0 base.R s.ridx
   let holes := downFrom (base.ladder0 + base.R - 1) base.R
   have hidxN : s.ridx < base.R := by
@@ -4252,8 +4262,10 @@ theorem resume_park_row
     h.shape.park.parkNe (Ne.symm hsrc.2.2.2) h.shape.park.fitI
   have hrun : Ecbs.park_rung b (r : Int) = .ok bPark := by
     simpa [bPark, bU, src] using hres
-  refine ⟨bPark, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-  · have hlist := afterPark_resume s.row src s.parkAt hole r prev
+  let bKeep := parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH
+  have hrowEq : bPark.sudo_5Board_3row =
+      embed (afterPark s.row s.fromHole s.parkAt hole r) := by
+    have hlist := afterPark_resume s.row src s.parkAt hole r prev
       hsrc.1 h.shape.park.parkLt hprev
     have hfromRow : afterPark s.row s.fromHole s.parkAt hole r =
         afterPark s.row (src : Int) s.parkAt hole r := by
@@ -4273,6 +4285,24 @@ theorem resume_park_row
         · by_cases hsj : src = j
           · simp [hhj, hpj, hsj]
           · simp [hhj, hpj, hsj]
+  have hframe : bPark = withPark bKeep
+      (embed (afterPark s.row s.fromHole s.parkAt hole r))
+      (Int.ofNat ((s.ctrl + 2) + 2))
+      (((hole : Nat) : Int))
+      (Int.ofNat (s.ridx + 1)) := by
+    apply board_ext
+    case hrow =>
+      rw [hrowEq, withPark_row]
+    case hcost =>
+      apply cost_ext
+      case hctrl =>
+        simp [bPark, bU, unparkedBoard, bKeep, parkKeepBoard, withPark]
+      all_goals
+        simp [bPark, bU, unparkedBoard, bKeep, parkKeepBoard, withPark]
+    all_goals
+      simp [bPark, bU, unparkedBoard, bKeep, parkKeepBoard, withPark]
+  refine ⟨bPark, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact hrowEq
   · dsimp [bPark, bU, unparkedBoard]
   · dsimp [bPark]
   · dsimp [bPark]
@@ -4281,6 +4311,98 @@ theorem resume_park_row
   · dsimp [bPark, bU, unparkedBoard]
   · dsimp [bPark, bU, unparkedBoard]
   · dsimp [bPark, bU, unparkedBoard]
+  · refine ⟨hRowP, hRowH, ?_⟩
+    have h4 : Int.ofNat ((s.ctrl + 2) + 2) = ((s.ctrl + 4 : Nat) : Int) := by
+      apply congrArg Int.ofNat
+      omega
+    rw [← h4]
+    exact hframe
+
+/-- Unpark-then-park is keep-park of the same board, with the restored row and a
+    counter two higher. Later `place`, `settle`, `cube`, `mul`, `tally_double`,
+    and `tally_add_one` already commute with `withPark`, so a parked rung is that
+    transport of the idle rung. -/
+theorem resume_park_withPark
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hge : 0 ≤ s.fromHole) :
+    ∃ (bPark bKeep : Ecbs.Board)
+      (hRowP : s.parkAt < b.sudo_5Board_3row.size)
+      (hRowH : climbAt base.ladder0 base.R s.ridx < b.sudo_5Board_3row.size),
+      Ecbs.park_rung b (r : Int) = .ok bPark ∧
+      bKeep = parkKeepBoard b (climbAt base.ladder0 base.R s.ridx) s.parkAt r
+        s.ridx s.ctrl hRowP hRowH ∧
+      bPark = withPark bKeep
+        (embed (afterPark s.row s.fromHole s.parkAt
+          (climbAt base.ladder0 base.R s.ridx) r))
+        (((s.ctrl + 4 : Nat) : Int))
+        (((climbAt base.ladder0 base.R s.ridx : Nat) : Int))
+        (Int.ofNat (s.ridx + 1)) := by
+  obtain ⟨bPark, hpark, _hrow, _hctrl, _hfrom, _hridx, _hhome, _hheld, _htier, _hmv, _hpk,
+      hRowP, hRowH, hframe⟩ := resume_park_row h hge
+  exact ⟨bPark, _, hRowP, hRowH, hpark, rfl, hframe⟩
+
+/-- Park does not write home or held. The spare stays empty and the gap stays
+    held at home 5, so the copy is `place` of the gap, as on an idle rung. -/
+theorem resume_copy
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hge : 0 ≤ s.fromHole) (_hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false) :
+    ∃ (bPark bCopy : Ecbs.Board) (moves peak : Nat)
+      (h6H : 6 < bPark.sudo_5Board_4home.size)
+      (h6D : 6 < bPark.sudo_5Board_4held.size),
+      Ecbs.park_rung b (r : Int) = .ok bPark ∧
+      Ecbs.copy_band bPark ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok bCopy ∧
+      bCopy = placeBoard bPark 6 h6H h6D s.gap moves peak := by
+  obtain ⟨bPark, hpark, _hrow, _hctrl, _hfrom, _hridx, hhomeEq, hheldEq, htierEq, hmvEq, hpkEq,
+      _hRowP, _hRowH, _hframe⟩ :=
+    resume_park_row h hge
+  obtain ⟨mv, hmv, hmvLe⟩ := h.moves
+  obtain ⟨pk, hpk, _hpkLe⟩ := h.peak
+  have h6H : 6 < bPark.sudo_5Board_4home.size := by
+    rw [hhomeEq]; exact h.shape.spareH
+  have h6D : 6 < bPark.sudo_5Board_4held.size := by
+    rw [hheldEq]; exact h.shape.spareD
+  have h5H : 5 < bPark.sudo_5Board_4home.size := by
+    rw [hhomeEq]; exact h.inv.hG
+  have h5D : 5 < bPark.sudo_5Board_4held.size := by
+    rw [hheldEq]; exact h.inv.hGs
+  have h7 : 7 ≤ bPark.sudo_5Board_4held.size := by
+    rw [hheldEq]; exact h.shape.h7
+  have hheld5 : bPark.sudo_5Board_4held[5]'h5D = true :=
+    cell_eq_of hheldEq (h.inv.gapHome hhome).1
+  have harr5 : bPark.sudo_5Board_4home[5]'h5H = embed s.gap :=
+    cell_eq_of hhomeEq (h.inv.gapHome hhome).2
+  have hempty : bPark.sudo_5Board_4held[6]'h6D = false :=
+    cell_eq_of hheldEq h.shape.spareE
+  have hn : bPark.sudo_5Board_1t.sudo_4Tier_1n = ((s.gap.length : Nat) : Int) := by
+    rw [htierEq, h.shape.gapLen]
+    exact h.shape.tierN
+  have hmvP : bPark.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) := hmvEq.trans hmv
+  have hpkP : bPark.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) := hpkEq.trans hpk
+  have hpegN : pegCount s.gap ≤ base.n := by
+    have h1 : pegCount s.gap ≤ s.gap.length := pegCount_le s.gap
+    rw [h.shape.gapLen, h.hn] at h1
+    exact h1
+  have hcopyLe := gap_copy_le_rung base.n base.bench base.mMax s.tally
+    (pegCount s.gap) hpegN hT
+  have hR1 : done.length + 1 ≤ base.R := by
+    have hlenK := h.kLe
+    rw [List.length_append, List.length_cons] at hlenK
+    omega
+  have hpegsLe : pegCount s.gap + 0 ≤ rungCharge base.n base.bench base.mMax := by
+    simpa using Nat.le_trans (Nat.le_add_right (pegCount s.gap) _) hcopyLe
+  have hfitBig := copy_then_pegs_fit base.moves0 mv done.length base.R
+    (rungCharge base.n base.bench base.mMax) (pegCount s.gap) 0 hR1 hmvLe
+    hpegsLe base.fitM
+  have hfit : FitsLen (mv + pegCount s.gap) := by
+    simpa using hfitBig
+  have hlenFit : FitsLen s.gap.length := by
+    rw [h.shape.gapLen]; exact h.shape.peg.fitN
+  have hcopy := copy_band_refines bPark 6 5 s.gap mv pk h6H h6D h5H h5D h7
+    hheld5 harr5 hempty hn hlenFit hmvP hpkP hfit
+  exact ⟨bPark, _, mv, pk, h6H, h6D, hpark, hcopy, rfl⟩
 
 
 end EcbsLink2.Link2

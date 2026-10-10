@@ -816,6 +816,37 @@ theorem withPark_from (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : I
 theorem withPark_ridx (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
     (withPark b row ctrl fromHole ridx).sudo_5Board_8rung_idx = ridx := rfl
 
+theorem withPark_high (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b.sudo_5Board_4cost.sudo_5Costs_15control_highest := rfl
+
+theorem withPark_ladder (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_7ladder0 = b.sudo_5Board_7ladder0 := rfl
+
+theorem withPark_nrungs (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_6nrungs = b.sudo_5Board_6nrungs := rfl
+
+theorem withPark_park (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_9park_hole = b.sudo_5Board_9park_hole := rfl
+
+theorem withPark_tmax (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := rfl
+
+/-- Park replaces the row, the control counter, the parked-from hole, and the rung
+    index. It adds no moves, slides, or ops, and it does not touch peak, so those
+    four cost fields are the incoming ones. -/
+theorem withPark_counters (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_5moves =
+      b.sudo_5Board_4cost.sudo_5Costs_5moves ∧
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_6slides =
+      b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_4peak =
+      b.sudo_5Board_4cost.sudo_5Costs_4peak :=
+  ⟨rfl, rfl, rfl, rfl⟩
+
 /-- Park fields and tally fields write disjoint slots. The final row and counter
     are the ones named last: `withPark` overwrites the row and the counter,
     `withTally` overwrites the length, the high, and `tally_max`. -/

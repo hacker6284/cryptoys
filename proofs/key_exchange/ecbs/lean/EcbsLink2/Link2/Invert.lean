@@ -5353,6 +5353,17 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   /-- The control counter stays within `ctrl0` plus one `rungCtrl` step per
       finished rung. -/
   ctrlLe : s.ctrl ≤ base.ctrl0 + done.length * (3 * base.mMax + 5)
+  /-- A parked source sits strictly above the climb hole about to be read.
+      Nothing is parked at entry, so the implication is vacuous there. A
+      successor parks the hole it just read, and the ladder steps down. -/
+  srcAbove : 0 ≤ s.fromHole →
+    climbAt base.ladder0 base.R s.ridx < s.fromHole.toNat
+
+/-- At entry nothing is parked, so the source-above-hole fact holds outright. -/
+theorem srcAbove_of_idle {s : ClimbModel} {L R : Nat} (hF : s.fromHole < 0) :
+    0 ≤ s.fromHole → climbAt L R s.ridx < s.fromHole.toNat := by
+  intro hge
+  omega
 
 /-- The geometric envelope is a legal cap for whatever list is being climbed. -/
 theorem climbCap_geom (tally0 R mMax : Nat) (rs done rest : List Nat)
@@ -5634,7 +5645,8 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     (htmax : ∃ tmax : Nat,
       b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < (modelRung s x r hole rest.isEmpty).tally →
-          tmax < 2 * (modelRung s x r hole rest.isEmpty).tally)) :
+          tmax < 2 * (modelRung s x r hole rest.isEmpty).tally))
+    (hAt : hole = climbAt base.ladder0 base.R s.ridx) :
     ClimbInvK (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
   have hT := h.tally_le hCap
   have hm : rungCharge base.n base.bench s.tally ≤
@@ -5664,7 +5676,8 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       openRoom := ?_
       openZero := ?_
       tmaxLt := htmax
-      ctrlLe := ?_ }
+      ctrlLe := ?_
+      srcAbove := ?_ }
   · simp [modelRung, h.idx, List.length_append]
   · simp [modelRung, h.hn]
   · simp [modelRung, h.hbench]
@@ -5897,6 +5910,36 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     apply Nat.le_trans hgrow
     rw [Nat.add_assoc, hsum]
     exact Nat.le_refl _
+  · intro _
+    have hf : (modelRung s x r hole rest.isEmpty).fromHole = (hole : Int) := by
+      simp [modelRung]
+    have hri : (modelRung s x r hole rest.isEmpty).ridx = s.ridx + 1 := by
+      simp [modelRung]
+    rw [hf, hri, hAt]
+    have hdec : climbAt base.ladder0 base.R (s.ridx + 1) <
+        climbAt base.ladder0 base.R s.ridx := by
+      have hL := h.shape.park.l0pos
+      have hidx : s.ridx < base.R := by
+        rw [h.idx]
+        have hk := h.kLe
+        simp [List.length_append, List.length_cons] at hk
+        omega
+      have hi : s.ridx + 1 ≤ base.R := by omega
+      by_cases hlt : s.ridx + 1 < base.R
+      · have hpred := climbAt_pred base.ladder0 base.R s.ridx hlt
+        have hge := climbAt_ge base.ladder0 base.R s.ridx hidx
+        have hpos : 0 < climbAt base.ladder0 base.R s.ridx := by omega
+        rw [hpred]
+        omega
+      · have heq : s.ridx + 1 = base.R := by omega
+        have hend := climbAt_end base.ladder0 base.R s.ridx hL heq
+        have hcur : climbAt base.ladder0 base.R s.ridx = base.ladder0 := by
+          unfold climbAt
+          have hr : s.ridx = base.R - 1 := by omega
+          rw [hr]
+          omega
+        omega
+    simpa [Int.toNat_ofNat] using hdec
 
 /-- The emitted climb, one rung at a time. `last` is the empty tail. -/
 def climbEmit (step : Ecbs.Board → Nat → Bool → Except SudoRt.Trap Ecbs.Board)
@@ -5920,7 +5963,9 @@ theorem climb_refines
     (hn : s0.n = base.n) (hbench : s0.benchlen = base.bench)
     (hCap : ∀ done rest, rs = done ++ rest →
       climbTallyPrefix base.tally0 done rest ≤ base.mMax)
-    (hhole : ∀ (s : ClimbModel) (r : Nat) (last : Bool), hole s r last < s.t0)
+    (hhole : ∀ (s : ClimbModel) (r : Nat) (last : Bool),
+      hole s r last = climbAt base.ladder0 base.R s.ridx ∧
+      hole s r last < s.t0)
     (hstep : ∀ (done rest : List Nat) (r : Nat) (b : Ecbs.Board) (s : ClimbModel),
       rs = done ++ r :: rest →
       ∀ (hK : ClimbInvK done (r :: rest) b s base),
@@ -5952,7 +5997,7 @@ theorem climb_refines
       obtain ⟨b1, hb1, hinv, hδ, hshape, htmax⟩ :=
         hstep done rest r b s hrs h
       have hK := climbInvK_succ h hinv hδ (hCap done (r :: rest) hrs) hshape
-        (hhole s r rest.isEmpty) htmax
+        (hhole s r rest.isEmpty).2 htmax (hhole s r rest.isEmpty).1
       have hrs' : rs = (done ++ [r]) ++ rest := by
         simp [hrs, List.append_assoc]
       obtain ⟨b', s', hfold, hs', hK'⟩ := ih (done ++ [r]) b1
@@ -7643,7 +7688,15 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
       (∃ mvE : Nat, b.sudo_5Board_4cost.sudo_5Costs_5moves = (mvE : Int) ∧
         Nat.le moves (mvE + base.n + s.tally * pegCharge base.n base.bench)) ∧
       (∃ slE : Nat, b.sudo_5Board_4cost.sudo_5Costs_6slides = (slE : Int) ∧
-        Nat.le slides (slE + s.tally * (2 * base.n))) := by
+        Nat.le slides (slE + s.tally * (2 * base.n))) ∧
+      (∀ (row : Array Int) (ctrl fromHole ridx : Int),
+        Ecbs.mul (withPark bM row ctrl fromHole ridx)
+            ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+            false false false =
+          .ok (withPark
+            (mulNoLiveBoard bM 5 6 c.g ys c.n c.k moves slides hole c.bench
+              peak peakS cOps hH hD hops)
+            row ctrl fromHole ridx)) := by
   obtain ⟨mv, pk, sl, c, hmv, hpk, hsl, hmvLe, hslLe, hb0, hcopy, hsrc, hg, hmEq, hrow0,
       hn, hkN, hbch, hmv0, hsl0, ht0, hctrl0, hhigh0, hcontrol, hlen0, hmax0⟩ :=
     peg_of_shape h hm hT hhome
@@ -7826,6 +7879,25 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
     hspan2 c.hxsT hfi hfm
     c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap hwF hhF hrF hkF
     d.hHole d.hpeakS c.hsm c.hnsm c.hfitB hfold
+  have hmulW : ∀ (row : Array Int) (ctrl fromHole ridx : Int),
+      Ecbs.mul (withPark d.b row ctrl fromHole ridx)
+          ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int) false false false =
+        .ok (withPark
+          (mulNoLiveBoard d.b 5 6 c.g d.xs c.n c.k d.moves d.slides d.hole c.bench
+            d.peak d.peakS cMul hH6 hD6 hkeep.opsLt)
+          row ctrl fromHole ridx) := by
+    intro row ctrl fromHole ridx
+    exact mul_eq_live_withPark d.b 5 5 6 c.g d.xs c.w c.h c.r c.n c.k d.moves d.slides
+      d.hole c.bench d.peak d.peakS cMul
+      d.marker d.onB hto hH6 hD6 d.h7 hempty d.hbench
+      hnB c.hn0 d.hpos d.hnle d.hzero c.hf hfitL
+      d.hmoves d.hslides d.hpeak hpegF hfitM hfitS
+      hkeep.opsLt hkeep.op0 hfops hbl
+      hkeep.heldLt hkeep.homeLt hkeep.held hkeep.arr (by decide) c.hlenx
+      hspan2 c.hxsT hfi hfm
+      c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap hwF hhF hrF hkF
+      d.hHole d.hpeakS c.hsm c.hnsm c.hfitB hfold
+      row ctrl fromHole ridx
   have hXFD0 : base.xHome < c.b0.sudo_5Board_4held.size := by
     rw [hb0, hbook.2.2.2.2.2.2.2.2.2]
     exact h.shape.xD
@@ -7924,7 +7996,7 @@ theorem mul_of_shape {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : Clim
         rw [hsl0, hmEq, hn, h.hn]
       have h1 := d.hsldB
       rw [hsum] at h1
-      exact h1⟩⟩
+      exact h1⟩, hmulW⟩
 
 /-- A live nocopy mul clears the second home. A different home, and the array it holds, stay. -/
 theorem mulLive_keep (b : Ecbs.Board) (dst second first : Nat) (xs ys : List Nat)
@@ -8044,7 +8116,7 @@ theorem clear_after_gap_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   obtain ⟨c, bLoop, ys, moves, slides, hole, peak, peakS, cMul, hH, hD, hops,
       _hcopy, _hsrc, hg, hmEq, hn, hkN, hbch, _hpeg, hysEq, hGap, _hX, _hFit, hMov,
       _hSFit, _hSLe,       _hOp, _hRow, _htier, _hmk, _h7, _hop0, _hOpsLe,       _hctrl0, _hhigh0,       _hcontrol, _hlen0, _hmax0, _ht0, hmul, _hrow0, _hmvB, _hslB, _hhoB, _hpkB, _hpsB,
-      ⟨_, _, _⟩, ⟨_, _, _⟩⟩ :=
+      ⟨_, _, _⟩, ⟨_, _, _⟩, _hmulW⟩ :=
     mul_of_shape h hm hT hhome
   let bMul := mulNoLiveBoard bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
     peak peakS cMul hH hD hops
@@ -8444,7 +8516,7 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       hcopy, hsrc, hg, hmEq, hn, hkN, hbch, hpegB, hysEq, hGap, hX, _hFit, hMov,
       _hSFit, hSLe, hOp, hRow, htier, _hmk, h7, _hop0, hOpsLe, hctrl0, hhighS,
       hcontrol, hlen0, hmax0, ht0, hmulG, hrow0, hmvB, hslB, hhoB, hpkB, hpsB,
-      ⟨mvE, hmvE, hmovRel⟩, ⟨slE, hslE, hsldRel⟩⟩ :=
+      ⟨mvE, hmvE, hmovRel⟩, ⟨slE, hslE, hsldRel⟩, _hmulW⟩ :=
     mul_of_shape h hm hT hhome
   let bMul := mulNoLiveBoard bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
     peak peakS cMul hH hD hops
@@ -9386,7 +9458,7 @@ theorem red_open_double {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       _hcopy, _hsrc, _hg, hmEq, hn, _hkN, hbch, hpegB, _hys, hGap, _hX, _hFit, hMov,
       _hSFit, _hSLe, _hOp, hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, hctrl0, hhighS,
       hcontrol, hlen0, hmax0, ht0, hmul, _hrow0, _hmvB, _hslB, _hhoB, _hpkB, _hpsB,
-      ⟨_, _, _⟩, ⟨_, _, _⟩⟩ :=
+      ⟨_, _, _⟩, ⟨_, _, _⟩, _hmulW⟩ :=
     mul_of_shape h hm hT hhome
   let bMul := mulNoLiveBoard bLoop 5 6 c.g ys c.n c.k moves slides hole c.bench
     peak peakS cMul hH hD hops
@@ -10405,7 +10477,7 @@ theorem parked_gap_is_withPark
       hcopyU, hsrcU, hgU, hmU, hnU, hkU, hbU, hpegB, hys, _hGap, _hX, _hFit, _hMov,
       _hSFit, _hSLe, _hOp, _hRow, _htier, _hmk, _h7, hopU, _hOpsLe, hctrlU, _hhighU,
       _hcontrolU, _hlenU, _hmaxU, ht0U, hmul, hrow0U, hmvB, hslB, hhoB, hpkB, hpsB,
-      ⟨_, _, _⟩, ⟨_, _, _⟩⟩ :=
+      ⟨_, _, _⟩, ⟨_, _, _⟩, _hmulW⟩ :=
     mul_of_shape h hm hT hhome
   obtain ⟨dp, bMulP, hmulP, _, _, _, _, _, hrow0P, hctrl0P, hmP, ht0P, _, _, _, hlive⟩ :=
     parked_gap_mul h hF hm hT hhome

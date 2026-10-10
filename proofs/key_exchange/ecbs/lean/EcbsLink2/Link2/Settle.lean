@@ -860,6 +860,16 @@ theorem withPark_withTally (b : Ecbs.Board)
     all_goals simp [withPark, withTally]
   all_goals simp [withPark, withTally]
 
+/-- A second park overwrites the same four fields, so the inner frame disappears. -/
+theorem withPark_withPark (b : Ecbs.Board)
+    (r1 r2 : Array Int) (c1 c2 h1 h2 i1 i2 : Int) :
+    withPark (withPark b r1 c1 h1 i1) r2 c2 h2 i2 = withPark b r2 c2 h2 i2 := by
+  apply board_ext
+  case hcost =>
+    apply cost_ext
+    all_goals simp [withPark]
+  all_goals simp [withPark]
+
 theorem placeBoard_irrel (b : Ecbs.Board) (home : Nat)
     (hH hH' : home < b.sudo_5Board_4home.size) (hD hD' : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) :

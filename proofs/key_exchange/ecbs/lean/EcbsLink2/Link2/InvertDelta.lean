@@ -2464,7 +2464,7 @@ theorem gap_bench_prefix
       _hcopy, _hsrc, hg, hmEq, hn, hk, hbch, _hbM, hysEq, _hGap, _hX, _hFit, _hMov,
       _hSFit, _hSLe, _hOp, _hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, _hctrl0, _hhigh0,
       _hcontrol, _hlen0, _hmax0, _ht0, hmul, _hrow0, _hmvB, _hslB, _hhoB, _hpkB, _hpsB,
-      ⟨_, _, _⟩, ⟨_, _, _⟩⟩ :=
+      ⟨_, _, _⟩, ⟨_, _, _⟩, _hmulW⟩ :=
     mul_of_shape h hm hT hhome
   have hpre : ys.take c.n = cubeTimes c.n c.k c.bench c.g c.m := by
     rw [hysEq]
@@ -2581,7 +2581,7 @@ theorem gap_mul_row
       _hcopy, _hsrc, _hg, _hmEq, _hn, _hk, _hbch, _hbM, _hys, _hGap, _hX, _hFit, _hMov,
       _hSFit, _hSLe, _hOp, hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, _hctrl0, _hhigh0,
       _hcontrol, _hlen0, _hmax0, _ht0, hmul, _hrow0, _hmvB, _hslB, _hhoB, _hpkB, _hpsB,
-      ⟨_, _, _⟩, ⟨_, _, _⟩⟩ :=
+      ⟨_, _, _⟩, ⟨_, _, _⟩, _hmulW⟩ :=
     mul_of_shape h hm hT hhome
   have hkeep := (mul_live_row bM 5 6 c.g ys c.n c.k moves slides hole c.bench peak peakS cOps
     hH hD hops).trans hRow

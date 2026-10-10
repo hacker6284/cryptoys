@@ -1742,7 +1742,7 @@ theorem white_final_k
     have hlt := hnote (by rw [← htall]; exact hpos)
     rw [htall]
     exact hlt
-  have hK := climbInvK_succ h hinv hδ hCap hshape hh htmax
+  have hK := climbInvK_succ h hinv hδ hCap hshape hh htmax rfl
   exact ⟨b', hrun, hK⟩
 
 private theorem cons_tail (r : Nat) (rest : List Nat) (k : Nat) (hk : k < rest.length) :
@@ -2245,7 +2245,7 @@ theorem white_open_k
     rw [htall]
     omega
   have hK := climbInvK_succ h (by simpa [hempty] using hinv) hδ' hCap
-    (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax)
+    (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
   exact ⟨b', hprog, by simpa [hempty] using hK⟩
 
 /-- The parked clear, the unparked red cube and mul, and the cost projections.
@@ -4102,7 +4102,7 @@ theorem red_open_k
     rw [htall]
     exact open_red_tmax_lt s.tally
   have hK := climbInvK_succ h (by simpa [hempty] using hinv) hδA hCap
-    (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax)
+    (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
   exact ⟨bAdd, hprog, by simpa [hempty] using hK⟩
 
 /-- Ops after the red cube and the red mul, read off the idle clear. The cube
@@ -4354,7 +4354,9 @@ theorem resume_copy
       (h6D : 6 < bPark.sudo_5Board_4held.size),
       Ecbs.park_rung b (r : Int) = .ok bPark ∧
       Ecbs.copy_band bPark ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok bCopy ∧
-      bCopy = placeBoard bPark 6 h6H h6D s.gap moves peak := by
+      bCopy = placeBoard bPark 6 h6H h6D s.gap moves peak ∧
+      b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) ∧
+      b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
   obtain ⟨bPark, hpark, _hrow, _hctrl, _hfrom, _hridx, hhomeEq, hheldEq, htierEq, hmvEq, hpkEq,
       _hRowP, _hRowH, _hframe⟩ :=
     resume_park_row h hge
@@ -4402,7 +4404,7 @@ theorem resume_copy
     rw [h.shape.gapLen]; exact h.shape.peg.fitN
   have hcopy := copy_band_refines bPark 6 5 s.gap mv pk h6H h6D h5H h5D h7
     hheld5 harr5 hempty hn hlenFit hmvP hpkP hfit
-  exact ⟨bPark, _, mv, pk, h6H, h6D, hpark, hcopy, rfl⟩
+  exact ⟨bPark, _, mv, pk, h6H, h6D, hpark, hcopy, rfl, hmv, hpk⟩
 
 /-- `place` writes one home. Marker, bench flag, tier, strict peak, and the
     recorded bench hole stay. -/
@@ -5245,7 +5247,7 @@ theorem red_final_k
       have hlt := hnote (by rw [← htall]; exact hpos)
       rw [htall]
       exact hlt
-  have hK := climbInvK_succ h hinv hδR hCap hshape h.holeBelow htmax
+  have hK := climbInvK_succ h hinv hδR hCap hshape h.holeBelow htmax rfl
   exact ⟨b', hprog, hK⟩
 
 /-- A parked resume spends two more control steps than an idle park. The peg
@@ -6715,7 +6717,7 @@ theorem white_final_ge
     have hlt := hnote (by rw [← htall]; exact hpos)
     rw [htall]
     exact hlt
-  have hK := climbInvK_succ h hinv hδ hCap hshape h.holeBelow htmax
+  have hK := climbInvK_succ h hinv hδ hCap hshape h.holeBelow htmax rfl
   exact ⟨b', hrun, hK⟩
 
 theorem open_white_ctrl_fit_ge (ctrl tally ctrl0 done R mMax : Nat)
@@ -6746,7 +6748,6 @@ theorem white_open_ge
     (hge : 0 ≤ s.fromHole) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false) (hwhite : r ≠ 2) (hrest : rest ≠ [])
     (hParkAt : s.parkAt = base.ladder0 + base.R)
-    (habove : climbAt base.ladder0 base.R s.ridx < s.fromHole.toNat)
     (hCap : climbTallyPrefix base.tally0 done (r :: rest) ≤ base.mMax) :
     ∃ b',
       (do
@@ -6771,6 +6772,7 @@ theorem white_open_ge
         (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base := by
   let hole := climbAt base.ladder0 base.R s.ridx
   let s' := modelRung s base.x r hole false
+  have habove := h.srcAbove hge
   obtain ⟨bClear, bIdle, hrun, hframe, hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E, hparkE,
       hhighE, htierE, hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep,
       ⟨ps, hps⟩, ⟨hnat, hhn⟩, hrowIdle, hctrlIdle, hδ⟩ :=
@@ -7264,7 +7266,238 @@ theorem white_open_ge
       rw [htall]
       omega
   have hK := climbInvK_succ h (by simpa [hempty] using hinv) hδ' hCap
-    (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax)
+    (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
   exact ⟨b', hprog, by simpa [hempty] using hK⟩
+
+/-- The emitted parked clear is `withPark` of the unparked clear. The keep-park
+    copy for `fromHole ≥ 0` is `withPark` of the idle entry copy; `withPark`
+    then pushes through the peg loop, the gap mul, and `clear`, and a second
+    park overwrites the idle frame. -/
+theorem parked_clear_unparked
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hge : 0 ≤ s.fromHole) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false)
+    (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
+    ∃ bClearU bCube bRed,
+      (do
+          let b ← Ecbs.park_rung b (r : Int)
+          let b ← Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false
+          let _ ← SudoRt.runLoopOn (Int.ofNat 0)
+              (fuelRange (Int.ofNat 0) (Int.ofNat (s.tally - 1)))
+              (whiteStep b (Int.ofNat (s.tally - 1)))
+              (fun j => .ok (b, j))
+              (fun _ => .ok (b, (0 : Int)))
+          let out ← SudoRt.runLoopOn (Int.ofNat 0, b)
+              (fuelRange (Int.ofNat 0) (Int.ofNat (s.tally - 1)))
+              (cubePegStep 6 (Int.ofNat (s.tally - 1)))
+              (fun σ => .ok σ)
+              (fun r => .ok ((0 : Int), r))
+          let b := out.2
+          let b ← Ecbs.mul b (5 : Int) (5 : Int) (6 : Int) false false false
+          Ecbs.clear b (5 : Int)) =
+        .ok (withPark bClearU
+          (embed (paintRed (afterPark s.row s.fromHole s.parkAt
+            (climbAt base.ladder0 base.R s.ridx) r) s.t0 s.tally))
+          (Int.ofNat (s.ctrl + 4 + s.tally))
+          (((climbAt base.ladder0 base.R s.ridx : Nat) : Int))
+          (Int.ofNat (s.ridx + 1))) ∧
+      Ecbs.cube (withPark bClearU
+          (embed (paintRed (afterPark s.row s.fromHole s.parkAt
+            (climbAt base.ladder0 base.R s.ridx) r) s.t0 s.tally))
+          (Int.ofNat (s.ctrl + 4 + s.tally))
+          (((climbAt base.ladder0 base.R s.ridx : Nat) : Int))
+          (Int.ofNat (s.ridx + 1)))
+          ((6 : Nat) : Int) ((5 : Nat) : Int) =
+        .ok (withPark bCube
+          (embed (paintRed (afterPark s.row s.fromHole s.parkAt
+            (climbAt base.ladder0 base.R s.ridx) r) s.t0 s.tally))
+          (Int.ofNat (s.ctrl + 4 + s.tally))
+          (((climbAt base.ladder0 base.R s.ridx : Nat) : Int))
+          (Int.ofNat (s.ridx + 1))) ∧
+      Ecbs.mul (withPark bCube
+          (embed (paintRed (afterPark s.row s.fromHole s.parkAt
+            (climbAt base.ladder0 base.R s.ridx) r) s.t0 s.tally))
+          (Int.ofNat (s.ctrl + 4 + s.tally))
+          (((climbAt base.ladder0 base.R s.ridx : Nat) : Int))
+          (Int.ofNat (s.ridx + 1)))
+          ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
+          false false false =
+        .ok (withPark bRed
+          (embed (paintRed (afterPark s.row s.fromHole s.parkAt
+            (climbAt base.ladder0 base.R s.ridx) r) s.t0 s.tally))
+          (Int.ofNat (s.ctrl + 4 + s.tally))
+          (((climbAt base.ladder0 base.R s.ridx : Nat) : Int))
+          (Int.ofNat (s.ridx + 1))) := by
+  let hole := climbAt base.ladder0 base.R s.ridx
+  obtain ⟨cM, bM, ys, moves, slides, holeM, peak, peakS, cOps, hH, hD, hops,
+      hcopyM, hsrcM, hgM, hmM, hnM, hkM, hbM, hpegM, _hys, hGap, _hX, _hFit, _hMov,
+      _hSFit, _hSLe, _hOp, _hRow, _htier, _hmk, _h7, _hop0, _hOpsLe, hctrlM, _hhigh,
+      _hcontrol, _hlen, _hmax, ht0M, hmul, hrowM, _hmvB, _hslB, _hhoB, _hpkB, _hpsB,
+      ⟨_, _, _⟩, ⟨_, _, _⟩, hmulW⟩ :=
+    mul_of_shape h hm hT hhome
+  obtain ⟨bLoopR, bMulR, bClearU, bCube, bRed, hmulR, _hclearR, _hcubeR, _hredR,
+      _bounds, _hlenC, _ht0C, _hrowC, _hctrlN, _hhighC, _hctrlC, _hmaxC,
+      _ht0Cube, _ht0Red, _htierCube, _htierRed, _hcubeF, _hmulF,
+      _honR, _htoR, _hlenR, _hbenchR, hclearP, hcubeP, hmulP,
+      _hcubeBoth, _hmulBoth, hpack, _hrel⟩ :=
+    red_cube_mul h hm hT hhome hxLen hxT
+  obtain ⟨cU, _ysU, _mvU, _slU, _hoU, _pkU, _psU, _cOpsU, _hHU, _hDU, _hopsU,
+      hloopU, hrowU, hctrlU, hgU, hmU, hnU, hkU, hbU, hsrcU, ht0U, _hnamed,
+      _hysU, _hmvU, _hslU, _hhoU, _hpkU, _hpsU, hcopyU⟩ := hpack
+  obtain ⟨mv, pk, sl, cE, hmv, hpk, _hsl, _hmvLe, _hslLe, hb0, hcopyE, _hsrcE, _hgE, _hmE,
+      _hrowE, _hnE, _hkE, _hbE, _hmv0, _hsl0, _ht0E, _hctrlE, _hhighE, _hcontrolE,
+      _hlenE, _hmaxE⟩ :=
+    peg_of_shape h hm hT hhome
+  have hb0M : cE.b0 = cM.b0 := by injection hcopyE.symm.trans hcopyM
+  have hRowP : s.parkAt < b.sudo_5Board_3row.size := by
+    rw [h.inv.row, size_embed]; exact h.shape.park.parkLt
+  have hRowH : hole < b.sudo_5Board_3row.size := by
+    rw [h.inv.row, size_embed]; exact h.shape.park.holeLt
+  let rowI := afterPark s.row (-1) s.parkAt hole r
+  let rowP := afterPark s.row s.fromHole s.parkAt hole r
+  let bKeep := parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH
+  have hPW := parkKeep_withPark b s.row hole s.parkAt r s.ridx s.ctrl hRowP hRowH
+    h.inv.row h.shape.park.parkLt h.shape.park.holeLt
+  have hplI := placeBoard_withPark b (embed rowI) (Int.ofNat (s.ctrl + 2))
+    ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1))
+    6 h.shape.spareH h.shape.spareD s.gap mv pk
+  have hb0p : placeBoard b 6 h.shape.spareH h.shape.spareD s.gap mv pk = cE.b0 := hb0.symm
+  have hIdle : placeBoard bKeep 6 h.shape.spareH h.shape.spareD s.gap mv pk =
+      withPark cE.b0 (embed rowI) (Int.ofNat (s.ctrl + 2))
+        ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1)) := by
+    have h1 := place_of_eq hPW 6 h.shape.spareH h.shape.spareD s.gap mv pk
+    have hir := placeBoard_irrel
+      (withPark b (embed rowI) (Int.ofNat (s.ctrl + 2)) ((hole : Nat) : Int)
+        (Int.ofNat (s.ridx + 1)))
+      6 (hPW ▸ h.shape.spareH) (withPark_home _ _ _ _ _ ▸ h.shape.spareH)
+      (hPW ▸ h.shape.spareD) (withPark_held _ _ _ _ _ ▸ h.shape.spareD)
+      s.gap mv pk
+    rw [h1, hir, hplI, hb0p]
+  obtain ⟨bPark, bCopy, mvR, pkR, h6H, h6D, hpark, hcopy, hplaceR, hmvR, hpkR⟩ :=
+    resume_copy h hge hm hT hhome
+  obtain ⟨bPark', bKeep', hRowP', hRowH', hpark', hkeep', hframe⟩ :=
+    resume_park_withPark h hge
+  have hParkEq : bPark = bPark' := by injection hpark.symm.trans hpark'
+  have hKeepEq : bKeep' = bKeep := by
+    rw [hkeep']
+  have hmvE : mv = mvR := ofNat_inj_nat (hmv.symm.trans hmvR)
+  have hpkE : pk = pkR := ofNat_inj_nat (hpk.symm.trans hpkR)
+  have hctrl4 : ((s.ctrl + 4 : Nat) : Int) = Int.ofNat (s.ctrl + 4) := rfl
+  let fromH := ((hole : Nat) : Int)
+  let ridxH := Int.ofNat (s.ridx + 1)
+  let ctrlReal := ((s.ctrl + 4 : Nat) : Int)
+  have hGePlace : placeBoard bPark 6 h6H h6D s.gap mvR pkR =
+      withPark cE.b0 (embed rowP) ctrlReal fromH ridxH := by
+    have hParkW : bPark = withPark bKeep (embed rowP) ctrlReal fromH ridxH := by
+      rw [hParkEq, hframe, hKeepEq]
+    have h1 := place_of_eq hParkW 6 h6H h6D s.gap mvR pkR
+    have hIH : 6 < bKeep.sudo_5Board_4home.size := by
+      simpa [bKeep, parkKeepBoard] using h.shape.spareH
+    have hID : 6 < bKeep.sudo_5Board_4held.size := by
+      simpa [bKeep, parkKeepBoard] using h.shape.spareD
+    have hplP := placeBoard_withPark bKeep (embed rowP) ctrlReal fromH ridxH
+      6 hIH hID s.gap mvR pkR
+    have hir := placeBoard_irrel
+      (withPark bKeep (embed rowP) ctrlReal fromH ridxH)
+      6 (hParkW ▸ h6H) (withPark_home _ _ _ _ _ ▸ hIH)
+      (hParkW ▸ h6D) (withPark_held _ _ _ _ _ ▸ hID)
+      s.gap mvR pkR
+    rw [h1, hir, hplP]
+    have hmvR : mvR = mv := hmvE.symm
+    have hpkR : pkR = pk := hpkE.symm
+    rw [hmvR, hpkR, hIdle, withPark_withPark]
+  have hFrame : bCopy = withPark cM.b0 (embed rowP) ctrlReal fromH ridxH := by
+    rw [hplaceR, hGePlace, hb0M]
+  have hRoom0 : cM.t0 + cM.m ≤ rowP.length := by
+    rw [ht0M, hmM, afterPark_length]
+    exact h.shape.seg.room
+  have hRoom : cM.t0 + cM.m ≤ s.row.length := by
+    rw [ht0M, hmM]
+    exact h.shape.seg.room
+  have hdoneLe : done.length ≤ base.R := by
+    have hk := h.kLe
+    simp [List.length_append, List.length_cons] at hk
+    omega
+  have hCtrlB : FitsLen (s.ctrl + 4 + s.tally) :=
+    ctrl_resume_peg_fit h.ctrlLe hT hm hdoneLe base.fitCtrl
+  have hCtrlM : FitsLen ((s.ctrl + 4) + cM.m) := by
+    rw [hmM]; exact hCtrlB
+  have hAgree : ∀ j (hj : j < cM.m),
+      rowP[cM.t0 + j]'(Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj cM.t0) hRoom0) =
+        s.row[cM.t0 + j]'(Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj cM.t0) hRoom) := by
+    intro j hj
+    have hjM : j < s.tally := by
+      rw [hmM] at hj
+      exact hj
+    have hix : s.t0 + j < s.row.length :=
+      Nat.lt_of_lt_of_le (Nat.add_lt_add_left hjM s.t0) h.shape.seg.room
+    have hget := afterPark_get s.row s.fromHole s.parkAt hole r (s.t0 + j)
+      (Nat.lt_of_lt_of_le h.parkBelow (Nat.le_add_right _ _))
+      (Nat.lt_of_lt_of_le h.holeBelow (Nat.le_add_right _ _))
+      (Or.inr (Nat.lt_of_lt_of_le (h.fromBelow hge) (Nat.le_add_right s.t0 j)))
+      hix
+    have ht : cM.t0 = s.t0 := ht0M
+    have hL := get_add_eq ht (Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj cM.t0) hRoom0)
+    have hR := get_add_eq ht.symm hix
+    exact hL.trans (hget.trans hR)
+  have hWhite : ∀ j (hj : j < cM.m),
+      s.row[cM.t0 + j]'(Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj cM.t0) hRoom) = 1 := by
+    intro j hj
+    have hjM : j < s.tally := by
+      rw [hmM] at hj
+      exact hj
+    have hcol := h.shape.seg.colour j hjM
+    have hfin : (r :: rest).isEmpty = false := by simp
+    simpa [hfin, ht0M] using hcol
+  have hRowIdle : cM.b0.sudo_5Board_3row = embed s.row := by
+    rw [cM.hRow, hrowM]
+  have hbLoop : bM = bLoopR := by
+    have hb0U : cM.b0 = cU.b0 := by injection hcopyM.symm.trans hcopyU
+    have hboards := pegBoard_same_copy cM cU hb0U
+      (hsrcU.trans hsrcM.symm) (hgU.trans hgM.symm) (hnU.trans hnM.symm)
+      (hkU.trans hkM.symm) (hbU.trans hbM.symm) (hrowU.trans hrowM.symm)
+      (ht0U.trans ht0M.symm) (hctrlU.trans hctrlM.symm) (hmU.trans hmM.symm)
+    rw [hpegM, hloopU, hboards]
+  have hMulIn : mulNoLiveBoard bM 5 6 cM.g ys cM.n cM.k moves slides holeM cM.bench
+      peak peakS cOps hH hD hops = bMulR := by
+    have hmulR' : Ecbs.mul bM ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+        false false false = .ok bMulR := by
+      rw [hbLoop]
+      exact hmulR
+    have hjoin := hmul.symm.trans hmulR'
+    injection hjoin
+  let paint := embed (paintRed rowP cM.t0 cM.m)
+  let ctrlP := Int.ofNat ((s.ctrl + 4) + cM.m)
+  have hMulRun := hmulW paint ctrlP fromH ridxH
+  have hMulRun' : Ecbs.mul (withPark bM paint ctrlP fromH ridxH)
+      (5 : Int) (5 : Int) (6 : Int) false false false =
+      .ok (withPark bMulR paint ctrlP fromH ridxH) := by
+    simpa [hMulIn] using hMulRun
+  have hClearRun := hclearP paint ctrlP fromH ridxH
+  have hctrlN : ctrlP = Int.ofNat (s.ctrl + 4 + s.tally) := by
+    unfold ctrlP
+    rw [hmM]
+  have hpaint : paint = embed (paintRed rowP s.t0 s.tally) := by
+    unfold paint
+    rw [ht0M, hmM]
+  have hrun := parked_clear_transport b bPark bCopy r cM s.row rowP (s.ctrl + 4)
+    fromH ridxH hpark hcopy hFrame hRoom0 hCtrlM hsrcM cM.hT0 hRowIdle hRoom
+    hAgree hWhite
+    (withPark bMulR paint ctrlP fromH ridxH)
+    (withPark bClearU paint ctrlP fromH ridxH)
+    (by
+      rw [← hpegM]
+      exact hMulRun')
+    hClearRun
+  rw [hctrlN, hpaint, hmM] at hrun
+  unfold rowP hole fromH ridxH at hrun
+  let paintF := embed (paintRed (afterPark s.row s.fromHole s.parkAt hole r) s.t0 s.tally)
+  let ctrlF := Int.ofNat (s.ctrl + 4 + s.tally)
+  let fromF := ((hole : Nat) : Int)
+  let ridxF := Int.ofNat (s.ridx + 1)
+  have hcube := hcubeP paintF ctrlF fromF ridxF
+  have hmulF := hmulP paintF ctrlF fromF ridxF
+  exact ⟨bClearU, bCube, bRed, hrun, hcube, hmulF⟩
 
 end EcbsLink2.Link2

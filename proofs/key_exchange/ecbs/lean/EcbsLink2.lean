@@ -16,4 +16,5 @@ import EcbsLink2.Link2.Cube
 import EcbsLink2.Link2.BoardBuild
 import EcbsLink2.Link2.Invert
 import EcbsLink2.Link2.InvertDelta
+import EcbsLink2.Link2.InvertStep
 import EcbsLink2.Link2.Export

@@ -3381,7 +3381,7 @@ theorem pegPack_board (c : PegCtx) (i : Nat) (h0 : 0 < i) (hle : i ≤ c.m) :
     · rw [hL.2.2.2.2.2.2.1, ih.2.2.2.2.2.2.2.1]
     · rw [hL.2.2.2.2.2.2.2, ih.2.2.2.2.2.2.2.2]
 
-private theorem place_book (b : Ecbs.Board) (home : Nat)
+theorem place_book (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) :
     (placeBoard b home hH hD xs moves peak).sudo_5Board_3row = b.sudo_5Board_3row ∧
@@ -3508,7 +3508,7 @@ theorem place_home_other (b : Ecbs.Board) (home other : Nat)
     idx_get hEq other hF]
   rw [Array.getElem_set, if_neg hne]
 
-private theorem clearHeld_book (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
+theorem clearHeld_book (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size) :
     (clearHeldBoard b home xs moves hH hD).sudo_5Board_3row = b.sudo_5Board_3row ∧
     (clearHeldBoard b home xs moves hH hD).sudo_5Board_11parked_from = b.sudo_5Board_11parked_from ∧
@@ -3593,7 +3593,7 @@ private theorem mulOff_book (b : Ecbs.Board) (dst second : Nat) (xs ys : List Na
   unfold mulNoOffBoard
   exact ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
-private theorem mulLive_book (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+theorem mulLive_book (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
     (n k moves slides hole bench peak peakS cOps : Nat)
     (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
     (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
@@ -6201,12 +6201,12 @@ theorem pegPack_keep (c : PegCtx) (first : Nat) (xs0 : List Nat) (cMul : Nat)
       ih.heldLt ih.homeLt hne ih.held ih.arr ih.opsLt ih.op0
     simpa [pegPack, pegNext] using hlive
 
-/-- On a final red rung the emitted gap mul, started from the idle park's peg
-    loop, keeps that loop's row, counter, parked-from hole, rung index, and
-    tally length. The loop started from the keep-park board. -/
+/-- The emitted gap mul, started from the idle park's peg loop, keeps that
+    loop's row, counter, parked-from hole, rung index, and tally length.
+    Home 5 still holds the gap. The loop started from the keep-park board. -/
 theorem parked_gap_mul
-    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done [2] b s base)
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
     (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false) :
     ∃ (c : PegCtx) (bMul : Ecbs.Board),
@@ -6217,7 +6217,7 @@ theorem parked_gap_mul
       bMul.sudo_5Board_11parked_from = c.b0.sudo_5Board_11parked_from ∧
       bMul.sudo_5Board_8rung_idx = c.b0.sudo_5Board_8rung_idx ∧
       bMul.sudo_5Board_9tally_len = c.b0.sudo_5Board_9tally_len ∧
-      c.row0 = afterPark s.row (-1) s.parkAt (climbAt base.ladder0 base.R s.ridx) 2 ∧
+      c.row0 = afterPark s.row (-1) s.parkAt (climbAt base.ladder0 base.R s.ridx) r ∧
       c.ctrl0 = s.ctrl + 2 ∧
       c.m = s.tally ∧
       c.t0 = s.t0 ∧
@@ -6239,14 +6239,18 @@ theorem parked_gap_mul
         peakS = (pegPack c c.m c.hm (Nat.le_refl _)).peakS ∧
         (pegBoard c c.m).sudo_5Board_4cost.sudo_5Costs_3ops[0]'hops = (cOps : Int) ∧
         c.src = 6 ∧ c.g = s.gap ∧ c.n = s.n ∧ c.k = s.k ∧ c.bench = s.benchlen ∧
-        (∃ bPark, Ecbs.park_rung b ((2 : Nat) : Int) = .ok bPark ∧
-          Ecbs.copy_band bPark ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok c.b0)) := by
+        (∃ bPark, Ecbs.park_rung b (r : Int) = .ok bPark ∧
+          Ecbs.copy_band bPark ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok c.b0) ∧
+        (∃ (h5D : 5 < bMul.sudo_5Board_4held.size)
+            (h5H : 5 < bMul.sudo_5Board_4home.size),
+          bMul.sudo_5Board_4held[5]'h5D = true ∧
+          bMul.sudo_5Board_4home[5]'h5H = embed c.g)) := by
   obtain ⟨bPark, c, hpark, hcopy, hrow0, hctrl0, hmEq, ht0, hg, hn, hkN, hbch, hsrc,
       hfrom, hridx, hlen, _hplace⟩ := parked_peg_ctx h hF hm hT hhome
   let hole := climbAt base.ladder0 base.R s.ridx
   obtain ⟨_b0, hpark0, _, _, hkeep⟩ := park_of_shape h
   obtain ⟨hRowP, hRowH, hEq⟩ := hkeep hF
-  have hPK : bPark = parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH := by
+  have hPK : bPark = parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH := by
     have hboard : bPark = _b0 := by injection hpark.symm.trans hpark0
     exact hboard.trans hEq
   obtain ⟨mv, hmv, hmvLe⟩ := h.moves
@@ -6490,6 +6494,34 @@ theorem parked_gap_mul
     have htr := mulNoLiveBoard_transport hPack.1 5 6 c.g d.xs c.n c.k d.moves d.slides d.hole
       c.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
     simpa [bMul] using htr
+  have hHeldM := mul_live_held d.b 5 6 c.g d.xs c.n c.k d.moves d.slides d.hole c.bench
+    d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+  have hHomeM := mul_live_home d.b 5 6 c.g d.xs c.n c.k d.moves d.slides d.hole c.bench
+    d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+  have h5D : 5 < bMul.sudo_5Board_4held.size := by
+    have hsz : bMul.sudo_5Board_4held.size = d.b.sudo_5Board_4held.size := by
+      rw [hHeldM]
+      simp only [Array.size_set]
+      rw [settle_held_eq d.b 6 hH6 hD6 d.xs c.n d.moves d.slides d.peak, Array.size_set]
+    rw [hsz]
+    exact hkeep.heldLt
+  have h5held : bMul.sudo_5Board_4held[5]'h5D = true := by
+    have h1 := idx_get hHeldM 5 h5D
+    rw [h1, Array.getElem_set, if_neg (by decide : (6 : Nat) ≠ 5)]
+    have hszS : 5 <
+        (settleBoard d.b 6 hH6 hD6 d.xs c.n d.moves d.slides d.peak).sudo_5Board_4held.size := by
+      rw [settle_held_eq d.b 6 hH6 hD6 d.xs c.n d.moves d.slides d.peak, Array.size_set]
+      exact hkeep.heldLt
+    have h2 := idx_get (settle_held_eq d.b 6 hH6 hD6 d.xs c.n d.moves d.slides d.peak) 5 hszS
+    rw [h2, Array.getElem_set, if_neg (by decide : (6 : Nat) ≠ 5)]
+    exact hkeep.held
+  have h5H : 5 < bMul.sudo_5Board_4home.size := by
+    rw [hHomeM, Array.size_set]
+    exact hkeep.homeLt
+  have h5arr : bMul.sudo_5Board_4home[5]'h5H = embed c.g := by
+    have h1 := idx_get hHomeM 5 h5H
+    rw [h1, Array.getElem_set, if_neg (by decide : (6 : Nat) ≠ 5)]
+    exact hkeep.arr
   exact ⟨c, bMul, hmulP, hrowM, hctrlM, hfromM, hridxM, hlenM, hrow0, hctrl0, hmEq, ht0,
     hfrom, hridx, hlen,
     ⟨d.xs, d.moves, d.slides, d.hole, d.peak, d.peakS, cMul, hHg, hDg, hopsG,
@@ -6498,7 +6530,8 @@ theorem parked_gap_mul
         have hget := idx_get
           (congrArg (fun b => b.sudo_5Board_4cost.sudo_5Costs_3ops) hPack.1.symm) 0 hopsG
         exact hget.trans hkeep.op0),
-      hsrc, hg, hn, hkN, hbch, ⟨bPark, hpark, hcopy⟩⟩⟩
+      hsrc, hg, hn, hkN, hbch, ⟨bPark, hpark, hcopy⟩,
+      ⟨h5D, h5H, h5held, h5arr⟩⟩⟩
 
 
 /-- One home and the array it holds. -/
@@ -6865,7 +6898,7 @@ theorem mulLive_keep (b : Ecbs.Board) (dst second first : Nat) (xs ys : List Nat
     exact hArr
   exact { heldLt, held, homeLt, arr }
 
-private theorem mul_live_aimed (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+theorem mul_live_aimed (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
     (n k moves slides hole bench peak peakS cOps : Nat)
     (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
     (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
@@ -8968,8 +9001,8 @@ private theorem pegBoard_same_copy (c d : PegCtx)
 /-- The emitted gap mul on the idle park is the unparked gap mul with the park
     row, the parked counter, the climb hole, and the advanced rung index. -/
 theorem parked_gap_is_withPark
-    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done [2] b s base)
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
     (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false) :
     ∃ (bMulU bMulP : Ecbs.Board),
@@ -8984,7 +9017,7 @@ theorem parked_gap_is_withPark
           ((6 : Nat) : Int) false false false = .ok bMulP) ∧
       bMulP = withPark bMulU
         (embed (paintRed (afterPark s.row (-1) s.parkAt
-          (climbAt base.ladder0 base.R s.ridx) 2) s.t0 s.tally))
+          (climbAt base.ladder0 base.R s.ridx) r) s.t0 s.tally))
         (((s.ctrl + 2 + s.tally : Nat) : Int))
         ((climbAt base.ladder0 base.R s.ridx : Nat) : Int)
         (Int.ofNat (s.ridx + 1)) := by
@@ -8998,35 +9031,35 @@ theorem parked_gap_is_withPark
   let hole := climbAt base.ladder0 base.R s.ridx
   obtain ⟨bP0, hpark0, _, _, hkeep⟩ := park_of_shape h
   obtain ⟨hRowP, hRowH, hEq⟩ := hkeep hF
-  have hPK : bPark = parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH := by
+  have hPK : bPark = parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH := by
     have hboard : bPark = bP0 := by injection hpark.symm.trans hpark0
     exact hboard.trans hEq
-  have hParkW := parkKeep_withPark b s.row hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH
+  have hParkW := parkKeep_withPark b s.row hole s.parkAt r s.ridx s.ctrl hRowP hRowH
     h.inv.row h.shape.park.parkLt h.shape.park.holeLt
   have hbDrel : d.b0 = withPark c.b0 (embed d.row0) ((d.ctrl0 : Nat) : Int)
       ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1)) := by
     have hplacePK : placeBoard bPark 6 h6H h6D s.gap mvP pkP =
-        placeBoard (parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH)
+        placeBoard (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
           6 (hPK ▸ h6H) (hPK ▸ h6D) s.gap mvP pkP := by
       cases hPK
       rfl
-    have hmvpk : placeBoard (parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH)
+    have hmvpk : placeBoard (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
           6 (hPK ▸ h6H) (hPK ▸ h6D) s.gap mvP pkP =
-        placeBoard (parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH)
+        placeBoard (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
           6 (hPK ▸ h6H) (hPK ▸ h6D) s.gap mv pk := by
       rw [hmvE, hpkE]
-    let rowW := embed (afterPark s.row (-1) s.parkAt hole 2)
+    let rowW := embed (afterPark s.row (-1) s.parkAt hole r)
     let ctrlW := Int.ofNat (s.ctrl + 2)
     let fromW := ((hole : Nat) : Int)
     let ridxW := Int.ofNat (s.ridx + 1)
     let wp := withPark b rowW ctrlW fromW ridxW
-    have hplSame : placeBoard (parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH)
+    have hplSame : placeBoard (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
           6 (hPK ▸ h6H) (hPK ▸ h6D) s.gap mv pk =
         placeBoard wp 6 (withPark_home b rowW ctrlW fromW ridxW ▸ h.shape.spareH)
           (withPark_held b rowW ctrlW fromW ridxW ▸ h.shape.spareD) s.gap mv pk := by
       unfold placeBoard
       have hcount :
-          countHeld ((parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH).sudo_5Board_4held.set
+          countHeld ((parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4held.set
               ⟨6, hPK ▸ h6D⟩ true) 7 =
             countHeld (wp.sudo_5Board_4held.set
               ⟨6, withPark_held b rowW ctrlW fromW ridxW ▸ h.shape.spareD⟩ true) 7 := by
@@ -9034,7 +9067,7 @@ theorem parked_gap_is_withPark
       by_cases hlt : pk < countHeld (wp.sudo_5Board_4held.set
           ⟨6, withPark_held b rowW ctrlW fromW ridxW ▸ h.shape.spareD⟩ true) 7
       · have hltK : pk < countHeld
-            ((parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH).sudo_5Board_4held.set
+            ((parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4held.set
               ⟨6, hPK ▸ h6D⟩ true) 7 := by
           simpa [hcount] using hlt
         simp only [hlt, hltK]
@@ -9049,7 +9082,7 @@ theorem parked_gap_is_withPark
                | simp [wp, parkKeepBoard, withPark, ridxW, fromW, ctrlW])
           | simp [wp, parkKeepBoard, withPark, ridxW, fromW, ctrlW]
       · have hltK : ¬ pk < countHeld
-            ((parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH).sudo_5Board_4held.set
+            ((parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4held.set
               ⟨6, hPK ▸ h6D⟩ true) 7 := by
           simpa [hcount] using hlt
         simp only [hlt, hltK]
@@ -9069,7 +9102,7 @@ theorem parked_gap_is_withPark
       have h1 := hb0D.trans (hplacePK.trans (hmvpk.trans (hplSame.trans hpl)))
       simpa [wp, ← hb0] using h1
     have hrowR : rowW = embed d.row0 := by
-      show embed (afterPark s.row (-1) s.parkAt hole 2) = embed d.row0
+      show embed (afterPark s.row (-1) s.parkAt hole r) = embed d.row0
       rw [← hrowD]
     have hctrlR : ctrlW = ((d.ctrl0 : Nat) : Int) := by
       show Int.ofNat (s.ctrl + 2) = ((d.ctrl0 : Nat) : Int)
@@ -9126,7 +9159,7 @@ theorem parked_gap_is_withPark
   obtain ⟨dp, bMulP, hmulP, _, _, _, _, _, hrow0P, hctrl0P, hmP, ht0P, _, _, _, hlive⟩ :=
     parked_gap_mul h hF hm hT hhome
   obtain ⟨ysP, movesP, slidesP, holeP, peakP, peakSP, cOpsP, hHP, hDP, hopsP, hnamed, hysP,
-      hmovP, hslP, hhoP, hpkP, hpsP, hopP, hsrcP, hgP, hnP, hkP, hbP, hparkE⟩ := hlive
+      hmovP, hslP, hhoP, hpkP, hpsP, hopP, hsrcP, hgP, hnP, hkP, hbP, hparkE, _h5⟩ := hlive
   obtain ⟨bParkP, hparkP, hcopyP⟩ := hparkE
   have hbU0 : c.b0 = cu.b0 := by
     injection hcopyC.symm.trans hcopyU
@@ -9383,8 +9416,8 @@ theorem parked_gap_is_withPark
     exact hPform.trans (hliveW.trans
       (congrArg (fun b => withPark b rowP ctrlP fromP ridxP) hUform.symm))
   have hrowA : rowP =
-      embed (paintRed (afterPark s.row (-1) s.parkAt hole 2) s.t0 s.tally) := by
-    show embed (paintRed d.row0 d.t0 c.m) = embed (paintRed (afterPark s.row (-1) s.parkAt hole 2) s.t0 s.tally)
+      embed (paintRed (afterPark s.row (-1) s.parkAt hole r) s.t0 s.tally) := by
+    show embed (paintRed d.row0 d.t0 c.m) = embed (paintRed (afterPark s.row (-1) s.parkAt hole r) s.t0 s.tally)
     rw [hrowD, ht0D, hmE]
   have hctrlA : ctrlP = ((s.ctrl + 2 + s.tally : Nat) : Int) := by
     show Int.ofNat (d.ctrl0 + c.m) = ((s.ctrl + 2 + s.tally : Nat) : Int)

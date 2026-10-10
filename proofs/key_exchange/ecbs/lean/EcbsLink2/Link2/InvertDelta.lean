@@ -2626,4 +2626,35 @@ theorem parked_final_red
   · rw [← hEq]; exact hFive.2.2.2.1
   · rw [← hEq]; exact hFive.2.2.2.2
 
+/-- The emitted gap mul of that parked peg loop has the final red model's row,
+    counter, parked-from hole, rung index, and tally length. -/
+theorem parked_gap_mul_fields
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [2] b s base)
+    (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false) :
+    ∃ (c : PegCtx) (bMul : Ecbs.Board),
+      Ecbs.mul (pegBoard c c.m) ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+          false false false = .ok bMul ∧
+      let hole := climbAt base.ladder0 base.R s.ridx
+      let st := modelRung s base.x 2 hole true
+      bMul.sudo_5Board_3row = embed st.row ∧
+      bMul.sudo_5Board_4cost.sudo_5Costs_4ctrl = (st.ctrl : Int) ∧
+      bMul.sudo_5Board_11parked_from = st.fromHole ∧
+      bMul.sudo_5Board_8rung_idx = (st.ridx : Int) ∧
+      bMul.sudo_5Board_9tally_len = (st.tally : Int) := by
+  obtain ⟨c, bMul, hmul, hrow, hctrl, hfromB, hridxB, hlenB, hrow0, hctrl0, hmT, ht0,
+      hfrom, hridx, hlen⟩ := parked_gap_mul h hF hm hT hhome
+  let hole := climbAt base.ladder0 base.R s.ridx
+  have hIdle : s.fromHole = -1 := h.shape.park.fromIdle hF
+  have hrow0' : c.row0 = afterPark s.row s.fromHole s.parkAt hole 2 := by
+    rw [hrow0, hIdle]
+  have hM := model_final_red s base.x hole hF
+  refine ⟨c, bMul, hmul, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [hrow, hrow0', ht0, hmT, hM.2.2.2.2.2.2.1]
+  · rw [hctrl, hctrl0, hmT, hM.2.2.2.2.1]
+  · rw [hfromB, hfrom, hM.2.2.2.2.2.2.2.1]
+  · rw [hridxB, hridx, hM.2.2.2.2.2.2.2.2.1]
+  · rw [hlenB, hlen, hM.2.1]
+
 end EcbsLink2.Link2

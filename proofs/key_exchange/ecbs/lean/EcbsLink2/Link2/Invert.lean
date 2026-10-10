@@ -5682,6 +5682,55 @@ theorem ctrl_park_peg_fit {ctrl tally ctrl0 done R mMax : Nat}
     FitsLen (ctrl + 2 + tally) :=
   FitsLen.of_le (double_ctrl_fit hctrl ht hd hf).1 (ctrl_add_peg_le ctrl tally hm)
 
+/-- The gap copy, the tally pegs, and one live mul stay inside one `rungCharge`. -/
+theorem gap_mul_le_rung (n bench mMax tally pegs : Nat)
+    (hpeg : pegs ≤ n) (ht : tally ≤ mMax) :
+    pegs + tally * pegCharge n bench + mulCharge n bench ≤
+      rungCharge n bench mMax := by
+  unfold rungCharge
+  have hmul : tally * pegCharge n bench ≤ (mMax + 1) * pegCharge n bench :=
+    Nat.mul_le_mul_right _ (Nat.le_succ_of_le ht)
+  have hsum : pegs + tally * pegCharge n bench + mulCharge n bench ≤
+      n + (mMax + 1) * pegCharge n bench + mulCharge n bench :=
+    Nat.add_le_add_right (Nat.add_le_add hpeg hmul) _
+  let X := (mMax + 1) * pegCharge n bench
+  have h2 : n ≤ 2 * n := by
+    rw [Nat.two_mul]
+    exact Nat.le_add_left n n
+  have h3 : mulCharge n bench ≤ 2 * mulCharge n bench := by
+    rw [Nat.two_mul]
+    exact Nat.le_add_left _ _
+  refine Nat.le_trans hsum ?_
+  calc
+    n + X + mulCharge n bench ≤ 2 * n + X + mulCharge n bench :=
+      Nat.add_le_add_right (Nat.add_le_add_right h2 X) _
+    _ ≤ 2 * n + X + 2 * mulCharge n bench := Nat.add_le_add_left h3 _
+
+theorem gap_copy_le_rung (n bench mMax tally pegs : Nat)
+    (hpeg : pegs ≤ n) (ht : tally ≤ mMax) :
+    pegs + tally * pegCharge n bench ≤ rungCharge n bench mMax :=
+  Nat.le_trans (Nat.le_add_right _ (mulCharge n bench))
+    (gap_mul_le_rung n bench mMax tally pegs hpeg ht)
+
+/-- `mv` is at most `done` charges, and `pegs + rest` is at most one more charge. -/
+theorem copy_then_pegs_fit (moves0 mv done R charge pegs rest : Nat)
+    (hk : done + 1 ≤ R)
+    (hmv : mv ≤ moves0 + done * charge)
+    (hex : pegs + rest ≤ charge)
+    (hf : FitsLen (moves0 + R * charge)) :
+    FitsLen (mv + pegs + rest) := by
+  apply FitsLen.of_le hf
+  have h1 : mv + pegs + rest ≤ mv + charge := by
+    rw [Nat.add_assoc]
+    exact Nat.add_le_add_left hex mv
+  have h2 : mv + charge ≤ moves0 + done * charge + charge :=
+    Nat.add_le_add_right hmv _
+  have h3 : moves0 + done * charge + charge = moves0 + (done + 1) * charge := by
+    rw [Nat.add_assoc, ← Nat.succ_mul]
+  have h4 : moves0 + (done + 1) * charge ≤ moves0 + R * charge :=
+    Nat.add_le_add_left (Nat.mul_le_mul_right _ hk) _
+  exact Nat.le_trans h1 (Nat.le_trans h2 (h3.symm ▸ h4))
+
 /-- The bench-off cube-peg context on the idle `park_rung` board. `peg_of_shape`
     builds the same context on the entry board, so its row is `s.row` and its
     counter is `s.ctrl`. Here the copy reads the keep-park board: the row is
@@ -6123,6 +6172,273 @@ theorem pegPack_keep (c : PegCtx) (first : Nat) (xs0 : List Nat) (cMul : Nat)
       (Nat.lt_of_succ_le hle) first xs0 cMul
       ih.heldLt ih.homeLt hne ih.held ih.arr ih.opsLt ih.op0
     simpa [pegPack, pegNext] using hlive
+
+/-- On a final red rung the emitted gap mul, started from the idle park's peg
+    loop, keeps that loop's row, counter, parked-from hole, rung index, and
+    tally length. The loop started from the keep-park board. -/
+theorem parked_gap_mul
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [2] b s base)
+    (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false) :
+    ∃ (c : PegCtx) (bMul : Ecbs.Board),
+      Ecbs.mul (pegBoard c c.m) ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+          false false false = .ok bMul ∧
+      bMul.sudo_5Board_3row = embed (paintRed c.row0 c.t0 c.m) ∧
+      bMul.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((c.ctrl0 + c.m : Nat) : Int) ∧
+      bMul.sudo_5Board_11parked_from = c.b0.sudo_5Board_11parked_from ∧
+      bMul.sudo_5Board_8rung_idx = c.b0.sudo_5Board_8rung_idx ∧
+      bMul.sudo_5Board_9tally_len = c.b0.sudo_5Board_9tally_len ∧
+      c.row0 = afterPark s.row (-1) s.parkAt (climbAt base.ladder0 base.R s.ridx) 2 ∧
+      c.ctrl0 = s.ctrl + 2 ∧
+      c.m = s.tally ∧
+      c.t0 = s.t0 ∧
+      c.b0.sudo_5Board_11parked_from =
+        ((climbAt base.ladder0 base.R s.ridx : Nat) : Int) ∧
+      c.b0.sudo_5Board_8rung_idx = ((s.ridx + 1 : Nat) : Int) ∧
+      c.b0.sudo_5Board_9tally_len = (s.tally : Int) := by
+  obtain ⟨bPark, c, hpark, hcopy, hrow0, hctrl0, hmEq, ht0, hg, hn, hkN, hbch, hsrc,
+      hfrom, hridx, hlen⟩ := parked_peg_ctx h hF hm hT hhome
+  let hole := climbAt base.ladder0 base.R s.ridx
+  obtain ⟨_b0, hpark0, _, _, hkeep⟩ := park_of_shape h
+  obtain ⟨hRowP, hRowH, hEq⟩ := hkeep hF
+  have hPK : bPark = parkKeepBoard b hole s.parkAt 2 s.ridx s.ctrl hRowP hRowH := by
+    have hboard : bPark = _b0 := by injection hpark.symm.trans hpark0
+    exact hboard.trans hEq
+  obtain ⟨mv, hmv, hmvLe⟩ := h.moves
+  obtain ⟨sl, hsl, hslLe⟩ := h.slides
+  have h6H : 6 < bPark.sudo_5Board_4home.size := by
+    rw [hPK]; simpa [parkKeepBoard] using h.shape.spareH
+  have h6D : 6 < bPark.sudo_5Board_4held.size := by
+    rw [hPK]; simpa [parkKeepBoard] using h.shape.spareD
+  have hmvP : bPark.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) := by
+    rw [hPK]; simpa [parkKeepBoard] using hmv
+  have hpk : ∃ pk : Nat, b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) := by
+    obtain ⟨pk, hpk, _⟩ := h.peak
+    exact ⟨pk, hpk⟩
+  obtain ⟨pk, hpk⟩ := hpk
+  have hpkP : bPark.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) := by
+    rw [hPK]; simpa [parkKeepBoard] using hpk
+  have h5H : 5 < bPark.sudo_5Board_4home.size := by
+    rw [hPK]; simpa [parkKeepBoard] using h.inv.hG
+  have h5D : 5 < bPark.sudo_5Board_4held.size := by
+    rw [hPK]; simpa [parkKeepBoard] using h.inv.hGs
+  have h7P : 7 ≤ bPark.sudo_5Board_4held.size := by
+    rw [hPK]; simpa [parkKeepBoard] using h.shape.h7
+  have hgapH := h.inv.gapHome hhome
+  have hsrcP : bPark.sudo_5Board_4held[5] = true := by
+    subst hPK
+    simpa [parkKeepBoard] using hgapH.1
+  have harrP : bPark.sudo_5Board_4home[5] = embed s.gap := by
+    subst hPK
+    simpa [parkKeepBoard] using hgapH.2
+  have hemptyP : bPark.sudo_5Board_4held[6] = false := by
+    subst hPK
+    simpa [parkKeepBoard] using h.shape.spareE
+  have hnP : bPark.sudo_5Board_1t.sudo_4Tier_1n = (s.gap.length : Int) := by
+    rw [hPK]
+    simpa [parkKeepBoard] using
+      (show b.sudo_5Board_1t.sudo_4Tier_1n = (s.gap.length : Int) by
+        rw [h.shape.gapLen]; exact h.shape.tierN)
+  have hk : done.length + 1 ≤ base.R := by
+    have hlenK := h.kLe
+    rw [List.length_append, List.length_cons] at hlenK
+    omega
+  have hpegN0 : pegCount s.gap ≤ s.n := by
+    rw [← h.shape.gapLen]; exact pegCount_le s.gap
+  have hmovFit : FitsLen (mv + pegCount s.gap + s.tally * pegCharge s.n s.benchlen) := by
+    have hpegB : pegCount s.gap ≤ base.n := by
+      rw [h.hn] at hpegN0
+      exact hpegN0
+    rw [h.hn, h.hbench]
+    exact copy_then_pegs_fit base.moves0 mv done.length base.R
+      (rungCharge base.n base.bench base.mMax) (pegCount s.gap)
+      (s.tally * pegCharge base.n base.bench) hk hmvLe
+      (gap_copy_le_rung base.n base.bench base.mMax s.tally (pegCount s.gap) hpegB hT)
+      base.fitM
+  have hfitCopy : FitsLen (mv + pegCount s.gap) := FitsLen.of_le hmovFit (by omega)
+  have hcopy2 := copy_band_refines bPark 6 5 s.gap mv pk
+    h6H h6D h5H h5D h7P hsrcP harrP hemptyP hnP
+    (by rw [h.shape.gapLen]; exact h.shape.peg.fitN) hmvP hpkP hfitCopy
+  have hb0 : c.b0 = placeBoard bPark 6 h6H h6D s.gap mv pk := by
+    injection hcopy.symm.trans hcopy2
+  have hbook := place_book bPark 6 h6H h6D s.gap mv pk
+  have hidle := place_idle bPark 6 h6H h6D s.gap mv pk
+  have hmv0 : c.moves0 = mv + pegCount s.gap := by
+    have hcast : (c.moves0 : Int) = ((mv + pegCount s.gap : Nat) : Int) := by
+      rw [← c.hmoves0, hb0]
+      exact (place_moves bPark 6 h6H h6D s.gap mv pk).trans (ofNat_eq_natCast _)
+    exact ofNat_inj_nat hcast
+  have hsl0 : c.slides0 = sl := by
+    have hcast : Int.ofNat c.slides0 = (sl : Int) := by
+      rw [← c.hslides0, hb0, hidle.2.2.2.1, hPK]
+      simpa [parkKeepBoard] using hsl
+    exact ofNat_inj_nat ((ofNat_eq_natCast _).trans hcast)
+  have hFD : 5 < c.b0.sudo_5Board_4held.size := by
+    rw [hb0, hbook.2.2.2.2.2.2.2.2.2]; exact h5D
+  have hFH : 5 < c.b0.sudo_5Board_4home.size := by
+    rw [hb0, hbook.2.2.2.2.2.2.2.2.1]; exact h5H
+  have hHeldEq : c.b0.sudo_5Board_4held =
+      (placeBoard bPark 6 h6H h6D s.gap mv pk).sudo_5Board_4held := by rw [hb0]
+  have hHomeEq5 : c.b0.sudo_5Board_4home =
+      (placeBoard bPark 6 h6H h6D s.gap mv pk).sudo_5Board_4home := by rw [hb0]
+  have hHeld5 : c.b0.sudo_5Board_4held[5] = true :=
+    (idx_get hHeldEq 5 hFD).trans
+      ((place_held_other bPark 6 5 h6H h6D s.gap mv pk (by decide) h5D
+        (hHeldEq ▸ hFD)).trans hsrcP)
+  have hArr5 : c.b0.sudo_5Board_4home[5] = embed c.g := by
+    rw [(idx_get hHomeEq5 5 hFH).trans
+        (place_home_other bPark 6 5 h6H h6D s.gap mv pk (by decide) h5H
+          (hHomeEq5 ▸ hFH)), harrP, hg]
+  have hopsP : bPark.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by rw [hPK]; simp [parkKeepBoard]
+  have hOpsEq : c.b0.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    rw [hb0]; exact hidle.2.2.1.trans hopsP
+  have hopsZ : 0 < c.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hOpsEq]; exact Nat.lt_trans (by decide : (0 : Nat) < 1) h.shape.peg.opsGt
+  obtain ⟨cMul, hcMul, hcLe⟩ := h.ops 0 (by rw [← hOpsEq]; exact hopsZ)
+  have hopZ : c.b0.sudo_5Board_4cost.sudo_5Costs_3ops[0] = (cMul : Int) :=
+    (idx_get hOpsEq 0 hopsZ).trans hcMul
+  have hne5 : (5 : Nat) ≠ c.src := by rw [hsrc]; decide
+  have hkeep := pegPack_keep c 5 c.g cMul c.m c.hm (Nat.le_refl _)
+    hFD hFH hne5 hHeld5 hArr5 hopsZ hopZ
+  let d := pegPack c c.m c.hm (Nat.le_refl _)
+  have hPack := pegPack_board c c.m c.hm (Nat.le_refl _)
+  have hpTake : pegCount (d.xs.take c.n) ≤ c.n := pegCount_take_le d.xs c.n
+  have hlenY : d.xs.length = c.bench := by
+    rw [d.hxs, cubeBenchIter_length c.n c.k c.bench c.g c.n_le c.m c.hm]
+  have hfitL : FitsLen d.xs.length := by rw [hlenY]; exact c.hfitB
+  have hspan2 : 2 * (c.n - 1) < c.bench := by
+    have hs := c.hspan
+    omega
+  have hfi : FitsLen (2 * (c.n - 1)) := FitsLen.of_le c.h3 (by omega)
+  have hsum : d.moves + 2 * pegCount (d.xs.take c.n) + c.n * (c.n + 1) +
+      3 * (c.bench - c.n) ≤
+      c.moves0 + c.m * pegCharge c.n c.bench + mulCharge c.n c.bench := by
+    have hge := mulCharge_ge c.n c.bench d.moves d.xs d.xs c.k c.n_le hpTake
+    exact Nat.le_trans hge (Nat.add_le_add_right d.hmovB _)
+  have hcap : c.moves0 + c.m * pegCharge c.n c.bench + mulCharge c.n c.bench ≤
+      base.moves0 + base.R * rungCharge base.n base.bench base.mMax := by
+    rw [hmv0, hmEq, hn, hbch]
+    have hpegN : pegCount s.gap ≤ base.n := by
+      have h1 : pegCount s.gap ≤ s.gap.length := pegCount_le s.gap
+      rw [h.shape.gapLen, h.hn] at h1
+      exact h1
+    have hpiece : pegCount s.gap + s.tally * pegCharge s.n s.benchlen +
+        mulCharge s.n s.benchlen ≤ rungCharge base.n base.bench base.mMax := by
+      rw [h.hn, h.hbench]
+      exact gap_mul_le_rung base.n base.bench base.mMax s.tally (pegCount s.gap) hpegN hT
+    have hassoc : mv + pegCount s.gap + s.tally * pegCharge s.n s.benchlen +
+        mulCharge s.n s.benchlen =
+        mv + (pegCount s.gap + s.tally * pegCharge s.n s.benchlen +
+          mulCharge s.n s.benchlen) := by
+      rw [← Nat.add_assoc, ← Nat.add_assoc]
+    have hleft : mv + pegCount s.gap + s.tally * pegCharge s.n s.benchlen +
+        mulCharge s.n s.benchlen ≤ mv + rungCharge base.n base.bench base.mMax := by
+      rw [hassoc]
+      exact Nat.add_le_add_left hpiece mv
+    have hmvR : mv + rungCharge base.n base.bench base.mMax ≤
+        base.moves0 + done.length * rungCharge base.n base.bench base.mMax +
+          rungCharge base.n base.bench base.mMax :=
+      Nat.add_le_add_right hmvLe _
+    have hsplit : base.moves0 + done.length * rungCharge base.n base.bench base.mMax +
+        rungCharge base.n base.bench base.mMax =
+        base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax := by
+      rw [Nat.add_assoc, ← Nat.succ_mul]
+    have hR : base.moves0 + (done.length + 1) * rungCharge base.n base.bench base.mMax ≤
+        base.moves0 + base.R * rungCharge base.n base.bench base.mMax :=
+      Nat.add_le_add_left (Nat.mul_le_mul_right _ hk) _
+    exact Nat.le_trans hleft (Nat.le_trans hmvR (Nat.le_trans (Nat.le_of_eq hsplit) hR))
+  have hfold : FitsLen (d.moves + 2 * pegCount (d.xs.take c.n) + c.n * (c.n + 1) +
+      3 * (c.bench - c.n)) :=
+    FitsLen.of_le base.fitM (Nat.le_trans hsum hcap)
+  have hfm : FitsLen (d.moves + 2 * pegCount (d.xs.take c.n) + c.n * (c.n + 1)) :=
+    FitsLen.of_le hfold (by omega)
+  have hfitM : FitsLen (d.moves + 2 * pegCount (d.xs.take c.n)) :=
+    FitsLen.of_le hfm (by omega)
+  have hpegF : FitsLen (2 * pegCount (d.xs.take c.n)) := FitsLen.of_le hfitM (by omega)
+  have hsld : d.slides + 2 * pegCount (d.xs.take c.n) ≤
+      base.slides0 + base.R * rungSlideCharge base.n base.mMax := by
+    have h2 : 2 * pegCount (d.xs.take c.n) ≤ 2 * c.n := by omega
+    have hSlidesEq : c.slides0 + c.m * (2 * c.n) = sl + s.tally * (2 * s.n) := by
+      rw [hsl0, hmEq, hn]
+    have hloc : d.slides + 2 * pegCount (d.xs.take c.n) ≤
+        sl + (s.tally + 1) * (2 * s.n) := by
+      have hprev' : d.slides ≤ sl + s.tally * (2 * s.n) :=
+        Nat.le_trans d.hsldB (Nat.le_of_eq hSlidesEq)
+      have h2s : 2 * pegCount (d.xs.take c.n) ≤ 2 * s.n := by rw [← hn]; exact h2
+      have hmul : (s.tally + 1) * (2 * s.n) = s.tally * (2 * s.n) + 2 * s.n := by
+        rw [Nat.succ_mul]
+      omega
+    have hpiece : (s.tally + 1) * (2 * s.n) ≤ rungSlideCharge base.n base.mMax := by
+      unfold rungSlideCharge
+      rw [h.hn]
+      exact Nat.mul_le_mul_right _ (by omega : s.tally + 1 ≤ base.mMax + 3)
+    exact Nat.le_trans
+      (Nat.le_trans hloc (Nat.add_le_add_left hpiece sl))
+      (Nat.le_trans (Nat.add_le_add_right hslLe _)
+        (Nat.le_trans
+          (Nat.le_of_eq (by rw [Nat.add_assoc, ← Nat.succ_mul] :
+            base.slides0 + done.length * rungSlideCharge base.n base.mMax +
+              rungSlideCharge base.n base.mMax =
+            base.slides0 + (done.length + 1) * rungSlideCharge base.n base.mMax))
+          (Nat.add_le_add_left (Nat.mul_le_mul_right _ hk) _)))
+  have hfitS : FitsLen (d.slides + 2 * pegCount (d.xs.take c.n)) :=
+    FitsLen.of_le base.fitS hsld
+  have hfops : FitsLen (cMul + 1) := by
+    apply FitsLen.of_le base.fitO
+    have hone : (1 : Nat) ≤ base.mMax + 3 := Nat.le_add_left 1 (base.mMax + 2)
+    have h1 : cMul + 1 ≤ base.ops0 + done.length * (base.mMax + 3) + (base.mMax + 3) :=
+      Nat.add_le_add hcLe hone
+    have h2 : base.ops0 + done.length * (base.mMax + 3) + (base.mMax + 3) =
+        base.ops0 + (done.length + 1) * (base.mMax + 3) := by
+      rw [Nat.add_assoc, ← Nat.succ_mul]
+    have h3 : base.ops0 + (done.length + 1) * (base.mMax + 3) ≤
+        base.ops0 + base.R * (base.mMax + 3) :=
+      Nat.add_le_add_left (Nat.mul_le_mul_right _ hk) _
+    exact Nat.le_trans h1 (Nat.le_trans (Nat.le_of_eq h2) h3)
+  have hH6 : 6 < d.b.sudo_5Board_4home.size := by rw [← hsrc]; exact d.hH
+  have hD6 : 6 < d.b.sudo_5Board_4held.size := by rw [← hsrc]; exact d.hD
+  have hempty : d.b.sudo_5Board_4held[6] = false := by simpa [hsrc] using d.hempty
+  have hto : d.b.sudo_5Board_8bench_to = ((6 : Nat) : Int) := by rw [d.toB, hsrc]
+  have hnB : d.b.sudo_5Board_1t.sudo_4Tier_1n = (c.n : Int) := by rw [d.tier]; exact c.hn
+  have hbl : d.b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat c.bench := by
+    rw [d.tier]; exact c.hbl
+  have hwF : d.b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat c.w := by rw [d.tier]; exact c.hwF
+  have hhF : d.b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat c.h := by rw [d.tier]; exact c.hhF
+  have hrF : d.b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat c.r := by rw [d.tier]; exact c.hrF
+  have hkF : d.b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat c.k := by rw [d.tier]; exact c.hkF
+  have hmul := mul_eq_live d.b 5 5 6 c.g d.xs c.w c.h c.r c.n c.k d.moves d.slides
+    d.hole c.bench d.peak d.peakS cMul
+    d.marker d.onB hto hH6 hD6 d.h7 hempty d.hbench
+    hnB c.hn0 d.hpos d.hnle d.hzero c.hf hfitL
+    d.hmoves d.hslides d.hpeak hpegF hfitM hfitS
+    hkeep.opsLt hkeep.op0 hfops hbl
+    hkeep.heldLt hkeep.homeLt hkeep.held hkeep.arr (by decide) c.hlenx
+    hspan2 c.hxsT hfi hfm
+    c.hw0 c.hh0 c.hrR c.hrP c.hnE c.hkLe c.hgap hwF hhF hrF hkF
+    d.hHole d.hpeakS c.hsm c.hnsm c.hfitB hfold
+  let bMul := mulNoLiveBoard d.b 5 6 c.g d.xs c.n c.k d.moves d.slides d.hole c.bench
+    d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+  have hCar := mulLive_carries d.b 5 6 c.g d.xs c.n c.k d.moves d.slides d.hole c.bench
+    d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+  have hmulP : Ecbs.mul (pegBoard c c.m) ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+      false false false = .ok bMul := by
+    rw [← hPack.1]
+    exact hmul
+  have hrowM : bMul.sudo_5Board_3row = embed (paintRed c.row0 c.t0 c.m) := by
+    rw [hCar.2.2.2.2, d.hrow]
+  have hctrlM : bMul.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((c.ctrl0 + c.m : Nat) : Int) := by
+    rw [hCar.2.2.2.1, d.hctrl, d.hctrlN]
+  have hfromM : bMul.sudo_5Board_11parked_from = c.b0.sudo_5Board_11parked_from := by
+    rw [hCar.1, hPack.2.1]
+  have hridxM : bMul.sudo_5Board_8rung_idx = c.b0.sudo_5Board_8rung_idx := by
+    rw [hCar.2.1, hPack.2.2.1]
+  have hlenM : bMul.sudo_5Board_9tally_len = c.b0.sudo_5Board_9tally_len := by
+    rw [hCar.2.2.1, hPack.2.2.2.1]
+  exact ⟨c, bMul, hmulP, hrowM, hctrlM, hfromM, hridxM, hlenM, hrow0, hctrl0, hmEq, ht0, hfrom, hridx, hlen⟩
+
 
 /-- One home and the array it holds. -/
 structure CellKeep (b : Ecbs.Board) (first : Nat) (xs0 : List Nat) : Prop where

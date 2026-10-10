@@ -7494,7 +7494,28 @@ theorem parked_clear_unparked
           List.replicate (s.benchlen - s.n) 0) ∧
       bRed.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) ∧
       bRed.sudo_5Board_4cost.sudo_5Costs_9tally_max =
-        b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+        b.sudo_5Board_4cost.sudo_5Costs_9tally_max ∧
+      ∃ (bLoop bMul : Ecbs.Board),
+        Ecbs.mul bLoop ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
+            false false false = .ok bMul ∧
+        Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClearU ∧
+        (∃ (cU : PegCtx) (ys : List Nat) (moves slides hole peak peakS cOps : Nat)
+          (hH : 6 < bLoop.sudo_5Board_4home.size)
+          (hD : 6 < bLoop.sudo_5Board_4held.size)
+          (hops : 0 < bLoop.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+          bLoop = pegBoard cU cU.m ∧
+          cU.row0 = s.row ∧ cU.ctrl0 = s.ctrl ∧ cU.g = s.gap ∧ cU.m = s.tally ∧
+          cU.n = s.n ∧ cU.k = s.k ∧ cU.bench = s.benchlen ∧ cU.src = 6 ∧
+          cU.t0 = s.t0 ∧
+          bMul = mulNoLiveBoard bLoop 5 6 cU.g ys cU.n cU.k moves slides hole cU.bench
+            peak peakS cOps hH hD hops ∧
+          ys = cubeBenchIter cU.n cU.k cU.bench cU.g cU.m ∧
+          moves = (pegPack cU cU.m cU.hm (Nat.le_refl _)).moves ∧
+          slides = (pegPack cU cU.m cU.hm (Nat.le_refl _)).slides ∧
+          hole = (pegPack cU cU.m cU.hm (Nat.le_refl _)).hole ∧
+          peak = (pegPack cU cU.m cU.hm (Nat.le_refl _)).peak ∧
+          peakS = (pegPack cU cU.m cU.hm (Nat.le_refl _)).peakS ∧
+          Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok cU.b0) := by
   let hole := climbAt base.ladder0 base.R s.ridx
   obtain ⟨cM, bM, ys, moves, slides, holeM, peak, peakS, cOps, hH, hD, hops,
       hcopyM, hsrcM, hgM, hmM, hnM, hkM, hbM, hpegM, _hys, hGap, _hX, _hFit, _hMov,
@@ -7502,12 +7523,13 @@ theorem parked_clear_unparked
       _hcontrol, _hlen, _hmax, ht0M, hmul, hrowM, _hmvB, _hslB, _hhoB, _hpkB, _hpsB,
       ⟨_, _, _⟩, ⟨_, _, _⟩, hmulW⟩ :=
     mul_of_shape h hm hT hhome
-  obtain ⟨bLoopR, bMulR, bClearU, bCube, bRed, hmulR, _hclearR, hcubeU, hredU,
+  obtain ⟨bLoopR, bMulR, bClearU, bCube, bRed, hmulR, hclearR, hcubeU, hredU,
       _bounds, _hlenC, _ht0C, _hrowC, _hctrlN, _hhighC, _hctrlC, _hmaxC,
       _ht0Cube, _ht0Red, _htierCube, _htierRed, _hcubeF, _hmulF,
       honR, htoR, hlenR, hbenchR, hclearP, hcubeP, hmulP,
       _hcubeBoth, _hmulBoth, hpack, hrel, hhighR, htmaxR⟩ :=
     red_cube_mul h hm hT hhome hxLen hxT
+  have hpackKeep := hpack
   obtain ⟨cU, _ysU, _mvU, _slU, _hoU, _pkU, _psU, _cOpsU, _hHU, _hDU, _hopsU,
       hloopU, hrowU, hctrlU, hgU, hmU, hnU, hkU, hbU, hsrcU, ht0U, _hnamed,
       _hysU, _hmvU, _hslU, _hhoU, _hpkU, _hpsU, hcopyU⟩ := hpack
@@ -7665,6 +7687,6 @@ theorem parked_clear_unparked
   have hcube := hcubeP paintF ctrlF fromF ridxF
   have hmulF := hmulP paintF ctrlF fromF ridxF
   exact ⟨bClearU, bCube, bRed, hrun, hcube, hmulF, hcubeU, hredU, hrel,
-    honR, htoR, hlenR, hbenchR, hhighR, htmaxR⟩
+    honR, htoR, hlenR, hbenchR, hhighR, htmaxR, bLoopR, bMulR, hmulR, hclearR, hpackKeep⟩
 
 end EcbsLink2.Link2

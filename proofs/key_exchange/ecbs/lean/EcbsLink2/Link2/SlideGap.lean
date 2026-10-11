@@ -1279,4 +1279,270 @@ theorem parkKeep_settle_comm
     · simp [bK, parkKeepBoard]
     · simp [bK, parkKeepBoard]
 
+/-- `unpark` writes the control row, `parked_from`, and the control counter.
+    It does not read the home array or the bench, so it commutes with `settle`. -/
+theorem unparked_home (b : Ecbs.Board) (src park prev ctrl : Nat)
+    (hRowS : src < b.sudo_5Board_3row.size) (hRowP : park < b.sudo_5Board_3row.size) :
+    (unparkedBoard b src park prev ctrl hRowS hRowP).sudo_5Board_4home =
+      b.sudo_5Board_4home := by
+  simp [unparkedBoard]
+
+theorem unparked_held (b : Ecbs.Board) (src park prev ctrl : Nat)
+    (hRowS : src < b.sudo_5Board_3row.size) (hRowP : park < b.sudo_5Board_3row.size) :
+    (unparkedBoard b src park prev ctrl hRowS hRowP).sudo_5Board_4held =
+      b.sudo_5Board_4held := by
+  simp [unparkedBoard]
+
+theorem unparked_cast
+    {b1 b2 : Ecbs.Board} (h : b1 = b2) (src park prev ctrl : Nat)
+    (hRowS : src < b1.sudo_5Board_3row.size) (hRowP : park < b1.sudo_5Board_3row.size) :
+    unparkedBoard b1 src park prev ctrl hRowS hRowP =
+      unparkedBoard b2 src park prev ctrl (h ▸ hRowS) (h ▸ hRowP) := by
+  subst h
+  rfl
+
+theorem unparked_settled_pos
+    (b : Ecbs.Board) (src park prev ctrl home : Nat)
+    (hRowS : src < b.sudo_5Board_3row.size) (hRowP : park < b.sudo_5Board_3row.size)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat)
+    (_hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) :
+    unparkedBoard
+        ({ b with
+          sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+          sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+          sudo_5Board_8bench_on := false
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+            sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n))
+            sudo_5Costs_4peak :=
+              Int.ofNat (countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) } })
+        src park prev ctrl hRowS hRowP =
+      { unparkedBoard b src park prev ctrl hRowS hRowP with
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+        sudo_5Board_8bench_on := false
+        sudo_5Board_4cost :=
+          { (unparkedBoard b src park prev ctrl hRowS hRowP).sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+            sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n))
+            sudo_5Costs_4peak :=
+              Int.ofNat (countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) } } := by
+  unfold unparkedBoard
+  simp [ofNat_eq_natCast]
+
+theorem unparked_settled_neg
+    (b : Ecbs.Board) (src park prev ctrl home : Nat)
+    (hRowS : src < b.sudo_5Board_3row.size) (hRowP : park < b.sudo_5Board_3row.size)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat)
+    (_hpk : ¬ peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) :
+    unparkedBoard
+        ({ b with
+          sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+          sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+          sudo_5Board_8bench_on := false
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+            sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n)) } })
+        src park prev ctrl hRowS hRowP =
+      { unparkedBoard b src park prev ctrl hRowS hRowP with
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+        sudo_5Board_8bench_on := false
+        sudo_5Board_4cost :=
+          { (unparkedBoard b src park prev ctrl hRowS hRowP).sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+            sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n)) } } := by
+  unfold unparkedBoard
+  simp [ofNat_eq_natCast]
+
+/-- The parked source is a control-row index strictly before the tally.
+    `unpark` writes that row slot. `settle` writes home 5, a different array. -/
+theorem unparked_settle_comm
+    (b : Ecbs.Board) (src park prev ctrl home : Nat)
+    (hRowS : src < b.sudo_5Board_3row.size) (hRowP : park < b.sudo_5Board_3row.size)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    unparkedBoard (settleBoard b home hH hD xs n moves slides peak)
+        src park prev ctrl
+        (settleBoard_row b home hH hD xs n moves slides peak ▸ hRowS)
+        (settleBoard_row b home hH hD xs n moves slides peak ▸ hRowP) =
+      settleBoard (unparkedBoard b src park prev ctrl hRowS hRowP)
+        home
+        (unparked_home b src park prev ctrl hRowS hRowP ▸ hH)
+        (unparked_held b src park prev ctrl hRowS hRowP ▸ hD)
+        xs n moves slides peak := by
+  let bU := unparkedBoard b src park prev ctrl hRowS hRowP
+  let hHU : home < bU.sudo_5Board_4home.size :=
+    unparked_home b src park prev ctrl hRowS hRowP ▸ hH
+  let hDU : home < bU.sudo_5Board_4held.size :=
+    unparked_held b src park prev ctrl hRowS hRowP ▸ hD
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  · have hheld : bU.sudo_5Board_4held = b.sudo_5Board_4held :=
+      unparked_held b src park prev ctrl hRowS hRowP
+    have hset := (array_set_of_eq bU.sudo_5Board_4held b.sudo_5Board_4held hheld
+      home hDU true).trans (array_set_irrel b.sudo_5Board_4held home (hheld ▸ hDU) hD true)
+    have hpkU : peak < countHeld (bU.sudo_5Board_4held.set ⟨home, hDU⟩ true) 7 := by
+      rw [countHeld_congr _ _ hset 7]
+      exact hpk
+    have hS := settleBoard_pos b home hH hD xs n moves slides peak hpk
+    have hrow := settleBoard_row b home hH hD xs n moves slides peak
+    have hL : unparkedBoard (settleBoard b home hH hD xs n moves slides peak)
+        src park prev ctrl (hrow ▸ hRowS) (hrow ▸ hRowP) =
+        unparkedBoard ({ b with
+          sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+          sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+          sudo_5Board_8bench_on := false
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+            sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n))
+            sudo_5Costs_4peak :=
+              Int.ofNat (countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) } })
+          src park prev ctrl hRowS hRowP := by
+      rw [unparked_cast hS src park prev ctrl (hrow ▸ hRowS) (hrow ▸ hRowP)]
+    rw [hL, unparked_settled_pos b src park prev ctrl home hRowS hRowP hH hD
+      xs n moves slides peak hpk]
+    rw [settleBoard_pos bU home hHU hDU xs n moves slides peak hpkU]
+    apply board_ext
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · apply cost_ext <;> first
+        | exact congrArg Int.ofNat (countHeld_congr _ _ hset 7)
+        | simp [bU, unparkedBoard, ofNat_eq_natCast]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+  · have hheld : bU.sudo_5Board_4held = b.sudo_5Board_4held :=
+      unparked_held b src park prev ctrl hRowS hRowP
+    have hset := (array_set_of_eq bU.sudo_5Board_4held b.sudo_5Board_4held hheld
+      home hDU true).trans (array_set_irrel b.sudo_5Board_4held home (hheld ▸ hDU) hD true)
+    have hpkU : ¬ peak < countHeld (bU.sudo_5Board_4held.set ⟨home, hDU⟩ true) 7 := by
+      rw [countHeld_congr _ _ hset 7]
+      exact hpk
+    have hS := settleBoard_neg b home hH hD xs n moves slides peak hpk
+    have hrow := settleBoard_row b home hH hD xs n moves slides peak
+    have hL : unparkedBoard (settleBoard b home hH hD xs n moves slides peak)
+        src park prev ctrl (hrow ▸ hRowS) (hrow ▸ hRowP) =
+        unparkedBoard ({ b with
+          sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+          sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+          sudo_5Board_8bench_on := false
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+            sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n)) } })
+          src park prev ctrl hRowS hRowP := by
+      rw [unparked_cast hS src park prev ctrl (hrow ▸ hRowS) (hrow ▸ hRowP)]
+    rw [hL, unparked_settled_neg b src park prev ctrl home hRowS hRowP hH hD
+      xs n moves slides peak hpk]
+    rw [settleBoard_neg bU home hHU hDU xs n moves slides peak hpkU]
+    apply board_ext
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · apply cost_ext <;> simp [bU, unparkedBoard, ofNat_eq_natCast]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+    · simp [bU, unparkedBoard]
+
+/-- A resume park is unpark, then the keep-park. `ctrl` on the keep is already
+    two ahead. The source hole is a control-row index (`fromBelow`), and the
+    keep writes that row, not home 5. -/
+def parkResumeBoard (b : Ecbs.Board) (src hole park prev rung i ctrl : Nat)
+    (hRowS : src < b.sudo_5Board_3row.size)
+    (hRowP : park < b.sudo_5Board_3row.size)
+    (hRowH : hole < b.sudo_5Board_3row.size) : Ecbs.Board :=
+  parkKeepBoard (unparkedBoard b src park prev ctrl hRowS hRowP)
+    hole park rung i (ctrl + 2)
+    (by simp [unparkedBoard, Array.size_set]; exact hRowP)
+    (by simp [unparkedBoard, Array.size_set]; exact hRowH)
+
+theorem parkResume_cast
+    {b1 b2 : Ecbs.Board} (h : b1 = b2) (src hole park prev rung i ctrl : Nat)
+    (hRowS : src < b1.sudo_5Board_3row.size)
+    (hRowP : park < b1.sudo_5Board_3row.size)
+    (hRowH : hole < b1.sudo_5Board_3row.size) :
+    parkResumeBoard b1 src hole park prev rung i ctrl hRowS hRowP hRowH =
+      parkResumeBoard b2 src hole park prev rung i ctrl (h ▸ hRowS) (h ▸ hRowP) (h ▸ hRowH) := by
+  subst h
+  rfl
+
+/-- Resume park commutes with `settle`. Unpark and the keep-park each commute
+    with it, and the source hole is only used as a control-row index. -/
+theorem parkResume_settle_comm
+    (b : Ecbs.Board) (src hole park prev rung i ctrl home : Nat)
+    (hRowS : src < b.sudo_5Board_3row.size)
+    (hRowP : park < b.sudo_5Board_3row.size)
+    (hRowH : hole < b.sudo_5Board_3row.size)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    let hrow := settleBoard_row b home hH hD xs n moves slides peak
+    let bU := unparkedBoard b src park prev ctrl hRowS hRowP
+    let hPU : park < bU.sudo_5Board_3row.size := by
+      simp [bU, unparkedBoard, Array.size_set]; exact hRowP
+    let hHU : hole < bU.sudo_5Board_3row.size := by
+      simp [bU, unparkedBoard, Array.size_set]; exact hRowH
+    let hHomeU : home < bU.sudo_5Board_4home.size :=
+      unparked_home b src park prev ctrl hRowS hRowP ▸ hH
+    let hHeldU : home < bU.sudo_5Board_4held.size :=
+      unparked_held b src park prev ctrl hRowS hRowP ▸ hD
+    parkResumeBoard (settleBoard b home hH hD xs n moves slides peak)
+        src hole park prev rung i ctrl (hrow ▸ hRowS) (hrow ▸ hRowP) (hrow ▸ hRowH) =
+      settleBoard (parkResumeBoard b src hole park prev rung i ctrl hRowS hRowP hRowH)
+        home
+        (parkKeep_home bU hole park rung i (ctrl + 2) hPU hHU ▸ hHomeU)
+        (parkKeep_held bU hole park rung i (ctrl + 2) hPU hHU ▸ hHeldU)
+        xs n moves slides peak := by
+  intro hrow bU hPU hHU hHomeU hHeldU
+  have hU := unparked_settle_comm b src park prev ctrl home hRowS hRowP hH hD
+    xs n moves slides peak
+  unfold parkResumeBoard
+  have hcast := parkKeep_cast hU hole park rung i (ctrl + 2)
+    (by simp [unparkedBoard, Array.size_set]; exact (hrow ▸ hRowP))
+    (by simp [unparkedBoard, Array.size_set]; exact (hrow ▸ hRowH))
+  have hK := parkKeep_settle_comm bU hole park rung i (ctrl + 2) home
+    hPU hHU hHomeU hHeldU xs n moves slides peak
+  have hrowU := settleBoard_row bU home hHomeU hHeldU xs n moves slides peak
+  have hp : (hU ▸ (by simp [unparkedBoard, Array.size_set]; exact (hrow ▸ hRowP))) =
+      (hrowU ▸ hPU) := Subsingleton.elim _ _
+  have hh : (hU ▸ (by simp [unparkedBoard, Array.size_set]; exact (hrow ▸ hRowH))) =
+      (hrowU ▸ hHU) := Subsingleton.elim _ _
+  rw [hcast, hp, hh, hK]
+
 end EcbsLink2.Link2

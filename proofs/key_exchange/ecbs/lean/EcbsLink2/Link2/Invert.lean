@@ -6385,69 +6385,6 @@ def climbEmit (step : Ecbs.Board → Nat → Bool → Except SudoRt.Trap Ecbs.Bo
       let b ← step b r rs.isEmpty
       climbEmit step b rs
 
-/-- Induction over a rung list. The list is the climb order, which for `invert`
-    is `(rungList (n − 1)).reverse`, so the final rung is last. Each step is an
-    emitted rung (`rung_step_refines` under that rung's domain) whose counters
-    grow by at most one charge and whose board satisfies `ClimbInv` for
-    `modelRung`. The tally bound is the model's, not a separate assumption. -/
-theorem climb_refines
-    (step : Ecbs.Board → Nat → Bool → Except SudoRt.Trap Ecbs.Board)
-    (rs : List Nat) (b0 : Ecbs.Board) (s0 : ClimbModel) (base : ClimbBudget)
-    (x : List Nat) (hole : ClimbModel → Nat → Bool → Nat)
-    (h0 : ClimbInvK [] rs b0 s0 base)
-    (hR : rs.length = base.R)
-    (hn : s0.n = base.n) (hbench : s0.benchlen = base.bench)
-    (hCap : ∀ done rest, rs = done ++ rest →
-      climbTallyPrefix base.tally0 done rest ≤ base.mMax)
-    (hhole : ∀ (s : ClimbModel) (r : Nat) (last : Bool),
-      hole s r last = climbAt base.ladder0 base.R s.ridx ∧
-      hole s r last < s.t0)
-    (hstep : ∀ (done rest : List Nat) (r : Nat) (b : Ecbs.Board) (s : ClimbModel),
-      rs = done ++ r :: rest →
-      ∀ (hK : ClimbInvK done (r :: rest) b s base),
-      ∃ b', step b r rest.isEmpty = .ok b' ∧
-        ClimbInv b' (modelRung s x r (hole s r rest.isEmpty) rest.isEmpty) ∧
-        RungDelta b b' base s.tally ∧
-        ClimbShape b' (modelRung s x r (hole s r rest.isEmpty) rest.isEmpty) rest base ∧
-        (∃ tmax : Nat,
-          b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-            (0 < (modelRung s x r (hole s r rest.isEmpty) rest.isEmpty).tally →
-              tmax < 2 * (modelRung s x r (hole s r rest.isEmpty) rest.isEmpty).tally))) :
-    ∃ b' s', climbEmit step b0 rs = .ok b' ∧ s' = modelClimb s0 x hole rs ∧
-      ClimbInvK rs [] b' s' base ∧
-      (s'.gap, s'.tally) = invClimb s0.n s0.k s0.benchlen x (s0.gap, s0.tally) rs ∧
-      s'.tally ≤ base.mMax := by
-  have hmain : ∀ (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel),
-      rs = done ++ rest →
-      ClimbInvK done rest b s base →
-      ∃ b' s', climbEmit step b rest = .ok b' ∧
-        s' = modelClimb s x hole rest ∧
-        ClimbInvK (done ++ rest) [] b' s' base := by
-    intro done rest
-    induction rest generalizing done with
-    | nil =>
-      intro b s hrs h
-      exact ⟨b, s, by simp [climbEmit], rfl, by simpa using h⟩
-    | cons r rest ih =>
-      intro b s hrs h
-      obtain ⟨b1, hb1, hinv, hδ, hshape, htmax⟩ :=
-        hstep done rest r b s hrs h
-      have hK := climbInvK_succ h hinv hδ (hCap done (r :: rest) hrs) hshape
-        (hhole s r rest.isEmpty).2 htmax (hhole s r rest.isEmpty).1
-      have hrs' : rs = (done ++ [r]) ++ rest := by
-        simp [hrs, List.append_assoc]
-      obtain ⟨b', s', hfold, hs', hK'⟩ := ih (done ++ [r]) b1
-        (modelRung s x r (hole s r rest.isEmpty) rest.isEmpty) hrs' hK
-      refine ⟨b', s', ?_, ?_, ?_⟩
-      · rw [climbEmit, hb1, ok_bind]
-        exact hfold
-      · simp [modelClimb, hs']
-      · simpa [List.append_assoc] using hK'
-  obtain ⟨b', s', hfold, hs', hK⟩ := hmain [] rs b0 s0 (by simp) h0
-  refine ⟨b', s', hfold, hs', hK, ?_, hK.tally_le (hCap rs [] (by simp))⟩
-  rw [hs']
-  exact modelClimb_spec s0 x hole rs
-
 /-- Running tally along a rung list, checked before every rung and on the value
     that rung leaves. `room` is how many control-row holes sit at the tally origin. -/
 def tallyPrefixesLe (tally room : Nat) : List Nat → Bool

@@ -21,5 +21,6 @@ import EcbsLink2.Link2.ParkFrame
 import EcbsLink2.Link2.OpenRed
 import EcbsLink2.Link2.GapAt
 import EcbsLink2.Link2.SlideGap
+import EcbsLink2.Link2.TightDelta
 import EcbsLink2.Link2.ClimbStep
 import EcbsLink2.Link2.Export

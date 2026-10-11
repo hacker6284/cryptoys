@@ -997,3 +997,924 @@ test "B8 squares into C and tidies C"
     nine = empty_register(t1)
     nine[2] = 1
     assert check_received(t1, three) == Some(nine)
+
+// ---------------------------------------------------------------------------
+// Animation trace (demo only; approved by Zachary, 2026-10-10). Not exported, not part
+// of the API. trace_exchange runs BUILD and B9 for the playroom demo and records one
+// summary per step that changes the board: every hole of BUILD with the dice it read and
+// the moves made there, and every multiplication, start, tidy, clear and shot of the
+// exchange, each with the player's X, Y and C after it. step_moves gives one summary's
+// peg moves, one step at a time (T1's exchange is about 951k peg moves, too many to
+// record up front), from twins of drop, lay, pay_toll, multiply, slide and tidy that
+// record every peg they move. The tests below tie the twins to the originals and replay
+// every step's moves onto the board to land exactly on the next summary.
+
+// A board register (§6): the player's X, Y, C, or the product strip.
+enum Reg
+    X
+    Y
+    C
+    Strip
+
+// Why a peg moves:
+//   Drop   B1: a peg dropped into the hole (it clicks once or twice)
+//   Carry  B1: the white flicked into the next hole up
+//   Lift   B3 step 3, B4: a peg lifted out
+//   Slide  B3 step 3, B5: the answer slides from the strip into its register (two
+//          moves, out of the strip's hole, then into the register's hole)
+//   Copy   B5: the register copied into the strip
+//   Spill  B5: the spilled white thrown away
+//   Wipe   B5: the copy cleared (no spill); §3.1: Y cleared
+//   Place  B7 step 3: the accumulator started
+//   Answer §3.1: a called hole's answer copied into Y
+enum Why
+    Drop
+    Carry
+    Lift
+    Slide
+    Copy
+    Spill
+    Wipe
+    Place
+    Answer
+
+// One peg move: hole `hole` of register `reg` goes from trit `from` to trit `into`.
+record PegMove
+    reg: Reg
+    hole: int
+    from: int
+    into: int
+    why: Why
+
+// B1 (drop, above) on the product strip, recording each hole it clicks.
+func trace_drop(strip: inout List<int>, hole: int, colour: int, moves: inout List<PegMove>)
+    clicks = colour
+    why = Drop
+    for h = hole to strip.length - 1
+        from = strip[h]
+        carry = false
+        for k = 1 to clicks
+            if strip[h] == 2
+                carry = true
+            strip[h] = click(strip[h])
+        moves.append(PegMove(Strip, h, from, strip[h], why))
+        if not carry
+            clicks = 0
+            break
+        clicks = 1
+        why = Carry
+    assert clicks == 0
+
+// B2 (lay, above), recording.
+func trace_lay(strip: inout List<int>, a: List<int>, s: int, moves: inout List<PegMove>)
+    for j = 0 to a.length - 1
+        if a[j] != 0
+            trace_drop(strip, s + j, a[j], moves)
+
+// B4 (pay_toll, above), recording.
+func trace_pay_toll(f: Field, strip: inout List<int>, moves: inout List<PegMove>)
+    assert f.toll.length < f.n
+    for h = strip.length - 1 downto f.n
+        for lift = 1 to lifts_per_hole
+            colour = strip[h]
+            if colour != 0
+                strip[h] = 0
+                moves.append(PegMove(Strip, h, colour, 0, Lift))
+                for k = 1 to colour
+                    trace_lay(strip, f.toll, h - f.n, moves)
+        assert strip[h] == 0
+
+// B3 (multiply, above), recording. The answer stays in the strip's holes 0 .. n-1 until
+// trace_slide slides it into its register.
+func trace_multiply(f: Field, a: List<int>, b: List<int>, nudge: int, moves: inout List<PegMove>) -> List<int>
+    assert (a.length == f.n) and (b.length == f.n)
+    assert (nudge >= 0) and (nudge <= 2)
+    strip = filled(2 * f.n + nudge, 0)
+    for i = 0 to f.n - 1
+        for k = 1 to b[i]
+            trace_lay(strip, a, i + nudge, moves)
+    trace_pay_toll(f, strip, moves)
+    out = empty_register(f)
+    for i = 0 to f.n - 1
+        out[i] = strip[i]
+    return out
+
+// B3 step 3 (slide, above), recording: lift the register's pegs, then slide the answer
+// from the strip's holes into the register's, peg by peg.
+func trace_slide(reg: Reg, dest: inout List<int>, answer: List<int>, moves: inout List<PegMove>)
+    assert dest.length == answer.length
+    for i = 0 to dest.length - 1
+        if dest[i] != 0
+            moves.append(PegMove(reg, i, dest[i], 0, Lift))
+            dest[i] = 0
+    for i = 0 to dest.length - 1
+        if answer[i] != 0
+            moves.append(PegMove(Strip, i, answer[i], 0, Slide))
+            moves.append(PegMove(reg, i, 0, answer[i], Slide))
+            dest[i] = answer[i]
+
+// B5 (tidy_in_place, above), recording; the copy is the strip's holes 0 .. n.
+func trace_tidy(f: Field, reg: Reg, r: inout List<int>, moves: inout List<PegMove>)
+    assert r.length == f.n
+    copy = filled(f.n + 1, 0)
+    for i = 0 to f.n - 1
+        if r[i] != 0
+            copy[i] = r[i]
+            moves.append(PegMove(Strip, i, 0, r[i], Copy))
+    trace_lay(copy, f.toll, 0, moves)
+    if copy[f.n] == 0
+        for i = 0 to f.n - 1
+            if copy[i] != 0
+                moves.append(PegMove(Strip, i, copy[i], 0, Wipe))
+        return
+    assert copy[f.n] == 1
+    moves.append(PegMove(Strip, f.n, 1, 0, Spill))
+    copy.pop()
+    trace_slide(reg, r, copy, moves)
+
+// B7 step 3 without the strip: lift the register's pegs, then put `value`'s pegs in.
+func trace_place(reg: Reg, dest: inout List<int>, value: List<int>, moves: inout List<PegMove>)
+    for i = 0 to dest.length - 1
+        if dest[i] != 0
+            moves.append(PegMove(reg, i, dest[i], 0, Lift))
+            dest[i] = 0
+    for i = 0 to dest.length - 1
+        if value[i] != 0
+            moves.append(PegMove(reg, i, 0, value[i], Place))
+            dest[i] = value[i]
+
+// One hole of BUILD (§4.2), move by move:
+//   Throw(die, face)   step 0: a row-cup d10 (die 0-4, rainbow order); a zero face is
+//                      thrown again
+//   HoleDie(face)      step 1: the d12
+//   Grow(face)         step 1: a growth roll of the d6
+//   Pick(face)         step 1: the 3-holer's d6 roll, 1-3 Sub, 4-6 Cruiser
+//   Piece(ship, holes) step 1: the piece now lying at the cursor (laid, or swapped in for
+//                      the one there: the next longer piece on a growth, the Cruiser for
+//                      the Sub on a pick of 4-6) and the holes it covers
+//   ReadDie(die, face) step 2: the pair's tray die read
+//   PutPeg(hole, colour, in_ship)  step 2: the peg (no move for no peg)
+enum BuildMove
+    Throw(die: int, face: int)
+    HoleDie(face: int)
+    Grow(face: int)
+    Pick(face: int)
+    Piece(ship: Ship, holes: List<int>)
+    ReadDie(die: int, face: int)
+    PutPeg(hole: int, colour: int, in_ship: bool)
+
+// One hole of BUILD, in reading order. cup: the row-cup faces thrown at this hole, zero
+// faces included (a row's first hole only, else empty). d12, d6: the hole-die and d6
+// faces read at this hole, in order. face, die: the row-cup die (1-9) this hole's peg is
+// read from and its place in the tray (0-4). ship: the ship laid at this hole (empty for
+// sea or a covered hole); covered: the holes it covers. peg: the trit put in this hole.
+// moves: the hole's moves, in order.
+record BuildRead
+    hole: int
+    cup: List<int>
+    d12: List<int>
+    d6: List<int>
+    face: int
+    die: int
+    ship: List<Ship>
+    covered: List<int>
+    peg: int
+    moves: List<BuildMove>
+
+func faces_between(faces: List<int>, from: int, upto: int) -> List<int>
+    out: List<int> = []
+    for i = from to upto - 1
+        out.append(faces[i])
+    return out
+
+func lay_piece(moves: inout List<BuildMove>, s: Ship)
+    moves.append(Piece(s, ship_holes(s)))
+
+// Step 1 (grow_until_it_bumps, above), recording its rolls and pieces.
+func trace_grow(d: inout Dice, covered: List<bool>, row: int, col: int, moves: inout List<BuildMove>) -> Option<Ship>
+    across = has_room(covered, row, col + 1)
+    down = has_room(covered, row + 1, col)
+    if (not across) and (not down)
+        return None
+    face = roll_hole_die(d)
+    moves.append(HoleDie(face))
+    lay_down = false
+    if across and down
+        if face <= 4
+            return None
+        lay_down = face >= 9
+    else
+        if face <= 6
+            return None
+        lay_down = down
+    bow_last = (face mod 2) == 0
+    len = 2
+    lay_piece(moves, Ship(Destroyer, lay_down, row, col, bow_last))
+    for grow = 1 to 3
+        next_row = row
+        next_col = col + len
+        if lay_down
+            next_row = row + len
+            next_col = col
+        if not has_room(covered, next_row, next_col)
+            break
+        need = 6
+        if len == 2
+            need = 4
+        roll = roll_d6(d)
+        moves.append(Grow(roll))
+        if roll >= need
+            len = len + 1
+            longer = Sub
+            if len == 4
+                longer = Battleship
+            else if len == 5
+                longer = Carrier
+            lay_piece(moves, Ship(longer, lay_down, row, col, bow_last))
+        else
+            break
+    kind = Destroyer
+    if len == 3
+        pick = roll_d6(d)
+        moves.append(Pick(pick))
+        kind = Sub
+        if pick > 3
+            kind = Cruiser
+            lay_piece(moves, Ship(Cruiser, lay_down, row, col, bow_last))
+    else if len == 4
+        kind = Battleship
+    else if len == 5
+        kind = Carrier
+    return Some(Ship(kind, lay_down, row, col, bow_last))
+
+// BUILD (build, above) one hole at a time, recording each hole's dice, pieces and moves.
+func trace_build(source: Dice, reads: inout List<BuildRead>) -> KeyGrid
+    d = source
+    holes = grid_rows * grid_cols
+    covered = filled(holes, false)
+    ships: List<Ship> = []
+    pegs = filled(holes, 0)
+    tray: List<int> = []
+    read = 0
+    for row = 0 to grid_rows - 1
+        face = 0
+        for col = 0 to grid_cols - 1
+            h = row * grid_cols + col
+            moves: List<BuildMove> = []
+            cup: List<int> = []
+            if col == 0
+                n10 = d.next10
+                tray = throw_row_cup(d)
+                read = 0
+                cup = faces_between(d.d10, n10, d.next10)
+                die = 0
+                for t = 0 to cup.length - 1
+                    moves.append(Throw(die, cup[t]))
+                    if cup[t] != 0
+                        die = die + 1
+            n12 = d.next12
+            n6 = d.next6
+            laid: List<Ship> = []
+            under: List<int> = []
+            if not covered[h]
+                grown = trace_grow(d, covered, row, col, moves)
+                match grown
+                    case Some(s)
+                        cover(covered, s)
+                        ships.append(s)
+                        laid.append(s)
+                        under = ship_holes(s)
+                    case None
+                        skip
+            if col mod 2 == 0
+                face = tray[read]
+                read = read + 1
+                pegs[h] = keypad_first(face)
+            else
+                pegs[h] = keypad_second(face)
+            moves.append(ReadDie(read - 1, face))
+            if pegs[h] != 0
+                moves.append(PutPeg(h, pegs[h], covered[h]))
+            reads.append(BuildRead(h, cup, faces_between(d.d12, n12, d.next12),
+                faces_between(d.d6, n6, d.next6), face, read - 1, laid, under, pegs[h], moves))
+    return KeyGrid(ships, pegs)
+
+// The key-grid hole each cell of read_key([g]) is read at, in order: -1 for the start
+// marker, then the ship pass (hole h; a Sub's or Cruiser's extra cell is at its last
+// hole again), then the peg pass as 100 + h.
+func cell_holes(g: KeyGrid) -> List<int>
+    holes = grid_rows * grid_cols
+    extra = filled(holes, false)
+    for i = 0 to g.ships.length - 1
+        s = g.ships[i]
+        under = ship_holes(s)
+        match s.kind
+            case Sub
+                extra[under[under.length - 1]] = true
+            case Cruiser
+                extra[under[under.length - 1]] = true
+            case _
+                skip
+    out = [-1]
+    for h = 0 to holes - 1
+        out.append(h)
+        if extra[h]
+            out.append(h)
+    for h = 0 to holes - 1
+        out.append(holes + h)
+    return out
+
+// The steps of the exchange (TraceStep.op):
+//   Start      B7 step 3: public, a lone peg at hole 1 or 2; shared, a copy of C (white)
+//              or C x C (red; a and b are C)
+//   Square     B6: Y = X x X
+//   Cube       B6: X = Y x X, nudged by the cell in the public walk
+//   TimesBase  shared walk: X = X x C (twice for a red cell: two steps)
+//   Tidy       B5 on X at the end of a walk
+//   Clear      §3.1 step 1: the receiver clears Y
+//   Call       §3.1: one hole called (hole) and its answer copied into the receiver's Y
+//   Check      B8: C = Y x Y
+//   CheckTidy  B8: tidy C
+enum Op
+    Start
+    Square
+    Cube
+    TimesBase
+    Tidy
+    Clear
+    Call
+    Check
+    CheckTidy
+
+// One summary: the step `op` on player `player`'s workspace (0 Alice, 1 Bob). phase: the
+// walk it is in (Public for the calls and the checks, B9 steps 1 and 2). cell: the key
+// cell being walked (index into the key's cells) and value its trit, else -1. hole: the
+// called hole, else -1. a, b, nudge: the multiplication laid in the product strip (a copy
+// of a at every pegged hole of b, nudge holes higher); empty when the step multiplies
+// nothing. x, y, c: the player's X, Y and C registers after the step.
+record TraceStep
+    player: int
+    op: Op
+    phase: Phase
+    cell: int
+    value: int
+    hole: int
+    a: List<int>
+    b: List<int>
+    nudge: int
+    x: List<int>
+    y: List<int>
+    c: List<int>
+
+// B7 (walk, above) with every step recorded: cube (B6) gives the square and the cube
+// steps, the shared walk's multiplications by C follow. x, y and c are the player's
+// registers.
+func trace_walk(f: Field, player: int, cells: List<int>, phase: Phase, x: inout List<int>,
+        y: inout List<int>, c: List<int>, steps: inout List<TraceStep>)
+    nothing: List<int> = []
+    started = false
+    for j = 0 to cells.length - 1
+        cell = cells[j]
+        assert (cell >= 0) and (cell <= 2)
+        if started
+            prev = x
+            match phase
+                case Public
+                    cube(f, x, cell, y)
+                    steps.append(TraceStep(player, Square, phase, j, cell, -1, prev, prev, 0, prev, y, c))
+                    steps.append(TraceStep(player, Cube, phase, j, cell, -1, y, prev, cell, x, y, c))
+                case Shared(base)
+                    cube(f, x, 0, y)
+                    steps.append(TraceStep(player, Square, phase, j, cell, -1, prev, prev, 0, prev, y, c))
+                    steps.append(TraceStep(player, Cube, phase, j, cell, -1, y, prev, 0, x, y, c))
+                    for k = 1 to cell
+                        prev = x
+                        slide(x, multiply(f, prev, base, 0))
+                        steps.append(TraceStep(player, TimesBase, phase, j, cell, -1, prev, base, 0, x, y, c))
+        else if cell != 0
+            slide(x, start_accumulator(f, cell, phase))
+            a = nothing
+            match phase
+                case Shared(base)
+                    if cell == 2
+                        a = base
+                case Public
+                    skip
+            steps.append(TraceStep(player, Start, phase, j, cell, -1, a, a, 0, x, y, c))
+            started = true
+    assert started
+    tidy_in_place(f, x)
+    steps.append(TraceStep(player, Tidy, phase, -1, -1, -1, nothing, nothing, 0, x, y, c))
+
+// §3.1 (call_the_shots, above) with every shot recorded: the receiver clears Y, then
+// copies each answer into it.
+func trace_call(f: Field, receiver: int, value: List<int>, x: List<int>, y: inout List<int>,
+        c: List<int>, steps: inout List<TraceStep>)
+    nothing: List<int> = []
+    shots = call_the_shots(f, value, y)
+    seen = empty_register(f)
+    steps.append(TraceStep(receiver, Clear, Public, -1, -1, -1, nothing, nothing, 0, x, seen, c))
+    for hole = 0 to f.n - 1
+        copy_shot(seen, hole, shots[hole])
+        steps.append(TraceStep(receiver, Call, Public, -1, -1, hole, nothing, nothing, 0, x, seen, c))
+    assert seen == y
+
+// B8 with its two steps recorded (C = Y x Y, then tidy C); the verdict is check_received's.
+func trace_check(f: Field, player: int, x: List<int>, y: List<int>, c: inout List<int>,
+        steps: inout List<TraceStep>) -> bool
+    nothing: List<int> = []
+    slide(c, multiply(f, y, y, 0))
+    steps.append(TraceStep(player, Check, Public, -1, -1, -1, y, y, 0, x, y, c))
+    tidy_in_place(f, c)
+    steps.append(TraceStep(player, CheckTidy, Public, -1, -1, -1, nothing, nothing, 0, x, y, c))
+    return check_received(f, y).is_some()
+
+// B9 on two one-page keys, every step recorded, in exchange's order (exchange, above);
+// the steps stop at a reject.
+func trace_steps(f: Field, grid_a: KeyGrid, grid_b: KeyGrid) -> List<TraceStep>
+    cells_a = read_key([grid_a])
+    cells_b = read_key([grid_b])
+    steps: List<TraceStep> = []
+    x_a = empty_register(f)
+    y_a = empty_register(f)
+    c_a = empty_register(f)
+    x_b = empty_register(f)
+    y_b = empty_register(f)
+    c_b = empty_register(f)
+    trace_walk(f, 0, cells_a, Public, x_a, y_a, c_a, steps)
+    trace_walk(f, 1, cells_b, Public, x_b, y_b, c_b, steps)
+    trace_call(f, 1, x_a, x_b, y_b, c_b, steps)
+    trace_call(f, 0, x_b, x_a, y_a, c_a, steps)
+    if not trace_check(f, 0, x_a, y_a, c_a, steps)
+        return steps
+    if not trace_check(f, 1, x_b, y_b, c_b, steps)
+        return steps
+    trace_walk(f, 0, cells_a, Shared(c_a), x_a, y_a, c_a, steps)
+    trace_walk(f, 1, cells_b, Shared(c_b), x_b, y_b, c_b, steps)
+    return steps
+
+// Everything the demo animates. reads_a, reads_b: BUILD hole by hole. cells_*: read_key
+// of each key; holes_*: cell_holes. steps: the exchange in B9 order. ok, error, public_*,
+// secret_*: exchange's outcome (public_value when it rejects).
+record Trace
+    grid_a: KeyGrid
+    grid_b: KeyGrid
+    reads_a: List<BuildRead>
+    reads_b: List<BuildRead>
+    cells_a: List<int>
+    cells_b: List<int>
+    holes_a: List<int>
+    holes_b: List<int>
+    steps: List<TraceStep>
+    ok: bool
+    error: text
+    public_a: List<int>
+    public_b: List<int>
+    secret_a: List<int>
+    secret_b: List<int>
+
+// BUILD both keys from their dice, then B9, every step recorded.
+func trace_exchange(f: Field, dice_a: Dice, dice_b: Dice) -> Trace
+    reads_a: List<BuildRead> = []
+    reads_b: List<BuildRead> = []
+    grid_a = trace_build(dice_a, reads_a)
+    grid_b = trace_build(dice_b, reads_b)
+    none = empty_register(f)
+    out = Trace(grid_a, grid_b, reads_a, reads_b, read_key([grid_a]), read_key([grid_b]),
+        cell_holes(grid_a), cell_holes(grid_b), trace_steps(f, grid_a, grid_b), false, "",
+        none, none, none, none)
+    match exchange(f, [grid_a], [grid_b])
+        case Ok(e)
+            out.ok = true
+            out.public_a = e.public_a
+            out.public_b = e.public_b
+            out.secret_a = e.secret_a
+            out.secret_b = e.secret_b
+        case Err(why)
+            out.error = why
+            out.public_a = public_value(f, [grid_a])
+            out.public_b = public_value(f, [grid_b])
+    return out
+
+// One summary's peg moves: step st on the player's X, Y and C as they were before it,
+// from the twins above. A start's accumulator is start_accumulator's; a call's answer is
+// the peg the call left in Y.
+func step_moves(f: Field, x: List<int>, y: List<int>, c: List<int>, st: TraceStep) -> List<PegMove>
+    moves: List<PegMove> = []
+    rx = x
+    ry = y
+    rc = c
+    match st.op
+        case Start
+            match st.phase
+                case Shared(base)
+                    if st.value == 2
+                        trace_slide(X, rx, trace_multiply(f, base, base, 0, moves), moves)
+                    else
+                        trace_place(X, rx, start_accumulator(f, st.value, st.phase), moves)
+                case Public
+                    trace_place(X, rx, start_accumulator(f, st.value, st.phase), moves)
+        case Square
+            trace_slide(Y, ry, trace_multiply(f, st.a, st.b, st.nudge, moves), moves)
+        case Cube
+            trace_slide(X, rx, trace_multiply(f, st.a, st.b, st.nudge, moves), moves)
+        case TimesBase
+            trace_slide(X, rx, trace_multiply(f, st.a, st.b, st.nudge, moves), moves)
+        case Check
+            trace_slide(C, rc, trace_multiply(f, st.a, st.b, st.nudge, moves), moves)
+        case Tidy
+            trace_tidy(f, X, rx, moves)
+        case CheckTidy
+            trace_tidy(f, C, rc, moves)
+        case Clear
+            for h = 0 to f.n - 1
+                if ry[h] != 0
+                    moves.append(PegMove(Y, h, ry[h], 0, Wipe))
+        case Call
+            if st.y[st.hole] != ry[st.hole]
+                moves.append(PegMove(Y, st.hole, ry[st.hole], st.y[st.hole], Answer))
+    return moves
+
+// The dice of the recorded exchanges in proofs/key_exchange/bs/vectors/inputs.json (the
+// T1, T2 and T6 exchange vectors), for the trace tests below. check_oracle.py checks they
+// are the file's.
+
+func dice_exchange_t1_run0_a() -> Dice
+    return dice([10, 3, 9, 3, 2, 8, 3, 2, 9, 10, 9, 1, 1, 4, 4, 10, 9, 11, 8, 11, 12, 6, 4, 9, 1,
+            5, 7, 1, 11, 4, 4, 1, 10, 5, 2, 5, 6, 7, 8, 11, 9, 12, 7, 7, 7, 10, 2, 1, 6, 7,
+            2, 2, 2, 4, 10, 8, 10],
+        [2, 4, 6, 5, 3, 6, 6, 1, 1, 1, 1, 2, 3, 1, 1, 3, 3, 1, 1, 6, 2, 6, 3, 1, 2, 5, 2,
+            4, 2, 2, 6, 4, 1, 4, 2, 1, 6, 5, 3, 2, 4, 5],
+        [7, 8, 7, 7, 8, 9, 6, 7, 9, 2, 7, 5, 7, 9, 3, 7, 4, 6, 8, 1, 1, 9, 1, 6, 1, 7, 6,
+            6, 6, 1, 1, 2, 3, 1, 0, 0, 7, 4, 9, 4, 0, 3, 2, 2, 3, 7, 4, 0, 9, 9, 3, 0, 9,
+            5, 5])
+
+func dice_exchange_t1_run0_b() -> Dice
+    return dice([4, 10, 12, 3, 12, 11, 2, 7, 2, 5, 7, 9, 12, 3, 4, 5, 4, 12, 2, 5, 9, 6, 8, 6, 6,
+            12, 1, 1, 10, 2, 12, 6, 6, 12, 12, 6, 6, 10, 10, 10, 10, 2, 2, 11, 8, 9, 9, 5,
+            8, 10, 11, 8, 4, 9],
+        [2, 2, 6, 5, 2, 4, 4, 5, 1, 5, 4, 3, 2, 1, 2, 1, 3, 5, 2, 1, 2, 3, 6, 1, 4, 3, 1,
+            6, 6, 2, 1, 6, 4, 4, 1, 1, 1, 4, 4, 1, 5, 1],
+        [2, 6, 2, 2, 4, 1, 0, 8, 4, 3, 6, 7, 8, 9, 9, 1, 4, 6, 7, 3, 0, 0, 2, 8, 9, 2, 9,
+            0, 0, 7, 2, 1, 1, 7, 8, 1, 7, 1, 6, 0, 7, 4, 6, 5, 6, 9, 9, 1, 7, 0, 3, 1, 4,
+            0, 5, 4, 2, 9])
+
+func dice_exchange_t1_run3_a() -> Dice
+    return dice([8, 4, 7, 2, 6, 1, 12, 9, 10, 2, 8, 1, 4, 9, 9, 9, 9, 6, 5, 12, 12, 8, 7, 9, 10, 7,
+            11, 1, 7, 7, 4, 12, 7, 1, 8, 12, 5, 1, 6, 4, 3, 6, 4, 10, 8, 5, 11, 9, 9, 8, 2,
+            8, 7],
+        [3, 6, 5, 2, 3, 5, 3, 4, 2, 5, 2, 2, 3, 1, 2, 3, 1, 1, 6, 4, 2, 2, 5, 3, 4, 3, 6,
+            1, 6, 1, 3, 1, 4, 2, 2, 5, 3, 3, 3, 1, 1, 2, 2, 4, 2, 3, 2],
+        [9, 4, 7, 8, 4, 5, 6, 9, 6, 3, 9, 4, 0, 6, 1, 9, 1, 5, 1, 0, 2, 1, 5, 5, 2, 7, 7,
+            7, 8, 0, 8, 5, 0, 1, 6, 2, 5, 3, 6, 2, 2, 0, 7, 0, 9, 7, 9, 7, 9, 8, 3, 4, 7,
+            6, 5, 8])
+
+func dice_exchange_t1_run3_b() -> Dice
+    return dice([5, 11, 1, 8, 8, 12, 7, 11, 9, 10, 1, 4, 3, 3, 2, 8, 12, 5, 4, 1, 9, 3, 5, 6, 8, 2,
+            6, 2, 11, 1, 7, 8, 5, 3, 5, 12, 6, 2, 5, 5, 10, 11, 8, 3, 10, 1, 8, 10, 12, 2,
+            2, 4, 6, 7],
+        [1, 2, 3, 2, 4, 5, 2, 2, 6, 5, 3, 5, 1, 2, 2, 6, 4, 1, 5, 5, 5, 4, 5, 4, 6, 6, 2,
+            6, 6, 2, 6, 4, 5, 3, 4, 5, 6, 3, 4, 6, 3, 4, 1, 1, 1, 5, 2],
+        [0, 3, 2, 6, 8, 8, 5, 2, 4, 8, 2, 1, 5, 4, 9, 8, 0, 3, 6, 3, 1, 7, 4, 6, 1, 8, 4,
+            1, 6, 7, 1, 7, 9, 1, 7, 0, 3, 9, 3, 3, 6, 1, 5, 2, 2, 2, 3, 6, 0, 2, 1, 6, 6, 1])
+
+func dice_exchange_t2_run3_a() -> Dice
+    return dice([2, 2, 6, 4, 12, 5, 1, 8, 7, 12, 2, 3, 10, 1, 1, 4, 6, 8, 12, 3, 6, 8, 6, 2, 7, 5,
+            4, 1, 7, 2, 1, 11, 3, 1, 6, 4, 3, 9, 8, 3, 11, 12, 2, 3, 12, 5, 6, 12, 5, 3, 2,
+            1, 8, 11, 2, 1, 8, 8, 9],
+        [3, 3, 4, 4, 3, 4, 6, 5, 6, 6, 4, 1, 4, 2, 6, 4, 5, 3, 2, 4, 1, 3, 3, 2, 6, 6, 6,
+            5, 1, 3, 3, 2, 2, 4, 3, 4, 2, 1, 4, 5, 2],
+        [6, 6, 5, 4, 5, 1, 1, 6, 0, 2, 3, 7, 4, 8, 4, 3, 1, 6, 2, 1, 9, 4, 5, 5, 0, 1, 5,
+            2, 3, 9, 0, 3, 4, 6, 9, 1, 1, 1, 7, 1, 0, 0, 7, 0, 0, 8, 3, 8, 6, 6, 1, 5, 7,
+            6, 9, 4, 8])
+
+func dice_exchange_t2_run3_b() -> Dice
+    return dice([1, 8, 3, 12, 8, 9, 4, 3, 11, 12, 3, 3, 11, 9, 3, 8, 12, 8, 6, 11, 2, 9, 3, 4, 10,
+            10, 3, 6, 4, 7, 9, 11, 4, 2, 4, 3, 11, 9, 2, 10, 7, 10, 10, 1, 11, 11, 6, 5, 4,
+            4, 2, 1, 7, 9],
+        [3, 2, 3, 5, 6, 1, 4, 2, 5, 4, 6, 4, 3, 4, 3, 6, 2, 4, 5, 3, 6, 6, 5, 5, 5, 1, 1,
+            4, 4, 1, 1, 2, 4, 2, 3, 1, 1, 2, 5, 4, 6, 4, 2, 1, 1],
+        [7, 6, 2, 3, 9, 2, 9, 0, 2, 7, 8, 0, 8, 1, 3, 9, 4, 7, 6, 1, 9, 0, 1, 8, 0, 0, 1,
+            6, 6, 7, 6, 1, 4, 8, 4, 2, 3, 7, 9, 7, 6, 6, 5, 1, 8, 2, 4, 7, 7, 1, 8, 6, 9,
+            9, 2])
+
+func dice_exchange_t6_run0_a() -> Dice
+    return dice([4, 11, 2, 9, 12, 1, 7, 11, 3, 5, 6, 4, 8, 9, 10, 8, 3, 8, 3, 9, 5, 8, 10, 7, 4, 4,
+            12, 3, 2, 7, 12, 3, 12, 6, 4, 12, 12, 10, 1, 6, 3, 11, 4, 3, 2, 6, 11, 2, 9, 1,
+            3, 5, 10, 8],
+        [6, 2, 2, 2, 3, 2, 5, 1, 3, 5, 4, 6, 6, 3, 6, 5, 5, 6, 3, 3, 3, 3, 2, 3, 6, 6, 4,
+            4, 6, 3, 4, 6, 3, 6, 3, 5, 6, 2, 6, 2, 5, 6, 5, 1, 6, 1, 5, 3],
+        [4, 4, 2, 3, 2, 1, 4, 7, 6, 2, 5, 6, 5, 1, 5, 7, 8, 2, 4, 3, 9, 7, 8, 3, 9, 6, 0,
+            6, 0, 3, 2, 7, 7, 3, 9, 0, 9, 9, 9, 5, 2, 4, 3, 6, 9, 8, 8, 0, 7, 1, 6, 4, 4, 9])
+
+func dice_exchange_t6_run0_b() -> Dice
+    return dice([9, 11, 5, 7, 12, 5, 4, 6, 10, 7, 4, 2, 2, 1, 10, 11, 4, 8, 9, 1, 2, 6, 3, 4, 5, 3,
+            2, 6, 10, 9, 3, 1, 11, 2, 8, 2, 6, 8, 10, 9, 2, 10, 9, 9, 9, 9, 2, 6, 2, 5, 7,
+            5, 1, 9, 5, 6, 4, 4],
+        [5, 4, 2, 2, 1, 5, 6, 2, 2, 2, 3, 1, 3, 4, 2, 2, 4, 4, 5, 4, 1, 3, 3, 2, 3, 2, 4,
+            5, 1, 1, 2, 3, 4, 3, 2, 3, 6, 3, 4, 4, 4, 3],
+        [0, 0, 5, 5, 2, 7, 8, 6, 3, 4, 6, 9, 5, 6, 0, 5, 6, 7, 7, 8, 6, 5, 0, 4, 4, 9, 6,
+            4, 0, 5, 5, 2, 8, 2, 0, 3, 4, 3, 0, 3, 3, 8, 4, 1, 5, 0, 0, 2, 0, 1, 6, 2, 9,
+            4, 0, 1, 2, 2, 7, 4, 0, 8])
+
+// Every face a build read, by kind, in order, from its reads.
+func faces_read(reads: List<BuildRead>, kind: int) -> List<int>
+    out: List<int> = []
+    for i = 0 to reads.length - 1
+        r = reads[i]
+        got = r.cup
+        if kind == 12
+            got = r.d12
+        else if kind == 6
+            got = r.d6
+        for j = 0 to got.length - 1
+            out.append(got[j])
+    return out
+
+// A hole's moves say what its read says: the row cup's faces (five dice settle, in tray
+// order), the hole die, the d6 rolls, the pieces ending in the ship laid on the holes it
+// covers, the tray die read and the peg.
+func check_build_moves(r: BuildRead, covered: List<bool>)
+    cup: List<int> = []
+    settled = 0
+    d12: List<int> = []
+    d6: List<int> = []
+    last: List<Ship> = []
+    read = 0
+    for i = 0 to r.moves.length - 1
+        match r.moves[i]
+            case Throw(die, face)
+                assert die == settled
+                cup.append(face)
+                if face != 0
+                    settled = settled + 1
+            case HoleDie(face)
+                d12.append(face)
+            case Grow(face)
+                d6.append(face)
+            case Pick(face)
+                d6.append(face)
+                assert last.length == 1
+                assert ship_length(last[0].kind) == 3
+            case Piece(s, holes)
+                assert holes == ship_holes(s)
+                assert (s.row * grid_cols + s.col == r.hole) and (s.down == r.ship[0].down)
+                last = [s]
+            case ReadDie(die, face)
+                assert (die == r.die) and (face == r.face)
+                read = read + 1
+            case PutPeg(hole, colour, in_ship)
+                assert (hole == r.hole) and (colour == r.peg) and (colour != 0)
+                assert in_ship == covered[hole]
+    assert (cup == r.cup) and (d12 == r.d12) and (d6 == r.d6) and (read == 1)
+    assert (settled == 5) or (cup.length == 0)
+    assert last == r.ship
+    if r.ship.length == 1
+        assert r.covered == ship_holes(r.ship[0])
+    else
+        assert r.covered.length == 0
+    assert r.die == (r.hole mod grid_cols) / 2
+
+// trace_build gives build_key_grid's grid, and its reads are exactly the faces it read,
+// the ships it laid (in laying order, each at its first hole), its pegs and its moves.
+func check_trace_build(source: Dice) -> KeyGrid
+    built = build_key_grid(source)
+    reads: List<BuildRead> = []
+    grid = trace_build(source, reads)
+    assert grid == built.grid
+    assert reads.length == grid_rows * grid_cols
+    assert faces_read(reads, 12) == faces_between(source.d12, 0, built.used12)
+    assert faces_read(reads, 6) == faces_between(source.d6, 0, built.used6)
+    assert faces_read(reads, 10) == faces_between(source.d10, 0, built.used10)
+    laid: List<Ship> = []
+    covered = filled(grid_rows * grid_cols, false)
+    for h = 0 to reads.length - 1
+        r = reads[h]
+        assert r.hole == h
+        assert (r.cup.length > 0) == (h mod grid_cols == 0)
+        assert (r.face >= 1) and (r.face <= 9)
+        if h mod 2 == 0
+            assert r.peg == keypad_first(r.face)
+        else
+            assert r.peg == keypad_second(r.face)
+            assert r.face == reads[h - 1].face
+        assert r.peg == grid.pegs[h]
+        for k = 0 to r.ship.length - 1
+            assert ship_holes(r.ship[k])[0] == h
+            laid.append(r.ship[k])
+            cover(covered, r.ship[k])
+        check_build_moves(r, covered)
+    assert laid == grid.ships
+    return grid
+
+// Apply one peg move to a player's board (x, y, c and the strip s), checking its `from`.
+func apply_move(x: inout List<int>, y: inout List<int>, c: inout List<int>, s: inout List<int>, m: PegMove)
+    match m.reg
+        case X
+            assert x[m.hole] == m.from
+            x[m.hole] = m.into
+        case Y
+            assert y[m.hole] == m.from
+            y[m.hole] = m.into
+        case C
+            assert c[m.hole] == m.from
+            c[m.hole] = m.into
+        case Strip
+            assert s[m.hole] == m.from
+            s[m.hole] = m.into
+
+// Every step of a trace is what it says: a multiplication's register is multiply of its
+// operands (and trace_multiply's), the registers it does not name are as the player's
+// last step left them, and its peg moves (step_moves) replayed on the board from the
+// last step's registers land exactly on this step's, with the strip clear again.
+func check_trace_steps(f: Field, steps: List<TraceStep>)
+    xs = [empty_register(f), empty_register(f)]
+    ys = [empty_register(f), empty_register(f)]
+    cs = [empty_register(f), empty_register(f)]
+    for i = 0 to steps.length - 1
+        st = steps[i]
+        p = st.player
+        assert (p == 0) or (p == 1)
+        product = empty_register(f)
+        if st.a.length > 0
+            product = multiply(f, st.a, st.b, st.nudge)
+            twin: List<PegMove> = []
+            assert trace_multiply(f, st.a, st.b, st.nudge, twin) == product
+        match st.op
+            case Square
+                assert (st.y == product) and (st.x == xs[p]) and (st.c == cs[p])
+                assert (st.a == xs[p]) and (st.b == xs[p]) and (st.nudge == 0)
+            case Cube
+                assert (st.x == product) and (st.y == ys[p]) and (st.c == cs[p])
+                assert (st.a == ys[p]) and (st.b == xs[p])
+            case TimesBase
+                assert (st.x == product) and (st.y == ys[p]) and (st.c == cs[p])
+                assert st.phase == Shared(cs[p])
+            case Start
+                assert (st.y == ys[p]) and (st.c == cs[p])
+                assert st.x == start_accumulator(f, st.value, st.phase)
+                if st.a.length > 0
+                    assert st.x == product
+            case Tidy
+                assert (st.x == tidy(f, xs[p])) and (st.y == ys[p]) and (st.c == cs[p])
+            case Clear
+                assert (st.y == empty_register(f)) and (st.x == xs[p]) and (st.c == cs[p])
+            case Call
+                assert (st.x == xs[p]) and (st.c == cs[p])
+                for h = 0 to f.n - 1
+                    if h != st.hole
+                        assert st.y[h] == ys[p][h]
+            case Check
+                assert (st.c == product) and (st.a == ys[p]) and (st.b == ys[p])
+                assert (st.x == xs[p]) and (st.y == ys[p])
+            case CheckTidy
+                assert (st.c == tidy(f, cs[p])) and (st.x == xs[p]) and (st.y == ys[p])
+        x = xs[p]
+        y = ys[p]
+        c = cs[p]
+        s = filled(2 * f.n + 2, 0)
+        moves = step_moves(f, xs[p], ys[p], cs[p], st)
+        for k = 0 to moves.length - 1
+            apply_move(x, y, c, s, moves[k])
+        assert (x == st.x) and (y == st.y) and (c == st.c) and is_empty(s)
+        xs[p] = st.x
+        ys[p] = st.y
+        cs[p] = st.c
+
+// The last tidy of `player`'s walks before step `upto`: its X.
+func walk_end(steps: List<TraceStep>, player: int, upto: int) -> List<int>
+    out: List<int> = []
+    for i = 0 to upto - 1
+        st = steps[i]
+        if (st.player == player) and (st.op == Tidy)
+            out = st.x
+    return out
+
+// The trace of two built keys is exchange's outcome, step by step: each public walk
+// ends in exchange's public value, each shared walk in its K.
+func check_trace_exchange(f: Field, dice_a: Dice, dice_b: Dice)
+    grid_a = check_trace_build(dice_a)
+    grid_b = check_trace_build(dice_b)
+    tr = trace_exchange(f, dice_a, dice_b)
+    assert (tr.grid_a == grid_a) and (tr.grid_b == grid_b)
+    assert (tr.cells_a == read_key([grid_a])) and (tr.cells_b == read_key([grid_b]))
+    assert tr.holes_a.length == tr.cells_a.length
+    assert tr.holes_b.length == tr.cells_b.length
+    check_trace_steps(f, tr.steps)
+    assert tr.ok
+    first_call = tr.steps.length
+    for i = tr.steps.length - 1 downto 0
+        if tr.steps[i].op == Clear
+            first_call = i
+    assert walk_end(tr.steps, 0, first_call) == tr.public_a
+    assert walk_end(tr.steps, 1, first_call) == tr.public_b
+    assert walk_end(tr.steps, 0, tr.steps.length) == tr.secret_a
+    assert walk_end(tr.steps, 1, tr.steps.length) == tr.secret_b
+
+test "trace twins: drop, lay, pay_toll, multiply and tidy record what they change"
+    moves: List<PegMove> = []
+    s = [2, 2, 0]
+    trace_drop(s, 0, 1, moves)
+    assert s == [0, 0, 1]
+    assert moves == [PegMove(Strip, 0, 2, 0, Drop), PegMove(Strip, 1, 2, 0, Carry), PegMove(Strip, 2, 0, 1, Carry)]
+    red = filled(t1.n, 2)
+    m: List<PegMove> = []
+    assert trace_multiply(t1, red, red, 2, m) == multiply(t1, red, red, 2)
+    x = empty_register(t1)
+    x[0] = 1
+    x[1] = 1
+    m = []
+    assert trace_multiply(t1, x, x, 0, m) == multiply(t1, x, x, 0)
+    // p tidies to the empty register: copy, pour, spill, slide (nothing slides back).
+    p = filled(t1.n, 2)
+    p[2] = 1
+    want = tidy(t1, p)
+    m = []
+    trace_tidy(t1, X, p, m)
+    assert p == want
+    assert is_empty(p)
+    assert m[m.length - 1].why == Lift
+
+test "trace_build: BUILD hole by hole gives build_key_grid's grid, its dice and its moves"
+    g = check_trace_build(dice([1, 5] + filled(96, 1), [1], [6, 2] + filled(48, 5)))
+    assert g.ships == [Ship(Destroyer, false, 0, 1, false)]
+    g = check_trace_build(dice(filled(99, 1), [], filled(50, 5)))
+    assert g.ships.length == 0
+    reads: List<BuildRead> = []
+    // A ship that grows to a 3-holer and picks a Cruiser: Destroyer, Sub, Cruiser pieces.
+    g = trace_build(dice([12] + filled(99, 1), [5, 1, 6], filled(50, 5)), reads)
+    assert reads[0].moves[5] == HoleDie(12)
+    assert reads[0].moves[6] == Piece(Ship(Destroyer, true, 0, 0, true), [0, 10])
+    assert reads[0].moves[7] == Grow(5)
+    assert reads[0].moves[8] == Piece(Ship(Sub, true, 0, 0, true), [0, 10, 20])
+    assert reads[0].moves[9] == Grow(1)
+    assert reads[0].moves[10] == Pick(6)
+    assert reads[0].moves[11] == Piece(Ship(Cruiser, true, 0, 0, true), [0, 10, 20])
+    assert reads[0].covered == [0, 10, 20]
+    assert g.ships == [Ship(Cruiser, true, 0, 0, true)]
+
+test "cell_holes: one hole per cell of read_key, the extra cell at the 3-holer's last hole"
+    g = sample_grid_a
+    holes = cell_holes(g)
+    cells = read_key([g])
+    assert holes.length == cells.length
+    assert holes[0] == -1
+    // Row A of sample_grid_a: Cruiser across A1-A3 (extra cell at A3), Sub down from A5.
+    assert (holes[1] == 0) and (holes[3] == 2) and (holes[4] == 2) and (holes[5] == 3)
+    assert holes[holes.length - 1] == 199
+    assert cell_holes(sample_grid_b).length == read_key([sample_grid_b]).length
+    // The peg pass: each cell is the peg in its hole.
+    for i = 1 to cells.length - 1
+        if holes[i] >= 100
+            assert cells[i] == g.pegs[holes[i] - 100]
+    // The ship pass: a ship's first hole white across, red down; its last hole white
+    // pointing back, red pointing on; a Sub's extra cell plain, a Cruiser's white; every
+    // other hole plain.
+    first = filled(100, -1)
+    last = filled(100, -1)
+    extra = filled(100, -1)
+    for k = 0 to g.ships.length - 1
+        s = g.ships[k]
+        under = ship_holes(s)
+        first[under[0]] = 1
+        if s.down
+            first[under[0]] = 2
+        last[under[under.length - 1]] = 1
+        if s.bow_last
+            last[under[under.length - 1]] = 2
+        match s.kind
+            case Sub
+                extra[under[under.length - 1]] = 0
+            case Cruiser
+                extra[under[under.length - 1]] = 1
+            case _
+                skip
+    for i = 1 to cells.length - 1
+        h = holes[i]
+        if h < 100
+            if first[h] >= 0
+                assert cells[i] == first[h]
+            else if last[h] >= 0
+                if holes[i - 1] == h
+                    assert cells[i] == extra[h]
+                else
+                    assert cells[i] == last[h]
+            else
+                assert cells[i] == 0
+
+test "trace_steps matches exchange on the sample grids, step by step"
+    steps = trace_steps(t1, sample_grid_a, sample_grid_b)
+    check_trace_steps(t1, steps)
+    e = exchange(t1, [sample_grid_a], [sample_grid_b]).unwrap()
+    assert walk_end(steps, 0, steps.length) == e.secret_a
+    assert walk_end(steps, 1, steps.length) == e.secret_b
+
+test "trace_exchange matches build_key_grid and exchange on the T1 exchange vectors"
+    check_trace_exchange(t1, dice_exchange_t1_run0_a(), dice_exchange_t1_run0_b())
+    check_trace_exchange(t1, dice_exchange_t1_run3_a(), dice_exchange_t1_run3_b())
+
+test "trace_exchange matches build_key_grid and exchange on the T2 exchange vector"
+    check_trace_exchange(t2, dice_exchange_t2_run3_a(), dice_exchange_t2_run3_b())
+
+test "trace_exchange matches build_key_grid and exchange on the T6 exchange vector"
+    check_trace_exchange(t6, dice_exchange_t6_run0_a(), dice_exchange_t6_run0_b())

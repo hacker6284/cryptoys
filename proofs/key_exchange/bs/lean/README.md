@@ -16,7 +16,7 @@ No `sorry`, no `native_decide`, no `axiom`. The tier facts use `decide` and `dec
 
 ## Generated Lean
 
-[`Generated/`](Generated/README.md) is emitted from `bs.sudo` by `proofs/emit_lean.sh bs` under the terminates gate (`sudoc emit-ir --require terminates`), which `bs.sudo` passes since its loops became bounded `for` loops (#160). Its TAP runs every sudo `test` in `bs.sudo`: **29/29 pass** (`cd Generated && lake build && ./.lake/build/bin/bs_test`; CI job `bs-generated`). That is evidence the emitter ran, not a theorem.
+[`Generated/`](Generated/README.md) is emitted from `bs.sudo` by `proofs/emit_lean.sh bs` under the terminates gate (`sudoc emit-ir --require terminates`), which `bs.sudo` passes since its loops became bounded `for` loops (#160). Its TAP runs every sudo `test` in `bs.sudo`: **33/33 pass** (`cd Generated && lake build && ./.lake/build/bin/bs_test`; CI job `bs-generated`). That is evidence the emitter ran, not a theorem.
 
 ## The model
 

@@ -61,6 +61,24 @@ export const POSES = {
             fov: 50,
         },
     },
+    // BS: both units (lids up) and the dice row in front, ~38° down, aimed
+    // right of the set's centre so it sits clear of the dock on the right.
+    bs: {
+        // The set (cup, two open units, dice row) spans 624 mm; aimed right
+        // of its centre and far enough back that it sits left of the dock
+        // (352 px wide) down to 960 px wide.
+        position: [DEN.x + 0.20, 1.74, DEN.z + 1.13],
+        target: [DEN.x + 0.20, 0.80, DEN.z - 0.07],
+        fov: 32,
+        overlays: { title: true, menu: false, teach: true },
+        // Phones: steeper, centred on the set, aimed below it so it sits
+        // above the transport and dock.
+        portrait: {
+            position: [DEN.x - 0.06, 2.38, DEN.z + 0.80],
+            target: [DEN.x - 0.06, 0.76, DEN.z + 0.10],
+            fov: 50,
+        },
+    },
     // Legacy named travel shot. Production enter uses followTo and
     // does not snap or ease through this pose.
     unbox_travel: {
@@ -100,6 +118,8 @@ const ALIASES = {
     lean_deck: "doubledeal",
     drei: "drei",
     megadreifach: "drei",
+    bs: "bs",
+    battleship: "bs",
     unbox_travel: "unbox_travel",
     unbox: "unbox",
     unbox_deal: "unbox_deal",

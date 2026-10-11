@@ -7,7 +7,7 @@ import { timing as MINX_TURN } from "../anim/megaminx/index.js";
 import { box as deckBox, card as deckCard, deal as deckDeal } from "../anim/deck/index.js";
 import { CARD_STEPS, PUZZLES } from "../megadreifach/plan.js";
 import { FACE_NORMAL, pieceDirection } from "../megadreifach/minx.js";
-import { pacedWait, skipMs } from "../shared/pacer.js";
+import { createStageTime } from "./stage-time.js";
 
 /**
  * MegaDreifach v3's toys in the room: three cubing.js megaminxes standing
@@ -197,32 +197,14 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     // duration: already at the dock's speed. Faster than 1× and shorter
     // than a frame, a motion jumps to its end and its time passes on the
     // pacer's clock (a wait: no frame floor).
-    function tween(duration, step, mine = gen, { floor = true } = {}) {
-        if (!duration || reduced()) {
-            step(1);
-            return Promise.resolve(mine === gen);
-        }
-        const speed = cardTempo();
-        const skip = skipMs(duration * speed, speed, { floor });
-        if (skip !== null) {
-            step(1);
-            return pacedWait(skip).then(() => mine === gen);
-        }
-        return new Promise((resolve) => {
-            const start = performance.now();
-            function tick(now) {
-                if (mine !== gen) return resolve(false);
-                const t = Math.min(1, (now - start) / duration);
-                step(t);
-                if (t < 1) requestAnimationFrame(tick);
-                else resolve(true);
-            }
-            requestAnimationFrame(tick);
-        });
+    const time = createStageTime({ current: (mine) => mine === gen, speed: () => cardTempo(), reduced });
+
+    function tween(duration, step, mine = gen, opts) {
+        return time.tween(duration, step, mine, opts);
     }
 
     function wait(duration, mine = gen) {
-        return tween(reduced() ? 0 : duration, () => {}, mine, { floor: false });
+        return time.wait(duration, mine);
     }
 
     // A clock for the library's moves that stops with this stage's beats.

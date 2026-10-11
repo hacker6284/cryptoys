@@ -23,8 +23,6 @@ import * as rt from "./generated/_sudo_rt.mjs";
 import { BLOCK_BYTES, TRACE_BLOCKS, buildShow } from "./plan.js";
 import { plain } from "../shared/sudo-plain.js";
 
-export { plain };
-
 let faceTurns = null;
 let oneBlock = null;
 

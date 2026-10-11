@@ -8,7 +8,7 @@ import { ROOM } from "../anim/shared/room.js";
 import { stubThree } from "./three-stub.mjs";
 
 stubThree();
-const { BS_MODELS, workspaceCell, laneCell, workspaceCells, boardMarks, cursorPoses, diceFacesAt, settled } = await import("./bs-stage.js");
+const { BS_MODELS, workspaceCell, laneCell, workspaceCells, boardMarks, cursorPoses, diceFacesAt, cupFaces } = await import("./bs-stage.js");
 
 // ---- real sizes ----
 assert.deepEqual([REAL_SIZES.bsUnit.w, REAL_SIZES.bsUnit.h, REAL_SIZES.bsUnit.d], [0.23, 0.035, 0.17], "unit 230 × 35 × 170 mm closed (measured)");
@@ -180,13 +180,13 @@ if (!existsSync(generated)) {
     });
     assert.ok(marks[0].lane10.includes(2) || marks[1].lane10.includes(2), "a 3-holer's extra cell shows red");
     assert.equal(marks[0].cursor[B - 1], -1, "the cursor leaves the grid at the end");
-    // Dice: the last row cup's five settled faces, the last d12 and d6.
+    // Dice: the last row cup's five faces, the last d12 and d6.
     const lastBuild = 199;
     const faces = diceFacesAt(show, lastBuild);
     assert.equal(faces.d10.length, 5);
     assert.ok(faces.d10.every((f) => f >= 1 && f <= 9));
     const cups = show.reads[1].filter((r) => r.cup.length);
-    assert.deepEqual(faces.d10, settled(cups.at(-1).cup));
+    assert.deepEqual(faces.d10, cupFaces(cups.at(-1)), "the last cup's dice, each at its last generated Throw");
     assert.deepEqual(diceFacesAt(show, -1), { d10: [1, 2, 3, 4, 5], d12: 12, d6: 6 }, "at rest before BUILD");
 }
 

@@ -19,7 +19,6 @@ export { settings };
 export const timing = settings.timing;
 export const slots = [];
 
-
 export function planPlace({ tempo = timing.tempo } = {}) {
     const ms = settings.place.ms / Math.max(0.05, tempo);
     return { ms, at: (t) => settings.place.dropM * (1 - easeInOutCubic(Math.min(1, t / ms))) };

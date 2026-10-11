@@ -21,7 +21,6 @@ export { settings };
 export const timing = settings.timing;
 export const slots = [];
 
-
 /** Insert plan: duration and the peg's height above its seat at time t (ms). */
 export function planInsert({ tempo = timing.tempo } = {}) {
     const k = Math.max(0.05, tempo);

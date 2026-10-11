@@ -319,6 +319,39 @@ theorem runLoopOn_ok_inv {σ ρ α : Type}
       | cont s =>
         exact ih s (hcont s0 s h0 hst) h
 
+/-- An `.ok` result is `after` on a state the stepper stopped in, or `onRet`
+    on a value some step returned. Fuel 0 is a trap, so it is not `.ok`. -/
+theorem runLoopOn_ok_after {σ ρ α : Type}
+    (s0 : σ) (fuel : Nat)
+    (step : σ → Except SudoRt.Trap (SudoRt.Flow σ ρ))
+    (after : σ → Except SudoRt.Trap α)
+    (onRet : ρ → Except SudoRt.Trap α)
+    (a : α)
+    (h : SudoRt.runLoopOn s0 fuel step after onRet = .ok a) :
+    (∃ s, after s = .ok a) ∨
+      (∃ r, onRet r = .ok a ∧ ∃ s, step s = .ok (.ret r)) := by
+  induction fuel generalizing s0 with
+  | zero =>
+    rw [runLoopOn_zero] at h
+    unfold SudoRt.fail at h
+    cases h
+  | succ fuel ih =>
+    rw [runLoopOn_succ] at h
+    cases hst : step s0 with
+    | error _ =>
+      rw [hst] at h
+      cases h
+    | ok fl =>
+      rw [hst] at h
+      cases fl with
+      | ret r =>
+        exact Or.inr ⟨r, ⟨h, ⟨s0, hst⟩⟩⟩
+      | brk s =>
+        change after s = .ok a at h
+        exact Or.inl ⟨s, h⟩
+      | cont s =>
+        exact ih s h
+
 /-- The white scan returns the board it was given. `onRet` is `(b, 0)`. -/
 theorem white_loop_ladder (b : Ecbs.Board) (toV j0 : Int) (fuel : Nat)
     (p : Ecbs.Board × Int)

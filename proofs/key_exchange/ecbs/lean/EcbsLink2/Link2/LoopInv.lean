@@ -4,6 +4,7 @@
   `runLoop_drop_inv` asks for the step only on boards in this predicate.
 -/
 import EcbsLink2.Link2.InvertOpen
+import EcbsLink2.Link2.MulKeep
 import EcbsLink2.Link2.TailLen
 
 namespace EcbsLink2.Link2
@@ -166,10 +167,11 @@ theorem climbL_succ
     (hPark : h.s.parkAt = base.ladder0 + base.R)
     (hCap : climbTallyPrefix base.tally0 h.done h.rest ≤ base.mMax)
     (hxLen : base.x.length = base.n) (hxT : allTritList base.x)
-    (hlad : b'.sudo_5Board_6ladder = b.sudo_5Board_6ladder)
     (hprog : climbRung b (L[i]'hi) ((L.drop (i + 1)).isEmpty)
         ((base.xHome : Nat) : Int) h.s.tally = .ok b') :
     ClimbP L base (i + 1) b' := by
+  have hlad := climbRung_ladder b (L[i]'hi) ((L.drop (i + 1)).isEmpty)
+    ((base.xHome : Nat) : Int) h.s.tally b' hprog
   have hk : h.done.length = i := h.k_eq.symm
   have hrest : h.rest = L.drop i := by
     have happ : (h.done ++ h.rest).drop h.done.length = h.rest := by
@@ -205,6 +207,49 @@ theorem climbL_succ
           (Nat.le_trans hK.tailFit (Nat.le_of_eq hK.shape.rowLen)))
     · have hlen := hK.inv.len
       simpa [s', ofNat_eq_natCast] using hlen
+
+/-- The index step of `invertWith`: break past `toV`, otherwise the named rung. -/
+def invertIdx (x nr toV : Int) (σ : Int × Ecbs.Board) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Ecbs.Board) Ecbs.Board) :=
+  let idx := σ.1
+  let b := σ.2
+  do
+    if idx > toV then
+      pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (idx, b))
+    else
+      match ← (do
+        let t ← SudoRt.subI nr (1 : Int)
+        let last := SudoRt.SEq.beq idx t
+        let rv ← SudoRt.atL b.sudo_5Board_6ladder idx
+        let b ← Ecbs.park_rung b rv
+        let b ← Ecbs.copy_band b Ecbs.spare Ecbs.gap false
+        let m := b.sudo_5Board_9tally_len
+        let toW ← SudoRt.subI m (1 : Int)
+        let fromW := (0 : Int)
+        let fuelW : Nat := if fromW > toW then 1 else (toW - fromW).natAbs + 1
+        let out ← SudoRt.runLoopOn (ρ := Ecbs.Board) fromW fuelW (whiteStep b toW)
+          (fun _ => rungAfterNamed x rv last b m)
+          (fun r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r))
+        pure out) with
+      | .ret r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r)
+      | .brk fs => pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (idx, fs))
+      | .cont fs => do
+          if idx == toV then
+            pure (SudoRt.Flow.brk (ρ := Ecbs.Board) (idx, fs))
+          else do
+            let i' ← SudoRt.addI idx (1 : Int)
+            pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (i', fs))
+
+/-- Past the last rung the index step breaks on the board it was given. -/
+theorem invertIdx_hi (x : Int) (n i : Nat) (b : Ecbs.Board) (hn : 0 < n) (hi : n ≤ i) :
+    invertIdx x (Int.ofNat n) (Int.ofNat (n - 1)) ((i : Int), b) =
+      pure (SudoRt.Flow.brk (ρ := Ecbs.Board) ((i : Int), b)) := by
+  unfold invertIdx
+  dsimp only
+  have hgt : (i : Int) > Int.ofNat (n - 1) := by
+    have hlt : n - 1 < i := by omega
+    simpa [GT.gt] using (Int.ofNat_lt.mpr hlt)
+  rw [if_pos hgt]
 
 /-- The emitted ladder, with the final unpark-cube-settle-clear as the tail.
     `runLoop_drop_inv_bind` is the fuel induction. -/

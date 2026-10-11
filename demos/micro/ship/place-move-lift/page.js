@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mountMicro } from "../../shared/micro.js";
 import * as ship from "../../../anim/ship/index.js";
-import { CAMERA, hideToys, loadGlb, placeUnit } from "../../shared/bs-scene.js";
+import { CAMERA, loadGlb, placeUnit } from "../../shared/bs-scene.js";
 
 // ship: place, move, lift (anim/ship). A Destroyer is laid across C3–C4
 // of the key grid, swapped for the Sub as the ship grows (BUILD, SPEC
@@ -20,7 +20,6 @@ void mountMicro({
     silent: true,
     async setup(ctx) {
         ctx.status("Loading the unit…");
-        hideToys(ctx.world);
         unit = await placeUnit(ctx.world);
         const ships = (await loadGlb("bs_ships.glb")).scene;
         pieces = { d: ships.getObjectByName("ship_destroyer_2").clone(), s: ships.getObjectByName("ship_submarine_3").clone() };

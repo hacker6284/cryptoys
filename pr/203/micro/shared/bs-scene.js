@@ -7,6 +7,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { BS_GRID as G, DEN } from "../../playroom/constants.js";
+import { setWorldPose } from "../../anim/shared/run.js";
 
 export const MODELS = new URL("../../bs/assets/models/", import.meta.url);
 
@@ -42,10 +43,12 @@ export function feltPose(world, x = 0, z = 0, yaw = 0) {
     return { p: [f.x + x, f.y, f.z + z], q: [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)] };
 }
 
-/** Put an object at a world pose (its parent the scene). */
-export function setPose(object, { p, q }) {
-    object.position.set(p[0], p[1], p[2]);
-    object.quaternion.set(q[0], q[1], q[2], q[3]);
+/** A microdemo's check: a failed plan check warns on the console and shows in its status line. */
+export function report(ctx, r, what) {
+    if (!r.ok) {
+        console.warn(`${what}: ${r.fail.join("; ")}`);
+        ctx.status(`${what}: ${r.fail.join("; ")}`);
+    }
 }
 
 /**
@@ -56,8 +59,8 @@ export async function placeBox(world, file, lidName, pose) {
     const group = (await loadGlb(file)).scene;
     const lid = group.getObjectByName(lidName);
     group.add(lid);
-    setPose(group, pose);
     world.scene.add(group);
+    setWorldPose(group, pose);
     return { group, lid };
 }
 

@@ -1,7 +1,10 @@
 // dice: one die (d10, d12 or d6; the BS key dice, SPEC §4.2) and its own
-// moves: a roll, and a place (lifted from the cup to its spot and back). Played by the BS stage (playroom/bs-stage.js): the row cup's
-// five d10s at the start of each row (a die on its zero face is thrown
-// again), the hole die (d12) and the d6. Audited by demos/micro/dice/roll.
+// moves: a roll, and a place (lifted out of the cup onto its spot, and
+// back). Played by the BS stage (playroom/bs-stage.js): it rolls the row
+// cup's five d10s at the start of each row (a die on its zero face is
+// thrown again), the hole die (d12) and the d6, and places them in the
+// unboxing (bs-unbox-plan.js). Audited by demos/micro/dice/roll and
+// demos/micro/dice/place.
 //
 // NOT YET APPROVED. Curves, u = time / ms (ms ÷ tempo):
 //   roll: the die leaves its spot on the felt, tumbles through `turns` whole

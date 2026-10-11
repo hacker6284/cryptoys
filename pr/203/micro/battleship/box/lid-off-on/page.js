@@ -1,12 +1,12 @@
 import * as THREE from "three";
 import { mountMicro } from "../../../shared/micro.js";
 import * as box from "../../../../anim/battleship/box/index.js";
-import { CAMERA, feltPose, placeBox } from "../../../shared/bs-scene.js";
+import { CAMERA, feltPose, placeBox, report } from "../../../shared/bs-scene.js";
 
 // battleship/box: lid off, lid on (anim/battleship/box). The Battleship
-// retail box (400 × 265 × 52.5 mm, both units packed in it) on the felt:
-// its lid lifted straight up off the base, carried across and set down
-// beside it, then put back on. Each hop is checked: no overlap, ends exact,
+// retail box (400 × 265 × 52.5 mm, empty here: the units are
+// lift-units-out-in's) on the felt: its lid lifted straight up off the
+// base, carried across and set down beside it, then put back on. Each hop is checked: no overlap, ends exact,
 // on the law.
 let rig = null;
 let aside = null;
@@ -43,10 +43,3 @@ void mountMicro({
         if (on) report(ctx, box.checkHop(on, { solids: box.baseSolids(shut) }), "lid on");
     },
 }, box.settings);
-
-function report(ctx, r, what) {
-    if (!r.ok) {
-        console.warn(`${what}: ${r.fail.join("; ")}`);
-        ctx.status(`${what}: ${r.fail.join("; ")}`);
-    }
-}

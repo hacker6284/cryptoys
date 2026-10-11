@@ -15,14 +15,14 @@
  * poses { p, q }. solids: what is around (anim/shared/geom.js oriented
  * boxes); the base's own card is added here. `run(ms, step)` plays it on
  * another clock. planLidOff, planLidOn, planOut, planIn are the same
- * moves as plans, for checks.
+ * moves as plans, for checks. The cup's shape is ../../shared/cup.js.
  *
  * Audited by demos/micro/yahtzee/box/, pinned by ../../library.test.mjs.
  */
 import settings from "./settings.js";
-import { baseParts as sharedBaseParts, lidParts as sharedLidParts, solidsAt } from "../../shared/lidbox.js";
-import { planHop, checkHop } from "../../shared/hop.js";
-import { playPose, rafRun, worldPose } from "../../shared/run.js";
+import { baseParts as sharedBaseParts, lidBoxMoves, lidParts as sharedLidParts, solidsAt } from "../../shared/lidbox.js";
+import { checkHop } from "../../shared/hop.js";
+import { cupBox } from "../../shared/cup.js";
 
 export { settings, checkHop };
 export const timing = settings.timing;
@@ -34,8 +34,8 @@ export const SIZE = { w: 0.248, h: 0.108, d: 0.163 };
 export const BASE = { hx: 0.1225, hz: 0.08, h: 0.1025, wall: 0.0015, floor: 0.0015 };
 /** The lid (50 mm deep, over the top of the base): outer half-sizes, y range in the box frame, card. */
 export const LID = { hx: 0.124, hz: 0.0815, y0: 0.058, y1: 0.108, wall: 0.0011, top: 0.0015 };
-/** The dice cup (proc_dice_cup_83x102mm.glb, Ø 82.6 × 101.6 mm), origin its underside, as a box. */
-export const CUP = { min: [-0.0413, 0, -0.0413], max: [0.0413, 0.1016, 0.0413] };
+/** The dice cup (anim/shared/cup.js), origin its underside, as a box. */
+export const CUP = cupBox();
 /** Where the cup stands in the base, box frame: in the middle, on the floor. */
 export const POCKET = { p: [0, 0.0015, 0] };
 
@@ -55,78 +55,35 @@ export function lidSolids(pose) {
     return solidsAt(pose, lidParts());
 }
 
-const rot = ([x, y, z, w], v) => {
-    const t = [2 * (y * v[2] - z * v[1]), 2 * (z * v[0] - x * v[2]), 2 * (x * v[1] - y * v[0])];
-    return [v[0] + w * t[0] + y * t[2] - z * t[1], v[1] + w * t[1] + z * t[0] - x * t[2], v[2] + w * t[2] + x * t[1] - y * t[0]];
-};
+// The lid clears its own top (it is lifted straight off over the base); the cup clears the base's rim.
+const moves = lidBoxMoves({
+    lid: lidParts(),
+    baseSolids,
+    lidClearY: (box) => box.p[1] + LID.y1,
+    packClearY: (box) => box.p[1] + BASE.h,
+    pockets: [POCKET],
+    held: [[CUP]],
+    laws: { lid: settings.lid, held: settings.cup },
+    timing,
+});
 
 /** World pose of the cup standing in the box at `boxPose`. */
-export function pocketPose(boxPose) {
-    const d = rot(boxPose.q, POCKET.p);
-    return { p: [boxPose.p[0] + d[0], boxPose.p[1] + d[1], boxPose.p[2] + d[2]], q: boxPose.q.slice() };
-}
-
-const topOf = (boxPose) => boxPose.p[1] + BASE.h;
-
-export function planLidOff({ box: boxPose, to, solids = [], tempo = timing.tempo }) {
-    return planHop({ from: boxPose, to, parts: lidParts(), clearY: boxPose.p[1] + LID.y1 + settings.lid.clearM, solids, law: settings.lid, tempo });
-}
-
-export function planLidOn({ box: boxPose, from, solids = [], tempo = timing.tempo }) {
-    return planHop({ from, to: boxPose, parts: lidParts(), clearY: boxPose.p[1] + LID.y1 + settings.lid.clearM, solids, law: settings.lid, tempo });
-}
-
-/** The cup lifted out of the box at `box` and stood at `to`. */
-export function planOut({ box: boxPose, to, solids = [], tempo = timing.tempo }) {
-    const all = [...baseSolids(boxPose), ...solids];
-    return planHop({ from: pocketPose(boxPose), to, parts: [CUP], clearY: topOf(boxPose) + settings.cup.clearM, solids: all, law: settings.cup, tempo });
-}
-
-/** The cup from `from` back into the box at `box`. */
-export function planIn({ box: boxPose, from, solids = [], tempo = timing.tempo }) {
-    const all = [...baseSolids(boxPose), ...solids];
-    return planHop({ from, to: pocketPose(boxPose), parts: [CUP], clearY: topOf(boxPose) + settings.cup.clearM, solids: all, law: settings.cup, tempo });
-}
-
-function reparent(object, parent) {
-    if (parent && object.parent !== parent) parent.attach(object);
-}
-
+export const pocketPose = (boxPose) => moves.pocketPose(boxPose, 0);
+/** The lid lifted off the box at `box` and set down at `to`: planLidOff({ box, to, solids, tempo }). */
+export const planLidOff = moves.planLidOff;
+/** The lid from `from` back onto the box at `box`: planLidOn({ box, from, solids, tempo }). */
+export const planLidOn = moves.planLidOn;
+/** The cup lifted out of the box at `box` and stood at `to`: planOut({ box, to, solids, tempo }). */
+export const planOut = ({ k, ...o }) => moves.planOut({ ...o, k: 0 });
+/** The cup from `from` back into the box at `box`: planIn({ box, from, solids, tempo }). */
+export const planIn = ({ k, ...o }) => moves.planIn({ ...o, k: 0 });
 /** Take the lid off and set it down at `to`. Resolves with the plan (null if stopped). */
-export function liftLid(rig, to, { solids = [], tempo = timing.tempo, run = rafRun } = {}) {
-    const plan = planLidOff({ box: worldPose(rig.group), to, solids, tempo });
-    reparent(rig.lid, rig.group.parent);
-    return playPose(rig.lid, plan, run);
-}
-
+export const liftLid = moves.liftLid;
 /** Put the lid back on. */
-export async function putLid(rig, { solids = [], tempo = timing.tempo, run = rafRun } = {}) {
-    const plan = planLidOn({ box: worldPose(rig.group), from: worldPose(rig.lid), solids, tempo });
-    const done = await playPose(rig.lid, plan, run);
-    reparent(rig.lid, rig.group);
-    rig.lid.position.set(0, 0, 0);
-    rig.lid.quaternion.set(0, 0, 0, 1);
-    return done;
-}
-
+export const putLid = moves.putLid;
 /** Lift the cup (with whatever is in it) out and stand it at `to`. */
-export function liftOut(rig, cup, to, { solids = [], tempo = timing.tempo, run = rafRun } = {}) {
-    const plan = planOut({ box: worldPose(rig.group), to, solids, tempo });
-    reparent(cup, rig.group.parent);
-    return playPose(cup, plan, run);
-}
-
+export const liftOut = (rig, cup, to, opts) => moves.liftOut(rig, 0, cup, to, opts);
 /** Put the cup back in the box. */
-export async function putIn(rig, cup, { solids = [], tempo = timing.tempo, run = rafRun } = {}) {
-    const plan = planIn({ box: worldPose(rig.group), from: worldPose(cup), solids, tempo });
-    const done = await playPose(cup, plan, run);
-    reparent(cup, rig.group);
-    return done;
-}
-
+export const putIn = (rig, cup, opts) => moves.putIn(rig, 0, cup, opts);
 /** Stand the cup in the box at once (a box that starts packed). */
-export function pack(rig, cup) {
-    reparent(cup, rig.group);
-    cup.position.set(...POCKET.p);
-    cup.quaternion.set(0, 0, 0, 1);
-}
+export const pack = (rig, cup) => moves.pack(rig, 0, cup);

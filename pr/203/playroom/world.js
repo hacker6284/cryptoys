@@ -10,6 +10,8 @@ import {
     SHELF_THICK,
     SHELF_TOP,
     TOP_Y,
+    FELT_TOP_Y,
+    TABLE_SEAT_Y,
     TABLE_R,
     CEIL_Y,
     SHADE_Y,
@@ -23,6 +25,7 @@ import {
     SLOTS,
     BS_BOX_REST,
     BS_SHELF,
+    BS_CHEST,
     toyHalfHeight,
 } from "./constants.js";
 import { seatOnSurface } from "./motion.js";
@@ -606,7 +609,7 @@ export async function mountWorld(canvas) {
     }
 
     function feltTopY() {
-        return TOP_Y + 0.032;
+        return FELT_TOP_Y;
     }
 
     // Shared post-scale AABB seat. Lowest measured point lands on the
@@ -631,9 +634,9 @@ export async function mountWorld(canvas) {
 
     // Along the chest floor: MSG in the middle, DEAL beside it, then the
     // two spare megaminxes on the other side.
-    const CHEST_DZ = { deck3: 0.11, dreiB: -0.11, dreiC: -0.2, bsDiceBox: 0.04 };
-    // BS's dice box lies beside that row (the cavity is 531 mm square).
-    const CHEST_DX = { bsDiceBox: -0.21 };
+    const CHEST_DZ = { deck3: 0.11, dreiB: -0.11, dreiC: -0.2, bsDiceBox: BS_CHEST.dz };
+    // BS's dice box lies beside that row (constants.js BS_CHEST).
+    const CHEST_DX = { bsDiceBox: BS_CHEST.dx };
 
     function getChestPose(name) {
         const box = new THREE.Box3().setFromObject(chestGroup);
@@ -659,7 +662,7 @@ export async function mountWorld(canvas) {
     function getDreiDeckPose() {
         return seatOn(toys.deck3, {
             x: DEN.x + DREI_DECK_X,
-            surfaceY: feltTopY() + 0.001,
+            surfaceY: TABLE_SEAT_Y,
             z: DEN.z + DREI_ROW_Z,
             rotation: { x: 0, y: 0, z: 0 },
             name: "deck3",
@@ -671,7 +674,7 @@ export async function mountWorld(canvas) {
         const side = name === "deck2" ? -1 : 1;
         return seatOn(toys[name], {
             x: DEN.x + side * 0.78,
-            surfaceY: feltTopY() + 0.001,
+            surfaceY: TABLE_SEAT_Y,
             z: DEN.z - 0.34,
             rotation: { x: 0, y: side * 0.2, z: 0 },
             name: name === "deck2" ? "deck" : name,
@@ -701,7 +704,7 @@ export async function mountWorld(canvas) {
             const r = BS_BOX_REST[name === "bsBox" ? "navalBox" : "diceBox"];
             return seatOn(toys[name], {
                 x: DEN.x + r.x,
-                surfaceY: feltTopY() + 0.001,
+                surfaceY: TABLE_SEAT_Y,
                 z: DEN.z + r.z,
                 rotation: { x: 0, y: r.yaw, z: 0 },
                 name,
@@ -713,7 +716,7 @@ export async function mountWorld(canvas) {
             const [dx, dz] = DREI_SEAT_XZ[DREI_EXTRA[name]];
             return seatOn(toys[name], {
                 x: DEN.x + dx,
-                surfaceY: feltTopY() + 0.001,
+                surfaceY: TABLE_SEAT_Y,
                 z: DEN.z + DREI_ROW_Z + dz,
                 rotation: { x: 0, y: 0, z: 0 },
                 name,
@@ -722,7 +725,7 @@ export async function mountWorld(canvas) {
         }
         return seatOn(toys[name], {
             x: DEN.x,
-            surfaceY: feltTopY() + 0.001,
+            surfaceY: TABLE_SEAT_Y,
             // The puzzle row sits back so its deal fits in front of it.
             z: name === "drei" ? DEN.z + DREI_ROW_Z : DEN.z,
             rotation: { x: 0, y: 0, z: 0 },

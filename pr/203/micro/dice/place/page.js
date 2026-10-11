@@ -1,8 +1,10 @@
 import * as THREE from "three";
 import { mountMicro } from "../../shared/micro.js";
 import * as dice from "../../../anim/dice/index.js";
-import { CAMERA, feltPose, loadGlb, setPose } from "../../shared/bs-scene.js";
-import { BS_DICE_PACK } from "../../../playroom/constants.js";
+import { CAMERA, feltPose, loadGlb, report } from "../../shared/bs-scene.js";
+import { setWorldPose } from "../../../anim/shared/run.js";
+import { cupRimY, cupSolids } from "../../../anim/shared/cup.js";
+import { BS_DICE_PACK, BS_DIE_LIFT } from "../../../playroom/constants.js";
 
 // dice: place (anim/dice). The cup on the felt (scenery) with a d10, the
 // d12 and the d6 in it where they are packed (playroom/constants.js
@@ -15,18 +17,8 @@ let cup = null;
 let at = null;
 const dies = [];
 
-function restY(holder, kind, q) {
-    const mesh = holder.userData.mesh;
-    const pos = mesh.geometry.attributes.position;
-    const v = new THREE.Vector3();
-    let min = Infinity;
-    for (let i = 0; i < pos.count; i++) min = Math.min(min, v.fromBufferAttribute(pos, i).multiply(mesh.scale).applyQuaternion(q).y);
-    return -min + 0.0002;
-}
-
-const cupRing = () => [
-    { kind: "cyl", x: at.p[0], z: at.p[2], r: 0.0413, rIn: 0.0342, y0: at.p[1], y1: at.p[1] + 0.1016, name: "the cup's wall" },
-];
+// The cup's wall (anim/shared/cup.js; the dice never reach its floor on the way).
+const cupRing = () => cupSolids(at).filter((s) => s.kind === "cyl");
 
 void mountMicro({
     id: "dice-place",
@@ -39,7 +31,7 @@ void mountMicro({
         ctx.status("Loading the cup and the dice…");
         at = feltPose(ctx.world, -0.07, 0);
         cup = (await loadGlb("proc_dice_cup_83x102mm.glb")).scene;
-        setPose(cup, at);
+        setWorldPose(cup, at);
         ctx.world.scene.add(cup);
         for (const [i, [kind, file, packed, face]] of KINDS.entries()) {
             const mesh = (await loadGlb(file)).scene.children[0].clone();
@@ -49,7 +41,7 @@ void mountMicro({
             ctx.world.scene.add(holder);
             const q = dice.restQuaternion(kind, face, 0.3 * i, THREE.Quaternion, THREE.Vector3);
             const f = feltPose(ctx.world, 0.03 + i * 0.035, 0.03);
-            const spot = { p: [f.p[0], f.p[1] + restY(holder, kind, q), f.p[2]], q: [q.x, q.y, q.z, q.w] };
+            const spot = { p: [f.p[0], f.p[1] + dice.restHeight(mesh, kind, face, THREE.Quaternion, THREE.Vector3) + BS_DIE_LIFT, f.p[2]], q: [q.x, q.y, q.z, q.w] };
             const inCup = { p: [at.p[0] + packed[0], at.p[1] + packed[1], at.p[2] + packed[2]], q: [0, 0, 0, 1] };
             dies.push({ holder, kind, spot, inCup });
         }
@@ -61,10 +53,10 @@ void mountMicro({
         return b.expandByScalar(0.03);
     },
     async reset() {
-        for (const d of dies) setPose(d.holder, d.inCup);
+        for (const d of dies) setWorldPose(d.holder, d.inCup);
     },
     async cycle(ctx) {
-        const rim = at.p[1] + 0.1016;
+        const rim = cupRimY(at);
         for (const d of dies) {
             const plan = await dice.place(d.holder, d.kind, d.spot, { clearY: rim, solids: cupRing() });
             if (plan) report(ctx, dice.checkHop(plan, { solids: cupRing() }), `${d.kind} out`);
@@ -78,10 +70,3 @@ void mountMicro({
         }
     },
 }, dice.settings);
-
-function report(ctx, r, what) {
-    if (!r.ok) {
-        console.warn(`${what}: ${r.fail.join("; ")}`);
-        ctx.status(`${what}: ${r.fail.join("; ")}`);
-    }
-}

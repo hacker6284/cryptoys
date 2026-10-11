@@ -10,14 +10,14 @@
  * lid_pivot node (shut: no rotation; open: −openRad about x). solids:
  * what is around (anim/shared/geom.js oriented boxes; the lid shuts onto
  * its own tray, so the tray is not one). `run(ms, step)` plays it on
- * another clock. planLid /
- * checkLid are the same move as a plan, for checks and tests.
+ * another clock. planLid / checkLid are the same move as a plan, for
+ * checks and tests.
  *
  * Audited by demos/micro/battleship/unit/open-close-lid/, pinned by
  * ../../library.test.mjs.
  */
 import settings from "./settings.js";
-import { obbOf, quatAxisAngle, quatMul, quatRotate } from "../../shared/geom.js";
+import { add, obbOf, quatAxisAngle, quatMul, quatRotate } from "../../shared/geom.js";
 import { planSwing, checkSwing } from "../../shared/swing.js";
 import { rafRun, worldPose } from "../../shared/run.js";
 
@@ -46,8 +46,6 @@ export function lidObb(pose, angle) {
     const pivot = { p: add(pose.p, quatRotate(pose.q, HINGE)), q: quatMul(pose.q, quatAxisAngle([1, 0, 0], -angle)) };
     return obbOf(pivot, LID);
 }
-
-const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 
 /** The lid swinging from `from` to `to` (fractions of openRad) with the unit at `pose`. */
 export function planLid({ pose, from = 0, to = 1, solids = [], tempo = timing.tempo }) {

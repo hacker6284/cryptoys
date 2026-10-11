@@ -30,9 +30,10 @@ import * as peg from "../anim/peg/index.js";
 import * as ship from "../anim/ship/index.js";
 import * as dice from "../anim/dice/index.js";
 import { createStageTime } from "./stage-time.js";
-import { BS_DICE, BS_GRID as G, REAL_SIZES } from "./constants.js";
+import { BS_DICE, BS_DICE_FACES, BS_DICE_YAW, BS_DIE_LIFT, BS_GRID as G, REAL_SIZES } from "./constants.js";
 import { lidMoves } from "../bs/expand.js";
 import { createBsUnbox } from "./bs-unbox.js";
+import { makeDieRest } from "./bs-unbox-plan.js";
 
 const MODELS = new URL("../bs/assets/models/", import.meta.url);
 export const BS_MODELS = {
@@ -64,10 +65,10 @@ const SHIP_NODE = {
     Destroyer: "ship_destroyer_2",
 };
 const D10_TINT = [0xd8443c, 0xf08a2c, 0xf2cf3a, 0x4caf50, 0x3f7fd8]; // red, orange, yellow, green, blue
-const D10_YAW = [0.3, -0.5, 0.9, 0.1, -0.8];
-const D12_YAW = 0.4;
-const D6_YAW = 0.25;
-const DEFAULT_FACES = { d10: [1, 2, 3, 4, 5], d12: 12, d6: 6 };
+const D10_YAW = BS_DICE_YAW.d10;
+const D12_YAW = BS_DICE_YAW.d12;
+const D6_YAW = BS_DICE_YAW.d6;
+const DEFAULT_FACES = BS_DICE_FACES;
 
 // ---- pure layout (tested in bs-layout.test.mjs) ------------------------
 
@@ -338,7 +339,7 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
                 diceRow: toys.dice,
                 dice: p.dice,
             },
-            rest: dieRest,
+            rest: makeDieRest((kind, k) => (kind === "d10" ? p.dice.d10[k] : p.dice[kind]).userData.mesh, THREE.Quaternion, THREE.Vector3),
         });
         unboxer.packNow();
         for (const name of ["bsBox", "bsDiceBox"]) {
@@ -442,29 +443,21 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
 
     function setDie(holder, kind, face, yaw) {
         holder.quaternion.copy(dice.restQuaternion(kind, face, yaw, THREE.Quaternion, THREE.Vector3));
-        holder.position.y = restY(holder, kind, face) + 0.0002;
+        holder.position.y = restY(holder, kind, face) + BS_DIE_LIFT;
         holder.userData.face = face;
     }
 
-    // A die's rest on its row spot showing its default face (where the unboxing sets it down).
-    function dieRest(kind, k) {
-        const holder = kind === "d10" ? parts.dice.d10[k] : parts.dice[kind];
-        const face = kind === "d10" ? DEFAULT_FACES.d10[k] : DEFAULT_FACES[kind];
-        const yaw = kind === "d10" ? D10_YAW[k] : kind === "d12" ? D12_YAW : D6_YAW;
-        const q = dice.restQuaternion(kind, face, yaw, THREE.Quaternion, THREE.Vector3);
-        return { y: restY(holder, kind, face) + 0.0002, q: [q.x, q.y, q.z, q.w] };
-    }
-
     function showDice(faces) {
-        // Packed, the dice lie in the cup as packed.
-        if (!parts || unboxer?.packed) return;
-        parts.dice.d10.forEach((d, k) => setDie(d, "d10", faces.d10[k] ?? DEFAULT_FACES.d10[k], D10_YAW[k]));
-        setDie(parts.dice.d12, "d12", faces.d12, D12_YAW);
-        setDie(parts.dice.d6, "d6", faces.d6, D6_YAW);
+        // Only the dice on their row: packed (or not yet unpacked), a die lies in the cup as packed.
+        if (!parts) return;
+        const onRow = (d) => d.parent === toys.dice;
+        parts.dice.d10.forEach((d, k) => onRow(d) && setDie(d, "d10", faces.d10[k] ?? DEFAULT_FACES.d10[k], D10_YAW[k]));
+        if (onRow(parts.dice.d12)) setDie(parts.dice.d12, "d12", faces.d12, D12_YAW);
+        if (onRow(parts.dice.d6)) setDie(parts.dice.d6, "d6", faces.d6, D6_YAW);
     }
 
     function rollDie(holder, kind, face, yaw, tempo, run) {
-        return dice.roll(holder, kind, face, { yaw, tempo, run, landY: restY(holder, kind, face) + 0.0002 })
+        return dice.roll(holder, kind, face, { yaw, tempo, run, landY: restY(holder, kind, face) + BS_DIE_LIFT })
             .then((ok) => { holder.userData.face = face; return ok; });
     }
 
@@ -783,10 +776,14 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
             await ready;
             await unboxer.unbox(run);
         },
-        /** Everything back into its box (the unboxing backwards). */
-        async repack(run) {
+        /** Stop the unboxing after the move it is in (leaving mid-unbox). */
+        cancelUnbox() {
+            unboxer?.cancel();
+        },
+        /** Everything back into its box: the moves done, backwards (snap: at once). */
+        async repack(run, opts) {
             await ready;
-            await unboxer.repack(run);
+            await unboxer.repack(run, opts);
         },
         /** Everything into its box at once. */
         packNow() {

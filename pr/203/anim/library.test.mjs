@@ -388,6 +388,7 @@ assert.match(readme, /\| `deck\/deal` \|[^\n]*Animation APPROVED and LOCKED at `
 {
     const geom = await import(new URL("shared/geom.js", here));
     const hop = await import(new URL("shared/hop.js", here));
+    const cup = await import(new URL("shared/cup.js", here));
     const box = await import(new URL("battleship/box/index.js", here));
     const unit = await import(new URL("battleship/unit/index.js", here));
     const ybox = await import(new URL("yahtzee/box/index.js", here));
@@ -426,12 +427,12 @@ assert.match(readme, /\| `deck\/deal` \|[^\n]*Animation APPROVED and LOCKED at `
     assert.ok(stopped.to < unit.lid.openRad && unit.checkLid(stopped).ok, "stopped short, no overlap");
     // A die out of the cup clears its rim first, then turns onto its face.
     const cupAt = felt(0, 0);
-    const ring = [{ kind: "cyl", x: 0, z: 0, r: 0.0413, rIn: 0.0342, y0: 0.773, y1: 0.773 + 0.1016, name: "the cup's wall" }];
-    const place = die.planPlace({ kind: "d10", from: { p: [0.0109, 0.773 + 0.0153, 0.01135], q: [0, 0, 0, 1] }, to: { p: [0.12, 0.773 + 0.011, 0], q: [0.3, 0, 0, Math.sqrt(1 - 0.09)] }, clearY: cupAt.p[1] + 0.1016, solids: ring });
+    const ring = cup.cupSolids(cupAt).filter((s) => s.kind === "cyl");
+    const place = die.planPlace({ kind: "d10", from: { p: [0.0109, 0.773 + 0.0153, 0.01135], q: [0, 0, 0, 1] }, to: { p: [0.12, 0.773 + 0.011, 0], q: [0.3, 0, 0, Math.sqrt(1 - 0.09)] }, clearY: cup.cupRimY(cupAt), solids: ring });
     assert.ok(hop.checkHop(place, { solids: ring }).ok, "a d10 out of the cup");
-    assert.ok(geom.obbMinY(geom.obbOf(place.at(place.legs[0].ms), die.SHAPES.d10)) >= cupAt.p[1] + 0.1016 + die.settings.place.clearM - 1e-6, "clear of the rim before it moves across");
+    assert.ok(geom.obbMinY(geom.obbOf(place.at(place.legs[0].ms), die.SHAPES.d10)) >= cup.cupRimY(cupAt) + die.settings.place.clearM - 1e-6, "clear of the rim before it moves across");
     assert.ok(geom.quatAngle(place.at(place.legs[0].ms).q, [0, 0, 0, 1]) < 1e-9, "it turns only on the way across");
-    const back = die.planPlace({ kind: "d10", from: place.to, to: place.from, clearY: cupAt.p[1] + 0.1016, solids: ring });
+    const back = die.planPlace({ kind: "d10", from: place.to, to: place.from, clearY: cup.cupRimY(cupAt), solids: ring });
     assert.ok(hop.checkHop(back, { solids: ring }).ok && Math.abs(back.ms - place.ms) < 1e-9, "and back in, the same hop backwards");
 }
 

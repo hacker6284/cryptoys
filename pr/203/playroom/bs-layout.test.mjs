@@ -5,8 +5,9 @@
 // the board marks the view draws from the generated trace.
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { BS_BOX_REST, BS_DICE, BS_GAP, BS_GRID, BS_SEAT_XZ, BS_SHELF, BS_UNIT_FOOT, DEN, REAL_SIZES, SHELF_TOP, TABLE_R } from "./constants.js";
-import { ROOM } from "../anim/shared/room.js";
+import { BS_BOX_REST, BS_CHEST, BS_DICE, BS_DIE_LIFT, BS_GAP, BS_GRID, BS_SEAT_XZ, BS_SHELF, BS_UNIT_FOOT, DEN, MINX_SPAN, REAL_SIZES, SHELF_TOP, TABLE_R } from "./constants.js";
+import { Quaternion, Vector3, glbMesh } from "./three-mini.mjs";
+import { CHEST as CHEST_DRAWN, ROOM } from "../anim/shared/room.js";
 import { stubThree } from "./three-stub.mjs";
 
 stubThree();
@@ -115,6 +116,31 @@ for (const s of ROOM.filter((r) => r.kind === "box" && r.name !== "shelf-top")) 
 }
 assert.ok(shelf.z0 > -2.28 && shelf.z1 < -2.0, "on the shelf board, in front of the backboard");
 
+// ---- the chest: the dice box waits in it, shut ----
+// Where world.getChestPose lays it: the row's spot (42 % across the
+// chest's drawn box in x, 52 % in z) moved by BS_CHEST, 55 mm up its
+// floor, turned π/2 + 0.1. Inside the cavity (10 mm from its walls, under
+// its rim, so the lid shuts over it) and clear of the row down the
+// middle (half the widest toy in it, 15 mm more).
+{
+    const yahtzee = await import("../anim/yahtzee/index.js");
+    const geom = await import("../anim/shared/geom.js");
+    const { outer: o, inner: cav } = CHEST_DRAWN;
+    const row = { x: o.min[0] * 0.42 + o.max[0] * 0.58, z: o.min[2] * 0.52 + o.max[2] * 0.48 };
+    const yaw = Math.PI / 2 + 0.1;
+    const at = { p: [row.x + BS_CHEST.dx, o.min[1] + 0.055, row.z + BS_CHEST.dz], q: [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)] };
+    const L = yahtzee.box.LID;
+    const shut = geom.obbOf(at, { min: [-L.hx, 0, -L.hz], max: [L.hx, L.y1, L.hz] });
+    const cs = geom.obbCorners(shut);
+    for (const c of cs) {
+        assert.ok(c[0] >= cav.min[0] + 0.01 && c[0] <= cav.max[0] - 0.01 && c[2] >= cav.min[2] + 0.01 && c[2] <= cav.max[2] - 0.01, `the dice box inside the chest's walls (${c[0].toFixed(3)}, ${c[2].toFixed(3)})`);
+        assert.ok(c[1] >= cav.min[1] - 1e-9 && c[1] <= cav.max[1] - 0.01, `the dice box above the chest's floor, under its rim (${c[1].toFixed(3)})`);
+    }
+    const rowHalf = Math.max(MINX_SPAN, REAL_SIZES.deckBox.w, REAL_SIZES.deckBox.h, REAL_SIZES.deckBox.d) / 2;
+    const gap = row.x - Math.max(...cs.map((c) => c[0]));
+    assert.ok(gap >= rowHalf + 0.015, `the dice box clear of the chest's row (${(gap * 1000).toFixed(0)} mm from its line)`);
+}
+
 // ---- the unboxing: every move, at every moment ----
 {
     const P = await import("./bs-unbox-plan.js");
@@ -154,19 +180,24 @@ assert.ok(shelf.z0 > -2.28 && shelf.z1 < -2.0, "on the shelf board, in front of 
         for (const b of packed) if (a !== b) assert.ok(geom.obbDepth(a.o, b.o) <= 0, `${a.kind}#${a.k} and ${b.kind}#${b.k} apart in the cup`);
     }
 
-    // A die's rest on its row: its face up (dice.FACES), its yaw, its drawn box on the felt.
-    const YAW = { d10: [0.3, -0.5, 0.9, 0.1, -0.8], d12: 0.4, d6: 0.25 };
-    const FACE = { d10: [1, 2, 3, 4, 5], d12: 12, d6: 6 };
-    const rest = (kind, k) => {
-        const n = dice.FACES[kind][kind === "d10" ? FACE.d10[k] : FACE[kind]];
-        const l = Math.hypot(...n);
-        const up = n.map((v) => v / l);
-        const axis = geom.cross(up, [0, 1, 0]);
-        const s = Math.hypot(...axis);
-        const tilt = s < 1e-9 ? (up[1] > 0 ? [0, 0, 0, 1] : geom.quatAxisAngle([1, 0, 0], Math.PI)) : geom.quatAxisAngle(axis.map((v) => v / s), Math.acos(Math.max(-1, Math.min(1, up[1]))));
-        const q = geom.quatMul(geom.quatAxisAngle([0, 1, 0], kind === "d10" ? YAW.d10[k] : YAW[kind]), tilt);
-        return { y: geom.seatY(0, q, dice.SHAPES[kind]) + 0.0002, q };
-    };
+    // A die's rest on its row: the stage's own rest(kind, k) (bs-unbox-plan.js
+    // makeDieRest: dice.restHeight of the drawn die showing its face), on
+    // the dice models themselves.
+    const meshes = Object.fromEntries(["d10", "d12", "d6"].map((kind) => [kind, glbMesh(new URL(`../bs/assets/models/${BS_MODELS[kind]}`, import.meta.url))]));
+    const rest = P.makeDieRest((kind) => meshes[kind], Quaternion, Vector3);
+    for (const [kind, k] of P.DICE) {
+        // Its lowest drawn point (every vertex turned to its rest) is BS_DIE_LIFT above the felt.
+        const { p, q } = P.dieSpot(kind, k, rest);
+        const m = meshes[kind];
+        const mq = [m.quaternion.x, m.quaternion.y, m.quaternion.z, m.quaternion.w];
+        const pos = m.geometry.attributes.position;
+        let low = Infinity;
+        for (let i = 0; i < pos.count; i++) {
+            const v = geom.quatRotate(geom.quatMul(q, mq), [pos.getX(i) * m.scale.x, pos.getY(i) * m.scale.y, pos.getZ(i) * m.scale.z]);
+            low = Math.min(low, p[1] + v[1]);
+        }
+        assert.ok(Math.abs(low - (P.FELT_Y + BS_DIE_LIFT)) < 1e-6, `${kind}#${k} rests on the felt by its drawn bottom (${((low - P.FELT_Y) * 1000).toFixed(3)} mm)`);
+    }
 
     // Every move of the unboxing and the repacking, at the tempo it plays:
     // on its law, ends exact, nothing jumps, no overlap with anything that
@@ -196,11 +227,12 @@ assert.ok(shelf.z0 > -2.28 && shelf.z1 < -2.0, "on the shelf board, in front of 
     const restSet = [
         ["Battleship base", S.navalBase()], ["Battleship lid", S.navalLid()], ["dice box base", S.diceBase()], ["dice box lid", S.diceLid()],
         ["red unit", S.unitOpen(0)], ["blue unit", S.unitOpen(1)], ["cup", S.cupBox(P.SEATS.cup)],
-        ...P.DICE.map(([kind, k]) => [`${kind}#${k}`, S.die(P.dieSpot(kind, k, rest), kind, kind)]),
+        ...P.DICE.map(([kind, k]) => [`${kind}#${k}`, S.die(P.dieSpot(kind, k, rest), kind, kind), true]),
     ];
-    for (const [name, parts] of restSet) {
+    for (const [name, parts, isDie] of restSet) {
+        // (A die's drawn box reaches below its drawn bottom, checked above on its vertices.)
         const bottom = Math.min(...parts.map(geom.obbMinY));
-        assert.ok(Math.abs(bottom - P.FELT_Y) < 2.5e-4, `${name} rests on the felt (${((bottom - P.FELT_Y) * 1000).toFixed(2)} mm)`);
+        if (!isDie) assert.ok(Math.abs(bottom - P.FELT_Y) < 2.5e-4, `${name} rests on the felt (${((bottom - P.FELT_Y) * 1000).toFixed(2)} mm)`);
         for (const p of parts) for (const c of geom.obbCorners(p)) assert.ok(Math.hypot(c[0] - DEN.x, c[2] - DEN.z) < TABLE_R - 0.08 - 0.05, `${name} on the felt`);
     }
     for (let i = 0; i < restSet.length; i++) for (let j = i + 1; j < restSet.length; j++) {

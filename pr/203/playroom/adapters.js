@@ -1041,6 +1041,8 @@ export function createMegaDreifachAdapter() {
         },
         async leave({ snap = false } = {}) {
             cancelEnter = true;
+            // Mid-unbox: stop after the move in progress (Skip finishes it).
+            stage?.cancelUnbox();
             clock?.skip();
             const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
             session?.dispose();
@@ -1223,6 +1225,8 @@ export function createBsAdapter() {
         },
         async leave({ snap = false } = {}) {
             cancelEnter = true;
+            // Mid-unbox: stop after the move in progress (Skip finishes it).
+            stage?.cancelUnbox();
             clock?.skip();
             const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
             session?.dispose();
@@ -1230,14 +1234,14 @@ export function createBsAdapter() {
             dock.close();
             stage?.settle();
             await stage?.clearShow();
-            // Back into the boxes (the unboxing backwards), then the
-            // director flies the boxes home.
+            // Back into the boxes (the moves done, backwards; snapped or
+            // reduced, at once), then the director flies the boxes home.
             if (stage && !stage.packed) {
                 markBeat("bs-repack");
                 const beat = createBeatClock({ reduced });
                 const gen = beat.begin();
                 try {
-                    await stage.repack((ms, step) => beat.tween(ms, (t) => step(t * ms), { ease: (t) => t, generation: gen }));
+                    await stage.repack((ms, step) => beat.tween(ms, (t) => step(t * ms), { ease: (t) => t, generation: gen }), { snap: reduced });
                 } catch (err) {
                     console.warn("BS repack failed", err);
                     stage.packNow();

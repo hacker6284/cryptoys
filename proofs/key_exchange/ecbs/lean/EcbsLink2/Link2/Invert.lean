@@ -5152,7 +5152,9 @@ theorem modelClimb_tally (s : ClimbModel) (x : List Nat)
     A shipped tier uses a smaller cap, the holes left in the control row after
     the tally origin: that envelope does not fit the control row of Demo, Toy,
     Hobby, or Serious. The three `FitsLen` facts are the moves, slides, and ops
-    fit in the domain of `invert_number_refines`, taken at this cap. -/
+    fit in the domain of `invert_number_refines`, taken at this cap. `fitTailM`
+    and `fitTailS` are headroom for the unpark, final cube, outer settle, and
+    `tally_clear` that follow the ladder. They do not change the rung charge. -/
 structure ClimbBudget where
   n : Nat
   bench : Nat
@@ -5167,6 +5169,10 @@ structure ClimbBudget where
   fitM : FitsLen (moves0 + R * rungCharge n bench mMax)
   fitS : FitsLen (slides0 + R * rungSlideCharge n mMax)
   fitO : FitsLen (ops0 + R * (mMax + 3))
+  /-- Comb, fold, and the outer settle, past the settle the climb already reserved. -/
+  fitTailM : FitsLen (moves0 + R * rungCharge n bench mMax + pegCharge n bench)
+  /-- The outer settle's `2 · n` slides, past the settle reserved in `fitS`. -/
+  fitTailS : FitsLen (slides0 + R * rungSlideCharge n mMax + 2 * n)
   /-- Counter at the start of the climb. One `rungCtrl` step is at most
       `3 · mMax + 5`, so the counter after every rung still fits an i64. -/
   ctrl0 : Nat
@@ -5220,6 +5226,13 @@ structure RungDeltaTight (b b' : Ecbs.Board) (base : ClimbBudget) (m : Nat) : Pr
     b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
     b'.sudo_5Board_4cost.sudo_5Costs_6slides = (sl' : Int) ∧
     sl' + 2 * base.n ≤ sl + rungSlideCharge base.n m
+  /-- One under `mMax + 3`. Slot 1 grows by at most the tally plus one cube,
+      and the mul slot by at most two. -/
+  opsTight : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+    ∃ (c c' : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(delta.opsSize ▸ hi) = (c' : Int) ∧
+      c' ≤ c + (base.mMax + 2)
 
 /-- The climb hole `park_rung` reads, and the colour sitting there.
     `climb_holes` walks `ladder0 + R - 1` down to `ladder0`. The hole for
@@ -5367,7 +5380,8 @@ structure ClimbShape (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
 /-- Induction hypothesis after the prefix `done`, with `rest` still to run.
     The tally length is `climbTallyPrefix`, proved from the rung list. The
     counters are at most `done.length` charges, and while the gap sits on the
-    bench the bound also reserves the pending slide of `2 · n`. `shape` is the
+    bench the bound also reserves the pending slide of `2 · n` and one pending
+    op. `shape` is the
     spare, the gap home, the tally segment past the current length, the held
     input, and the tier layout. -/
 structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
@@ -5389,7 +5403,8 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
       base.slides0 + done.length * rungSlideCharge base.n base.mMax
   ops : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
     ∃ (c : Nat), b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
-      c ≤ base.ops0 + done.length * (base.mMax + 3)
+      c + (if s.onBench then 1 else 0) ≤
+        base.ops0 + done.length * (base.mMax + 3)
   peak : ∃ (pk : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     pk ≤ max base.peak0 7
@@ -5475,7 +5490,11 @@ theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel
     htally0 := h.htally0
     kLe := h.kLe
     shape := h.shape
-    ops := h.ops
+    ops := by
+      intro i hi
+      obtain ⟨c, hc, hle⟩ := h.ops i hi
+      refine ⟨c, hc, ?_⟩
+      cases hs : s.onBench <;> simp [hs] at hle <;> omega
     peak := h.peak
     highTop := h.highTop
     parkBelow := h.parkBelow
@@ -5588,6 +5607,24 @@ theorem moves_reserve_entry (n mv moves0 rc : Nat) (onBench : Bool)
 theorem slides_reserve_entry (n sl slides0 rc : Nat) (onBench : Bool)
     (hon : onBench = false) (hle : sl ≤ slides0) :
     sl + (if onBench then 2 * n else 0) ≤ slides0 + 0 * rc := by
+  simp [hon, Nat.zero_mul, Nat.add_zero]
+  exact hle
+
+/-- The reserved op is nonnegative, so the strengthened bound implies the old one. -/
+theorem ClimbInvK.ops_loose {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget} (h : ClimbInvK done rest b s base) :
+    ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      ∃ (c : Nat), b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+        c ≤ base.ops0 + done.length * (base.mMax + 3) := by
+  intro i hi
+  obtain ⟨c, hc, hle⟩ := h.ops i hi
+  refine ⟨c, hc, ?_⟩
+  cases hs : s.onBench <;> simp [hs] at hle <;> omega
+
+/-- At entry the bench is off, so the reservation is zero and the field is `c ≤ ops0`. -/
+theorem ops_reserve_entry (c ops0 charge : Nat) (onBench : Bool)
+    (hon : onBench = false) (hle : c ≤ ops0) :
+    c + (if onBench then 1 else 0) ≤ ops0 + 0 * charge := by
   simp [hon, Nat.zero_mul, Nat.add_zero]
   exact hle
 
@@ -6124,6 +6161,11 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       sl' + 2 * base.n ≤
         sl + (if s.onBench then 2 * base.n else 0) +
           rungSlideCharge base.n s.tally)
+    (hopsCarry : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      ∃ (c c' : Nat),
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδ.opsSize ▸ hi) = (c' : Int) ∧
+        c' + 1 ≤ c + (if s.onBench then 1 else 0) + (base.mMax + 3))
     (hCap : climbTallyPrefix base.tally0 done (r :: rest) ≤ base.mMax)
     (hshape : ClimbShape b' (modelRung s x r hole rest.isEmpty) rest base)
     (hhole : hole < s.t0)
@@ -6244,16 +6286,38 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
   · intro i hi
     have hi0 : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
       rw [← hδ.opsSize]; exact hi
-    obtain ⟨c, c', hc, hc', hle⟩ := hδ.ops i hi0
+    obtain ⟨c, c', hc, hc', hcarry⟩ := hopsCarry i hi0
     obtain ⟨c0, hc0, hbound⟩ := h.ops i hi0
     have hcEq : c = c0 := ofNat_inj_nat (hc.symm.trans hc0)
-    refine ⟨c', hc', ?_⟩
-    have hlen : (done ++ [r]).length = done.length + 1 := by simp
-    rw [hlen]
-    have h4 : (done.length + 1) * (base.mMax + 3) =
-        done.length * (base.mMax + 3) + (base.mMax + 3) := by
-      rw [Nat.succ_mul]
-    omega
+    refine ⟨c', ?_, ?_⟩
+    · have hix :
+          b'.sudo_5Board_4cost.sudo_5Costs_3ops[i] =
+            b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδ.opsSize ▸ hi0) := by
+        have hfin : (⟨i, hi⟩ : Fin b'.sudo_5Board_4cost.sudo_5Costs_3ops.size) =
+            ⟨i, hδ.opsSize ▸ hi0⟩ := Fin.ext rfl
+        simp [hfin]
+      exact hix.trans hc'
+    · have hlen : (done ++ [r]).length = done.length + 1 := by simp
+      have honS : (modelRung s x r hole rest.isEmpty).onBench = true := by
+        simp [modelRung]
+      rw [hlen]
+      simp only [honS, ite_true]
+      have hstep : c' + 1 ≤
+          base.ops0 + done.length * (base.mMax + 3) + (base.mMax + 3) := by
+        have h1 : c' + 1 ≤
+            c + (if s.onBench then 1 else 0) + (base.mMax + 3) := by
+          simpa [hcEq] using hcarry
+        have h2 : c + (if s.onBench then 1 else 0) + (base.mMax + 3) ≤
+            base.ops0 + done.length * (base.mMax + 3) + (base.mMax + 3) :=
+          Nat.add_le_add_right (by simpa [hcEq] using hbound) _
+        exact Nat.le_trans h1 h2
+      have h4 : (done.length + 1) * (base.mMax + 3) =
+          done.length * (base.mMax + 3) + (base.mMax + 3) := by
+        rw [Nat.succ_mul]
+      have hgoalO : base.ops0 + done.length * (base.mMax + 3) + (base.mMax + 3) =
+          base.ops0 + (done.length + 1) * (base.mMax + 3) := by
+        rw [h4, Nat.add_assoc]
+      exact Nat.le_trans hstep (Nat.le_of_eq hgoalO)
   · obtain ⟨pk, pk', hb, hb', hle⟩ := hδ.peak
     obtain ⟨pk0, hb0, hbound⟩ := h.peak
     have hpk : pk = pk0 := ofNat_inj_nat (hb.symm.trans hb0)
@@ -6549,6 +6613,11 @@ structure TierSat (t : Spec.Tier) : Prop where
   fitGeomM : FitsLen (tierChargeMoves t (geomCap t))
   fitGeomS : FitsLen (tierChargeSlides t (geomCap t))
   fitGeomO : FitsLen (tierChargeOps t (geomCap t))
+  /-- Post-ladder move headroom at the control-row cap. Not part of the rung charge. -/
+  fitRoomTailM : FitsLen (tierChargeMoves t (rowRoom t) + pegCharge t.n t.benchlen)
+  fitRoomTailS : FitsLen (tierChargeSlides t (rowRoom t) + 2 * t.n)
+  fitGeomTailM : FitsLen (tierChargeMoves t (geomCap t) + pegCharge t.n t.benchlen)
+  fitGeomTailS : FitsLen (tierChargeSlides t (geomCap t) + 2 * t.n)
   cube_span : 3 * (t.n - 1) + t.combgap < t.benchlen
   mul_span : 2 * (t.n - 1) < t.benchlen
 
@@ -6609,6 +6678,10 @@ theorem tierSat_num (t : Spec.Tier) (origin room geom r : Nat) (climb : List Nat
     (hGm : r * rungCharge t.n t.benchlen geom ≤ i64MaxNat)
     (hGs : r * rungSlideCharge t.n geom ≤ i64MaxNat)
     (hGo : r * (geom + 3) ≤ i64MaxNat)
+    (hRmT : r * rungCharge t.n t.benchlen room + pegCharge t.n t.benchlen ≤ i64MaxNat)
+    (hRsT : r * rungSlideCharge t.n room + 2 * t.n ≤ i64MaxNat)
+    (hGmT : r * rungCharge t.n t.benchlen geom + pegCharge t.n t.benchlen ≤ i64MaxNat)
+    (hGsT : r * rungSlideCharge t.n geom + 2 * t.n ≤ i64MaxNat)
     (hcube : 3 * (t.n - 1) + t.combgap < t.benchlen)
     (hmul : 2 * (t.n - 1) < t.benchlen) : TierSat t := by
   refine
@@ -6623,6 +6696,22 @@ theorem tierSat_num (t : Spec.Tier) (origin room geom r : Nat) (climb : List Nat
       fitGeomM := by unfold FitsLen tierChargeMoves; rw [hR, hG]; exact hGm
       fitGeomS := by unfold FitsLen tierChargeSlides; rw [hR, hG]; exact hGs
       fitGeomO := by unfold FitsLen tierChargeOps; rw [hR, hG]; exact hGo
+      fitRoomTailM := by
+        unfold FitsLen tierChargeMoves
+        rw [hR, hRoom]
+        exact hRmT
+      fitRoomTailS := by
+        unfold FitsLen tierChargeSlides
+        rw [hR, hRoom]
+        exact hRsT
+      fitGeomTailM := by
+        unfold FitsLen tierChargeMoves
+        rw [hR, hG]
+        exact hGmT
+      fitGeomTailS := by
+        unfold FitsLen tierChargeSlides
+        rw [hR, hG]
+        exact hGsT
       cube_span := hcube
       mul_span := hmul }
 
@@ -6635,6 +6724,7 @@ theorem demo_tier_sat : TierSat Spec.demo := by
   exact tierSat_num Spec.demo 10 6 8 2 [2, 1] hO hRoom hG hR hClimb
     (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide)
 
 theorem toy_tier_sat : TierSat Spec.toy := by
@@ -6646,6 +6736,7 @@ theorem toy_tier_sat : TierSat Spec.toy := by
   exact tierSat_num Spec.toy 22 18 32 4 [1, 2, 2, 1] hO hRoom hG hR hClimb
     (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide)
 
 theorem hobby_tier_sat : TierSat Spec.hobby := by
@@ -6658,6 +6749,7 @@ theorem hobby_tier_sat : TierSat Spec.hobby := by
   exact tierSat_num Spec.hobby 23 57 64 5 [2, 2, 1, 2, 1] hO hRoom hG hR hClimb
     (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide)
 
 theorem serious_tier_sat : TierSat Spec.serious := by
@@ -6670,6 +6762,7 @@ theorem serious_tier_sat : TierSat Spec.serious := by
   exact tierSat_num Spec.serious 25 175 256 7 [1, 2, 2, 1, 1, 2, 1] hO hRoom hG hR hClimb
     (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide)
 
 theorem demo_climb_cap (done rest : List Nat)

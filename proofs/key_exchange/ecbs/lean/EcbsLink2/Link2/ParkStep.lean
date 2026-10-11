@@ -1390,7 +1390,7 @@ theorem white_final_ge
   let s' := modelRung s base.x r hole true
   obtain ⟨b', bIdle, hrun, hframe, hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E, hparkE,
       hhighE, htierE, hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep,
-      ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, _hslots, hpieceM, hpieceS⟩ :=
+      ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
     parked_clear_ge h hM hS hge hm hT hhome
   obtain ⟨hgap, htall, hon, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
       hparkM, hnM, hkM, hbM⟩ := model_final_white_ge s base.x r hole hwhite hge
@@ -1703,7 +1703,8 @@ theorem white_final_ge
     rw [htall]
     exact hlt
   have hK := climbInvKCore_succ h hinv hδ hCap hshape h.holeBelow htmax rfl
-  exact ⟨b', hrun, hK, rungTight_of_clear hδ hpieceM hpieceS⟩
+  exact ⟨b', hrun, hK, rungTight_of_clear hδ hpieceM hpieceS
+    (opsTight_of_clear hδ hT hslots)⟩
 
 theorem open_white_ctrl_fit_ge (ctrl tally ctrl0 done R mMax : Nat)
     (hctrl : ctrl ≤ ctrl0 + done * (3 * mMax + 5))
@@ -1763,7 +1764,7 @@ theorem white_open_ge
   have habove := h.srcAbove hge
   obtain ⟨bClear, bIdle, hrun, hframe, hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E, hparkE,
       hhighE, htierE, hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep,
-      ⟨ps, hps⟩, ⟨hnat, hhn⟩, hrowIdle, hctrlIdle, hδ, _hslots, hpieceM, hpieceS⟩ :=
+      ⟨ps, hps⟩, ⟨hnat, hhn⟩, hrowIdle, hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
     parked_clear_ge h hM hS hge hm hT hhome
   obtain ⟨hgap, htall, hon, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
       hparkM, hnM, hkM, hbM⟩ := model_open_white_ge s base.x r hole hwhite hge
@@ -1973,7 +1974,8 @@ theorem white_open_ge
     · unfold b'; rw [withPark_ops, hopsIn, hframe, withPark_ops]
     · unfold b'; rw [withPark_peak, hpkIn, hframe, withPark_peak]
   have hTight : RungDeltaTight b b' base s.tally :=
-    rungTight_cost (rungTight_of_clear hδ hpieceM hpieceS)
+    rungTight_cost (rungTight_of_clear hδ hpieceM hpieceS
+      (opsTight_of_clear hδ hT hslots))
       (by unfold b'; rw [withPark_moves, hmvIn, hframe, withPark_moves])
       (by unfold b'; rw [withPark_slides, hslIn, hframe, withPark_slides])
       (by unfold b'; rw [withPark_ops, hopsIn, hframe, withPark_ops])

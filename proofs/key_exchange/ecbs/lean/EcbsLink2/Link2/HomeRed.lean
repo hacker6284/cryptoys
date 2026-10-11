@@ -277,6 +277,11 @@ structure RedCarry (b bRed bClear : Ecbs.Board) (base : ClimbBudget) (tally xHom
   keep : CellKeep bRed xHome x
   strict : ∃ p : Nat, bRed.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int)
   hole : ∃ h : Nat, bRed.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int)
+  opsTight : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+    ∃ c c' : Nat,
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+      bRed.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(delta.opsSize ▸ hi) = (c' : Int) ∧
+      c' ≤ c + (base.mMax + 2)
 
 /-- Spare cube, then the mul by the input, on the unparked clear. The cube writes
     ops slot 1 only. The mul writes ops slot 0 only. Each peak stays at most
@@ -839,6 +844,28 @@ theorem red_unparked_delta
     refine ⟨c, c', hc, ?_, hle⟩
     exact (array_get_irrel (h1 := hszR ▸ hi)
       (h2 := by rw [hraw.1]; exact hi)).trans hc'
+  have hopsTight : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      ∃ c c' : Nat,
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+        bRed0.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hszR ▸ hi) = (c' : Int) ∧
+        c' ≤ c + (base.mMax + 2) := by
+    intro i hi
+    have hraw := red_ops_slack b.sudo_5Board_4cost.sudo_5Costs_3ops
+      bClearU.sudo_5Board_4cost.sudo_5Costs_3ops
+      bCube0.sudo_5Board_4cost.sudo_5Costs_3ops
+      bRed0.sudo_5Board_4cost.sudo_5Costs_3ops
+      s.tally base.mMax c1 cC0 hT
+      (clearSlots_cast hslots (by
+        have hback : bClearP.sudo_5Board_4cost.sudo_5Costs_3ops =
+            bClearU.sudo_5Board_4cost.sudo_5Costs_3ops := hopsU.symm
+        exact hback))
+      (by rw [hOpsB.trans hOps, Array.size_set])
+      (by rw [hRedSet, Array.size_set])
+      hops1U h0cubeSz hop1U (hOpsB.trans hOps) hv0 hRedSet
+    obtain ⟨c, c', hc, hc', hle⟩ := hraw.2 i hi
+    refine ⟨c, c', hc, ?_, hle⟩
+    exact (array_get_irrel (h1 := hszR ▸ hi)
+      (h2 := by rw [hraw.1]; exact hi)).trans hc'
   have hmovLoose : mvR ≤ mvE + rungCharge base.n base.bench s.tally := by
     omega
   have hsldLoose : slR ≤ slE + rungSlideCharge base.n s.tally := by
@@ -996,7 +1023,8 @@ theorem red_unparked_delta
     empty6 := h6fR
     keep := hkeepR
     strict := hstrictR
-    hole := hholeR }
+    hole := hholeR
+    opsTight := hopsTight }
 /-- Idle non-final red rung. The parked clear is the unparked clear with the
     park row and a counter `2` higher. `tally_double` and `tally_add_one` keep
     that offset. The spare cube and the mul by the input are `withPark` of the
@@ -1883,7 +1911,7 @@ theorem red_open_k
     rw [htall]
     exact open_red_tmax_lt s.tally
   have hTight : RungDeltaTight b bAdd base s.tally :=
-    rungTight_cost (rungTight_of_rel hcarry.delta hrel) hmvA hslA hopsA hpkA
+    rungTight_cost (rungTight_of_rel hcarry.delta hrel hcarry.opsTight) hmvA hslA hopsA hpkA
   have hK := climbInvKCore_succ h (by simpa [hempty] using hinv) hδA hCap
     (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
   exact ⟨bAdd, hprog, by simpa [hempty] using hK, by simpa [hempty] using hTight⟩
@@ -2709,7 +2737,7 @@ theorem red_final_k
       (by rw [withPark_ops, withTally_ops])
       (by rw [withPark_peak, withTally_peak])
   have hTight : RungDeltaTight b b' base s.tally :=
-    rungTight_cost (rungTight_of_rel hpack.delta hrel)
+    rungTight_cost (rungTight_of_rel hpack.delta hrel hpack.opsTight)
       (by rw [withPark_moves, withTally_moves])
       (by rw [withPark_slides, withTally_slides])
       (by rw [withPark_ops, withTally_ops])

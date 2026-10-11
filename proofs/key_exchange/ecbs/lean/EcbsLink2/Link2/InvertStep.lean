@@ -208,7 +208,12 @@ theorem rungTight_of_clear {b b' : Ecbs.Board} {base : ClimbBudget} {m : Nat}
     (hs : ∃ sl slC : Nat,
       b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides = (slC : Int) ∧
-      slC ≤ sl + m * (2 * base.n)) :
+      slC ≤ sl + m * (2 * base.n))
+    (hops : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      ∃ c c' : Nat,
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδ.opsSize ▸ hi) = (c' : Int) ∧
+        c' ≤ c + (base.mMax + 2)) :
     RungDeltaTight b b' base m := by
   obtain ⟨mv, mvC, hmv, hmvC, hshort⟩ := hm
   obtain ⟨sl, slC, hsl, hslC, hss⟩ := hs
@@ -217,7 +222,8 @@ theorem rungTight_of_clear {b b' : Ecbs.Board} {base : ClimbBudget} {m : Nat}
       moveTight := ⟨mv, mvC, hmv, hmvC,
         short_clear_move_tight base.n base.bench m mv mvC hshort⟩
       slideTight := ⟨sl, slC, hsl, hslC,
-        short_clear_slide_tight base.n m sl slC hss⟩ }
+        short_clear_slide_tight base.n m sl slC hss⟩
+      opsTight := hops }
 
 /-- `tally_double` copies moves, slides, ops, and peak, so a rung delta survives it. -/
 theorem rungDelta_cost {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
@@ -257,11 +263,15 @@ theorem rungTight_cost {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
     (hpk : b2.sudo_5Board_4cost.sudo_5Costs_4peak =
       b1.sudo_5Board_4cost.sudo_5Costs_4peak) :
     RungDeltaTight b b2 base m := by
-  refine ⟨rungDelta_cost h.delta hmv hsl hops hpk, ?_, ?_⟩
+  refine ⟨rungDelta_cost h.delta hmv hsl hops hpk, ?_, ?_, ?_⟩
   · obtain ⟨mv, mv', hb, hb', hle⟩ := h.moveTight
     exact ⟨mv, mv', hb, hmv.trans hb', hle⟩
   · obtain ⟨sl, sl', sb, sb', sle⟩ := h.slideTight
     exact ⟨sl, sl', sb, hsl.trans sb', sle⟩
+  · intro i hi
+    obtain ⟨c, c', hc, hc', hle⟩ := h.opsTight i hi
+    refine ⟨c, c', hc, ?_, hle⟩
+    simpa [hops] using hc'
 
 /-- The red mul's tight counters are a tight rung delta when the loose delta
     is already known. -/
@@ -273,10 +283,15 @@ theorem rungTight_of_rel {b b' : Ecbs.Board} {base : ClimbBudget} {m : Nat}
       mvR + 2 * base.n ≤ mvE + rungCharge base.n base.bench m ∧
       b.sudo_5Board_4cost.sudo_5Costs_6slides = (slE : Int) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides = (slR : Int) ∧
-      slR + 2 * base.n ≤ slE + rungSlideCharge base.n m) :
+      slR + 2 * base.n ≤ slE + rungSlideCharge base.n m)
+    (hops : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      ∃ c c' : Nat,
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδ.opsSize ▸ hi) = (c' : Int) ∧
+        c' ≤ c + (base.mMax + 2)) :
     RungDeltaTight b b' base m := by
   obtain ⟨mvE, mvR, slE, slR, hmvE, hmvR, hmov, hslE, hslR, hsld⟩ := hrel
-  exact ⟨hδ, ⟨mvE, mvR, hmvE, hmvR, hmov⟩, ⟨slE, slR, hslE, hslR, hsld⟩⟩
+  exact ⟨hδ, ⟨mvE, mvR, hmvE, hmvR, hmov⟩, ⟨slE, slR, hslE, hslR, hsld⟩, hops⟩
 
 /-- The row a final white rung leaves: the park write, then the tally painted red.
     The segment is the finished one. -/
@@ -805,6 +820,73 @@ theorem red_ops_on_clear (entry clr cube red : Array Int) (tally mMax v1 v0 : Na
       refine ⟨cE, cE, hcE, ?_, Nat.le_add_right _ _⟩
       rw [hredN, hcuN, hcC, hcEq]
 
+/-- The same red cube and red mul, one under the charge. Slot 0 grows by two,
+    slot 1 by `tally + 1`, and every other slot stays. -/
+theorem red_ops_slack (entry clr cube red : Array Int) (tally mMax v1 v0 : Nat)
+    (ht : tally ≤ mMax)
+    (hs : ClearSlots entry clr tally)
+    (hszU : cube.size = clr.size) (hszR : red.size = cube.size)
+    (h1 : 1 < clr.size) (h0 : 0 < cube.size)
+    (hv1 : clr[1]'h1 = (v1 : Int))
+    (hcube : cube = clr.set ⟨1, h1⟩ (Int.ofNat (v1 + 1)))
+    (hv0 : cube[0]'h0 = (v0 : Int))
+    (hmul : red = cube.set ⟨0, h0⟩ (Int.ofNat (v0 + 1))) :
+    red.size = entry.size ∧
+    ∀ i (hi : i < entry.size),
+      ∃ c c' : Nat,
+        entry[i]'hi = (c : Int) ∧
+        red[i]'(by rw [hszR, hszU, hs.size]; exact hi) = (c' : Int) ∧
+        c' ≤ c + (mMax + 2) := by
+  refine ⟨by rw [hszR, hszU, hs.size], ?_⟩
+  intro i hi
+  obtain ⟨cE, cC, hcE, hcC, h0s, h1s, hrest⟩ := hs.slots i hi
+  have hiC : i < clr.size := hs.size ▸ hi
+  have hiU : i < cube.size := hszU ▸ hiC
+  have hiR : i < red.size := by rw [hszR, hszU, hs.size]; exact hi
+  by_cases hz : i = 0
+  · subst hz
+    have hc0 : cC = cE + 1 := h0s rfl
+    have hred : red[0]'hiR = Int.ofNat (v0 + 1) := by
+      rw [arr_get hmul 0 hiR]
+      exact Array.getElem_set_eq cube ⟨0, h0⟩ _ rfl _
+    have hcU : cube[0]'h0 = clr[0]'hiC := by
+      rw [arr_get hcube 0 h0]
+      rw [Array.getElem_set_ne clr ⟨1, h1⟩ _ _ (by decide : (1 : Nat) ≠ 0)]
+    have hv : v0 = cC := by
+      apply ofNat_inj_nat
+      exact hv0.symm.trans (hcU.trans hcC)
+    refine ⟨cE, cE + 2, hcE, ?_, ?_⟩
+    · have hnum : v0 + 1 = cE + 2 := by rw [hv, hc0]
+      rw [hred, hnum, ofNat_eq_natCast]
+    · omega
+  · by_cases ho : i = 1
+    · subst ho
+      have hc1 : cC = cE + tally := h1s rfl
+      have hred1 : red[1]'hiR = cube[1]'hiU := by
+        rw [arr_get hmul 1 hiR]
+        rw [Array.getElem_set_ne cube ⟨0, h0⟩ _ _ (by decide : (0 : Nat) ≠ 1)]
+      have hcu1 : cube[1]'hiU = Int.ofNat (v1 + 1) := by
+        rw [arr_get hcube 1 hiU]
+        exact Array.getElem_set_eq clr ⟨1, h1⟩ _ rfl _
+      have hv : v1 = cC := by
+        apply ofNat_inj_nat
+        exact hv1.symm.trans hcC
+      refine ⟨cE, cE + tally + 1, hcE, ?_, ?_⟩
+      · have hnum : v1 + 1 = cE + tally + 1 := by rw [hv, hc1]
+        rw [hred1, hcu1, hnum, ofNat_eq_natCast]
+      · have hle : tally + 1 ≤ mMax + 2 := by omega
+        rw [Nat.add_assoc]
+        exact Nat.add_le_add_left hle cE
+    · have hcEq : cC = cE := hrest hz ho
+      have hredN : red[i]'hiR = cube[i]'hiU := by
+        rw [arr_get hmul i hiR]
+        rw [Array.getElem_set_ne cube ⟨0, h0⟩ _ _ (Ne.symm hz)]
+      have hcuN : cube[i]'hiU = clr[i]'hiC := by
+        rw [arr_get hcube i hiU]
+        rw [Array.getElem_set_ne clr ⟨1, h1⟩ _ _ (Ne.symm ho)]
+      refine ⟨cE, cE, hcE, ?_, Nat.le_add_right _ _⟩
+      rw [hredN, hcuN, hcC, hcEq]
+
 /-- The three slot facts are one rung's ops bound: slot 0 grows by one, slot 1
     by the tally, and every other slot stays. Each of those is at most `mMax + 3`. -/
 theorem rung_ops_of_bump (entry peg mul clr : Array Int) (tally mMax c0 c1 : Nat)
@@ -845,6 +927,33 @@ theorem rung_ops_of_bump (entry peg mul clr : Array Int) (tally mMax c0 c1 : Nat
       have ht3 : tally ≤ mMax + 3 := Nat.le_trans ht (Nat.le_add_right mMax 3)
       omega
     · exact ⟨c, c, hc, (hr i hzero hone hi hiC).trans hc, Nat.le_add_right _ _⟩
+
+/-- An idle clear's slots are one under the ops charge: slot 0 grows by one,
+    slot 1 by the tally, and every other slot stays. -/
+theorem opsTight_of_clear {b b' : Ecbs.Board} {base : ClimbBudget} {m tally : Nat}
+    (hδ : RungDelta b b' base m)
+    (ht : tally ≤ base.mMax)
+    (hs : ClearSlots b.sudo_5Board_4cost.sudo_5Costs_3ops
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops tally) :
+    ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      ∃ c c' : Nat,
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδ.opsSize ▸ hi) = (c' : Int) ∧
+        c' ≤ c + (base.mMax + 2) := by
+  intro i hi
+  obtain ⟨cE, cC, hcE, hcC, h0, h1, hr⟩ := hs.slots i hi
+  refine ⟨cE, cC, hcE, ?_, ?_⟩
+  · exact (array_get_irrel
+      (h1 := hδ.opsSize ▸ hi) (h2 := hs.size ▸ hi)).trans hcC
+  · by_cases hz : i = 0
+    · have h := h0 hz
+      omega
+    · by_cases ho : i = 1
+      · have h := h1 ho
+        have ht2 : tally ≤ base.mMax + 2 := Nat.le_trans ht (Nat.le_add_right _ 2)
+        omega
+      · have h := hr hz ho
+        omega
 
 /-- Park, copy, the white scan, the cube-peg loop, the gap mul, and `clear`.
     The result is that clear. Its row, counter, parked-from hole, rung index,
@@ -1597,7 +1706,7 @@ theorem white_final_k
       hhighE, hmarkE, hbonE, htoE, hbenchE, htierE, hladE, hnrE, htmaxE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, htrits, hopsE, hc1E, hpkSE,
       hholeE, hδs, _hctx⟩
-  obtain ⟨hδ, _, hpieceM, hpieceS⟩ := hδs
+  obtain ⟨hδ, hslots, hpieceM, hpieceS⟩ := hδs
   have hFrom : s.fromHole = -1 := h.shape.park.fromIdle hF
   have hMod := model_final_white s base.x r hole hwhite hF
   obtain ⟨hgap, htall, hon, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
@@ -1829,7 +1938,8 @@ theorem white_final_k
     rw [htall]
     exact hlt
   have hK := climbInvKCore_succ h hinv hδ hCap hshape hh htmax rfl
-  exact ⟨b', hrun, hK, rungTight_of_clear hδ hpieceM hpieceS⟩
+  exact ⟨b', hrun, hK, rungTight_of_clear hδ hpieceM hpieceS
+    (opsTight_of_clear hδ hT hslots)⟩
 
 theorem cons_tail (r : Nat) (rest : List Nat) (k : Nat) (hk : k < rest.length) :
     (r :: rest)[1 + k]'(by simp; omega) = rest[k] := by
@@ -1880,7 +1990,7 @@ theorem white_open_k
       hhighE, hmarkE, hbonE, htoE, hbenchE, htierE, hladE, hnrE, htmaxE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, htrits, hopsE, hc1E, hpkSE,
       hholeE, hδs, _hctx⟩
-  obtain ⟨hδ, _, hpieceM, hpieceS⟩ := hδs
+  obtain ⟨hδ, hslots, hpieceM, hpieceS⟩ := hδs
   have hFrom : s.fromHole = -1 := h.shape.park.fromIdle hF
   have hMod := model_open_white s base.x r hole hwhite hF
   obtain ⟨hgap, htall, hon, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
@@ -2327,8 +2437,9 @@ theorem white_open_k
   have hδ' : RungDelta b b' base s.tally :=
     rungDelta_cost hδ (by simp [b']) (by simp [b']) (by simp [b']) (by simp [b'])
   have hClearTight := rungTight_of_clear hδ hpieceM hpieceS
+    (opsTight_of_clear hδ hT hslots)
   have hTight : RungDeltaTight b b' base s.tally := by
-    refine ⟨hδ', ?_, ?_⟩
+    refine ⟨hδ', ?_, ?_, ?_⟩
     · obtain ⟨mv, mv', hmv, hmv', hle⟩ := hClearTight.moveTight
       refine ⟨mv, mv', hmv, ?_, hle⟩
       exact (by simp [b'] : b'.sudo_5Board_4cost.sudo_5Costs_5moves =
@@ -2337,6 +2448,10 @@ theorem white_open_k
       refine ⟨sl, sl', hsl, ?_, hle⟩
       exact (by simp [b'] : b'.sudo_5Board_4cost.sudo_5Costs_6slides =
         bClear.sudo_5Board_4cost.sudo_5Costs_6slides).trans hsl'
+    · intro i hi
+      obtain ⟨c, c', hc, hc', hle⟩ := hClearTight.opsTight i hi
+      refine ⟨c, c', hc, ?_, hle⟩
+      simpa [b'] using hc'
   have htmax : ∃ tmax : Nat,
       b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < s'.tally → tmax < 2 * s'.tally) := by

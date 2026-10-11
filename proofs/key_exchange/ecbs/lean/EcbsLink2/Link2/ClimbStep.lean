@@ -1024,7 +1024,7 @@ theorem climbClear_slide
   have hopsC : 1 < bC.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     rw [hopsPl, hopsB]
     exact h.shape.peg.opsGt
-  obtain ⟨cOps, hcOps, hcBound⟩ := h.ops 1 h.shape.peg.opsGt
+  obtain ⟨cOps, hcOps, hcBound⟩ := h.ops_loose 1 h.shape.peg.opsGt
   have hop1 : bC.sudo_5Board_4cost.sudo_5Costs_3ops[1] = (cOps : Int) := by
     have hget := idx_get (hopsPl.trans hopsB) 1 hopsC
     exact (hget.trans (get_proof_irrel _ 1 _ _)).trans hcOps
@@ -1104,6 +1104,21 @@ theorem slideCarry_off {b b' : Ecbs.Board} {base : ClimbBudget} {m : Nat}
   refine ⟨sl, sl', hb, hb', ?_⟩
   simpa [hoff] using hle
 
+/-- A home rung's ops slack is the carry `climbInvK_succ` needs. The bench
+    reservation on the way in is zero, and the successor reserves one op. -/
+theorem opsCarry_off {b b' : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (hδ : RungDeltaTight b b' base m) (onBench : Bool) (hoff : onBench = false) :
+    ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      ∃ (c c' : Nat),
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδ.delta.opsSize ▸ hi) = (c' : Int) ∧
+        c' + 1 ≤ c + (if onBench then 1 else 0) + (base.mMax + 3) := by
+  intro i hi
+  obtain ⟨c, c', hc, hc', hle⟩ := hδ.opsTight i hi
+  refine ⟨c, c', hc, hc', ?_⟩
+  have h1 : c' + 1 ≤ c + (base.mMax + 3) := by omega
+  simpa [hoff] using h1
+
 /-- One rung, gap still in home 5. That is the entry rung: `new_board` leaves the
     bench off, and `invert` copies the input into home 5 before the ladder `for`.
     `modelRung` then sets `onBench`, so a second rung is not this theorem. -/
@@ -1125,6 +1140,7 @@ theorem climb_refines_one
   refine ⟨b', hprog, ?_⟩
   exact climbInvK_succ h0 hinv hδ.delta
     (moveCarry_off hδ s0.onBench hEntry) (slideCarry_off hδ s0.onBench hEntry)
+    (opsCarry_off hδ s0.onBench hEntry)
     hCap hshape h0.holeBelow htmax rfl
 
 /-- Bench rung, once `climbRung` on the original board agrees with `climbRung`
@@ -1249,7 +1265,29 @@ theorem climb_step_bench_of
       simpa [h0, slS, pegs] using hle
     have hpeg2 : 2 * pegs ≤ 2 * base.n := Nat.mul_le_mul_left 2 hpegs
     omega
-  have hK := climbInvK_succ h (by simpa [hmod] using hinv) hδL hmoveCarry hslideCarry hCap
+  have hopsCarry : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      ∃ (c c' : Nat),
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδL.opsSize ▸ hi) = (c' : Int) ∧
+        c' + 1 ≤ c + (if s.onBench then 1 else 0) + (base.mMax + 3) := by
+    intro i hi
+    have hiS : i < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      rw [hops]; exact hi
+    obtain ⟨cS, c', hcS, hc', hle⟩ := hδ.opsTight i hiS
+    have hcB : b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (cS : Int) :=
+      (idx_get hops.symm i hi).trans hcS
+    refine ⟨cS, c', hcB, ?_, ?_⟩
+    · have hix :
+          b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδL.opsSize ▸ hi) =
+            b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδ.delta.opsSize ▸ hiS) := by
+        have hfin : (⟨i, hδL.opsSize ▸ hi⟩ : Fin _) = ⟨i, hδ.delta.opsSize ▸ hiS⟩ :=
+          Fin.ext rfl
+        simp [hfin]
+      exact hix.trans hc'
+    · simp only [hon, ite_true]
+      omega
+  have hK := climbInvK_succ h (by simpa [hmod] using hinv) hδL hmoveCarry hslideCarry
+    hopsCarry hCap
     (by simpa [hmod] using hshape) h.holeBelow (by simpa [hmod] using htmax) rfl
   simpa [hmod] using hK
 
@@ -1273,6 +1311,7 @@ theorem climb_step
         hon hm hParkAt hCap hxLen hxT
     refine ⟨b', hprog, climbInvK_succ h hinv hδ.delta
       (moveCarry_off hδ s.onBench hon) (slideCarry_off hδ s.onBench hon)
+      (opsCarry_off hδ s.onBench hon)
       hCap hshape h.holeBelow htmax rfl⟩
   · exact climb_step_bench_of h hon hm hParkAt hCap hxLen hxT
       (fun _ hs => climbRung_slide h hon hm hs)
@@ -1372,7 +1411,16 @@ theorem unpark_after_climb
       bU.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (s.ctrl + 2) ∧
       bU.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
       bU.sudo_5Board_1t = b.sudo_5Board_1t ∧
-      bU.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+      bU.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      bU.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      bU.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      bU.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      bU.sudo_5Board_9tally_len = b.sudo_5Board_9tally_len ∧
+      bU.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   obtain ⟨colour, hcell⟩ := h.shape.park.parkHeld hge
   have hsrc := h.shape.park.srcOk hge
   let src := s.fromHole.toNat
@@ -1389,7 +1437,7 @@ theorem unpark_after_climb
   have hrun := unpark_rung_back b src s.parkAt colour s.high base.control s.ctrl
     hFrom h.inv.park hRowS hRowP hColour h.shape.tierC hsrc.2.1 h.inv.high
     hsrc.2.2.1 h.inv.ctrl h.shape.park.fit2
-  refine ⟨_, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨_, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   all_goals rfl
 
 end EcbsLink2.Link2

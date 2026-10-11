@@ -1993,7 +1993,7 @@ theorem red_cube_emit
     Nat.le_trans hSldW (Nat.le_add_right _ (2 * base.n))
   have hfitS := clear_slide_fit base.n s.tally base.mMax sl slC
     (pegCount (xs.take base.n)) hT hroomS hSldLoose hpegTake
-  obtain ⟨cSlot, hcSlot, hcLe⟩ := h.ops 1 hi1
+  obtain ⟨cSlot, hcSlot, hcLe⟩ := h.ops_loose 1 hi1
   have hcEeq : cE = cSlot := natCast_inj (hcE.symm.trans hcSlot)
   have hent : cE ≤ base.ops0 + done.length * (base.mMax + 3) := by
     rw [hcEeq]; exact hcLe
@@ -2167,7 +2167,7 @@ theorem red_mul_emit
   have hSlideFit := red_slide_fit base.n s.tally base.mMax sl slC
     (pegCount (xs.take base.n)) (pegCount (ys.take base.n)) hT hroomS hSldW
     (pegCount_take_le xs base.n) hpegY
-  obtain ⟨cSlot0, hcSlot0, hcLe0⟩ := h.ops 0 hi0
+  obtain ⟨cSlot0, hcSlot0, hcLe0⟩ := h.ops_loose 0 hi0
   have hent0 : cE0 ≤ base.ops0 + done.length * (base.mMax + 3) := by
     rw [natCast_inj (hcE0.symm.trans hcSlot0)]; exact hcLe0
   have hOpsFit : cOps0 + 1 ≤ base.ops0 + base.R * (base.mMax + 3) :=

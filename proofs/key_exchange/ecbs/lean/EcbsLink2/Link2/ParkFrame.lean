@@ -310,7 +310,7 @@ theorem red_final_ge
   have hδR : RungDelta b b' base s.tally :=
     rungDelta_withPark hpack.delta rowP ctrlP fromH ridxH
   have hTight : RungDeltaTight b b' base s.tally :=
-    rungTight_withPark (rungTight_of_rel hpack.delta hrel) rowP ctrlP fromH ridxH
+    rungTight_withPark (rungTight_of_rel hpack.delta hrel hpack.opsTight) rowP ctrlP fromH ridxH
   obtain ⟨hgap, htall, honM, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
       hparkM, _hnM, _hkM, _hbM⟩ := model_final_red_ge s base.x hole hge
   have hidx : s.ridx < base.R := by

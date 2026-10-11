@@ -931,7 +931,7 @@ theorem red_open_ge
   have hδ' : RungDelta b b' base s.tally :=
     rungDelta_cost hcarry.delta hmvF hslF hopsF hpkF
   have hTight : RungDeltaTight b b' base s.tally :=
-    rungTight_cost (rungTight_of_rel hcarry.delta hrelP) hmvF hslF hopsF hpkF
+    rungTight_cost (rungTight_of_rel hcarry.delta hrelP hcarry.opsTight) hmvF hslF hopsF hpkF
   have hhomeRec : bRec.sudo_5Board_4home = bRedC.sudo_5Board_4home := by
     unfold bRec
     unfold bTall

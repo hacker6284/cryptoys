@@ -324,6 +324,10 @@ theorem array_set_irrel {α : Type} (a : Array α) (i : Nat) (h h' : i < a.size)
   have : (⟨i, h⟩ : Fin a.size) = ⟨i, h'⟩ := Fin.ext rfl
   simp [this]
 
+theorem get_proof_irrel {α : Type} (a : Array α) (i : Nat) (h h' : i < a.size) :
+    a[i]'h = a[i]'h' :=
+  congrArg (fun p : i < a.size => a[i]'p) (proof_irrel h h')
+
 theorem countHeld_congr (a b : Array Bool) (h : a = b) (k : Nat) :
     countHeld a k = countHeld b k := by
   rw [h]
@@ -816,5 +820,463 @@ theorem climbInv_settled (b : Ecbs.Board) (s : ClimbModel)
       simp [Array.getElem_set, hgap, gap_slide_take s.gap s.n s.benchlen hlen]
   · intro hOn
     simp at hOn
+
+/-- `settle` does not write `tally_max`. -/
+theorem settle_tmax_eq (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
+  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+
+/-- The park read survives a slide into home 5. It reads the row, the control
+    counter, the parked hole, and the rung index. `settle` writes none of them.
+    `climb_holes` reads only `ladder0` and `nrungs`, which the slide also leaves. -/
+theorem parkRead_slideGap {b : Ecbs.Board} {s : ClimbModel} {rest : List Nat}
+    {base : ClimbBudget} (h : ParkRead b s rest base)
+    (xs : List Nat) (n moves slides peak : Nat)
+    (h5H : 5 < b.sudo_5Board_4home.size) (h5D : 5 < b.sudo_5Board_4held.size) :
+    ParkRead (settleBoard b 5 h5H h5D xs n moves slides peak)
+      { s with onBench := false } rest base := by
+  let bS := settleBoard b 5 h5H h5D xs n moves slides peak
+  obtain ⟨_, _, _, _, _, _, _, _, hl0, hnr, _⟩ :=
+    settle_rest b 5 h5H h5D xs n moves slides peak
+  have hclimb : Ecbs.climb_holes bS = Ecbs.climb_holes b := by
+    unfold Ecbs.climb_holes
+    rw [hl0, hnr]
+  refine
+    { ladder0B := hl0.trans h.ladder0B
+      nrungsB := hnr.trans h.nrungsB
+      climbH := hclimb.trans h.climbH
+      holeLt := h.holeLt
+      parkLt := h.parkLt
+      parkNe := h.parkNe
+      parkLe := h.parkLe
+      parkIn := h.parkIn
+      parkCell := h.parkCell
+      fromIdle := h.fromIdle
+      fromNat := h.fromNat
+      srcOk := h.srcOk
+      parkHeld := h.parkHeld
+      nextRung := h.nextRung
+      ladderTail := h.ladderTail
+      fit2 := h.fit2
+      fit4 := h.fit4
+      fitI := h.fitI
+      l0pos := h.l0pos
+      fitL0 := h.fitL0
+      fitLR := h.fitLR }
+
+/-- The peg read survives a slide into home 5. Ops, the strict peak, and the
+    recorded bench hole are not among the counters `settle` writes. The gap's
+    trits are the model's, not a home-5 read. -/
+theorem pegRead_slideGap {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : PegRead b s base)
+    (xs : List Nat) (n moves slides peak : Nat)
+    (h5H : 5 < b.sudo_5Board_4home.size) (h5D : 5 < b.sudo_5Board_4held.size) :
+    PegRead (settleBoard b 5 h5H h5D xs n moves slides peak)
+      { s with onBench := false } base := by
+  let bS := settleBoard b 5 h5H h5D xs n moves slides peak
+  have hopsEq := settle_ops b 5 h5H h5D xs n moves slides peak
+  have hstrict := settle_strict_eq b 5 h5H h5D xs n moves slides peak
+  have hhole := settle_hole_eq b 5 h5H h5D xs n moves slides peak
+  obtain ⟨c, hc⟩ := h.cOps
+  obtain ⟨p, hp⟩ := h.peakS
+  obtain ⟨hn, hh⟩ := h.holeM
+  refine
+    { opsGt := by rw [hopsEq]; exact h.opsGt
+      cOps := ⟨c, by
+        have hsz : 1 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [hopsEq]; exact h.opsGt
+        exact (idx_get hopsEq 1 hsz).trans hc⟩
+      peakS := ⟨p, hstrict.trans hp⟩
+      holeM := ⟨hn, hhole.trans hh⟩
+      trits := h.trits
+      top := h.top
+      fitRow := h.fitRow
+      fitTall := h.fitTall
+      fitCtrl := h.fitCtrl
+      n_pos := h.n_pos
+      span := h.span
+      small := h.small
+      n_small := h.n_small
+      fitN := h.fitN
+      fitBn := h.fitBn
+      fit3 := h.fit3 }
+
+/-- `ClimbShape` after `slideGap`. `settle` writes home 5's array and held flag,
+    turns the bench off, and updates the move, slide, and peak counters. The
+    park read and the peg read do not use those fields. Home 5 being clear is
+    the bench-on obligation; after the slide the model is bench-off, so that
+    obligation is gone, and the bench-off obligation is the flag `settle` writes. -/
+theorem climbShape_slideGap {b : Ecbs.Board} {s : ClimbModel} {rest : List Nat}
+    {base : ClimbBudget} (h : ClimbShape b s rest base) (_hon : s.onBench = true)
+    (xs : List Nat) (moves slides peak : Nat) :
+    let h5H := Nat.lt_trans (by decide : (5 : Nat) < 6) h.spareH
+    let h5D := Nat.lt_of_lt_of_le (by decide : (5 : Nat) < 7) h.h7
+    ClimbShape (settleBoard b 5 h5H h5D xs s.n moves slides peak)
+      { s with onBench := false } rest base := by
+  intro h5H h5D
+  let bS := settleBoard b 5 h5H h5D xs s.n moves slides peak
+  let s' : ClimbModel := { s with onBench := false }
+  have hHeld := settle_held_eq b 5 h5H h5D xs s.n moves slides peak
+  have hHome := settle_home_eq b 5 h5H h5D xs s.n moves slides peak
+  have htier := settle_tier_eq b 5 h5H h5D xs s.n moves slides peak
+  have h6 : 6 < bS.sudo_5Board_4held.size := by
+    rw [hHeld, Array.size_set]; exact h.spareD
+  have h6H : 6 < bS.sudo_5Board_4home.size := by
+    rw [hHome, Array.size_set]; exact h.spareH
+  have hxD : base.xHome < bS.sudo_5Board_4held.size := by
+    rw [hHeld, Array.size_set]; exact h.xD
+  have hxH : base.xHome < bS.sudo_5Board_4home.size := by
+    rw [hHome, Array.size_set]; exact h.xH
+  refine
+    { spareH := h6H
+      spareD := h6
+      spareE := by
+        rw [idx_get hHeld 6 h6, Array.getElem_set, if_neg (by decide : (5 : Nat) ≠ 6)]
+        exact h.spareE
+      h7 := by rw [hHeld, Array.size_set]; exact h.h7
+      gapClear := by
+        intro hOn
+        simp at hOn
+      offWhenHome := by
+        intro _
+        exact settle_bench_off b 5 h5H h5D xs s.n moves slides peak
+      xD := hxD
+      xH := hxH
+      xHeld := by
+        rw [idx_get hHeld base.xHome hxD, Array.getElem_set, if_neg (Ne.symm h.xNe5)]
+        exact h.xHeld
+      xArr := by
+        rw [idx_get hHome base.xHome hxH, Array.getElem_set, if_neg (Ne.symm h.xNe5)]
+        exact h.xArr
+      xNe5 := h.xNe5
+      xNe6 := h.xNe6
+      gapLen := h.gapLen
+      seg := h.seg
+      tierN := by rw [htier]; exact h.tierN
+      tierK := by rw [htier]; exact h.tierK
+      tierB := by rw [htier]; exact h.tierB
+      tierW := by rw [htier]; exact h.tierW
+      tierH := by rw [htier]; exact h.tierH
+      tierR := by rw [htier]; exact h.tierR
+      tierCg := by rw [htier]; exact h.tierCg
+      tierC := by rw [htier]; exact h.tierC
+      rowLen := h.rowLen
+      w0 := h.w0
+      h0 := h.h0
+      r0 := h.r0
+      rlt := h.rlt
+      n_eq := h.n_eq
+      k_le := h.k_le
+      gap_eq := h.gap_eq
+      park := parkRead_slideGap h.park xs s.n moves slides peak h5H h5D
+      peg := pegRead_slideGap h.peg xs s.n moves slides peak h5H h5D }
+
+/-- The core invariant on the slid board. Moves and slides are not fields of
+    the core. Ops are copied. The peak stays `max(previous, 7)`. -/
+theorem climbCore_slideGap {done rest : List Nat} {b : Ecbs.Board}
+    {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvKCore done rest b s base) (hon : s.onBench = true)
+    (xs : List Nat) (moves slides peak : Nat)
+    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hxs : b.sudo_5Board_5bench = embed xs)
+    (hgap : xs = s.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0) :
+    let h5H := Nat.lt_trans (by decide : (5 : Nat) < 6) h.shape.spareH
+    let h5D := Nat.lt_of_lt_of_le (by decide : (5 : Nat) < 7) h.shape.h7
+    ClimbInvKCore done rest (settleBoard b 5 h5H h5D xs s.n moves slides peak)
+      { s with onBench := false } base := by
+  intro h5H h5D
+  let bS := settleBoard b 5 h5H h5D xs s.n moves slides peak
+  have hshape : ClimbShape bS { s with onBench := false } rest base :=
+    climbShape_slideGap h.shape hon xs moves slides peak
+  have hmvI : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves := by
+    rw [hmv, ofNat_eq_natCast]
+  have hslI : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides := by
+    rw [hsl, ofNat_eq_natCast]
+  have hpkI : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+    rw [hpk, ofNat_eq_natCast]
+  have hinv0 := climbInv_settled b s h.inv hon xs moves slides peak hxs hgap h.shape.gapLen
+    hmvI hslI hpkI
+  have hboard :=
+    settleBoard_irrel b 5 h.inv.hG h5H h.inv.hGs h5D xs s.n moves slides peak
+  have hinv : ClimbInv bS { s with onBench := false } := by
+    rw [hboard] at hinv0
+    simpa [bS] using hinv0
+  obtain ⟨pk0, hpk0, hpkLe⟩ := h.peak
+  have hpkN : peak = pk0 := ofNat_inj_nat (hpk.symm.trans hpk0)
+  let occ := countHeld (b.sudo_5Board_4held.set ⟨5, h5D⟩ true) 7
+  have hpeakS := settle_peak_eq b 5 h5H h5D xs s.n moves slides peak hpkI
+  refine
+    { inv := hinv
+      idx := h.idx
+      hn := h.hn
+      hbench := h.hbench
+      htally0 := h.htally0
+      kLe := h.kLe
+      shape := hshape
+      ops := by
+        intro i hi
+        have hi0 : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [← settle_ops b 5 h5H h5D xs s.n moves slides peak]; exact hi
+        obtain ⟨c, hc, hle⟩ := h.ops i hi0
+        refine ⟨c, ?_, hle⟩
+        have hopsEq := settle_ops b 5 h5H h5D xs s.n moves slides peak
+        exact (idx_get hopsEq i hi).trans hc
+      peak := by
+        let pk' := if peak < occ then occ else peak
+        have hocc : occ ≤ 7 := countHeld_seven _
+        have hle := settle_peak_le peak occ hocc
+        refine ⟨pk', hpeakS, ?_⟩
+        have hpk' : pk' ≤ max pk0 7 := by
+          simpa [pk', hpkN] using hle
+        exact peak_carry base.peak0 pk0 pk' hpkLe hpk'
+      highTop := h.highTop
+      parkBelow := h.parkBelow
+      holeBelow := h.holeBelow
+      fromBelow := h.fromBelow
+      finalLe := h.finalLe
+      tailFit := h.tailFit
+      tailZero := h.tailZero
+      openRoom := h.openRoom
+      openZero := h.openZero
+      tmaxLt := by
+        obtain ⟨tmax, ht, hnote⟩ := h.tmaxLt
+        refine ⟨tmax, ?_, hnote⟩
+        rw [settle_tmax_eq b 5 h5H h5D xs s.n moves slides peak, ht]
+      ctrlLe := h.ctrlLe
+      srcAbove := h.srcAbove }
+
+/-- The padded bench list has length `bench` once `n ≤ bench`. -/
+theorem bench_pad_len (gap : List Nat) (n bench : Nat)
+    (hlen : gap.length = n) (hnle : n ≤ bench) :
+    (gap.take n ++ List.replicate (bench - n) 0).length = bench := by
+  simp only [List.length_append, List.length_take, List.length_replicate, hlen,
+    Nat.min_eq_left (Nat.le_refl n)]
+  omega
+
+/-- Entries at or past `n` in that pad are zero. -/
+theorem bench_pad_zero (gap : List Nat) (n bench : Nat)
+    (hlen : gap.length = n) (_hnle : n ≤ bench) :
+    let xs := gap.take n ++ List.replicate (bench - n) 0
+    ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0 := by
+  intro xs i hi hix
+  have hpre : (gap.take n).length = n := by
+    rw [List.length_take, hlen, Nat.min_eq_left (Nat.le_refl _)]
+  have hge : (gap.take n).length ≤ i := by
+    rw [hpre]
+    exact hi
+  rw [List.getElem_append_right hge, List.getElem_replicate]
+
+/-- `slideGap` is the emitted `settle` of a bench-on gap. The slid value is the
+    bench prefix, and the move and slide fits are the tight headroom on
+    `mv + 2 · pegs`. -/
+theorem slideGap_run
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base) (hon : s.onBench = true) :
+    let xs := s.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0
+    ∃ (moves slides peak : Nat),
+      let h5H := Nat.lt_trans (by decide : (5 : Nat) < 6) h.shape.spareH
+      let h5D := Nat.lt_of_lt_of_le (by decide : (5 : Nat) < 7) h.shape.h7
+      b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) ∧
+      b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int) ∧
+      b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) ∧
+      b.sudo_5Board_5bench = embed xs ∧
+      slideGap b = .ok (settleBoard b 5 h5H h5D xs s.n moves slides peak) := by
+  intro xs
+  obtain ⟨moves, hmv, hmvLe⟩ := h.moves
+  obtain ⟨slides, hsl, hslLe⟩ := h.slides
+  obtain ⟨peak, hpk, _hpkLe⟩ := h.peak
+  refine ⟨moves, slides, peak, ?_⟩
+  intro h5H h5D
+  have hg := h.inv.gapBench hon
+  have hxs : b.sudo_5Board_5bench = embed xs := by
+    simpa [xs] using hg.2.2.1
+  have hnleB : s.n ≤ s.benchlen := by
+    have hsp := h.shape.peg.span
+    omega
+  have hlenX : xs.length = s.benchlen :=
+    bench_pad_len s.gap s.n s.benchlen h.shape.gapLen hnleB
+  have hpos : 0 < xs.length := by
+    rw [hlenX]
+    exact Nat.lt_of_lt_of_le h.shape.peg.n_pos hnleB
+  have hnle : s.n ≤ xs.length := by
+    rw [hlenX]
+    exact hnleB
+  have hzero : ∀ i, s.n ≤ i → ∀ hi : i < xs.length, xs[i] = 0 :=
+    bench_pad_zero s.gap s.n s.benchlen h.shape.gapLen hnleB
+  have hmvI : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves := by
+    rw [hmv, ofNat_eq_natCast]
+  have hslI : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides := by
+    rw [hsl, ofNat_eq_natCast]
+  have hpkI : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+    rw [hpk, ofNat_eq_natCast]
+  have hpegs : pegCount (xs.take s.n) ≤ base.n := by
+    rw [← h.hn]
+    exact pegCount_take_le xs s.n
+  have hk : done.length + 1 ≤ base.R := by
+    have hlen := h.kLe
+    simp [List.length_append, List.length_cons] at hlen
+    omega
+  have hroomM := bench_headroom_of base.moves0 base.R done.length base.n base.bench
+    base.mMax moves (pegCount (xs.take s.n)) hk hmvLe hpegs base.fitM
+  have hroomS := bench_slide_headroom_of base.slides0 base.R done.length base.n
+    base.mMax slides (pegCount (xs.take s.n)) hk hslLe hpegs base.fitS
+  have hfitM : FitsLen (moves + 2 * pegCount (xs.take s.n)) :=
+    FitsLen.of_le hroomM (Nat.le_add_right _ _)
+  have hfitS : FitsLen (slides + 2 * pegCount (xs.take s.n)) :=
+    FitsLen.of_le hroomS (Nat.le_add_right _ _)
+  have hpegF : FitsLen (2 * pegCount (xs.take s.n)) :=
+    FitsLen.of_le hfitM (Nat.le_add_left _ _)
+  have hempty : b.sudo_5Board_4held[5]'h5D = false := by
+    have hclear := h.shape.gapClear hon
+    exact (get_proof_irrel b.sudo_5Board_4held 5 h5D
+      (Nat.lt_of_lt_of_le (by decide : (5 : Nat) < 7) h.shape.h7)).trans hclear
+  have hrun := settle_refines b 5 xs s.n moves slides peak h5H h5D h.shape.h7
+    hg.1 hg.2.1 hempty hxs h.shape.tierN hpos hnle hzero h.shape.peg.fitN
+    (by rw [hlenX]; exact h.shape.peg.fitBn) hmvI hslI hpkI hpegF hfitM hfitS
+  exact ⟨hmv, hsl, hpk, hxs, by simpa [slideGap] using hrun⟩
+
+/-- Rewriting the board under `parkKeep` rewrites the row-size proofs with it. -/
+theorem parkKeep_cast
+    {b1 b2 : Ecbs.Board} (h : b1 = b2) (hole park rung i ctrl : Nat)
+    (hRowP : park < b1.sudo_5Board_3row.size)
+    (hRowH : hole < b1.sudo_5Board_3row.size) :
+    parkKeepBoard b1 hole park rung i ctrl hRowP hRowH =
+      parkKeepBoard b2 hole park rung i ctrl (h ▸ hRowP) (h ▸ hRowH) := by
+  subst h
+  rfl
+
+/-- `parkKeep` and `settle` write different fields, so they commute. The row
+    proofs on the slid board are the original ones, transported along
+    `settleBoard_row`. -/
+theorem parkKeep_settle_comm
+    (b : Ecbs.Board) (hole park rung i ctrl home : Nat)
+    (hRowP : park < b.sudo_5Board_3row.size)
+    (hRowH : hole < b.sudo_5Board_3row.size)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    parkKeepBoard (settleBoard b home hH hD xs n moves slides peak)
+        hole park rung i ctrl
+        (settleBoard_row b home hH hD xs n moves slides peak ▸ hRowP)
+        (settleBoard_row b home hH hD xs n moves slides peak ▸ hRowH) =
+      settleBoard (parkKeepBoard b hole park rung i ctrl hRowP hRowH)
+        home
+        (parkKeep_home b hole park rung i ctrl hRowP hRowH ▸ hH)
+        (parkKeep_held b hole park rung i ctrl hRowP hRowH ▸ hD)
+        xs n moves slides peak := by
+  let bK := parkKeepBoard b hole park rung i ctrl hRowP hRowH
+  let hHK : home < bK.sudo_5Board_4home.size :=
+    parkKeep_home b hole park rung i ctrl hRowP hRowH ▸ hH
+  let hDK : home < bK.sudo_5Board_4held.size :=
+    parkKeep_held b hole park rung i ctrl hRowP hRowH ▸ hD
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  · have hheld : bK.sudo_5Board_4held = b.sudo_5Board_4held :=
+      parkKeep_held b hole park rung i ctrl hRowP hRowH
+    have hset := (array_set_of_eq bK.sudo_5Board_4held b.sudo_5Board_4held hheld
+      home hDK true).trans (array_set_irrel b.sudo_5Board_4held home (hheld ▸ hDK) hD true)
+    have hpkK : peak < countHeld (bK.sudo_5Board_4held.set ⟨home, hDK⟩ true) 7 := by
+      rw [countHeld_congr _ _ hset 7]
+      exact hpk
+    have hS := settleBoard_pos b home hH hD xs n moves slides peak hpk
+    have hrow := settleBoard_row b home hH hD xs n moves slides peak
+    have hL : parkKeepBoard (settleBoard b home hH hD xs n moves slides peak)
+        hole park rung i ctrl (hrow ▸ hRowP) (hrow ▸ hRowH) =
+        parkKeepBoard ({ b with
+          sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+          sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+          sudo_5Board_8bench_on := false
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+            sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n))
+            sudo_5Costs_4peak :=
+              Int.ofNat (countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) } })
+          hole park rung i ctrl hRowP hRowH := by
+      rw [parkKeep_cast hS hole park rung i ctrl (hrow ▸ hRowP) (hrow ▸ hRowH)]
+    rw [hL, parkKeep_settled_pos b hole park rung i ctrl home hRowP hRowH hH hD
+      xs n moves slides peak hpk]
+    rw [settleBoard_pos bK home hHK hDK xs n moves slides peak hpkK]
+    apply board_ext
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · apply cost_ext <;> first
+        | exact congrArg Int.ofNat (countHeld_congr _ _ hset 7)
+        | simp [bK, parkKeepBoard, ofNat_eq_natCast]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+  · have hheld : bK.sudo_5Board_4held = b.sudo_5Board_4held :=
+      parkKeep_held b hole park rung i ctrl hRowP hRowH
+    have hset := (array_set_of_eq bK.sudo_5Board_4held b.sudo_5Board_4held hheld
+      home hDK true).trans (array_set_irrel b.sudo_5Board_4held home (hheld ▸ hDK) hD true)
+    have hpkK : ¬ peak < countHeld (bK.sudo_5Board_4held.set ⟨home, hDK⟩ true) 7 := by
+      rw [countHeld_congr _ _ hset 7]
+      exact hpk
+    have hS := settleBoard_neg b home hH hD xs n moves slides peak hpk
+    have hrow := settleBoard_row b home hH hD xs n moves slides peak
+    have hL : parkKeepBoard (settleBoard b home hH hD xs n moves slides peak)
+        hole park rung i ctrl (hrow ▸ hRowP) (hrow ▸ hRowH) =
+        parkKeepBoard ({ b with
+          sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
+          sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+          sudo_5Board_8bench_on := false
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
+            sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n)) } })
+          hole park rung i ctrl hRowP hRowH := by
+      rw [parkKeep_cast hS hole park rung i ctrl (hrow ▸ hRowP) (hrow ▸ hRowH)]
+    rw [hL, parkKeep_settled_neg b hole park rung i ctrl home hRowP hRowH hH hD
+      xs n moves slides peak hpk]
+    rw [settleBoard_neg bK home hHK hDK xs n moves slides peak hpkK]
+    apply board_ext
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · apply cost_ext <;> simp [bK, parkKeepBoard, ofNat_eq_natCast]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
+    · simp [bK, parkKeepBoard]
 
 end EcbsLink2.Link2

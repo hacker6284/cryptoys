@@ -5,6 +5,7 @@
   is the `List.foldlM` / `forIn` walk of the stored ladder (build order reversed).
 -/
 import EcbsLink2.Link2.OpenRed
+import EcbsLink2.Link2.TightDelta
 
 namespace EcbsLink2.Link2
 
@@ -324,7 +325,9 @@ theorem climbFor_reversed
     is the matching successor. -/
 theorem climb_step_home
     {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done (r :: rest) b s base)
+    (h : ClimbInvKCore done (r :: rest) b s base)
+    (hM : MoveHeadroom b base.n base.bench base.mMax)
+    (hS : SlideHeadroom b base.n base.mMax)
     (hhome : s.onBench = false) (hm : 0 < s.tally)
     (hParkAt : s.parkAt = base.ladder0 + base.R)
     (hCap : climbTallyPrefix base.tally0 done (r :: rest) ≤ base.mMax)
@@ -332,7 +335,7 @@ theorem climb_step_home
     ∃ b',
       climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' ∧
       ClimbInv b' (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) ∧
-      RungDelta b b' base s.tally ∧
+      RungDeltaTight b b' base s.tally ∧
       ClimbShape b' (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty)
         rest base ∧
       (∃ tmax : Nat,
@@ -347,34 +350,32 @@ theorem climb_step_home
       · dsimp only [List.isEmpty]
         rw [hr] at h hCap ⊢
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          red_final_k h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
-            hF hm hT hhome hParkAt hCap hxLen hxT
-        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
+          red_final_k h hM hS hF hm hT hhome hParkAt hCap hxLen hxT
+        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_idle_red_final b 2 s.tally ((base.xHome : Nat) : Int) s.fromHole
           true hF rfl rfl]
         exact hprog
       · dsimp only [List.isEmpty]
         have hrest : (hd :: tl) ≠ [] := by simp
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          red_open_k h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
-            hF hm hT hhome hr hrest hParkAt hCap hxLen hxT
-        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
+          red_open_k h hM hS hF hm hT hhome hr hrest hParkAt hCap hxLen hxT
+        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_idle_red_open b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           false hF hr rfl]
         exact hprog
     · rcases rest with (_ | ⟨hd, tl⟩)
       · dsimp only [List.isEmpty]
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          white_final_k_ofK h hF hm hT hhome h.parkBelow h.holeBelow hwhite hParkAt hCap
-        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
+          white_final_k h hM hS hF hm hT hhome h.parkBelow h.holeBelow hwhite hParkAt hCap
+        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_idle_white_final b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           true hF hwhite rfl]
         exact hprog
       · dsimp only [List.isEmpty]
         have hrest : (hd :: tl) ≠ [] := by simp
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          white_open_k_ofK h hF hm hT hhome hwhite hrest hParkAt hCap
-        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
+          white_open_k h hM hS hF hm hT hhome hwhite hrest hParkAt hCap
+        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_idle_white_open b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           false hF hwhite rfl]
         exact hprog
@@ -384,39 +385,68 @@ theorem climb_step_home
       · dsimp only [List.isEmpty]
         rw [hr] at h hCap ⊢
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          red_final_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
-            hge hm hT hhome hParkAt hCap hxLen hxT
-        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
+          red_final_ge h hM hS hge hm hT hhome hParkAt hCap hxLen hxT
+        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_park_red_final b 2 s.tally ((base.xHome : Nat) : Int) s.fromHole
           true hge rfl rfl]
         exact hprog
       · dsimp only [List.isEmpty]
         have hrest : (hd :: tl) ≠ [] := by simp
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          red_open_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
-            hge hm hT hhome hr hrest hParkAt hCap hxLen hxT
-        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
+          red_open_ge h hM hS hge hm hT hhome hr hrest hParkAt hCap hxLen hxT
+        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_park_red_open b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           false hge hr rfl]
         exact hprog
     · rcases rest with (_ | ⟨hd, tl⟩)
       · dsimp only [List.isEmpty]
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          white_final_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
-            hge hm hT hhome hwhite hParkAt hCap
-        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
+          white_final_ge h hM hS hge hm hT hhome hwhite hParkAt hCap
+        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_park_white_final b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           true hge hwhite rfl]
         exact hprog
       · dsimp only [List.isEmpty]
         have hrest : (hd :: tl) ≠ [] := by simp
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          white_open_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
-            hge hm hT hhome hwhite hrest hParkAt hCap
-        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
+          white_open_ge h hM hS hge hm hT hhome hwhite hrest hParkAt hCap
+        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_park_white_open b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           false hge hwhite rfl]
         exact hprog
+
+/-- The first cube-peg body determines the loop. A bench-on cube slides the gap
+    before it reads the spare, and `cube_settle_other` makes that the same body
+    as the cube on the already-slid board. -/
+theorem cubePegStep_at_zero (src toN : Nat) (b b' : Ecbs.Board)
+    (hbody : cubePegBody src b (Int.ofNat 0) = cubePegBody src b' (Int.ofNat 0))
+    (hng : ¬ Int.ofNat 0 > Int.ofNat toN) :
+    cubePegStep src (Int.ofNat toN) (Int.ofNat 0, b) =
+      cubePegStep src (Int.ofNat toN) (Int.ofNat 0, b') := by
+  unfold cubePegStep
+  simp only [Prod.fst, Prod.snd]
+  rw [if_neg hng, if_neg hng, hbody]
+
+theorem peg_loop_of_body (src m : Nat) (b b' : Ecbs.Board) (hm : 0 < m)
+    (hbody : cubePegBody src b (Int.ofNat 0) = cubePegBody src b' (Int.ofNat 0)) :
+    SudoRt.runLoopOn (Int.ofNat 0, b)
+        (fuelRange (Int.ofNat 0) (Int.ofNat (m - 1)))
+        (cubePegStep src (Int.ofNat (m - 1)))
+        (fun σ => .ok σ)
+        (fun r => .ok ((0 : Int), r)) =
+      SudoRt.runLoopOn (Int.ofNat 0, b')
+        (fuelRange (Int.ofNat 0) (Int.ofNat (m - 1)))
+        (cubePegStep src (Int.ofNat (m - 1)))
+        (fun σ => .ok σ)
+        (fun r => .ok ((0 : Int), r)) := by
+  have hfuel : fuelRange (Int.ofNat 0) (Int.ofNat (m - 1)) = (m - 1) + 1 := by
+    rw [fuelRange_le (Nat.zero_le _)]
+    omega
+  have hng : ¬ Int.ofNat 0 > Int.ofNat (m - 1) := by
+    rw [Int.not_lt]
+    simpa [ofNat_eq_natCast] using (Int.ofNat_le.mpr (Nat.zero_le (m - 1)))
+  rw [hfuel, runLoopOn_succ, runLoopOn_succ,
+    cubePegStep_at_zero src (m - 1) b b' hbody hng]
 
 /-- One rung, gap still in home 5. That is the entry rung: `new_board` leaves the
     bench off, and `invert` copies the input into home 5 before the ladder `for`.
@@ -434,8 +464,116 @@ theorem climb_refines_one
       ClimbInvK [r] [] b'
         (modelRung s0 base.x r (climbAt base.ladder0 base.R s0.ridx) true) base := by
   obtain ⟨b', hprog, hinv, hδ, hshape, htmax⟩ :=
-    climb_step_home h0 hEntry hm hPark hCap hxLen hxT
+    climb_step_home h0.toCore (moveHeadroom_of_cons h0) (slideHeadroom_of_cons h0)
+      hEntry hm hPark hCap hxLen hxT
   refine ⟨b', hprog, ?_⟩
-  exact climbInvK_succ h0 hinv hδ hCap hshape h0.holeBelow htmax rfl
+  exact climbInvK_succ h0 hinv hδ.delta hCap hshape h0.holeBelow htmax rfl
+
+/-- Bench rung, once `climbRung` on the original board agrees with `climbRung`
+    on the slid board. `slideGap` restores the core, shape, and tight headroom.
+    The home successor returns a tight delta from the slid counter. The settle
+    spends `2 · pegs ≤ 2 · n`, so that tight delta is one loose `RungDelta`
+    from the pre-slide board, and `climbInvK_succ` rebuilds the absolute fields. -/
+theorem climb_step_bench_of
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hon : s.onBench = true)
+    (hm : 0 < s.tally)
+    (hParkAt : s.parkAt = base.ladder0 + base.R)
+    (hCap : climbTallyPrefix base.tally0 done (r :: rest) ≤ base.mMax)
+    (hxLen : base.x.length = base.n) (hxT : allTritList base.x)
+    (hprogEq : ∀ bS,
+      slideGap b = .ok bS →
+      climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally =
+        climbRung bS r rest.isEmpty ((base.xHome : Nat) : Int) s.tally) :
+    ∃ b',
+      climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' ∧
+      ClimbInvK (done ++ [r]) rest b'
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base := by
+  let xs := s.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0
+  obtain ⟨moves, slides, peak, hmv, hsl, hpk, hbench, hslide⟩ := slideGap_run h hon
+  have h5H : 5 < b.sudo_5Board_4home.size :=
+    Nat.lt_trans (by decide : (5 : Nat) < 6) h.shape.spareH
+  have h5D : 5 < b.sudo_5Board_4held.size :=
+    Nat.lt_of_lt_of_le (by decide : (5 : Nat) < 7) h.shape.h7
+  let bS := settleBoard b 5 h5H h5D xs s.n moves slides peak
+  have hcore := climbCore_slideGap h.toCore hon xs moves slides peak hmv hsl hpk hbench rfl
+  have hslideB : slideGap b = .ok bS := by
+    simpa [bS, h5H, h5D] using hslide
+  obtain ⟨mv0, hmv0, hmvLe⟩ := h.moves
+  obtain ⟨sl0, hsl0, hslLe⟩ := h.slides
+  have hmvN : moves = mv0 := ofNat_inj_nat (hmv.symm.trans hmv0)
+  have hslN : slides = sl0 := ofNat_inj_nat (hsl.symm.trans hsl0)
+  have hpegs : pegCount (xs.take s.n) ≤ base.n := by
+    rw [← h.hn]
+    exact pegCount_take_le xs s.n
+  have hk : done.length + 1 ≤ base.R := by
+    have hlen := h.kLe
+    simp [List.length_append, List.length_cons] at hlen
+    omega
+  have hroomM := bench_headroom_of base.moves0 base.R done.length base.n base.bench
+    base.mMax moves (pegCount (xs.take s.n)) hk (by rw [hmvN]; exact hmvLe) hpegs base.fitM
+  have hroomS := bench_slide_headroom_of base.slides0 base.R done.length base.n
+    base.mMax slides (pegCount (xs.take s.n)) hk (by rw [hslN]; exact hslLe) hpegs base.fitS
+  have hmvS := settle_moves_eq b 5 h5H h5D xs s.n moves slides peak
+  have hslS := settle_slides_eq b 5 h5H h5D xs s.n moves slides peak
+  have hpkS := settle_peak_eq b 5 h5H h5D xs s.n moves slides peak
+    (by rw [hpk, ofNat_eq_natCast])
+  let pegs := pegCount (xs.take s.n)
+  let mvS : Nat := moves + 2 * pegs
+  let slS : Nat := slides + 2 * pegs
+  let pkS : Nat :=
+    if peak < countHeld (b.sudo_5Board_4held.set ⟨5, h5D⟩ true) 7 then
+      countHeld (b.sudo_5Board_4held.set ⟨5, h5D⟩ true) 7 else peak
+  have hM : MoveHeadroom bS base.n base.bench base.mMax :=
+    ⟨mvS, by simpa [bS, mvS, pegs, ofNat_eq_natCast] using hmvS, by simpa [pegs] using hroomM⟩
+  have hSl : SlideHeadroom bS base.n base.mMax :=
+    ⟨slS, by simpa [bS, slS, pegs, ofNat_eq_natCast] using hslS, by simpa [pegs] using hroomS⟩
+  let sH : ClimbModel := { s with onBench := false }
+  obtain ⟨b', hprogS, hinv, hδ, hshape, htmax⟩ :=
+    climb_step_home hcore hM hSl rfl hm hParkAt hCap hxLen hxT
+  have hprogS' : climbRung bS r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' := by
+    simpa [bS, sH] using hprogS
+  have hprog : climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' := by
+    rw [hprogEq bS hslideB]
+    exact hprogS'
+  have hops := settle_ops b 5 h5H h5D xs s.n moves slides peak
+  obtain ⟨pk0, hpk0, _⟩ := h.peak
+  have hpkN : peak = pk0 := ofNat_inj_nat (hpk.symm.trans hpk0)
+  have hpkLe : pkS ≤ max pk0 7 := by
+    have hocc := countHeld_seven (b.sudo_5Board_4held.set ⟨5, h5D⟩ true)
+    simpa [pkS, hpkN] using settle_peak_le peak _ hocc
+  have hδL := rungDelta_of_slide hδ moves slides pk0 mvS slS pkS pegs
+    hmv hsl hpk0
+    (by simpa [bS, mvS, pegs, ofNat_eq_natCast] using hmvS)
+    (by simpa [bS, slS, pegs, ofNat_eq_natCast] using hslS)
+    (by simpa [bS, pkS] using hpkS)
+    rfl rfl hpegs hpkLe (by simpa [bS] using hops)
+  have hmod : modelRung sH base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty =
+      modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty := by
+    simp [sH, modelRung]
+  refine ⟨b', hprog, ?_⟩
+  have hK := climbInvK_succ h (by simpa [hmod] using hinv) hδL hCap
+    (by simpa [hmod] using hshape) h.holeBelow (by simpa [hmod] using htmax) rfl
+  simpa [hmod] using hK
+
+/-- One emitted rung with the gap still in home 5. The successor returns a tight
+    delta; `climbInvK_succ` rebuilds the absolute move and slide fields. -/
+theorem climb_step
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done (r :: rest) b s base)
+    (hhome : s.onBench = false)
+    (hm : 0 < s.tally)
+    (hParkAt : s.parkAt = base.ladder0 + base.R)
+    (hCap : climbTallyPrefix base.tally0 done (r :: rest) ≤ base.mMax)
+    (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
+    ∃ b',
+      climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' ∧
+      ClimbInvK (done ++ [r]) rest b'
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base := by
+  obtain ⟨b', hprog, hinv, hδ, hshape, htmax⟩ :=
+    climb_step_home h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+      hhome hm hParkAt hCap hxLen hxT
+  refine ⟨b', hprog, climbInvK_succ h hinv hδ.delta hCap hshape h.holeBelow htmax rfl⟩
 
 end EcbsLink2.Link2

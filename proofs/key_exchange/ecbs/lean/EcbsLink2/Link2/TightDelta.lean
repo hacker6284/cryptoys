@@ -157,4 +157,60 @@ theorem home_clear_delta_tight
     base.n base.bench hpegs hloop (Nat.le_refl _)
   refine ⟨mv, d.moves, mvC, hmv, hloop, Nat.le_refl _, htight⟩
 
+/-- A home rung's tight delta, read on the board `settle` just wrote, is one
+    loose `RungDelta` on the board from before that slide. The settle spends
+    `2 · pegs ≤ 2 · n`, which is the slack the tight conjuncts left. Ops are
+    copied. The peak is `max` of the settle's raise and the home rung's raise. -/
+theorem rungDelta_of_slide
+    {b bS b' : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (hδ : RungDeltaTight bS b' base m)
+    (mv sl pk mvS slS pkS pegs : Nat)
+    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int))
+    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int))
+    (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int))
+    (hmvS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mvS : Int))
+    (hslS : bS.sudo_5Board_4cost.sudo_5Costs_6slides = (slS : Int))
+    (hpkS : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (pkS : Int))
+    (hmvAdd : mvS = mv + 2 * pegs)
+    (hslAdd : slS = sl + 2 * pegs)
+    (hpegs : pegs ≤ base.n)
+    (hpkLe : pkS ≤ max pk 7)
+    (hops : bS.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops) :
+    RungDelta b b' base m := by
+  have hpeg2 : 2 * pegs ≤ 2 * base.n := Nat.mul_le_mul_left 2 hpegs
+  refine
+    { moves := ?_
+      slides := ?_
+      opsSize := ?_
+      ops := ?_
+      peak := ?_ }
+  · obtain ⟨mv0, mv', hb, hb', hle⟩ := hδ.moveTight
+    have h0 : mv0 = mvS := ofNat_inj_nat (hb.symm.trans hmvS)
+    refine ⟨mv, mv', hmv, hb', ?_⟩
+    have hle' : mv' + 2 * base.n ≤ mv + 2 * pegs + rungCharge base.n base.bench m := by
+      simpa [h0, hmvAdd] using hle
+    omega
+  · obtain ⟨sl0, sl', hb, hb', hle⟩ := hδ.slideTight
+    have h0 : sl0 = slS := ofNat_inj_nat (hb.symm.trans hslS)
+    refine ⟨sl, sl', hsl, hb', ?_⟩
+    have hle' : sl' + 2 * base.n ≤ sl + 2 * pegs + rungSlideCharge base.n m := by
+      simpa [h0, hslAdd] using hle
+    omega
+  · exact hδ.delta.opsSize.trans (congrArg Array.size hops)
+  · intro i hi
+    have hiS : i < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      rw [hops]; exact hi
+    obtain ⟨c, c', hc, hc', hle⟩ := hδ.delta.ops i hiS
+    have hcB : b.sudo_5Board_4cost.sudo_5Costs_3ops[i] = (c : Int) :=
+      (idx_get hops.symm i hi).trans hc
+    have hix :
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'
+          ((hδ.delta.opsSize.trans (congrArg Array.size hops)) ▸ hi) =
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[i]'(hδ.delta.opsSize ▸ hiS) :=
+      get_proof_irrel _ i _ _
+    exact ⟨c, c', hcB, hix.symm.trans hc', hle⟩
+  · obtain ⟨pk0, pk', hb, hb', hle⟩ := hδ.delta.peak
+    have h0 : pk0 = pkS := ofNat_inj_nat (hb.symm.trans hpkS)
+    refine ⟨pk, pk', hpk, hb', bench_peak pk pkS pk' hpkLe (by simpa [h0] using hle)⟩
+
 end EcbsLink2.Link2

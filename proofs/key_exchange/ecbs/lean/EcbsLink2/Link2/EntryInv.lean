@@ -1,0 +1,1057 @@
+/-
+  Climb entry is the board `tally_start` returns: the gap holds the input,
+  the bench is off, and one white peg sits at the tally origin. `ClimbInvK`
+  at the empty prefix is that board. The park hole is the cell just after the
+  ladder, so the loop's park premise holds, and the pending colours are the
+  climb-order rungs already proved on `entryRow`.
+-/
+import EcbsLink2.Link2.InvertOpen
+import EcbsLink2.Link2.InvertDelta
+import EcbsLink2.Link2.LoopInv
+
+namespace EcbsLink2.Link2
+
+open MegaDreifach.Link2
+open EcbsLink2.Spec
+
+/-- Grid equations and the control-counter fit the climb reads off a tier.
+    The four shipped tiers satisfy it; `ctrlFit` is the same bound as
+    `demo_ctrl_fit` and its siblings. -/
+structure TierShape (t : Spec.Tier) : Prop where
+  n_eq : t.n = t.w * t.h - 1
+  k_le : t.k ≤ t.n
+  gap : t.n - t.k = t.w * t.r
+  w0 : 0 < t.w
+  h0 : 0 < t.h
+  r0 : 0 < t.r
+  rlt : t.r < t.h
+  script_ge : 2 ≤ t.script
+  small : t.w ≤ 1000000 ∧ t.h ≤ 1000000 ∧ t.r ≤ 1000000 ∧ t.benchlen ≤ 1000001
+  n_small : t.n ≤ 1000000
+  ctrlFit : FitsLen (t.control + ((rungList (t.n - 1)).length + 1) * (3 * t.control + 5))
+
+theorem demo_shape : TierShape Spec.demo where
+  n_eq := by decide
+  k_le := by decide
+  gap := by decide
+  w0 := by decide
+  h0 := by decide
+  r0 := by decide
+  rlt := by decide
+  script_ge := by decide
+  small := by decide
+  n_small := by decide
+  ctrlFit := demo_ctrl_fit
+
+theorem toy_shape : TierShape Spec.toy where
+  n_eq := by decide
+  k_le := by decide
+  gap := by decide
+  w0 := by decide
+  h0 := by decide
+  r0 := by decide
+  rlt := by decide
+  script_ge := by decide
+  small := by decide
+  n_small := by decide
+  ctrlFit := toy_ctrl_fit
+
+theorem hobby_shape : TierShape Spec.hobby where
+  n_eq := by decide
+  k_le := by decide
+  gap := by decide
+  w0 := by decide
+  h0 := by decide
+  r0 := by decide
+  rlt := by decide
+  script_ge := by decide
+  small := by decide
+  n_small := by decide
+  ctrlFit := hobby_ctrl_fit
+
+theorem serious_shape : TierShape Spec.serious where
+  n_eq := by decide
+  k_le := by decide
+  gap := by decide
+  w0 := by decide
+  h0 := by decide
+  r0 := by decide
+  rlt := by decide
+  script_ge := by decide
+  small := by decide
+  n_small := by decide
+  ctrlFit := serious_ctrl_fit
+
+theorem rungCharge_add (n bench a d : Nat) :
+    rungCharge n bench (a + d) =
+      rungCharge n bench a + d * pegCharge n bench := by
+  unfold rungCharge
+  have hcoef : a + d + 1 = a + 1 + d := by omega
+  rw [hcoef, Nat.add_mul]
+  omega
+
+theorem geom_room_lt (t : Spec.Tier) (sat : TierSat t) : rowRoom t < geomCap t := by
+  have hmiss := sat.geom_miss
+  have hor := sat.origin_le
+  unfold rowRoom at hmiss hor ⊢
+  omega
+
+theorem entry_copy_le (xs : List Nat) (n bench : Nat) (hx : xs.length = n) :
+    pegCount xs + pegCount xs ≤ pegCharge n bench := by
+  have hle := pegCount_le xs
+  rw [hx] at hle
+  unfold pegCharge
+  omega
+
+theorem entry_moves_le (t : Spec.Tier) (xs : List Nat) (hx : xs.length = t.n)
+    (sat : TierSat t) (hR : 0 < tierR t) :
+    pegCount xs + pegCount xs +
+        tierR t * rungCharge t.n t.benchlen (rowRoom t) ≤
+      tierChargeMoves t (geomCap t) := by
+  have hcopy := entry_copy_le xs t.n t.benchlen hx
+  have hlt := geom_room_lt t sat
+  have hsplit : geomCap t = rowRoom t + (geomCap t - rowRoom t) := by omega
+  have hadd := rungCharge_add t.n t.benchlen (rowRoom t) (geomCap t - rowRoom t)
+  have hcoef : pegCharge t.n t.benchlen ≤
+      tierR t * ((geomCap t - rowRoom t) * pegCharge t.n t.benchlen) := by
+    have hd1 : 1 ≤ geomCap t - rowRoom t := by omega
+    have hprod : 1 ≤ tierR t * (geomCap t - rowRoom t) := by
+      have hmul : tierR t * 1 ≤ tierR t * (geomCap t - rowRoom t) :=
+        Nat.mul_le_mul_left (tierR t) hd1
+      have hR1 : 1 ≤ tierR t := hR
+      omega
+    calc
+      pegCharge t.n t.benchlen
+          = 1 * pegCharge t.n t.benchlen := by rw [Nat.one_mul]
+      _ ≤ (tierR t * (geomCap t - rowRoom t)) * pegCharge t.n t.benchlen :=
+            Nat.mul_le_mul_right _ hprod
+      _ = tierR t * ((geomCap t - rowRoom t) * pegCharge t.n t.benchlen) := by
+            rw [Nat.mul_assoc]
+  have hmul := Nat.mul_add (tierR t)
+      (rungCharge t.n t.benchlen (rowRoom t))
+      ((geomCap t - rowRoom t) * pegCharge t.n t.benchlen)
+  unfold tierChargeMoves
+  rw [hsplit, hadd, hmul]
+  omega
+
+theorem entry_tail_moves_le (t : Spec.Tier) (xs : List Nat) (hx : xs.length = t.n)
+    (sat : TierSat t) (hR : 0 < tierR t) :
+    pegCount xs + pegCount xs +
+        tierR t * rungCharge t.n t.benchlen (rowRoom t) +
+        pegCharge t.n t.benchlen ≤
+      tierChargeMoves t (geomCap t) + pegCharge t.n t.benchlen := by
+  have h := entry_moves_le t xs hx sat hR
+  unfold tierChargeMoves at *
+  omega
+
+theorem entry_ops_le (t : Spec.Tier) (sat : TierSat t) (hR : 0 < tierR t) :
+    1 + tierR t * (rowRoom t + 3) ≤ tierChargeOps t (geomCap t) := by
+  have hlt := geom_room_lt t sat
+  unfold tierChargeOps
+  have hsum : geomCap t + 3 = (rowRoom t + 3) + (geomCap t - rowRoom t) := by omega
+  have hdiff : 1 ≤ tierR t * (geomCap t - rowRoom t) := by
+    have hd1 : 1 ≤ geomCap t - rowRoom t := by omega
+    calc
+      1 ≤ tierR t := hR
+      _ = tierR t * 1 := by rw [Nat.mul_one]
+      _ ≤ tierR t * (geomCap t - rowRoom t) := Nat.mul_le_mul_left _ hd1
+  calc
+    1 + tierR t * (rowRoom t + 3)
+        ≤ tierR t * (geomCap t - rowRoom t) + tierR t * (rowRoom t + 3) :=
+          Nat.add_le_add_right hdiff _
+    _ = tierR t * (rowRoom t + 3) + tierR t * (geomCap t - rowRoom t) :=
+          Nat.add_comm _ _
+    _ = tierR t * ((rowRoom t + 3) + (geomCap t - rowRoom t)) := by
+          rw [← Nat.mul_add]
+    _ = tierR t * (geomCap t + 3) := by rw [← hsum]
+
+theorem entry_ctrl_le (t : Spec.Tier) (hOk : BoardOk t) :
+    (tierR t + 1) + (tierR t + 1) * (3 * rowRoom t + 5) ≤
+      t.control + (tierR t + 1) * (3 * t.control + 5) := by
+  have hroom : 3 * rowRoom t + 5 ≤ 3 * t.control + 5 := by
+    unfold rowRoom
+    omega
+  have hrest : tierR t + 1 ≤ t.control := by
+    have hL := hOk.ladder
+    unfold tierR at hL ⊢
+    omega
+  have hmul : (tierR t + 1) * (3 * rowRoom t + 5) ≤
+      (tierR t + 1) * (3 * t.control + 5) :=
+    Nat.mul_le_mul_left _ hroom
+  calc
+    (tierR t + 1) + (tierR t + 1) * (3 * rowRoom t + 5)
+        ≤ (tierR t + 1) + (tierR t + 1) * (3 * t.control + 5) :=
+          Nat.add_le_add_left hmul _
+    _ ≤ t.control + (tierR t + 1) * (3 * t.control + 5) :=
+          Nat.add_le_add_right hrest _
+
+theorem entry_row_len (t : Spec.Tier) : (entryRow t).length = t.control := by
+  unfold entryRow
+  rw [List.length_set, painted_len]
+
+theorem climb_nonempty (t : Spec.Tier) (hR : 0 < tierR t) :
+    (tierClimb t).isEmpty = false := by
+  have hlen : 0 < (tierClimb t).length := by
+    unfold tierClimb
+    rw [List.length_reverse]
+    simpa [tierR] using hR
+  cases h : tierClimb t with
+  | nil => simp [h] at hlen
+  | cons _ _ => simp
+
+theorem entry_origin (t : Spec.Tier)
+    (hix : tallyOrigin t < (entryRow t).length) :
+    (entryRow t)[tallyOrigin t]'hix = 1 := by
+  have hlen : tallyOrigin t < (paintedRow t).length := by
+    rw [painted_len]
+    rw [entry_row_len] at hix
+    exact hix
+  unfold entryRow
+  rw [List.getElem_set_self]
+
+/-- Cells strictly after the origin are still the blank row. The paint stops
+    at the last rung, one hole before the park. -/
+theorem entry_past (t : Spec.Tier) (j : Nat) (hj : tallyOrigin t < j)
+    (hix : j < (entryRow t).length) : (entryRow t)[j]'hix = 0 := by
+  have hne : tallyOrigin t ≠ j := Nat.ne_of_lt hj
+  unfold entryRow
+  rw [List.getElem_set, if_neg hne]
+  have hstart : t.script + 2 + (rungList (t.n - 1)).length ≤ j := by
+    unfold tallyOrigin tierR at hj
+    omega
+  have hrep : j < (List.replicate t.control 0).length := by
+    rw [List.length_replicate]
+    rw [entry_row_len] at hix
+    exact hix
+  have hhi := paintRow_hi (List.replicate t.control 0) (t.script + 2)
+      (rungList (t.n - 1)) j hstart hrep
+  unfold paintedRow
+  rw [hhi]
+  simp [List.getElem_replicate]
+
+/-- The park cell, the hole after the last rung and before the tally peg. -/
+theorem entry_park_cell (t : Spec.Tier)
+    (hix : t.script + 2 + tierR t < (entryRow t).length) :
+    (entryRow t)[t.script + 2 + tierR t]'hix = 0 := by
+  have hne : tallyOrigin t ≠ t.script + 2 + tierR t := by
+    unfold tallyOrigin
+    omega
+  unfold entryRow
+  rw [List.getElem_set, if_neg hne]
+  have hstart : t.script + 2 + (rungList (t.n - 1)).length ≤
+      t.script + 2 + tierR t := by
+    unfold tierR
+    omega
+  have hrep : t.script + 2 + tierR t < (List.replicate t.control 0).length := by
+    rw [List.length_replicate]
+    rw [entry_row_len] at hix
+    exact hix
+  have hhi := paintRow_hi (List.replicate t.control 0) (t.script + 2)
+      (rungList (t.n - 1)) (t.script + 2 + tierR t) hstart hrep
+  unfold paintedRow
+  rw [hhi]
+  simp [List.getElem_replicate]
+
+theorem entry_seg (t : Spec.Tier) (sat : TierSat t) (hR : 0 < tierR t) :
+    RowSeg (entryRow t) (tallyOrigin t) 1 (tierClimb t).isEmpty := by
+  have hempty := climb_nonempty t hR
+  refine ⟨?_, ?_, ?_⟩
+  · rw [entry_row_len]
+    have h := origin_lt t sat
+    omega
+  · intro j hj
+    rw [hempty]
+    have hj0 : j = 0 := by omega
+    subst hj0
+    have hix : tallyOrigin t + 0 < (entryRow t).length := by
+      rw [entry_row_len]
+      have h := origin_lt t sat
+      omega
+    have hget := entry_origin t (by
+      rw [entry_row_len]
+      exact origin_lt t sat)
+    have hidx : tallyOrigin t + 0 = tallyOrigin t := by omega
+    rw [rowGet_idx hidx hix, hget]
+    rfl
+  · intro _ j hj hix
+    have hlt : tallyOrigin t < tallyOrigin t + j := by omega
+    exact entry_past t (tallyOrigin t + j) hlt hix
+
+theorem entry_double_room (t : Spec.Tier) (sat : TierSat t) :
+    2 ≤ (tierClimb t).length → tallyOrigin t + 2 ≤ t.control := by
+  intro h2
+  have hpre := sat.prefixes
+  cases hL : tierClimb t with
+  | nil => simp [hL] at h2
+  | cons r rs =>
+      rw [hL] at hpre h2
+      have hrs : rs ≠ [] := by
+        intro hrs
+        simp [hrs] at h2
+      have hpair : 1 ≤ rowRoom t ∧
+          tallyPrefixesLe (tallyAfter 1 r rs.isEmpty) (rowRoom t) rs = true := by
+        simpa [tallyPrefixesLe] using hpre
+      have hne : rs.isEmpty = false := by
+        cases rs with
+        | nil => exact absurd rfl hrs
+        | cons => rfl
+      have hta : 2 ≤ tallyAfter 1 r false := by
+        unfold tallyAfter
+        by_cases hr : r = 2 <;> simp [hr]
+      have hle : tallyAfter 1 r false ≤ rowRoom t := by
+        rw [hne] at hpair
+        cases rs with
+        | nil => exact absurd rfl hrs
+        | cons r2 rs2 =>
+            have h' : tallyAfter 1 r false ≤ rowRoom t ∧
+                tallyPrefixesLe (tallyAfter (tallyAfter 1 r false) r2 rs2.isEmpty)
+                  (rowRoom t) rs2 = true := by
+              simpa [tallyPrefixesLe] using hpair.2
+            exact h'.1
+      have hroom : 2 ≤ rowRoom t := Nat.le_trans hta hle
+      have hor := sat.origin_le
+      unfold rowRoom at hroom
+      omega
+
+/-- The model at the first tally peg. Nothing is parked. The gap is the input. -/
+def entryModel (t : Spec.Tier) (xs : List Nat) : ClimbModel where
+  n := t.n
+  k := t.k
+  benchlen := t.benchlen
+  gap := xs
+  work := xs
+  onBench := false
+  tally := 1
+  t0 := tallyOrigin t
+  parkAt := t.script + 2 + tierR t
+  parked := 0
+  fromHole := -1
+  ridx := 0
+  ctrl := tierR t + 1
+  high := tallyOrigin t
+  row := entryRow t
+
+/-- Counters on the tally board, and the room cap as the tally bound. -/
+def entryBudget (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (sat : TierSat t) (hR : 0 < tierR t)
+    (lay : TierShape t) : ClimbBudget where
+  n := t.n
+  bench := t.benchlen
+  moves0 := pegCount xs + pegCount xs
+  slides0 := 0
+  ops0 := 1
+  peak0 := 2
+  tally0 := 1
+  R := tierR t
+  mMax := rowRoom t
+  mMax_le := by simpa [geomCap] using sat.room_le_geom
+  fitM := FitsLen.of_le sat.fitGeomM (entry_moves_le t xs hx sat hR)
+  fitS := by simpa [tierChargeSlides, Nat.zero_add] using sat.fitRoomS
+  fitO := by
+    simpa [tierChargeOps] using
+      (FitsLen.of_le sat.fitGeomO (entry_ops_le t sat hR))
+  fitTailM := by
+    simpa [tierChargeMoves] using
+      (FitsLen.of_le sat.fitGeomTailM (entry_tail_moves_le t xs hx sat hR))
+  fitTailS := by simpa [tierChargeSlides, Nat.zero_add] using sat.fitRoomTailS
+  ctrl0 := tierR t + 1
+  fitCtrl := FitsLen.of_le lay.ctrlFit (entry_ctrl_le t hOk)
+  x := xs
+  xHome := 2
+  w := t.w
+  h := t.h
+  r := t.r
+  cg := t.combgap
+  control := t.control
+  fitControl := fits_of hOk.fits_control
+  ladder0 := t.script + 2
+
+theorem tally_home (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_4home = (gapBoard t xs).sudo_5Board_4home := by
+  simp [tallyBoard]
+
+theorem tally_held (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_4held = (gapBoard t xs).sudo_5Board_4held := by
+  simp [tallyBoard]
+
+theorem tally_tier (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_1t = (gapBoard t xs).sudo_5Board_1t := by
+  simp [tallyBoard]
+
+theorem gap_home_eq (t : Spec.Tier) (xs : List Nat) :
+    (gapBoard t xs).sudo_5Board_4home =
+      (bumpedBoard t xs).sudo_5Board_4home.set ⟨5, bumped_home5 t xs⟩ (embed xs) := by
+  simp [gapBoard]
+
+theorem gap_held_eq (t : Spec.Tier) (xs : List Nat) :
+    (gapBoard t xs).sudo_5Board_4held =
+      (bumpedBoard t xs).sudo_5Board_4held.set ⟨5, bumped_held5 t xs⟩ true := by
+  simp [gapBoard]
+
+theorem tally_home_size (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_4home.size = 8 := by
+  rw [tally_home, gap_home_eq, Array.size_set]
+  simp [bumpedBoard, bumpOp, bottomBoard, Array.size_set, built_home_blank, Array.size_mkArray]
+
+theorem tally_held_size (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_4held.size = 8 := by
+  rw [tally_held, gap_held_eq, Array.size_set]
+  simp [bumpedBoard, bumpOp, bottomBoard, Array.size_set, built_held_blank, Array.size_mkArray]
+
+theorem tally_home5 (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t)
+    (h : 5 < (tallyBoard t xs sat hR).sudo_5Board_4home.size) :
+    (tallyBoard t xs sat hR).sudo_5Board_4home[5]'h = embed xs := by
+  have harr : (tallyBoard t xs sat hR).sudo_5Board_4home =
+      (bumpedBoard t xs).sudo_5Board_4home.set ⟨5, bumped_home5 t xs⟩ (embed xs) := by
+    rw [tally_home, gap_home_eq]
+  have h5 := bumped_home5 t xs
+  have hsz : 5 < ((bumpedBoard t xs).sudo_5Board_4home.set ⟨5, h5⟩ (embed xs)).size := by
+    rw [Array.size_set]; exact h5
+  have hget := Array.getElem_set_eq (bumpedBoard t xs).sudo_5Board_4home ⟨5, h5⟩
+      (embed xs) rfl hsz
+  exact cell_eq_of harr hget
+
+theorem tally_held5 (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t)
+    (h : 5 < (tallyBoard t xs sat hR).sudo_5Board_4held.size) :
+    (tallyBoard t xs sat hR).sudo_5Board_4held[5]'h = true := by
+  have harr : (tallyBoard t xs sat hR).sudo_5Board_4held =
+      (bumpedBoard t xs).sudo_5Board_4held.set ⟨5, bumped_held5 t xs⟩ true := by
+    rw [tally_held, gap_held_eq]
+  have h5 := bumped_held5 t xs
+  have hsz : 5 < ((bumpedBoard t xs).sudo_5Board_4held.set ⟨5, h5⟩ true).size := by
+    rw [Array.size_set]; exact h5
+  have hget := Array.getElem_set_eq (bumpedBoard t xs).sudo_5Board_4held ⟨5, h5⟩ true rfl hsz
+  exact cell_eq_of harr hget
+
+theorem bottom_held_eq (t : Spec.Tier) (xs : List Nat) :
+    (bottomBoard t xs).sudo_5Board_4held =
+      (builtBoard t).sudo_5Board_4held.set ⟨2, held2_lt t⟩ true := by
+  simp [bottomBoard]
+
+theorem bottom_home_eq (t : Spec.Tier) (xs : List Nat) :
+    (bottomBoard t xs).sudo_5Board_4home =
+      (builtBoard t).sudo_5Board_4home.set ⟨2, home2_lt t⟩ (embed xs) := by
+  simp [bottomBoard]
+
+theorem tally_held2 (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t)
+    (h : 2 < (tallyBoard t xs sat hR).sudo_5Board_4held.size) :
+    (tallyBoard t xs sat hR).sudo_5Board_4held[2]'h = true := by
+  have harr : (tallyBoard t xs sat hR).sudo_5Board_4held =
+      (bumpedBoard t xs).sudo_5Board_4held.set ⟨5, bumped_held5 t xs⟩ true := by
+    rw [tally_held, gap_held_eq]
+  have h5 := bumped_held5 t xs
+  have hsz : 2 < ((bumpedBoard t xs).sudo_5Board_4held.set ⟨5, h5⟩ true).size := by
+    rw [Array.size_set]; exact bumped_held2 t xs
+  have hne : (5 : Nat) ≠ 2 := by decide
+  have hget := Array.getElem_set_ne (bumpedBoard t xs).sudo_5Board_4held ⟨5, h5⟩ true hsz hne
+  have hsrc := bumped_src_held t xs
+  have hcell : (tallyBoard t xs sat hR).sudo_5Board_4held[2]'h =
+      (bumpedBoard t xs).sudo_5Board_4held[2]'(bumped_held2 t xs) := by
+    have hfin : (⟨2, hsz⟩ : Fin _) = ⟨2, by rw [Array.size_set]; exact bumped_held2 t xs⟩ :=
+      Fin.ext rfl
+    simp [harr, hfin]
+  exact hcell.trans hsrc
+
+theorem tally_home2 (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t)
+    (h : 2 < (tallyBoard t xs sat hR).sudo_5Board_4home.size) :
+    (tallyBoard t xs sat hR).sudo_5Board_4home[2]'h = embed xs := by
+  have harr : (tallyBoard t xs sat hR).sudo_5Board_4home =
+      (bumpedBoard t xs).sudo_5Board_4home.set ⟨5, bumped_home5 t xs⟩ (embed xs) := by
+    rw [tally_home, gap_home_eq]
+  have h5 := bumped_home5 t xs
+  have hsz : 2 < ((bumpedBoard t xs).sudo_5Board_4home.set ⟨5, h5⟩ (embed xs)).size := by
+    rw [Array.size_set]; exact bumped_home2 t xs
+  have hne : (5 : Nat) ≠ 2 := by decide
+  have hget := Array.getElem_set_ne (bumpedBoard t xs).sudo_5Board_4home ⟨5, h5⟩
+      (embed xs) hsz hne
+  have hsrc := bumped_src_arr t xs
+  have hcell : (tallyBoard t xs sat hR).sudo_5Board_4home[2]'h =
+      (bumpedBoard t xs).sudo_5Board_4home[2]'(bumped_home2 t xs) := by
+    have hfin : (⟨2, hsz⟩ : Fin _) = ⟨2, by rw [Array.size_set]; exact bumped_home2 t xs⟩ :=
+      Fin.ext rfl
+    simp [harr, hfin]
+  exact hcell.trans hsrc
+
+theorem tally_held6 (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t)
+    (h : 6 < (tallyBoard t xs sat hR).sudo_5Board_4held.size) :
+    (tallyBoard t xs sat hR).sudo_5Board_4held[6]'h = false := by
+  have hblank := built_held_blank t
+  have h6blank : 6 < (Array.mkArray 8 false).size := by simp [Array.size_mkArray]
+  have hzero : (Array.mkArray 8 false)[6]'h6blank = false := by simp [Array.getElem_mkArray]
+  have hbuilt : (builtBoard t).sudo_5Board_4held[6]'(by rw [hblank]; exact h6blank) = false := by
+    rw [idx_get hblank 6 (by rw [hblank]; exact h6blank)]
+    exact hzero
+  have hbot := bottom_held_eq t xs
+  have h6set : 6 < ((builtBoard t).sudo_5Board_4held.set ⟨2, held2_lt t⟩ true).size := by
+    rw [Array.size_set, hblank]; exact h6blank
+  have hne2 : (2 : Nat) ≠ 6 := by decide
+  have hset := Array.getElem_set_ne (builtBoard t).sudo_5Board_4held ⟨2, held2_lt t⟩
+      true h6set hne2
+  have hbottom : (bottomBoard t xs).sudo_5Board_4held[6]'(by rw [hbot]; exact h6set) = false :=
+    (cell_eq_of hbot (hset.trans hbuilt))
+  have hbump : (bumpedBoard t xs).sudo_5Board_4held =
+      (bottomBoard t xs).sudo_5Board_4held := by simp [bumpedBoard, bumpOp]
+  have hbumped : (bumpedBoard t xs).sudo_5Board_4held[6]'(by rw [hbump, hbot]; exact h6set) =
+      false := cell_eq_of hbump hbottom
+  have harr : (tallyBoard t xs sat hR).sudo_5Board_4held =
+      (bumpedBoard t xs).sudo_5Board_4held.set ⟨5, bumped_held5 t xs⟩ true :=
+    (tally_held t xs sat hR).trans (gap_held_eq t xs)
+  have h5 := bumped_held5 t xs
+  have hsz : 6 < ((bumpedBoard t xs).sudo_5Board_4held.set ⟨5, h5⟩ true).size := by
+    rw [Array.size_set, hbump, hbot]; exact h6set
+  have hne5 : (5 : Nat) ≠ 6 := by decide
+  have hgap := Array.getElem_set_ne (bumpedBoard t xs).sudo_5Board_4held ⟨5, h5⟩ true hsz hne5
+  exact cell_eq_of harr (hgap.trans hbumped)
+
+theorem tally_moves (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (pegCount xs + pegCount xs) := by
+  simp [tallyBoard, gapBoard]
+
+theorem tally_peak (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat 2 := by
+  simp [tallyBoard, gapBoard]
+
+theorem tally_plain (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_8bench_on = false ∧
+      (tallyBoard t xs sat hR).sudo_5Board_9marker_on = false ∧
+      (tallyBoard t xs sat hR).sudo_5Board_8rung_idx = 0 ∧
+      (tallyBoard t xs sat hR).sudo_5Board_11parked_from = -1 ∧
+      (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_6slides = 0 ∧
+      (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_11peak_strict = 0 ∧
+      (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = 0 ∧
+      (tallyBoard t xs sat hR).sudo_5Board_7ladder0 = Int.ofNat (t.script + 2) ∧
+      (tallyBoard t xs sat hR).sudo_5Board_6nrungs = Int.ofNat (tierR t) ∧
+      (tallyBoard t xs sat hR).sudo_5Board_9park_hole =
+        Int.ofNat (t.script + 2 + tierR t) := by
+  simp [tallyBoard, gapBoard, bumpedBoard, bumpOp, bottomBoard, builtBoard, midBoard, placed,
+    blankOf, tierR]
+
+theorem tally_ops_arr (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_3ops =
+      (Array.mkArray 5 (0 : Int)).set ⟨2, by simp [Array.size_mkArray]⟩ (Int.ofNat 1) := by
+  have ht : (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_3ops =
+      (gapBoard t xs).sudo_5Board_4cost.sudo_5Costs_3ops := by
+    simp [tallyBoard]
+  have hg : (gapBoard t xs).sudo_5Board_4cost.sudo_5Costs_3ops =
+      (bumpedBoard t xs).sudo_5Board_4cost.sudo_5Costs_3ops := by
+    simp [gapBoard]
+  rw [ht, hg]
+  have hb : (bumpedBoard t xs).sudo_5Board_4cost.sudo_5Costs_3ops =
+      (bottomBoard t xs).sudo_5Board_4cost.sudo_5Costs_3ops.set
+        ⟨2, bottom_ops2 t xs⟩ (1 : Int) := by
+    simp [bumpedBoard, bumpOp, Nat.zero_add]
+  rw [hb]
+  apply Array.ext
+  · simp [bottom_ops, Array.size_set, Array.size_mkArray]
+  · intro i hi1 hi2
+    simp [bottom_ops, Array.getElem_set, Array.getElem_mkArray, ofNat_eq_natCast]
+
+theorem gap_emb (t : Spec.Tier) (xs : List Nat) :
+    (gapBoard t xs).sudo_5Board_1t = embTier t := by
+  simp [gapBoard, bumpedBoard, bumpOp, bottomBoard, builtBoard, midBoard, placed, blankOf]
+
+theorem tally_emb (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_1t = embTier t := by
+  rw [tally_tier, gap_emb]
+
+theorem entry_inv (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    ClimbInv (tallyBoard t xs sat hR) (entryModel t xs) := by
+  have hsizeH := tally_home_size t xs sat hR
+  have hsizeD := tally_held_size t xs sat hR
+  have hplain := tally_plain t xs sat hR
+  rcases hplain with ⟨-, hmark, hridx, hfrom, -, -, -, -, -, hpark⟩
+  refine
+    { hG := by rw [hsizeH]; decide
+      hGs := by rw [hsizeD]; decide
+      marker := hmark
+      len := by simp [tallyBoard, entryModel]
+      ctrl := by simp [tallyBoard, entryModel]
+      high := by simp [tallyBoard, entryModel]
+      t0 := by
+        have h0 : (tallyBoard t xs sat hR).sudo_5Board_6tally0 =
+            (gapBoard t xs).sudo_5Board_6tally0 := by simp [tallyBoard]
+        simp [entryModel, h0, gap_tally0, ofNat_eq_natCast]
+      row := by simp [entryModel, tally_row t xs sat hR]
+      park := by simp [entryModel, hpark, ofNat_eq_natCast]
+      fromP := by simp [entryModel, hfrom]
+      ridx := by simp [entryModel, hridx]
+      gapHome := by
+        intro _
+        refine ⟨?_, ?_⟩
+        · exact tally_held5 t xs sat hR (by rw [hsizeD]; decide)
+        · have hhome := tally_home5 t xs sat hR (by rw [hsizeH]; decide)
+          simpa [entryModel] using hhome
+      gapBench := by
+        intro h
+        simp [entryModel] at h }
+
+theorem entry_park_lt (t : Spec.Tier) (sat : TierSat t) :
+    t.script + 2 + tierR t < (entryRow t).length := by
+  rw [entry_row_len]
+  have h := origin_lt t sat
+  unfold tallyOrigin at h
+  omega
+
+theorem entry_hole_lt (t : Spec.Tier) (hOk : BoardOk t) (hR : 0 < tierR t) :
+    climbAt (t.script + 2) (tierR t) 0 < (entryRow t).length := by
+  rw [climb_head_ix]
+  exact entry_ix_lt t hOk 0 hR
+
+theorem entry_park (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (sat : TierSat t) (hR : 0 < tierR t) (lay : TierShape t) :
+    ParkRead (tallyBoard t xs sat hR) (entryModel t xs) (tierClimb t)
+      (entryBudget t hOk xs hx sat hR lay) := by
+  have hplain := tally_plain t xs sat hR
+  rcases hplain with ⟨-, -, -, -, -, -, -, hlad, hnr, -⟩
+  refine
+    { ladder0B := by simp [entryBudget, hlad]
+      nrungsB := by simp [entryBudget, hnr, ofNat_eq_natCast]
+      climbH := by
+        apply climb_holes_refines (tallyBoard t xs sat hR) (t.script + 2) (tierR t)
+        · simp [hlad]
+        · simp [hnr, ofNat_eq_natCast]
+        · omega
+        · exact FitsLen.of_le (fits_of hOk.fits_script) (by omega)
+        · apply FitsLen.of_le (fits_of hOk.fits_control)
+          have hL := hOk.ladder
+          unfold tierR at hL ⊢
+          omega
+      holeLt := by simpa [entryModel, entryBudget] using entry_hole_lt t hOk hR
+      parkLt := by simpa [entryModel] using entry_park_lt t sat
+      parkNe := by
+        simp [entryModel, entryBudget, climbAt]
+        omega
+      parkLe := by
+        simp [entryModel]
+        unfold tallyOrigin
+        omega
+      parkIn := by
+        simp [entryModel, entryBudget]
+        have h := origin_lt t sat
+        unfold tallyOrigin at h
+        omega
+      parkCell := by
+        intro _
+        simp [entryModel, entry_park_cell t (entry_park_lt t sat)]
+      fromIdle := by
+        intro _
+        simp [entryModel]
+      fromNat := by
+        intro h
+        simp [entryModel] at h
+      srcOk := by
+        intro h
+        simp [entryModel] at h
+      parkHeld := by
+        intro h
+        simp [entryModel] at h
+      nextRung := by
+        intro r rs hrest
+        simpa [entryModel, entryBudget] using entry_nextRung t hOk hR r rs hrest
+      ladderTail := by
+        intro k hk hlt
+        simpa [entryModel, entryBudget] using entry_ladderTail t hOk k hk
+      fit2 := by
+        simp [entryModel]
+        apply FitsLen.of_le (fits_of hOk.fits_control)
+        have hL := hOk.ladder
+        unfold tierR at hL ⊢
+        omega
+      fit4 := by
+        simp [entryModel]
+        apply FitsLen.of_le (fits_of hOk.fits_control)
+        have hL := hOk.ladder
+        have hs := lay.script_ge
+        unfold tierR at hL ⊢
+        omega
+      fitI := by simp [entryModel, FitsLen, i64MaxNat]
+      l0pos := by simp [entryBudget]
+      fitL0 := by
+        simp [entryBudget]
+        exact FitsLen.of_le (fits_of hOk.fits_script) (by omega)
+      fitLR := by
+        simp [entryBudget]
+        apply FitsLen.of_le (fits_of hOk.fits_control)
+        have hL := hOk.ladder
+        unfold tierR at hL ⊢
+        omega }
+
+theorem entry_peg (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t) (hR : 0 < tierR t)
+    (lay : TierShape t) :
+    PegRead (tallyBoard t xs sat hR) (entryModel t xs)
+      (entryBudget t hOk xs hx sat hR lay) := by
+  have hplain := tally_plain t xs sat hR
+  rcases hplain with ⟨-, -, -, -, -, hstrict, hhole, -, -, -⟩
+  have hops : (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+    rw [tally_ops_arr, Array.size_set, Array.size_mkArray]
+  refine
+    { opsGt := by rw [hops]; decide
+      cOps := by
+        refine ⟨0, ?_⟩
+        have harr := tally_ops_arr t xs sat hR
+        have hi : 1 < (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [hops]; decide
+        rw [idx_get harr 1 hi, Array.getElem_set, if_neg (by decide : (2 : Nat) ≠ 1)]
+        simp [Array.getElem_mkArray]
+      peakS := ⟨0, hstrict⟩
+      holeM := ⟨0, hhole⟩
+      trits := by simpa [entryModel] using htri
+      top := by
+        intro _
+        simp [entryModel]
+      fitRow := by
+        simp [entryModel]
+        apply FitsLen.of_le (fits_of hOk.fits_control)
+        have h := origin_lt t sat
+        omega
+      fitTall := by
+        simp [entryModel]
+        unfold FitsLen i64MaxNat
+        decide
+      fitCtrl := by
+        simp [entryModel]
+        apply FitsLen.of_le (fits_of hOk.fits_control)
+        have hL := hOk.ladder
+        unfold tierR at hL ⊢
+        omega
+      n_pos := by simpa [entryModel] using hOk.n_pos
+      span := by simpa [entryModel, entryBudget] using sat.cube_span
+      small := by simpa [entryModel, entryBudget] using lay.small
+      n_small := by simpa [entryModel] using lay.n_small
+      fitN := by
+        simp [entryModel]
+        exact FitsLen.of_le (fits_of hOk.fits_n) (by omega)
+      fitBn := by
+        simp [entryModel]
+        exact FitsLen.of_le (by unfold FitsLen i64MaxNat; decide) lay.small.2.2.2
+      fit3 := by
+        simp [entryModel]
+        exact FitsLen.of_le (fits_of hOk.fits_n) (by omega) }
+
+theorem entry_shape (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t) (hR : 0 < tierR t)
+    (lay : TierShape t) :
+    ClimbShape (tallyBoard t xs sat hR) (entryModel t xs) (tierClimb t)
+      (entryBudget t hOk xs hx sat hR lay) := by
+  have hsizeH := tally_home_size t xs sat hR
+  have hsizeD := tally_held_size t xs sat hR
+  have hplain := tally_plain t xs sat hR
+  rcases hplain with ⟨hbench, -, -, -, -, -, -, -, -, -⟩
+  have hem := tally_emb t xs sat hR
+  refine
+    { spareH := by rw [hsizeH]; decide
+      spareD := by rw [hsizeD]; decide
+      spareE := tally_held6 t xs sat hR (by rw [hsizeD]; decide)
+      h7 := by rw [hsizeD]; decide
+      gapClear := by
+        intro h
+        simp [entryModel] at h
+      offWhenHome := by
+        intro _
+        exact hbench
+      xD := by simp [entryBudget, hsizeD]
+      xH := by simp [entryBudget, hsizeH]
+      xHeld := tally_held2 t xs sat hR (by rw [hsizeD]; decide)
+      xArr := by
+        have hhome := tally_home2 t xs sat hR (by rw [hsizeH]; decide)
+        simpa [entryBudget] using hhome
+      xNe5 := by simp [entryBudget]
+      xNe6 := by simp [entryBudget]
+      gapLen := by simp [entryModel, hx]
+      seg := by simpa [entryModel] using entry_seg t sat hR
+      tierN := by rw [hem]; simp [entryModel, embTier]
+      tierK := by rw [hem]; simp [entryModel, embTier]
+      tierB := by rw [hem]; simp [entryModel, embTier]
+      tierW := by rw [hem]; simp [entryBudget, embTier]
+      tierH := by rw [hem]; simp [entryBudget, embTier]
+      tierR := by rw [hem]; simp [entryBudget, embTier]
+      tierCg := by rw [hem]; simp [entryBudget, embTier]
+      tierC := by rw [hem]; simp [entryBudget, embTier]
+      rowLen := by simp [entryModel, entryBudget, entry_row_len]
+      w0 := by simpa [entryBudget] using lay.w0
+      h0 := by simpa [entryBudget] using lay.h0
+      r0 := by simpa [entryBudget] using lay.r0
+      rlt := by simpa [entryBudget] using lay.rlt
+      n_eq := by simpa [entryModel, entryBudget] using lay.n_eq
+      k_le := by simpa [entryModel] using lay.k_le
+      gap_eq := by simpa [entryModel, entryBudget] using lay.gap
+      park := entry_park t hOk xs hx sat hR lay
+      peg := entry_peg t hOk xs hx htri sat hR lay }
+
+theorem entry_ops_slot (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t)
+    (i : Nat) (hi : i < (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    ∃ c : Nat,
+      (tallyBoard t xs sat hR).sudo_5Board_4cost.sudo_5Costs_3ops[i]'hi = (c : Int) ∧
+        c ≤ 1 := by
+  have harr := tally_ops_arr t xs sat hR
+  rw [idx_get harr i hi]
+  by_cases h2 : i = 2
+  · subst h2
+    refine ⟨1, ?_, ?_⟩
+    · rw [Array.getElem_set, if_pos rfl]
+      simp [ofNat_eq_natCast]
+    · omega
+  · refine ⟨0, ?_, ?_⟩
+    · rw [Array.getElem_set, if_neg (Ne.symm h2)]
+      simp [Array.getElem_mkArray]
+    · omega
+
+/-- `ClimbInvK` on the tally board, before any rung. Reservations are the
+    counters already on that board, and `done.length = 0`. -/
+theorem entry_climbInv (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t)
+    (hR : 0 < tierR t) (lay : TierShape t) :
+    ClimbInvK [] (tierClimb t) (tallyBoard t xs sat hR) (entryModel t xs)
+      (entryBudget t hOk xs hx sat hR lay) := by
+  refine
+    { inv := entry_inv t xs sat hR
+      idx := by simp [entryModel]
+      hn := by simp [entryModel, entryBudget]
+      hbench := by simp [entryModel, entryBudget]
+      htally0 := by simp [entryModel, entryBudget, climbTallyPrefix]
+      kLe := by
+        simp [entryBudget]
+        unfold tierClimb tierR
+        rw [List.length_reverse]
+        exact Nat.le_refl _
+      shape := entry_shape t hOk xs hx htri sat hR lay
+      moves := by
+        refine ⟨pegCount xs + pegCount xs, ?_, ?_⟩
+        · simpa [entryBudget] using tally_moves t xs sat hR
+        · simp [entryModel, entryBudget]
+      slides := by
+        refine ⟨0, ?_, ?_⟩
+        · have hplain := tally_plain t xs sat hR
+          rcases hplain with ⟨-, -, -, -, hslides, -, -, -, -, -⟩
+          simp [entryBudget, hslides]
+        · simp [entryModel, entryBudget]
+      ops := by
+        intro i hi
+        obtain ⟨c, hc, hle⟩ := entry_ops_slot t xs sat hR i hi
+        refine ⟨c, hc, ?_⟩
+        simp [entryModel, entryBudget]
+        omega
+      peak := by
+        refine ⟨2, ?_, ?_⟩
+        · simpa [entryBudget] using tally_peak t xs sat hR
+        · simp [entryBudget]
+          omega
+      highTop := by
+        intro _
+        simp [entryModel]
+      parkBelow := by
+        simp [entryModel]
+        unfold tallyOrigin
+        omega
+      holeBelow := by
+        simp [entryModel, entryBudget, climbAt]
+        unfold tallyOrigin
+        omega
+      fromBelow := by
+        intro h
+        simp [entryModel] at h
+      finalLe := by
+        simpa [entryModel, entryBudget] using climbTally_ge 1 (tierClimb t)
+      tailFit := by
+        have hpre : tallyPrefixesLe 1 (rowRoom t) (tierClimb t ++ []) = true := by
+          simpa using sat.prefixes
+        have hct : climbTally 1 (tierClimb t) ≤ rowRoom t := by
+          rw [← climbTallyPrefix_full]
+          exact tallyPrefixesLe_spec 1 (rowRoom t) (tierClimb t) [] hpre
+        simp [entryModel, entryBudget, entry_row_len]
+        have hor := sat.origin_le
+        unfold rowRoom at hct
+        omega
+      tailZero := by
+        intro k hk1 _ hix
+        have hlt : tallyOrigin t < tallyOrigin t + k := by
+          simp [entryModel] at hk1
+          omega
+        simpa [entryModel] using entry_past t (tallyOrigin t + k) hlt hix
+      openRoom := by
+        intro h2
+        have hroom := entry_double_room t sat h2
+        simpa [entryModel, entryBudget] using hroom
+      openZero := by
+        intro _ k hk hix
+        have hk0 : k = 0 := by
+          simp [entryModel] at hk
+          omega
+        subst hk0
+        have hix' : tallyOrigin t + 1 < (entryRow t).length := by
+          simpa [entryModel] using hix
+        have hpast := entry_past t (tallyOrigin t + 1) (by omega) hix'
+        simpa [entryModel] using hpast
+      tmaxLt := by
+        refine ⟨1, ?_, ?_⟩
+        · simp [tallyBoard]
+        · intro _
+          simp [entryModel]
+      ctrlLe := by simp [entryModel, entryBudget]
+      srcAbove := by
+        intro h
+        simp [entryModel] at h }
+
+/-- Park sits on the cell just after the ladder: `ladder0 + R`. -/
+theorem entry_park_top (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (sat : TierSat t) (hR : 0 < tierR t) (lay : TierShape t) :
+    (entryModel t xs).parkAt =
+      (entryBudget t hOk xs hx sat hR lay).ladder0 +
+        (entryBudget t hOk xs hx sat hR lay).R := by
+  simp [entryModel, entryBudget]
+
+theorem entry_cap (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (sat : TierSat t) (hR : 0 < tierR t) (lay : TierShape t)
+    (done rest : List Nat) (hsplit : tierClimb t = done ++ rest) :
+    climbTallyPrefix (entryBudget t hOk xs hx sat hR lay).tally0 done rest ≤
+      (entryBudget t hOk xs hx sat hR lay).mMax := by
+  simpa [entryBudget] using tallyPrefixesLe_spec 1 (rowRoom t) done rest
+    (by simpa [hsplit] using sat.prefixes)
+
+/-- The loop predicate at index 0 on the tally board. The park hole is the
+    cell just after the ladder. -/
+theorem entry_climbL (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t)
+    (hR : 0 < tierR t) (lay : TierShape t) :
+    ∃ inv : ClimbInvL (tierClimb t) 0 (tallyBoard t xs sat hR)
+        (entryBudget t hOk xs hx sat hR lay),
+      inv.s.parkAt =
+        (entryBudget t hOk xs hx sat hR lay).ladder0 +
+          (entryBudget t hOk xs hx sat hR lay).R := by
+  refine ⟨
+    { done := []
+      rest := tierClimb t
+      s := entryModel t xs
+      split := by simp
+      k_eq := rfl
+      inv := entry_climbInv t hOk xs hx htri sat hR lay
+      ladder := tally_ladder t xs sat hR
+      m_pos := by simp [entryModel]
+      m_le := by
+        simp [entryModel, entryBudget]
+        have hL := hOk.ladder
+        unfold tierR at hL
+        omega
+      m_len := by simp [entryModel, tallyBoard, ofNat_eq_natCast] },
+    ?_⟩
+  simp [entryModel, entryBudget]
+
+/-- The emitted inverse, from the fresh input board, is the climb of the tally
+    board bound into the final tail. -/
+theorem invert_emit (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t)
+    (hR : 0 < tierR t) (lay : TierShape t) :
+    Ecbs.invert (bottomBoard t xs) ((2 : Nat) : Int) =
+      climbEmit (climbStepBoard ((2 : Nat) : Int)) (tallyBoard t xs sat hR)
+        (tierClimb t) >>= finalTail := by
+  rw [invert_steps (bottomBoard t xs) ((2 : Nat) : Int),
+    invertWith_named_loop (bottomBoard t xs) ((2 : Nat) : Int)]
+  have hbump := bump_bottom t xs
+  have hcopy := copy_gap_board t hOk xs hx
+  have htally := tally_board_run t hOk xs sat hR
+  suffices
+      (do
+        let b ← (do
+          let ix := Ecbs.op_inv
+          let t1 ← SudoRt.atL (bottomBoard t xs).sudo_5Board_4cost.sudo_5Costs_3ops ix
+          let t2 ← SudoRt.addI t1 (1 : Int)
+          let t3 ← SudoRt.putL (bottomBoard t xs).sudo_5Board_4cost.sudo_5Costs_3ops ix t2
+          pure ({ bottomBoard t xs with sudo_5Board_4cost :=
+            { (bottomBoard t xs).sudo_5Board_4cost with sudo_5Costs_3ops := t3 } }))
+        let b ← Ecbs.copy_band b Ecbs.gap ((2 : Nat) : Int) false
+        let b ← Ecbs.tally_start b
+        let nr := SudoRt.listLen b.sudo_5Board_6ladder
+        let toV ← SudoRt.subI nr (1 : Int)
+        let fromV := (0 : Int)
+        let fuel : Nat := if fromV > toV then 1 else (toV - fromV).natAbs + 1
+        let out ← SudoRt.runLoopOn (ρ := Ecbs.Board) (fromV, b) fuel
+          (invertIdx ((2 : Nat) : Int) nr toV)
+          (fun σ => finalTail σ.2)
+          (fun r => pure r)
+        pure out) =
+      climbEmit (climbStepBoard ((2 : Nat) : Int)) (tallyBoard t xs sat hR)
+        (tierClimb t) >>= finalTail by
+    simpa using this
+  rw [hbump, ok_bind, hcopy, ok_bind, htally, ok_bind]
+  obtain ⟨invL, hpark⟩ := entry_climbL t hOk xs hx htri sat hR lay
+  have hpos : 0 < (tierClimb t).length := by
+    simpa [tierClimb, List.length_reverse, tierR] using hR
+  have hfit : FitsLen (tierClimb t).length := by
+    simpa [tierClimb, List.length_reverse, tierR] using tierR_fit t hOk
+  have hxLen : (entryBudget t hOk xs hx sat hR lay).x.length =
+      (entryBudget t hOk xs hx sat hR lay).n := by
+    simpa [entryBudget] using hx
+  have hxT : allTritList (entryBudget t hOk xs hx sat hR lay).x := by
+    simpa [entryBudget] using htri
+  simpa [entryBudget] using
+    invertWith_on_inv invL hpos hfit hpark
+      (entry_cap t hOk xs hx sat hR lay) hxLen hxT
+
+/-- After the ladder the gap and the tally are `invClimb` of the input, and the
+    rest of `invert` is the final tail on that board. -/
+theorem invert_climbed (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t)
+    (hR : 0 < tierR t) (lay : TierShape t) :
+    ∃ b' s',
+      Ecbs.invert (bottomBoard t xs) ((2 : Nat) : Int) = finalTail b' ∧
+      (s'.gap, s'.tally) =
+        invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t) ∧
+      ClimbInvK (tierClimb t) [] b' s' (entryBudget t hOk xs hx sat hR lay) := by
+  have hem := invert_emit t hOk xs hx htri sat hR lay
+  have hxLen : (entryBudget t hOk xs hx sat hR lay).x.length =
+      (entryBudget t hOk xs hx sat hR lay).n := by
+    simpa [entryBudget] using hx
+  have hxT : allTritList (entryBudget t hOk xs hx sat hR lay).x := by
+    simpa [entryBudget] using htri
+  obtain ⟨b', s', hrun, _, hK, hgap, _⟩ := climb_refines_emit (tierClimb t)
+      (tallyBoard t xs sat hR) (entryModel t xs)
+      (entryBudget t hOk xs hx sat hR lay)
+      (entry_climbInv t hOk xs hx htri sat hR lay)
+      (entry_park_top t hOk xs hx sat hR lay)
+      (by simp [entryModel])
+      (entry_cap t hOk xs hx sat hR lay) hxLen hxT
+  have hrun' :
+      climbEmit (climbStepBoard ((2 : Nat) : Int)) (tallyBoard t xs sat hR) (tierClimb t) =
+        .ok b' := by
+    simpa [entryBudget] using hrun
+  refine ⟨b', s', ?_, ?_, hK⟩
+  · rw [hem, hrun', ok_bind]
+  · simpa [entryModel, entryBudget] using hgap
+
+/-- The emitted inverse returns a board. -/
+theorem invert_ok (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t)
+    (hR : 0 < tierR t) (lay : TierShape t) :
+    ∃ bZ, Ecbs.invert (bottomBoard t xs) ((2 : Nat) : Int) = .ok bZ := by
+  have hem := invert_emit t hOk xs hx htri sat hR lay
+  have hpos : 0 < (tierClimb t).length := by
+    simpa [tierClimb, List.length_reverse, tierR] using hR
+  have hxLen : (entryBudget t hOk xs hx sat hR lay).x.length =
+      (entryBudget t hOk xs hx sat hR lay).n := by
+    simpa [entryBudget] using hx
+  have hxT : allTritList (entryBudget t hOk xs hx sat hR lay).x := by
+    simpa [entryBudget] using htri
+  obtain ⟨bZ, hrun⟩ := climb_then_tail
+      (entry_climbInv t hOk xs hx htri sat hR lay) hpos
+      (entry_park_top t hOk xs hx sat hR lay)
+      (by simp [entryModel])
+      (entry_cap t hOk xs hx sat hR lay) hxLen hxT
+  exact ⟨bZ, hem.trans hrun⟩
+
+/-- A climb that starts from a positive tally stays positive. -/
+theorem invClimb_tally_pos (n k bench : Nat) (x g : List Nat) (tally : Nat)
+    (rs : List Nat) (ht : 0 < tally) :
+    0 < (invClimb n k bench x (g, tally) rs).2 := by
+  induction rs generalizing g tally with
+  | nil => simpa [invClimb] using ht
+  | cons r rs ih =>
+      simp only [invClimb]
+      exact ih (invRung n k bench x g tally r rs.isEmpty).1
+        (invRung n k bench x g tally r rs.isEmpty).2
+        (by
+          rw [invRung_tally]
+          exact Nat.lt_of_lt_of_le ht (tallyAfter_ge tally r rs.isEmpty))
+
+end EcbsLink2.Link2

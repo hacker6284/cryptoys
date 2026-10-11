@@ -1503,7 +1503,8 @@ theorem white_final_k
           let b ← Ecbs.mul b (5 : Int) (5 : Int) (6 : Int) false false false
           Ecbs.clear b (5 : Int)) = .ok b' ∧
       ClimbInvK (done ++ [r]) [] b'
-        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) true) base := by
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) true) base ∧
+      RungDelta b b' base s.tally := by
   let hole := climbAt base.ladder0 base.R s.ridx
   let s' := modelRung s base.x r hole true
   obtain ⟨b', hAll⟩ := gap_clear_emit h hF hm hT hhome hp hh
@@ -1743,7 +1744,7 @@ theorem white_final_k
     rw [htall]
     exact hlt
   have hK := climbInvK_succ h hinv hδ hCap hshape hh htmax rfl
-  exact ⟨b', hrun, hK⟩
+  exact ⟨b', hrun, hK, hδ⟩
 
 private theorem cons_tail (r : Nat) (rest : List Nat) (k : Nat) (hk : k < rest.length) :
     (r :: rest)[1 + k]'(by simp; omega) = rest[k] := by
@@ -1783,7 +1784,8 @@ theorem white_open_k
               Ecbs.clear b (5 : Int))
           Ecbs.tally_double b) = .ok b' ∧
       ClimbInvK (done ++ [r]) rest b'
-        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base := by
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base ∧
+      RungDelta b b' base s.tally := by
   let hole := climbAt base.ladder0 base.R s.ridx
   let s' := modelRung s base.x r hole false
   obtain ⟨bClear, hAll⟩ := gap_clear_emit h hF hm hT hhome h.parkBelow h.holeBelow
@@ -2246,7 +2248,7 @@ theorem white_open_k
     omega
   have hK := climbInvK_succ h (by simpa [hempty] using hinv) hδ' hCap
     (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
-  exact ⟨b', hprog, by simpa [hempty] using hK⟩
+  exact ⟨b', hprog, by simpa [hempty] using hK, hδ'⟩
 
 /-- The parked clear, the unparked red cube and mul, and the cost projections.
     `red_cube_mul` is obtained once here. The row proof and the successor read
@@ -3747,7 +3749,8 @@ theorem red_open_k
               false false false
           Ecbs.tally_add_one b) = .ok b' ∧
       ClimbInvK (done ++ [r]) rest b'
-        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base := by
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base ∧
+      RungDelta b b' base s.tally := by
   obtain ⟨bAdd, hprog, hctrlA, hlenA, hhighA, hfromA, hridxA, hrowA, htmaxA, hδA,
       _bCP, _bCU, _bC, _bR,
       _hmvA, _hslA, _hopsA, _hpkA,
@@ -4105,7 +4108,7 @@ theorem red_open_k
     exact open_red_tmax_lt s.tally
   have hK := climbInvK_succ h (by simpa [hempty] using hinv) hδA hCap
     (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
-  exact ⟨bAdd, hprog, by simpa [hempty] using hK⟩
+  exact ⟨bAdd, hprog, by simpa [hempty] using hK, hδA⟩
 
 /-- Ops after the red cube and the red mul, read off the idle clear. The cube
     writes slot 1 and the mul writes slot 0. -/
@@ -4848,7 +4851,8 @@ theorem red_final_k
           Ecbs.mul b ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
             false false false) = .ok b' ∧
       ClimbInvK (done ++ [2]) [] b'
-        (modelRung s base.x 2 (climbAt base.ladder0 base.R s.ridx) true) base := by
+        (modelRung s base.x 2 (climbAt base.ladder0 base.R s.ridx) true) base ∧
+      RungDelta b b' base s.tally := by
   obtain ⟨bClearP, bClearU, bCube0, bRed0, hrun, hClearEq, hlenC, _ht0C, _hrowC,
       _hctrlN, hhighC, _hctrlC, hmaxC, ht0Red, _htierRed, hcubeBoth, hmulBoth,
       hrel, honR, htoR, _hlenR, hbenchR, hδ, hslots, hladE, hnrE, hparkE,
@@ -5256,7 +5260,7 @@ theorem red_final_k
       rw [htall]
       exact hlt
   have hK := climbInvK_succ h hinv hδR hCap hshape h.holeBelow htmax rfl
-  exact ⟨b', hprog, hK⟩
+  exact ⟨b', hprog, hK, hδR⟩
 
 /-- A parked resume spends two more control steps than an idle park. The peg
     loop still fits the same counter budget: `4 + tally ≤ 3 · mMax + 5`. -/
@@ -6544,7 +6548,8 @@ theorem white_final_ge
           let b ← Ecbs.mul b (5 : Int) (5 : Int) (6 : Int) false false false
           Ecbs.clear b (5 : Int)) = .ok b' ∧
       ClimbInvK (done ++ [r]) [] b'
-        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) true) base := by
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) true) base ∧
+      RungDelta b b' base s.tally := by
   let hole := climbAt base.ladder0 base.R s.ridx
   let s' := modelRung s base.x r hole true
   obtain ⟨b', bIdle, hrun, hframe, hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E, hparkE,
@@ -6862,7 +6867,7 @@ theorem white_final_ge
     rw [htall]
     exact hlt
   have hK := climbInvK_succ h hinv hδ hCap hshape h.holeBelow htmax rfl
-  exact ⟨b', hrun, hK⟩
+  exact ⟨b', hrun, hK, hδ⟩
 
 theorem open_white_ctrl_fit_ge (ctrl tally ctrl0 done R mMax : Nat)
     (hctrl : ctrl ≤ ctrl0 + done * (3 * mMax + 5))
@@ -6913,7 +6918,8 @@ theorem white_open_ge
               Ecbs.clear b (5 : Int))
           Ecbs.tally_double b) = .ok b' ∧
       ClimbInvK (done ++ [r]) rest b'
-        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base := by
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base ∧
+      RungDelta b b' base s.tally := by
   let hole := climbAt base.ladder0 base.R s.ridx
   let s' := modelRung s base.x r hole false
   have habove := h.srcAbove hge
@@ -7411,7 +7417,7 @@ theorem white_open_ge
       omega
   have hK := climbInvK_succ h (by simpa [hempty] using hinv) hδ' hCap
     (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
-  exact ⟨b', hprog, by simpa [hempty] using hK⟩
+  exact ⟨b', hprog, by simpa [hempty] using hK, hδ'⟩
 
 /-- The emitted parked clear is `withPark` of the unparked clear. The keep-park
     copy for `fromHole ≥ 0` is `withPark` of the idle entry copy; `withPark`

@@ -6,10 +6,9 @@
  */
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { DEN } from "../../playroom/constants.js";
+import { BS_GRID as G, DEN } from "../../playroom/constants.js";
 
 export const MODELS = new URL("../../bs/assets/models/", import.meta.url);
-const PITCH = 0.12 / 9;
 
 export function loadGlb(file) {
     return new Promise((resolve, reject) => new GLTFLoader().load(new URL(file, MODELS).href, resolve, undefined, reject));
@@ -30,8 +29,8 @@ export async function placeUnit(world, file = "bs_unit_red.glb") {
     return {
         root,
         lid,
-        ocean: (h) => new THREE.Vector3(-0.06393 + (h % 10) * PITCH, 0.0124, -0.04683 + Math.floor(h / 10) * PITCH),
-        lidSeat: (cell) => new THREE.Vector3(-0.06393 + (cell % 10) * PITCH, 0.005, 0.135833 - Math.floor(cell / 10) * PITCH),
+        ocean: (h) => new THREE.Vector3(G.x0 + (h % 10) * G.pitch, G.plateY, G.oceanZ0 + Math.floor(h / 10) * G.pitch),
+        lidSeat: (cell) => new THREE.Vector3(G.x0 + (cell % 10) * G.pitch, G.lidFaceY, G.lidZ0 - Math.floor(cell / 10) * G.pitch),
     };
 }
 

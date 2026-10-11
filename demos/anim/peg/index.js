@@ -15,15 +15,12 @@
  */
 import settings from "./settings.js";
 import { rafRun } from "../shared/run.js";
+import { easeInOutCubic, easeInCubic, easeOutCubic, easeInOutQuad } from "../shared/geom.js";
 
 export { settings };
 export const timing = settings.timing;
 export const slots = [];
 
-const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2);
-const easeInCubic = (t) => t * t * t;
-const easeOutCubic = (t) => 1 - (1 - t) ** 3;
-const easeInOutQuad = (t) => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2);
 
 /** Insert plan: duration and the peg's height above its seat at time t (ms). */
 export function planInsert({ tempo = timing.tempo } = {}) {

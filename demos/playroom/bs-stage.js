@@ -14,7 +14,9 @@
  *
  * Play runs one beat per summary of the generated trace (bs.sudo
  * trace_exchange): the registers jump from one summary to the next. Step
- * plays that step's own peg moves (bs/expand.js), one after another, fast.
+ * plays that step's own moves, one after another, fast: a hole of BUILD's
+ * from its BuildRead, an exchange step's peg moves from the generated
+ * step_moves (worker.js), placed on the lid by bs/expand.js.
  * Moves are the library's own (anim/peg, anim/ship, anim/dice), played on
  * the dock's speed with the pacer's frame skipping.
  *
@@ -24,9 +26,9 @@ import * as THREE from "three";
 import * as peg from "../anim/peg/index.js";
 import * as ship from "../anim/ship/index.js";
 import * as dice from "../anim/dice/index.js";
-import { pacedWait, skipMs } from "../shared/pacer.js";
-import { BS_DICE, REAL_SIZES } from "./constants.js";
-import { OP, SHIP_LEN, emptyGrid, emptyWorkspace, expandBuild, expandStep } from "../bs/expand.js";
+import { createStageTime } from "./stage-time.js";
+import { BS_DICE, BS_GRID as G, REAL_SIZES } from "./constants.js";
+import { lidMoves } from "../bs/expand.js";
 
 const MODELS = new URL("../bs/assets/models/", import.meta.url);
 export const BS_MODELS = {
@@ -35,22 +37,13 @@ export const BS_MODELS = {
     pegs: "bs_pegs.glb",
     ships: "bs_ships.glb",
     d10: "facehunter_d10_22mm.glb",
-    d12: "facehunter_d12_19mm.glb",
+    d12: "facehunter_d12_19mm_box.glb",
     d6: "facehunter_d6_16mm.glb",
-    cup: "proc_dice_cup_95mm.glb",
+    cup: "proc_dice_cup_83x102mm.glb",
 };
 
-// The unit GLB's grids (Scrounger's pack README §3; lid frame from
-// bs_unit_render.py): hole centres at the measured 13.333 mm pitch.
-const PITCH = REAL_SIZES.bsPitch.m;
-const X0 = -0.06393; // column 1
-const OCEAN_Z0 = -0.04683; // ocean row A (nearest the hinge)
-const PLATE_Y = 0.0124; // ocean plate top
-const DECK_UP = 0.006; // a peg in a ship's deck hole sits this much higher
-const LID_Z0 = 0.135833; // target-grid row A, lid_pivot frame (farthest from the hinge)
-const LID_FACE_Y = 0.005; // target-grid face, lid_pivot frame (pegs point −y)
-const FRAME_LEFT_X = -0.0761; // the ocean grid's letter strip
-const FRAME_TOP_Z = -0.059; // its number strip
+// The unit GLB's grids: constants.js BS_GRID (one source with the microdemos).
+const { pitch: PITCH, x0: X0, oceanZ0: OCEAN_Z0, plateY: PLATE_Y, deckUp: DECK_UP, lidZ0: LID_Z0, lidFaceY: LID_FACE_Y } = G;
 
 // 1×: a Play beat's hold after its moves (ms); the moves' own lengths are
 // the library entries' at their `tempos.play`.
@@ -72,14 +65,19 @@ const DEFAULT_FACES = { d10: [1, 2, 3, 4, 5], d12: 12, d6: 6 };
 
 // ---- pure layout (tested in bs-layout.test.mjs) ------------------------
 
-/** Workspace cell (row × 10 + column) of register r's hole h, T1 (SPEC §6). */
+/**
+ * Workspace cell (row × 10 + column) of register r's hole h, T1 (SPEC §6):
+ * r is a generated Reg, "X" | "Y" | "C" | "Strip". The strip's holes 36–37
+ * overflow into row I, columns 1–2, which are C's holes 0–1 (the strip only
+ * reaches them in a nudged public-walk product, while C is still empty).
+ */
 export function workspaceCell(r, h) {
     const row = Math.floor(h / 9);
     const col = h % 9;
-    if (r === "x") return row * 10 + col;
-    if (r === "y") return (2 + row) * 10 + col;
-    if (r === "c") return (8 + row) * 10 + col;
-    if (r === "s") return h < 36 ? (4 + row) * 10 + col : 80 + (h - 36);
+    if (r === "X") return row * 10 + col;
+    if (r === "Y") return (2 + row) * 10 + col;
+    if (r === "C") return (8 + row) * 10 + col;
+    if (r === "Strip") return h < 36 ? (4 + row) * 10 + col : 80 + (h - 36);
     throw new Error(`no register ${r}`);
 }
 
@@ -88,11 +86,10 @@ export function laneCell(k) {
     return (k - 1) * 10 + 9;
 }
 
-/** The 100 workspace cells of one player: registers x, y, c (strip s optional) and the lane. */
+/** The 100 workspace cells of one player: registers { x, y, c } and the lane. */
 export function workspaceCells(ws, lane5 = 0, lane10 = 0) {
     const cells = new Int8Array(100);
-    for (const r of ["x", "y", "c", "s"]) {
-        const reg = ws[r];
+    for (const [r, reg] of [["X", ws.x], ["Y", ws.y], ["C", ws.c]]) {
         if (!reg) continue;
         for (let h = 0; h < reg.length; h++) if (reg[h]) cells[workspaceCell(r, h)] = reg[h];
     }
@@ -127,7 +124,7 @@ export function boardMarks(show) {
         } else {
             const st = show.steps[beat.step];
             c.step = beat.step;
-            const walk = st.op === OP.start || st.op === OP.square || st.op === OP.cube || st.op === OP.hit;
+            const walk = st.op === "Start" || st.op === "Square" || st.op === "Cube" || st.op === "TimesBase";
             if (walk && st.cell >= 0) {
                 const holes = show.holes[p];
                 const h = holes[st.cell];
@@ -137,8 +134,8 @@ export function boardMarks(show) {
                 c.cursor = -1;
                 c.lane10 = 0;
             }
-            const calling = st.op === OP.clear || st.op === OP.shot;
-            c.lane5 = calling && next[beat.step] >= 0 && show.steps[next[beat.step]].op === OP.shot ? 1 : 0;
+            const calling = st.op === "Clear" || st.op === "Call";
+            c.lane5 = calling && next[beat.step] >= 0 && show.steps[next[beat.step]].op === "Call" ? 1 : 0;
         }
         for (const q of [0, 1]) {
             out[q].cursor[i] = cur[q].cursor;
@@ -149,6 +146,27 @@ export function boardMarks(show) {
         }
     });
     return out;
+}
+
+/**
+ * The walk cursor at key-grid hole h (unit frame, metres): two Destroyers,
+ * one on the letter strip (lying along the rows' axis, z) and one on the
+ * number strip (along x). Each marks its row or column with one end, the
+ * end toward the corner of A1 in the grid's near half and the other end in
+ * its far half, so the pair stays apart even at A1. { row, col }: each
+ * piece's centre { x, z } and footprint { x0, x1, z0, z1 }.
+ */
+export function cursorPoses(h) {
+    const L = REAL_SIZES.bsShip.destroyer;
+    const W = REAL_SIZES.bsShip.w;
+    const r = Math.floor(h / 10);
+    const c = h % 10;
+    const shift = (k) => (k < 5 ? 1 : -1) * (L - PITCH) / 2;
+    const row = { x: G.frameLeftX, z: OCEAN_Z0 + r * PITCH + shift(r) };
+    const col = { x: X0 + c * PITCH + shift(c), z: G.frameTopZ };
+    row.foot = { x0: row.x - W / 2, x1: row.x + W / 2, z0: row.z - L / 2, z1: row.z + L / 2 };
+    col.foot = { x0: col.x - L / 2, x1: col.x + L / 2, z0: col.z - W / 2, z1: col.z + W / 2 };
+    return { row, col };
 }
 
 /** The dice faces showing after beat `index`: the last row cup's settled d10s, the last d12 and d6. */
@@ -224,10 +242,8 @@ export function createBsToys() {
                 o.position.set(0, 0, 0);
                 parts.templates.ships[kind] = o;
             }
-            // The dice cup at its sourced height; the dice as built (real size).
+            // The dice cup and the dice as built (real size; bs-layout.test checks).
             const cup = g.cup.scene;
-            const box = new THREE.Box3().setFromObject(cup);
-            cup.scale.setScalar(REAL_SIZES.diceCup.m / (box.max.y - box.min.y));
             shadows(cup);
             cupToy.add(cup);
             const dieOf = (gltf, tint) => {
@@ -264,28 +280,6 @@ export function createBsToys() {
         return loading;
     }
     return { units, dice: diceToy, cup: cupToy, load };
-}
-
-/** The transmission fallback (Scrounger's pack README §3): plain transparency on the grid plates. */
-export function useGlassFallback(root, on = true) {
-    root.traverse((o) => {
-        if (!o.isMesh) return;
-        for (const m of Array.isArray(o.material) ? o.material : [o.material]) {
-            if (!m || !("transmission" in m)) continue;
-            if (on && m.transmission > 0) {
-                m.userData.transmission = m.transmission;
-                m.transmission = 0;
-                m.transparent = true;
-                m.opacity = 0.45;
-                m.needsUpdate = true;
-            } else if (!on && m.userData.transmission) {
-                m.transmission = m.userData.transmission;
-                m.transparent = false;
-                m.opacity = 1;
-                m.needsUpdate = true;
-            }
-        }
-    });
 }
 
 // ---- the stage ----------------------------------------------------------------
@@ -356,11 +350,9 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         return mesh;
     }
 
-    function shipPose(s, len) {
-        const L = len ?? SHIP_LEN[s.kind];
-        const first = s.row * 10 + s.col;
-        const last = first + (L - 1) * (s.down ? 10 : 1);
-        const at = oceanSeat(first, false).clone().add(oceanSeat(last, false)).multiplyScalar(0.5);
+    // A piece lying on `holes` (from the trace), its bow as the ship says.
+    function shipPose(s, holes) {
+        const at = oceanSeat(holes[0], false).clone().add(oceanSeat(holes[holes.length - 1], false)).multiplyScalar(0.5);
         at.y = PLATE_Y;
         const rotY = s.down ? (s.bow_last ? -Math.PI / 2 : Math.PI / 2) : (s.bow_last ? 0 : Math.PI);
         return { at, rotY };
@@ -398,29 +390,17 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         };
     }
 
-    function cursorPoses(h) {
-        return {
-            row: new THREE.Vector3(FRAME_LEFT_X, PLATE_Y, OCEAN_Z0 + Math.floor(h / 10) * PITCH),
-            col: new THREE.Vector3(X0 + (h % 10) * PITCH, PLATE_Y, FRAME_TOP_Z),
-        };
+    function cursorAt(h) {
+        const { row, col } = cursorPoses(h);
+        return { row: new THREE.Vector3(row.x, PLATE_Y, row.z), col: new THREE.Vector3(col.x, PLATE_Y, col.z) };
     }
 
     // ---- dice ----
 
     function restY(holder, kind, face) {
         const key = `${kind}:${face}`;
-        if (restCache.has(key)) return restCache.get(key);
-        const mesh = holder.userData.mesh;
-        const q = dice.restQuaternion(kind, face, 0, THREE.Quaternion, THREE.Vector3);
-        const pos = mesh.geometry.attributes.position;
-        const v = new THREE.Vector3();
-        let min = Infinity;
-        for (let i = 0; i < pos.count; i++) {
-            v.fromBufferAttribute(pos, i).multiply(mesh.scale).applyQuaternion(mesh.quaternion).applyQuaternion(q);
-            min = Math.min(min, v.y);
-        }
-        restCache.set(key, -min);
-        return -min;
+        if (!restCache.has(key)) restCache.set(key, dice.restHeight(holder.userData.mesh, kind, face, THREE.Quaternion, THREE.Vector3));
+        return restCache.get(key);
     }
 
     function setDie(holder, kind, face, yaw) {
@@ -443,52 +423,32 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
 
     // ---- time ----
 
+    const time = createStageTime({ current: (mine) => mine === gen, speed: () => speed, reduced: () => Boolean(prefersReducedMotion()) });
+
+    // A clock for the library's moves (ms at 1× dock speed) that stops with this stage's beats.
     function runner() {
         const mine = gen;
-        const reduced = Boolean(prefersReducedMotion());
-        return (ms, step) => {
-            if (mine !== gen) return Promise.resolve(false);
-            const skip = reduced ? 0 : skipMs(ms, speed);
-            if (skip !== null) {
-                step(ms);
-                return (skip > 0 ? pacedWait(skip) : Promise.resolve()).then(() => mine === gen);
-            }
-            const real = ms / speed;
-            return new Promise((resolve) => {
-                const t0 = performance.now();
-                const tick = () => {
-                    if (mine !== gen) {
-                        resolve(false);
-                        return;
-                    }
-                    const t = Math.min(real, performance.now() - t0);
-                    step(t * speed);
-                    if (t >= real) resolve(true);
-                    else requestAnimationFrame(tick);
-                };
-                requestAnimationFrame(tick);
-            });
-        };
+        return (ms, step) => time.tween(ms / speed, (t) => step(t * ms), mine);
     }
 
     function hold(ms1x) {
-        const mine = gen;
-        if (prefersReducedMotion()) return Promise.resolve(mine === gen);
-        return pacedWait(ms1x / speed).then(() => mine === gen);
+        return time.wait(ms1x / speed, gen);
     }
 
     // ---- state ----
 
     function wsOf(p, i) {
         const s = i >= 0 ? marks[p].step[i] : -1;
-        if (s < 0) return emptyWorkspace(show.n);
-        const st = show.steps[s];
-        return { x: st.x.slice(), y: st.y.slice(), c: st.c.slice(), s: new Array(2 * show.n + 2).fill(0) };
+        return s < 0 ? {} : show.steps[s];
     }
 
     function cellsAt(p, i) {
         if (i < 0) return new Int8Array(100);
         return workspaceCells(wsOf(p, i), marks[p].lane5[i], marks[p].lane10[i]);
+    }
+
+    function emptyGrid() {
+        return { pegs: new Int8Array(100), covered: new Uint8Array(100) };
     }
 
     function keyAt(p, i) {
@@ -497,11 +457,8 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         let ships = 0;
         for (let r = 0; r < count; r++) {
             const read = show.reads[p][r];
-            if (read.ship.length) {
-                ships += 1;
-                const s = read.ship[0];
-                for (let t = 0; t < SHIP_LEN[s.kind]; t++) grid.covered[s.row * 10 + s.col + t * (s.down ? 10 : 1)] = true;
-            }
+            if (read.ship.length) ships += 1;
+            for (const h of read.covered) grid.covered[h] = 1;
             grid.pegs[read.hole] = read.peg;
         }
         return { grid, ships };
@@ -544,7 +501,7 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         u.rowCursor.visible = h >= 0;
         u.colCursor.visible = h >= 0;
         if (h < 0) return;
-        const c = cursorPoses(h);
+        const c = cursorAt(h);
         u.rowCursor.position.copy(c.row);
         u.colCursor.position.copy(c.col);
     }
@@ -555,7 +512,7 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
             placeCursor(u, h);
             return;
         }
-        const c = cursorPoses(h);
+        const c = cursorAt(h);
         u.cursor = h;
         await Promise.all([ship.move(u.rowCursor, c.row, { tempo, run }), ship.move(u.colCursor, c.col, { tempo, run })]);
     }
@@ -576,7 +533,7 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
                 if (!read.ship.length) continue;
                 const s = read.ship[0];
                 const m = makeShip(s.kind);
-                m.userData.pose = shipPose(s);
+                m.userData.pose = shipPose(s, read.covered);
                 u.fleet.add(m);
                 u.ships.push(m);
             }
@@ -621,11 +578,9 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         if (read.ship.length) {
             const m = u.ships[u.shown];
             u.shown += 1;
-            for (const h of shipHolesOf(read.ship[0])) u.covered[h] = 1;
-            moves.push(ship.place(m, m.userData.pose.at, { tempo: T.ship, run }).then(() => {
-                m.rotation.set(0, m.userData.pose.rotY, 0);
-            }));
+            for (const h of read.covered) u.covered[h] = 1;
             m.rotation.set(0, m.userData.pose.rotY, 0);
+            moves.push(ship.place(m, m.userData.pose.at, { tempo: T.ship, run }));
         }
         await Promise.all(moves);
         if (mine !== gen) return;
@@ -637,11 +592,7 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         }
     }
 
-    function shipHolesOf(s) {
-        return Array.from({ length: SHIP_LEN[s.kind] }, (_, t) => s.row * 10 + s.col + t * (s.down ? 10 : 1));
-    }
-
-    async function playStepBeat(beat, i, mine) {
+    async function playStepBeat(beat, i) {
         const p = beat.player;
         const u = units[p];
         const run = runner();
@@ -658,7 +609,7 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         const mine = ++gen;
         if (index !== i - 1) render(i - 1);
         if (beat.kind === "build") await playBuildBeat(beat, i, mine);
-        else await playStepBeat(beat, i, mine);
+        else await playStepBeat(beat, i);
         if (mine !== gen) return;
         await hold(BEAT_HOLD_MS);
         if (mine !== gen) return;
@@ -672,82 +623,76 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         const read = show.reads[p][beat.read];
         const run = runner();
         const T = { peg: peg.settings.tempos.step, ship: ship.settings.tempos.step, dice: dice.settings.tempos.step };
-        const grid = keyAt(p, i - 1).grid;
         await moveCursor(u, read.hole, T.ship, run);
         let piece = null;
-        for (const m of expandBuild(grid, read)) {
+        for (const m of read.moves) {
             if (mine !== gen) return;
-            if (m.t === "d10") await rollDie(parts.dice.d10[m.die], "d10", m.face, D10_YAW[m.die], T.dice, run);
-            else if (m.t === "d12") await rollDie(parts.dice.d12, "d12", m.face, D12_YAW, T.dice, run);
-            else if (m.t === "d6") await rollDie(parts.dice.d6, "d6", m.face, D6_YAW, T.dice, run);
-            else if (m.t === "ship") {
+            if (m.case === "Throw") await rollDie(parts.dice.d10[m.die], "d10", m.face, D10_YAW[m.die], T.dice, run);
+            else if (m.case === "HoleDie") await rollDie(parts.dice.d12, "d12", m.face, D12_YAW, T.dice, run);
+            else if (m.case === "Grow" || m.case === "Pick") await rollDie(parts.dice.d6, "d6", m.face, D6_YAW, T.dice, run);
+            else if (m.case === "Piece") {
                 if (piece) {
                     await ship.lift(piece, { tempo: T.ship, run });
                     u.fleet.remove(piece);
                 }
-                piece = makeShip(m.kind);
-                const pose = shipPose(m, m.len);
+                piece = makeShip(m.ship.kind);
+                const pose = shipPose(m.ship, m.holes);
                 piece.rotation.set(0, pose.rotY, 0);
                 u.fleet.add(piece);
                 u.temp = piece;
                 await ship.place(piece, pose.at, { tempo: T.ship, run });
-            } else if (m.t === "read") {
+            } else if (m.case === "ReadDie") {
                 await hold(READ_MS / T.dice);
-            } else if (m.t === "peg") {
-                if (read.ship.length) for (const h of shipHolesOf(read.ship[0])) u.covered[h] = 1;
+            } else if (m.case === "PutPeg") {
+                for (const h of read.covered) u.covered[h] = 1;
                 const mesh = u.ocean[m.hole];
                 colour(mesh, m.colour);
-                await peg.insert(mesh, oceanSeat(m.hole, m.inShip), AX_UP, { tempo: T.peg, run });
+                await peg.insert(mesh, oceanSeat(m.hole, m.in_ship), AX_UP, { tempo: T.peg, run });
             }
         }
     }
 
-    async function expandStepBeat(beat, i, mine) {
+    async function expandStepBeat(beat, i, mine, moves) {
         const p = beat.player;
         const u = units[p];
         const run = runner();
         const T = { peg: peg.settings.tempos.step, ship: ship.settings.tempos.step };
-        const st = show.steps[beat.step];
-        const ws = [wsOf(0, i - 1), wsOf(1, i - 1)];
-        const moves = expandStep(ws, st, { n: show.n, toll: show.toll }, { cellValue: beat.cellValue, shared: beat.shared });
         // The lane and the cursor first (where the board is), then the pegs.
         const lane = new Int8Array(u.cells);
         lane[laneCell(5)] = marks[p].lane5[i];
         lane[laneCell(10)] = marks[p].lane10[i];
         await Promise.all([animateCells(u, lane, T.peg, run), moveCursor(u, marks[p].cursor[i], T.ship, run)]);
-        for (const m of moves) {
+        for (const m of lidMoves(moves ?? [], workspaceCell)) {
             if (mine !== gen) return;
             if (m.t === "set") {
-                const c = workspaceCell(m.r, m.h);
-                const mesh = u.lidPegs[c];
+                const mesh = u.lidPegs[m.cell];
                 if (m.from) await peg.remove(mesh, AX_LID, { tempo: T.peg, run });
-                u.cells[c] = m.to;
-                if (m.to) {
-                    colour(mesh, m.to);
-                    await peg.insert(mesh, lidSeat(c), AX_LID, { tempo: T.peg, run });
+                u.cells[m.cell] = m.into;
+                if (m.into) {
+                    colour(mesh, m.into);
+                    await peg.insert(mesh, lidSeat(m.cell), AX_LID, { tempo: T.peg, run });
                 }
-            } else if (m.t === "slide") {
-                const a = workspaceCell(m.from.r, m.from.h);
-                const b = workspaceCell(m.to.r, m.to.h);
-                const mesh = u.lidPegs[a];
-                await peg.slide(mesh, lidSeat(a), lidSeat(b), AX_LID, { tempo: T.peg, run });
-                mesh.position.copy(lidSeat(a));
+            } else {
+                const mesh = u.lidPegs[m.from];
+                await peg.slide(mesh, lidSeat(m.from), lidSeat(m.to), AX_LID, { tempo: T.peg, run });
+                mesh.position.copy(lidSeat(m.from));
                 colour(mesh, 0);
-                u.cells[a] = 0;
-                colour(u.lidPegs[b], m.colour);
-                u.lidPegs[b].position.copy(lidSeat(b));
-                u.cells[b] = m.colour;
+                u.cells[m.from] = 0;
+                colour(u.lidPegs[m.to], m.colour);
+                u.lidPegs[m.to].position.copy(lidSeat(m.to));
+                u.cells[m.to] = m.colour;
             }
         }
     }
 
-    async function playExpanded(beat, i) {
+    // moves: an exchange step's peg moves (generated step_moves); BUILD's are in the show.
+    async function playExpanded(beat, i, moves) {
         await ready;
         if (!show) return;
         const mine = ++gen;
         if (index !== i - 1) render(i - 1);
         if (beat.kind === "build") await expandBuildBeat(beat, i, mine);
-        else await expandStepBeat(beat, i, mine);
+        else await expandStepBeat(beat, i, mine, moves);
         if (mine !== gen) return;
         render(i);
     }
@@ -789,8 +734,5 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         /** For checks: the board as drawn (lid cells, key pegs, ships shown, cursor) per player. */
         board: () => units.map((u) => ({ cells: Array.from(u.cells), key: Array.from(u.key), ships: u.shown, cursor: u.cursor })),
         index: () => index,
-        glassFallback(on = true) {
-            for (const u of units) useGlassFallback(u.root, on);
-        },
     };
 }

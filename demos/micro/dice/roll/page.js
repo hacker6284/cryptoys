@@ -6,7 +6,7 @@ import { CAMERA, feltAt, loadGlb } from "../../shared/bs-scene.js";
 // dice: roll (anim/dice). The BS key dice at real size on the felt: a d10
 // (0–9), the d12 and the d6, each thrown in turn and landing on the next
 // face, so every face shows once per few loops.
-const KINDS = [["d10", "facehunter_d10_22mm.glb", 10, 0], ["d12", "facehunter_d12_19mm.glb", 12, 1], ["d6", "facehunter_d6_16mm.glb", 6, 1]];
+const KINDS = [["d10", "facehunter_d10_22mm.glb", 10, 0], ["d12", "facehunter_d12_19mm_box.glb", 12, 1], ["d6", "facehunter_d6_16mm.glb", 6, 1]];
 let group = null;
 const dies = [];
 let n = 0;

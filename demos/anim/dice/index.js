@@ -2,11 +2,12 @@
  * dice: one die and its roll, wherever it lies.
  *
  *   import { dice } from "demos/anim/index.js";
- *   await dice.roll(mesh, faceUp);   // tumble and land showing faceUp
- *   mesh.quaternion.copy(dice.restQuaternion("d10", 7));  // lie showing 7
+ *   await dice.roll(mesh, "d10", 7, { landY });   // tumble and land showing 7
+ *   mesh.quaternion.copy(dice.restQuaternion("d10", 7, 0, THREE.Quaternion, THREE.Vector3));
+ *   mesh.position.y = dice.restHeight(dieMesh, "d10", 7, THREE.Quaternion, THREE.Vector3);
  *
- * `mesh` is the die resting on the felt (origin at its centre, `rest` the
- * height of its centre above the felt for the face it lands on). The face
+ * `mesh` is the die resting on the felt (origin at its centre; restHeight
+ * is the height of its centre above the felt for the face it lands on). The face
  * normals of the Facehunter dice (CC0, demos/bs/assets/LICENSE.md) are in
  * ./faces.js. `tempo` scales the duration; `run(ms, step)` plays it on
  * another clock. The values live in ./settings.js (NOT YET APPROVED).
@@ -26,6 +27,23 @@ export function restQuaternion(kind, face, yaw = 0, Q, V) {
     const from = new V(n[0], n[1], n[2]).normalize();
     const q = new Q().setFromUnitVectors(from, new V(0, 1, 0));
     return new Q().setFromAxisAngle(new V(0, 1, 0), yaw).multiply(q);
+}
+
+/**
+ * The height of a die's centre above the felt when it rests showing `face`:
+ * the lowest vertex of `dieMesh` (its geometry, scale and own rotation)
+ * turned by restQuaternion. Q, V: three's Quaternion and Vector3.
+ */
+export function restHeight(dieMesh, kind, face, Q, V) {
+    const q = restQuaternion(kind, face, 0, Q, V);
+    const pos = dieMesh.geometry.attributes.position;
+    const v = new V();
+    let min = Infinity;
+    for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).multiply(dieMesh.scale).applyQuaternion(dieMesh.quaternion).applyQuaternion(q);
+        min = Math.min(min, v.y);
+    }
+    return -min;
 }
 
 export function planRoll({ tempo = timing.tempo } = {}) {

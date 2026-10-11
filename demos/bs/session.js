@@ -217,8 +217,12 @@ export function createBsSession({
         renderTeach();
         syncControls();
         const beat = show.beats[cursor];
-        if (expanded && view.playExpanded) await view.playExpanded(beat, cursor);
-        else await view.playBeat(beat, cursor);
+        if (expanded && view.playExpanded) {
+            // An exchange step's peg moves come from the generated step_moves, one step at a time.
+            const moves = beat.kind === "step" ? (await keys.moves(beat.step)).moves : null;
+            if (mine !== job) return false;
+            await view.playExpanded(beat, cursor, moves);
+        } else await view.playBeat(beat, cursor);
         return mine === job;
     }
 

@@ -26,6 +26,8 @@ Same path as GitHub Pages (`.github/actions/generate-demos` →
    demos/doubledeal/generated/doubledeal.mjs
    demos/megadreifach/generated/megadreifach.mjs
    demos/megadreifach/generated/kats.json
+   demos/bs/generated/bs.mjs
+   demos/bs/generated/kats.json
    ```
 
 `tools/render-build.sh` is that sequence for Render (install rustup if `cargo`

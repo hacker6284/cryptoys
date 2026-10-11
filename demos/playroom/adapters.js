@@ -10,6 +10,7 @@ import { playroomDebugEnabled, readPuzzleSearchParam, resolveProductPuzzleId } f
 import { adoptTwistyPuzzle, createTwistySeat } from "./twisty-rig.js";
 import { continueTo, markBeat, trackActive, waitToyIdle } from "./motion.js";
 import { createDreiToy, stageDrei } from "./drei-stage.js";
+import { createBsToys, stageBs } from "./bs-stage.js";
 import { formSessionTable, gatherSessionTable } from "./table-form.js";
 import { pickHandTextures, pickMsgTextures } from "./unbox-hand.js";
 import { createDealerKey, playDualUnbox, playRestow, restBoxes } from "./unbox-physical.js";
@@ -1057,6 +1058,168 @@ export function createMegaDreifachAdapter() {
             deck?.restow();
             if (world?.toys.drei) world.toys.drei.visible = true;
             if (world?.toys.deck3) world.toys.deck3.visible = true;
+        },
+    };
+}
+
+/**
+ * BS (Battleship Diffie–Hellman): Alice's red unit flies off the shelf,
+ * Bob's blue unit, the key dice and their cup out of the toy chest, onto the felt
+ * (constants.js BS layout). The seed rolls both key grids; Play shows every
+ * summary of the generated trace, Step every peg move of one.
+ */
+export function createBsAdapter() {
+    const dock = createDock("bs", {
+        controls: `
+            <div class="playroom-ctl">
+              <button type="button" class="seg-btn on" id="roll">Roll keys</button>
+            </div>`,
+        fields: `
+          <label class="playroom-ctl playroom-ctl--field" for="seed">
+            <span class="playroom-label">Seed</span>
+            <input id="seed" class="grow-field" type="text" spellcheck="false" autocomplete="off" placeholder="Any text">
+          </label>
+          <div id="kat-menu" class="drei-kat-menu" role="group" aria-label="Known-answer tests" hidden></div>
+          <label class="playroom-ctl playroom-ctl--field" for="out-a">
+            <span class="playroom-label">A</span>
+            <textarea id="out-a" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
+          </label>
+          <label class="playroom-ctl playroom-ctl--field" for="out-b">
+            <span class="playroom-label">B</span>
+            <textarea id="out-b" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
+          </label>
+          <label class="playroom-ctl playroom-ctl--field" for="out-k">
+            <span class="playroom-label">K</span>
+            <textarea id="out-k" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
+          </label>
+          <p id="anim-note" class="drei-anim-note" role="status" hidden></p>
+          <p id="status" class="status drei-status" aria-live="polite"></p>`,
+        digestButton: "Copy",
+        hint: "Step to see every peg move.",
+        roundName: "phase",
+        digin: '<button id="kat" class="playroom-digin" type="button" aria-controls="kat-menu" aria-expanded="false">'
+            + 'KAT</button>'
+            + '<button id="recentre" class="playroom-digin" type="button" title="Back to the table view">'
+            + 'Recentre</button>',
+    });
+    let world = null;
+    let poses = null;
+    let toys = null;
+    let stage = null;
+    let session = null;
+    let sessionMod = null;
+    let preloadPromise = null;
+    let entering = false;
+    let clock = null;
+    let enterGen = 0;
+    let cancelEnter = false;
+    let recentreBound = null;
+
+    function preload() {
+        if (sessionMod) return Promise.resolve({ sessionMod });
+        preloadPromise ??= import("../bs/session.js").then((mod) => {
+            sessionMod = mod;
+            return { sessionMod };
+        }).catch((err) => {
+            preloadPromise = null;
+            throw err;
+        });
+        return preloadPromise;
+    }
+
+    function recentre() {
+        continueTo(poses, "bs", { duration: 900 });
+    }
+
+    return {
+        install(nextWorld, { poses: nextPoses, prefersReducedMotion } = {}) {
+            world = nextWorld;
+            poses = nextPoses;
+            toys = createBsToys();
+            const pairs = [["bs", toys.units[0]], ["bsB", toys.units[1]], ["bsDice", toys.dice], ["bsCup", toys.cup]];
+            for (const [name, toy] of pairs) {
+                const old = world.toys[name];
+                world.replaceToy(name, toy);
+                if (old) disposeObject(old);
+                world.shelfHome(name);
+            }
+            stage = stageBs(world, toys, { prefersReducedMotion });
+            return toys.units[0];
+        },
+        async ready() {
+            try {
+                await stage.ready();
+            } catch (err) {
+                console.warn("BS models failed to load", err);
+            }
+            return stage;
+        },
+        preload,
+        prepareEnter() {
+            return stage?.ready();
+        },
+        skipEnter() {
+            clock?.skip();
+        },
+        get busy() {
+            return Boolean(entering && clock && !clock.dead(enterGen));
+        },
+        leaveMs() {
+            return 0;
+        },
+        view() {
+            return stage;
+        },
+        async enter({ snap = false } = {}) {
+            if (session || entering) return session;
+            entering = true;
+            cancelEnter = false;
+            try {
+                await stage.ready();
+                const root = dock.mount();
+                const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
+                poses?.lockOrbit?.();
+                clock = createBeatClock({ reduced });
+                enterGen = clock.begin();
+                const { sessionMod: mod } = await preload();
+                const specUrl = await dock.specUrl();
+                if (cancelEnter) return session;
+                // The director has flown the red unit off the shelf and, out
+                // of the chest, the blue unit and the dice; the follow shot
+                // eases on into the BS seat (no cut), then the dock.
+                markBeat("bs-present");
+                poses?.followLive?.(null);
+                poses?.releaseFrame?.();
+                const seated = continueTo(poses, "bs", { duration: reduced ? 480 : 1400, restart: true });
+                for (const name of ["bsB", "bsDice", "bsCup"]) await waitToyIdle(world.toys[name], clock, enterGen);
+                await seated;
+                if (cancelEnter) return session;
+                session = mod.createBsSession({ view: stage, specUrl, root, exposeTeach: true });
+                stage.rememberSeated();
+                const button = root.querySelector("#recentre");
+                if (button && recentreBound !== button) {
+                    button.addEventListener("click", recentre);
+                    recentreBound = button;
+                }
+                dock.show();
+                return session;
+            } finally {
+                entering = false;
+                clock = null;
+                poses?.unlockOrbit?.();
+            }
+        },
+        async leave() {
+            cancelEnter = true;
+            clock?.skip();
+            session?.dispose();
+            session = null;
+            dock.close();
+            stage?.settle();
+            await stage?.clearShow();
+        },
+        revealShelf() {
+            for (const name of ["bs", "bsB", "bsDice", "bsCup"]) if (world?.toys[name]) world.toys[name].visible = true;
         },
     };
 }

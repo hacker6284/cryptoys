@@ -199,17 +199,9 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
     // pacer's clock (a wait: no frame floor).
     const time = createStageTime({ current: (mine) => mine === gen, speed: () => cardTempo(), reduced });
 
-    function tween(duration, step, mine = gen, opts) {
-        return time.tween(duration, step, mine, opts);
-    }
-
-    function wait(duration, mine = gen) {
-        return time.wait(duration, mine);
-    }
-
     // A clock for the library's moves that stops with this stage's beats.
     function runner(mine) {
-        return (ms, step) => tween(ms, (t) => step(t * ms), mine);
+        return (ms, step) => time.tween(ms, (t) => step(t * ms), mine);
     }
 
     function measureRest(p) {
@@ -334,7 +326,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         const flight = deckDeal.timing.dealMs / pace;
         const stagger = deckDeal.timing.dealStaggerMs / pace;
         await Promise.all(beat.deal.map(async (card, i) => {
-            if (!(await wait(stagger * i, mine)) && stagger * i) return;
+            if (!(await time.wait(stagger * i, mine)) && stagger * i) return;
             const mesh = deck.cards[card];
             deck.group.add(mesh);
             mesh.position.copy(inBoxLocal(i));
@@ -345,7 +337,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
             const from = mesh.position.clone();
             const fromQ = mesh.quaternion.clone();
             const to = vec(slotLocal(i));
-            await tween(flight, (u) => {
+            await time.tween(flight, (u) => {
                 const s = easeInOutQuad(u);
                 mesh.position.lerpVectors(from, to, s);
                 mesh.position.y += Math.sin(Math.PI * u) * DEAL_HOP;
@@ -386,7 +378,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         // to the box's mouth standing and sliding down into its place.
         const stagger = deckDeal.timing.dealStaggerMs / (deckDeal.timing.pace * cardTempo());
         await Promise.all(cards.map(async (card, i) => {
-            if (i && !(await wait(stagger * i, mine))) return;
+            if (i && !(await time.wait(stagger * i, mine))) return;
             const mesh = deck.cards[card];
             deck.group.attach(mesh);
             if (!(await deckCard.move(mesh, mouthLocal(i), STAND, { tempo: cardTempo(), run }))) return;
@@ -584,7 +576,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
         case "name":
         case "look":
             showPieces(beat.marks);
-            await wait(900 / cardTempo(), mine);
+            await time.wait(900 / cardTempo(), mine);
             break;
         case "hold":
             await holdCard(mine);
@@ -593,7 +585,7 @@ export function stageDrei(world, drei, { prefersReducedMotion } = {}) {
             await turnCard(CARD_STEPS - 1 - beat.counter, false, mine);
             break;
         case "done-w":
-            await wait(700 / cardTempo(), mine);
+            await time.wait(700 / cardTempo(), mine);
             break;
         case "solve": {
             const first = beat.ranges[beat.leader][0];

@@ -169,7 +169,7 @@ export function cursorPoses(h) {
     return { row, col };
 }
 
-/** The dice faces showing after beat `index`: the last row cup's settled d10s, the last d12 and d6. */
+/** The dice faces showing after beat `index`: the last row cup's d10s (cupFaces), the last d12 and d6. */
 export function diceFacesAt(show, index) {
     let d10 = null;
     let d12 = null;
@@ -178,16 +178,18 @@ export function diceFacesAt(show, index) {
         const beat = show.beats[i];
         if (beat.kind !== "build") continue;
         const read = show.reads[beat.player][beat.read];
-        if (!d10 && read.cup.length) d10 = settled(read.cup);
+        if (!d10 && read.cup.length) d10 = cupFaces(read);
         if (!d12 && read.d12.length) d12 = read.d12[read.d12.length - 1];
         if (!d6 && read.d6.length) d6 = read.d6[read.d6.length - 1];
     }
     return { d10: d10 ?? DEFAULT_FACES.d10.slice(), d12: d12 ?? DEFAULT_FACES.d12, d6: d6 ?? DEFAULT_FACES.d6 };
 }
 
-/** The five faces a row cup settles on (zero faces are thrown again). */
-export function settled(cup) {
-    return cup.filter((f) => f !== 0);
+/** The faces a hole's row cup settles on, die by die: each d10's last Throw in the generated BuildRead.moves. */
+export function cupFaces(read) {
+    const faces = [];
+    for (const m of read.moves) if (m.case === "Throw") faces[m.die] = m.face;
+    return faces;
 }
 
 // ---- the toys -------------------------------------------------------------
@@ -567,7 +569,7 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
         const T = { peg: peg.settings.tempos.play, ship: ship.settings.tempos.play, dice: dice.settings.tempos.play };
         const rolls = [];
         if (read.cup.length) {
-            settled(read.cup).forEach((f, k) => rolls.push(rollDie(parts.dice.d10[k], "d10", f, D10_YAW[k], T.dice, run)));
+            cupFaces(read).forEach((f, k) => rolls.push(rollDie(parts.dice.d10[k], "d10", f, D10_YAW[k], T.dice, run)));
         }
         if (read.d12.length) rolls.push(rollDie(parts.dice.d12, "d12", read.d12[read.d12.length - 1], D12_YAW, T.dice, run));
         if (read.d6.length) rolls.push(rollDie(parts.dice.d6, "d6", read.d6[read.d6.length - 1], D6_YAW, T.dice, run));

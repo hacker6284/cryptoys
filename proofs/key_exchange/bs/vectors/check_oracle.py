@@ -11,7 +11,8 @@ evidence harness cross-checked against bs.sudo here, not a reference:
 
 Also checks that the JSON records the pinned sudocode commit and the current
 bs.sudo hash, and that bs.sudo's dice_exchange_<tier>_run<k>_<a|b>() literals
-(the trace tests' inputs) are inputs.json's dice for exchange_<TIER>_run<k>. Prints one line per vector; exits 1 on any mismatch.
+(the trace tests' inputs) are inputs.json's dice for exchange_<TIER>_run<k>.
+Prints one line per vector; exits 1 on any mismatch.
 
   python3 check_oracle.py > check_oracle_output.txt
 """

@@ -130,6 +130,39 @@ theorem entry_nextRung (t : Spec.Tier) (h : BoardOk t) (hR : 0 < tierR t)
   · rw [← hhead]
     exact entry_colour_ne t 0 hR
 
+theorem climb_k_ix (t : Spec.Tier) (k : Nat) :
+    climbAt (t.script + 2) (tierR t) k = climbIx t k := by
+  unfold climbAt climbIx
+  rfl
+
+/-- `ParkRead.ladderTail` at entry: rung index 0, the pending list still whole. -/
+theorem entry_ladderTail (t : Spec.Tier) (h : BoardOk t)
+    (k : Nat) (hk : k < (tierClimb t).length) :
+    (entryRow t)[climbAt (t.script + 2) (tierR t) k]'(by
+      rw [climb_k_ix]
+      apply entry_ix_lt t h k
+      unfold tierClimb at hk
+      rw [List.length_reverse] at hk
+      simpa [tierR] using hk) =
+      (tierClimb t)[k]'hk ∧ (tierClimb t)[k]'hk ≠ 0 := by
+  have hkR : k < tierR t := by
+    unfold tierClimb at hk
+    rw [List.length_reverse] at hk
+    simpa [tierR] using hk
+  have hi : climbAt (t.script + 2) (tierR t) k < (entryRow t).length := by
+    rw [climb_k_ix]
+    exact entry_ix_lt t h k hkR
+  have hcol := entry_colour t h k hkR
+  have hidx :
+      (tierClimb t)[k]'(by
+        unfold tierClimb
+        rw [List.length_reverse]
+        simpa [tierR] using hkR) =
+      (tierClimb t)[k]'hk := rfl
+  refine ⟨(rowGet_idx (climb_k_ix t k) hi).trans (hcol.trans hidx), ?_⟩
+  · rw [← hidx]
+    exact entry_colour_ne t k hkR
+
 /-- The board `tally_start` returns on the gap copy. -/
 def tallyBoard (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
     Ecbs.Board :=
@@ -180,5 +213,35 @@ theorem entry_board_colour (t : Spec.Tier) (h : BoardOk t) (xs : List Nat) (sat 
     exact climb_ix_lt t h k hk
   rw [embed_nat _ (climbIx t k) hpaint]
   exact congrArg Int.ofNat (painted_colour t h k hk)
+
+/-- `tally_start` replaces the painted row by the same row with the origin peg. -/
+theorem tally_row (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+    (tallyBoard t xs sat hR).sudo_5Board_3row = embed (entryRow t) := by
+  unfold tallyBoard
+  have hgap := gap_row t xs
+  rw [Array.set_congr_arr hgap (gap_row_lt t xs sat) (1 : Int)]
+  have hlen : tallyOrigin t < (paintedRow t).length := by
+    rw [painted_len]
+    exact origin_lt t sat
+  have hpaint : paintedRow t =
+      paint (List.replicate t.control 0) (t.script + 2) (rungList (t.n - 1)) := rfl
+  rw [hpaint] at hlen
+  have hsz : tallyOrigin t <
+      (embed (paint (List.replicate t.control 0) (t.script + 2) (rungList (t.n - 1)))).size := by
+    rw [size_embed]
+    exact hlen
+  have hfin :
+      (⟨tallyOrigin t, hgap ▸ gap_row_lt t xs sat⟩ : Fin _) = ⟨tallyOrigin t, hsz⟩ :=
+    Fin.ext rfl
+  rw [hfin]
+  have hembed := embed_set
+      (paint (List.replicate t.control 0) (t.script + 2) (rungList (t.n - 1)))
+      (tallyOrigin t) 1 hlen
+  have hidx :
+      (⟨tallyOrigin t, hsz⟩ : Fin _) =
+        ⟨tallyOrigin t, by rw [size_embed]; exact hlen⟩ := Fin.ext rfl
+  rw [hidx, show (1 : Int) = Int.ofNat 1 from rfl, hembed]
+  unfold entryRow
+  rw [← hpaint]
 
 end EcbsLink2.Link2

@@ -393,4 +393,51 @@ theorem suffix_tail (pre : Except SudoRt.Trap Ecbs.Board) (rung x : Int) (last :
     rw [ok_bind, ← rungTail_eq]
     rfl
 
+/-- Two continuations that agree pointwise agree under any prefix. -/
+theorem bind_pointwise {α β : Type} (m : Except SudoRt.Trap α)
+    (f g : α → Except SudoRt.Trap β) (h : ∀ a, f a = g a) :
+    m >>= f = m >>= g := by
+  cases m with
+  | error _ => rfl
+  | ok a =>
+    rw [ok_bind, ok_bind, h]
+
+/-- `climbRung`, then `Flow.cont`, is park, copy, the sequenced loops, and
+    `rungTail`. The pure `let`s between binds are zeta'd before the tail
+    rewrite, so `rungTail` stays sealed except for `rungTail_eq` on the right. -/
+theorem climbRung_cont (b : Ecbs.Board) (rung : Nat) (last : Bool) (x : Int) (m : Nat) :
+    (do
+      let b ← climbRung b rung last x m
+      pure (SudoRt.Flow.cont (ρ := Ecbs.Board) b)) =
+      (do
+        let b ← Ecbs.park_rung b (rung : Int)
+        let b ← Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false
+        let _ ← SudoRt.runLoopOn (Int.ofNat 0)
+            (fuelRange (Int.ofNat 0) (Int.ofNat (m - 1)))
+            (whiteStep b (Int.ofNat (m - 1)))
+            (fun j => .ok (b, j))
+            (fun _ => .ok (b, (0 : Int)))
+        let out ← SudoRt.runLoopOn (Int.ofNat 0, b)
+            (fuelRange (Int.ofNat 0) (Int.ofNat (m - 1)))
+            (cubePegStep 6 (Int.ofNat (m - 1)))
+            (fun σ => .ok σ)
+            (fun r => .ok ((0 : Int), r))
+        rungTail (rung : Int) x last out.2) := by
+  rw [climbRung_nest]
+  unfold climbClear
+  dsimp only
+  rw [bind_assoc, bind_assoc]
+  apply bind_pointwise
+  intro b1
+  rw [bind_assoc]
+  apply bind_pointwise
+  intro b2
+  rw [bind_assoc]
+  apply bind_pointwise
+  intro _w
+  rw [bind_assoc]
+  apply bind_pointwise
+  intro out
+  rw [rungTail_eq (rung : Int) x last out.2, bind_assoc]
+
 end EcbsLink2.Link2

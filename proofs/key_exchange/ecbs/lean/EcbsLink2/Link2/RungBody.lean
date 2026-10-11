@@ -440,4 +440,63 @@ theorem climbRung_cont (b : Ecbs.Board) (rung : Nat) (last : Bool) (x : Int) (m 
   intro out
   rw [rungTail_eq (rung : Int) x last out.2, bind_assoc]
 
+/-- Park, copy, and the generated nest, against `climbRung` then `Flow.cont`.
+    The board that reaches the loops keeps the tally length. -/
+theorem climbRung_nested (b : Ecbs.Board) (rung : Nat) (last : Bool) (x : Int) (m : Nat)
+    (hm : 0 < m) (hfit : FitsLen m)
+    (hlen : b.sudo_5Board_9tally_len = Int.ofNat m)
+    (hpark : ∀ b1, Ecbs.park_rung b (rung : Int) = .ok b1 →
+        b1.sudo_5Board_9tally_len = b.sudo_5Board_9tally_len)
+    (hcopy : ∀ b1 b2, Ecbs.copy_band b1 ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok b2 →
+        b2.sudo_5Board_9tally_len = b1.sudo_5Board_9tally_len) :
+    (do
+      let b ← Ecbs.park_rung b (rung : Int)
+      let b ← Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false
+      let toV ← SudoRt.subI b.sudo_5Board_9tally_len (1 : Int)
+      let fuel : Nat := if (0 : Int) > toV then 1 else (toV - (0 : Int)).natAbs + 1
+      SudoRt.runLoopOn (Int.ofNat 0) fuel (whiteStep b toV)
+        (fun _ => do
+          let toV ← SudoRt.subI b.sudo_5Board_9tally_len (1 : Int)
+          let fuel : Nat := if (0 : Int) > toV then 1 else (toV - (0 : Int)).natAbs + 1
+          SudoRt.runLoopOn (Int.ofNat 0, b) fuel (cubePegStep 6 toV)
+            (fun σ => rungTail (rung : Int) x last σ.2)
+            (fun r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r)))
+        (fun r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r))) =
+      (do
+        let b ← climbRung b rung last x m
+        pure (SudoRt.Flow.cont (ρ := Ecbs.Board) b)) := by
+  rw [climbRung_cont]
+  cases hp : Ecbs.park_rung b (rung : Int) with
+  | error _ =>
+    simp only [hp, error_bind]
+  | ok b1 =>
+    simp only [hp, ok_bind]
+    cases hc : Ecbs.copy_band b1 ((6 : Nat) : Int) ((5 : Nat) : Int) false with
+    | error _ =>
+      simp only [hc, error_bind]
+    | ok b2 =>
+      simp only [hc, ok_bind]
+      have hlen2 : b2.sudo_5Board_9tally_len = Int.ofNat m :=
+        (hcopy b1 b2 hc).trans ((hpark b1 hp).trans hlen)
+      have hwhite :
+          (fun j => (Except.ok (b2, j) : Except SudoRt.Trap (Ecbs.Board × Int))) =
+            fun j => pure (b2, j) := by
+        funext j
+        exact (pure_eq_ok (b2, j)).symm
+      have hcube :
+          (fun σ => (Except.ok σ : Except SudoRt.Trap (Int × Ecbs.Board))) =
+            fun σ => pure σ := by
+        funext σ
+        exact (pure_eq_ok σ).symm
+      rw [hwhite, hcube]
+      have hloops := rung_loops_pair b2 (rung : Int) x last m hm hfit hlen2
+        (fun r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r))
+        (fun r => pure (SudoRt.Flow.ret (ρ := Ecbs.Board) r))
+        (fun _ => pure (0 : Int))
+        (fun r => .ok ((0 : Int), r))
+        (fun _ => .ok (b2, (0 : Int)))
+      dsimp only at hloops
+      rw [bind_assoc] at hloops
+      exact hloops
+
 end EcbsLink2.Link2

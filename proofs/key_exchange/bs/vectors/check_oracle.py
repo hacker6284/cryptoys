@@ -10,11 +10,12 @@ evidence harness cross-checked against bs.sudo here, not a reference:
   §3.1    the answer for each hole (red Hit, white Miss, empty Misfire), all n holes
 
 Also checks that the JSON records the pinned sudocode commit and the current
-bs.sudo hash. Prints one line per vector; exits 1 on any mismatch.
+bs.sudo hash, and that bs.sudo's dice_exchange_<tier>_run<k>_<a|b>() literals
+(the trace tests' inputs) are inputs.json's dice for exchange_<TIER>_run<k>. Prints one line per vector; exits 1 on any mismatch.
 
   python3 check_oracle.py > check_oracle_output.txt
 """
-import hashlib, json, os, sys
+import hashlib, json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", "..", "..", ".."))
@@ -133,6 +134,31 @@ def run(v):
     raise ValueError(v["kind"])
 
 
+def dice_literals(sudo_path):
+    """bs.sudo's `func dice_exchange_<tier>_run<k>_<a|b>() -> Dice` = dice(d12, d6, d10), by vector."""
+    text = open(sudo_path).read()
+    out = {}
+    pat = r"func dice_exchange_(t\d+)_run(\d+)_([ab])\(\) -> Dice\s+return dice\(\[([^\]]*)\],\s*\[([^\]]*)\],\s*\[([^\]]*)\]\)"
+    for tier, run_, side, *lists in re.findall(pat, text):
+        d12, d6, d10 = ([int(t) for t in l.replace("\n", " ").split(",") if t.strip()] for l in lists)
+        out.setdefault(f"exchange_{tier.upper()}_run{run_}", {})[f"dice_{side}"] = {"d12": d12, "d6": d6, "d10": d10}
+    return out
+
+
+def check_dice_literals(sudo_path):
+    inputs = {v["name"]: v for v in json.load(open(os.path.join(HERE, "inputs.json")))["vectors"]}
+    lits = dice_literals(sudo_path)
+    check("dice literals", len(lits) > 0, "no dice_exchange_* literals found in bs.sudo")
+    for name, sides in sorted(lits.items()):
+        v = inputs.get(name)
+        if not check("dice literals", v is not None, f"{name} is not in inputs.json"):
+            continue
+        for side in ("dice_a", "dice_b"):
+            want = {k: v[side][k] for k in ("d12", "d6", "d10")}
+            check("dice literals", sides.get(side) == want, f"bs.sudo {name} {side} differs from inputs.json")
+    return len(lits)
+
+
 def main():
     doc = json.load(open(os.path.join(HERE, "bs_vectors.json")))
     pin = [l.strip() for l in open(os.path.join(ROOT, "proofs", "SUDOCODE_PIN"))
@@ -142,6 +168,9 @@ def main():
           f"sudocode_commit {doc['sudocode_commit']} != pin {pin}")
     check("header", doc["sudo_sha256"] == sha, "sudo_sha256 is not the current bs.sudo")
     print(f"bs_vectors.json: sudocode {doc['sudocode_commit'][:7]}, {len(doc['vectors'])} vectors")
+    before = len(failures)
+    n = check_dice_literals(os.path.join(ROOT, doc["source"]))
+    print(f"{'ok ' if len(failures) == before else 'BAD'} bs.sudo dice_exchange_* literals: {n} exchanges, both players, = inputs.json")
     for v in doc["vectors"]:
         before = len(failures)
         info = run(v)

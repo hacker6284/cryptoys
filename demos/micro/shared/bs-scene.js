@@ -35,3 +35,36 @@ export async function placeUnit(world, file = "bs_unit_red.glb") {
 }
 
 export const CAMERA = { position: [DEN.x, 1.06, DEN.z + 0.42], target: [DEN.x, 0.82, DEN.z], fov: 34, fill: 0.8 };
+
+/** A world pose { p, q } on the felt, x / z metres from its centre, turned `yaw`. */
+export function feltPose(world, x = 0, z = 0, yaw = 0) {
+    const f = feltAt(world);
+    return { p: [f.x + x, f.y, f.z + z], q: [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)] };
+}
+
+/** Put an object at a world pose (its parent the scene). */
+export function setPose(object, { p, q }) {
+    object.position.set(p[0], p[1], p[2]);
+    object.quaternion.set(q[0], q[1], q[2], q[3]);
+}
+
+/**
+ * A retail box from its GLB (the Battleship box or the dice box), shut, at
+ * `pose`: { group (the base, and the card inserts), lid (a child at its origin) }.
+ */
+export async function placeBox(world, file, lidName, pose) {
+    const group = (await loadGlb(file)).scene;
+    const lid = group.getObjectByName(lidName);
+    group.add(lid);
+    setPose(group, pose);
+    world.scene.add(group);
+    return { group, lid };
+}
+
+/** A Battleship unit with its lid shut: { group, lid } (lid: its lid_pivot). */
+export async function closedUnit(file = "bs_unit_red.glb") {
+    const group = (await loadGlb(file)).scene;
+    const lid = group.getObjectByName("lid_pivot");
+    lid.quaternion.identity();
+    return { group, lid };
+}

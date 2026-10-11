@@ -11,12 +11,27 @@
  * normals of the Facehunter dice (CC0, demos/bs/assets/LICENSE.md) are in
  * ./faces.js. `tempo` scales the duration; `run(ms, step)` plays it on
  * another clock. The values live in ./settings.js (NOT YET APPROVED).
+ *
+ *   await dice.place(mesh, "d10", to, { clearY, solids });   // lift it and set it down at `to`
+ *
+ * place: `to` is a world pose { p, q } (restQuaternion and restHeight give
+ * the one for a face on the felt); clearY the height its bottom must clear
+ * first (a cup's rim). The die keeps its parent. planPlace is the same
+ * move as a plan, for checks (checkHop).
  */
 import settings from "./settings.js";
 import { FACES } from "./faces.js";
-import { rafRun } from "../shared/run.js";
+import { rafRun, playPose, worldPose } from "../shared/run.js";
+import { planHop, checkHop } from "../shared/hop.js";
 
-export { settings, FACES };
+export { settings, FACES, checkHop };
+
+/** Each die's drawn bounds about its centre (the Facehunter GLBs, MEASURED). */
+export const SHAPES = {
+    d10: { min: [-0.0101, -0.011, -0.01055], max: [0.0101, 0.011, 0.01055] },
+    d12: { min: [-0.0095, -0.0095, -0.0095], max: [0.0095, 0.0095, 0.0095] },
+    d6: { min: [-0.008, -0.008, -0.008], max: [0.008, 0.008, 0.008] },
+};
 export const timing = settings.timing;
 export const slots = [];
 
@@ -84,4 +99,16 @@ export async function roll(mesh, kind, face, { yaw = 0, landY, tempo = timing.te
     mesh.position.set(base.x, y1, base.z);
     mesh.quaternion.copy(end);
     return ok !== false;
+}
+
+/** The die from world pose `from` to `to`, its bottom clearing `clearY` on the way. */
+export function planPlace({ kind, from, to, clearY = -Infinity, solids = [], tempo = timing.tempo }) {
+    const law = settings.place;
+    return planHop({ from, to, parts: [SHAPES[kind]], clearY: clearY + law.clearM, solids, law, tempo });
+}
+
+/** Lift the die from where it is and set it down at world pose `to`. Resolves with the plan (null if stopped). */
+export function place(mesh, kind, to, { clearY, solids = [], tempo = timing.tempo, run = rafRun } = {}) {
+    const plan = planPlace({ kind, from: worldPose(mesh), to, clearY, solids, tempo });
+    return playPose(mesh, plan, run);
 }

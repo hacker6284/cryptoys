@@ -1,7 +1,7 @@
 /**
  * The animation library, by object (see README.md):
  *
- *   import { deck, chest, cube, megaminx, peg, ship, dice } from "./demos/anim/index.js";
+ *   import { deck, chest, cube, megaminx, peg, ship, dice, battleship, yahtzee } from "./demos/anim/index.js";
  *   await deck.box.openFlap(box);  await chest.openLid(rig);  deck.carry(toy, to);
  *   await peg.insert(mesh, seat, axis);  await ship.place(piece, at);  await dice.roll(die, "d10", 7);
  *
@@ -16,3 +16,5 @@ export * as megaminx from "./megaminx/index.js";
 export * as peg from "./peg/index.js";
 export * as ship from "./ship/index.js";
 export * as dice from "./dice/index.js";
+export * as battleship from "./battleship/index.js";
+export * as yahtzee from "./yahtzee/index.js";

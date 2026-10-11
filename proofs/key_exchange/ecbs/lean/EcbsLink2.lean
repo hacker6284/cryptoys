@@ -28,7 +28,9 @@ import EcbsLink2.Link2.ClimbStep
 import EcbsLink2.Link2.IdxFold
 import EcbsLink2.Link2.ScanSplit
 import EcbsLink2.Link2.LadderKeep
+import EcbsLink2.Link2.TallyLen
 import EcbsLink2.Link2.RungBody
+import EcbsLink2.Link2.GenRung
 import EcbsLink2.Link2.SetCongr
 import EcbsLink2.Link2.AfterClimb
 import EcbsLink2.Link2.InvertTie

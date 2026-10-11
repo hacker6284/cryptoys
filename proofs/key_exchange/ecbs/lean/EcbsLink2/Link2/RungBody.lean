@@ -5,6 +5,7 @@
   `subI` of the tally length.
 -/
 import EcbsLink2.Link2.LadderKeep
+import EcbsLink2.Link2.TallyLen
 
 namespace EcbsLink2.Link2
 
@@ -444,11 +445,7 @@ theorem climbRung_cont (b : Ecbs.Board) (rung : Nat) (last : Bool) (x : Int) (m 
     The board that reaches the loops keeps the tally length. -/
 theorem climbRung_nested (b : Ecbs.Board) (rung : Nat) (last : Bool) (x : Int) (m : Nat)
     (hm : 0 < m) (hfit : FitsLen m)
-    (hlen : b.sudo_5Board_9tally_len = Int.ofNat m)
-    (hpark : ∀ b1, Ecbs.park_rung b (rung : Int) = .ok b1 →
-        b1.sudo_5Board_9tally_len = b.sudo_5Board_9tally_len)
-    (hcopy : ∀ b1 b2, Ecbs.copy_band b1 ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok b2 →
-        b2.sudo_5Board_9tally_len = b1.sudo_5Board_9tally_len) :
+    (hlen : b.sudo_5Board_9tally_len = Int.ofNat m) :
     (do
       let b ← Ecbs.park_rung b (rung : Int)
       let b ← Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false
@@ -477,7 +474,8 @@ theorem climbRung_nested (b : Ecbs.Board) (rung : Nat) (last : Bool) (x : Int) (
     | ok b2 =>
       simp only [hc, ok_bind]
       have hlen2 : b2.sudo_5Board_9tally_len = Int.ofNat m :=
-        (hcopy b1 b2 hc).trans ((hpark b1 hp).trans hlen)
+        ((copy_band_tally_len ((6 : Nat) : Int) ((5 : Nat) : Int) false) b1 b2 hc).trans
+          (((park_rung_tally_len (rung : Int)) b b1 hp).trans hlen)
       have hwhite :
           (fun j => (Except.ok (b2, j) : Except SudoRt.Trap (Ecbs.Board × Int))) =
             fun j => pure (b2, j) := by

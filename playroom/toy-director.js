@@ -254,7 +254,7 @@ export function createToyDirector(world, demos, { timing = DIRECTOR_TIMING } = {
                 await animateLid(0, { snap, duration: timing.LID_CLOSE_MS });
             })();
         }
-        markBeat(primary === "cube" ? "cube-fly" : primary === "drei" ? "drei-fly" : "key-fly");
+        markBeat(primary === "cube" ? "cube-fly" : primary === "drei" ? "drei-fly" : primary === "bs" ? "bs-fly" : "key-fly");
         if (world.toys[primary]) world.toys[primary].userData.seatSurface = "table";
         await flyToy(primary, world.getTablePose(primary), { snap });
         if (snap && extraJob) await extraJob;

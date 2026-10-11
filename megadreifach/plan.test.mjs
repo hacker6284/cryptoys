@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { FACE_MOVE } from "./minx.js";
 import { CARD_STEPS, ECHOES, PUZZLES, TRACE_BLOCKS, buildShow, pairs, undo } from "./plan.js";
 import { bytesOfHex, loadGenerated, samePos } from "./gen.test-helper.mjs";
+import { plain } from "../shared/sudo-plain.js";
 
 assert.deepEqual(undo([[1, 2], [3, -4]]), [[3, 4], [1, -2]]);
 assert.deepEqual(pairs([1, 2, 3, 4]), [[1, 2], [3, 4]]);
@@ -18,7 +19,7 @@ if (!gen) {
     process.exit(0);
 }
 
-const { answer, hasTrace, oneBlockBytes, plain } = await import("./worker.js");
+const { answer, hasTrace, oneBlockBytes } = await import("./worker.js");
 // The dock's one-block size comes from the generated padding.
 assert.equal(gen.host.pad_message(new Array(oneBlockBytes()).fill(1)).length / 28, 1);
 assert.equal(gen.host.pad_message(new Array(oneBlockBytes() + 1).fill(1)).length / 28, 2);

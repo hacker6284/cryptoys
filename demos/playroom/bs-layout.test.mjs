@@ -8,6 +8,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { BS_BOX_REST, BS_CHEST, BS_DICE, BS_DIE_LIFT, BS_GAP, BS_GRID, BS_SEAT_XZ, BS_SHELF, BS_UNIT_FOOT, DEN, MINX_SPAN, REAL_SIZES, SHELF_TOP, TABLE_R } from "./constants.js";
 import { Quaternion, Vector3, glbMesh } from "./three-mini.mjs";
 import { CHEST as CHEST_DRAWN, ROOM } from "../anim/shared/room.js";
+import { CUP } from "../anim/shared/cup.js";
 import { stubThree } from "./three-stub.mjs";
 
 stubThree();
@@ -70,9 +71,9 @@ assert.deepEqual(glbBounds(BS_MODELS.cup), [82.6, 101.6, 82.6], "cup: Ø 82.6 ×
 assert.deepEqual(glbBounds(BS_MODELS.navalBox), [400, 52.5, 265], "Battleship box: 400 × 265 × 52.5 mm closed");
 assert.deepEqual(glbBounds(BS_MODELS.navalBox, "navalbox_lid"), [400, 52.5, 265], "its lid is the whole box's outside");
 assert.deepEqual(glbBounds(BS_MODELS.navalBox, "navalbox_base"), [396.4, 50.7, 261.4], "its base, 1.5 mm inside the lid");
-assert.deepEqual(glbBounds(BS_MODELS.diceBox), [248, 108, 163], "dice box: 248 × 163 × 108 mm closed");
-assert.deepEqual(glbBounds(BS_MODELS.diceBox, "dicebox_base"), [245, 102.5, 160], "its base holds the 101.6 mm cup standing");
-assert.deepEqual(glbBounds(BS_MODELS.diceBox, "dicebox_lid"), [248, 50, 163], "its lid, 50 mm deep");
+assert.deepEqual(glbBounds(BS_MODELS.diceBox), [120.3, 88.6, 113.6], "dice box: 120.3 × 113.6 × 88.6 mm closed (designed to fit)");
+assert.deepEqual(glbBounds(BS_MODELS.diceBox, "dicebox_base"), [116.3, 86.6, 109.6], "its base holds the cup lying and the dice beside it");
+assert.deepEqual(glbBounds(BS_MODELS.diceBox, "dicebox_lid"), [120.3, 85.6, 113.6], "its lid over the whole base, 3 mm off the table");
 
 // ---- the table: footprints on the felt (x, z from DEN), no overlap ----
 const rect = (name, [x, z], f) => ({ name, x0: x + f.x0, x1: x + f.x1, z0: z + f.z0, z1: z + f.z1 });
@@ -154,8 +155,20 @@ assert.ok(shelf.z0 > -2.28 && shelf.z1 < -2.0, "on the shelf board, in front of 
     // The library's box constants are the models'.
     assert.deepEqual([battleship.box.LID.hx * 2, battleship.box.LID.h, battleship.box.LID.hz * 2].map((v) => +(v * 1000).toFixed(1)), [400, 52.5, 265]);
     assert.deepEqual([battleship.box.BASE.hx * 2, battleship.box.BASE.h, battleship.box.BASE.hz * 2].map((v) => +(v * 1000).toFixed(1)), [396.4, 50.7, 261.4]);
-    assert.deepEqual([yahtzee.box.LID.hx * 2, yahtzee.box.LID.y1 - yahtzee.box.LID.y0, yahtzee.box.LID.hz * 2].map((v) => +(v * 1000).toFixed(1)), [248, 50, 163]);
-    assert.deepEqual([yahtzee.box.BASE.hx * 2, yahtzee.box.BASE.h, yahtzee.box.BASE.hz * 2].map((v) => +(v * 1000).toFixed(1)), [245, 102.5, 160]);
+    assert.deepEqual([yahtzee.box.LID.hx * 2, yahtzee.box.LID.y1 - yahtzee.box.LID.y0, yahtzee.box.LID.hz * 2].map((v) => +(v * 1000).toFixed(1)), [120.3, 85.6, 113.6]);
+    assert.deepEqual([yahtzee.box.BASE.hx * 2, yahtzee.box.BASE.h, yahtzee.box.BASE.hz * 2].map((v) => +(v * 1000).toFixed(1)), [116.3, 86.6, 109.6]);
+    // The dice box is designed to fit: every inside size is the contents
+    // plus 2 mm of play (the cup lying, Ø 82.6 × 101.6 mm; one d10 across
+    // the strip), and the lid 0.5 mm over the base. Nothing more.
+    {
+        const Yb = yahtzee.box, B = Yb.BASE, L = Yb.LID, C = 0.002, near = (a, b) => Math.abs(a - b) < 1e-9;
+        const cupW = 2 * CUP.r, dieW = dice.SHAPES.d10.max[0] - dice.SHAPES.d10.min[0];
+        assert.ok(near(Yb.STRIP.max[0] - Yb.STRIP.min[0], dieW + 2 * C), "the strip: one d10 wide, 2 mm each side");
+        assert.ok(near(B.hx - B.wall - Yb.DIVIDER.max[0], cupW + 2 * C), "the cup's well: the cup across, 2 mm each side");
+        assert.ok(near(2 * (B.hz - B.wall), CUP.h + 2 * C), "both as long as the cup, 2 mm each end");
+        assert.ok(near(B.h - B.floor, cupW + C), "as deep as the lying cup, 2 mm under the lid");
+        assert.ok(near(L.hx - L.wall - B.hx, 0.0005) && near(L.hz - L.wall - B.hz, 0.0005) && near(L.y1 - L.top, B.h), "the lid 0.5 mm over the base, its top on the rim");
+    }
     assert.deepEqual(battleship.box.UNIT, { min: [-0.115, 0, -0.0854], max: [0.115, 0.0351, 0.086] }, "a closed unit, 230 × 35.1 × 171.4 mm");
     assert.deepEqual(battleship.unit.OPEN, { min: [-0.115, 0, -0.0901], max: [0.115, 0.177, 0.0834] }, "an open unit, as its GLB");
     for (const [kind, mm] of [["d10", [20.2, 22, 21.1]], ["d12", [19, 19, 19]], ["d6", [16, 16, 16]]]) {
@@ -172,12 +185,28 @@ assert.ok(shelf.z0 > -2.28 && shelf.z1 < -2.0, "on the shelf board, in front of 
     assert.ok(geom.obbDepth(geom.obbOf(N.pocketPose(P.REST.navalBox, 0), N.UNIT), geom.obbOf(N.pocketPose(P.REST.navalBox, 1), N.UNIT)) < 0, "the units apart in the box");
     const Y = yahtzee.box;
     const cupIn = Y.pocketPose(P.REST.diceBox);
-    assert.ok(geom.worstDepth(geom.obbOf(cupIn, Y.CUP), Y.baseSolids(P.REST.diceBox), 0).depth <= 5e-4, "the cup stands in the dice box (on its floor)");
-    assert.ok(cupIn.p[1] + Y.CUP.max[1] < P.REST.diceBox.p[1] + Y.LID.y1 - Y.LID.top, "the cup under the lid");
-    const packed = P.DICE.map(([kind, k]) => ({ kind, k, o: geom.obbOf(P.packedDie(P.SEATS.cup, kind, k), dice.SHAPES[kind]) }));
+    const cupO = geom.obbOf(cupIn, Y.CUP);
+    for (const s of Y.baseSolids(P.REST.diceBox)) {
+        const d = geom.obbDepth(cupO, s);
+        if (s.name === "box floor") assert.ok(Math.abs(d) <= 5e-4, `the cup lies on the dice box's floor (${(d * 1000).toFixed(2)} mm)`);
+        else assert.ok(d <= -0.002 + 1e-6, `the cup 2 mm clear of the ${s.name} (${(-d * 1000).toFixed(2)} mm)`);
+    }
+    assert.ok(Math.abs(geom.obbMaxY(cupO) - geom.obbMinY(cupO) - 2 * CUP.r) < 1e-9, "the cup lying on its side");
+    assert.ok(geom.obbMaxY(cupO) <= P.REST.diceBox.p[1] + Y.LID.y1 - Y.LID.top - 0.002 + 1e-9, "the cup 2 mm under the lid");
+    const lidO = Y.lidSolids(P.REST.diceBox);
+    assert.ok(geom.worstDepth(cupO, lidO, 0).depth <= 5e-4, "the lid shuts over it");
+    const packed = P.DICE.map(([kind, k]) => ({ kind, k, o: geom.obbOf(P.packedDie(P.REST.diceBox, kind, k), dice.SHAPES[kind]) }));
     for (const a of packed) {
-        assert.ok(geom.worstDepth(a.o, P.solids.cupRing(P.SEATS.cup), 0).depth <= 5e-4, `${a.kind}#${a.k} inside the cup`);
-        for (const b of packed) if (a !== b) assert.ok(geom.obbDepth(a.o, b.o) <= 0, `${a.kind}#${a.k} and ${b.kind}#${b.k} apart in the cup`);
+        assert.ok(geom.worstDepth(a.o, Y.baseSolids(P.REST.diceBox), 0).depth <= 5e-4, `${a.kind}#${a.k} in the box, clear of its card`);
+        const box = { min: Y.STRIP.min, max: Y.STRIP.max };
+        const inv = [-P.REST.diceBox.q[0], -P.REST.diceBox.q[1], -P.REST.diceBox.q[2], P.REST.diceBox.q[3]];
+        for (const c of geom.obbCorners(a.o)) {
+            const l = geom.quatRotate(inv, c.map((v, k) => v - P.REST.diceBox.p[k]));
+            assert.ok(l.every((v, k) => v >= box.min[k] - 1e-9 && v <= box.max[k] + 1e-9), `${a.kind}#${a.k} inside the dice strip`);
+        }
+        assert.ok(geom.obbDepth(a.o, cupO) < 0, `${a.kind}#${a.k} apart from the cup`);
+        assert.ok(geom.worstDepth(a.o, lidO, 0).depth <= 0, `${a.kind}#${a.k} under the lid`);
+        for (const b of packed) if (a !== b) assert.ok(geom.obbDepth(a.o, b.o) <= 0, `${a.kind}#${a.k} and ${b.kind}#${b.k} apart in the box`);
     }
 
     // A die's rest on its row: the stage's own rest(kind, k) (bs-unbox-plan.js

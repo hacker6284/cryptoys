@@ -170,20 +170,22 @@ export const BS_SEAT_XZ = {
 // Battleship box (Hasbro 2015 set, 400 × 265 × 52.5 mm, holding both closed
 // units across its divider) waits flat on the back shelf, right of plant-b
 // (bracket-3 stands between the plants: BS_SHELF);
-// the dice game box (248 × 163 × 108 mm with its lid, holding the dice cup
-// standing up with every key die in it) waits in the toy chest. Entering BS
+// the dice game box (120.3 × 113.6 × 88.6 mm with its lid, designed to fit
+// the dice cup lying on its side and every key die in a strip beside it)
+// waits in the toy chest. Entering BS
 // flies each to its rest on the felt, where it is unboxed and stays:
 //   - the Battleship base back left and its lid back right, behind the
 //     units (z −0.775 … −0.51: an open unit's 177 mm lid hides the felt
 //     from the seat only up to about z −0.5);
-//   - the dice box turned a quarter, one gap left of the cup, its front in
-//     line with the units' front; its lid one gap further left.
+//   - the dice box turned a quarter (its dice strip to the front), one gap
+//     left of the cup, its front in line with the units' front; its lid one
+//     gap further left (both by the closed box's 120.3 × 113.6 mm).
 // x, z from DEN, yaw about +y (the box's long side along x at yaw 0).
 export const BS_BOX_REST = {
     navalBox: { x: -0.22, z: -0.6425, yaw: 0 },
     navalLid: { x: 0.22, z: -0.6425, yaw: 0 },
-    diceBox: { x: -0.4926, z: -0.1591, yaw: Math.PI / 2 },
-    diceLid: { x: -0.6926, z: -0.1591, yaw: Math.PI / 2 },
+    diceBox: { x: -0.4694, z: -0.0968, yaw: Math.PI / 2 },
+    diceLid: { x: -0.623, z: -0.0968, yaw: Math.PI / 2 },
 };
 // On the shelf board (z −2.28 … −2.0, 280 mm deep), flat: the 265 mm deep
 // box 7.5 mm from the backboard and from the front edge, right of plant-b
@@ -195,15 +197,17 @@ export const BS_SHELF = { x: 1.55, z: -2.14 };
 // of toys down the chest's middle: dx, dz from the row's spot (the cavity
 // is 531 mm square; bs-layout.test checks it fits, clear of the row).
 export const BS_CHEST = { dx: -0.21, dz: 0.04 };
-// The key dice packed in the cup (cup frame: origin its underside, centres
-// of each die in its model's own orientation, 1.6 mm apart): four d10s on
-// the cup's floor (y 4.1 mm), the fifth d10, the d12 and the d6 in a row
-// on top of them. The d6 fits a dice game's box; whether the d10s and the
-// d12 belong in one is Zachary's open question.
+// The key dice packed in the dice box's strip (anim/yahtzee/box STRIP; box
+// frame: origin under the middle of its floor; centres of each die in its
+// model's own orientation, 2 mm from the strip's walls): four d10s along
+// the floor (0.2 mm up, 1.5 mm apart), then the fifth d10, the d12 and the
+// d6 lying on them (0.5 mm up), each over a gap. The d6 belongs in a dice
+// game's box; whether the d10s and the d12 do is Zachary's open question
+// (the box's size is the cup's either way: the strip is one die wide).
 export const BS_DICE_PACK = {
-    d10: [[-0.0109, 0.0153, -0.01135], [0.0109, 0.0153, -0.01135], [-0.0109, 0.0153, 0.01135], [0.0109, 0.0153, 0.01135], [-0.0185, 0.0378, 0]],
-    d12: [0.0021, 0.0363, 0],
-    d6: [0.0206, 0.0348, 0],
+    d10: [[-0.04405, 0.0132, -0.0339], [-0.04405, 0.0132, -0.0113], [-0.04405, 0.0132, 0.0113], [-0.04405, 0.0132, 0.0339], [-0.04405, 0.0357, -0.0226]],
+    d12: [-0.04405, 0.0342, 0],
+    d6: [-0.04405, 0.0327, 0.0226],
 };
 // The key dice on their row (the bsDice toy, BS_DICE): the face each
 // shows at rest before any throw, its yaw about +y there (rad), and how far

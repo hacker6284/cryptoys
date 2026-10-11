@@ -16,7 +16,7 @@
  *
  * place: `to` is a world pose { p, q } (restQuaternion and restHeight give
  * the one for a face on the felt); clearY the height its bottom must clear
- * first (a cup's rim). The die keeps its parent. planPlace is the same
+ * first (a box's rim, a cup it passes over). The die keeps its parent. planPlace is the same
  * move as a plan, for checks (checkHop).
  */
 import settings from "./settings.js";

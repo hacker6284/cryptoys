@@ -45,20 +45,23 @@ export function solidsAt(pose, parts, prefix = "") {
     return parts.map((s) => ({ ...obbOf(pose, s), name: prefix + s.name }));
 }
 
-/** World pose of a pocket { p, yaw } (box frame: where something lies in the base) in the box at `boxPose`. */
-export function pocketAt(boxPose, { p, yaw = 0 }) {
-    return { p: add(boxPose.p, quatRotate(boxPose.q, p)), q: quatMul(boxPose.q, quatAxisAngle([0, 1, 0], yaw)) };
+const pocketQ = ({ q, yaw = 0 }) => q ?? quatAxisAngle([0, 1, 0], yaw);
+
+/** World pose of a pocket { p, yaw } or { p, q } (box frame: where something lies in the base) in the box at `boxPose`. */
+export function pocketAt(boxPose, pocket) {
+    return { p: add(boxPose.p, quatRotate(boxPose.q, pocket.p)), q: quatMul(boxPose.q, pocketQ(pocket)) };
 }
 
 function reparent(object, parent) {
     if (parent && object.parent !== parent) parent.attach(object);
 }
 
-/** Put `object` in `parent` at the local pose { p, yaw } exactly. */
-function seatIn(object, parent, { p, yaw = 0 }) {
+/** Put `object` in `parent` at the local pose { p, yaw } or { p, q } exactly. */
+function seatIn(object, parent, pocket) {
     reparent(object, parent);
+    const { p } = pocket;
     object.position.set(p[0], p[1], p[2]);
-    object.quaternion.set(0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2));
+    object.quaternion.set(...pocketQ(pocket));
 }
 
 /**
@@ -66,7 +69,7 @@ function seatIn(object, parent, { p, yaw = 0 }) {
  *   lid: the lid's parts (lid frame); baseSolids(pose): the base's own solids;
  *   lidClearY(boxPose) / packClearY(boxPose): the height the lid's / a held
  *     thing's bottom clears on the way across (the entry's law adds clearM);
- *   pockets: [{ p, yaw }] box frame; held: [parts] of what lies in each;
+ *   pockets: [{ p, yaw } or { p, q }] box frame; held: [parts] of what lies in each;
  *   laws: { lid, held } hop laws (settings); timing: the entry's timing.
  * Returned (k: the pocket):
  *   pocketPose(boxPose, k); planLidOff({ box, to }), planLidOn({ box, from }),

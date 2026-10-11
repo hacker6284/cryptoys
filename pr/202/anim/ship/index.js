@@ -13,14 +13,12 @@
  */
 import settings from "./settings.js";
 import { rafRun } from "../shared/run.js";
+import { easeInOutCubic, easeOutCubic, easeInOutQuad } from "../shared/geom.js";
 
 export { settings };
 export const timing = settings.timing;
 export const slots = [];
 
-const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2);
-const easeOutCubic = (t) => 1 - (1 - t) ** 3;
-const easeInOutQuad = (t) => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2);
 
 export function planPlace({ tempo = timing.tempo } = {}) {
     const ms = settings.place.ms / Math.max(0.05, tempo);

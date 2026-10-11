@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { mountMicro } from "../../shared/micro.js";
 import * as ship from "../../../anim/ship/index.js";
 import { CAMERA, loadGlb, placeUnit } from "../../shared/bs-scene.js";
+import { BS_GRID as G } from "../../../playroom/constants.js";
 
 // ship: place, move, lift (anim/ship). A Destroyer is laid across C3–C4
 // of the key grid, swapped for the Sub as the ship grows (BUILD, SPEC
@@ -39,7 +40,7 @@ void mountMicro({
     },
     async cycle(ctx) {
         const mid = (a, b) => unit.ocean(a).add(unit.ocean(b)).multiplyScalar(0.5);
-        const strip = (col) => new THREE.Vector3(-0.06393 + col * (0.12 / 9), 0.0124, -0.059);
+        const strip = (col) => new THREE.Vector3(G.x0 + col * G.pitch, G.plateY, G.frameTopZ);
         await ship.place(pieces.d, mid(22, 23));
         await ctx.wait(300);
         await ship.lift(pieces.d);

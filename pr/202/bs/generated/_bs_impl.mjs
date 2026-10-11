@@ -87,29 +87,47 @@ export class Exchange {
     }
 }
 
+export class PegMove {
+    static _sudoKind = ["r", "PegMove"];
+    static _sudoFields = ["reg", "hole", "from", "into", "why"];
+    static _sudoShared = true;
+    constructor(reg, hole, from, into, why) {
+        this.reg = reg;
+        this.hole = hole;
+        this.from = from;
+        this.into = into;
+        this.why = why;
+    }
+}
+
 export class BuildRead {
     static _sudoKind = ["r", "BuildRead"];
-    static _sudoFields = ["hole", "cup", "d12", "d6", "face", "ship", "peg"];
+    static _sudoFields = ["hole", "cup", "d12", "d6", "face", "die", "ship", "covered", "peg", "moves"];
     static _sudoShared = true;
-    constructor(hole, cup, d12, d6, face, ship, peg) {
+    constructor(hole, cup, d12, d6, face, die, ship, covered, peg, moves) {
         this.hole = hole;
         this.cup = cup;
         this.d12 = d12;
         this.d6 = d6;
         this.face = face;
+        this.die = die;
         this.ship = ship;
+        this.covered = covered;
         this.peg = peg;
+        this.moves = moves;
     }
 }
 
 export class TraceStep {
     static _sudoKind = ["r", "TraceStep"];
-    static _sudoFields = ["player", "op", "cell", "hole", "a", "b", "nudge", "x", "y", "c"];
+    static _sudoFields = ["player", "op", "phase", "cell", "value", "hole", "a", "b", "nudge", "x", "y", "c"];
     static _sudoShared = true;
-    constructor(player, op, cell, hole, a, b, nudge, x, y, c) {
+    constructor(player, op, phase, cell, value, hole, a, b, nudge, x, y, c) {
         this.player = player;
         this.op = op;
+        this.phase = phase;
         this.cell = cell;
+        this.value = value;
         this.hole = hole;
         this.a = a;
         this.b = b;
@@ -213,6 +231,221 @@ export class Sudo_4Kind_7Carrier {
     }
 }
 
+export class Sudo_3Reg_1X {
+    static _sudoKind = ["e", "Reg.X"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Reg_1Y {
+    static _sudoKind = ["e", "Reg.Y"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Reg_1C {
+    static _sudoKind = ["e", "Reg.C"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Reg_5Strip {
+    static _sudoKind = ["e", "Reg.Strip"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Why_4Drop {
+    static _sudoKind = ["e", "Why.Drop"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Why_5Carry {
+    static _sudoKind = ["e", "Why.Carry"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Why_4Lift {
+    static _sudoKind = ["e", "Why.Lift"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Why_5Slide {
+    static _sudoKind = ["e", "Why.Slide"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Why_4Copy {
+    static _sudoKind = ["e", "Why.Copy"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Why_5Spill {
+    static _sudoKind = ["e", "Why.Spill"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Why_4Wipe {
+    static _sudoKind = ["e", "Why.Wipe"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Why_5Place {
+    static _sudoKind = ["e", "Why.Place"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_3Why_6Answer {
+    static _sudoKind = ["e", "Why.Answer"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_9BuildMove_5Throw {
+    static _sudoKind = ["e", "BuildMove.Throw"];
+    static _sudoFields = ["die", "face"];
+    constructor(die, face) {
+        this.die = die;
+        this.face = face;
+    }
+}
+
+export class Sudo_9BuildMove_7HoleDie {
+    static _sudoKind = ["e", "BuildMove.HoleDie"];
+    static _sudoFields = ["face"];
+    constructor(face) {
+        this.face = face;
+    }
+}
+
+export class Sudo_9BuildMove_4Grow {
+    static _sudoKind = ["e", "BuildMove.Grow"];
+    static _sudoFields = ["face"];
+    constructor(face) {
+        this.face = face;
+    }
+}
+
+export class Sudo_9BuildMove_4Pick {
+    static _sudoKind = ["e", "BuildMove.Pick"];
+    static _sudoFields = ["face"];
+    constructor(face) {
+        this.face = face;
+    }
+}
+
+export class Sudo_9BuildMove_5Piece {
+    static _sudoKind = ["e", "BuildMove.Piece"];
+    static _sudoFields = ["ship", "holes"];
+    constructor(ship, holes) {
+        this.ship = ship;
+        this.holes = holes;
+    }
+}
+
+export class Sudo_9BuildMove_7ReadDie {
+    static _sudoKind = ["e", "BuildMove.ReadDie"];
+    static _sudoFields = ["die", "face"];
+    constructor(die, face) {
+        this.die = die;
+        this.face = face;
+    }
+}
+
+export class Sudo_9BuildMove_6PutPeg {
+    static _sudoKind = ["e", "BuildMove.PutPeg"];
+    static _sudoFields = ["hole", "colour", "in_ship"];
+    constructor(hole, colour, in_ship) {
+        this.hole = hole;
+        this.colour = colour;
+        this.in_ship = in_ship;
+    }
+}
+
+export class Sudo_2Op_5Start {
+    static _sudoKind = ["e", "Op.Start"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_2Op_6Square {
+    static _sudoKind = ["e", "Op.Square"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_2Op_4Cube {
+    static _sudoKind = ["e", "Op.Cube"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_2Op_9TimesBase {
+    static _sudoKind = ["e", "Op.TimesBase"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_2Op_4Tidy {
+    static _sudoKind = ["e", "Op.Tidy"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_2Op_5Clear {
+    static _sudoKind = ["e", "Op.Clear"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_2Op_4Call {
+    static _sudoKind = ["e", "Op.Call"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_2Op_5Check {
+    static _sudoKind = ["e", "Op.Check"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
+export class Sudo_2Op_9CheckTidy {
+    static _sudoKind = ["e", "Op.CheckTidy"];
+    static _sudoFields = [];
+    constructor() {
+    }
+}
+
 export const t1 = new Field(18n, _rt.lst([1n, 0n, 1n]));
 export const t2 = new Field(35n, _rt.lst([1n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n, 1n]));
 export const t6 = new Field(100n, _rt.lst([1n, 2n, 2n, 2n, 1n, 2n, 1n, 2n, 2n, 1n, 1n, 1n, 0n, 2n, 2n, 2n, 2n, 2n, 1n, 2n, 2n, 0n, 1n, 1n, 1n, 1n, 1n, 2n, 0n, 0n, 1n, 1n, 2n, 0n, 1n, 0n, 2n, 2n, 2n, 2n, 1n, 0n, 1n, 1n, 2n, 0n, 1n, 0n, 0n, 1n]));
@@ -222,15 +455,6 @@ export const grid_cols = 10n;
 export const cup_dice = 5n;
 export const sample_grid_a = new KeyGrid(_rt.lst([new Ship(new Sudo_4Kind_7Cruiser(), false, 0n, 0n, true), new Ship(new Sudo_4Kind_3Sub(), true, 0n, 4n, false), new Ship(new Sudo_4Kind_9Destroyer(), false, 9n, 8n, true), new Ship(new Sudo_4Kind_10Battleship(), true, 2n, 0n, false), new Ship(new Sudo_4Kind_7Carrier(), false, 7n, 1n, true)]), _rt.lst([0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 0n, 1n, 2n, 0n, 1n, 2n, 0n, 1n, 2n, 0n]));
 export const sample_grid_b = new KeyGrid(_rt.lst([new Ship(new Sudo_4Kind_9Destroyer(), true, 0n, 9n, false), new Ship(new Sudo_4Kind_3Sub(), false, 4n, 3n, true), new Ship(new Sudo_4Kind_7Cruiser(), true, 5n, 6n, true)]), _rt.lst([2n, 1n, 0n, 0n, 0n, 1n, 0n, 0n, 0n, 1n, 0n, 2n, 0n, 1n, 0n, 0n, 0n, 1n, 0n, 0n, 0n, 1n, 2n, 0n, 0n, 1n, 0n, 0n, 0n, 1n, 0n, 0n, 0n, 2n, 0n, 0n, 0n, 1n, 0n, 0n, 0n, 1n, 0n, 0n, 2n, 1n, 0n, 0n, 0n, 1n, 0n, 0n, 0n, 1n, 0n, 2n, 0n, 1n, 0n, 0n, 0n, 1n, 0n, 0n, 0n, 1n, 2n, 0n, 0n, 1n, 0n, 0n, 0n, 1n, 0n, 0n, 0n, 2n, 0n, 0n, 0n, 1n, 0n, 0n, 0n, 1n, 0n, 0n, 2n, 1n, 0n, 0n, 0n, 1n, 0n, 0n, 0n, 1n, 0n, 2n]));
-export const op_start = 1n;
-export const op_square = 2n;
-export const op_cube = 3n;
-export const op_hit = 4n;
-export const op_tidy = 5n;
-export const op_clear = 6n;
-export const op_shot = 7n;
-export const op_check = 8n;
-export const op_check_tidy = 9n;
 
 export function tier(name) {
     if (_rt.eq(name, _rt.txt("T1"))) {
@@ -934,6 +1158,193 @@ export function exchange(f, key_a, key_b) {
     return new _rt.Ok(new Exchange(_rt.dup(public_a), _rt.dup(public_b), _rt.dup(shots_a), _rt.dup(received_a), _rt.dup(shots_b), _rt.dup(received_b), _rt.dup(base_a), _rt.dup(base_b), _rt.dup(secret_a), _rt.dup(secret_b)));
 }
 
+export function trace_drop(strip, hole, colour, moves) {
+    let clicks = colour;
+    let why = new Sudo_3Why_4Drop();
+    {
+        const _sudo_from_h = hole;
+        const _sudo_to_h = _rt.chk(globalThis.BigInt(strip.length) - 1n);
+        for (let h = _sudo_from_h; h <= _sudo_to_h; h += 1n) {
+            let from = _rt.at(strip, h);
+            let carry = false;
+            {
+                const _sudo_from_k = 1n;
+                const _sudo_to_k = clicks;
+                for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
+                    if (_rt.at(strip, h) === 2n) {
+                        carry = true;
+                    }
+                    _rt.put(strip, h, click(_rt.at(strip, h)));
+                }
+            }
+            moves.push(new PegMove(new Sudo_3Reg_5Strip(), h, from, _rt.at(strip, h), why));
+            if (!carry) {
+                clicks = 0n;
+                break;
+            }
+            clicks = 1n;
+            why = new Sudo_3Why_5Carry();
+        }
+    }
+    _rt.sudo_assert_eq(clicks, 0n, 1066);
+    return [strip, moves];
+}
+
+export function trace_lay(strip, a, s, moves) {
+    {
+        const _sudo_from_j = 0n;
+        const _sudo_to_j = _rt.chk(globalThis.BigInt(a.length) - 1n);
+        for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
+            if (_rt.at(a, j) !== 0n) {
+                [strip, moves] = trace_drop(strip, _rt.chk(s + j), _rt.at(a, j), moves);
+            }
+        }
+    }
+    return [strip, moves];
+}
+
+export function trace_pay_toll(f, strip, moves) {
+    _rt.sudo_assert(globalThis.BigInt(f.toll.length) < f.n, 1076);
+    {
+        const _sudo_from_h = _rt.chk(globalThis.BigInt(strip.length) - 1n);
+        const _sudo_to_h = f.n;
+        for (let h = _sudo_from_h; h >= _sudo_to_h; h -= 1n) {
+            {
+                const _sudo_from_lift = 1n;
+                const _sudo_to_lift = lifts_per_hole;
+                for (let lift = _sudo_from_lift; lift <= _sudo_to_lift; lift += 1n) {
+                    let colour = _rt.at(strip, h);
+                    if (colour !== 0n) {
+                        _rt.put(strip, h, 0n);
+                        moves.push(new PegMove(new Sudo_3Reg_5Strip(), h, colour, 0n, new Sudo_3Why_4Lift()));
+                        {
+                            const _sudo_from_k = 1n;
+                            const _sudo_to_k = colour;
+                            for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
+                                [strip, moves] = trace_lay(strip, f.toll, _rt.chk(h - f.n), moves);
+                            }
+                        }
+                    }
+                }
+            }
+            _rt.sudo_assert_eq(_rt.at(strip, h), 0n, 1085);
+        }
+    }
+    return [strip, moves];
+}
+
+export function trace_multiply(f, a, b, nudge, moves) {
+    _rt.sudo_assert(globalThis.BigInt(a.length) === f.n && globalThis.BigInt(b.length) === f.n, 1090);
+    _rt.sudo_assert(nudge >= 0n && nudge <= 2n, 1091);
+    let strip = _rt.filled(_rt.chk(_rt.chk(2n * f.n) + nudge), 0n);
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(f.n - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            {
+                const _sudo_from_k = 1n;
+                const _sudo_to_k = _rt.at(b, i);
+                for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
+                    [strip, moves] = trace_lay(strip, a, _rt.chk(i + nudge), moves);
+                }
+            }
+        }
+    }
+    [strip, moves] = trace_pay_toll(f, strip, moves);
+    let out = empty_register(f);
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(f.n - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            _rt.put(out, i, _rt.at(strip, i));
+        }
+    }
+    return [_rt.dup(out), moves];
+}
+
+export function trace_slide(reg, dest, answer, moves) {
+    _rt.sudo_assert_eq(globalThis.BigInt(dest.length), globalThis.BigInt(answer.length), 1105);
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(globalThis.BigInt(dest.length) - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            if (_rt.at(dest, i) !== 0n) {
+                moves.push(new PegMove(reg, i, _rt.at(dest, i), 0n, new Sudo_3Why_4Lift()));
+                _rt.put(dest, i, 0n);
+            }
+        }
+    }
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(globalThis.BigInt(dest.length) - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            if (_rt.at(answer, i) !== 0n) {
+                moves.push(new PegMove(new Sudo_3Reg_5Strip(), i, _rt.at(answer, i), 0n, new Sudo_3Why_5Slide()));
+                moves.push(new PegMove(reg, i, 0n, _rt.at(answer, i), new Sudo_3Why_5Slide()));
+                _rt.put(dest, i, _rt.at(answer, i));
+            }
+        }
+    }
+    return [dest, moves];
+}
+
+export function trace_tidy(f, reg, r, moves) {
+    _rt.sudo_assert_eq(globalThis.BigInt(r.length), f.n, 1118);
+    let copy = _rt.filled(_rt.chk(f.n + 1n), 0n);
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(f.n - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            if (_rt.at(r, i) !== 0n) {
+                _rt.put(copy, i, _rt.at(r, i));
+                moves.push(new PegMove(new Sudo_3Reg_5Strip(), i, 0n, _rt.at(r, i), new Sudo_3Why_4Copy()));
+            }
+        }
+    }
+    [copy, moves] = trace_lay(copy, f.toll, 0n, moves);
+    if (_rt.at(copy, f.n) === 0n) {
+        {
+            const _sudo_from_i = 0n;
+            const _sudo_to_i = _rt.chk(f.n - 1n);
+            for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+                if (_rt.at(copy, i) !== 0n) {
+                    moves.push(new PegMove(new Sudo_3Reg_5Strip(), i, _rt.at(copy, i), 0n, new Sudo_3Why_4Wipe()));
+                }
+            }
+        }
+        return [r, moves];
+    }
+    _rt.sudo_assert_eq(_rt.at(copy, f.n), 1n, 1130);
+    moves.push(new PegMove(new Sudo_3Reg_5Strip(), f.n, 1n, 0n, new Sudo_3Why_5Spill()));
+    _rt.pop(copy);
+    [r, moves] = trace_slide(reg, r, copy, moves);
+    return [r, moves];
+}
+
+export function trace_place(reg, dest, value, moves) {
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(globalThis.BigInt(dest.length) - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            if (_rt.at(dest, i) !== 0n) {
+                moves.push(new PegMove(reg, i, _rt.at(dest, i), 0n, new Sudo_3Why_4Lift()));
+                _rt.put(dest, i, 0n);
+            }
+        }
+    }
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(globalThis.BigInt(dest.length) - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            if (_rt.at(value, i) !== 0n) {
+                moves.push(new PegMove(reg, i, 0n, _rt.at(value, i), new Sudo_3Why_5Place()));
+                _rt.put(dest, i, _rt.at(value, i));
+            }
+        }
+    }
+    return [dest, moves];
+}
+
 export function faces_between(faces, from, upto) {
     let out = _rt.lst([]);
     {
@@ -944,6 +1355,87 @@ export function faces_between(faces, from, upto) {
         }
     }
     return _rt.dup(out);
+}
+
+export function lay_piece(moves, s) {
+    moves.push(new Sudo_9BuildMove_5Piece(s, ship_holes(s)));
+    return moves;
+}
+
+export function trace_grow(d, covered, row, col, moves) {
+    let across = has_room(covered, row, _rt.chk(col + 1n));
+    let down = has_room(covered, _rt.chk(row + 1n), col);
+    if (!across && !down) {
+        return [_rt.NONE, d, moves];
+    }
+    let face;
+    [face, d] = roll_hole_die(d);
+    moves.push(new Sudo_9BuildMove_7HoleDie(face));
+    let lay_down = false;
+    if (across && down) {
+        if (face <= 4n) {
+            return [_rt.NONE, d, moves];
+        }
+        lay_down = face >= 9n;
+    } else {
+        if (face <= 6n) {
+            return [_rt.NONE, d, moves];
+        }
+        lay_down = down;
+    }
+    let bow_last = _rt.mod_i64(face, 2n) === 0n;
+    let len = 2n;
+    moves = lay_piece(moves, new Ship(new Sudo_4Kind_9Destroyer(), lay_down, row, col, bow_last));
+    {
+        const _sudo_from_grow = 1n;
+        const _sudo_to_grow = 3n;
+        for (let grow = _sudo_from_grow; grow <= _sudo_to_grow; grow += 1n) {
+            let next_row = row;
+            let next_col = _rt.chk(col + len);
+            if (lay_down) {
+                next_row = _rt.chk(row + len);
+                next_col = col;
+            }
+            if (!has_room(covered, next_row, next_col)) {
+                break;
+            }
+            let need = 6n;
+            if (len === 2n) {
+                need = 4n;
+            }
+            let roll;
+            [roll, d] = roll_d6(d);
+            moves.push(new Sudo_9BuildMove_4Grow(roll));
+            if (roll >= need) {
+                len = _rt.chk(len + 1n);
+                let longer = new Sudo_4Kind_3Sub();
+                if (len === 4n) {
+                    longer = new Sudo_4Kind_10Battleship();
+                } else if (len === 5n) {
+                    longer = new Sudo_4Kind_7Carrier();
+                }
+                moves = lay_piece(moves, new Ship(longer, lay_down, row, col, bow_last));
+            } else {
+                break;
+            }
+        }
+    }
+    let kind = new Sudo_4Kind_9Destroyer();
+    if (len === 3n) {
+        let pick;
+        [pick, d] = roll_d6(d);
+        moves.push(new Sudo_9BuildMove_4Pick(pick));
+        kind = new Sudo_4Kind_3Sub();
+        if (pick > 3n) {
+            kind = new Sudo_4Kind_7Cruiser();
+            moves = lay_piece(moves, new Ship(new Sudo_4Kind_7Cruiser(), lay_down, row, col, bow_last));
+        }
+    } else if (len === 4n) {
+        kind = new Sudo_4Kind_10Battleship();
+    } else if (len === 5n) {
+        kind = new Sudo_4Kind_7Carrier();
+    }
+    return [new _rt.Some(new Ship(kind, lay_down, row, col, bow_last)), d, moves];
 }
 
 export function trace_build(source, reads) {
@@ -964,19 +1456,32 @@ export function trace_build(source, reads) {
                 const _sudo_to_col = _rt.chk(grid_cols - 1n);
                 for (let col = _sudo_from_col; col <= _sudo_to_col; col += 1n) {
                     let h = _rt.chk(_rt.chk(row * grid_cols) + col);
+                    let moves = _rt.lst([]);
                     let cup = _rt.lst([]);
                     if (col === 0n) {
                         let n10 = d.next10;
                         [tray, d] = throw_row_cup(d);
                         read = 0n;
                         cup = faces_between(d.d10, n10, d.next10);
+                        let die = 0n;
+                        {
+                            const _sudo_from_t = 0n;
+                            const _sudo_to_t = _rt.chk(globalThis.BigInt(cup.length) - 1n);
+                            for (let t = _sudo_from_t; t <= _sudo_to_t; t += 1n) {
+                                moves.push(new Sudo_9BuildMove_5Throw(die, _rt.at(cup, t)));
+                                if (_rt.at(cup, t) !== 0n) {
+                                    die = _rt.chk(die + 1n);
+                                }
+                            }
+                        }
                     }
                     let n12 = d.next12;
                     let n6 = d.next6;
                     let laid = _rt.lst([]);
+                    let under = _rt.lst([]);
                     if (!_rt.at(covered, h)) {
                         let grown;
-                        [grown, d] = grow_until_it_bumps(d, covered, row, col);
+                        [grown, d, moves] = trace_grow(d, covered, row, col, moves);
                         {
                             const _sudo_sc = grown;
                             if (_sudo_sc instanceof _rt.Some) {
@@ -984,6 +1489,7 @@ export function trace_build(source, reads) {
                                 covered = cover(covered, s);
                                 ships.push(s);
                                 laid.push(s);
+                                under = ship_holes(s);
                             } else if (_sudo_sc instanceof _rt.NoneOpt) {
                             }
                         }
@@ -995,7 +1501,11 @@ export function trace_build(source, reads) {
                     } else {
                         _rt.put(pegs, h, keypad_second(face));
                     }
-                    reads.push(new BuildRead(h, _rt.dup(cup), faces_between(d.d12, n12, d.next12), faces_between(d.d6, n6, d.next6), face, _rt.dup(laid), _rt.at(pegs, h)));
+                    moves.push(new Sudo_9BuildMove_7ReadDie(_rt.chk(read - 1n), face));
+                    if (_rt.at(pegs, h) !== 0n) {
+                        moves.push(new Sudo_9BuildMove_6PutPeg(h, _rt.at(pegs, h), _rt.at(covered, h)));
+                    }
+                    reads.push(new BuildRead(h, _rt.dup(cup), faces_between(d.d12, n12, d.next12), faces_between(d.d6, n6, d.next6), face, _rt.chk(read - 1n), _rt.dup(laid), _rt.dup(under), _rt.at(pegs, h), _rt.dup(moves)));
                 }
             }
         }
@@ -1044,7 +1554,7 @@ export function cell_holes(g) {
     return _rt.dup(out);
 }
 
-export function trace_walk(f, player, cells, shared, x, y, c, steps) {
+export function trace_walk(f, player, cells, phase, x, y, c, steps) {
     let nothing = _rt.lst([]);
     let started = false;
     {
@@ -1052,88 +1562,83 @@ export function trace_walk(f, player, cells, shared, x, y, c, steps) {
         const _sudo_to_j = _rt.chk(globalThis.BigInt(cells.length) - 1n);
         for (let j = _sudo_from_j; j <= _sudo_to_j; j += 1n) {
             let cell = _rt.at(cells, j);
-            _rt.sudo_assert(cell >= 0n && cell <= 2n, 1142);
+            _rt.sudo_assert(cell >= 0n && cell <= 2n, 1378);
             if (started) {
-                let sq = _rt.dup(x);
-                y = slide(y, multiply(f, sq, sq, 0n));
-                steps.push(new TraceStep(player, op_square, j, _rt.neg(1n), _rt.dup(sq), _rt.dup(sq), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
-                let nudge = cell;
-                if (shared) {
-                    nudge = 0n;
-                }
                 let prev = _rt.dup(x);
-                x = slide(x, multiply(f, y, prev, nudge));
-                steps.push(new TraceStep(player, op_cube, j, _rt.neg(1n), _rt.dup(y), _rt.dup(prev), nudge, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
-                if (shared) {
-                    {
-                        const _sudo_from_k = 1n;
-                        const _sudo_to_k = cell;
-                        for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
-                            prev = _rt.dup(x);
-                            x = slide(x, multiply(f, prev, c, 0n));
-                            steps.push(new TraceStep(player, op_hit, j, _rt.neg(1n), _rt.dup(prev), _rt.dup(c), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
+                {
+                    const _sudo_sc = phase;
+                    if (_sudo_sc instanceof Sudo_5Phase_6Public) {
+                        [x, y] = cube(f, x, cell, y);
+                        steps.push(new TraceStep(player, new Sudo_2Op_6Square(), phase, j, cell, _rt.neg(1n), _rt.dup(prev), _rt.dup(prev), 0n, _rt.dup(prev), _rt.dup(y), _rt.dup(c)));
+                        steps.push(new TraceStep(player, new Sudo_2Op_4Cube(), phase, j, cell, _rt.neg(1n), _rt.dup(y), _rt.dup(prev), cell, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
+                    } else if (_sudo_sc instanceof Sudo_5Phase_6Shared) {
+                        const base = _rt.dup(_sudo_sc.base);
+                        [x, y] = cube(f, x, 0n, y);
+                        steps.push(new TraceStep(player, new Sudo_2Op_6Square(), phase, j, cell, _rt.neg(1n), _rt.dup(prev), _rt.dup(prev), 0n, _rt.dup(prev), _rt.dup(y), _rt.dup(c)));
+                        steps.push(new TraceStep(player, new Sudo_2Op_4Cube(), phase, j, cell, _rt.neg(1n), _rt.dup(y), _rt.dup(prev), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
+                        {
+                            const _sudo_from_k = 1n;
+                            const _sudo_to_k = cell;
+                            for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
+                                prev = _rt.dup(x);
+                                x = slide(x, multiply(f, prev, base, 0n));
+                                steps.push(new TraceStep(player, new Sudo_2Op_9TimesBase(), phase, j, cell, _rt.neg(1n), _rt.dup(prev), _rt.dup(base), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
+                            }
                         }
                     }
                 }
             } else if (cell !== 0n) {
-                if (shared) {
-                    x = slide(x, start_accumulator(f, cell, new Sudo_5Phase_6Shared(_rt.dup(c))));
-                    if (cell === 1n) {
-                        steps.push(new TraceStep(player, op_start, j, _rt.neg(1n), _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
-                    } else {
-                        steps.push(new TraceStep(player, op_start, j, _rt.neg(1n), _rt.dup(c), _rt.dup(c), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
+                x = slide(x, start_accumulator(f, cell, phase));
+                let a = _rt.dup(nothing);
+                {
+                    const _sudo_sc = phase;
+                    if (_sudo_sc instanceof Sudo_5Phase_6Shared) {
+                        const base = _rt.dup(_sudo_sc.base);
+                        if (cell === 2n) {
+                            a = _rt.dup(base);
+                        }
+                    } else if (_sudo_sc instanceof Sudo_5Phase_6Public) {
                     }
-                } else {
-                    x = slide(x, start_accumulator(f, cell, new Sudo_5Phase_6Public()));
-                    steps.push(new TraceStep(player, op_start, j, _rt.neg(1n), _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
                 }
+                steps.push(new TraceStep(player, new Sudo_2Op_5Start(), phase, j, cell, _rt.neg(1n), _rt.dup(a), _rt.dup(a), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
                 started = true;
             }
         }
     }
-    _rt.sudo_assert(started, 1169);
+    _rt.sudo_assert(started, 1405);
     x = tidy_in_place(f, x);
-    steps.push(new TraceStep(player, op_tidy, _rt.neg(1n), _rt.neg(1n), _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
+    steps.push(new TraceStep(player, new Sudo_2Op_4Tidy(), phase, _rt.neg(1n), _rt.neg(1n), _rt.neg(1n), _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
     return [x, y, steps];
 }
 
 export function trace_call(f, receiver, value, x, y, c, steps) {
     let nothing = _rt.lst([]);
+    let shots;
+    [shots, y] = call_the_shots(f, value, y);
+    let seen = empty_register(f);
+    steps.push(new TraceStep(receiver, new Sudo_2Op_5Clear(), new Sudo_5Phase_6Public(), _rt.neg(1n), _rt.neg(1n), _rt.neg(1n), _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(seen), _rt.dup(c)));
     {
         const _sudo_from_hole = 0n;
         const _sudo_to_hole = _rt.chk(f.n - 1n);
         for (let hole = _sudo_from_hole; hole <= _sudo_to_hole; hole += 1n) {
-            _rt.put(y, hole, 0n);
+            seen = copy_shot(seen, hole, _rt.at(shots, hole));
+            steps.push(new TraceStep(receiver, new Sudo_2Op_4Call(), new Sudo_5Phase_6Public(), _rt.neg(1n), _rt.neg(1n), hole, _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(seen), _rt.dup(c)));
         }
     }
-    steps.push(new TraceStep(receiver, op_clear, _rt.neg(1n), _rt.neg(1n), _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
-    {
-        const _sudo_from_hole = 0n;
-        const _sudo_to_hole = _rt.chk(f.n - 1n);
-        for (let hole = _sudo_from_hole; hole <= _sudo_to_hole; hole += 1n) {
-            y = copy_shot(y, hole, answer(value, hole));
-            steps.push(new TraceStep(receiver, op_shot, _rt.neg(1n), hole, _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
-        }
-    }
+    _rt.sudo_assert_eq(seen, y, 1420);
     return [y, steps];
 }
 
 export function trace_check(f, player, x, y, c, steps) {
     let nothing = _rt.lst([]);
-    if (!is_trits(y)) {
-        return [false, c, steps];
-    }
     c = slide(c, multiply(f, y, y, 0n));
-    steps.push(new TraceStep(player, op_check, _rt.neg(1n), _rt.neg(1n), _rt.dup(y), _rt.dup(y), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
+    steps.push(new TraceStep(player, new Sudo_2Op_5Check(), new Sudo_5Phase_6Public(), _rt.neg(1n), _rt.neg(1n), _rt.neg(1n), _rt.dup(y), _rt.dup(y), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
     c = tidy_in_place(f, c);
-    steps.push(new TraceStep(player, op_check_tidy, _rt.neg(1n), _rt.neg(1n), _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
-    if (is_empty(c) || is_lone_white(c)) {
-        return [false, c, steps];
-    }
-    return [true, c, steps];
+    steps.push(new TraceStep(player, new Sudo_2Op_9CheckTidy(), new Sudo_5Phase_6Public(), _rt.neg(1n), _rt.neg(1n), _rt.neg(1n), _rt.dup(nothing), _rt.dup(nothing), 0n, _rt.dup(x), _rt.dup(y), _rt.dup(c)));
+    return [_rt.is_some(check_received(f, y)), c, steps];
 }
 
-export function trace_keys(f, grid_a, grid_b, reads_a, reads_b) {
+export function trace_steps(f, grid_a, grid_b) {
     let cells_a = read_key(_rt.lst([grid_a]));
     let cells_b = read_key(_rt.lst([grid_b]));
     let steps = _rt.lst([]);
@@ -1143,35 +1648,23 @@ export function trace_keys(f, grid_a, grid_b, reads_a, reads_b) {
     let x_b = empty_register(f);
     let y_b = empty_register(f);
     let c_b = empty_register(f);
-    [x_a, y_a, steps] = trace_walk(f, 0n, cells_a, false, x_a, y_a, c_a, steps);
-    let public_a = _rt.dup(x_a);
-    [x_b, y_b, steps] = trace_walk(f, 1n, cells_b, false, x_b, y_b, c_b, steps);
-    let public_b = _rt.dup(x_b);
-    [y_b, steps] = trace_call(f, 1n, public_a, x_b, y_b, c_b, steps);
-    [y_a, steps] = trace_call(f, 0n, public_b, x_a, y_a, c_a, steps);
-    let none = empty_register(f);
-    let out = _rt.rec(new Trace(grid_a, grid_b, _rt.dup(reads_a), _rt.dup(reads_b), _rt.dup(cells_a), _rt.dup(cells_b), cell_holes(grid_a), cell_holes(grid_b), _rt.dup(steps), false, _rt.txt(""), _rt.dup(public_a), _rt.dup(public_b), _rt.dup(none), _rt.dup(none)));
+    [x_a, y_a, steps] = trace_walk(f, 0n, cells_a, new Sudo_5Phase_6Public(), x_a, y_a, c_a, steps);
+    [x_b, y_b, steps] = trace_walk(f, 1n, cells_b, new Sudo_5Phase_6Public(), x_b, y_b, c_b, steps);
+    [y_b, steps] = trace_call(f, 1n, x_a, x_b, y_b, c_b, steps);
+    [y_a, steps] = trace_call(f, 0n, x_b, x_a, y_a, c_a, steps);
     let _sudo_h0;
     [_sudo_h0, c_a, steps] = trace_check(f, 0n, x_a, y_a, c_a, steps);
     if (!_sudo_h0) {
-        out.steps = _rt.dup(steps);
-        out.error = _rt.txt("B8: Alice rejects Bob's value");
-        return _rt.dup(out);
+        return _rt.dup(steps);
     }
     let _sudo_h1;
     [_sudo_h1, c_b, steps] = trace_check(f, 1n, x_b, y_b, c_b, steps);
     if (!_sudo_h1) {
-        out.steps = _rt.dup(steps);
-        out.error = _rt.txt("B8: Bob rejects Alice's value");
-        return _rt.dup(out);
+        return _rt.dup(steps);
     }
-    [x_a, y_a, steps] = trace_walk(f, 0n, cells_a, true, x_a, y_a, c_a, steps);
-    [x_b, y_b, steps] = trace_walk(f, 1n, cells_b, true, x_b, y_b, c_b, steps);
-    out.steps = _rt.dup(steps);
-    out.ok = true;
-    out.secret_a = _rt.dup(x_a);
-    out.secret_b = _rt.dup(x_b);
-    return _rt.dup(out);
+    [x_a, y_a, steps] = trace_walk(f, 0n, cells_a, new Sudo_5Phase_6Shared(_rt.dup(c_a)), x_a, y_a, c_a, steps);
+    [x_b, y_b, steps] = trace_walk(f, 1n, cells_b, new Sudo_5Phase_6Shared(_rt.dup(c_b)), x_b, y_b, c_b, steps);
+    return _rt.dup(steps);
 }
 
 export function trace_exchange(f, dice_a, dice_b) {
@@ -1181,7 +1674,92 @@ export function trace_exchange(f, dice_a, dice_b) {
     [grid_a, reads_a] = trace_build(dice_a, reads_a);
     let grid_b;
     [grid_b, reads_b] = trace_build(dice_b, reads_b);
-    return trace_keys(f, grid_a, grid_b, reads_a, reads_b);
+    let none = empty_register(f);
+    let out = _rt.rec(new Trace(grid_a, grid_b, _rt.dup(reads_a), _rt.dup(reads_b), read_key(_rt.lst([grid_a])), read_key(_rt.lst([grid_b])), cell_holes(grid_a), cell_holes(grid_b), trace_steps(f, grid_a, grid_b), false, _rt.txt(""), _rt.dup(none), _rt.dup(none), _rt.dup(none), _rt.dup(none)));
+    {
+        const _sudo_sc = exchange(f, _rt.lst([grid_a]), _rt.lst([grid_b]));
+        if (_sudo_sc instanceof _rt.Ok) {
+            const e = _sudo_sc.value;
+            out.ok = true;
+            out.public_a = _rt.dup(e.public_a);
+            out.public_b = _rt.dup(e.public_b);
+            out.secret_a = _rt.dup(e.secret_a);
+            out.secret_b = _rt.dup(e.secret_b);
+        } else if (_sudo_sc instanceof _rt.Err) {
+            const why = _sudo_sc.error;
+            out.error = _rt.dup(why);
+            out.public_a = public_value(f, _rt.lst([grid_a]));
+            out.public_b = public_value(f, _rt.lst([grid_b]));
+        }
+    }
+    return _rt.dup(out);
+}
+
+export function step_moves(f, x, y, c, st) {
+    let moves = _rt.lst([]);
+    let rx = _rt.dup(x);
+    let ry = _rt.dup(y);
+    let rc = _rt.dup(c);
+    {
+        const _sudo_sc = st.op;
+        if (_sudo_sc instanceof Sudo_2Op_5Start) {
+            {
+                const _sudo_sc = st.phase;
+                if (_sudo_sc instanceof Sudo_5Phase_6Shared) {
+                    const base = _rt.dup(_sudo_sc.base);
+                    if (st.value === 2n) {
+                        let _sudo_h0 = new Sudo_3Reg_1X();
+                        let _sudo_h1;
+                        [_sudo_h1, moves] = trace_multiply(f, base, base, 0n, moves);
+                        [rx, moves] = trace_slide(_sudo_h0, rx, _sudo_h1, moves);
+                    } else {
+                        [rx, moves] = trace_place(new Sudo_3Reg_1X(), rx, start_accumulator(f, st.value, st.phase), moves);
+                    }
+                } else if (_sudo_sc instanceof Sudo_5Phase_6Public) {
+                    [rx, moves] = trace_place(new Sudo_3Reg_1X(), rx, start_accumulator(f, st.value, st.phase), moves);
+                }
+            }
+        } else if (_sudo_sc instanceof Sudo_2Op_6Square) {
+            let _sudo_h2 = new Sudo_3Reg_1Y();
+            let _sudo_h3;
+            [_sudo_h3, moves] = trace_multiply(f, st.a, st.b, st.nudge, moves);
+            [ry, moves] = trace_slide(_sudo_h2, ry, _sudo_h3, moves);
+        } else if (_sudo_sc instanceof Sudo_2Op_4Cube) {
+            let _sudo_h4 = new Sudo_3Reg_1X();
+            let _sudo_h5;
+            [_sudo_h5, moves] = trace_multiply(f, st.a, st.b, st.nudge, moves);
+            [rx, moves] = trace_slide(_sudo_h4, rx, _sudo_h5, moves);
+        } else if (_sudo_sc instanceof Sudo_2Op_9TimesBase) {
+            let _sudo_h6 = new Sudo_3Reg_1X();
+            let _sudo_h7;
+            [_sudo_h7, moves] = trace_multiply(f, st.a, st.b, st.nudge, moves);
+            [rx, moves] = trace_slide(_sudo_h6, rx, _sudo_h7, moves);
+        } else if (_sudo_sc instanceof Sudo_2Op_5Check) {
+            let _sudo_h8 = new Sudo_3Reg_1C();
+            let _sudo_h9;
+            [_sudo_h9, moves] = trace_multiply(f, st.a, st.b, st.nudge, moves);
+            [rc, moves] = trace_slide(_sudo_h8, rc, _sudo_h9, moves);
+        } else if (_sudo_sc instanceof Sudo_2Op_4Tidy) {
+            [rx, moves] = trace_tidy(f, new Sudo_3Reg_1X(), rx, moves);
+        } else if (_sudo_sc instanceof Sudo_2Op_9CheckTidy) {
+            [rc, moves] = trace_tidy(f, new Sudo_3Reg_1C(), rc, moves);
+        } else if (_sudo_sc instanceof Sudo_2Op_5Clear) {
+            {
+                const _sudo_from_h = 0n;
+                const _sudo_to_h = _rt.chk(f.n - 1n);
+                for (let h = _sudo_from_h; h <= _sudo_to_h; h += 1n) {
+                    if (_rt.at(ry, h) !== 0n) {
+                        moves.push(new PegMove(new Sudo_3Reg_1Y(), h, _rt.at(ry, h), 0n, new Sudo_3Why_4Wipe()));
+                    }
+                }
+            }
+        } else if (_sudo_sc instanceof Sudo_2Op_4Call) {
+            if (_rt.at(st.y, st.hole) !== _rt.at(ry, st.hole)) {
+                moves.push(new PegMove(new Sudo_3Reg_1Y(), st.hole, _rt.at(ry, st.hole), _rt.at(st.y, st.hole), new Sudo_3Why_6Answer()));
+            }
+        }
+    }
+    return _rt.dup(moves);
 }
 
 export function dice_exchange_t1_run0_a() {
@@ -1241,93 +1819,204 @@ export function faces_read(reads, kind) {
     return _rt.dup(out);
 }
 
+export function check_build_moves(r, covered) {
+    let cup = _rt.lst([]);
+    let settled = 0n;
+    let d12 = _rt.lst([]);
+    let d6 = _rt.lst([]);
+    let last = _rt.lst([]);
+    let read = 0n;
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(globalThis.BigInt(r.moves.length) - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            {
+                const _sudo_sc = _rt.at(r.moves, i);
+                if (_sudo_sc instanceof Sudo_9BuildMove_5Throw) {
+                    const die = _sudo_sc.die;
+                    const face = _sudo_sc.face;
+                    _rt.sudo_assert_eq(die, settled, 1647);
+                    cup.push(face);
+                    if (face !== 0n) {
+                        settled = _rt.chk(settled + 1n);
+                    }
+                } else if (_sudo_sc instanceof Sudo_9BuildMove_7HoleDie) {
+                    const face = _sudo_sc.face;
+                    d12.push(face);
+                } else if (_sudo_sc instanceof Sudo_9BuildMove_4Grow) {
+                    const face = _sudo_sc.face;
+                    d6.push(face);
+                } else if (_sudo_sc instanceof Sudo_9BuildMove_4Pick) {
+                    const face = _sudo_sc.face;
+                    d6.push(face);
+                    _rt.sudo_assert_eq(globalThis.BigInt(last.length), 1n, 1657);
+                    _rt.sudo_assert_eq(ship_length(_rt.at(last, 0n).kind), 3n, 1658);
+                } else if (_sudo_sc instanceof Sudo_9BuildMove_5Piece) {
+                    const s = _sudo_sc.ship;
+                    const holes = _rt.dup(_sudo_sc.holes);
+                    _rt.sudo_assert_eq(holes, ship_holes(s), 1660);
+                    _rt.sudo_assert(_rt.chk(_rt.chk(s.row * grid_cols) + s.col) === r.hole && s.down === _rt.at(r.ship, 0n).down, 1661);
+                    last = _rt.lst([s]);
+                } else if (_sudo_sc instanceof Sudo_9BuildMove_7ReadDie) {
+                    const die = _sudo_sc.die;
+                    const face = _sudo_sc.face;
+                    _rt.sudo_assert(die === r.die && face === r.face, 1664);
+                    read = _rt.chk(read + 1n);
+                } else if (_sudo_sc instanceof Sudo_9BuildMove_6PutPeg) {
+                    const hole = _sudo_sc.hole;
+                    const colour = _sudo_sc.colour;
+                    const in_ship = _sudo_sc.in_ship;
+                    _rt.sudo_assert(hole === r.hole && colour === r.peg && colour !== 0n, 1667);
+                    _rt.sudo_assert_eq(in_ship, _rt.at(covered, hole), 1668);
+                }
+            }
+        }
+    }
+    _rt.sudo_assert(_rt.eq(cup, r.cup) && _rt.eq(d12, r.d12) && _rt.eq(d6, r.d6) && read === 1n, 1669);
+    _rt.sudo_assert(settled === 5n || globalThis.BigInt(cup.length) === 0n, 1670);
+    _rt.sudo_assert_eq(last, r.ship, 1671);
+    if (globalThis.BigInt(r.ship.length) === 1n) {
+        _rt.sudo_assert_eq(r.covered, ship_holes(_rt.at(r.ship, 0n)), 1673);
+    } else {
+        _rt.sudo_assert_eq(globalThis.BigInt(r.covered.length), 0n, 1675);
+    }
+    _rt.sudo_assert_eq(r.die, _rt.div(_rt.mod_i64(r.hole, grid_cols), 2n), 1676);
+}
+
 export function check_trace_build(source) {
     let built = build_key_grid(source);
     let reads = _rt.lst([]);
     let grid;
     [grid, reads] = trace_build(source, reads);
-    _rt.sudo_assert_eq(grid, built.grid, 1366);
-    _rt.sudo_assert_eq(globalThis.BigInt(reads.length), _rt.chk(grid_rows * grid_cols), 1367);
-    _rt.sudo_assert_eq(faces_read(reads, 12n), faces_between(source.d12, 0n, built.used12), 1368);
-    _rt.sudo_assert_eq(faces_read(reads, 6n), faces_between(source.d6, 0n, built.used6), 1369);
-    _rt.sudo_assert_eq(faces_read(reads, 10n), faces_between(source.d10, 0n, built.used10), 1370);
+    _rt.sudo_assert_eq(grid, built.grid, 1684);
+    _rt.sudo_assert_eq(globalThis.BigInt(reads.length), _rt.chk(grid_rows * grid_cols), 1685);
+    _rt.sudo_assert_eq(faces_read(reads, 12n), faces_between(source.d12, 0n, built.used12), 1686);
+    _rt.sudo_assert_eq(faces_read(reads, 6n), faces_between(source.d6, 0n, built.used6), 1687);
+    _rt.sudo_assert_eq(faces_read(reads, 10n), faces_between(source.d10, 0n, built.used10), 1688);
     let laid = _rt.lst([]);
+    let covered = _rt.filled(_rt.chk(grid_rows * grid_cols), false);
     {
         const _sudo_from_h = 0n;
         const _sudo_to_h = _rt.chk(globalThis.BigInt(reads.length) - 1n);
         for (let h = _sudo_from_h; h <= _sudo_to_h; h += 1n) {
             let r = _rt.at(reads, h);
-            _rt.sudo_assert_eq(r.hole, h, 1374);
-            _rt.sudo_assert_eq(globalThis.BigInt(r.cup.length) > 0n, _rt.mod_i64(h, grid_cols) === 0n, 1375);
-            _rt.sudo_assert(r.face >= 1n && r.face <= 9n, 1376);
+            _rt.sudo_assert_eq(r.hole, h, 1693);
+            _rt.sudo_assert_eq(globalThis.BigInt(r.cup.length) > 0n, _rt.mod_i64(h, grid_cols) === 0n, 1694);
+            _rt.sudo_assert(r.face >= 1n && r.face <= 9n, 1695);
             if (_rt.mod_i64(h, 2n) === 0n) {
-                _rt.sudo_assert_eq(r.peg, keypad_first(r.face), 1378);
+                _rt.sudo_assert_eq(r.peg, keypad_first(r.face), 1697);
             } else {
-                _rt.sudo_assert_eq(r.peg, keypad_second(r.face), 1380);
-                _rt.sudo_assert_eq(r.face, _rt.at(reads, _rt.chk(h - 1n)).face, 1381);
+                _rt.sudo_assert_eq(r.peg, keypad_second(r.face), 1699);
+                _rt.sudo_assert_eq(r.face, _rt.at(reads, _rt.chk(h - 1n)).face, 1700);
             }
-            _rt.sudo_assert_eq(r.peg, _rt.at(grid.pegs, h), 1382);
+            _rt.sudo_assert_eq(r.peg, _rt.at(grid.pegs, h), 1701);
             {
                 const _sudo_from_k = 0n;
                 const _sudo_to_k = _rt.chk(globalThis.BigInt(r.ship.length) - 1n);
                 for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
-                    _rt.sudo_assert_eq(_rt.at(ship_holes(_rt.at(r.ship, k)), 0n), h, 1384);
+                    _rt.sudo_assert_eq(_rt.at(ship_holes(_rt.at(r.ship, k)), 0n), h, 1703);
                     laid.push(_rt.at(r.ship, k));
+                    covered = cover(covered, _rt.at(r.ship, k));
                 }
             }
+            check_build_moves(r, covered);
         }
     }
-    _rt.sudo_assert_eq(laid, grid.ships, 1386);
+    _rt.sudo_assert_eq(laid, grid.ships, 1707);
     return grid;
 }
 
-export function check_trace_steps(f, tr) {
+export function apply_move(x, y, c, s, m) {
+    {
+        const _sudo_sc = m.reg;
+        if (_sudo_sc instanceof Sudo_3Reg_1X) {
+            _rt.sudo_assert_eq(_rt.at(x, m.hole), m.from, 1714);
+            _rt.put(x, m.hole, m.into);
+        } else if (_sudo_sc instanceof Sudo_3Reg_1Y) {
+            _rt.sudo_assert_eq(_rt.at(y, m.hole), m.from, 1717);
+            _rt.put(y, m.hole, m.into);
+        } else if (_sudo_sc instanceof Sudo_3Reg_1C) {
+            _rt.sudo_assert_eq(_rt.at(c, m.hole), m.from, 1720);
+            _rt.put(c, m.hole, m.into);
+        } else if (_sudo_sc instanceof Sudo_3Reg_5Strip) {
+            _rt.sudo_assert_eq(_rt.at(s, m.hole), m.from, 1723);
+            _rt.put(s, m.hole, m.into);
+        }
+    }
+    return [x, y, c, s];
+}
+
+export function check_trace_steps(f, steps) {
     let xs = _rt.lst([empty_register(f), empty_register(f)]);
     let ys = _rt.lst([empty_register(f), empty_register(f)]);
     let cs = _rt.lst([empty_register(f), empty_register(f)]);
     {
         const _sudo_from_i = 0n;
-        const _sudo_to_i = _rt.chk(globalThis.BigInt(tr.steps.length) - 1n);
+        const _sudo_to_i = _rt.chk(globalThis.BigInt(steps.length) - 1n);
         for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
-            let st = _rt.at(tr.steps, i);
+            let st = _rt.at(steps, i);
             let p = st.player;
-            _rt.sudo_assert(p === 0n || p === 1n, 1398);
+            _rt.sudo_assert(p === 0n || p === 1n, 1737);
             let product = empty_register(f);
             if (globalThis.BigInt(st.a.length) > 0n) {
                 product = multiply(f, st.a, st.b, st.nudge);
+                let twin = _rt.lst([]);
+                let _sudo_h0;
+                [_sudo_h0, twin] = trace_multiply(f, st.a, st.b, st.nudge, twin);
+                _rt.sudo_assert_eq(_sudo_h0, product, 1742);
             }
-            if (st.op === op_square) {
-                _rt.sudo_assert(_rt.eq(st.y, product) && _rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1403);
-                _rt.sudo_assert(_rt.eq(st.a, _rt.at(xs, p)) && _rt.eq(st.b, _rt.at(xs, p)) && st.nudge === 0n, 1404);
-            } else if (st.op === op_cube || st.op === op_hit) {
-                _rt.sudo_assert(_rt.eq(st.x, product) && _rt.eq(st.y, _rt.at(ys, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1406);
-            } else if (st.op === op_start) {
-                _rt.sudo_assert(_rt.eq(st.y, _rt.at(ys, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1408);
-                if (globalThis.BigInt(st.a.length) > 0n) {
-                    _rt.sudo_assert_eq(st.x, product, 1410);
-                }
-            } else if (st.op === op_tidy) {
-                _rt.sudo_assert(_rt.eq(st.x, tidy(f, _rt.at(xs, p))) && _rt.eq(st.y, _rt.at(ys, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1412);
-            } else if (st.op === op_clear) {
-                _rt.sudo_assert(_rt.eq(st.y, empty_register(f)) && _rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1414);
-            } else if (st.op === op_shot) {
-                _rt.sudo_assert(_rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1416);
-                {
-                    const _sudo_from_h = 0n;
-                    const _sudo_to_h = _rt.chk(f.n - 1n);
-                    for (let h = _sudo_from_h; h <= _sudo_to_h; h += 1n) {
-                        if (h !== st.hole) {
-                            _rt.sudo_assert_eq(_rt.at(st.y, h), _rt.at(_rt.at(ys, p), h), 1419);
+            {
+                const _sudo_sc = st.op;
+                if (_sudo_sc instanceof Sudo_2Op_6Square) {
+                    _rt.sudo_assert(_rt.eq(st.y, product) && _rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1745);
+                    _rt.sudo_assert(_rt.eq(st.a, _rt.at(xs, p)) && _rt.eq(st.b, _rt.at(xs, p)) && st.nudge === 0n, 1746);
+                } else if (_sudo_sc instanceof Sudo_2Op_4Cube) {
+                    _rt.sudo_assert(_rt.eq(st.x, product) && _rt.eq(st.y, _rt.at(ys, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1748);
+                    _rt.sudo_assert(_rt.eq(st.a, _rt.at(ys, p)) && _rt.eq(st.b, _rt.at(xs, p)), 1749);
+                } else if (_sudo_sc instanceof Sudo_2Op_9TimesBase) {
+                    _rt.sudo_assert(_rt.eq(st.x, product) && _rt.eq(st.y, _rt.at(ys, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1751);
+                    _rt.sudo_assert_eq(st.phase, new Sudo_5Phase_6Shared(_rt.dup(_rt.at(cs, p))), 1752);
+                } else if (_sudo_sc instanceof Sudo_2Op_5Start) {
+                    _rt.sudo_assert(_rt.eq(st.y, _rt.at(ys, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1754);
+                    _rt.sudo_assert_eq(st.x, start_accumulator(f, st.value, st.phase), 1755);
+                    if (globalThis.BigInt(st.a.length) > 0n) {
+                        _rt.sudo_assert_eq(st.x, product, 1757);
+                    }
+                } else if (_sudo_sc instanceof Sudo_2Op_4Tidy) {
+                    _rt.sudo_assert(_rt.eq(st.x, tidy(f, _rt.at(xs, p))) && _rt.eq(st.y, _rt.at(ys, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1759);
+                } else if (_sudo_sc instanceof Sudo_2Op_5Clear) {
+                    _rt.sudo_assert(_rt.eq(st.y, empty_register(f)) && _rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1761);
+                } else if (_sudo_sc instanceof Sudo_2Op_4Call) {
+                    _rt.sudo_assert(_rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.c, _rt.at(cs, p)), 1763);
+                    {
+                        const _sudo_from_h = 0n;
+                        const _sudo_to_h = _rt.chk(f.n - 1n);
+                        for (let h = _sudo_from_h; h <= _sudo_to_h; h += 1n) {
+                            if (h !== st.hole) {
+                                _rt.sudo_assert_eq(_rt.at(st.y, h), _rt.at(_rt.at(ys, p), h), 1766);
+                            }
                         }
                     }
+                } else if (_sudo_sc instanceof Sudo_2Op_5Check) {
+                    _rt.sudo_assert(_rt.eq(st.c, product) && _rt.eq(st.a, _rt.at(ys, p)) && _rt.eq(st.b, _rt.at(ys, p)), 1768);
+                    _rt.sudo_assert(_rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.y, _rt.at(ys, p)), 1769);
+                } else if (_sudo_sc instanceof Sudo_2Op_9CheckTidy) {
+                    _rt.sudo_assert(_rt.eq(st.c, tidy(f, _rt.at(cs, p))) && _rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.y, _rt.at(ys, p)), 1771);
                 }
-            } else if (st.op === op_check) {
-                _rt.sudo_assert(_rt.eq(st.c, product) && _rt.eq(st.a, _rt.at(ys, p)) && _rt.eq(st.b, _rt.at(ys, p)), 1421);
-                _rt.sudo_assert(_rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.y, _rt.at(ys, p)), 1422);
-            } else {
-                _rt.sudo_assert_eq(st.op, op_check_tidy, 1424);
-                _rt.sudo_assert(_rt.eq(st.c, tidy(f, _rt.at(cs, p))) && _rt.eq(st.x, _rt.at(xs, p)) && _rt.eq(st.y, _rt.at(ys, p)), 1425);
             }
+            let x = _rt.dup(_rt.at(xs, p));
+            let y = _rt.dup(_rt.at(ys, p));
+            let c = _rt.dup(_rt.at(cs, p));
+            let s = _rt.filled(_rt.chk(_rt.chk(2n * f.n) + 2n), 0n);
+            let moves = step_moves(f, _rt.at(xs, p), _rt.at(ys, p), _rt.at(cs, p), st);
+            {
+                const _sudo_from_k = 0n;
+                const _sudo_to_k = _rt.chk(globalThis.BigInt(moves.length) - 1n);
+                for (let k = _sudo_from_k; k <= _sudo_to_k; k += 1n) {
+                    [x, y, c, s] = apply_move(x, y, c, s, _rt.at(moves, k));
+                }
+            }
+            _rt.sudo_assert(_rt.eq(x, st.x) && _rt.eq(y, st.y) && _rt.eq(c, st.c) && is_empty(s), 1779);
             _rt.put(xs, p, _rt.dup(st.x));
             _rt.put(ys, p, _rt.dup(st.y));
             _rt.put(cs, p, _rt.dup(st.c));
@@ -1335,19 +2024,44 @@ export function check_trace_steps(f, tr) {
     }
 }
 
+export function walk_end(steps, player, upto) {
+    let out = _rt.lst([]);
+    {
+        const _sudo_from_i = 0n;
+        const _sudo_to_i = _rt.chk(upto - 1n);
+        for (let i = _sudo_from_i; i <= _sudo_to_i; i += 1n) {
+            let st = _rt.at(steps, i);
+            if (st.player === player && _rt.eq(st.op, new Sudo_2Op_4Tidy())) {
+                out = _rt.dup(st.x);
+            }
+        }
+    }
+    return _rt.dup(out);
+}
+
 export function check_trace_exchange(f, dice_a, dice_b) {
     let grid_a = check_trace_build(dice_a);
     let grid_b = check_trace_build(dice_b);
     let tr = trace_exchange(f, dice_a, dice_b);
-    _rt.sudo_assert(_rt.eq(tr.grid_a, grid_a) && _rt.eq(tr.grid_b, grid_b), 1435);
-    _rt.sudo_assert(_rt.eq(tr.cells_a, read_key(_rt.lst([grid_a]))) && _rt.eq(tr.cells_b, read_key(_rt.lst([grid_b]))), 1436);
-    _rt.sudo_assert_eq(globalThis.BigInt(tr.holes_a.length), globalThis.BigInt(tr.cells_a.length), 1437);
-    _rt.sudo_assert_eq(globalThis.BigInt(tr.holes_b.length), globalThis.BigInt(tr.cells_b.length), 1438);
-    check_trace_steps(f, tr);
-    let r = exchange(f, _rt.lst([grid_a]), _rt.lst([grid_b]));
-    _rt.sudo_assert(_rt.is_ok(r) && tr.ok, 1441);
-    let e = _rt.unwrap(r);
-    _rt.sudo_assert(_rt.eq(tr.public_a, e.public_a) && _rt.eq(tr.public_b, e.public_b), 1443);
-    _rt.sudo_assert(_rt.eq(tr.secret_a, e.secret_a) && _rt.eq(tr.secret_b, e.secret_b), 1444);
+    _rt.sudo_assert(_rt.eq(tr.grid_a, grid_a) && _rt.eq(tr.grid_b, grid_b), 1799);
+    _rt.sudo_assert(_rt.eq(tr.cells_a, read_key(_rt.lst([grid_a]))) && _rt.eq(tr.cells_b, read_key(_rt.lst([grid_b]))), 1800);
+    _rt.sudo_assert_eq(globalThis.BigInt(tr.holes_a.length), globalThis.BigInt(tr.cells_a.length), 1801);
+    _rt.sudo_assert_eq(globalThis.BigInt(tr.holes_b.length), globalThis.BigInt(tr.cells_b.length), 1802);
+    check_trace_steps(f, tr.steps);
+    _rt.sudo_assert(tr.ok, 1804);
+    let first_call = globalThis.BigInt(tr.steps.length);
+    {
+        const _sudo_from_i = _rt.chk(globalThis.BigInt(tr.steps.length) - 1n);
+        const _sudo_to_i = 0n;
+        for (let i = _sudo_from_i; i >= _sudo_to_i; i -= 1n) {
+            if (_rt.eq(_rt.at(tr.steps, i).op, new Sudo_2Op_5Clear())) {
+                first_call = i;
+            }
+        }
+    }
+    _rt.sudo_assert_eq(walk_end(tr.steps, 0n, first_call), tr.public_a, 1809);
+    _rt.sudo_assert_eq(walk_end(tr.steps, 1n, first_call), tr.public_b, 1810);
+    _rt.sudo_assert_eq(walk_end(tr.steps, 0n, globalThis.BigInt(tr.steps.length)), tr.secret_a, 1811);
+    _rt.sudo_assert_eq(walk_end(tr.steps, 1n, globalThis.BigInt(tr.steps.length)), tr.secret_b, 1812);
 }
 

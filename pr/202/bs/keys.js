@@ -46,6 +46,8 @@ export function createKeys({ createWorker } = {}) {
         show: (seed) => ask({ op: "show", seed }),
         showVector: (vector) => ask({ op: "show", vector }),
         check: (vector) => ask({ op: "check", vector }),
+        /** One step's peg moves (generated step_moves) in the last show. */
+        moves: (step) => ask({ op: "moves", step }),
         dispose() {
             worker?.terminate?.();
             worker = null;

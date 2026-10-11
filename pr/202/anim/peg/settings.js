@@ -1,6 +1,6 @@
 // peg: a Battleship peg (Hasbro 2015 set: 18 mm, head Ø 5 × 12 mm, shank
 // Ø 3 × 6 mm) and its own moves in a grid hole. Played by the BS stage
-// (playroom/bs-stage.js); audited by demos/micro/peg/insert-remove.
+// (playroom/bs-stage.js); audited by demos/micro/peg/insert-slide-remove.
 //
 // NOT YET APPROVED. Starting values from the pre-library peg microdemo
 // (demos/micro/peg/settings.js: approach 420 ms, push 140 ms easeInCubic,

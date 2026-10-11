@@ -12,9 +12,9 @@ cryptoys; the playroom loads each one by path (`playroom/bs-stage.js`
 | `models/bs_pegs.glb` | `peg_white`, `peg_red` (+ 8-sided LODs) | Ø 5 × 18 mm (head 12 mm, shank Ø 3 × 6 mm) | own work, Scrounger | CC0 1.0 |
 | `models/bs_ships.glb` | carrier, battleship, cruiser, submarine, destroyer | 65 / 52 / 41 / 41 / 27 × 10 mm | own work, Scrounger | CC0 1.0 |
 | `models/facehunter_d10_22mm.glb` | d10 numbered 0–9 (rescaled by Scrounger to 22 mm) | 22.0 mm pole to pole | Facehunter2003, "Low Poly 3D Dice", https://opengameart.org/content/low-poly-3d-dice (licence re-read 2026-10-10); numerals in Tuffy (public domain, http://tulrich.com/fonts/) | CC0 |
-| `models/facehunter_d12_19mm.glb` | d12 | 20.3 mm vertex to vertex | Facehunter2003, same page | CC0 |
+| `models/facehunter_d12_19mm_box.glb` | d12 | 19 mm bounding box (20.3 mm vertex to vertex) | Facehunter2003, same page | CC0 |
 | `models/facehunter_d6_16mm.glb` | d6 with numerals | 16.0 mm face to face | Facehunter2003, same page | CC0 |
-| `models/proc_dice_cup_95mm.glb` | leather-look dice cup (lathe, rolled rim); the playroom scales it to the sourced 101.6 mm height | built Ø 82 × 99.5 mm | own work, Scrounger (procedural, `bs-ecbs/yahtzee/models/`, MANIFEST §2c "procedural (mine)") | CC0 1.0 (own work, released like the rest of his own models) |
+| `models/proc_dice_cup_83x102mm.glb` | leather-look dice cup (lathe, rolled rim), rebuilt at the sourced 3 1/4" × 4" | Ø 82.6 × 101.6 mm (Scrounger's Ø 82 × 99.5 mm `proc_dice_cup_95mm.glb`, scaled per axis, normals redone) | own work, Scrounger (procedural, `bs-ecbs/yahtzee/models/`, MANIFEST §2c "procedural (mine)") | CC0 1.0 (own work, released like the rest of his own models) |
 
 The grid-plate textures embedded in the unit GLBs are Scrounger's own art
 (cell outlines and A–J / 1–10 set in Oswald, SIL OFL 1.1, used only to

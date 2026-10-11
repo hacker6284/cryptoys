@@ -3,7 +3,7 @@
 // own moves on a grid. Played by the BS stage (playroom/bs-stage.js): BUILD
 // lays a Destroyer and swaps it for the next longer piece as it grows
 // (SPEC §4.2), and the walk cursor's two Destroyers move along the frame.
-// Audited by demos/micro/ship/place-lift.
+// Audited by demos/micro/ship/place-move-lift.
 //
 // NOT YET APPROVED. Curves, u = time / ms (ms ÷ tempo):
 //   place: the piece comes straight down from dropM above its holes

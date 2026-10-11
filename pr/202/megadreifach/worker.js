@@ -21,6 +21,9 @@ import { Hash, pad_message } from "./generated/megadreifach.mjs";
 import * as raw from "./generated/_megadreifach_impl.mjs";
 import * as rt from "./generated/_sudo_rt.mjs";
 import { BLOCK_BYTES, TRACE_BLOCKS, buildShow } from "./plan.js";
+import { plain } from "../shared/sudo-plain.js";
+
+export { plain };
 
 let faceTurns = null;
 let oneBlock = null;
@@ -37,18 +40,6 @@ export function oneBlockBytes() {
     while (pad_message(new Array(n + 1).fill(0)).length === BLOCK_BYTES) n += 1;
     oneBlock = n;
     return n;
-}
-
-/** A generated value as plain numbers, arrays and objects (records by their sudo field list). */
-export function plain(v) {
-    if (typeof v === "bigint") return Number(v);
-    if (v && v.constructor && Array.isArray(v.constructor._sudoFields)) {
-        const out = {};
-        for (const f of v.constructor._sudoFields) out[f] = plain(v[f]);
-        return out;
-    }
-    if (v && typeof v !== "string" && typeof v[Symbol.iterator] === "function") return Array.from(v, plain);
-    return v;
 }
 
 const big = (n) => BigInt(n);

@@ -65,6 +65,21 @@ export const REAL_SIZES = {
     diceCup: { m: 0.1016, w: 0.0826, measure: "height" },
 };
 
+// The BS unit GLB's grids, unit frame (metres; Scrounger's pack README §3,
+// lid frame from bs_unit_render.py): hole centres at the measured pitch.
+// One source for the playroom stage and the BS microdemos.
+export const BS_GRID = {
+    pitch: REAL_SIZES.bsPitch.m,
+    x0: -0.06393, // column 1
+    oceanZ0: -0.04683, // ocean row A (nearest the hinge)
+    plateY: 0.0124, // ocean plate top
+    deckUp: 0.006, // a peg in a ship's deck hole sits this much higher
+    lidZ0: 0.135833, // target-grid row A, lid_pivot frame (farthest from the hinge)
+    lidFaceY: 0.005, // target-grid face, lid_pivot frame (pegs point −y)
+    frameLeftX: -0.0761, // the ocean grid's letter strip
+    frameTopZ: -0.059, // its number strip
+};
+
 /** A puzzle's real size: { m, measure } (unknown ids get the 3×3's). */
 export function realSizeOf(puzzleId) {
     const entry = REAL_SIZES[puzzleId];
@@ -123,7 +138,7 @@ export const DECK_H = REAL_SIZES.deckBox.h;
 //     the key grid, the lid's target grid the workspace, SPEC §6): Alice's
 //     red unit left, Bob's blue right, BS_GAP apart; an open unit's
 //     footprint is 230 × 173.5 mm (BS_UNIT_FOOT, from its origin);
-//   - the dice cup (Ø 83.7 mm at 101.6 mm tall) one gap left of Alice's
+//   - the dice cup (Ø 82.6 × 101.6 mm) one gap left of Alice's
 //     unit, its front in line with the units' (in front of them it would
 //     hide their trays from the seat);
 //   - the key dice one gap in front of the units, in a row: the row cup's
@@ -133,13 +148,13 @@ export const BS_GAP = 0.04;
 export const BS_UNIT_FOOT = { x0: -0.115, x1: 0.115, z0: -0.0901, z1: 0.0834 };
 export const BS_UNIT_Z = -0.12;
 // The dice row on the bsDice toy's origin (on the felt): x of each die.
-// Footprints (radius on the felt): cup 41.9 mm (the model's 41 mm rim at
-// the sourced 101.6 mm height), d10 ≤ 12.5, d12 ≤ 10.2, d6 ≤ 11.3.
+// Footprints (radius on the felt): cup 41.3 mm (the model, built at the
+// sourced Ø 82.6 × 101.6 mm), d10 ≤ 12.5, d12 ≤ 10.2, d6 ≤ 11.3.
 export const BS_DICE = {
     d10: [-0.1, -0.068, -0.036, -0.004, 0.028],
     d12: 0.066,
     d6: 0.1,
-    reach: { cup: 0.0419, d10: 0.0125, d12: 0.0102, d6: 0.0114 },
+    reach: { cup: 0.0413, d10: 0.0125, d12: 0.0102, d6: 0.0114 },
 };
 export const BS_SEAT_XZ = {
     bs: [-(BS_UNIT_FOOT.x1 + BS_GAP / 2), BS_UNIT_Z],

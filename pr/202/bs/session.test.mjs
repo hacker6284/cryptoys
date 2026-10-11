@@ -82,7 +82,7 @@ function stubView() {
         loadShow: async (show) => { calls.push(["load", show.beats.length]); },
         seek: async (i) => { calls.push(["seek", i]); },
         playBeat: async (beat, i) => { calls.push(["beat", i, beat.kind]); },
-        playExpanded: async (beat, i) => { calls.push(["expand", i, beat.kind]); },
+        playExpanded: async (beat, i, moves) => { calls.push(["expand", i, beat.kind, moves]); },
         clearShow: async () => { calls.push(["clear"]); },
         setSpeed: (m) => { calls.push(["speed", m]); },
     };
@@ -101,6 +101,7 @@ async function setup(seed) {
         show: async (s) => worker.answer({ op: "show", seed: s }),
         showVector: async (vector) => worker.answer({ op: "show", vector }),
         check: async (vector) => worker.answer({ op: "check", vector }),
+        moves: async (step) => worker.answer({ op: "moves", step }),
     };
     const root = makeRoot();
     const view = stubView();
@@ -147,11 +148,24 @@ test("Step expands one summary into its peg moves and opens the teach card", { s
     const { root, view, session } = await setup("s1");
     await session.step(1);
     await session.step(1);
-    assert.deepEqual(view.calls.filter(([k]) => k === "expand"), [["expand", 0, "build"], ["expand", 1, "build"]]);
+    assert.deepEqual(view.calls.filter(([k]) => k === "expand"), [["expand", 0, "build", null], ["expand", 1, "build", null]]);
     assert.equal(session.state().teaching, true);
     assert.equal(root.byId["teach-pos"].textContent, `2 / ${session.state().beats}`);
     await session.step(-1);
     assert.deepEqual(view.calls.at(-1), ["seek", 0], "back seeks to the summary before");
+    session.dispose();
+});
+
+test("Step on an exchange step plays the generated step_moves for it", { skip: !ready }, async () => {
+    const { root, view, session } = await setup("m1");
+    root.jumps.find((b) => b.dataset.jump === "round-fwd").fire("click");
+    await new Promise((r) => setTimeout(r, 0));
+    await session.step(1);
+    const [, i, kind, moves] = view.calls.filter(([k]) => k === "expand").at(-1);
+    assert.equal(kind, "step");
+    assert.equal(i, session.state().cursor);
+    assert.ok(moves.length > 0, "the walk's start lays pegs");
+    assert.ok(moves.every((m) => ["X", "Y", "C", "Strip"].includes(m.reg) && Number.isInteger(m.hole)), "PegMoves");
     session.dispose();
 });
 

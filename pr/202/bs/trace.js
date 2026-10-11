@@ -6,30 +6,13 @@
  * outputs A, B and K. This file only turns its records into plain numbers
  * and orders them into beats (one beat per summary), and turns a seed into
  * the dice faces BUILD reads (the seed is the input, like a cup of dice).
+ * The peg moves of one step come from the generated step_moves (worker.js).
  */
-import { OP } from "./expand.js";
-
-/** A generated value as plain numbers, arrays and objects (records by their sudo field list, enum cases by name). */
-export function plain(v) {
-    if (typeof v === "bigint") return Number(v);
-    const kind = v?.constructor?._sudoKind;
-    if (kind && kind[0] === "e" && !v.constructor._sudoFields.length) return kind[1].split(".").pop();
-    if (v && v.constructor && Array.isArray(v.constructor._sudoFields)) {
-        const out = {};
-        for (const f of v.constructor._sudoFields) out[f] = plain(v[f]);
-        return out;
-    }
-    if (v && typeof v !== "string" && typeof v[Symbol.iterator] === "function") return Array.from(v, plain);
-    return v;
-}
+import { plain } from "../shared/sudo-plain.js";
 
 /** '.WR' string of a register (hole 0 first), the vectors' notation. */
 export function regString(r) {
     return r.map((t) => ".WR"[t]).join("");
-}
-
-export function regOf(s) {
-    return Array.from(s, (ch) => ".WR".indexOf(ch));
 }
 
 // ---- seed → dice --------------------------------------------------------
@@ -95,6 +78,7 @@ export function randomSeed() {
 /**
  * Run the generated trace_exchange on two players' dice. raw/rt: the
  * generated _bs_impl.mjs and _sudo_rt.mjs; tierName "T1" | "T2" | "T6".
+ * Returns the trace as plain values and the generated field and trace.
  */
 export function runTrace(raw, rt, tierName, diceA, diceB) {
     const list = (xs) => rt.host_list(xs, (v) => rt.host_int(v));
@@ -104,14 +88,13 @@ export function runTrace(raw, rt, tierName, diceA, diceB) {
     const generated = raw.trace_exchange(field, dz(diceA), dz(diceB));
     const trace = plain(generated);
     trace.error = rt.text_str(generated.error);
-    return { field: plain(field), trace };
+    return { field: plain(field), trace, generated: { field, trace: generated } };
 }
 
 /**
  * The show: one beat per summary. BUILD gives a beat per key-grid hole
- * (Alice's 100, then Bob's); the exchange a beat per trace step. Each
- * exchange beat carries the key cell it walks (`cellValue`, `keyHole`) and
- * whether it is in the shared walk.
+ * (Alice's 100, then Bob's); the exchange a beat per trace step, its
+ * stage from the step's op and phase.
  */
 export function buildShow({ field, trace }, meta = {}) {
     const beats = [];
@@ -121,17 +104,13 @@ export function buildShow({ field, trace }, meta = {}) {
     for (const p of [0, 1]) {
         reads[p].forEach((read, i) => beats.push({ kind: "build", player: p, read: i, stage: `build-${p}` }));
     }
-    const starts = [0, 0];
     trace.steps.forEach((st, i) => {
-        if (st.op === OP.start) starts[st.player] += 1;
-        const shared = starts[st.player] > 1;
-        const cell = st.cell >= 0 ? cells[st.player][st.cell] : -1;
-        const keyHole = st.cell >= 0 ? holes[st.player][st.cell] : null;
+        const shared = st.phase !== "Public";
         let stage;
-        if (st.op === OP.clear || st.op === OP.shot) stage = `call-${st.player}`;
-        else if (st.op === OP.check || st.op === OP.checkTidy) stage = `check-${st.player}`;
+        if (st.op === "Clear" || st.op === "Call") stage = `call-${st.player}`;
+        else if (st.op === "Check" || st.op === "CheckTidy") stage = `check-${st.player}`;
         else stage = `${shared ? "shared" : "public"}-${st.player}`;
-        beats.push({ kind: "step", step: i, player: st.player, op: st.op, shared, cellValue: cell, keyHole, stage });
+        beats.push({ kind: "step", step: i, player: st.player, op: st.op, shared, stage });
     });
     return {
         ...meta,

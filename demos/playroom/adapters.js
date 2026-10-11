@@ -1190,20 +1190,21 @@ export function createBsAdapter() {
                 if (cancelEnter) return session;
                 // The director has flown the Battleship box off the shelf
                 // and, out of the chest, the dice box; the follow shot eases
-                // on into the BS seat (no cut). Once both boxes are down they
-                // are unboxed, one move after another (bs-unbox-plan.js),
-                // on this clock (Skip finishes it at once); then the dock.
+                // on into the BS seat (no cut). Once both boxes are down and
+                // the camera is in the seat they are unboxed in view, one
+                // move after another (bs-unbox-plan.js), on this clock (Skip
+                // finishes it at once); then the dock.
                 markBeat("bs-present");
                 poses?.followLive?.(null);
                 poses?.releaseFrame?.();
                 const seated = continueTo(poses, "bs", { duration: reduced ? 480 : 1400, restart: true });
                 for (const name of ["bsBox", "bsDiceBox"]) await waitToyIdle(world.toys[name], clock, enterGen);
+                await seated;
                 markBeat("bs-unbox");
                 const gen = enterGen;
                 const beat = clock;
                 await stage.unbox((ms, step) => beat.tween(ms, (t) => step(t * ms), { ease: (t) => t, generation: gen }));
                 markBeat("bs-unboxed");
-                await seated;
                 if (cancelEnter) return session;
                 session = mod.createBsSession({ view: stage, specUrl, root, exposeTeach: true });
                 stage.rememberSeated();

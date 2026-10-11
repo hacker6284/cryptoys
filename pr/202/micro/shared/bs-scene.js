@@ -15,11 +15,6 @@ export function loadGlb(file) {
     return new Promise((resolve, reject) => new GLTFLoader().load(new URL(file, MODELS).href, resolve, undefined, reject));
 }
 
-/** Hide the room's toys (each microdemo shows one object). */
-export function hideToys(world) {
-    for (const toy of Object.values(world.toys || {})) toy.visible = false;
-}
-
 /** The felt top under the table centre. */
 export function feltAt(world) {
     return new THREE.Vector3(DEN.x, (world.table?.feltTopY ?? 0.772) + 0.001, DEN.z);

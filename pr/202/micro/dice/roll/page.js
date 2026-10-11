@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mountMicro } from "../../shared/micro.js";
 import * as dice from "../../../anim/dice/index.js";
-import { CAMERA, feltAt, hideToys, loadGlb } from "../../shared/bs-scene.js";
+import { CAMERA, feltAt, loadGlb } from "../../shared/bs-scene.js";
 
 // dice: roll (anim/dice). The BS key dice at real size on the felt: a d10
 // (0–9), the d12 and the d6, each thrown in turn and landing on the next
@@ -30,7 +30,6 @@ void mountMicro({
     silent: true,
     async setup(ctx) {
         ctx.status("Loading the dice…");
-        hideToys(ctx.world);
         group = new THREE.Group();
         group.position.copy(feltAt(ctx.world));
         ctx.world.scene.add(group);

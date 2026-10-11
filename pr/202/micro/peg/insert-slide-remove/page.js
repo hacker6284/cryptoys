@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mountMicro } from "../../shared/micro.js";
 import * as peg from "../../../anim/peg/index.js";
-import { CAMERA, hideToys, loadGlb, placeUnit } from "../../shared/bs-scene.js";
+import { CAMERA, loadGlb, placeUnit } from "../../shared/bs-scene.js";
 
 // peg: insert, slide, remove (anim/peg). A white peg goes into a hole of
 // the key (ocean) grid and comes out; a red peg goes into the workspace
@@ -22,7 +22,6 @@ void mountMicro({
     silent: true,
     async setup(ctx) {
         ctx.status("Loading the unit…");
-        hideToys(ctx.world);
         unit = await placeUnit(ctx.world);
         const pegs = (await loadGlb("bs_pegs.glb")).scene;
         white = pegs.getObjectByName("peg_white").clone();

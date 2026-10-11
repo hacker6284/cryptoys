@@ -115,12 +115,12 @@ structure RedOpenId
   hpieceM : ∃ mv mvC : Nat,
     b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
     bClearG.sudo_5Board_4cost.sudo_5Costs_5moves = (mvC : Int) ∧
-    mvC ≤ mv + base.n + s.tally * pegCharge base.n base.bench +
+    mvC + 2 * base.n ≤ mv + base.n + s.tally * pegCharge base.n base.bench +
       mulCharge base.n base.bench + base.n
   hpieceS : ∃ sl slC : Nat,
     b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
     bClearG.sudo_5Board_4cost.sudo_5Costs_6slides = (slC : Int) ∧
-    slC ≤ sl + s.tally * (2 * base.n) + 2 * base.n
+    slC ≤ sl + s.tally * (2 * base.n)
   hclearSame : bClearC = bClearU
   hredSame : bRedC = bRedP
   hcubeBoth : ∀ (rowD rowP : Array Int) (len high tmax ctrlD ctrlP fromHole ridx : Int),

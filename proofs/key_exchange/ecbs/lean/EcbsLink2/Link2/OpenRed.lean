@@ -864,7 +864,7 @@ theorem red_open_ge
   have hpieceMP : ∃ mv mvC : Nat,
       b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
       bClearP.sudo_5Board_4cost.sudo_5Costs_5moves = (mvC : Int) ∧
-      mvC ≤ mv + base.n + s.tally * pegCharge base.n base.bench +
+      mvC + 2 * base.n ≤ mv + base.n + s.tally * pegCharge base.n base.bench +
         mulCharge base.n base.bench + base.n := by
     obtain ⟨mv, mvC, hmv, hmvC, hle⟩ := hpieceM
     refine ⟨mv, mvC, hmv, ?_, hle⟩
@@ -872,7 +872,7 @@ theorem red_open_ge
   have hpieceSP : ∃ sl slC : Nat,
       b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
       bClearP.sudo_5Board_4cost.sudo_5Costs_6slides = (slC : Int) ∧
-      slC ≤ sl + s.tally * (2 * base.n) + 2 * base.n := by
+      slC ≤ sl + s.tally * (2 * base.n) := by
     obtain ⟨sl, slC, hsl, hslC, hle⟩ := hpieceS
     refine ⟨sl, slC, hsl, ?_, hle⟩
     simpa [hP] using hslC

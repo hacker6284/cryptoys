@@ -311,57 +311,6 @@ theorem cubeMoves_add (moves d : Nat) (xs : List Nat) (n k bench : Nat) :
   dsimp only
   omega
 
-/-- The bench-off first peg is short of one `pegCharge` by the settle that peg
-    did not pay. Later live pegs spend a full `pegCharge`, so the slack remains
-    one settle of `2 · n` for the whole loop. -/
-theorem pegPack_move_slack (c : PegCtx) (i : Nat) (h0 : 0 < i) (hle : i ≤ c.m) :
-    (pegPack c i h0 hle).moves + 2 * c.n ≤
-      c.moves0 + i * pegCharge c.n c.bench := by
-  match i with
-  | 0 => exact absurd h0 (Nat.not_lt_zero 0)
-  | 1 =>
-    simp only [pegPack, pegFromOff]
-    have h := cubeMoves_le c.moves0 c.g c.n c.k c.bench
-    unfold pegCharge
-    omega
-  | n + 2 =>
-    have hle1 : n + 1 ≤ c.m := Nat.le_of_succ_le hle
-    have ih := pegPack_move_slack c (n + 1) (Nat.succ_pos n) hle1
-    simp only [pegPack, pegNext]
-    have hstep := liveCubeMoves_le
-      (pegPack c (n + 1) (Nat.succ_pos n) hle1).moves
-      (pegPack c (n + 1) (Nat.succ_pos n) hle1).xs
-      c.n c.k c.bench
-    have hmul : (n + 2) * pegCharge c.n c.bench =
-        (n + 1) * pegCharge c.n c.bench + pegCharge c.n c.bench := by
-      have : n + 2 = (n + 1).succ := rfl
-      rw [this, Nat.succ_mul]
-    omega
-
-/-- The first peg adds no slides. Each later peg adds at most `2 · n`, so the
-    loop stays one settle of `2 · n` under `i · (2 · n)`. -/
-theorem pegPack_slide_slack (c : PegCtx) (i : Nat) (h0 : 0 < i) (hle : i ≤ c.m) :
-    (pegPack c i h0 hle).slides + 2 * c.n ≤
-      c.slides0 + i * (2 * c.n) := by
-  match i with
-  | 0 => exact absurd h0 (Nat.not_lt_zero 0)
-  | 1 =>
-    simp only [pegPack, pegFromOff]
-    omega
-  | n + 2 =>
-    have hle1 : n + 1 ≤ c.m := Nat.le_of_succ_le hle
-    have ih := pegPack_slide_slack c (n + 1) (Nat.succ_pos n) hle1
-    simp only [pegPack, pegNext]
-    have hp := pegCount_take_le
-      (pegPack c (n + 1) (Nat.succ_pos n) hle1).xs c.n
-    have hmul : (n + 2) * (2 * c.n) = (n + 1) * (2 * c.n) + 2 * c.n := by
-      have : n + 2 = (n + 1).succ := rfl
-      rw [this, Nat.succ_mul]
-    have h2 : 2 * pegCount
-        ((pegPack c (n + 1) (Nat.succ_pos n) hle1).xs.take c.n) ≤ 2 * c.n :=
-      Nat.mul_le_mul_left 2 hp
-    omega
-
 /-- A settle of at most `2 · n`, paid inside a loop that was already one settle
     short, is absorbed by that slack. -/
 theorem settle_absorbed (mv pegs settle loop m n bench : Nat)

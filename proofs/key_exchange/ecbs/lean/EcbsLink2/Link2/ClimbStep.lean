@@ -412,4 +412,24 @@ theorem climb_step_home
           false hge hwhite rfl]
         exact hprog
 
+/-- One rung, gap still in home 5. That is the entry rung: `new_board` leaves the
+    bench off, and `invert` copies the input into home 5 before the ladder `for`.
+    `modelRung` then sets `onBench`, so a second rung is not this theorem. -/
+theorem climb_refines_one
+    {r : Nat} {b0 : Ecbs.Board} {s0 : ClimbModel} {base : ClimbBudget}
+    (h0 : ClimbInvK [] [r] b0 s0 base)
+    (hEntry : s0.onBench = false)
+    (hm : 0 < s0.tally)
+    (hPark : s0.parkAt = base.ladder0 + base.R)
+    (hCap : climbTallyPrefix base.tally0 [] [r] ≤ base.mMax)
+    (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
+    ∃ b',
+      climbRung b0 r true ((base.xHome : Nat) : Int) s0.tally = .ok b' ∧
+      ClimbInvK [r] [] b'
+        (modelRung s0 base.x r (climbAt base.ladder0 base.R s0.ridx) true) base := by
+  obtain ⟨b', hprog, hinv, hδ, hshape, htmax⟩ :=
+    climb_step_home h0 hEntry hm hPark hCap hxLen hxT
+  refine ⟨b', hprog, ?_⟩
+  exact climbInvK_succ h0 hinv hδ hCap hshape h0.holeBelow htmax rfl
+
 end EcbsLink2.Link2

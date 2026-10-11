@@ -16,6 +16,9 @@
 //     orientation). "edge": the longest straight line across the toy (a
 //     tetrahedron's edge, how a pyraminx is quoted). "box": w × h × d.
 //     "longest": the longest side.
+
+import { CUP } from "../anim/shared/cup.js";
+
 export const REAL_SIZES = {
     // Rubik's 3×3: "3×3: … 57mm version" (Rubik's, rubiksgift.com/faqs);
     // "the original cube size was 57mm" (funCUBING, hjreggel.net/fun/fc_size.html).
@@ -61,8 +64,9 @@ export const REAL_SIZES = {
     d12: { m: 0.0203, measure: "vertex-to-vertex" },
     // Leather dice cup, 3 1/4" × 4" (82.6 × 101.6 mm), "perfect for 5 dice"
     // (dicegames.com/products/deluxe-leather-dice-cup-3-1-4-x-4); cf.
-    // myleathergoods.com 3.1" × 3.6", Julia Moss 3" × 3.5".
-    diceCup: { m: 0.1016, w: 0.0826, measure: "height" },
+    // myleathergoods.com 3.1" × 3.6", Julia Moss 3" × 3.5". The cup's shape
+    // is written once, in anim/shared/cup.js.
+    diceCup: { m: CUP.h, w: 2 * CUP.r, measure: "height" },
 };
 
 // The BS unit GLB's grids, unit frame (metres; Scrounger's pack README §3,
@@ -154,7 +158,7 @@ export const BS_DICE = {
     d10: [-0.1, -0.068, -0.036, -0.004, 0.028],
     d12: 0.066,
     d6: 0.1,
-    reach: { cup: 0.0413, d10: 0.0125, d12: 0.0102, d6: 0.0114 },
+    reach: { cup: CUP.r, d10: 0.0125, d12: 0.0102, d6: 0.0114 },
 };
 export const BS_SEAT_XZ = {
     bs: [-(BS_UNIT_FOOT.x1 + BS_GAP / 2), BS_UNIT_Z],
@@ -164,7 +168,8 @@ export const BS_SEAT_XZ = {
 };
 // The retail boxes (real size; bs-layout.test checks the models): the
 // Battleship box (Hasbro 2015 set, 400 × 265 × 52.5 mm, holding both closed
-// units across its divider) waits flat on the shelf between the plants;
+// units across its divider) waits flat on the back shelf, right of plant-b
+// (bracket-3 stands between the plants: BS_SHELF);
 // the dice game box (248 × 163 × 108 mm with its lid, holding the dice cup
 // standing up with every key die in it) waits in the toy chest. Entering BS
 // flies each to its rest on the felt, where it is unboxed and stays:
@@ -186,6 +191,10 @@ export const BS_BOX_REST = {
 // lie flat: bracket-3 rises in front of the board at x 0.68–0.72, leaving
 // 230 mm of depth there, and the gaps either side are under 400 mm.
 export const BS_SHELF = { x: 1.55, z: -2.14 };
+// In the toy chest (world.getChestPose), the dice box lies beside the row
+// of toys down the chest's middle: dx, dz from the row's spot (the cavity
+// is 531 mm square; bs-layout.test checks it fits, clear of the row).
+export const BS_CHEST = { dx: -0.21, dz: 0.04 };
 // The key dice packed in the cup (cup frame: origin its underside, centres
 // of each die in its model's own orientation, 1.6 mm apart): four d10s on
 // the cup's floor (y 4.1 mm), the fifth d10, the d12 and the d6 in a row
@@ -196,6 +205,12 @@ export const BS_DICE_PACK = {
     d12: [0.0021, 0.0363, 0],
     d6: [0.0206, 0.0348, 0],
 };
+// The key dice on their row (the bsDice toy, BS_DICE): the face each
+// shows at rest before any throw, its yaw about +y there (rad), and how far
+// above its drawn rest it is set (0.2 mm, so it never touches the felt).
+export const BS_DICE_FACES = { d10: [1, 2, 3, 4, 5], d12: 12, d6: 6 };
+export const BS_DICE_YAW = { d10: [0.3, -0.5, 0.9, 0.1, -0.8], d12: 0.4, d6: 0.25 };
+export const BS_DIE_LIFT = 0.0002;
 
 // Fallback only, when a toy cannot be measured: seatOnSurface seats from
 // the live post-scale shape (a megaminx's own height, not the cube's).
@@ -208,6 +223,11 @@ export function toyHalfHeight(name) {
 export const DEN = { x: -0.35, z: 0.15 };
 export const SHELF_Z = -2.15;
 export const TOP_Y = 0.74;
+// The felt's top (on the 32 mm table top over TOP_Y) and the height a toy
+// is seated at on it: world.getTablePose seats every toy at TABLE_SEAT_Y,
+// 1 mm above the felt; the BS unboxing plans (bs-unbox-plan.js) use the same.
+export const FELT_TOP_Y = TOP_Y + 0.032;
+export const TABLE_SEAT_Y = FELT_TOP_Y + 0.001;
 export const TABLE_R = 1.025;
 export const CEIL_Y = 2.68;
 export const SHADE_Y = 2.22;

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { mountMicro } from "../../../shared/micro.js";
 import * as box from "../../../../anim/battleship/box/index.js";
 import { obbOf } from "../../../../anim/shared/geom.js";
-import { CAMERA, closedUnit, feltPose, placeBox } from "../../../shared/bs-scene.js";
+import { CAMERA, closedUnit, feltPose, placeBox, report } from "../../../shared/bs-scene.js";
 
 // battleship/box: lift the units out, put them in (anim/battleship/box).
 // The Battleship box open on the felt (its lid set aside, out of view) with
@@ -56,10 +56,3 @@ void mountMicro({
         }
     },
 }, box.settings);
-
-function report(ctx, r, what) {
-    if (!r.ok) {
-        console.warn(`${what}: ${r.fail.join("; ")}`);
-        ctx.status(`${what}: ${r.fail.join("; ")}`);
-    }
-}

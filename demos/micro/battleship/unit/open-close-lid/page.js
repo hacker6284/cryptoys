@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { mountMicro } from "../../../shared/micro.js";
 import * as unit from "../../../../anim/battleship/unit/index.js";
-import { CAMERA, closedUnit, feltPose, setPose } from "../../../shared/bs-scene.js";
+import { CAMERA, closedUnit, feltPose, report } from "../../../shared/bs-scene.js";
+import { setWorldPose } from "../../../../anim/shared/run.js";
 
 // battleship/unit: open and close the lid (anim/battleship/unit). Alice's
 // red unit, shut, on the felt: its lid swings up on its hinge to upright
@@ -19,7 +20,7 @@ void mountMicro({
     async setup(ctx) {
         ctx.status("Loading the unit…");
         rig = await closedUnit("bs_unit_red.glb");
-        setPose(rig.group, feltPose(ctx.world));
+        setWorldPose(rig.group, feltPose(ctx.world));
         ctx.world.scene.add(rig.group);
         window.__primitive = { name: "battleship/unit open-close-lid", settings: unit.settings };
     },
@@ -38,10 +39,3 @@ void mountMicro({
         if (shut) report(ctx, unit.checkLid(shut), "close");
     },
 }, unit.settings);
-
-function report(ctx, r, what) {
-    if (!r.ok) {
-        console.warn(`${what}: ${r.fail.join("; ")}`);
-        ctx.status(`${what}: ${r.fail.join("; ")}`);
-    }
-}

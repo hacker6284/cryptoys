@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mountMicro } from "../../../shared/micro.js";
 import * as box from "../../../../anim/yahtzee/box/index.js";
-import { CAMERA, feltPose, placeBox } from "../../../shared/bs-scene.js";
+import { CAMERA, feltPose, placeBox, report } from "../../../shared/bs-scene.js";
 
 // yahtzee/box: lid off, lid on (anim/yahtzee/box). The dice game's retail
 // box (248 × 163 × 108 mm, the cup standing in it) on the felt: its 50 mm
@@ -44,10 +44,3 @@ void mountMicro({
         if (on) report(ctx, box.checkHop(on, { solids: box.baseSolids(shut) }), "lid on");
     },
 }, box.settings);
-
-function report(ctx, r, what) {
-    if (!r.ok) {
-        console.warn(`${what}: ${r.fail.join("; ")}`);
-        ctx.status(`${what}: ${r.fail.join("; ")}`);
-    }
-}

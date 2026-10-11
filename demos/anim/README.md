@@ -29,7 +29,8 @@ anim/
     poses.js          placement helpers (the deck box's bounds, orientations, a seated pose); no motion
     swing.js          private helper: hinged-part curves, duration law, stop-short scan (each object passes its own constants)
     hop.js            private helper: lift straight up, across, straight down (a lid off, a unit or cup out, a die placed), clearing what is around
-    lidbox.js         private helper: a lift-off-lid box's card as oriented boxes, from the object's own constants
+    lidbox.js         private helper: a lift-off-lid box's card as oriented boxes and its moves (lid off / on, what it holds out / in), from the object's own constants and settings
+    cup.js            the dice cup's shape, written once (like room.js, measured): what holds it (yahtzee/box) and what goes in it (dice) take it from here
     run.js            play a planned move on the real clock; read and set an object's world pose
     voice.js          settings.sounds → a sound.js player with contact timing
     twisty.js         cubing.js move timing shared by the twisty puzzles

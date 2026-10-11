@@ -20,10 +20,8 @@
  * Audited by demos/micro/battleship/box/, pinned by ../../library.test.mjs.
  */
 import settings from "./settings.js";
-import { quatAxisAngle, quatMul, quatRotate } from "../../shared/geom.js";
-import { baseParts as sharedBaseParts, lidParts as sharedLidParts, solidsAt } from "../../shared/lidbox.js";
-import { planHop, checkHop } from "../../shared/hop.js";
-import { playPose, rafRun, worldPose } from "../../shared/run.js";
+import { baseParts as sharedBaseParts, lidBoxMoves, lidParts as sharedLidParts, solidsAt } from "../../shared/lidbox.js";
+import { checkHop } from "../../shared/hop.js";
 
 export { settings, checkHop };
 export const timing = settings.timing;
@@ -43,7 +41,8 @@ export const UNIT = { min: [-0.115, 0, -0.0854], max: [0.115, 0.0351, 0.086] };
 /**
  * Where each unit lies in the base, box frame: on the floor either side of
  * the divider, turned a quarter (its 230 mm along the box's depth), its
- * hinge to the end wall; 0.7 mm to the walls and the fleet strip.
+ * hinge to the end wall; 0.7 mm to the back wall and to the fleet strip,
+ * 1.4 mm to the end wall and to the divider.
  */
 export const POCKETS = [
     { p: [-0.1099, 0.0015, -0.0135], yaw: Math.PI / 2 },
@@ -70,77 +69,35 @@ export function lidSolids(pose) {
     return solidsAt(pose, lidParts());
 }
 
+// The lid and the units clear the base's walls (the units' lids are shut: 35.1 mm, under the walls).
+const moves = lidBoxMoves({
+    lid: lidParts(),
+    baseSolids,
+    lidClearY: (box) => box.p[1] + BASE.h,
+    packClearY: (box) => box.p[1] + BASE.h,
+    pockets: POCKETS,
+    held: [[UNIT], [UNIT]],
+    laws: { lid: settings.lid, held: settings.unit },
+    timing,
+});
+
 /** World pose of unit k lying in the box at `boxPose`. */
-export function pocketPose(boxPose, k) {
-    const c = POCKETS[k];
-    return { p: addv(boxPose.p, quatRotate(boxPose.q, c.p)), q: quatMul(boxPose.q, quatAxisAngle([0, 1, 0], c.yaw)) };
-}
-
-const addv = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
-const topOf = (boxPose) => boxPose.p[1] + BASE.h;
-
-/** The lid lifted off the box at `box` and set down at `to`. */
-export function planLidOff({ box: boxPose, to, solids = [], tempo = timing.tempo }) {
-    return planHop({ from: boxPose, to, parts: lidParts(), clearY: topOf(boxPose) + settings.lid.clearM, solids, law: settings.lid, tempo });
-}
-
-/** The lid from `from` back onto the box at `box`. */
-export function planLidOn({ box: boxPose, from, solids = [], tempo = timing.tempo }) {
-    return planHop({ from, to: boxPose, parts: lidParts(), clearY: topOf(boxPose) + settings.lid.clearM, solids, law: settings.lid, tempo });
-}
-
-/** Unit k lifted out of the box at `box` and set down at `to`. */
-export function planOut({ box: boxPose, k, to, solids = [], tempo = timing.tempo }) {
-    const all = [...baseSolids(boxPose), ...solids];
-    return planHop({ from: pocketPose(boxPose, k), to, parts: [UNIT], clearY: topOf(boxPose) + settings.unit.clearM, solids: all, law: settings.unit, tempo });
-}
-
-/** Unit k from `from` back into its pocket in the box at `box`. */
-export function planIn({ box: boxPose, k, from, solids = [], tempo = timing.tempo }) {
-    const all = [...baseSolids(boxPose), ...solids];
-    return planHop({ from, to: pocketPose(boxPose, k), parts: [UNIT], clearY: topOf(boxPose) + settings.unit.clearM, solids: all, law: settings.unit, tempo });
-}
-
-function reparent(object, parent) {
-    if (parent && object.parent !== parent) parent.attach(object);
-}
-
+export const pocketPose = (boxPose, k) => moves.pocketPose(boxPose, k);
+/** The lid lifted off the box at `box` and set down at `to`: planLidOff({ box, to, solids, tempo }). */
+export const planLidOff = moves.planLidOff;
+/** The lid from `from` back onto the box at `box`: planLidOn({ box, from, solids, tempo }). */
+export const planLidOn = moves.planLidOn;
+/** Unit k lifted out of the box at `box` and set down at `to`: planOut({ box, k, to, solids, tempo }). */
+export const planOut = moves.planOut;
+/** Unit k from `from` back into its pocket: planIn({ box, k, from, solids, tempo }). */
+export const planIn = moves.planIn;
 /** Take the lid off the box and set it down at `to`. Resolves with the plan (null if stopped). */
-export function liftLid(rig, to, { solids = [], tempo = timing.tempo, run = rafRun } = {}) {
-    const plan = planLidOff({ box: worldPose(rig.group), to, solids, tempo });
-    reparent(rig.lid, rig.group.parent);
-    return playPose(rig.lid, plan, run);
-}
-
+export const liftLid = moves.liftLid;
 /** Put the lid back on the box. */
-export async function putLid(rig, { solids = [], tempo = timing.tempo, run = rafRun } = {}) {
-    const plan = planLidOn({ box: worldPose(rig.group), from: worldPose(rig.lid), solids, tempo });
-    const done = await playPose(rig.lid, plan, run);
-    reparent(rig.lid, rig.group);
-    rig.lid.position.set(0, 0, 0);
-    rig.lid.quaternion.set(0, 0, 0, 1);
-    return done;
-}
-
+export const putLid = moves.putLid;
 /** Lift unit k (its root object, closed) out of the box and set it down at `to`. */
-export function liftOut(rig, k, unit, to, { solids = [], tempo = timing.tempo, run = rafRun } = {}) {
-    const plan = planOut({ box: worldPose(rig.group), k, to, solids, tempo });
-    reparent(unit, rig.group.parent);
-    return playPose(unit, plan, run);
-}
-
+export const liftOut = moves.liftOut;
 /** Put unit k (closed) back into its pocket. */
-export async function putIn(rig, k, unit, { solids = [], tempo = timing.tempo, run = rafRun } = {}) {
-    const plan = planIn({ box: worldPose(rig.group), k, from: worldPose(unit), solids, tempo });
-    const done = await playPose(unit, plan, run);
-    reparent(unit, rig.group);
-    return done;
-}
-
+export const putIn = moves.putIn;
 /** Pack unit k in its pocket at once (a box that starts packed). */
-export function pack(rig, k, unit) {
-    reparent(unit, rig.group);
-    const c = POCKETS[k];
-    unit.position.set(c.p[0], c.p[1], c.p[2]);
-    unit.quaternion.set(0, Math.sin(c.yaw / 2), 0, Math.cos(c.yaw / 2));
-}
+export const pack = moves.pack;

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { mountMicro } from "../../../shared/micro.js";
 import * as box from "../../../../anim/yahtzee/box/index.js";
-import { CAMERA, feltPose, loadGlb, placeBox } from "../../../shared/bs-scene.js";
+import { CAMERA, feltPose, loadGlb, placeBox, report } from "../../../shared/bs-scene.js";
 import { BS_DICE_PACK } from "../../../../playroom/constants.js";
 
 // yahtzee/box: lift the cup out, put it in (anim/yahtzee/box). The dice
@@ -57,10 +57,3 @@ void mountMicro({
         if (back) report(ctx, box.checkHop(back, { solids: box.baseSolids(at) }), "cup in");
     },
 }, box.settings);
-
-function report(ctx, r, what) {
-    if (!r.ok) {
-        console.warn(`${what}: ${r.fail.join("; ")}`);
-        ctx.status(`${what}: ${r.fail.join("; ")}`);
-    }
-}

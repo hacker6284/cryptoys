@@ -117,10 +117,8 @@ def box_faces(m, x0, x1, y0, y1, z0, z1, mats, inward=False, skip=()):
     for name, (q, n) in F.items():
         if name in skip or name not in mats:
             continue
+        # one uv for every face: on the top, the art reads upright from the front (+z), its top at the far (−z) edge
         uv = ((0, 1), (1, 1), (1, 0), (0, 0))
-        if name == "top" and not inward:
-            # the art upright seen from the front (+z): image top at the far (−z) edge
-            uv = ((0, 1), (1, 1), (1, 0), (0, 0))
         m.quad(mats[name], *q, n, uv)
 
 

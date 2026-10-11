@@ -1092,6 +1092,12 @@ theorem slideGap_run
   intro xs
   obtain ⟨moves, hmv, hmvLe⟩ := h.moves
   obtain ⟨slides, hsl, hslLe⟩ := h.slides
+  have hmvRes : moves + 2 * base.n ≤
+      base.moves0 + done.length * rungCharge base.n base.bench base.mMax := by
+    simpa [hon] using hmvLe
+  have hslRes : slides + 2 * base.n ≤
+      base.slides0 + done.length * rungSlideCharge base.n base.mMax := by
+    simpa [hon] using hslLe
   obtain ⟨peak, hpk, _hpkLe⟩ := h.peak
   refine ⟨moves, slides, peak, ?_⟩
   intro h5H h5D
@@ -1125,9 +1131,9 @@ theorem slideGap_run
     simp [List.length_append, List.length_cons] at hlen
     omega
   have hroomM := bench_headroom_of base.moves0 base.R done.length base.n base.bench
-    base.mMax moves (pegCount (xs.take s.n)) hk hmvLe hpegs base.fitM
+    base.mMax moves (pegCount (xs.take s.n)) hk hmvRes hpegs base.fitM
   have hroomS := bench_slide_headroom_of base.slides0 base.R done.length base.n
-    base.mMax slides (pegCount (xs.take s.n)) hk hslLe hpegs base.fitS
+    base.mMax slides (pegCount (xs.take s.n)) hk hslRes hpegs base.fitS
   have hfitM : FitsLen (moves + 2 * pegCount (xs.take s.n)) :=
     FitsLen.of_le hroomM (Nat.le_add_right _ _)
   have hfitS : FitsLen (slides + 2 * pegCount (xs.take s.n)) :=

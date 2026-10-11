@@ -1967,7 +1967,7 @@ theorem red_cube_emit
     rung_delta_clear h hm hT hhome
   have hi1 : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := hopsSz ▸ hops1
   obtain ⟨cE, cOps, hcE, hcOps, _, hplus1, _⟩ := hslots 1 hi1 hops1
-  obtain ⟨mv0, hmv0, hle0⟩ := h.moves
+  obtain ⟨mv0, hmv0, hle0⟩ := h.moves_loose
   have hmvEq : mv = mv0 := natCast_inj (hmv.symm.trans hmv0)
   have hmvLe : mv ≤ base.moves0 + done.length * rungCharge base.n base.bench base.mMax := by
     rw [hmvEq]; exact hle0
@@ -1983,7 +1983,7 @@ theorem red_cube_emit
     Nat.le_trans (Nat.le_add_right mvC (2 * base.n)) hMovW
   have hfitM := clear_move_fit base.n base.bench s.tally base.mMax mv mvC
     (pegCount (xs.take base.n)) hT hroomM hMovLoose hpegTake
-  obtain ⟨sl0, hsl0, hsle⟩ := h.slides
+  obtain ⟨sl0, hsl0, hsle⟩ := h.slides_loose
   have hslEq : sl = sl0 := natCast_inj (hsl.symm.trans hsl0)
   have hslLe : sl ≤ base.slides0 + done.length * rungSlideCharge base.n base.mMax := by
     rw [hslEq]; exact hsle
@@ -2146,7 +2146,7 @@ theorem red_mul_emit
     pkC peakS cOps1 base.x h5H h5D hops1 h.shape.xNe5 hX.heldLt hX.homeLt hX.held hX.arr
   have hheld6 := cube_live_held_other bClear bCube 6 5 6 xs base.n k mvC slC hole base.bench
     pkC peakS cOps1 h5H h5D hops1 hC (by decide) h6D hD6
-  obtain ⟨mv0, hmv0, hle0⟩ := h.moves
+  obtain ⟨mv0, hmv0, hle0⟩ := h.moves_loose
   have hmvLe : mv ≤ base.moves0 + done.length * rungCharge base.n base.bench base.mMax := by
     rw [natCast_inj (hmv.symm.trans hmv0)]; exact hle0
   have hstepR : done.length + 1 ≤ base.R := by
@@ -2159,7 +2159,7 @@ theorem red_mul_emit
     mv hstepR hmvLe base.fitM
   have hMulFit := red_mul_move_fit base.n base.bench s.tally base.mMax mv mvC mvCube
     (pegCount (ys.take base.n)) hT hroomM hMovW hCubeLe hpegY
-  obtain ⟨sl0, hsl0, hsle⟩ := h.slides
+  obtain ⟨sl0, hsl0, hsle⟩ := h.slides_loose
   have hslLe : sl ≤ base.slides0 + done.length * rungSlideCharge base.n base.mMax := by
     rw [natCast_inj (hsl.symm.trans hsl0)]; exact hsle
   have hroomS := slide_headroom_of base.slides0 base.R done.length base.n base.mMax

@@ -928,10 +928,11 @@ theorem climbClear_slide
       have hlen := h.kLe
       simp [List.length_append, List.length_cons] at hlen
       omega
-    have hmvLe : moves ≤ base.moves0 + done.length * rungCharge base.n base.bench base.mMax := by
+    have hmvLe : moves + 2 * base.n ≤
+        base.moves0 + done.length * rungCharge base.n base.bench base.mMax := by
       obtain ⟨mv0, hmv0, hle⟩ := h.moves
       have := ofNat_inj_nat (hmv.symm.trans hmv0)
-      rw [this]; exact hle
+      simpa [hon, this] using hle
     apply FitsLen.of_le (bench_headroom_of base.moves0 base.R done.length base.n base.bench
       base.mMax moves (pegCount (xs.take s.n)) hk hmvLe hpegs base.fitM)
     have hsub : pegCount (xs.take s.n) ≤
@@ -950,7 +951,7 @@ theorem climbClear_slide
         omega) (by
         obtain ⟨sl0, hsl0, hle⟩ := h.slides
         have := ofNat_inj_nat (hsl.symm.trans hsl0)
-        rw [this]; exact hle) hpegs base.fitS)
+        simpa [hon, this] using hle) hpegs base.fitS)
     omega
   obtain ⟨h6HS, h6DS, hcopy, hcopyS, hplace⟩ :=
     copy_band_settle bPark hHp hDp h6HP h6DP h7P xs s.n moves slides peak
@@ -1077,6 +1078,32 @@ theorem whiteStep_row (b b' : Ecbs.Board) (toV j : Int)
   unfold whiteStep
   simp [hrow, ht]
 
+/-- A home rung's tight delta is the carry `climbInvK_succ` needs: the bench
+    reservation on the way in is zero, and the successor reserves `2 · n`. -/
+theorem moveCarry_off {b b' : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (hδ : RungDeltaTight b b' base m) (onBench : Bool) (hoff : onBench = false) :
+    ∃ (mv mv' : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves = (mv' : Int) ∧
+      mv' + 2 * base.n ≤
+        mv + (if onBench then 2 * base.n else 0) +
+          rungCharge base.n base.bench m := by
+  obtain ⟨mv, mv', hb, hb', hle⟩ := hδ.moveTight
+  refine ⟨mv, mv', hb, hb', ?_⟩
+  simpa [hoff] using hle
+
+theorem slideCarry_off {b b' : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (hδ : RungDeltaTight b b' base m) (onBench : Bool) (hoff : onBench = false) :
+    ∃ (sl sl' : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = (sl' : Int) ∧
+      sl' + 2 * base.n ≤
+        sl + (if onBench then 2 * base.n else 0) +
+          rungSlideCharge base.n m := by
+  obtain ⟨sl, sl', hb, hb', hle⟩ := hδ.slideTight
+  refine ⟨sl, sl', hb, hb', ?_⟩
+  simpa [hoff] using hle
+
 /-- One rung, gap still in home 5. That is the entry rung: `new_board` leaves the
     bench off, and `invert` copies the input into home 5 before the ladder `for`.
     `modelRung` then sets `onBench`, so a second rung is not this theorem. -/
@@ -1096,7 +1123,9 @@ theorem climb_refines_one
     climb_step_home h0.toCore (moveHeadroom_of_cons h0) (slideHeadroom_of_cons h0)
       hEntry hm hPark hCap hxLen hxT
   refine ⟨b', hprog, ?_⟩
-  exact climbInvK_succ h0 hinv hδ.delta hCap hshape h0.holeBelow htmax rfl
+  exact climbInvK_succ h0 hinv hδ.delta
+    (moveCarry_off hδ s0.onBench hEntry) (slideCarry_off hδ s0.onBench hEntry)
+    hCap hshape h0.holeBelow htmax rfl
 
 /-- Bench rung, once `climbRung` on the original board agrees with `climbRung`
     on the slid board. `slideGap` restores the core, shape, and tight headroom.
@@ -1133,6 +1162,12 @@ theorem climb_step_bench_of
   obtain ⟨sl0, hsl0, hslLe⟩ := h.slides
   have hmvN : moves = mv0 := ofNat_inj_nat (hmv.symm.trans hmv0)
   have hslN : slides = sl0 := ofNat_inj_nat (hsl.symm.trans hsl0)
+  have hmvRes : moves + 2 * base.n ≤
+      base.moves0 + done.length * rungCharge base.n base.bench base.mMax := by
+    simpa [hon, hmvN] using hmvLe
+  have hslRes : slides + 2 * base.n ≤
+      base.slides0 + done.length * rungSlideCharge base.n base.mMax := by
+    simpa [hon, hslN] using hslLe
   have hpegs : pegCount (xs.take s.n) ≤ base.n := by
     rw [← h.hn]
     exact pegCount_take_le xs s.n
@@ -1141,9 +1176,9 @@ theorem climb_step_bench_of
     simp [List.length_append, List.length_cons] at hlen
     omega
   have hroomM := bench_headroom_of base.moves0 base.R done.length base.n base.bench
-    base.mMax moves (pegCount (xs.take s.n)) hk (by rw [hmvN]; exact hmvLe) hpegs base.fitM
+    base.mMax moves (pegCount (xs.take s.n)) hk hmvRes hpegs base.fitM
   have hroomS := bench_slide_headroom_of base.slides0 base.R done.length base.n
-    base.mMax slides (pegCount (xs.take s.n)) hk (by rw [hslN]; exact hslLe) hpegs base.fitS
+    base.mMax slides (pegCount (xs.take s.n)) hk hslRes hpegs base.fitS
   have hmvS := settle_moves_eq b 5 h5H h5D xs s.n moves slides peak
   have hslS := settle_slides_eq b 5 h5H h5D xs s.n moves slides peak
   have hpkS := settle_peak_eq b 5 h5H h5D xs s.n moves slides peak
@@ -1182,7 +1217,39 @@ theorem climb_step_bench_of
       modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty := by
     simp [sH, modelRung]
   refine ⟨b', hprog, ?_⟩
-  have hK := climbInvK_succ h (by simpa [hmod] using hinv) hδL hCap
+  have hmoveCarry : ∃ (mv mv' : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves = (mv' : Int) ∧
+      mv' + 2 * base.n ≤
+        mv + (if s.onBench then 2 * base.n else 0) +
+          rungCharge base.n base.bench s.tally := by
+    obtain ⟨mv0, mv', hb, hb', hle⟩ := hδ.moveTight
+    have h0 : mv0 = mvS := ofNat_inj_nat (hb.symm.trans
+      (by simpa [bS, mvS, pegs, ofNat_eq_natCast] using hmvS))
+    refine ⟨moves, mv', hmv, hb', ?_⟩
+    simp only [hon, ite_true]
+    have hle' : mv' + 2 * base.n ≤
+        moves + 2 * pegs + rungCharge base.n base.bench s.tally := by
+      simpa [h0, mvS, pegs] using hle
+    have hpeg2 : 2 * pegs ≤ 2 * base.n := Nat.mul_le_mul_left 2 hpegs
+    omega
+  have hslideCarry : ∃ (sl sl' : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = (sl' : Int) ∧
+      sl' + 2 * base.n ≤
+        sl + (if s.onBench then 2 * base.n else 0) +
+          rungSlideCharge base.n s.tally := by
+    obtain ⟨sl0, sl', hb, hb', hle⟩ := hδ.slideTight
+    have h0 : sl0 = slS := ofNat_inj_nat (hb.symm.trans
+      (by simpa [bS, slS, pegs, ofNat_eq_natCast] using hslS))
+    refine ⟨slides, sl', hsl, hb', ?_⟩
+    simp only [hon, ite_true]
+    have hle' : sl' + 2 * base.n ≤
+        slides + 2 * pegs + rungSlideCharge base.n s.tally := by
+      simpa [h0, slS, pegs] using hle
+    have hpeg2 : 2 * pegs ≤ 2 * base.n := Nat.mul_le_mul_left 2 hpegs
+    omega
+  have hK := climbInvK_succ h (by simpa [hmod] using hinv) hδL hmoveCarry hslideCarry hCap
     (by simpa [hmod] using hshape) h.holeBelow (by simpa [hmod] using htmax) rfl
   simpa [hmod] using hK
 
@@ -1204,7 +1271,9 @@ theorem climb_step
   · obtain ⟨b', hprog, hinv, hδ, hshape, htmax⟩ :=
       climb_step_home h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
         hon hm hParkAt hCap hxLen hxT
-    refine ⟨b', hprog, climbInvK_succ h hinv hδ.delta hCap hshape h.holeBelow htmax rfl⟩
+    refine ⟨b', hprog, climbInvK_succ h hinv hδ.delta
+      (moveCarry_off hδ s.onBench hon) (slideCarry_off hδ s.onBench hon)
+      hCap hshape h.holeBelow htmax rfl⟩
   · exact climb_step_bench_of h hon hm hParkAt hCap hxLen hxT
       (fun _ hs => climbRung_slide h hon hm hs)
 

@@ -5,7 +5,7 @@
   survives the frame (`rungDelta_withPark`). A climb invariant survives it when
   the model agrees on every field the frame does not write.
 -/
-import EcbsLink2.Link2.InvertStep
+import EcbsLink2.Link2.ParkStep
 
 namespace EcbsLink2.Link2
 
@@ -168,7 +168,7 @@ theorem red_final_ge
   obtain ⟨bClear, bIdle, hrunI, hframe, hbenchE, hbonE, htoE, hmarkE, _hlenE, ht0E,
       hparkE, _hhighE, htierE, hladE, hnrE, _htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f,
       hkeep, ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
-    parked_clear_ge h hge hm hT hhome
+    parked_clear_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h) hge hm hT hhome
   have hboards : withPark bClearU rowP ctrlP fromH ridxH = bClear := by
     have hjoin := hclearProg.symm.trans hrunI
     injection hjoin
@@ -275,7 +275,8 @@ theorem red_final_ge
     refine ⟨sl, slC, hsl, ?_, hle⟩
     simpa [hP] using hslC
   have hpack :=
-    red_unparked_delta h hm hT hhome hxLen hxT
+    red_unparked_delta h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+      hm hT hhome hxLen hxT
       bClearP bClearU bCube bRed rowP ctrlP fromH ridxH rfl
       hδP hslotsP hmarkP htierP hcubeU hredU hrel
       hbonP htoP hbenchP h5HP h5DP h6HP h6DP h7P h5fP h6fP hkeepP hopsP hc1P

@@ -363,16 +363,16 @@ theorem climb_step_home
     · rcases rest with (_ | ⟨hd, tl⟩)
       · dsimp only [List.isEmpty]
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          white_final_k h hF hm hT hhome h.parkBelow h.holeBelow hwhite hParkAt hCap
-        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
+          white_final_k_ofK h hF hm hT hhome h.parkBelow h.holeBelow hwhite hParkAt hCap
+        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_idle_white_final b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           true hF hwhite rfl]
         exact hprog
       · dsimp only [List.isEmpty]
         have hrest : (hd :: tl) ≠ [] := by simp
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          white_open_k h hF hm hT hhome hwhite hrest hParkAt hCap
-        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
+          white_open_k_ofK h hF hm hT hhome hwhite hrest hParkAt hCap
+        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_idle_white_open b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           false hF hwhite rfl]
         exact hprog

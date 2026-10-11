@@ -162,7 +162,7 @@ theorem red_open_idents
   obtain ⟨bClearG, bIdle, hrun, hframe, hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E,
       hparkE, hhighE, htierE, hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f,
       hkeep, ⟨ps, hpsEq⟩, ⟨hnat, hhnEq⟩, hrowIdle, hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
-    parked_clear_ge h hge hm hT hhome
+    parked_clear_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h) hge hm hT hhome
   obtain ⟨bLoopC, bMulC, bClearC, bCubeC, bRedC, hmulC, hclearC, hcubeC, hredC,
       _bounds, _lenC, _t0C, _rowC, hctrlN, _highC, _ctrlC, _maxC, _t0Cu, ht0Red,
       _tierCu, htierRed, _fCube, _fMul, honC, htoC, _lenRed, hbenchC, _clearF, _cubeF,

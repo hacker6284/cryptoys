@@ -877,7 +877,8 @@ theorem red_open_ge
     refine ⟨sl, slC, hsl, ?_, hle⟩
     simpa [hP] using hslC
   have hcarry :=
-    red_unparked_delta h hm hT hhome hxLen hxT
+    red_unparked_delta h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+      hm hT hhome hxLen hxT
       bClearP bClearU bCubeP bRedP rowP ctrlP fromH ridxH rfl
       hδP hslotsP hmarkP htierP hcubeU hredU hrelP
       hbonP htoP hbenchP h5HP h5DP h6HP h6DP h7P h5fP h6fP hkeepP hopsP hc1P

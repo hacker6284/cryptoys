@@ -552,8 +552,8 @@ theorem climb_then_tail
   have hm' : 0 < s'.tally := by
     rw [hs', modelClimb_tally]
     exact Nat.lt_of_lt_of_le hm (climbTally_ge s.tally L)
-  obtain ⟨bU, bC, bOut, bZ, _, _, _, hun, hc, hset, hz, _, _, _, _, _, _, _, _, _, _, _⟩ :=
-    final_cube_settle hK hon hge htally hm'
+  obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, _hhome⟩ :=
+    final_cube_home hK hon hge htally hm'
   refine ⟨bZ, ?_⟩
   rw [hrun, ok_bind]
   simp [finalTail, hun, hc, hset, hz, ok_bind]

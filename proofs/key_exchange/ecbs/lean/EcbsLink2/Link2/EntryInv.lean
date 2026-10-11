@@ -1040,6 +1040,18 @@ theorem invert_ok (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       (entry_cap t hOk xs hx sat hR lay) hxLen hxT
   exact ⟨bZ, hem.trans hrun⟩
 
+theorem modelClimb_params (s : ClimbModel) (x : List Nat)
+    (hole : ClimbModel → Nat → Bool → Nat) (rs : List Nat) :
+    (modelClimb s x hole rs).n = s.n ∧
+      (modelClimb s x hole rs).k = s.k ∧
+      (modelClimb s x hole rs).benchlen = s.benchlen := by
+  induction rs generalizing s with
+  | nil => simp [modelClimb]
+  | cons r rs ih =>
+      rw [modelClimb]
+      simpa [modelRung] using
+        ih (modelRung s x r (hole s r rs.isEmpty) rs.isEmpty)
+
 /-- A climb that starts from a positive tally stays positive. -/
 theorem invClimb_tally_pos (n k bench : Nat) (x g : List Nat) (tally : Nat)
     (rs : List Nat) (ht : 0 < tally) :
@@ -1053,5 +1065,100 @@ theorem invClimb_tally_pos (n k bench : Nat) (x g : List Nat) (tally : Nat)
         (by
           rw [invRung_tally]
           exact Nat.lt_of_lt_of_le ht (tallyAfter_ge tally r rs.isEmpty))
+
+/-- Home 5 after `invert` is the field cube of the climbed input. That list is
+    `invGap` before the hole-0 check. -/
+theorem invert_gap (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t)
+    (hR : 0 < tierR t) (lay : TierShape t) :
+    ∃ (bZ : Ecbs.Board) (h5 : 5 < bZ.sudo_5Board_4home.size),
+      Ecbs.invert (bottomBoard t xs) ((2 : Nat) : Int) = .ok bZ ∧
+      bZ.sudo_5Board_4home[5]'h5 =
+        embed (fieldCube t.n t.k t.benchlen
+          (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1) := by
+  have hem := invert_emit t hOk xs hx htri sat hR lay
+  have hxLen : (entryBudget t hOk xs hx sat hR lay).x.length =
+      (entryBudget t hOk xs hx sat hR lay).n := by
+    simpa [entryBudget] using hx
+  have hxT : allTritList (entryBudget t hOk xs hx sat hR lay).x := by
+    simpa [entryBudget] using htri
+  obtain ⟨b', s', hrun, hs', hK, hgap, htmax⟩ := climb_refines_emit (tierClimb t)
+      (tallyBoard t xs sat hR) (entryModel t xs)
+      (entryBudget t hOk xs hx sat hR lay)
+      (entry_climbInv t hOk xs hx htri sat hR lay)
+      (entry_park_top t hOk xs hx sat hR lay)
+      (by simp [entryModel])
+      (entry_cap t hOk xs hx sat hR lay) hxLen hxT
+  have hpos : 0 < (tierClimb t).length := by
+    simpa [tierClimb, List.length_reverse, tierR] using hR
+  cases hL : tierClimb t with
+  | nil => simp [hL] at hpos
+  | cons r rs =>
+      let hole : ClimbModel → Nat → Bool → Nat :=
+        fun s _ _ =>
+          climbAt (entryBudget t hOk xs hx sat hR lay).ladder0
+            (entryBudget t hOk xs hx sat hR lay).R s.ridx
+      let x := (entryBudget t hOk xs hx sat hR lay).x
+      have hon : s'.onBench = true := by
+        rw [hs', hL]
+        exact modelClimb_onBench (entryModel t xs) x hole r rs
+      have hge : 0 ≤ s'.fromHole := by
+        rw [hs', hL]
+        exact modelClimb_fromHole (entryModel t xs) x hole r rs
+      have hm : 0 < s'.tally := by
+        rw [hs', modelClimb_tally]
+        simp [entryModel]
+        exact Nat.lt_of_lt_of_le (by decide : (0 : Nat) < 1)
+          (climbTally_ge 1 (tierClimb t))
+      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hhome⟩ :=
+        final_cube_home hK hon hge htmax hm
+      have hrun' :
+          climbEmit (climbStepBoard ((2 : Nat) : Int)) (tallyBoard t xs sat hR)
+              (tierClimb t) =
+            .ok b' := by
+        simpa [entryBudget] using hrun
+      have hok : Ecbs.invert (bottomBoard t xs) ((2 : Nat) : Int) = .ok bZ := by
+        rw [hem, hrun', ok_bind]
+        simp [finalTail, hun, hc, hset, hz, ok_bind]
+      have hlay := modelClimb_params (entryModel t xs) x hole (tierClimb t)
+      have hpair : (s'.gap, s'.tally) =
+          invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t) := by
+        simpa [entryModel, entryBudget] using hgap
+      have hgap1 : s'.gap =
+          (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1 :=
+        congrArg Prod.fst hpair
+      have hn : s'.n = t.n := by
+        rw [hs']
+        simpa [entryModel] using hlay.1
+      have hk : s'.k = t.k := by
+        rw [hs']
+        simpa [entryModel] using hlay.2.1
+      have hb : s'.benchlen = t.benchlen := by
+        rw [hs']
+        simpa [entryModel] using hlay.2.2
+      refine ⟨bZ, hhome.h5, hok, ?_⟩
+      rw [← hL]
+      refine hhome.arr.trans (congrArg embed ?_)
+      rw [hn, hk, hb, hgap1]
+
+/-- `invGap` is that field cube. It is the list `fieldInv` checks, before the
+    hole-0 test and the optional mirror. -/
+theorem invGap_cube (t : Spec.Tier) (xs : List Nat) :
+    invGap t.n t.k t.benchlen xs =
+      fieldCube t.n t.k t.benchlen
+        (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1 := by
+  simp [invGap, tierClimb]
+
+/-- Home 5 after `invert` is `invGap` of the input. -/
+theorem invert_invGap (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t)
+    (hR : 0 < tierR t) (lay : TierShape t) :
+    ∃ (bZ : Ecbs.Board) (h5 : 5 < bZ.sudo_5Board_4home.size),
+      Ecbs.invert (bottomBoard t xs) ((2 : Nat) : Int) = .ok bZ ∧
+      bZ.sudo_5Board_4home[5]'h5 = embed (invGap t.n t.k t.benchlen xs) := by
+  obtain ⟨bZ, h5, hok, harr⟩ := invert_gap t hOk xs hx htri sat hR lay
+  refine ⟨bZ, h5, hok, ?_⟩
+  simp [invGap, tierClimb]
+  exact harr
 
 end EcbsLink2.Link2

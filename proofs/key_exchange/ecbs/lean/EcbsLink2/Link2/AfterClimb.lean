@@ -289,6 +289,12 @@ theorem unpark_row_embed
   · exact h2.trans h2e
   · simp [row, row1, List.length_set]
 
+/-- Home 5 holds `xs` after the final settle and the tally clear. The index
+    proof stays inside the structure so a later `obtain` does not case on it. -/
+structure SettledHome (b : Ecbs.Board) (xs : List Nat) : Prop where
+  h5 : 5 < b.sudo_5Board_4home.size
+  arr : b.sudo_5Board_4home[5]'h5 = embed xs
+
 /-- Unpark, the final cube of the gap onto the gap, and the outer settle.
     The cube's internal settle spends the reserved `2 · n`. The comb, the fold,
     and the outer settle spend `pegCharge`. The outer settle's slides spend
@@ -316,6 +322,7 @@ theorem final_cube_settle
         bOut.sudo_5Board_4cost.sudo_5Costs_6slides ∧
       bZ.sudo_5Board_4cost.sudo_5Costs_3ops =
         bOut.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      SettledHome bZ (fieldCube s.n s.k s.benchlen s.gap) ∧
       FitsLen (mv + 2 * base.n + pegCharge base.n base.bench) ∧
       FitsLen (sl + 2 * base.n + 2 * base.n) ∧
       FitsLen (s.ctrl + 2 + s.tally) := by
@@ -482,7 +489,7 @@ theorem final_cube_settle
     h.shape.peg.n_small
     h.shape.peg.fitBn
     hfold
-  obtain ⟨bC, hrunC, honC, htoC, hbenchC, _htakeC, hzeroC, hmvC, _hpkC, hslC,
+  obtain ⟨bC, hrunC, honC, htoC, hbenchC, htakeC, hzeroC, hmvC, _hpkC, hslC,
       _htierC, _hszH, _hhomeC, _hheldC, _hmkC, _hrowC, _hopsC, _ht0C, _hhighC, _hctrlC⟩ :=
     hcube
   have hprog : Ecbs.cube bU Ecbs.gap Ecbs.gap = .ok bC := hcubeEq.trans hrunC
@@ -646,12 +653,58 @@ theorem final_cube_settle
       (Int.ofNat (s.ctrl + 2 + s.tally)) with sudo_5Board_9tally_len := 0 }
   have hclearZ : Ecbs.tally_clear bOut = .ok bZ := by
     simpa [bZ] using hclear
+  have hhomeOut := settle_home_eq bC 5 h5HC h5DC fold s.n
+      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
+      (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+  have htake : fold.take s.n = fieldCube s.n s.k s.benchlen s.gap := htakeC
+  have h5Z : 5 < bZ.sudo_5Board_4home.size := by
+    have h5O : 5 < bOut.sudo_5Board_4home.size := by
+      rw [hhomeOut, Array.size_set]
+      exact h5HC
+    simpa [bZ, touchRow] using h5O
+  have hgetZ : bZ.sudo_5Board_4home[5]'h5Z =
+      embed (fieldCube s.n s.k s.benchlen s.gap) := by
+    have hZh : bZ.sudo_5Board_4home = bOut.sudo_5Board_4home := by
+      simp [bZ, touchRow]
+    have hsz : 5 < (bC.sudo_5Board_4home.set ⟨5, h5HC⟩ (embed (fold.take s.n))).size := by
+      rw [Array.size_set]
+      exact h5HC
+    have hget := Array.getElem_set_eq bC.sudo_5Board_4home ⟨5, h5HC⟩
+        (embed (fold.take s.n)) rfl hsz
+    have hcell : bOut.sudo_5Board_4home[5]'(by rw [hhomeOut]; exact hsz) =
+        embed (fieldCube s.n s.k s.benchlen s.gap) :=
+      (cell_eq_of hhomeOut hget).trans (congrArg embed htake)
+    exact cell_eq_of hZh hcell
   refine ⟨bU, bC, bOut, bZ, mv, sl, row, hun, hprog, by simpa [bOut] using hsettle,
     hclearZ, hmvB, hslB, by simpa [bOut] using
       (settle_bench_off bC 5 h5HC h5DC fold s.n
         (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
         (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))),
-    hrowOut, rfl, rfl, rfl, rfl, htailM, htailS, tail_ctrl_fit h hk ht⟩
+    hrowOut, rfl, rfl, rfl, rfl, ⟨h5Z, hgetZ⟩, htailM, htailS, tail_ctrl_fit h hk ht⟩
 
+/-- The final tail's boards and the settled gap. The i64 bounds stay inside
+    `final_cube_settle` and are not opened here. -/
+theorem final_cube_home
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [] b s base)
+    (hon : s.onBench = true)
+    (hge : 0 ≤ s.fromHole)
+    (ht : s.tally ≤ base.mMax)
+    (hm : 0 < s.tally) :
+    ∃ (bU bC bOut bZ : Ecbs.Board),
+      Ecbs.unpark_rung b = .ok bU ∧
+      Ecbs.cube bU Ecbs.gap Ecbs.gap = .ok bC ∧
+      Ecbs.settle bC = .ok bOut ∧
+      Ecbs.tally_clear bOut = .ok bZ ∧
+      SettledHome bZ (fieldCube s.n s.k s.benchlen s.gap) :=
+  Exists.elim (final_cube_settle h hon hge ht hm) fun bU pack1 =>
+  Exists.elim pack1 fun bC pack2 =>
+  Exists.elim pack2 fun bOut pack3 =>
+  Exists.elim pack3 fun bZ pack4 =>
+  Exists.elim pack4 fun _mv pack5 =>
+  Exists.elim pack5 fun _sl pack6 =>
+  Exists.elim pack6 fun _row hpack =>
+    ⟨bU, bC, bOut, bZ, hpack.1, hpack.2.1, hpack.2.2.1, hpack.2.2.2.1,
+      hpack.2.2.2.2.2.2.2.2.2.2.2.2.1⟩
 
 end EcbsLink2.Link2

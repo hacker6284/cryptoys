@@ -125,7 +125,9 @@ theorem climbInv_withPark {b : Ecbs.Board} {s s' : ClimbModel}
     unparked red board (`climbInv_atPark`). -/
 theorem red_final_ge
     {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done [2] b s base)
+    (h : ClimbInvKCore done [2] b s base)
+    (hM : MoveHeadroom b base.n base.bench base.mMax)
+    (hS : SlideHeadroom b base.n base.mMax)
     (hge : 0 ≤ s.fromHole) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false)
     (hParkAt : s.parkAt = base.ladder0 + base.R)
@@ -152,9 +154,9 @@ theorem red_final_ge
           let b ← Ecbs.cube b ((6 : Nat) : Int) ((5 : Nat) : Int)
           Ecbs.mul b ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
             false false false) = .ok b' ∧
-      ClimbInvK (done ++ [2]) [] b'
+      ClimbInvKCore (done ++ [2]) [] b'
         (modelRung s base.x 2 (climbAt base.ladder0 base.R s.ridx) true) base ∧
-      RungDelta b b' base s.tally := by
+      RungDeltaTight b b' base s.tally := by
   let hole := climbAt base.ladder0 base.R s.ridx
   let rowP := embed (paintRed (afterPark s.row s.fromHole s.parkAt hole 2) s.t0 s.tally)
   let ctrlP := Int.ofNat (s.ctrl + 4 + s.tally)
@@ -164,11 +166,11 @@ theorem red_final_ge
   obtain ⟨bClearU, bCube, bRed, hclearProg, hcubeF, hmulF, hcubeU, hredU, hrel,
       honR, htoR, hlenR, hbenchR, hhighR, htmaxR, _bLoop, _bMul, _hmulU, _hclearU,
       _hpackU⟩ :=
-    parked_clear_unparked h hge hm hT hhome hxLen hxT
+    parked_clear_unparked h hM hS hge hm hT hhome hxLen hxT
   obtain ⟨bClear, bIdle, hrunI, hframe, hbenchE, hbonE, htoE, hmarkE, _hlenE, ht0E,
       hparkE, _hhighE, htierE, hladE, hnrE, _htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f,
       hkeep, ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
-    parked_clear_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h) hge hm hT hhome
+    parked_clear_ge h hM hS hge hm hT hhome
   have hboards : withPark bClearU rowP ctrlP fromH ridxH = bClear := by
     have hjoin := hclearProg.symm.trans hrunI
     injection hjoin
@@ -275,7 +277,7 @@ theorem red_final_ge
     refine ⟨sl, slC, hsl, ?_, hle⟩
     simpa [hP] using hslC
   have hpack :=
-    red_unparked_delta h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+    red_unparked_delta h hM hS
       hm hT hhome hxLen hxT
       bClearP bClearU bCube bRed rowP ctrlP fromH ridxH rfl
       hδP hslotsP hmarkP htierP hcubeU hredU hrel
@@ -307,6 +309,8 @@ theorem red_final_ge
     simpa [b', rowP, ctrlP, fromH, ridxH, hole] using hmulF
   have hδR : RungDelta b b' base s.tally :=
     rungDelta_withPark hpack.delta rowP ctrlP fromH ridxH
+  have hTight : RungDeltaTight b b' base s.tally :=
+    rungTight_withPark (rungTight_of_rel hpack.delta hrel) rowP ctrlP fromH ridxH
   obtain ⟨hgap, htall, honM, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
       hparkM, _hnM, _hkM, _hbM⟩ := model_final_red_ge s base.x hole hge
   have hidx : s.ridx < base.R := by
@@ -578,8 +582,8 @@ theorem red_final_ge
       have hlt := hnote (by rw [← htall]; exact hpos)
       rw [htall]
       exact hlt
-  have hK := climbInvK_succ h hinv hδR hCap hshape h.holeBelow htmax rfl
-  exact ⟨b', hprog, hK, hδR⟩
+  have hK := climbInvKCore_succ h hinv hδR hCap hshape h.holeBelow htmax rfl
+  exact ⟨b', hprog, hK, hTight⟩
 
 /-- A projection `withPark` leaves alone is the same on any two frames. -/
 private theorem park_kept {α : Type} (f : Ecbs.Board → α)

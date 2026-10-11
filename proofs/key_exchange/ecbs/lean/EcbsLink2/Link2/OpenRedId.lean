@@ -51,10 +51,10 @@ structure RedOpenId
   hrelP : ∃ mvE mvR slE slR : Nat,
     b.sudo_5Board_4cost.sudo_5Costs_5moves = (mvE : Int) ∧
     bRedP.sudo_5Board_4cost.sudo_5Costs_5moves = (mvR : Int) ∧
-    mvR ≤ mvE + rungCharge base.n base.bench s.tally ∧
+    mvR + 2 * base.n ≤ mvE + rungCharge base.n base.bench s.tally ∧
     b.sudo_5Board_4cost.sudo_5Costs_6slides = (slE : Int) ∧
     bRedP.sudo_5Board_4cost.sudo_5Costs_6slides = (slR : Int) ∧
-    slR ≤ slE + rungSlideCharge base.n s.tally
+    slR + 2 * base.n ≤ slE + rungSlideCharge base.n s.tally
   hrun :
     (do
         let b ← Ecbs.park_rung b (r : Int)
@@ -147,7 +147,9 @@ structure RedOpenId
     The two clears are the same board. -/
 theorem red_open_idents
     {done rs : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done (r :: rs) b s base)
+    (h : ClimbInvKCore done (r :: rs) b s base)
+    (hM : MoveHeadroom b base.n base.bench base.mMax)
+    (hS : SlideHeadroom b base.n base.mMax)
     (hge : 0 ≤ s.fromHole) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false)
     (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
@@ -155,19 +157,19 @@ theorem red_open_idents
   obtain ⟨bClearU, bCubeP, bRedP, hclearProg, _hcubeF, _hmulF, hcubeU, hredU, hrelP,
       _honP, _htoP, _hlenP, _hbenchP, _hhighP, _htmaxP, bLoopP, bMulP, hmulP, hclearP,
       hpackP⟩ :=
-    parked_clear_unparked h hge hm hT hhome hxLen hxT
+    parked_clear_unparked h hM hS hge hm hT hhome hxLen hxT
   obtain ⟨cP, _ysP, _mvPk, _slPk, _hoPk, _pkPk, _psPk, _opsPk, _hHP, _hDP, _hopsP,
       hloopP, hrowP0, hctrlP0, hgP, hmP, hnP, hkP, hbP, hsrcP, ht0P, _hnamedP,
       _hysP, _hmvP, _hslP, _hhoP, _hpkP, _hpsP, hcopyP⟩ := hpackP
   obtain ⟨bClearG, bIdle, hrun, hframe, hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E,
       hparkE, hhighE, htierE, hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f,
       hkeep, ⟨ps, hpsEq⟩, ⟨hnat, hhnEq⟩, hrowIdle, hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
-    parked_clear_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h) hge hm hT hhome
+    parked_clear_ge h hM hS hge hm hT hhome
   obtain ⟨bLoopC, bMulC, bClearC, bCubeC, bRedC, hmulC, hclearC, hcubeC, hredC,
       _bounds, _lenC, _t0C, _rowC, hctrlN, _highC, _ctrlC, _maxC, _t0Cu, ht0Red,
       _tierCu, htierRed, _fCube, _fMul, honC, htoC, _lenRed, hbenchC, _clearF, _cubeF,
       _mulF, hcubeBoth, hmulBoth, hpackC, _hrelC, _highRed, _tmaxRed⟩ :=
-    red_cube_mul h hm hT hhome hxLen hxT
+    red_cube_mul h hM hS hm hT hhome hxLen hxT
   obtain ⟨cC, _ysC, _mvC, _slC, _hoC, _pkC, _psC, _opsC, _hHC, _hDC, _hopsC,
       hloopC, hrowC0, hctrlC0, hgC, hmC, hnC, hkC, hbC, hsrcC, ht0C0, _hnamedC,
       _hysC, _hmvC, _hslC, _hhoC, _hpkC, _hpsC, hcopyC⟩ := hpackC

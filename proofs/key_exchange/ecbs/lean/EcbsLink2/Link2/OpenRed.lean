@@ -77,7 +77,7 @@ theorem open_red_peg_zero (row : List Nat) (fromHole : Int) (park hole t0 tally 
 theorem red_open_finish
     {done rs : List Nat} {r : Nat} {b b' bRed bClear : Ecbs.Board}
     {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done (r :: rs) b s base)
+    (h : ClimbInvKCore done (r :: rs) b s base)
     (hge : 0 ≤ s.fromHole) (hr : r = 2) (hrest : rs ≠ [])
     (hParkAt : s.parkAt = base.ladder0 + base.R)
     (hCap : climbTallyPrefix base.tally0 done (r :: rs) ≤ base.mMax)
@@ -121,7 +121,7 @@ theorem red_open_finish
           let b ← Ecbs.mul b ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
               false false false
           Ecbs.tally_add_one b) = .ok b') :
-    ClimbInvK (done ++ [r]) rs b'
+    ClimbInvKCore (done ++ [r]) rs b'
       (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base := by
   let hole := climbAt base.ladder0 base.R s.ridx
   obtain ⟨hgap, htall, honM, _hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
@@ -449,13 +449,15 @@ theorem red_open_finish
     · intro hpos
       rw [htall]
       omega
-  have hK := climbInvK_succ h (by simpa [hempty] using hinv) hδ' hCap
+  have hK := climbInvKCore_succ h (by simpa [hempty] using hinv) hδ' hCap
     (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmaxS) rfl
   simpa [hempty] using hK
 
 theorem red_open_ge
     {done rs : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done (r :: rs) b s base)
+    (h : ClimbInvKCore done (r :: rs) b s base)
+    (hM : MoveHeadroom b base.n base.bench base.mMax)
+    (hS : SlideHeadroom b base.n base.mMax)
     (hge : 0 ≤ s.fromHole) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false) (hr : r = 2) (hrest : rs ≠ [])
     (hParkAt : s.parkAt = base.ladder0 + base.R)
@@ -484,9 +486,9 @@ theorem red_open_ge
           let b ← Ecbs.mul b ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
               false false false
           Ecbs.tally_add_one b) = .ok b' ∧
-      ClimbInvK (done ++ [r]) rs b'
+      ClimbInvKCore (done ++ [r]) rs b'
         (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base ∧
-      RungDelta b b' base s.tally := by
+      RungDeltaTight b b' base s.tally := by
   let hole := climbAt base.ladder0 base.R s.ridx
   let c0 := s.ctrl + 2 + s.tally
   let xs := paintRed (afterPark s.row (-1) s.parkAt hole 2) s.t0 s.tally
@@ -500,7 +502,7 @@ theorem red_open_ge
   let highD := ((s.t0 + 2 * s.tally - 1 : Nat) : Int)
   let maxD := Int.ofNat (2 * s.tally)
   let ctrlOut := Int.ofNat (c0 + 2 + 2 * s.tally)
-  let V := Classical.choice (red_open_idents h hge hm hT hhome hxLen hxT)
+  let V := Classical.choice (red_open_idents h hM hS hge hm hT hhome hxLen hxT)
   obtain ⟨bClearU, bCubeP, bRedP, bClearG, bIdle, bClearC, bCubeC, bRedC,
       hclearProg, hcubeU, hredU, hrelP, hrun, hframe,
       hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E, hparkE, hhighE, htierE,
@@ -877,7 +879,7 @@ theorem red_open_ge
     refine ⟨sl, slC, hsl, ?_, hle⟩
     simpa [hP] using hslC
   have hcarry :=
-    red_unparked_delta h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+    red_unparked_delta h hM hS
       hm hT hhome hxLen hxT
       bClearP bClearU bCubeP bRedP rowP ctrlP fromH ridxH rfl
       hδP hslotsP hmarkP htierP hcubeU hredU hrelP
@@ -928,6 +930,8 @@ theorem red_open_ge
     rw [withTally_peak, hredSame]
   have hδ' : RungDelta b b' base s.tally :=
     rungDelta_cost hcarry.delta hmvF hslF hopsF hpkF
+  have hTight : RungDeltaTight b b' base s.tally :=
+    rungTight_cost (rungTight_of_rel hcarry.delta hrelP) hmvF hslF hopsF hpkF
   have hhomeRec : bRec.sudo_5Board_4home = bRedC.sudo_5Board_4home := by
     unfold bRec
     unfold bTall
@@ -1110,6 +1114,6 @@ theorem red_open_ge
     rw [withPark_tmax]
     simp only [Int.ofNat_eq_coe]
   exact ⟨b', hprog, red_open_finish h hge hr hrest hParkAt hCap hT hinv hδ' hladB hnrB
-    htierB hhomeB hheldB hcarry hopsB hopsF hstrictF hholeF htmaxEq hprog, hδ'⟩
+    htierB hhomeB hheldB hcarry hopsB hopsF hstrictF hholeF htmaxEq hprog, hTight⟩
 
 end EcbsLink2.Link2

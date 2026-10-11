@@ -16,7 +16,9 @@ open EcbsLink2.Spec
     this bundle, so they do not elaborate that theorem again. -/
 theorem red_open_view
     {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done (r :: rest) b s base)
+    (h : ClimbInvKCore done (r :: rest) b s base)
+    (hM : MoveHeadroom b base.n base.bench base.mMax)
+    (hS : SlideHeadroom b base.n base.mMax)
     (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false)
     (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
@@ -65,10 +67,10 @@ theorem red_open_view
       (∃ (mvE mvR slE slR : Nat),
         b.sudo_5Board_4cost.sudo_5Costs_5moves = (mvE : Int) ∧
         bRed.sudo_5Board_4cost.sudo_5Costs_5moves = (mvR : Int) ∧
-        mvR ≤ mvE + rungCharge base.n base.bench s.tally ∧
+        mvR + 2 * base.n ≤ mvE + rungCharge base.n base.bench s.tally ∧
         b.sudo_5Board_4cost.sudo_5Costs_6slides = (slE : Int) ∧
         bRed.sudo_5Board_4cost.sudo_5Costs_6slides = (slR : Int) ∧
-        slR ≤ slE + rungSlideCharge base.n s.tally) ∧
+        slR + 2 * base.n ≤ slE + rungSlideCharge base.n s.tally) ∧
       bRed.sudo_5Board_8bench_on = true ∧
       bRed.sudo_5Board_8bench_to = (5 : Int) ∧
       bRed.sudo_5Board_9tally_len = (s.tally : Int) ∧
@@ -127,7 +129,7 @@ theorem red_open_view
         slC ≤ sl + s.tally * (2 * base.n)) := by
 
   let hole := climbAt base.ladder0 base.R s.ridx
-  obtain ⟨bClearP, hAll⟩ := gap_clear_emit_ofK h hF hm hT hhome h.parkBelow h.holeBelow
+  obtain ⟨bClearP, hAll⟩ := gap_clear_emit h hM hS hF hm hT hhome h.parkBelow h.holeBelow
   rcases hAll with ⟨hrun, _hrowE, _hctrlE, _hfromE, _hridxE, _hlenE, ht0E, hparkE,
       _hhighE, hmarkE, hbonE, htoE, hbenchE, htierE, hladE, hnrE, htmaxE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, htrits, hopsE, hc1E, hpkSE,
@@ -139,14 +141,15 @@ theorem red_open_view
       _hbounds, hlenC, ht0C, hrowC, hctrlN, hhighC, hctrlC, hmaxC,
       _ht0Cube, ht0Red, _htierCube, htierRed, _hcubeF, _hmulF,
       honR, htoR, hlenR, hbenchR, hclearP, _hcubeP, _hmulP,
-      hcubeBoth, hmulBoth, hpack, hrel, _hhighR, _htmaxR⟩ := red_cube_mul h hm hT hhome hxLen hxT
+      hcubeBoth, hmulBoth, hpack, hrel, _hhighR, _htmaxR⟩ :=
+    red_cube_mul h hM hS hm hT hhome hxLen hxT
   obtain ⟨cU, _ysU, _mvU, _slU, _hoU, _pkU, _psU, _cOpsU, _hHU, _hDU, _hopsU,
       hloopU, hrowU, hctrlU, hgU, hmU, hnU, hkU, hbU, hsrcU, ht0U, _hnamed,
       _hys, _hmv, _hsl, _hho, _hpk, _hps, hcopyU⟩ := hpack
   obtain ⟨bMulU, bMulD, ⟨cP, bLoopP, hmulP, hloopP, hcopyP, hrowP, hctrlP, hgP,
       hmP, hnP, hkP, hbP, hsrcP, ht0P⟩, ⟨cD, hmulD, hrowD, hctrlD, hmD, ht0D, hgD,
       hnD, hkD, hbD, hsrcD, ⟨bParkD, hparkD, hcopyD⟩⟩, hrelP⟩ :=
-    parked_gap_is_withPark h hF hm hT hhome
+    parked_gap_is_withPark h hM hS hF hm hT hhome
   have hb0U : cP.b0 = cU.b0 := by injection hcopyP.symm.trans hcopyU
   have hboardsU := pegBoard_same_copy cP cU hb0U
     (hsrcU.trans hsrcP.symm) (hgU.trans hgP.symm) (hnU.trans hnP.symm)
@@ -300,10 +303,10 @@ theorem red_unparked_delta
     (hrel : ∃ mvE mvR slE slR : Nat,
       b.sudo_5Board_4cost.sudo_5Costs_5moves = (mvE : Int) ∧
       bRed0.sudo_5Board_4cost.sudo_5Costs_5moves = (mvR : Int) ∧
-      mvR ≤ mvE + rungCharge base.n base.bench s.tally ∧
+      mvR + 2 * base.n ≤ mvE + rungCharge base.n base.bench s.tally ∧
       b.sudo_5Board_4cost.sudo_5Costs_6slides = (slE : Int) ∧
       bRed0.sudo_5Board_4cost.sudo_5Costs_6slides = (slR : Int) ∧
-      slR ≤ slE + rungSlideCharge base.n s.tally)
+      slR + 2 * base.n ≤ slE + rungSlideCharge base.n s.tally)
     (hbonE : bClearP.sudo_5Board_8bench_on = true)
     (htoE : bClearP.sudo_5Board_8bench_to = (5 : Int))
     (hbenchE : bClearP.sudo_5Board_5bench =
@@ -836,8 +839,12 @@ theorem red_unparked_delta
     refine ⟨c, c', hc, ?_, hle⟩
     exact (array_get_irrel (h1 := hszR ▸ hi)
       (h2 := by rw [hraw.1]; exact hi)).trans hc'
+  have hmovLoose : mvR ≤ mvE + rungCharge base.n base.bench s.tally := by
+    omega
+  have hsldLoose : slR ≤ slE + rungSlideCharge base.n s.tally := by
+    omega
   have hδRed : RungDelta b bRed0 base s.tally :=
-    rungDelta_cube_mul hmvE hmvR hmovR hslE hslR hsldR hpk hpkR hpkRle hszR hslotsR
+    rungDelta_cube_mul hmvE hmvR hmovLoose hslE hslR hsldLoose hpk hpkR hpkRle hszR hslotsR
   have hfixC := cube_live_park bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
     pkC pkS c1 h5HU h5DU hops1U
   have hfixM := mul_live_park bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
@@ -996,7 +1003,9 @@ theorem red_unparked_delta
     unparked results, on the doubled park row. -/
 theorem red_open_emit
     {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done (r :: rest) b s base)
+    (h : ClimbInvKCore done (r :: rest) b s base)
+    (hM : MoveHeadroom b base.n base.bench base.mMax)
+    (hS : SlideHeadroom b base.n base.mMax)
     (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false) (hr : r = 2) (hrest : rest ≠ [])
     (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
@@ -1072,10 +1081,10 @@ theorem red_open_emit
         (∃ (mvE mvR slE slR : Nat),
           b.sudo_5Board_4cost.sudo_5Costs_5moves = (mvE : Int) ∧
           bR.sudo_5Board_4cost.sudo_5Costs_5moves = (mvR : Int) ∧
-          mvR ≤ mvE + rungCharge base.n base.bench s.tally ∧
+          mvR + 2 * base.n ≤ mvE + rungCharge base.n base.bench s.tally ∧
           b.sudo_5Board_4cost.sudo_5Costs_6slides = (slE : Int) ∧
           bR.sudo_5Board_4cost.sudo_5Costs_6slides = (slR : Int) ∧
-          slR ≤ slE + rungSlideCharge base.n s.tally) ∧
+          slR + 2 * base.n ≤ slE + rungSlideCharge base.n s.tally) ∧
         bClearP.sudo_5Board_7ladder0 = b.sudo_5Board_7ladder0 ∧
         bClearP.sudo_5Board_6nrungs = b.sudo_5Board_6nrungs ∧
         bClearP.sudo_5Board_9park_hole = (s.parkAt : Int) ∧
@@ -1101,7 +1110,7 @@ theorem red_open_emit
       ht0E, hmarkE, htierE, _htmaxE, hcubeU, hredU, hbonE, htoE, hbenchE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, hopsE, hc1E, hpkSE, hholeE,
       htrits, hpieceM, hpieceS⟩ :=
-    red_open_view h hF hm hT hhome hxLen hxT
+    red_open_view h hM hS hF hm hT hhome hxLen hxT
   let fromH := ((hole : Nat) : Int)
   let ridxH := Int.ofNat (s.ridx + 1)
   have hge : 2 ≤ (r :: rest).length := by
@@ -1409,7 +1418,7 @@ theorem red_open_emit
     rw [hrun, ok_bind, hDoubleForm, ok_bind, hcubeRun, ok_bind, hmulRun, ok_bind]
     simpa [bRedP] using hAdd
   have hpack :=
-    red_unparked_delta h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+    red_unparked_delta h hM hS
       hm hT hhome hxLen hxT
       bClearP bClearU bCube0 bRed0
       (embed (paintRed (afterPark s.row (-1) s.parkAt
@@ -1484,7 +1493,9 @@ theorem red_open_emit
     ops, and they do not change peak. -/
 theorem red_open_k
     {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done (r :: rest) b s base)
+    (h : ClimbInvKCore done (r :: rest) b s base)
+    (hM : MoveHeadroom b base.n base.bench base.mMax)
+    (hS : SlideHeadroom b base.n base.mMax)
     (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false) (hr : r = 2) (hrest : rest ≠ [])
     (hParkAt : s.parkAt = base.ladder0 + base.R)
@@ -1513,18 +1524,18 @@ theorem red_open_k
           let b ← Ecbs.mul b ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
               false false false
           Ecbs.tally_add_one b) = .ok b' ∧
-      ClimbInvK (done ++ [r]) rest b'
+      ClimbInvKCore (done ++ [r]) rest b'
         (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false) base ∧
-      RungDelta b b' base s.tally := by
+      RungDeltaTight b b' base s.tally := by
   obtain ⟨bAdd, hprog, hctrlA, hlenA, hhighA, hfromA, hridxA, hrowA, htmaxA, hδA,
-      _bCP, _bCU, _bC, _bR,
-      _hmvA, _hslA, _hopsA, _hpkA,
+      _bCP, _bCU, _bC, bR,
+      hmvA, hslA, hopsA, hpkA,
       hheldA, hhomeA, hbenchA, honA, htoA, hmarkA, htierA,
       hladA, hnrA, hparkA, ht0A, hstrictA, hholeA,
-      _hClear, _hδC, _hslots, _hrel,
+      _hClear, _hδC, _hslots, hrel,
       hladE, hnrE, hparkE, _ht0E, _hmarkE, htierE,
       honR, htoR, _hlenR, ht0R, hbenchR, hcarry⟩ :=
-    red_open_emit h hF hm hT hhome hr hrest hxLen hxT
+    red_open_emit h hM hS hF hm hT hhome hr hrest hxLen hxT
   let hole := climbAt base.ladder0 base.R s.ridx
   let s' := modelRung s base.x r hole false
   obtain ⟨hgap, htall, hon, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
@@ -1871,9 +1882,11 @@ theorem red_open_k
     intro _
     rw [htall]
     exact open_red_tmax_lt s.tally
-  have hK := climbInvK_succ h (by simpa [hempty] using hinv) hδA hCap
+  have hTight : RungDeltaTight b bAdd base s.tally :=
+    rungTight_cost (rungTight_of_rel hcarry.delta hrel) hmvA hslA hopsA hpkA
+  have hK := climbInvKCore_succ h (by simpa [hempty] using hinv) hδA hCap
     (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
-  exact ⟨bAdd, hprog, by simpa [hempty] using hK, hδA⟩
+  exact ⟨bAdd, hprog, by simpa [hempty] using hK, by simpa [hempty] using hTight⟩
 
 /-- Ops after the red cube and the red mul, read off the idle clear. The cube
     writes slot 1 and the mul writes slot 0. -/
@@ -1924,6 +1937,13 @@ theorem rungDelta_withPark {b b1 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
     RungDelta b (withPark b1 row ctrl fromHole ridx) base m := by
   obtain ⟨hmv, hsl, hops, hpk⟩ := withPark_counters b1 row ctrl fromHole ridx
   exact rungDelta_cost hδ hmv hsl hops hpk
+
+/-- `withPark` copies the counters, so a tight delta survives the frame. -/
+theorem rungTight_withPark {b b1 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (hδ : RungDeltaTight b b1 base m) (row : Array Int) (ctrl fromHole ridx : Int) :
+    RungDeltaTight b (withPark b1 row ctrl fromHole ridx) base m := by
+  obtain ⟨hmv, hsl, hops, hpk⟩ := withPark_counters b1 row ctrl fromHole ridx
+  exact rungTight_cost hδ hmv hsl hops hpk
 
 /-- Unpark then park, as a list. The restored colour is the one that was sitting
     in the parking hole. -/
@@ -2590,7 +2610,9 @@ theorem withTally_id (b : Ecbs.Board) :
     delta plus that cube (ops slot 1) and that mul (ops slot 0). -/
 theorem red_final_k
     {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
-    (h : ClimbInvK done [2] b s base)
+    (h : ClimbInvKCore done [2] b s base)
+    (hM : MoveHeadroom b base.n base.bench base.mMax)
+    (hS : SlideHeadroom b base.n base.mMax)
     (hF : s.fromHole < 0) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
     (hhome : s.onBench = false)
     (hParkAt : s.parkAt = base.ladder0 + base.R)
@@ -2617,18 +2639,18 @@ theorem red_final_k
           let b ← Ecbs.cube b ((6 : Nat) : Int) ((5 : Nat) : Int)
           Ecbs.mul b ((5 : Nat) : Int) (base.xHome : Int) ((6 : Nat) : Int)
             false false false) = .ok b' ∧
-      ClimbInvK (done ++ [2]) [] b'
+      ClimbInvKCore (done ++ [2]) [] b'
         (modelRung s base.x 2 (climbAt base.ladder0 base.R s.ridx) true) base ∧
-      RungDelta b b' base s.tally := by
+      RungDeltaTight b b' base s.tally := by
   obtain ⟨bClearP, bClearU, bCube0, bRed0, hrun, hClearEq, hlenC, _ht0C, _hrowC,
       _hctrlN, hhighC, _hctrlC, hmaxC, ht0Red, _htierRed, hcubeBoth, hmulBoth,
       hrel, honR, htoR, _hlenR, hbenchR, hδ, hslots, hladE, hnrE, hparkE,
       _ht0E, _hmarkE, htierE, _htmaxE, hcubeU, hredU, hbonE, htoE, hbenchE,
       _h5H, _h5D, _h6H, _h6D, _h7E, _h5f, _h6f, _hkeep, hopsE, _hc1E, _hpkSE, _hholeE,
       _htrits, hpieceM, hpieceS⟩ :=
-    red_open_view h hF hm hT hhome hxLen hxT
+    red_open_view h hM hS hF hm hT hhome hxLen hxT
   have hpack :=
-    red_unparked_delta h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+    red_unparked_delta h hM hS
       hm hT hhome hxLen hxT
       bClearP bClearU bCube0 bRed0
       (embed (paintRed (afterPark s.row (-1) s.parkAt
@@ -2682,6 +2704,12 @@ theorem red_final_k
     exact hmul0
   have hδR : RungDelta b b' base s.tally :=
     rungDelta_cost hpack.delta
+      (by rw [withPark_moves, withTally_moves])
+      (by rw [withPark_slides, withTally_slides])
+      (by rw [withPark_ops, withTally_ops])
+      (by rw [withPark_peak, withTally_peak])
+  have hTight : RungDeltaTight b b' base s.tally :=
+    rungTight_cost (rungTight_of_rel hpack.delta hrel)
       (by rw [withPark_moves, withTally_moves])
       (by rw [withPark_slides, withTally_slides])
       (by rw [withPark_ops, withTally_ops])
@@ -3027,8 +3055,8 @@ theorem red_final_k
       have hlt := hnote (by rw [← htall]; exact hpos)
       rw [htall]
       exact hlt
-  have hK := climbInvK_succ h hinv hδR hCap hshape h.holeBelow htmax rfl
-  exact ⟨b', hprog, hK, hδR⟩
+  have hK := climbInvKCore_succ h hinv hδR hCap hshape h.holeBelow htmax rfl
+  exact ⟨b', hprog, hK, hTight⟩
 
 
 end EcbsLink2.Link2

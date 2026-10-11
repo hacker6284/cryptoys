@@ -347,16 +347,18 @@ theorem climb_step_home
       · dsimp only [List.isEmpty]
         rw [hr] at h hCap ⊢
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          red_final_k h hF hm hT hhome hParkAt hCap hxLen hxT
-        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
+          red_final_k h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+            hF hm hT hhome hParkAt hCap hxLen hxT
+        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_idle_red_final b 2 s.tally ((base.xHome : Nat) : Int) s.fromHole
           true hF rfl rfl]
         exact hprog
       · dsimp only [List.isEmpty]
         have hrest : (hd :: tl) ≠ [] := by simp
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          red_open_k h hF hm hT hhome hr hrest hParkAt hCap hxLen hxT
-        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
+          red_open_k h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+            hF hm hT hhome hr hrest hParkAt hCap hxLen hxT
+        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_idle_red_open b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           false hF hr rfl]
         exact hprog
@@ -382,32 +384,36 @@ theorem climb_step_home
       · dsimp only [List.isEmpty]
         rw [hr] at h hCap ⊢
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          red_final_ge h hge hm hT hhome hParkAt hCap hxLen hxT
-        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
+          red_final_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+            hge hm hT hhome hParkAt hCap hxLen hxT
+        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_park_red_final b 2 s.tally ((base.xHome : Nat) : Int) s.fromHole
           true hge rfl rfl]
         exact hprog
       · dsimp only [List.isEmpty]
         have hrest : (hd :: tl) ≠ [] := by simp
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          red_open_ge h hge hm hT hhome hr hrest hParkAt hCap hxLen hxT
-        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
+          red_open_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+            hge hm hT hhome hr hrest hParkAt hCap hxLen hxT
+        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_park_red_open b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           false hge hr rfl]
         exact hprog
     · rcases rest with (_ | ⟨hd, tl⟩)
       · dsimp only [List.isEmpty]
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          white_final_ge h hge hm hT hhome hwhite hParkAt hCap
-        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
+          white_final_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+            hge hm hT hhome hwhite hParkAt hCap
+        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_park_white_final b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           true hge hwhite rfl]
         exact hprog
       · dsimp only [List.isEmpty]
         have hrest : (hd :: tl) ≠ [] := by simp
         obtain ⟨b', hprog, hK', hδ⟩ :=
-          white_open_ge h hge hm hT hhome hwhite hrest hParkAt hCap
-        refine ⟨b', ?_, hK'.inv, hδ, hK'.shape, hK'.tmaxLt⟩
+          white_open_ge h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
+            hge hm hT hhome hwhite hrest hParkAt hCap
+        refine ⟨b', ?_, hK'.inv, hδ.delta, hK'.shape, hK'.tmaxLt⟩
         rw [dispatch_park_white_open b r s.tally ((base.xHome : Nat) : Int) s.fromHole
           false hge hwhite rfl]
         exact hprog

@@ -245,6 +245,39 @@ theorem rungDelta_cost {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
   refine ⟨c, c', hc, ?_, hle⟩
   simpa [hops] using hc'
 
+/-- A tight rung delta survives a step that copies moves, slides, ops, and peak. -/
+theorem rungTight_cost {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (h : RungDeltaTight b b1 base m)
+    (hmv : b2.sudo_5Board_4cost.sudo_5Costs_5moves =
+      b1.sudo_5Board_4cost.sudo_5Costs_5moves)
+    (hsl : b2.sudo_5Board_4cost.sudo_5Costs_6slides =
+      b1.sudo_5Board_4cost.sudo_5Costs_6slides)
+    (hops : b2.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b1.sudo_5Board_4cost.sudo_5Costs_3ops)
+    (hpk : b2.sudo_5Board_4cost.sudo_5Costs_4peak =
+      b1.sudo_5Board_4cost.sudo_5Costs_4peak) :
+    RungDeltaTight b b2 base m := by
+  refine ⟨rungDelta_cost h.delta hmv hsl hops hpk, ?_, ?_⟩
+  · obtain ⟨mv, mv', hb, hb', hle⟩ := h.moveTight
+    exact ⟨mv, mv', hb, hmv.trans hb', hle⟩
+  · obtain ⟨sl, sl', sb, sb', sle⟩ := h.slideTight
+    exact ⟨sl, sl', sb, hsl.trans sb', sle⟩
+
+/-- The red mul's tight counters are a tight rung delta when the loose delta
+    is already known. -/
+theorem rungTight_of_rel {b b' : Ecbs.Board} {base : ClimbBudget} {m : Nat}
+    (hδ : RungDelta b b' base m)
+    (hrel : ∃ mvE mvR slE slR : Nat,
+      b.sudo_5Board_4cost.sudo_5Costs_5moves = (mvE : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves = (mvR : Int) ∧
+      mvR + 2 * base.n ≤ mvE + rungCharge base.n base.bench m ∧
+      b.sudo_5Board_4cost.sudo_5Costs_6slides = (slE : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = (slR : Int) ∧
+      slR + 2 * base.n ≤ slE + rungSlideCharge base.n m) :
+    RungDeltaTight b b' base m := by
+  obtain ⟨mvE, mvR, slE, slR, hmvE, hmvR, hmov, hslE, hslR, hsld⟩ := hrel
+  exact ⟨hδ, ⟨mvE, mvR, hmvE, hmvR, hmov⟩, ⟨slE, slR, hslE, hslR, hsld⟩⟩
+
 /-- The row a final white rung leaves: the park write, then the tally painted red.
     The segment is the finished one. -/
 theorem final_white_row_seg (s : ClimbModel) (x : List Nat) (r hole : Nat)

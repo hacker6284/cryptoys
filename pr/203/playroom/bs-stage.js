@@ -2,7 +2,7 @@
  * BS on the playroom table: two Battleship travel units, lids up, and the
  * key dice (constants.js BS layout, every piece at its real size). They
  * wait packed in their retail boxes (the Battleship box holds both units,
- * the dice box the cup with the dice in it) and are unboxed on the table
+ * the dice box the cup and the dice) and are unboxed on the table
  * (bs-unbox.js, bs-unbox-plan.js).
  *
  *   - Each player's ocean grid is the key grid: BUILD lays the fleet and a
@@ -13,7 +13,7 @@
  *     row I), C in I–J, registers in columns 1–9; column 10 is the control
  *     lane (hole 5: calling; hole 10: where the walk is).
  *   - The dice: the row cup's five d10s, the hole die (d12) and the d6,
- *     and their cup.
+ *     and their cup (lying in the dice box beside them).
  *
  * Play runs one beat per summary of the generated trace (bs.sudo
  * trace_exchange): the registers jump from one summary to the next. Step
@@ -46,7 +46,7 @@ export const BS_MODELS = {
     d6: "facehunter_d6_16mm.glb",
     cup: "proc_dice_cup_83x102mm.glb",
     navalBox: "proc_naval_game_box_400x265x52.glb",
-    diceBox: "proc_dice_game_box_245x160x108.glb",
+    diceBox: "proc_dice_game_box_120x114x89.glb",
 };
 
 // The unit GLB's grids: constants.js BS_GRID (one source with the microdemos).
@@ -448,7 +448,7 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
     }
 
     function showDice(faces) {
-        // Only the dice on their row: packed (or not yet unpacked), a die lies in the cup as packed.
+        // Only the dice on their row: packed (or not yet unpacked), a die lies in the dice box as packed.
         if (!parts) return;
         const onRow = (d) => d.parent === toys.dice;
         parts.dice.d10.forEach((d, k) => onRow(d) && setDie(d, "d10", faces.d10[k] ?? DEFAULT_FACES.d10[k], D10_YAW[k]));

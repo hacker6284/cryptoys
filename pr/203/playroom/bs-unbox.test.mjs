@@ -92,11 +92,14 @@ rigs.units.forEach((u, k) => {
     assert.ok(near(u.group.world().p, want.p) && sameQ(u.group.world().q, want.q), `unit ${k} in its pocket`);
     assert.equal(u.lid.quaternion.w, 1, `unit ${k} shut`);
 });
-assert.equal(rigs.cup.parent, rigs.diceBox.group, "the cup in the dice box");
-assert.ok(near(rigs.cup.world().p, yahtzee.box.pocketPose(P.REST.diceBox).p), "standing in its pocket");
+assert.ok(rigs.cup.parent === rigs.diceBox.group, "the cup in the dice box");
+{
+    const want = yahtzee.box.pocketPose(P.REST.diceBox);
+    assert.ok(near(rigs.cup.world().p, want.p) && sameQ(rigs.cup.world().q, want.q), "lying in its well");
+}
 for (const [kind, k] of P.DICE) {
     const d = dieOf(rigs, kind, k);
-    assert.equal(d.parent, rigs.cup, `${kind}#${k} in the cup`);
+    assert.ok(d.parent === rigs.diceBox.group, `${kind}#${k} in the dice box`);
     assert.ok(near(d.position.toArray(), P.packOf(kind, k)), `${kind}#${k} in its place there`);
 }
 assert.equal(rigs.diceRow.parent, null, "the empty dice row out of the scene");
@@ -165,7 +168,7 @@ const end = (name) => steps.find((s) => s.name === name).plan.to;
     assert.equal(rigs.units[0].group.parent, scene, "unit 0 out");
     assert.equal(rigs.units[1].group.parent, scene, "unit 1 out (its move finished)");
     assert.equal(rigs.units[0].lid.quaternion.w, 1, "but not opened");
-    assert.equal(rigs.cup.parent, rigs.diceBox.group, "the cup still in its box");
+    assert.ok(rigs.cup.parent === rigs.diceBox.group, "the cup still in its box");
     const done = steps.slice(0, 3);
     assert.ok(Math.abs(box.repackMs() - P.stepsMs(P.reverseSteps(done))) < 1e-9, "repacking only what was done");
     const back = snapRun();
@@ -179,8 +182,8 @@ const end = (name) => steps.find((s) => s.name === name).plan.to;
     run.onCall = (n) => n === 9 && box.cancel();
     await box.unbox(run);
     assert.equal(run.calls, 9);
-    assert.equal(rigs.dice.d12.parent, rigs.diceRow, "the d12 on its row");
-    assert.equal(rigs.dice.d10[4].parent, rigs.cup, "the fifth d10 still in the cup");
+    assert.ok(rigs.dice.d12.parent === rigs.diceRow, "the d12 on its row");
+    assert.ok(rigs.dice.d10[4].parent === rigs.diceBox.group, "the fifth d10 still in the box");
     const back = snapRun();
     await box.repack(back, { snap: true });
     assert.equal(back.calls, 0, "snapped: no moves");

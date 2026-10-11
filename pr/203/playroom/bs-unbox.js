@@ -44,7 +44,7 @@ export function createBsUnbox({ scene, rigs, rest }) {
         yahtzee.box.pack(diceBox, cup);
         for (const [kind, k] of DICE) {
             const holder = dieOf(kind, k);
-            cup.add(holder);
+            diceBox.group.add(holder);
             holder.position.fromArray(packOf(kind, k));
             holder.quaternion.identity();
         }

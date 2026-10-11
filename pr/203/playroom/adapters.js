@@ -1066,7 +1066,7 @@ export function createMegaDreifachAdapter() {
 
 /**
  * BS (Battleship Diffie–Hellman): the Battleship box (both units in it)
- * flies off the shelf and the dice box (the cup with the dice in it) out of
+ * flies off the shelf and the dice box (the cup and the dice in it) out of
  * the toy chest, onto the felt, and they are unboxed there: the units to
  * their seats, lids up, the cup and the dice to theirs (constants.js BS
  * layout; bs-unbox-plan.js). Leaving repacks them before they fly home.

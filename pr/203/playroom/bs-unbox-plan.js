@@ -14,8 +14,8 @@
  *   2. Alice's red unit, then Bob's blue unit, lifted out to their seats;
  *   3. each unit's lid opened (T1: the lid's grid is the workspace);
  *   4. the dice box's lid off, to its rest;
- *   5. the cup (with the dice) lifted out to its spot;
- *   6. the dice, top layer first, out of the cup onto the dice row.
+ *   5. the cup, lying in its well, lifted out and stood up on its spot;
+ *   6. the dice, top layer first, out of the box's dice strip onto the row.
  * Repacking is the same moves backwards.
  */
 import { BS_BOX_REST, BS_DICE, BS_DICE_PACK, BS_DICE_FACES, BS_DICE_YAW, BS_DIE_LIFT, BS_SEAT_XZ, DEN, TABLE_SEAT_Y } from "./constants.js";
@@ -23,7 +23,7 @@ import * as battleship from "../anim/battleship/index.js";
 import * as yahtzee from "../anim/yahtzee/index.js";
 import * as dice from "../anim/dice/index.js";
 import { add, obbOf, quatRotate } from "../anim/shared/geom.js";
-import { cupRimY, cupSolids } from "../anim/shared/cup.js";
+import { cupRimY } from "../anim/shared/cup.js";
 
 /** The felt a toy is seated on: world.getTablePose's seat height (constants.js TABLE_SEAT_Y, the felt top + 1 mm). */
 export const FELT_Y = TABLE_SEAT_Y;
@@ -44,16 +44,16 @@ export const SEATS = {
     cup: onFelt(...BS_SEAT_XZ.bsCup),
     dice: onFelt(...BS_SEAT_XZ.bsDice),
 };
-/** The dice, out of the cup in this order (the top layer first); back in, the reverse. */
+/** The dice, out of the box in this order (the top layer first); back in, the reverse. */
 export const DICE = [["d6", 0], ["d12", 0], ["d10", 4], ["d10", 3], ["d10", 2], ["d10", 1], ["d10", 0]];
-/** A die's place in the cup (cup frame, the die unturned): constants.js BS_DICE_PACK. */
+/** A die's place in the dice box (box frame, the die unturned): constants.js BS_DICE_PACK. */
 export const packOf = (kind, k) => (kind === "d10" ? BS_DICE_PACK.d10[k] : BS_DICE_PACK[kind]);
 /** The die's x on the dice row (bsDice frame). */
 export const rowX = (kind, k) => (kind === "d10" ? BS_DICE.d10[k] : BS_DICE[kind]);
 
-/** A die packed in the cup at `cup` (world; the die in its model's own orientation, turned with the cup). */
-export function packedDie(cup, kind, k) {
-    return { p: add(cup.p, quatRotate(cup.q, packOf(kind, k))), q: cup.q.slice() };
+/** A die packed in the dice box at `box` (world; the die in its model's own orientation, turned with the box). */
+export function packedDie(box, kind, k) {
+    return { p: add(box.p, quatRotate(box.q, packOf(kind, k))), q: box.q.slice() };
 }
 
 /** The face a die shows on its row spot and its yaw there (constants.js). */
@@ -102,9 +102,10 @@ export const solids = {
     unitPacked: (k) => [named(obbOf(battleship.box.pocketPose(REST.navalBox, k), battleship.box.UNIT), `unit ${k} in its box`)],
     unitClosed: (k, pose = SEATS.units[k]) => [named(obbOf(pose, battleship.unit.SHUT), `unit ${k} shut`)],
     unitOpen: (k, pose = SEATS.units[k]) => battleship.unit.OPEN_PARTS.map((s, i) => named(obbOf(pose, s), `unit ${k} ${i ? "lid" : "tray"}`)),
+    /** The cup as one box (standing or lying, as `pose` turns it). */
     cupBox: (pose) => [named(obbOf(pose, yahtzee.box.CUP), "the cup")],
-    /** The cup as its wall (a ring) and its floor, for what goes in and out of it (anim/shared/cup.js). */
-    cupRing: (pose) => cupSolids(pose),
+    /** The dice still in the box at `box`, from the i-th of DICE on. */
+    diceIn: (i = 0, box = REST.diceBox) => DICE.slice(i).flatMap(([kd, kk]) => solids.die(packedDie(box, kd, kk), kd, `${kd}#${kk} in the box`)),
     die: (pose, kind, name) => [named(obbOf(pose, dice.SHAPES[kind]), name)],
 };
 
@@ -203,7 +204,7 @@ export function unboxSteps(rest, phase = "unbox") {
     // 4. The dice box's lid off.
     const packedCup = yahtzee.box.pocketPose(REST.diceBox);
     {
-        const around = [...set(), ...S.diceBase(), ...S.cupBox(packedCup)];
+        const around = [...set(), ...S.diceBase(), ...S.cupBox(packedCup), ...S.diceIn()];
         push({
             names: ["dice-lid-off", "dice-lid-on"],
             entry: "yahtzee/box",
@@ -216,9 +217,9 @@ export function unboxSteps(rest, phase = "unbox") {
                 : yahtzee.box.liftLid(rigs.diceBox, REST.diceLid, { ...o, solids: around })),
         });
     }
-    // 5. The cup out (the entry adds the base's own card).
+    // 5. The cup out, stood up on the way (the entry adds the base's own card).
     {
-        const around = [...set(), ...S.diceLid()];
+        const around = [...set(), ...S.diceLid(), ...S.diceIn()];
         push({
             names: ["cup-out", "cup-in"],
             entry: "yahtzee/box",
@@ -231,15 +232,14 @@ export function unboxSteps(rest, phase = "unbox") {
                 : yahtzee.box.liftOut(rigs.diceBox, rigs.cup, SEATS.cup, { ...o, solids: around })),
         });
     }
-    // 6. The dice onto the row, the top layer first. Out, a die joins the
-    // row (exactly on its spot there, its home); back, the cup (exactly in
-    // its place there).
+    // 6. The dice onto the row, the top layer first, over the cup on its
+    // spot. Out, a die joins the row (exactly on its spot there, its
+    // home); back, the box (exactly in its place in the strip).
     const placed = [];
-    const clearY = cupRimY(SEATS.cup);
+    const clearY = Math.max(cupRimY(SEATS.cup), REST.diceBox.p[1] + yahtzee.box.BASE.h);
     DICE.forEach(([kind, k], i) => {
-        const still = DICE.slice(i + 1).flatMap(([kd, kk]) => S.die(packedDie(SEATS.cup, kd, kk), kd, `${kd}#${kk} in the cup`));
-        const around = [...set(), ...S.diceBase(), ...S.diceLid(), ...S.cupRing(SEATS.cup), ...still, ...placed];
-        const inCup = packedDie(SEATS.cup, kind, k);
+        const around = [...set(), ...S.diceBase(), ...S.diceLid(), ...S.cupBox(SEATS.cup), ...S.diceIn(i + 1), ...placed];
+        const inBox = packedDie(REST.diceBox, kind, k);
         const spot = dieSpot(kind, k, rest);
         push({
             names: [`${kind}-${k}-out`, `${kind}-${k}-in`],
@@ -247,11 +247,11 @@ export function unboxSteps(rest, phase = "unbox") {
             solids: around,
             die: [kind, k],
             clearY,
-            plan: (way, tempo) => dice.planPlace({ kind, from: way ? spot : inCup, to: way ? inCup : spot, clearY, solids: around, tempo }),
+            plan: (way, tempo) => dice.planPlace({ kind, from: way ? spot : inBox, to: way ? inBox : spot, clearY, solids: around, tempo }),
             async play(way, rigs, o) {
                 const holder = dieOf(rigs, kind, k);
-                (way ? rigs.cup : rigs.diceRow).attach(holder);
-                const done = await dice.place(holder, kind, way ? inCup : spot, { ...o, clearY, solids: around });
+                (way ? rigs.diceBox.group : rigs.diceRow).attach(holder);
+                const done = await dice.place(holder, kind, way ? inBox : spot, { ...o, clearY, solids: around });
                 if (way) {
                     holder.position.fromArray(packOf(kind, k));
                     holder.quaternion.set(0, 0, 0, 1);

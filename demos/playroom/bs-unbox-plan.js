@@ -33,7 +33,7 @@ const onFelt = (x, z, yaw = 0) => ({ p: [DEN.x + x, FELT_Y, DEN.z + z], q: yawQ(
 
 /**
  * Rest poses on the felt (world): each box's base and its lid, set down by
- * their drawn bottoms (the dice box's lid is drawn 58 mm up its frame: it
+ * their drawn bottoms (the dice box's lid is drawn 3 mm up its frame (LID.y0): it
  * fits over the top of the base).
  */
 export const REST = Object.fromEntries(Object.entries(BS_BOX_REST).map(([k, r]) => [k, onFelt(r.x, r.z, r.yaw)]));

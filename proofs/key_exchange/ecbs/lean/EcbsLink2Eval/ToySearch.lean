@@ -2,8 +2,8 @@
   Toy's search hits at hole 2. The cofactor walk of that root is still open:
   one chord does not fit in a single kernel evaluation.
 -/
-import EcbsLink2.Link2.ToyHit
-import EcbsLink2.Link2.ToyMissHit
+import EcbsLink2Eval.ToyHit
+import EcbsLink2Eval.ToyMissHit
 
 namespace EcbsLink2.Spec
 

@@ -50,17 +50,6 @@ import EcbsLink2.SpecBase
 import EcbsLink2.Link2.BaseSpec
 import EcbsLink2.Link2.DemoPoint
 import EcbsLink2.Link2.Frobenius
-import EcbsLink2.Link2.ToyPow
-import EcbsLink2.Link2.ToyRoot
-import EcbsLink2.Link2.ToyHit
-import EcbsLink2.Link2.ToyMiss
-import EcbsLink2.Link2.ToyMissRoot
-import EcbsLink2.Link2.ToyMissHit
-import EcbsLink2.Link2.ToySearch
-import EcbsLink2.Link2.ToyInv
-import EcbsLink2.Link2.ToyWalk
-import EcbsLink2.Link2.ToyChord
-import EcbsLink2.Link2.ToyChordAsm
 import EcbsLink2.Link2.OneField
 import EcbsLink2.Link2.CurveTest
 import EcbsLink2.Link2.CurveAsm

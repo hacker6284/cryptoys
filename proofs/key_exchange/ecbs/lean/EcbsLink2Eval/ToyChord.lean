@@ -2,7 +2,7 @@
   Field steps of the first Toy chord (red cell after the copy).
   Each product is one kernel evaluation. The inverse is `toy_run_inv`.
 -/
-import EcbsLink2.Link2.ToyInv
+import EcbsLink2Eval.ToyInv
 
 namespace EcbsLink2.Spec
 

@@ -1,7 +1,7 @@
 /-
   The hole-1 exponent root does not square to the curve side.
 -/
-import EcbsLink2.Link2.ToyMissRoot
+import EcbsLink2Eval.ToyMissRoot
 
 namespace EcbsLink2.Spec
 

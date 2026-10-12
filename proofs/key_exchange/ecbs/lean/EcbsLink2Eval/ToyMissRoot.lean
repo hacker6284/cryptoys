@@ -1,8 +1,8 @@
 /-
   Hole 1 on Toy is not a root. The exponent is the hole-2 proof's digit list.
 -/
-import EcbsLink2.Link2.ToyMiss
-import EcbsLink2.Link2.ToyPow
+import EcbsLink2Eval.ToyMiss
+import EcbsLink2Eval.ToyPow
 
 namespace EcbsLink2.Spec
 

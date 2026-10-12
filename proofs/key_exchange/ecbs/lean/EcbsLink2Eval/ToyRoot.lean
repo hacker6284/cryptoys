@@ -2,7 +2,7 @@
   The Toy root at hole 2, assembled from the per-step exponent.
   SPEC.md §5.1 lines 195 and 197.
 -/
-import EcbsLink2.Link2.ToyPow
+import EcbsLink2Eval.ToyPow
 
 namespace EcbsLink2.Spec
 

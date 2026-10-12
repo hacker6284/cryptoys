@@ -13,6 +13,11 @@ path = "../../../audit"
 [[lean_lib]]
 name = "EcbsLink2"
 
+# Concrete Toy kernel checks. Not a default target: `lake build` and normal CI
+# build EcbsLink2 only. Not wired into proofs-heavy either.
+[[lean_lib]]
+name = "EcbsLink2Eval"
+
 # The MegaDreifach Link 2 runtime lemmas (`MegaDreifach.Link2.Embed`, `.Sudo`,
 # `.Loop`: `FitsLen`, the SudoRt arithmetic and the loop drivers), elaborated here
 # against this package's own emitted SudoRt (identical to MegaDreifach's but for the

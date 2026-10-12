@@ -1,7 +1,7 @@
 /-
   The first red cell of the Toy cofactor, from the field steps.
 -/
-import EcbsLink2.Link2.ToyChord
+import EcbsLink2Eval.ToyChord
 
 namespace EcbsLink2.Spec
 

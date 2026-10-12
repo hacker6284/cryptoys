@@ -630,7 +630,8 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
       (∀ i (hi : i < b.sudo_5Board_4home.size) (hi' : i < b'.sudo_5Board_4home.size),
         i ≠ 6 → i ≠ 2 → b'.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]) ∧
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
-      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      ∃ pk', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk' := by
   have hpair := mul_settles_first b Ecbs.spare Ecbs.base_across Ecbs.base_across true
     2 lane n moves slides peak cOps hmk hon hto h2H h2D h7 hempty2 hbench hn hpos hnle hzero
     hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
@@ -719,12 +720,12 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
     (by rw [htier]; exact hrF) (by rw [htier]; exact hkF)
     hhole hsm hnsm hfitB hfold
   obtain ⟨b', hok, hon', hto', hbench, htake, htail⟩ := hmul
-  obtain ⟨hhigh, hmov, _hpk, hsl, ht, hsz, hheld, _h5, hframe, _hmk, _hops,
+  obtain ⟨hhigh, hmov, hpk, hsl, ht, hsz, hheld, _h5, hframe, _hmk, _hops,
       _hstrict, _hhole⟩ := htail
   have h2s : 2 < bS.sudo_5Board_4home.size := by
     simp [bS, settleBoard]
     split <;> simp [Array.size_set, h2H]
-  refine ⟨b', ?_, hon', ?_, htake, ?_, hbench, hhigh, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', ?_, hon', ?_, htake, ?_, hbench, hhigh, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
       show Ecbs.base_across = ((3 : Nat) : Int) from rfl]
     exact hok
@@ -787,6 +788,7 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
   · rw [hheld, Array.size_set, Array.size_set]
     simp [bS, settleBoard]
     split <;> simp [Array.size_set, h2D]
+  · exact ⟨_, hpk⟩
 
 /-- The explicit `settle` after the spare multiply. The square is on the bench,
     aimed at the empty spare, so the spare home becomes the length-`n` prefix. -/

@@ -49,6 +49,9 @@ import EcbsLink2.SpecCurve
 import EcbsLink2.Link2.OneField
 import EcbsLink2.Link2.CurveTest
 import EcbsLink2.Link2.CurveAsm
+import EcbsLink2.Link2.CurveCube
+import EcbsLink2.Link2.CurveSpare
+import EcbsLink2.Link2.CurveRun
 import EcbsLink2.Link2.RungLadder
 import EcbsLink2.Link2.MulKeep
 import EcbsLink2.Link2.Export

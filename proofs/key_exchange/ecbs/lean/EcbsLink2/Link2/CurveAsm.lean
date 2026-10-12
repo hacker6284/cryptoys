@@ -3,6 +3,7 @@
   The pieces are the curve lemmas; this file only chains them.
 -/
 import EcbsLink2.Link2.CurveTest
+import EcbsLink2.Link2.CurveCopy
 
 namespace EcbsLink2.Link2
 
@@ -157,18 +158,55 @@ private theorem place_lane (b : Ecbs.Board) (home : Nat)
   dsimp only
   split <;> simp [Array.size_set]
 
-/-- The cube in `on_curve` is the cube of the gap after that pending square has been
-    settled. The peak argument is the one `placeBoard` was given, and the settled
-    board's peak is `raisedPeak` of it. Reading the settled board back in this same
-    proof exceeds the heartbeat limit, so the spare multiply starts from this equality. -/
-theorem curve_cube_of_copy (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
+/-- `on_curve` after the two puts is the cube of the settled gap, then the spare
+    multiply, the settle, and the add-through-clears tail. The board in the cube is
+    named, not unfolded. The conjuncts are the fields the cube step reads. -/
+theorem curve_on_prefix (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
     (x y : List Nat) (hx : x.length = t.n) (hy : y.length = t.n)
     (_hxt : allTritList x) (hyt : allTritList y) :
-    ∃ (b : Ecbs.Board) (lane : List Nat) (moves pk : Nat)
-      (h5H : 5 < b.sudo_5Board_4home.size) (h5D : 5 < b.sudo_5Board_4held.size),
-      Ecbs.cube b Ecbs.bottom Ecbs.bottom =
-        Ecbs.cube (settleBoard b 5 h5H h5D lane t.n moves 0 pk)
-          Ecbs.bottom Ecbs.bottom := by
+    ∃ (b : Ecbs.Board) (lane : List Nat) (moves pk peakS holeN : Nat)
+      (h5H : 5 < b.sudo_5Board_4home.size) (h5D : 5 < b.sudo_5Board_4held.size)
+      (hops1 : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      Ecbs.on_curve (boardCurve t x y) =
+        (Ecbs.cube (settleBoard b 5 h5H h5D lane t.n moves 0 pk) Ecbs.bottom Ecbs.bottom >>= fun bC =>
+          Ecbs.mul bC Ecbs.spare Ecbs.base_across Ecbs.base_across true false false >>= fun bM =>
+          Ecbs.settle bM >>= fun bS =>
+          Ecbs.add bS Ecbs.bottom Ecbs.spare true >>= fun bA =>
+          Ecbs.clear bA Ecbs.spare >>= fun bW =>
+          Ecbs.white0 bW Ecbs.bottom >>= fun b3 =>
+          Ecbs.value b3 Ecbs.gap >>= fun g =>
+          Ecbs.value b3 Ecbs.bottom >>= fun bot =>
+          Ecbs.clear b3 Ecbs.gap >>= fun b4 =>
+          Ecbs.clear b4 Ecbs.bottom >>= fun b5 =>
+          pure (SudoRt.SEq.beq g bot, b5)) ∧
+      b.sudo_5Board_9marker_on = false ∧
+      b.sudo_5Board_8bench_on = true ∧
+      b.sudo_5Board_8bench_to = Ecbs.gap ∧
+      b.sudo_5Board_4held[5]'h5D = false ∧
+      b.sudo_5Board_5bench = embed lane ∧
+      b.sudo_5Board_1t = embTier t ∧
+      b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) ∧
+      b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat 0 ∧
+      b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk ∧
+      (∀ (h : 2 < b.sudo_5Board_4home.size), b.sudo_5Board_4home[2] = embed x) ∧
+      (∀ (h : 2 < b.sudo_5Board_4held.size), b.sudo_5Board_4held[2] = true) ∧
+      (∀ (h : 3 < b.sudo_5Board_4home.size), b.sudo_5Board_4home[3] = embed x) ∧
+      (∀ (h : 3 < b.sudo_5Board_4held.size), b.sudo_5Board_4held[3] = true) ∧
+      (∀ (h : 4 < b.sudo_5Board_4home.size), b.sudo_5Board_4home[4] = embed y) ∧
+      (∀ (h : 4 < b.sudo_5Board_4held.size), b.sudo_5Board_4held[4] = true) ∧
+      (∀ (h : 6 < b.sudo_5Board_4held.size), b.sudo_5Board_4held[6] = false) ∧
+      b.sudo_5Board_4home.size = 8 ∧
+      b.sudo_5Board_4held.size = 8 ∧
+      0 < lane.length ∧
+      t.n ≤ lane.length ∧
+      (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hops1 = (0 : Int) ∧
+      (∀ (h : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = 1) ∧
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS ∧
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN ∧
+      lane.take t.n = fieldMul t.n t.k t.benchlen y y ∧
+      moves ≤ t.n * (t.n + 1) + 3 * (t.benchlen - t.n) + 6 * t.n := by
   let n := t.n
   let k := t.k
   let w := t.w
@@ -279,7 +317,7 @@ theorem curve_cube_of_copy (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
     dsimp [mvSet]; omega
   have fit (m : Nat) (hm : m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8) : FitsLen m :=
     layFit n bench m hnsm hbnd hm
-  obtain ⟨b1, hmul, hon1, hto1, hbench1, htake1, h3, _h4, _h2e, hh3, _hh4, hh2, hhs, hds,
+  obtain ⟨b1, hmul, hon1, hto1, hbench1, htake1, h3, h4, _h2e, hh3, hh4, hh2, hhs, hds,
       _h5e, hh5, hhigh, hmov, hpeak1, htier, hslides, hmk1, hops1, hstrict1, hhole1, hh6,
       hfit1⟩ :=
     curve_mul_gap t lay x y hx hy hyt
@@ -405,8 +443,41 @@ theorem curve_cube_of_copy (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
     (fit (2 * pegCount (yLane.take n)) (by omega)) hfitGap
     (fit (0 + 2 * pegCount (yLane.take n)) (by omega)) hopsSzC hop1C
     (fit 1 (by omega))
-  exact ⟨bCopy, yLane, mvCopy,
-    raisedPeak pk1 (countHeld (bCopy.sudo_5Board_4held.set ⟨2, h2b⟩ true) 7),
-    h5Hb, h5Db, hcubeEq⟩
+  have hop0b : ∀ (h : 0 < b1.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      b1.sudo_5Board_4cost.sudo_5Costs_3ops[0] = 1 := by
+    intro h
+    have hget := get_eq_of_array hops1 0 h
+    simpa [boardCurve, baseAcrossBoard, built_ops_blank, Array.getElem_set,
+      Array.getElem_mkArray] using hget
+  obtain ⟨hszHc, hszDc, hhome2, hheld2, hhome3, hheld3, hhome4, hheld4, hheld6,
+      hstrictEq, hholeEq, hop0⟩ :=
+    curve_copy_pack b1 x y mv1 pk1 h2H1 h2D1 hhs hds h3 h4 hh3 hh4 hh6 hop0b
+  have hstrictEx : ∃ peakS,
+      bCopy.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS :=
+    ⟨_, hstrictEq.trans hstrict1⟩
+  obtain ⟨peakS, hstrictPk⟩ := hstrictEx
+  have hholeEx : ∃ holeN,
+      bCopy.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN :=
+    ⟨_, hholeEq.trans hhole1⟩
+  obtain ⟨holeN, hholePk⟩ := hholeEx
+  have hmvB : mvCopy ≤ n * (n + 1) + 3 * (bench - n) + 6 * n := by
+    have hle : mvCopy ≤ mvGap := by
+      dsimp [mvGap]
+      omega
+    exact Nat.le_trans hle hmvGapLe
+  refine ⟨bCopy, yLane, mvCopy,
+      raisedPeak pk1 (countHeld (bCopy.sudo_5Board_4held.set ⟨2, h2b⟩ true) 7),
+      peakS, holeN, h5Hb, h5Db, hopsSzC, ?_, hmkC, honC, htoC, hempty5, hbenchC,
+      htCopy, ?_, hslideC, hpeakC, hhome2, hheld2, hhome3, hheld3, hhome4, hheld4,
+      hheld6, hszHc, hszDc, hposY, ?_, ?_, hop1C, hop0, hstrictPk, hholePk, ?_, hmvB⟩
+  · unfold Ecbs.on_curve
+    rw [hmul, ok_bind]
+    dsimp only
+    rw [hcopy, ok_bind]
+    rw [hcubeEq]
+  · simpa [ofNat_eq_natCast] using hmovC
+  · rw [hyl]; exact hnb
+  · simpa [n] using hzeroY
+  · simpa [n, k, bench] using htakeY
 
 end EcbsLink2.Link2

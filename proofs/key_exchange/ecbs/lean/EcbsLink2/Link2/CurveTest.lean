@@ -912,6 +912,57 @@ theorem curve_white_beq (b : Ecbs.Board) (x3 x2 y2 : List Nat) (n moves : Nat)
   have hwhite := fieldAdd_white n sum hsumL hpos htriS
   simp [white, hwhite]
 
+/-- The two clears after the curve compare. Gap first, then bottom.
+    Neither clear changes the bool already read. -/
+theorem curve_clear_ends (b : Ecbs.Board) (gapXs botXs : List Nat) (moves : Nat)
+    (h5H : 5 < b.sudo_5Board_4home.size) (h5D : 5 < b.sudo_5Board_4held.size)
+    (h2H : 2 < b.sudo_5Board_4home.size) (h2D : 2 < b.sudo_5Board_4held.size)
+    (hheld5 : b.sudo_5Board_4held[5] = true)
+    (harr5 : b.sudo_5Board_4home[5] = embed gapXs)
+    (hheld2 : b.sudo_5Board_4held[2] = true)
+    (harr2 : b.sudo_5Board_4home[2] = embed botXs)
+    (hm : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hf5 : FitsLen gapXs.length) (hf2 : FitsLen botXs.length)
+    (hfit5 : FitsLen (moves + pegCount gapXs))
+    (hfit2 : FitsLen (moves + pegCount gapXs + pegCount botXs)) :
+    (Ecbs.clear b Ecbs.gap >>= fun b1 => Ecbs.clear b1 Ecbs.bottom) =
+      .ok { { b with
+          sudo_5Board_4home := b.sudo_5Board_4home.set ⟨5, h5H⟩ #[]
+          sudo_5Board_4held := b.sudo_5Board_4held.set ⟨5, h5D⟩ false
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (moves + pegCount gapXs) } } with
+        sudo_5Board_4home :=
+          (b.sudo_5Board_4home.set ⟨5, h5H⟩ #[]).set
+            ⟨2, by simpa [Array.size_set] using h2H⟩ #[]
+        sudo_5Board_4held :=
+          (b.sudo_5Board_4held.set ⟨5, h5D⟩ false).set
+            ⟨2, by simpa [Array.size_set] using h2D⟩ false
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_5moves := Int.ofNat (moves + pegCount gapXs + pegCount botXs) } } := by
+  have h1 := clear_held_refines b 5 gapXs moves h5H h5D hheld5 harr5 hm hf5 hfit5
+  rw [show Ecbs.gap = ((5 : Nat) : Int) from rfl, h1, ok_bind]
+  let b1 := { b with
+    sudo_5Board_4home := b.sudo_5Board_4home.set ⟨5, h5H⟩ #[]
+    sudo_5Board_4held := b.sudo_5Board_4held.set ⟨5, h5D⟩ false
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_5moves := Int.ofNat (moves + pegCount gapXs) } }
+  have h2H1 : 2 < b1.sudo_5Board_4home.size := by
+    simpa [b1, Array.size_set] using h2H
+  have h2D1 : 2 < b1.sudo_5Board_4held.size := by
+    simpa [b1, Array.size_set] using h2D
+  have hheld21 : b1.sudo_5Board_4held[2] = true := by
+    have hne : (2 : Nat) ≠ 5 := by decide
+    simp [b1, Array.getElem_set, hne, hheld2]
+  have harr21 : b1.sudo_5Board_4home[2] = embed botXs := by
+    have hne : (2 : Nat) ≠ 5 := by decide
+    simp [b1, Array.getElem_set, hne, harr2]
+  have hm1 : b1.sudo_5Board_4cost.sudo_5Costs_5moves =
+      ((moves + pegCount gapXs) : Int) := by
+    simp [b1, ofNat_eq_natCast]
+  have h2 := clear_held_refines b1 2 botXs (moves + pegCount gapXs) h2H1 h2D1
+    hheld21 harr21 hm1 hf2 (by simpa [Nat.add_assoc] using hfit2)
+  rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, h2]
+
 theorem placeBoard_home (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) :

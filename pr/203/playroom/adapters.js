@@ -1041,8 +1041,6 @@ export function createMegaDreifachAdapter() {
         },
         async leave({ snap = false } = {}) {
             cancelEnter = true;
-            // Mid-unbox: stop after the move in progress (Skip finishes it).
-            stage?.cancelUnbox();
             clock?.skip();
             const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
             session?.dispose();

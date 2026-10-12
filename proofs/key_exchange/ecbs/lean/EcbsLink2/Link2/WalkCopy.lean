@@ -6,6 +6,7 @@
 -/
 import EcbsLink2.Link2.Place
 import EcbsLink2.Link2.MulSettle
+import EcbsLink2.SpecBase
 
 namespace EcbsLink2.Link2
 
@@ -198,3 +199,22 @@ theorem walk_copy_white (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
     exact hget.trans h4a1
   · rw [place_moves_eq]
   · rw [place_peak_nat b1 1 h1H1 h1D1 y mv1 pk1 (by rw [hpk1])]
+
+/-- SPEC.md §3 R8 lines 158–159. A white cell while the accumulator is empty
+    copies the base point. No Frobenius, no chord. -/
+theorem walkStep_fresh_white (n k bench : Nat) (base acc : List Nat × List Nat) :
+    Spec.walkStep n k bench base false acc 1 = some (true, base) := by
+  unfold Spec.walkStep
+  dsimp only
+  simp
+
+/-- A red cell while the accumulator is empty copies the base point with the
+    up coordinate negated. -/
+theorem walkStep_fresh_red (n k bench : Nat) (base acc : List Nat × List Nat) :
+    Spec.walkStep n k bench base false acc 2 =
+      some (true, (base.1, Spec.mirrorTrits base.2)) := by
+  unfold Spec.walkStep
+  dsimp only
+  simp
+
+end EcbsLink2.Link2

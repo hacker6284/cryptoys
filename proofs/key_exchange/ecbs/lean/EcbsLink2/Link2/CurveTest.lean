@@ -271,6 +271,15 @@ theorem curve_mul_gap (t : Spec.Tier) (lay : FieldLay t) (x y : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_3ops =
         (boardCurve t x y).sudo_5Board_4cost.sudo_5Costs_3ops.set
           ⟨0, by simp [curve_ops, Array.size_mkArray]⟩ 1 ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        Int.ofNat (raisedPeak 0 (countHeld ((boardCurve t x y).sudo_5Board_4held.set
+          ⟨6, by
+            have h8 := (curve_sz t x y).1
+            rw [h8]; decide⟩ true) 7)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        Int.ofNat (raisedHole 0 (topIdx
+          (school t.n y y (List.replicate t.benchlen 0) false))) ∧
+      (∀ (h6 : 6 < b'.sudo_5Board_4held.size), b'.sudo_5Board_4held[6] = false) ∧
       FitsLen (mulMoves (pegCount x + pegCount y) y y t.n t.k t.benchlen + pegCount x) := by
   let n := t.n
   let k := t.k
@@ -332,7 +341,8 @@ theorem curve_mul_gap (t : Spec.Tier) (lay : FieldLay t) (x y : List Nat)
       simpa [bU, ofNat_eq_natCast] using this)
     lay.small hnsm hfitB hfold
   obtain ⟨b', hok, hon, hto, hbench, htake, htail⟩ := hmul
-  obtain ⟨hhigh, hmov, hpeakM, hslides, ht, hhsz, hheld, _h5, hframe, _hmk, _hops⟩ := htail
+  obtain ⟨hhigh, hmov, hpeakM, hslides, ht, hhsz, hheld, _h5, hframe, _hmk, _hops,
+      hstrict, hhole⟩ := htail
   have h2H : 2 < bU.sudo_5Board_4home.size := by rw [hHome8]; decide
   have h2D : 2 < bU.sudo_5Board_4held.size := by rw [hHeld8]; decide
   let sch := school n y y (List.replicate bench 0) false
@@ -347,7 +357,7 @@ theorem curve_mul_gap (t : Spec.Tier) (lay : FieldLay t) (x y : List Nat)
     exact fits_budget (by omega)
   have h5H : 5 < bU.sudo_5Board_4home.size := by rw [hHome8]; decide
   have h5D : 5 < bU.sudo_5Board_4held.size := by rw [hHeld8]; decide
-  refine ⟨b', hok, hon, hto, hbench, htake, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hmovFit⟩
+  refine ⟨b', hok, hon, hto, hbench, htake, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hmovFit⟩
   · intro h3
     rw [hframe 3 hH3 h3 (by decide)]
     exact (curve_at3 t x y hD3 hH3).2
@@ -390,6 +400,13 @@ theorem curve_mul_gap (t : Spec.Tier) (lay : FieldLay t) (x y : List Nat)
     simpa [bU, ofNat_eq_natCast] using (curve_off t x y).2.2.2.2
   · exact _hmk
   · simpa [bU, curve_ops, ofNat_eq_natCast] using _hops
+  · simpa [bU, ofNat_eq_natCast] using hstrict
+  · simpa [bU, n, bench, ofNat_eq_natCast] using hhole
+  · intro h6
+    revert h6
+    rw [hheld]
+    intro h6
+    simp [Array.getElem_set, bU, curve_spare t x y hD6]
 
 /-- `on_curve`'s second bind: copy the across into the empty bottom.
     `placeBoard` writes `embed x` at home 2 and marks it held. The bench is untouched. -/
@@ -416,11 +433,12 @@ theorem curve_copy_across (b : Ecbs.Board) (x : List Nat) (n moves peak : Nat)
 /-- `on_curve`'s cube starts by settling the pending gap, which holds `y²`.
     The cube of the bottom is then the cube on that settled board. -/
 theorem curve_cube_settles (b : Ecbs.Board) (lane : List Nat)
-    (n moves slides peak cOps : Nat)
+    (n moves slides pk cOps : Nat)
     (hmk : b.sudo_5Board_9marker_on = false)
     (hon : b.sudo_5Board_8bench_on = true)
     (hto : b.sudo_5Board_8bench_to = Ecbs.gap)
     (hH : 5 < b.sudo_5Board_4home.size) (hD : 5 < b.sudo_5Board_4held.size)
+    (h2 : 2 < b.sudo_5Board_4held.size)
     (h7 : 7 ≤ b.sudo_5Board_4held.size)
     (hempty : b.sudo_5Board_4held[5] = false)
     (hbench : b.sudo_5Board_5bench = embed lane)
@@ -430,7 +448,8 @@ theorem curve_cube_settles (b : Ecbs.Board) (lane : List Nat)
     (hf : FitsLen n) (hfitL : FitsLen lane.length)
     (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
     (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
-    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak pk (countHeld (b.sudo_5Board_4held.set ⟨2, h2⟩ true) 7)))
     (hpeg : FitsLen (2 * pegCount (lane.take n)))
     (hfitM : FitsLen (moves + 2 * pegCount (lane.take n)))
     (hfitS : FitsLen (slides + 2 * pegCount (lane.take n)))
@@ -438,8 +457,10 @@ theorem curve_cube_settles (b : Ecbs.Board) (lane : List Nat)
     (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hops = (cOps : Int))
     (hfops : FitsLen (cOps + 1)) :
     Ecbs.cube b Ecbs.bottom Ecbs.bottom =
-      Ecbs.cube (settleBoard b 5 hH hD lane n moves slides peak)
+      Ecbs.cube (settleBoard b 5 hH hD lane n moves slides
+          (raisedPeak pk (countHeld (b.sudo_5Board_4held.set ⟨2, h2⟩ true) 7)))
         Ecbs.bottom Ecbs.bottom := by
+  let peak := raisedPeak pk (countHeld (b.sudo_5Board_4held.set ⟨2, h2⟩ true) 7)
   have hto5 : b.sudo_5Board_8bench_to = ((5 : Nat) : Int) := by
     rw [hto, show Ecbs.gap = ((5 : Nat) : Int) from rfl]
   rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl]
@@ -450,7 +471,7 @@ theorem curve_cube_settles (b : Ecbs.Board) (lane : List Nat)
 /-- After the gap has been settled, `cube bottom bottom` leaves `x³` on the bench
     aimed at the bottom, and clears that home. -/
 theorem curve_cube_bottom (b : Ecbs.Board) (x : List Nat)
-    (w h r n k moves hole bench peak peakS cOps cg : Nat)
+    (w h r n k moves hole bench pk peakS cOps cg : Nat)
     (hmk : b.sudo_5Board_9marker_on = false)
     (hoff : b.sudo_5Board_8bench_on = false)
     (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
@@ -469,7 +490,8 @@ theorem curve_cube_bottom (b : Ecbs.Board) (x : List Nat)
     (hlenx : x.length = n)
     (hf : FitsLen n)
     (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
-    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak =
+      (raisedPeak pk (countHeld (b.sudo_5Board_4held.set ⟨2, hF⟩ true) 7) : Int))
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
     (hxsT : allTritList x)
     (h3 : FitsLen (3 * (n - 1)))
@@ -499,26 +521,48 @@ theorem curve_cube_bottom (b : Ecbs.Board) (x : List Nat)
         coeff (laneFold n (n - k) (combStrip n bench x)) i = 0) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat (cubeMoves moves x n k bench) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_4peak =
-        Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨2, hF⟩ false) 7)) ∧
+        Int.ofNat (raisedPeak
+          (raisedPeak pk (countHeld (b.sudo_5Board_4held.set ⟨2, hF⟩ true) 7))
+          (countHeld (b.sudo_5Board_4held.set ⟨2, hF⟩ false) 7)) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
       b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
       b'.sudo_5Board_4cost.sudo_5Costs_3ops =
-        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) := by
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        Int.ofNat (raisedPeak peakS (countHeld b.sudo_5Board_4held 7)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        Int.ofNat (raisedHole hole (topIdx (combStrip n bench x))) := by
+  let peak := raisedPeak pk (countHeld (b.sudo_5Board_4held.set ⟨2, hF⟩ true) 7)
+  have hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    simpa [peak, ofNat_eq_natCast] using hpeak
   have hcube := cube_refines b 2 2 x w h r n k moves hole bench peak peakS cOps cg
     hmk hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf
-    hmoves hpeak hpeakS hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF
+    hmoves hpk hpeakS hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF
     hHole hsm hnsm hfitB hfold
-  obtain ⟨b', hok, hon, hto, hbench, htake, hhigh, hmov, hpeak, hslides, ht,
+  have hoffB := cube_off_eq b 2 2 x w h r n k moves hole bench peak peakS cOps cg
+    hmk hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf
+    hmoves hpk hpeakS hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF
+    hHole hsm hnsm hfitB hfold
+  obtain ⟨b', hok, hon, hto, hbench, htake, hhigh, hmov, hpeakOut, hslides, ht,
       _hhsz, hhome, hheld, hmk', _hrow, hops', _htally, _hctrlH, _hctrl⟩ := hcube
-  refine ⟨b', ?_, hon, ?_, hbench, htake, hheld, hhome, hmk', hhigh, hmov, hpeak, hslides, ht, hops'⟩
+  have hb' : b' = cubeOffBoard b 2 2 x n k moves hole bench peak peakS cOps hops hF hHome := by
+    have hok2 : Ecbs.cube b ((2 : Nat) : Int) ((2 : Nat) : Int) = .ok b' := by
+      rw [← show Ecbs.bottom = ((2 : Nat) : Int) from rfl]
+      exact hok
+    rw [hoffB] at hok2
+    injection hok2.symm
+  refine ⟨b', ?_, hon, ?_, hbench, htake, hheld, hhome, hmk', hhigh, hmov, ?_, hslides, ht, hops', ?_, ?_⟩
   · rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl]; exact hok
   · rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl]; exact hto
+  · simpa [peak] using hpeakOut
+  · simp [hb', cubeOffBoard]
+  · simp [hb', cubeOffBoard]
 
 /-- The spare multiply in `on_curve`. The bench holds the cube and is aimed at the
     empty bottom, so `mul` settles `x³` there and then squares the across.
     The square sits on a fresh bench aimed at the spare. -/
 theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
-    (w h r n k moves hole bench peak peakS cOps : Nat)
+    (w h r n k moves slides hole bench peak peakS cOps : Nat)
     (hmk : b.sudo_5Board_9marker_on = false)
     (hon : b.sudo_5Board_8bench_on = true)
     (hto : b.sudo_5Board_8bench_to = ((2 : Nat) : Int))
@@ -536,12 +580,12 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
     (hzero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i] = 0)
     (hf : FitsLen n) (hfitL : FitsLen lane.length)
     (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
-    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat 0)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
     (hpeg : FitsLen (2 * pegCount (lane.take n)))
     (hfitM : FitsLen (moves + 2 * pegCount (lane.take n)))
-    (hfitS : FitsLen (2 * pegCount (lane.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (lane.take n)))
     (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
     (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
     (hfops : FitsLen (cOps + 1))
@@ -577,53 +621,57 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_5moves =
         Int.ofNat (mulMoves (moves + 2 * pegCount (lane.take n)) x x n k bench) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides =
-        Int.ofNat (2 * pegCount (lane.take n)) ∧
+        Int.ofNat (slides + 2 * pegCount (lane.take n)) ∧
       b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
       (∀ (h6 : 6 < b'.sudo_5Board_4held.size), b'.sudo_5Board_4held[6] = false) ∧
+      (∀ (h2 : 2 < b'.sudo_5Board_4held.size), b'.sudo_5Board_4held[2] = true) ∧
+      (∀ i (hi : i < b.sudo_5Board_4held.size) (hi' : i < b'.sudo_5Board_4held.size),
+        i ≠ 6 → i ≠ 2 → b'.sudo_5Board_4held[i] = b.sudo_5Board_4held[i]) ∧
       (∀ i (hi : i < b.sudo_5Board_4home.size) (hi' : i < b'.sudo_5Board_4home.size),
-        i ≠ 6 → i ≠ 2 → b'.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]) := by
+        i ≠ 6 → i ≠ 2 → b'.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]) ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
   have hpair := mul_settles_first b Ecbs.spare Ecbs.base_across Ecbs.base_across true
-    2 lane n moves 0 peak cOps hmk hon hto h2H h2D h7 hempty2 hbench hn hpos hnle hzero
-    hf hfitL hmoves (by simpa [ofNat_eq_natCast] using hslides) hpeak hpeg hfitM
-    (by simpa [Nat.zero_add] using hfitS)
+    2 lane n moves slides peak cOps hmk hon hto h2H h2D h7 hempty2 hbench hn hpos hnle hzero
+    hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
     hops hop0 hfops
-  have hset := settle_refines b 2 lane n moves 0 peak h2H h2D h7 hon hto hempty2 hbench
-    hn hpos hnle hzero hf hfitL hmoves (by simpa [ofNat_eq_natCast] using hslides) hpeak
-    hpeg hfitM (by simpa [Nat.zero_add] using hfitS)
+  have hset := settle_refines b 2 lane n moves slides peak h2H h2D h7 hon hto hempty2 hbench
+    hn hpos hnle hzero hf hfitL hmoves hslides hpeak
+    hpeg hfitM hfitS
   rw [hpair.1, hset, ok_bind]
-  let bS := settleBoard b 2 h2H h2D lane n moves 0 peak
+  let bS := settleBoard b 2 h2H h2D lane n moves slides peak
   let pegs := pegCount (lane.take n)
   let mvS := moves + 2 * pegs
   let occ := countHeld (b.sudo_5Board_4held.set ⟨2, h2D⟩ true) 7
   let pkS := if peak < occ then occ else peak
   have hmkS : bS.sudo_5Board_9marker_on = false := by
     by_cases hpk : peak < occ
-    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, hmk]
-    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, hmk]
+    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, hmk]
+    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, hmk]
   have hoffS : bS.sudo_5Board_8bench_on = false := by
-    simp [bS, settle_bench_off b 2 h2H h2D lane n moves 0 peak]
+    simp [bS, settle_bench_off b 2 h2H h2D lane n moves slides peak]
   have hmovS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mvS : Int) := by
     by_cases hpk : peak < occ
-    · simp [bS, mvS, pegs, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, ofNat_eq_natCast]
-    · simp [bS, mvS, pegs, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, ofNat_eq_natCast]
+    · simp [bS, mvS, pegs, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, ofNat_eq_natCast]
+    · simp [bS, mvS, pegs, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, ofNat_eq_natCast]
   have hpkS : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (pkS : Int) := by
     by_cases hpk : peak < occ
-    · simp [bS, pkS, occ, hpk, if_pos, settle_peak b 2 h2H h2D lane n moves 0 peak hpk,
+    · simp [bS, pkS, occ, hpk, if_pos, settle_peak b 2 h2H h2D lane n moves slides peak hpk,
         ofNat_eq_natCast]
-    · simp [bS, pkS, occ, hpk, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, hpeak,
+    · simp [bS, pkS, occ, hpk, settle_keep b 2 h2H h2D lane n moves slides peak hpk, hpeak,
         ofNat_eq_natCast]
   have hstrict : bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
     by_cases hpk : peak < occ
-    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, hpeakS]
-    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, hpeakS]
+    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, hpeakS]
+    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, hpeakS]
   have hhole : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
     by_cases hpk : peak < occ
-    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, hHole]
-    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, hHole]
+    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, hHole]
+    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, hHole]
   have hopsS : 0 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-    simpa [bS] using settle_ops_lt b 0 2 hops h2H h2D lane n moves 0 peak
+    simpa [bS] using settle_ops_lt b 0 2 hops h2H h2D lane n moves slides peak
   have hop0S : bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsS = (cOps : Int) := by
-    have hget := get_eq_of_array (settle_ops b 2 h2H h2D lane n moves 0 peak) 0 hopsS
+    have hget := get_eq_of_array (settle_ops b 2 h2H h2D lane n moves slides peak) 0 hopsS
     exact hget.trans hop0
   have htier : bS.sudo_5Board_1t = b.sudo_5Board_1t := by
     dsimp [bS]
@@ -646,16 +694,16 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
     split <;> simp [Array.size_set, h7]
   have hheld3s : bS.sudo_5Board_4held[3] = true := by
     by_cases hpk : peak < occ
-    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set, hheld3]
-    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set, hheld3]
+    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set, hheld3]
+    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set, hheld3]
   have harr3s : bS.sudo_5Board_4home[3] = embed x := by
     by_cases hpk : peak < occ
-    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set, harr3]
-    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set, harr3]
+    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set, harr3]
+    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set, harr3]
   have hspEs : bS.sudo_5Board_4held[6] = false := by
     by_cases hpk : peak < occ
-    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set, hspE]
-    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set, hspE]
+    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set, hspE]
+    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set, hspE]
   have hmul := mul_refines bS 6 3 3 x x w h r n k mvS hole bench pkS peakS cOps
     hmkS hoffS hopsS hop0S hfops
     (by rw [htier]; exact hbl)
@@ -671,11 +719,12 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
     (by rw [htier]; exact hrF) (by rw [htier]; exact hkF)
     hhole hsm hnsm hfitB hfold
   obtain ⟨b', hok, hon', hto', hbench, htake, htail⟩ := hmul
-  obtain ⟨hhigh, hmov, _hpk, hsl, ht, _hsz, hheld, _h5, hframe, _hmk, _hops⟩ := htail
+  obtain ⟨hhigh, hmov, _hpk, hsl, ht, hsz, hheld, _h5, hframe, _hmk, _hops,
+      _hstrict, _hhole⟩ := htail
   have h2s : 2 < bS.sudo_5Board_4home.size := by
     simp [bS, settleBoard]
     split <;> simp [Array.size_set, h2H]
-  refine ⟨b', ?_, hon', ?_, htake, ?_, hbench, hhigh, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', ?_, hon', ?_, htake, ?_, hbench, hhigh, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
       show Ecbs.base_across = ((3 : Nat) : Int) from rfl]
     exact hok
@@ -684,16 +733,41 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
   · intro h2
     rw [hframe 2 h2s h2 (by decide)]
     by_cases hpk : peak < occ
-    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set]
-    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set]
+    · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set]
+    · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set]
   · simpa [mvS, pegs] using hmov
   · rw [hsl]
     by_cases hpk : peak < occ
-    · simp [bS, mvS, pegs, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, ofNat_eq_natCast]
-    · simp [bS, mvS, pegs, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, ofNat_eq_natCast]
+    · simp [bS, mvS, pegs, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, ofNat_eq_natCast]
+    · simp [bS, mvS, pegs, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, ofNat_eq_natCast]
   · rw [ht, htier]
   · intro h6
     simp [hheld, Array.getElem_set]
+  · intro h2
+    have h2Ds : 2 < bS.sudo_5Board_4held.size := by
+      simp [bS, settleBoard]
+      split <;> simp [Array.size_set, h2D]
+    have h2true : bS.sudo_5Board_4held[2] = true := by
+      by_cases hpk : peak < occ
+      · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set]
+      · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk, Array.getElem_set]
+    have hne : (6 : Nat) ≠ 2 := by decide
+    simp [hheld, Array.getElem_set, hne, h2true]
+  · intro i hi hi' h6ne h2ne
+    have hSi : i < bS.sudo_5Board_4held.size := by
+      simp [bS, settleBoard]
+      split <;> simp [Array.size_set, hi]
+    have hget : b'.sudo_5Board_4held[i] = bS.sudo_5Board_4held[i] := by
+      have hne6 : (6 : Nat) ≠ i := Ne.symm h6ne
+      simp [hheld, Array.getElem_set, hne6]
+    have hne2 : (2 : Nat) ≠ i := Ne.symm h2ne
+    by_cases hpk : peak < occ
+    · simp only [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk,
+        Array.getElem_set, hne2] at hget
+      exact hget
+    · simp only [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk,
+        Array.getElem_set, hne2] at hget
+      exact hget
   · intro i hi hi' h6 h2
     have hSi : i < bS.sudo_5Board_4home.size := by
       simp [bS, settleBoard]
@@ -701,12 +775,18 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
     have hget := hframe i hSi hi' h6
     have hne2 : 2 ≠ i := Ne.symm h2
     by_cases hpk : peak < occ
-    · simp only [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk,
+    · simp only [bS, occ, settle_peak b 2 h2H h2D lane n moves slides peak hpk,
         Array.getElem_set, hne2] at hget
       exact hget
-    · simp only [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk,
+    · simp only [bS, occ, settle_keep b 2 h2H h2D lane n moves slides peak hpk,
         Array.getElem_set, hne2] at hget
       exact hget
+  · rw [hsz]
+    simp [bS, settleBoard]
+    split <;> simp [Array.size_set, h2H]
+  · rw [hheld, Array.size_set, Array.size_set]
+    simp [bS, settleBoard]
+    split <;> simp [Array.size_set, h2D]
 
 /-- The explicit `settle` after the spare multiply. The square is on the bench,
     aimed at the empty spare, so the spare home becomes the length-`n` prefix. -/
@@ -739,11 +819,13 @@ theorem curve_settle_spare (b : Ecbs.Board) (lane sq : List Nat) (n moves slides
         i ≠ 6 → b'.sudo_5Board_4held[i] = b.sudo_5Board_4held[i]) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_5moves =
         Int.ofNat (moves + 2 * pegCount (lane.take n)) ∧
-      b'.sudo_5Board_1t = b.sudo_5Board_1t := by
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
   have hset := settle_refines b 6 lane n moves slides peak h6H h6D h7 hon hto hempty hbench
     hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
   let b' := settleBoard b 6 h6H h6D lane n moves slides peak
-  refine ⟨b', hset, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', hset, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · dsimp [b']
     unfold settleBoard
     split <;> rfl
@@ -777,6 +859,12 @@ theorem curve_settle_spare (b : Ecbs.Board) (lane sq : List Nat) (n moves slides
   · dsimp [b']
     unfold settleBoard
     split <;> rfl
+  · dsimp [b']
+    unfold settleBoard
+    split <;> simp [Array.size_set]
+  · dsimp [b']
+    unfold settleBoard
+    split <;> simp [Array.size_set]
 
 /-- `bottom + mirror(spare)` after the square has been settled into the spare.
     The destination is `fieldAdd` of the cube and the flipped square. -/

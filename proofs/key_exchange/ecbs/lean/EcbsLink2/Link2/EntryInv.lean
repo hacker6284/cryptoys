@@ -1392,7 +1392,7 @@ theorem check_mul (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
             apply FitsLen.of_le hfitBig
             omega)
       obtain ⟨bM, hmulOk, hon, -, hbench, htake, hrest⟩ := hmul
-      obtain ⟨-, hmov, -, -, htM, hsz, hheld, h5keep, _hframe, _hmk, _hops⟩ := hrest
+      obtain ⟨-, hmov, -, -, htM, hsz, hheld, h5keep, _hframe, _hmk, _hops, _hstrict, _hhole⟩ := hrest
       have h5M : 5 < bM.sudo_5Board_4home.size := by
         rw [hsz]; exact hsg.h5
       have hhomeM : bM.sudo_5Board_4home[5]'h5M = embed (invGap t.n t.k t.benchlen xs) :=

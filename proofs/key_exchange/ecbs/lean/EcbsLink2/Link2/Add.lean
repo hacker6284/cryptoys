@@ -443,4 +443,160 @@ theorem toNum_inj (xs ys : List Nat) (hx : allTritList xs) (hy : allTritList ys)
       have hrest : toNum cs = toNum ds := by omega
       simp [ih ds hcs hds hlen hrest, hmod]
 
+/-- `beqBy.go` from hole `i` is list equality of the unconsumed tails. -/
+private theorem beqBy_go_drop (xs ys : List Nat) (i : Nat)
+    (hi : i ≤ xs.length) (hlen : xs.length = ys.length) :
+    SudoRt.beqBy.go (fun a b => SudoRt.SEq.beq a b) (embed xs) (embed ys) i =
+      decide (xs.drop i = ys.drop i) := by
+  have hmain : ∀ k i, xs.length - i = k → i ≤ xs.length → xs.length = ys.length →
+      SudoRt.beqBy.go (fun a b => SudoRt.SEq.beq a b) (embed xs) (embed ys) i =
+        decide (xs.drop i = ys.drop i) := by
+    intro k
+    refine Nat.strongRecOn k ?_
+    intro k ih i hk hi hlen
+    unfold SudoRt.beqBy.go
+    by_cases hlt : i < xs.length
+    · have hltY : i < ys.length := by omega
+      have hszX : i < (embed xs).size := by rw [size_embed]; exact hlt
+      have hszY : i < (embed ys).size := by rw [size_embed]; exact hltY
+      simp only [hszX, hszY, dif_pos, Array.get_eq_getElem, get_embed, sEq_ofNat]
+      have hdropX : xs.drop i = xs[i] :: xs.drop (i + 1) := List.drop_eq_getElem_cons hlt
+      have hdropY : ys.drop i = ys[i] :: ys.drop (i + 1) := List.drop_eq_getElem_cons hltY
+      rw [hdropX, hdropY]
+      have hcons : decide (xs[i] :: xs.drop (i + 1) = ys[i] :: ys.drop (i + 1)) =
+          (decide (xs[i] = ys[i]) && decide (xs.drop (i + 1) = ys.drop (i + 1))) := by
+        by_cases ha : xs[i] = ys[i] <;> by_cases hb : xs.drop (i + 1) = ys.drop (i + 1)
+        · simp [ha, hb]
+        · have hne : xs[i] :: xs.drop (i + 1) ≠ ys[i] :: ys.drop (i + 1) := by
+            intro h
+            injection h with _ htail
+            exact hb htail
+          rw [decide_eq_false hne]
+          simp only [ha, hb, decide_True, decide_False, Bool.true_and, Bool.false_and]
+        · have hne : xs[i] :: xs.drop (i + 1) ≠ ys[i] :: ys.drop (i + 1) := by
+            intro h
+            injection h with h1
+            exact ha h1
+          rw [decide_eq_false hne]
+          simp only [ha, hb, decide_False, Bool.false_and]
+        · have hne : xs[i] :: xs.drop (i + 1) ≠ ys[i] :: ys.drop (i + 1) := by
+            intro h
+            injection h with h1
+            exact ha h1
+          rw [decide_eq_false hne]
+          simp only [ha, hb, decide_False, Bool.false_and]
+      rw [hcons]
+      by_cases hxy : xs[i] = ys[i]
+      · have hlt' : i + 1 ≤ xs.length := Nat.succ_le_of_lt hlt
+        have hih := ih (xs.length - (i + 1)) (by omega) (i + 1) rfl hlt' hlen
+        simp only [hxy, decide_True, Bool.true_and, ite_true]
+        exact hih
+      · simp only [hxy, decide_False, Bool.false_and, Bool.false_eq_true, if_false]
+    · have hiEq : i = xs.length := by omega
+      have hdropY : ys.drop xs.length = [] := by
+        rw [hlen]
+        exact List.drop_length ys
+      simp only [size_embed, hiEq, Nat.lt_irrefl, dite_false, List.drop_length, hdropY,
+        decide_True]
+  exact hmain (xs.length - i) i rfl hi hlen
+
+/-- The curve compare is `SudoRt.SEq.beq` on the two embedded arrays, the same
+    walk as `beqBy`. On equal lengths that is list equality, not `toNum`. -/
+theorem embed_beq (xs ys : List Nat) :
+    SudoRt.SEq.beq (embed xs) (embed ys) = decide (xs = ys) := by
+  have hby : SudoRt.SEq.beq (embed xs) (embed ys) =
+      SudoRt.beqBy (fun a b => SudoRt.SEq.beq a b) (embed xs) (embed ys) := by
+    with_unfolding_all rfl
+  rw [hby]
+  unfold SudoRt.beqBy
+  by_cases hlen : xs.length = ys.length
+  · have hne : ((embed xs).size != (embed ys).size) = false := by
+      simp [size_embed, bne, hlen]
+    simp only [hne, ite_false]
+    rw [beqBy_go_drop xs ys 0 (Nat.zero_le _) hlen]
+    simp
+  · have hne : ((embed xs).size != (embed ys).size) = true := by
+      simp [size_embed, bne, hlen]
+    simp only [hne, ite_true]
+    have hneq : xs ≠ ys := by
+      intro h
+      exact hlen (congrArg List.length h)
+    simp [hneq]
+
+private theorem embed_inj {xs ys : List Nat} (h : embed xs = embed ys) : xs = ys := by
+  have hxs := embed_beq xs ys
+  rw [h] at hxs
+  rw [embed_beq ys ys] at hxs
+  exact of_decide_eq_true (by simpa using hxs)
+
+/-- Plus one is a white peg in hole 0. Later holes are unchanged. -/
+theorem fieldAdd_white (n : Nat) (xs : List Nat)
+    (hx : xs.length = n) (hpos : 0 < n) (ht : allTritList xs) :
+    fieldAdd n xs (1 :: List.replicate (n - 1) 0) =
+      xs.set 0 (tritAdd (xs[0]'(by omega)) 1) := by
+  have honeL : (1 :: List.replicate (n - 1) 0).length = n := by
+    simp
+    omega
+  have hz := fieldAdd_zipWith xs (1 :: List.replicate (n - 1) 0) (hx.trans honeL.symm)
+  have hEq : fieldAdd n xs (1 :: List.replicate (n - 1) 0) =
+      fieldAdd xs.length xs (1 :: List.replicate (n - 1) 0) := by
+    rw [hx]
+  rw [hEq, hz]
+  apply List.ext_getElem
+  · simp [List.length_zipWith, List.length_set, honeL, hx]
+  · intro i hi _
+    rw [List.getElem_zipWith]
+    by_cases hi0 : i = 0
+    · simp [hi0, List.getElem_set, tritAdd]
+    · have hix : i < xs.length := by
+        simp [List.length_zipWith, hx, honeL] at hi
+        omega
+      have hone0 : (1 :: List.replicate (n - 1) 0)[i]'(by rw [honeL, ← hx]; exact hix) = 0 := by
+        cases i with
+        | zero => exact absurd rfl hi0
+        | succ j =>
+          simp [List.getElem_cons_succ, List.getElem_replicate]
+      have htri : xs[i] ≤ 2 := trit_get ht hix
+      simp [List.getElem_set, Ne.symm hi0, hone0, tritAdd_right_zero _ htri]
+
+/-- Held home: `white0` adds one to hole 0 in GF(3) and bumps moves by one.
+    `set_number` writes only that home. The empty-home arm, which plants a
+    fresh white peg, is the other branch. -/
+theorem white0_held (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (hheld : b.sudo_5Board_4held[home] = true)
+    (harr : b.sudo_5Board_4home[home] = embed xs)
+    (h0 : 0 < xs.length)
+    (hc : xs[0] ≤ 2)
+    (hm : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hfm : FitsLen (moves + 1)) :
+    Ecbs.white0 b (home : Int) =
+      .ok (addBoard b home hH (embed (xs.set 0 (tritAdd xs[0] 1))) (moves + 1)) := by
+  have hcell : FitsLen (xs[0] + 1) := fits_small (by omega)
+  unfold Ecbs.white0
+  rw [show (home : Int) = Int.ofNat home from ofNat_eq_natCast home]
+  rw [atL_ofNat _ home hD, hheld]
+  simp only [ok_bind, Bool.not_true, Bool.false_eq_true, if_false, pure_eq_ok]
+  rw [ofNat_eq_natCast home]
+  rw [get_number_held b home hH hD hheld, harr, ok_bind]
+  rw [show (0 : Int) = Int.ofNat 0 from rfl]
+  rw [atL_embed xs 0 h0, ok_bind]
+  rw [addI_ofNat_one (xs[0]) hcell, ok_bind]
+  rw [show (3 : Int) = Int.ofNat 3 from rfl, modI_ofNat _ (by decide), ok_bind]
+  rw [embed_put xs 0 ((xs[0] + 1) % 3) h0, ok_bind]
+  rw [hm, addI_ofNat_one moves hfm, ok_bind]
+  simp only [← pure_eq_ok]
+  rw [except_bind_pure]
+  let b' := withMoves b (Int.ofNat (moves + 1))
+  let arr := embed (xs.set 0 ((xs[0] + 1) % 3))
+  change Ecbs.set_number b' (home : Int) arr =
+    .ok (addBoard b home hH (embed (xs.set 0 (tritAdd xs[0] 1))) (moves + 1))
+  have hHb : home < b'.sudo_5Board_4home.size := hH
+  have hDb : home < b'.sudo_5Board_4held.size := hD
+  have hheldb : b'.sudo_5Board_4held[home] = true := hheld
+  rw [set_number_held b' home arr hHb hDb hheldb]
+  unfold addBoard b'
+  simp [withMoves, tritAdd, arr]
+
 end EcbsLink2.Link2

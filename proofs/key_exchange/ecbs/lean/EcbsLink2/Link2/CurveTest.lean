@@ -494,14 +494,23 @@ theorem curve_cube_bottom (b : Ecbs.Board) (x : List Nat)
       (laneFold n (n - k) (combStrip n bench x)).take n = fieldCube n k bench x ∧
       b'.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨2, hF⟩ false ∧
       b'.sudo_5Board_4home = b.sudo_5Board_4home.set ⟨2, hHome⟩ #[] ∧
-      b'.sudo_5Board_9marker_on = false := by
+      b'.sudo_5Board_9marker_on = false ∧
+      (∀ i, n ≤ i → i < bench →
+        coeff (laneFold n (n - k) (combStrip n bench x)) i = 0) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat (cubeMoves moves x n k bench) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak =
+        Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨2, hF⟩ false) 7)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) := by
   have hcube := cube_refines b 2 2 x w h r n k moves hole bench peak peakS cOps cg
     hmk hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf
     hmoves hpeak hpeakS hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF
     hHole hsm hnsm hfitB hfold
-  obtain ⟨b', hok, hon, hto, hbench, htake, _hhigh, _hmov, _hpeak, _hslides, _ht,
-      _hhsz, hhome, hheld, hmk', _hrow, _hops', _htally, _hctrlH, _hctrl⟩ := hcube
-  refine ⟨b', ?_, hon, ?_, hbench, htake, hheld, hhome, hmk'⟩
+  obtain ⟨b', hok, hon, hto, hbench, htake, hhigh, hmov, hpeak, hslides, ht,
+      _hhsz, hhome, hheld, hmk', _hrow, hops', _htally, _hctrlH, _hctrl⟩ := hcube
+  refine ⟨b', ?_, hon, ?_, hbench, htake, hheld, hhome, hmk', hhigh, hmov, hpeak, hslides, ht, hops'⟩
   · rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl]; exact hok
   · rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl]; exact hto
 
@@ -560,7 +569,19 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
       (laneFold n (n - k) (school n x x (List.replicate bench 0) false)).take n =
         fieldMul n k bench x x ∧
       (∀ (h2 : 2 < b'.sudo_5Board_4home.size),
-        b'.sudo_5Board_4home[2] = embed (lane.take n)) := by
+        b'.sudo_5Board_4home[2] = embed (lane.take n)) ∧
+      b'.sudo_5Board_5bench =
+        embed (laneFold n (n - k) (school n x x (List.replicate bench 0) false)) ∧
+      (∀ i, n ≤ i → i < bench →
+        coeff (laneFold n (n - k) (school n x x (List.replicate bench 0) false)) i = 0) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (mulMoves (moves + 2 * pegCount (lane.take n)) x x n k bench) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (2 * pegCount (lane.take n)) ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      (∀ (h6 : 6 < b'.sudo_5Board_4held.size), b'.sudo_5Board_4held[6] = false) ∧
+      (∀ i (hi : i < b.sudo_5Board_4home.size) (hi' : i < b'.sudo_5Board_4home.size),
+        i ≠ 6 → i ≠ 2 → b'.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]) := by
   have hpair := mul_settles_first b Ecbs.spare Ecbs.base_across Ecbs.base_across true
     2 lane n moves 0 peak cOps hmk hon hto h2H h2D h7 hempty2 hbench hn hpos hnle hzero
     hf hfitL hmoves (by simpa [ofNat_eq_natCast] using hslides) hpeak hpeg hfitM
@@ -649,12 +670,12 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
     (by rw [htier]; exact hwF) (by rw [htier]; exact hhF)
     (by rw [htier]; exact hrF) (by rw [htier]; exact hkF)
     hhole hsm hnsm hfitB hfold
-  obtain ⟨b', hok, hon', hto', _hbench, htake, htail⟩ := hmul
-  obtain ⟨_hhigh, _hmov, _hpk, _hsl, _ht, _hsz, _hheld, _h5, hframe, _hmk, _hops⟩ := htail
+  obtain ⟨b', hok, hon', hto', hbench, htake, htail⟩ := hmul
+  obtain ⟨hhigh, hmov, _hpk, hsl, ht, _hsz, hheld, _h5, hframe, _hmk, _hops⟩ := htail
   have h2s : 2 < bS.sudo_5Board_4home.size := by
     simp [bS, settleBoard]
     split <;> simp [Array.size_set, h2H]
-  refine ⟨b', ?_, hon', ?_, htake, ?_⟩
+  refine ⟨b', ?_, hon', ?_, htake, ?_, hbench, hhigh, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
       show Ecbs.base_across = ((3 : Nat) : Int) from rfl]
     exact hok
@@ -665,6 +686,27 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
     by_cases hpk : peak < occ
     · simp [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set]
     · simp [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, Array.getElem_set]
+  · simpa [mvS, pegs] using hmov
+  · rw [hsl]
+    by_cases hpk : peak < occ
+    · simp [bS, mvS, pegs, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk, ofNat_eq_natCast]
+    · simp [bS, mvS, pegs, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk, ofNat_eq_natCast]
+  · rw [ht, htier]
+  · intro h6
+    simp [hheld, Array.getElem_set]
+  · intro i hi hi' h6 h2
+    have hSi : i < bS.sudo_5Board_4home.size := by
+      simp [bS, settleBoard]
+      split <;> simp [Array.size_set, hi]
+    have hget := hframe i hSi hi' h6
+    have hne2 : 2 ≠ i := Ne.symm h2
+    by_cases hpk : peak < occ
+    · simp only [bS, occ, settle_peak b 2 h2H h2D lane n moves 0 peak hpk,
+        Array.getElem_set, hne2] at hget
+      exact hget
+    · simp only [bS, occ, settle_keep b 2 h2H h2D lane n moves 0 peak hpk,
+        Array.getElem_set, hne2] at hget
+      exact hget
 
 /-- The explicit `settle` after the spare multiply. The square is on the bench,
     aimed at the empty spare, so the spare home becomes the length-`n` prefix. -/
@@ -692,11 +734,16 @@ theorem curve_settle_spare (b : Ecbs.Board) (lane sq : List Nat) (n moves slides
       (∀ (h6 : 6 < b'.sudo_5Board_4home.size), b'.sudo_5Board_4home[6] = embed sq) ∧
       (∀ (h6 : 6 < b'.sudo_5Board_4held.size), b'.sudo_5Board_4held[6] = true) ∧
       (∀ i (hi : i < b.sudo_5Board_4home.size) (hi' : i < b'.sudo_5Board_4home.size),
-        i ≠ 6 → b'.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]) := by
+        i ≠ 6 → b'.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]) ∧
+      (∀ i (hi : i < b.sudo_5Board_4held.size) (hi' : i < b'.sudo_5Board_4held.size),
+        i ≠ 6 → b'.sudo_5Board_4held[i] = b.sudo_5Board_4held[i]) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + 2 * pegCount (lane.take n)) ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t := by
   have hset := settle_refines b 6 lane n moves slides peak h6H h6D h7 hon hto hempty hbench
     hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
   let b' := settleBoard b 6 h6H h6D lane n moves slides peak
-  refine ⟨b', hset, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', hset, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · dsimp [b']
     unfold settleBoard
     split <;> rfl
@@ -716,6 +763,20 @@ theorem curve_settle_spare (b : Ecbs.Board) (lane sq : List Nat) (n moves slides
       exact absurd heq.symm hne
     · intro heq
       exact absurd heq.symm hne
+  · intro i hi hi' hne
+    dsimp [b']
+    unfold settleBoard
+    split <;> simp [Array.getElem_set, hne]
+    · intro heq
+      exact absurd heq.symm hne
+    · intro heq
+      exact absurd heq.symm hne
+  · dsimp [b']
+    unfold settleBoard
+    split <;> simp [ofNat_eq_natCast]
+  · dsimp [b']
+    unfold settleBoard
+    split <;> rfl
 
 /-- `bottom + mirror(spare)` after the square has been settled into the spare.
     The destination is `fieldAdd` of the cube and the flipped square. -/
@@ -765,6 +826,13 @@ private theorem fieldAdd_trits (n : Nat) (xs ys : List Nat)
 private theorem fieldAdd_len (n : Nat) (xs ys : List Nat) : (fieldAdd n xs ys).length = n := by
   simp [fieldAdd, List.length_map, List.length_range]
 
+private theorem except_bind_assoc {α β γ}
+    (m : Except SudoRt.Trap α) (f : α → Except SudoRt.Trap β) (g : β → Except SudoRt.Trap γ) :
+    (m >>= fun x => f x >>= g) = ((m >>= f) >>= g) := by
+  cases m with
+  | error _ => simp
+  | ok a => simp [ok_bind]
+
 private theorem addBoard_home_size (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (arr : Array Int) (mv : Nat) :
     (addBoard b home hH arr mv).sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
@@ -793,124 +861,6 @@ private theorem addBoard_get_ne (b : Ecbs.Board) (home i : Nat)
   simp [Array.getElem_set, hne]
   intro heq
   exact absurd heq.symm hne
-
-/-- After the mirror add, clear the spare, add the white peg at hole 0, and
-    compare the gap with the bottom. The compare is array `SEq.beq`. -/
-theorem curve_white_beq (b : Ecbs.Board) (x3 x2 y2 : List Nat) (n moves : Nat)
-    (h2H : 2 < b.sudo_5Board_4home.size) (h2D : 2 < b.sudo_5Board_4held.size)
-    (h5H : 5 < b.sudo_5Board_4home.size) (h5D : 5 < b.sudo_5Board_4held.size)
-    (h6H : 6 < b.sudo_5Board_4home.size) (h6D : 6 < b.sudo_5Board_4held.size)
-    (hheld2 : b.sudo_5Board_4held[2] = true)
-    (harr2 : b.sudo_5Board_4home[2] = embed x3)
-    (hheld5 : b.sudo_5Board_4held[5] = true)
-    (harr5 : b.sudo_5Board_4home[5] = embed y2)
-    (hheld6 : b.sudo_5Board_4held[6] = true)
-    (harr6 : b.sudo_5Board_4home[6] = embed x2)
-    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
-    (hx3 : x3.length = n) (hx2 : x2.length = n) (hy2 : y2.length = n) (hpos : 0 < n)
-    (ht3 : allTritList x3) (ht2 : allTritList x2)
-    (hm : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
-    (hfit : FitsLen (moves + n))
-    (hf : FitsLen n)
-    (hfitC : FitsLen (moves + pegCount x2 + pegCount x2))
-    (hfitW : FitsLen (moves + pegCount x2 + pegCount x2 + 1)) :
-    (Ecbs.add b Ecbs.bottom Ecbs.spare true >>= fun b1 =>
-      Ecbs.clear b1 Ecbs.spare >>= fun b2 =>
-      Ecbs.white0 b2 Ecbs.bottom >>= fun b3 =>
-      Ecbs.value b3 Ecbs.gap >>= fun g =>
-      Ecbs.value b3 Ecbs.bottom >>= fun bot =>
-      pure (SudoRt.SEq.beq g bot)) =
-      .ok (decide (y2 =
-        fieldAdd n (fieldAdd n x3 (mirrorTrits x2)) (1 :: List.replicate (n - 1) 0))) := by
-  have hadd := curve_add_bottom b x3 x2 n moves h2H h2D h6H h6D
-    hheld2 harr2 hheld6 harr6 hn hx3 hx2 hpos ht3 ht2 hm hfit
-  rw [hadd, ok_bind]
-  let sum := fieldAdd n x3 (mirrorTrits x2)
-  let mvA := moves + pegCount x2
-  let bA := addBoard b 2 h2H (embed sum) mvA
-  have h6HA : 6 < bA.sudo_5Board_4home.size := by
-    simpa [bA, addBoard_home_size] using h6H
-  have h6DA : 6 < bA.sudo_5Board_4held.size := by
-    simpa [bA, addBoard_held] using h6D
-  have hheld6A : bA.sudo_5Board_4held[6] = true := by
-    simpa [bA, addBoard_held] using hheld6
-  have harr6A : bA.sudo_5Board_4home[6] = embed x2 :=
-    addBoard_get_ne b 2 6 h2H (embed sum) mvA h6H (by decide) h6HA ▸ harr6
-  have hmA : bA.sudo_5Board_4cost.sudo_5Costs_5moves = (mvA : Int) := by
-    simpa [bA, addBoard_moves, ofNat_eq_natCast]
-  have hC := clear_held_refines bA 6 x2 mvA h6HA h6DA hheld6A harr6A hmA
-    (by simpa [hx2] using hf) hfitC
-  rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl, hC, ok_bind]
-  let mvC := mvA + pegCount x2
-  let bC := { bA with
-    sudo_5Board_4home := bA.sudo_5Board_4home.set ⟨6, h6HA⟩ #[]
-    sudo_5Board_4held := bA.sudo_5Board_4held.set ⟨6, h6DA⟩ false
-    sudo_5Board_4cost := { bA.sudo_5Board_4cost with
-      sudo_5Costs_5moves := Int.ofNat mvC } }
-  have hsumL : sum.length = n := fieldAdd_len n x3 (mirrorTrits x2)
-  have htriS : allTritList sum :=
-    fieldAdd_trits n x3 (mirrorTrits x2) ht3 (mirror_trits ht2)
-  have h2HC : 2 < bC.sudo_5Board_4home.size := by
-    simpa [bC, Array.size_set] using (addBoard_home_size b 2 h2H (embed sum) mvA ▸ h2H)
-  have h2DC : 2 < bC.sudo_5Board_4held.size := by
-    simpa [bC, Array.size_set, bA, addBoard_held] using h2D
-  have hheld2C : bC.sudo_5Board_4held[2] = true := by
-    simpa [bC, Array.getElem_set, bA, addBoard_held] using hheld2
-  have harr2A : bA.sudo_5Board_4home[2] = embed sum := by
-    unfold bA addBoard withMoves
-    simp [Array.getElem_set]
-  have harr2C : bC.sudo_5Board_4home[2] = embed sum := by
-    have hne : (2 : Nat) ≠ 6 := by decide
-    simp [bC, Array.getElem_set, hne, harr2A]
-  have hmC : bC.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvC := by
-    simp [bC]
-  have h0s : 0 < sum.length := by rw [hsumL]; exact hpos
-  have hcell : sum[0] ≤ 2 := trit_get htriS h0s
-  have hfitW' : FitsLen (mvC + 1) := by simpa [mvC, mvA, Nat.add_assoc] using hfitW
-  have hW := white0_held bC 2 sum mvC h2HC h2DC hheld2C harr2C h0s hcell hmC hfitW'
-  rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, hW, ok_bind]
-  let white := sum.set 0 (tritAdd sum[0] 1)
-  let bW := addBoard bC 2 h2HC (embed white) (mvC + 1)
-  have h5HW : 5 < bW.sudo_5Board_4home.size := by
-    simpa [bW, addBoard_home_size] using
-      (by simpa [bC, Array.size_set] using (addBoard_home_size b 2 h2H (embed sum) mvA ▸ h5H))
-  have h5DW : 5 < bW.sudo_5Board_4held.size := by
-    simpa [bW, addBoard_held, bC, Array.size_set, bA, addBoard_held] using h5D
-  have hheld5W : bW.sudo_5Board_4held[5] = true := by
-    simpa [bW, addBoard_held, bC, Array.getElem_set, bA, addBoard_held] using hheld5
-  have h5szA : 5 < bA.sudo_5Board_4home.size := by
-    simpa [bA, addBoard_home_size] using h5H
-  have h5A : bA.sudo_5Board_4home[5] = embed y2 :=
-    (addBoard_get_ne b 2 5 h2H (embed sum) mvA h5H (by decide) h5szA).trans harr5
-  have h5szC : 5 < bC.sudo_5Board_4home.size := by
-    simpa [bC, Array.size_set] using h5szA
-  have h5C : bC.sudo_5Board_4home[5] = embed y2 := by
-    have hne6 : (5 : Nat) ≠ 6 := by decide
-    simp [bC, Array.getElem_set, hne6, h5A]
-  have harr5W : bW.sudo_5Board_4home[5] = embed y2 := by
-    have hne : (5 : Nat) ≠ 2 := by decide
-    exact (addBoard_get_ne bC 2 5 h2HC (embed white) (mvC + 1) h5szC hne h5HW).trans h5C
-  have h2HW : 2 < bW.sudo_5Board_4home.size := by
-    simpa [bW, addBoard_home_size] using h2HC
-  have h2DW : 2 < bW.sudo_5Board_4held.size := by
-    simpa [bW, addBoard_held] using h2DC
-  have hheld2W : bW.sudo_5Board_4held[2] = true := by
-    simpa [bW, addBoard_held] using hheld2C
-  have harr2W : bW.sudo_5Board_4home[2] = embed white := by
-    unfold bW addBoard withMoves
-    simp [Array.getElem_set]
-  have hwhiteL : white.length = n := by simp [white, List.length_set, hsumL]
-  have hG := value_held_refines bW 5 y2 n h5DW h5HW hheld5W harr5W hn
-    (by rw [hy2]; exact Nat.le_refl _) hf
-  have hB := value_held_refines bW 2 white n h2DW h2HW hheld2W harr2W hn
-    (by rw [hwhiteL]; exact Nat.le_refl _) hf
-  rw [show Ecbs.gap = ((5 : Nat) : Int) from rfl, hG, ok_bind]
-  rw [hB, ok_bind, pure_eq_ok]
-  have htakeY : y2.take n = y2 := by rw [← hy2]; exact List.take_length y2
-  have htakeW : white.take n = white := by rw [← hwhiteL]; exact List.take_length white
-  rw [htakeY, htakeW, embed_beq]
-  have hwhite := fieldAdd_white n sum hsumL hpos htriS
-  simp [white, hwhite]
 
 /-- The two clears after the curve compare. Gap first, then bottom.
     Neither clear changes the bool already read. -/
@@ -962,6 +912,158 @@ theorem curve_clear_ends (b : Ecbs.Board) (gapXs botXs : List Nat) (moves : Nat)
   have h2 := clear_held_refines b1 2 botXs (moves + pegCount gapXs) h2H1 h2D1
     hheld21 harr21 hm1 hf2 (by simpa [Nat.add_assoc] using hfit2)
   rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, h2]
+
+/-- After the mirror add, clear the spare, add the white peg at hole 0, and
+    compare the gap with the bottom. The compare is array `SEq.beq`. -/
+theorem curve_white_beq (b : Ecbs.Board) (x3 x2 y2 : List Nat) (n moves : Nat)
+    (h2H : 2 < b.sudo_5Board_4home.size) (h2D : 2 < b.sudo_5Board_4held.size)
+    (h5H : 5 < b.sudo_5Board_4home.size) (h5D : 5 < b.sudo_5Board_4held.size)
+    (h6H : 6 < b.sudo_5Board_4home.size) (h6D : 6 < b.sudo_5Board_4held.size)
+    (hheld2 : b.sudo_5Board_4held[2] = true)
+    (harr2 : b.sudo_5Board_4home[2] = embed x3)
+    (hheld5 : b.sudo_5Board_4held[5] = true)
+    (harr5 : b.sudo_5Board_4home[5] = embed y2)
+    (hheld6 : b.sudo_5Board_4held[6] = true)
+    (harr6 : b.sudo_5Board_4home[6] = embed x2)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hx3 : x3.length = n) (hx2 : x2.length = n) (hy2 : y2.length = n) (hpos : 0 < n)
+    (ht3 : allTritList x3) (ht2 : allTritList x2)
+    (hm : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hfit : FitsLen (moves + n))
+    (hf : FitsLen n)
+    (hfitC : FitsLen (moves + pegCount x2 + pegCount x2))
+    (hfitW : FitsLen (moves + pegCount x2 + pegCount x2 + 1))
+    (hfitG : FitsLen (moves + pegCount x2 + pegCount x2 + 1 + pegCount y2))
+    (hfitBot : FitsLen (moves + pegCount x2 + pegCount x2 + 1 + pegCount y2 + n)) :
+    ∃ bF,
+      (Ecbs.add b Ecbs.bottom Ecbs.spare true >>= fun b1 =>
+        Ecbs.clear b1 Ecbs.spare >>= fun b2 =>
+        Ecbs.white0 b2 Ecbs.bottom >>= fun b3 =>
+        Ecbs.value b3 Ecbs.gap >>= fun g =>
+        Ecbs.value b3 Ecbs.bottom >>= fun bot =>
+        Ecbs.clear b3 Ecbs.gap >>= fun b4 =>
+        Ecbs.clear b4 Ecbs.bottom >>= fun b5 =>
+        pure (SudoRt.SEq.beq g bot, b5)) =
+        .ok (decide (y2 =
+          fieldAdd n (fieldAdd n x3 (mirrorTrits x2)) (1 :: List.replicate (n - 1) 0)), bF) := by
+  have hadd := curve_add_bottom b x3 x2 n moves h2H h2D h6H h6D
+    hheld2 harr2 hheld6 harr6 hn hx3 hx2 hpos ht3 ht2 hm hfit
+  let sum := fieldAdd n x3 (mirrorTrits x2)
+  let mvA := moves + pegCount x2
+  let bA := addBoard b 2 h2H (embed sum) mvA
+  have h6HA : 6 < bA.sudo_5Board_4home.size := by
+    simpa [bA, addBoard_home_size] using h6H
+  have h6DA : 6 < bA.sudo_5Board_4held.size := by
+    simpa [bA, addBoard_held] using h6D
+  have hheld6A : bA.sudo_5Board_4held[6] = true := by
+    simpa [bA, addBoard_held] using hheld6
+  have harr6A : bA.sudo_5Board_4home[6] = embed x2 :=
+    addBoard_get_ne b 2 6 h2H (embed sum) mvA h6H (by decide) h6HA ▸ harr6
+  have hmA : bA.sudo_5Board_4cost.sudo_5Costs_5moves = (mvA : Int) := by
+    simpa [bA, addBoard_moves, ofNat_eq_natCast]
+  have hC := clear_held_refines bA 6 x2 mvA h6HA h6DA hheld6A harr6A hmA
+    (by simpa [hx2] using hf) hfitC
+  let mvC := mvA + pegCount x2
+  let bC := { bA with
+    sudo_5Board_4home := bA.sudo_5Board_4home.set ⟨6, h6HA⟩ #[]
+    sudo_5Board_4held := bA.sudo_5Board_4held.set ⟨6, h6DA⟩ false
+    sudo_5Board_4cost := { bA.sudo_5Board_4cost with
+      sudo_5Costs_5moves := Int.ofNat mvC } }
+  have hsumL : sum.length = n := fieldAdd_len n x3 (mirrorTrits x2)
+  have htriS : allTritList sum :=
+    fieldAdd_trits n x3 (mirrorTrits x2) ht3 (mirror_trits ht2)
+  have h2HC : 2 < bC.sudo_5Board_4home.size := by
+    simpa [bC, Array.size_set] using (addBoard_home_size b 2 h2H (embed sum) mvA ▸ h2H)
+  have h2DC : 2 < bC.sudo_5Board_4held.size := by
+    simpa [bC, Array.size_set, bA, addBoard_held] using h2D
+  have hheld2C : bC.sudo_5Board_4held[2] = true := by
+    simpa [bC, Array.getElem_set, bA, addBoard_held] using hheld2
+  have harr2A : bA.sudo_5Board_4home[2] = embed sum := by
+    unfold bA addBoard withMoves
+    simp [Array.getElem_set]
+  have harr2C : bC.sudo_5Board_4home[2] = embed sum := by
+    have hne : (2 : Nat) ≠ 6 := by decide
+    simp [bC, Array.getElem_set, hne, harr2A]
+  have hmC : bC.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvC := by
+    simp [bC]
+  have h0s : 0 < sum.length := by rw [hsumL]; exact hpos
+  have hcell : sum[0] ≤ 2 := trit_get htriS h0s
+  have hfitW' : FitsLen (mvC + 1) := by simpa [mvC, mvA, Nat.add_assoc] using hfitW
+  have hW := white0_held bC 2 sum mvC h2HC h2DC hheld2C harr2C h0s hcell hmC hfitW'
+  let white := sum.set 0 (tritAdd sum[0] 1)
+  let bW := addBoard bC 2 h2HC (embed white) (mvC + 1)
+  have h5HW : 5 < bW.sudo_5Board_4home.size := by
+    simpa [bW, addBoard_home_size] using
+      (by simpa [bC, Array.size_set] using (addBoard_home_size b 2 h2H (embed sum) mvA ▸ h5H))
+  have h5DW : 5 < bW.sudo_5Board_4held.size := by
+    simpa [bW, addBoard_held, bC, Array.size_set, bA, addBoard_held] using h5D
+  have hheld5W : bW.sudo_5Board_4held[5] = true := by
+    simpa [bW, addBoard_held, bC, Array.getElem_set, bA, addBoard_held] using hheld5
+  have h5szA : 5 < bA.sudo_5Board_4home.size := by
+    simpa [bA, addBoard_home_size] using h5H
+  have h5A : bA.sudo_5Board_4home[5] = embed y2 :=
+    (addBoard_get_ne b 2 5 h2H (embed sum) mvA h5H (by decide) h5szA).trans harr5
+  have h5szC : 5 < bC.sudo_5Board_4home.size := by
+    simpa [bC, Array.size_set] using h5szA
+  have h5C : bC.sudo_5Board_4home[5] = embed y2 := by
+    have hne6 : (5 : Nat) ≠ 6 := by decide
+    simp [bC, Array.getElem_set, hne6, h5A]
+  have harr5W : bW.sudo_5Board_4home[5] = embed y2 := by
+    have hne : (5 : Nat) ≠ 2 := by decide
+    exact (addBoard_get_ne bC 2 5 h2HC (embed white) (mvC + 1) h5szC hne h5HW).trans h5C
+  have h2HW : 2 < bW.sudo_5Board_4home.size := by
+    simpa [bW, addBoard_home_size] using h2HC
+  have h2DW : 2 < bW.sudo_5Board_4held.size := by
+    simpa [bW, addBoard_held] using h2DC
+  have hheld2W : bW.sudo_5Board_4held[2] = true := by
+    simpa [bW, addBoard_held] using hheld2C
+  have harr2W : bW.sudo_5Board_4home[2] = embed white := by
+    unfold bW addBoard withMoves
+    simp [Array.getElem_set]
+  have hwhiteL : white.length = n := by simp [white, List.length_set, hsumL]
+  have hG := value_held_refines bW 5 y2 n h5DW h5HW hheld5W harr5W hn
+    (by rw [hy2]; exact Nat.le_refl _) hf
+  have hB := value_held_refines bW 2 white n h2DW h2HW hheld2W harr2W hn
+    (by rw [hwhiteL]; exact Nat.le_refl _) hf
+  have htakeY : y2.take n = y2 := by rw [← hy2]; exact List.take_length y2
+  have htakeW : white.take n = white := by rw [← hwhiteL]; exact List.take_length white
+  have hwhiteEq := fieldAdd_white n sum hsumL hpos htriS
+  have hmW : bW.sudo_5Board_4cost.sudo_5Costs_5moves = ((mvC + 1) : Int) := by
+    simpa [bW, addBoard_moves, mvC, ofNat_eq_natCast]
+  have hpegW : pegCount white ≤ n := by rw [← hwhiteL]; exact pegCount_le white
+  have hfitWbot : FitsLen (mvC + 1 + pegCount y2 + pegCount white) :=
+    FitsLen.of_le (by simpa [mvC, mvA, Nat.add_assoc] using hfitBot) (by omega)
+  have hcl := curve_clear_ends bW y2 white (mvC + 1) h5HW h5DW h2HW h2DW
+    hheld5W harr5W hheld2W harr2W hmW
+    (by simpa [hy2] using hf) (by simpa [hwhiteL] using hf)
+    (by simpa [mvC, mvA, Nat.add_assoc] using hfitG) hfitWbot
+  have hcl' : (Ecbs.clear bW ((5 : Nat) : Int) >>= fun b1 =>
+      Ecbs.clear b1 ((2 : Nat) : Int)) = Except.ok
+      ({ { bW with
+          sudo_5Board_4home := bW.sudo_5Board_4home.set ⟨5, h5HW⟩ #[]
+          sudo_5Board_4held := bW.sudo_5Board_4held.set ⟨5, h5DW⟩ false
+          sudo_5Board_4cost := { bW.sudo_5Board_4cost with
+            sudo_5Costs_5moves := Int.ofNat (mvC + 1 + pegCount y2) } } with
+        sudo_5Board_4home :=
+          (bW.sudo_5Board_4home.set ⟨5, h5HW⟩ #[]).set
+            ⟨2, by simpa [Array.size_set] using h2HW⟩ #[]
+        sudo_5Board_4held :=
+          (bW.sudo_5Board_4held.set ⟨5, h5DW⟩ false).set
+            ⟨2, by simpa [Array.size_set] using h2DW⟩ false
+        sudo_5Board_4cost := { bW.sudo_5Board_4cost with
+          sudo_5Costs_5moves := Int.ofNat (mvC + 1 + pegCount y2 + pegCount white) } }) := by
+    simpa [show Ecbs.gap = ((5 : Nat) : Int) from rfl,
+      show Ecbs.bottom = ((2 : Nat) : Int) from rfl] using hcl
+  exact ⟨_, by
+    rw [hadd, ok_bind]
+    rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl, hC, ok_bind]
+    rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, hW, ok_bind]
+    rw [show Ecbs.gap = ((5 : Nat) : Int) from rfl, hG, ok_bind]
+    rw [hB, ok_bind]
+    rw [htakeY, htakeW, embed_beq]
+    rw [except_bind_assoc, hcl', ok_bind, pure_eq_ok]
+    simp [white, hwhiteEq]
+    rfl⟩
 
 theorem placeBoard_home (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)

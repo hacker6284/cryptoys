@@ -15,7 +15,7 @@ const walk = (dir, rel = "") => readdirSync(dir, { withFileTypes: true }).flatMa
     return [...(existsSync(new URL("settings.js", sub)) ? [name] : []), ...walk(sub, `${name}/`)];
 });
 const entries = walk(here);
-assert.deepEqual([...entries].sort(), ["chest", "cube", "deck/box", "deck/card", "deck/carry", "deck/deal", "dice", "megaminx", "peg", "ship"], "the library's entries, by object");
+assert.deepEqual([...entries].sort(), ["battleship/box", "battleship/unit", "chest", "cube", "deck/box", "deck/card", "deck/carry", "deck/deal", "dice", "megaminx", "peg", "ship", "yahtzee/box"], "the library's entries, by object");
 assert.ok(!existsSync(new URL("hinge/", here)), "no generic hinge entry");
 for (const name of entries) {
     assert.ok(existsSync(new URL(`${name}/index.js`, here)), `${name}: index.js`);
@@ -382,6 +382,60 @@ assert.match(readme, /\| `deck\/deal` \|[^\n]*Animation APPROVED and LOCKED at `
     assert.equal(lp.lidPlacement(1).open.to, chest.lid.openRad, "the chest lid opens all the way in its corner");
 }
 
+// The retail boxes, a unit's lid and a die's place (not yet approved): the
+// hops and the swing as the microdemos play them pass their checks, and
+// every value is in the entry's settings (marked NOT YET APPROVED).
+{
+    const geom = await import(new URL("shared/geom.js", here));
+    const hop = await import(new URL("shared/hop.js", here));
+    const cup = await import(new URL("shared/cup.js", here));
+    const box = await import(new URL("battleship/box/index.js", here));
+    const unit = await import(new URL("battleship/unit/index.js", here));
+    const ybox = await import(new URL("yahtzee/box/index.js", here));
+    const die = await import(new URL("dice/index.js", here));
+    for (const e of ["battleship/box", "battleship/unit", "yahtzee/box"]) {
+        assert.match(readFileSync(new URL(`${e}/settings.js`, here), "utf8"), /NOT YET APPROVED/, `${e}: marked not yet approved`);
+        assert.match(readme, new RegExp("\\| `" + e + "` \\|[^\\n]*\\*\\*not yet approved\\*\\*"), `${e}: README says not yet approved`);
+    }
+    assert.ok(!Object.keys(hop).some((k) => /settings|timing/.test(k)), "hop.js holds no constants");
+    const felt = (x, z, yaw = 0) => ({ p: [x, 0.773, z], q: [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)] });
+    for (const yaw of [0, 0.7, Math.PI / 2, Math.PI]) {
+        const at = felt(0, 0, yaw);
+        const aside = felt(0.45, 0.1, yaw + 0.3);
+        const off = box.planLidOff({ box: at, to: aside, solids: box.baseSolids(at) });
+        assert.ok(hop.checkHop(off, { solids: box.baseSolids(at) }).ok, `battleship lid off at yaw ${yaw}`);
+        assert.ok(off.at(0).p[1] === at.p[1] && off.legs[0].b[1] >= at.p[1] + box.BASE.h + box.settings.lid.clearM - 1e-9, "the lid lifts clear of the base first");
+        for (const k of [0, 1]) {
+            const seat = felt(k ? 0.135 : -0.135, 0.35);
+            const other = [{ ...geom.obbOf(box.pocketPose(at, 1 - k), box.UNIT), name: "the other unit" }];
+            const out = box.planOut({ box: at, k, to: seat, solids: other });
+            assert.ok(hop.checkHop(out, { solids: [...box.baseSolids(at), ...other] }).ok, `unit ${k} out at yaw ${yaw}`);
+        }
+        const yat = felt(0, 0, yaw);
+        const yoff = ybox.planLidOff({ box: yat, to: { ...aside, p: [aside.p[0], aside.p[1] - ybox.LID.y0, aside.p[2]] }, solids: ybox.baseSolids(yat) });
+        assert.ok(hop.checkHop(yoff, { solids: ybox.baseSolids(yat) }).ok, `dice box lid off at yaw ${yaw}`);
+        const cup = ybox.planOut({ box: yat, to: felt(0.2, 0.2) });
+        assert.ok(hop.checkHop(cup, { solids: ybox.baseSolids(yat) }).ok, `cup out at yaw ${yaw}`);
+        const lid = unit.planLid({ pose: at, from: 0, to: 1 });
+        assert.ok(unit.checkLid(lid).ok && lid.to === unit.lid.openRad, `unit lid opens all the way at yaw ${yaw}`);
+        assert.ok(unit.checkLid(unit.planLid({ pose: at, from: 1, to: 0 })).ok, "and shuts");
+    }
+    // A wall behind the unit stops its lid 5 mm short.
+    const wall = [{ ...geom.boxSolid([-0.3, 0.83, -0.13], [0.3, 1.2, -0.088]), name: "a wall" }];
+    const stopped = unit.planLid({ pose: felt(0, 0), from: 0, to: 1, solids: wall });
+    assert.equal(stopped.stopped, "a wall");
+    assert.ok(stopped.to < unit.lid.openRad && unit.checkLid(stopped).ok, "stopped short, no overlap");
+    // A die out of the cup clears its rim first, then turns onto its face.
+    const cupAt = felt(0, 0);
+    const ring = cup.cupSolids(cupAt).filter((s) => s.kind === "cyl");
+    const place = die.planPlace({ kind: "d10", from: { p: [0.0109, 0.773 + 0.0153, 0.01135], q: [0, 0, 0, 1] }, to: { p: [0.12, 0.773 + 0.011, 0], q: [0.3, 0, 0, Math.sqrt(1 - 0.09)] }, clearY: cup.cupRimY(cupAt), solids: ring });
+    assert.ok(hop.checkHop(place, { solids: ring }).ok, "a d10 out of the cup");
+    assert.ok(geom.obbMinY(geom.obbOf(place.at(place.legs[0].ms), die.SHAPES.d10)) >= cup.cupRimY(cupAt) + die.settings.place.clearM - 1e-6, "clear of the rim before it moves across");
+    assert.ok(geom.quatAngle(place.at(place.legs[0].ms).q, [0, 0, 0, 1]) < 1e-9, "it turns only on the way across");
+    const back = die.planPlace({ kind: "d10", from: place.to, to: place.from, clearY: cup.cupRimY(cupAt), solids: ring });
+    assert.ok(hop.checkHop(back, { solids: ring }).ok && Math.abs(back.ms - place.ms) < 1e-9, "and back in, the same hop backwards");
+}
+
 // Each object stands alone: no object's modules reach another object's
 // folder (deck's own index gathers its sub-objects; deck/box, deck/card,
 // deck/carry and deck/deal never reach each other). Shared: anim/shared/.
@@ -408,7 +462,9 @@ assert.match(readme, /\| `deck\/deal` \|[^\n]*Animation APPROVED and LOCKED at `
     const pages = {
         "deck/carry": "deck/carry", "deck/deal": "deck/deal", "deck/box/open-close-flap": "deck/box",
         "chest/open-close-lid": "chest", "cube/face-turn": "cube", "cube/rotate": "cube", "megaminx/face-turn": "megaminx",
-        "peg/insert-slide-remove": "peg", "ship/place-move-lift": "ship", "dice/roll": "dice",
+        "peg/insert-slide-remove": "peg", "ship/place-move-lift": "ship", "dice/roll": "dice", "dice/place": "dice",
+        "battleship/box/lid-off-on": "battleship/box", "battleship/box/lift-units-out-in": "battleship/box",
+        "battleship/unit/open-close-lid": "battleship/unit", "yahtzee/box/lid-off-on": "yahtzee/box", "yahtzee/box/lift-cup-out-in": "yahtzee/box",
     };
     for (const [page, entry] of Object.entries(pages)) {
         const url = new URL(`${page}/page.js`, micro);

@@ -10,6 +10,8 @@ import {
     SHELF_THICK,
     SHELF_TOP,
     TOP_Y,
+    FELT_TOP_Y,
+    TABLE_SEAT_Y,
     TABLE_R,
     CEIL_Y,
     SHADE_Y,
@@ -21,8 +23,9 @@ import {
     SHELF_Y0,
     SHELF_Y1,
     SLOTS,
-    BS_SEAT_XZ,
+    BS_BOX_REST,
     BS_SHELF,
+    BS_CHEST,
     toyHalfHeight,
 } from "./constants.js";
 import { seatOnSurface } from "./motion.js";
@@ -547,8 +550,8 @@ export async function mountWorld(canvas) {
         deck: { ...SLOTS.deck, slot: makeSlot(SLOTS.deck.x) },
         cube: { ...SLOTS.cube, slot: makeSlot(SLOTS.cube.x) },
         drei: { ...SLOTS.drei, slot: makeSlot(SLOTS.drei.x) },
-        // BS: Alice's red unit; Bob's unit and the dice wait in the chest.
-        bs: { x: BS_SHELF.x, y: SHELF_Y1, z: BS_SHELF.z, slot: makeSlot(BS_SHELF.x, BS_SHELF.z) },
+        // BS: the Battleship box (both units in it); the dice box waits in the chest.
+        bsBox: { x: BS_SHELF.x, y: SHELF_Y1, z: BS_SHELF.z, slot: makeSlot(BS_SHELF.x, BS_SHELF.z) },
     };
 
     const chestGroup = new THREE.Group();
@@ -591,12 +594,10 @@ export async function mountWorld(canvas) {
         dreiB: makeCubeSlot(),
         dreiC: makeCubeSlot(),
         deck3: makeDeckBox(0x3a2140, "DEAL"),
-        // BS: the two Battleship units, the key dice and their cup (the
-        // adapter loads the models into these groups).
-        bs: makeCubeSlot(),
-        bsB: makeCubeSlot(),
-        bsDice: makeCubeSlot(),
-        bsCup: makeCubeSlot(),
+        // BS: the Battleship box (both units packed in it) and the dice box
+        // (the cup and the key dice in it); the adapter loads the models.
+        bsBox: makeCubeSlot(),
+        bsDiceBox: makeCubeSlot(),
     };
     for (const [name, toy] of Object.entries(toys)) {
         scene.add(toy);
@@ -608,7 +609,7 @@ export async function mountWorld(canvas) {
     }
 
     function feltTopY() {
-        return TOP_Y + 0.032;
+        return FELT_TOP_Y;
     }
 
     // Shared post-scale AABB seat. Lowest measured point lands on the
@@ -616,8 +617,8 @@ export async function mountWorld(canvas) {
     // MegaDreifach's megaminx toys keep their origin on the surface they
     // stand on (the puzzle rests just above it, measured once its fit is
     // known), so a re-gripped A cannot change where the toy is set down.
-    // BS's toys too: a unit's origin is its underside, the dice toy's the felt.
-    const ORIGIN_SEATED = new Set(["drei", "dreiB", "dreiC", "bs", "bsB", "bsDice", "bsCup"]);
+    // BS's boxes too: each box's origin is its underside.
+    const ORIGIN_SEATED = new Set(["drei", "dreiB", "dreiC", "bsBox", "bsDiceBox"]);
     const originBox = () => ({ min: { y: 0 } });
 
     function seatOn(object, { x, surfaceY, z, rotation, name, origin = false }) {
@@ -633,10 +634,9 @@ export async function mountWorld(canvas) {
 
     // Along the chest floor: MSG in the middle, DEAL beside it, then the
     // two spare megaminxes on the other side.
-    const CHEST_DZ = { deck3: 0.11, dreiB: -0.11, dreiC: -0.2, bsB: 0.04, bsDice: 0.02, bsCup: -0.19 };
-    // BS's blue unit, cup and dice lie beside that row (the cavity is 531 mm
-    // square): the unit and the cup on one side, the dice row on the other.
-    const CHEST_DX = { bsB: -0.21, bsDice: 0.1, bsCup: -0.21 };
+    const CHEST_DZ = { deck3: 0.11, dreiB: -0.11, dreiC: -0.2, bsDiceBox: BS_CHEST.dz };
+    // BS's dice box lies beside that row (constants.js BS_CHEST).
+    const CHEST_DX = { bsDiceBox: BS_CHEST.dx };
 
     function getChestPose(name) {
         const box = new THREE.Box3().setFromObject(chestGroup);
@@ -662,7 +662,7 @@ export async function mountWorld(canvas) {
     function getDreiDeckPose() {
         return seatOn(toys.deck3, {
             x: DEN.x + DREI_DECK_X,
-            surfaceY: feltTopY() + 0.001,
+            surfaceY: TABLE_SEAT_Y,
             z: DEN.z + DREI_ROW_Z,
             rotation: { x: 0, y: 0, z: 0 },
             name: "deck3",
@@ -674,7 +674,7 @@ export async function mountWorld(canvas) {
         const side = name === "deck2" ? -1 : 1;
         return seatOn(toys[name], {
             x: DEN.x + side * 0.78,
-            surfaceY: feltTopY() + 0.001,
+            surfaceY: TABLE_SEAT_Y,
             z: DEN.z - 0.34,
             rotation: { x: 0, y: side * 0.2, z: 0 },
             name: name === "deck2" ? "deck" : name,
@@ -682,7 +682,7 @@ export async function mountWorld(canvas) {
     }
 
     function getShelfPose(name) {
-        if (name === "deck2" || name === "deck3" || DREI_EXTRA[name] || name === "bsB" || name === "bsDice" || name === "bsCup") return getChestPose(name);
+        if (name === "deck2" || name === "deck3" || DREI_EXTRA[name] || name === "bsDiceBox") return getChestPose(name);
         const slot = slots[name];
         if (!slot) return null;
         return seatOn(toys[name], {
@@ -690,7 +690,7 @@ export async function mountWorld(canvas) {
             surfaceY: SHELF_TOP + 0.001,
             z: slot.z ?? SHELF_Z,
             // Yaw only — pitch was driving corners through the board.
-            rotation: { x: 0, y: name === "cube" ? 0.45 : name === "drei" ? 0.12 : name === "bs" ? 0 : 0.15, z: 0 },
+            rotation: { x: 0, y: name === "cube" ? 0.45 : name === "drei" ? 0.12 : name === "bsBox" ? 0 : 0.15, z: 0 },
             name,
             origin: ORIGIN_SEATED.has(name),
         });
@@ -698,14 +698,15 @@ export async function mountWorld(canvas) {
 
     function getTablePose(name) {
         if (name === "deck2" || name === "deck3") return getBoxRestPose(name);
-        if (BS_SEAT_XZ[name]) {
-            // BS: square on the felt in its place (constants.js has the layout).
-            const [dx, dz] = BS_SEAT_XZ[name];
+        if (name === "bsBox" || name === "bsDiceBox") {
+            // BS: each box straight to its rest on the felt, where it is
+            // unboxed and stays (constants.js BS_BOX_REST).
+            const r = BS_BOX_REST[name === "bsBox" ? "navalBox" : "diceBox"];
             return seatOn(toys[name], {
-                x: DEN.x + dx,
-                surfaceY: feltTopY() + 0.001,
-                z: DEN.z + dz,
-                rotation: { x: 0, y: 0, z: 0 },
+                x: DEN.x + r.x,
+                surfaceY: TABLE_SEAT_Y,
+                z: DEN.z + r.z,
+                rotation: { x: 0, y: r.yaw, z: 0 },
                 name,
                 origin: true,
             });
@@ -715,7 +716,7 @@ export async function mountWorld(canvas) {
             const [dx, dz] = DREI_SEAT_XZ[DREI_EXTRA[name]];
             return seatOn(toys[name], {
                 x: DEN.x + dx,
-                surfaceY: feltTopY() + 0.001,
+                surfaceY: TABLE_SEAT_Y,
                 z: DEN.z + DREI_ROW_Z + dz,
                 rotation: { x: 0, y: 0, z: 0 },
                 name,
@@ -724,7 +725,7 @@ export async function mountWorld(canvas) {
         }
         return seatOn(toys[name], {
             x: DEN.x,
-            surfaceY: feltTopY() + 0.001,
+            surfaceY: TABLE_SEAT_Y,
             // The puzzle row sits back so its deal fits in front of it.
             z: name === "drei" ? DEN.z + DREI_ROW_Z : DEN.z,
             rotation: { x: 0, y: 0, z: 0 },
@@ -797,10 +798,8 @@ export async function mountWorld(canvas) {
     shelfHome("dreiB");
     shelfHome("dreiC");
     shelfHome("deck3");
-    shelfHome("bs");
-    shelfHome("bsB");
-    shelfHome("bsDice");
-    shelfHome("bsCup");
+    shelfHome("bsBox");
+    shelfHome("bsDiceBox");
 
     placePlant(scene, plantAGltf, 0.35, SHELF_Y1, SHELF_Z, 0.22, 0.2);
     placePlant(scene, plantBGltf, 1.05, SHELF_Y1, SHELF_Z, 0.18, -0.35);

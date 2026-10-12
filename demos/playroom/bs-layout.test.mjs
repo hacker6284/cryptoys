@@ -1,10 +1,14 @@
 // BS on the table: the real-size layout (no overlap, on the felt, on the
-// shelf clear of the room), the T1 workspace on the lid grid (SPEC §6) and
+// shelf clear of the room), the retail boxes and every move of their
+// unboxing and repacking (real size, no overlap at any moment, the empty
+// boxes at rest in view), the T1 workspace on the lid grid (SPEC §6) and
 // the board marks the view draws from the generated trace.
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { BS_DICE, BS_GAP, BS_GRID, BS_SEAT_XZ, BS_SHELF, BS_UNIT_FOOT, DEN, REAL_SIZES, SHELF_TOP, TABLE_R } from "./constants.js";
-import { ROOM } from "../anim/shared/room.js";
+import { BS_BOX_REST, BS_CHEST, BS_DICE, BS_DIE_LIFT, BS_GAP, BS_GRID, BS_SEAT_XZ, BS_SHELF, BS_UNIT_FOOT, DEN, MINX_SPAN, REAL_SIZES, SHELF_TOP, TABLE_R } from "./constants.js";
+import { Quaternion, Vector3, glbMesh } from "./three-mini.mjs";
+import { CHEST as CHEST_DRAWN, ROOM } from "../anim/shared/room.js";
+import { CUP } from "../anim/shared/cup.js";
 import { stubThree } from "./three-stub.mjs";
 
 stubThree();
@@ -63,6 +67,13 @@ assert.equal(glbBounds(BS_MODELS.d10)[1], 22, "d10: 22 mm tip to tip");
 assert.deepEqual(glbBounds(BS_MODELS.d12), [19, 19, 19], "d12: a 19 mm box");
 assert.deepEqual(glbBounds(BS_MODELS.d6), [16, 16, 16], "d6: 16 mm");
 assert.deepEqual(glbBounds(BS_MODELS.cup), [82.6, 101.6, 82.6], "cup: Ø 82.6 × 101.6 mm");
+// The retail boxes, and the library's constants for them, from the models.
+assert.deepEqual(glbBounds(BS_MODELS.navalBox), [400, 52.5, 265], "Battleship box: 400 × 265 × 52.5 mm closed");
+assert.deepEqual(glbBounds(BS_MODELS.navalBox, "navalbox_lid"), [400, 52.5, 265], "its lid is the whole box's outside");
+assert.deepEqual(glbBounds(BS_MODELS.navalBox, "navalbox_base"), [396.4, 50.7, 261.4], "its base, 1.5 mm inside the lid");
+assert.deepEqual(glbBounds(BS_MODELS.diceBox), [120.3, 88.6, 113.6], "dice box: 120.3 × 113.6 × 88.6 mm closed (designed to fit)");
+assert.deepEqual(glbBounds(BS_MODELS.diceBox, "dicebox_base"), [116.3, 86.6, 109.6], "its base holds the cup lying and the dice beside it");
+assert.deepEqual(glbBounds(BS_MODELS.diceBox, "dicebox_lid"), [120.3, 85.6, 113.6], "its lid over the whole base, 3 mm off the table");
 
 // ---- the table: footprints on the felt (x, z from DEN), no overlap ----
 const rect = (name, [x, z], f) => ({ name, x0: x + f.x0, x1: x + f.x1, z0: z + f.z0, z1: z + f.z1 });
@@ -94,16 +105,237 @@ for (const p of pieces) {
     }
 }
 
-// ---- the shelf: the red unit between the plants, clear of the room ----
-const shelf = { x0: BS_SHELF.x + BS_UNIT_FOOT.x0, x1: BS_SHELF.x + BS_UNIT_FOOT.x1, z0: BS_SHELF.z + BS_UNIT_FOOT.z0, z1: BS_SHELF.z + BS_UNIT_FOOT.z1, y0: SHELF_TOP, y1: SHELF_TOP + 0.177 };
+// ---- the shelf: the Battleship box lying flat, clear of the room ----
+// (15 mm from everything; 7.5 mm from the backboard: the board is 280 mm
+// deep, the box 265 mm.)
+const shelf = { x0: BS_SHELF.x - 0.2, x1: BS_SHELF.x + 0.2, z0: BS_SHELF.z - 0.1325, z1: BS_SHELF.z + 0.1325, y0: SHELF_TOP, y1: SHELF_TOP + 0.0525 };
 for (const s of ROOM.filter((r) => r.kind === "box" && r.name !== "shelf-top")) {
     const lo = s.c.map((c, k) => c - s.he[k]);
     const hi = s.c.map((c, k) => c + s.he[k]);
     const apart = Math.max(lo[0] - shelf.x1, shelf.x0 - hi[0], lo[1] - shelf.y1, shelf.y0 - hi[1], lo[2] - shelf.z1, shelf.z0 - hi[2]);
-    assert.ok(apart >= 0.015, `shelf unit clear of ${s.name} (${(apart * 1000).toFixed(0)} mm)`);
+    assert.ok(apart >= (s.name === "shelf-back" ? 0.0075 - 1e-9 : 0.015), `shelf box clear of ${s.name} (${(apart * 1000).toFixed(1)} mm)`);
 }
 assert.ok(shelf.z0 > -2.28 && shelf.z1 < -2.0, "on the shelf board, in front of the backboard");
 
+// ---- the chest: the dice box waits in it, shut ----
+// Where world.getChestPose lays it: the row's spot (42 % across the
+// chest's drawn box in x, 52 % in z) moved by BS_CHEST, 55 mm up its
+// floor, turned π/2 + 0.1. Inside the cavity (10 mm from its walls, under
+// its rim, so the lid shuts over it) and clear of the row down the
+// middle (half the widest toy in it, 15 mm more).
+{
+    const yahtzee = await import("../anim/yahtzee/index.js");
+    const geom = await import("../anim/shared/geom.js");
+    const { outer: o, inner: cav } = CHEST_DRAWN;
+    const row = { x: o.min[0] * 0.42 + o.max[0] * 0.58, z: o.min[2] * 0.52 + o.max[2] * 0.48 };
+    const yaw = Math.PI / 2 + 0.1;
+    const at = { p: [row.x + BS_CHEST.dx, o.min[1] + 0.055, row.z + BS_CHEST.dz], q: [0, Math.sin(yaw / 2), 0, Math.cos(yaw / 2)] };
+    const L = yahtzee.box.LID;
+    const shut = geom.obbOf(at, { min: [-L.hx, 0, -L.hz], max: [L.hx, L.y1, L.hz] });
+    const cs = geom.obbCorners(shut);
+    for (const c of cs) {
+        assert.ok(c[0] >= cav.min[0] + 0.01 && c[0] <= cav.max[0] - 0.01 && c[2] >= cav.min[2] + 0.01 && c[2] <= cav.max[2] - 0.01, `the dice box inside the chest's walls (${c[0].toFixed(3)}, ${c[2].toFixed(3)})`);
+        assert.ok(c[1] >= cav.min[1] - 1e-9 && c[1] <= cav.max[1] - 0.01, `the dice box above the chest's floor, under its rim (${c[1].toFixed(3)})`);
+    }
+    const rowHalf = Math.max(MINX_SPAN, REAL_SIZES.deckBox.w, REAL_SIZES.deckBox.h, REAL_SIZES.deckBox.d) / 2;
+    const gap = row.x - Math.max(...cs.map((c) => c[0]));
+    assert.ok(gap >= rowHalf + 0.015, `the dice box clear of the chest's row (${(gap * 1000).toFixed(0)} mm from its line)`);
+}
+
+// ---- the unboxing: every move, at every moment ----
+{
+    const P = await import("./bs-unbox-plan.js");
+    const { checkHop } = await import("../anim/shared/hop.js");
+    const battleship = await import("../anim/battleship/index.js");
+    const yahtzee = await import("../anim/yahtzee/index.js");
+    const dice = await import("../anim/dice/index.js");
+    const geom = await import("../anim/shared/geom.js");
+    const { POSES } = await import("./poses.js");
+
+    // The library's box constants are the models'.
+    assert.deepEqual([battleship.box.LID.hx * 2, battleship.box.LID.h, battleship.box.LID.hz * 2].map((v) => +(v * 1000).toFixed(1)), [400, 52.5, 265]);
+    assert.deepEqual([battleship.box.BASE.hx * 2, battleship.box.BASE.h, battleship.box.BASE.hz * 2].map((v) => +(v * 1000).toFixed(1)), [396.4, 50.7, 261.4]);
+    assert.deepEqual([yahtzee.box.LID.hx * 2, yahtzee.box.LID.y1 - yahtzee.box.LID.y0, yahtzee.box.LID.hz * 2].map((v) => +(v * 1000).toFixed(1)), [120.3, 85.6, 113.6]);
+    assert.deepEqual([yahtzee.box.BASE.hx * 2, yahtzee.box.BASE.h, yahtzee.box.BASE.hz * 2].map((v) => +(v * 1000).toFixed(1)), [116.3, 86.6, 109.6]);
+    // The dice box is designed to fit: every inside size is the contents
+    // plus 2 mm of play (the cup lying, Ø 82.6 × 101.6 mm; one d10 across
+    // the strip), and the lid 0.5 mm over the base. Nothing more.
+    {
+        const Yb = yahtzee.box, B = Yb.BASE, L = Yb.LID, C = 0.002, near = (a, b) => Math.abs(a - b) < 1e-9;
+        const cupW = 2 * CUP.r, dieW = dice.SHAPES.d10.max[0] - dice.SHAPES.d10.min[0];
+        assert.ok(near(Yb.STRIP.max[0] - Yb.STRIP.min[0], dieW + 2 * C), "the strip: one d10 wide, 2 mm each side");
+        assert.ok(near(B.hx - B.wall - Yb.DIVIDER.max[0], cupW + 2 * C), "the cup's well: the cup across, 2 mm each side");
+        assert.ok(near(2 * (B.hz - B.wall), CUP.h + 2 * C), "both as long as the cup, 2 mm each end");
+        assert.ok(near(B.h - B.floor, cupW + C), "as deep as the lying cup, 2 mm under the lid");
+        assert.ok(near(L.hx - L.wall - B.hx, 0.0005) && near(L.hz - L.wall - B.hz, 0.0005) && near(L.y1 - L.top, B.h), "the lid 0.5 mm over the base, its top on the rim");
+    }
+    assert.deepEqual(battleship.box.UNIT, { min: [-0.115, 0, -0.0854], max: [0.115, 0.0351, 0.086] }, "a closed unit, 230 × 35.1 × 171.4 mm");
+    assert.deepEqual(battleship.unit.OPEN, { min: [-0.115, 0, -0.0901], max: [0.115, 0.177, 0.0834] }, "an open unit, as its GLB");
+    for (const [kind, mm] of [["d10", [20.2, 22, 21.1]], ["d12", [19, 19, 19]], ["d6", [16, 16, 16]]]) {
+        assert.deepEqual(dice.SHAPES[kind].max.map((v, k) => +((v - dice.SHAPES[kind].min[k]) * 1000).toFixed(1)), mm, `${kind}: as its model`);
+    }
+
+    // Packed: each unit in the box, the cup in the dice box, the dice in the cup, nothing overlapping.
+    const N = battleship.box;
+    for (const k of [0, 1]) {
+        const u = geom.obbOf(N.pocketPose(P.REST.navalBox, k), N.UNIT);
+        assert.ok(geom.worstDepth(u, N.baseSolids(P.REST.navalBox), 0).depth <= 5e-4, `unit ${k} fits its pocket (on its floor)`);
+        assert.ok(geom.obbMaxY(u) < P.REST.navalBox.p[1] + N.LID.h - N.LID.top, `unit ${k} under the lid`);
+    }
+    assert.ok(geom.obbDepth(geom.obbOf(N.pocketPose(P.REST.navalBox, 0), N.UNIT), geom.obbOf(N.pocketPose(P.REST.navalBox, 1), N.UNIT)) < 0, "the units apart in the box");
+    const Y = yahtzee.box;
+    const cupIn = Y.pocketPose(P.REST.diceBox);
+    const cupO = geom.obbOf(cupIn, Y.CUP);
+    for (const s of Y.baseSolids(P.REST.diceBox)) {
+        const d = geom.obbDepth(cupO, s);
+        if (s.name === "box floor") assert.ok(Math.abs(d) <= 5e-4, `the cup lies on the dice box's floor (${(d * 1000).toFixed(2)} mm)`);
+        else assert.ok(d <= -0.002 + 1e-6, `the cup 2 mm clear of the ${s.name} (${(-d * 1000).toFixed(2)} mm)`);
+    }
+    assert.ok(Math.abs(geom.obbMaxY(cupO) - geom.obbMinY(cupO) - 2 * CUP.r) < 1e-9, "the cup lying on its side");
+    assert.ok(geom.obbMaxY(cupO) <= P.REST.diceBox.p[1] + Y.LID.y1 - Y.LID.top - 0.002 + 1e-9, "the cup 2 mm under the lid");
+    const lidO = Y.lidSolids(P.REST.diceBox);
+    assert.ok(geom.worstDepth(cupO, lidO, 0).depth <= 5e-4, "the lid shuts over it");
+    const packed = P.DICE.map(([kind, k]) => ({ kind, k, o: geom.obbOf(P.packedDie(P.REST.diceBox, kind, k), dice.SHAPES[kind]) }));
+    for (const a of packed) {
+        assert.ok(geom.worstDepth(a.o, Y.baseSolids(P.REST.diceBox), 0).depth <= 5e-4, `${a.kind}#${a.k} in the box, clear of its card`);
+        const box = { min: Y.STRIP.min, max: Y.STRIP.max };
+        const inv = [-P.REST.diceBox.q[0], -P.REST.diceBox.q[1], -P.REST.diceBox.q[2], P.REST.diceBox.q[3]];
+        for (const c of geom.obbCorners(a.o)) {
+            const l = geom.quatRotate(inv, c.map((v, k) => v - P.REST.diceBox.p[k]));
+            assert.ok(l.every((v, k) => v >= box.min[k] - 1e-9 && v <= box.max[k] + 1e-9), `${a.kind}#${a.k} inside the dice strip`);
+        }
+        assert.ok(geom.obbDepth(a.o, cupO) < 0, `${a.kind}#${a.k} apart from the cup`);
+        assert.ok(geom.worstDepth(a.o, lidO, 0).depth <= 0, `${a.kind}#${a.k} under the lid`);
+        for (const b of packed) if (a !== b) assert.ok(geom.obbDepth(a.o, b.o) <= 0, `${a.kind}#${a.k} and ${b.kind}#${b.k} apart in the box`);
+    }
+
+    // A die's rest on its row: the stage's own rest(kind, k) (bs-unbox-plan.js
+    // makeDieRest: dice.restHeight of the drawn die showing its face), on
+    // the dice models themselves.
+    const meshes = Object.fromEntries(["d10", "d12", "d6"].map((kind) => [kind, glbMesh(new URL(`../bs/assets/models/${BS_MODELS[kind]}`, import.meta.url))]));
+    const rest = P.makeDieRest((kind) => meshes[kind], Quaternion, Vector3);
+    for (const [kind, k] of P.DICE) {
+        // Its lowest drawn point (every vertex turned to its rest) is BS_DIE_LIFT above the felt.
+        const { p, q } = P.dieSpot(kind, k, rest);
+        const m = meshes[kind];
+        const mq = [m.quaternion.x, m.quaternion.y, m.quaternion.z, m.quaternion.w];
+        const pos = m.geometry.attributes.position;
+        let low = Infinity;
+        for (let i = 0; i < pos.count; i++) {
+            const v = geom.quatRotate(geom.quatMul(q, mq), [pos.getX(i) * m.scale.x, pos.getY(i) * m.scale.y, pos.getZ(i) * m.scale.z]);
+            low = Math.min(low, p[1] + v[1]);
+        }
+        assert.ok(Math.abs(low - (P.FELT_Y + BS_DIE_LIFT)) < 1e-6, `${kind}#${k} rests on the felt by its drawn bottom (${((low - P.FELT_Y) * 1000).toFixed(3)} mm)`);
+    }
+
+    // Every move of the unboxing and the repacking, at the tempo it plays:
+    // on its law, ends exact, nothing jumps, no overlap with anything that
+    // stands around it then (touching, ≤ 0.5 mm, is not overlapping).
+    const unit = battleship.unit;
+    const steps = { unbox: P.unboxSteps(rest), repack: P.repackSteps(rest) };
+    for (const [phase, list] of Object.entries(steps)) {
+        assert.equal(list.length, 14, `${phase}: 14 moves`);
+        for (const step of list) {
+            const r = step.entry === "battleship/unit" ? unit.checkLid(step.plan, P.tempoOf(step.entry, phase)) : checkHop(step.plan, { solids: step.solids });
+            assert.ok(r.ok, `${phase} ${step.name}: ${r.fail.join("; ")}`);
+            if (step.entry === "battleship/unit") assert.equal(step.plan.stopped, null, `${step.name}: the lid swings all the way`);
+        }
+    }
+    assert.deepEqual(steps.unbox.map((s) => s.name).slice(0, 7), ["naval-lid-off", "unit-0-out", "unit-1-out", "unit-0-open", "unit-1-open", "dice-lid-off", "cup-out"]);
+    const at = (name) => steps.unbox.find((s) => s.name === name).plan;
+    const near = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]) < 1e-9;
+    assert.ok(near(at("unit-0-out").to.p, P.SEATS.units[0].p) && near(at("unit-1-out").to.p, P.SEATS.units[1].p), "the units go to their T1 seats");
+    assert.ok(near(at("cup-out").to.p, P.SEATS.cup.p), "the cup to its spot");
+    assert.ok(P.stepsMs(steps.unbox) < 10000 && P.stepsMs(steps.repack) < 7000, `unboxing ${P.stepsMs(steps.unbox).toFixed(0)} ms, repacking ${P.stepsMs(steps.repack).toFixed(0)} ms`);
+
+    // At rest: everything on the felt by its drawn bottom, nothing overlapping
+    // (15 mm apart; two dice's drawn boxes 2 mm: their reach, above, keeps
+    // 6.5 mm), on the felt, the boxes where
+    // the director sets them down (BS_BOX_REST).
+    const S = P.solids;
+    const restSet = [
+        ["Battleship base", S.navalBase()], ["Battleship lid", S.navalLid()], ["dice box base", S.diceBase()], ["dice box lid", S.diceLid()],
+        ["red unit", S.unitOpen(0)], ["blue unit", S.unitOpen(1)], ["cup", S.cupBox(P.SEATS.cup)],
+        ...P.DICE.map(([kind, k]) => [`${kind}#${k}`, S.die(P.dieSpot(kind, k, rest), kind, kind), true]),
+    ];
+    for (const [name, parts, isDie] of restSet) {
+        // (A die's drawn box reaches below its drawn bottom, checked above on its vertices.)
+        const bottom = Math.min(...parts.map(geom.obbMinY));
+        if (!isDie) assert.ok(Math.abs(bottom - P.FELT_Y) < 2.5e-4, `${name} rests on the felt (${((bottom - P.FELT_Y) * 1000).toFixed(2)} mm)`);
+        for (const p of parts) for (const c of geom.obbCorners(p)) assert.ok(Math.hypot(c[0] - DEN.x, c[2] - DEN.z) < TABLE_R - 0.08 - 0.05, `${name} on the felt`);
+    }
+    for (let i = 0; i < restSet.length; i++) for (let j = i + 1; j < restSet.length; j++) {
+        const [an, ap] = restSet[i];
+        const [bn, bp] = restSet[j];
+        const dice2 = i >= 7 && j >= 7;
+        let d = -Infinity;
+        for (const a of ap) for (const b of bp) d = Math.max(d, geom.obbDepth(a, b));
+        assert.ok(d <= -(dice2 ? 0.002 : 0.015) + 1e-9, `${an} and ${bn} ${(-d * 1000).toFixed(1)} mm apart`);
+    }
+    for (const [key, r] of Object.entries(BS_BOX_REST)) {
+        assert.ok(Math.abs(P.REST[key].p[0] - (DEN.x + r.x)) < 1e-12 && Math.abs(P.REST[key].p[2] - (DEN.z + r.z)) < 1e-12, `${key} rests at BS_BOX_REST`);
+    }
+
+    // In view at rest: every piece inside the BS seat's frame (1440 × 900,
+    // left of the 352 px dock; phones 390 × 844, across), and each empty box
+    // and lid seen from the seat: no other piece in front of its top corners
+    // or the middle of its front edge.
+    const camera = (pose) => {
+        const f0 = pose.target.map((v, k) => v - pose.position[k]);
+        const f = f0.map((v) => v / Math.hypot(...f0));
+        const r0 = [-f[2], 0, f[0]];
+        const r = r0.map((v) => v / Math.hypot(...r0));
+        const u = geom.cross(r, f);
+        const t = Math.tan((pose.fov * Math.PI) / 360);
+        return (p, W, H) => {
+            const d = p.map((v, k) => v - pose.position[k]);
+            const z = geom.dot(d, f);
+            return [((geom.dot(d, r) / (z * t * W / H)) + 1) / 2 * W, (1 - geom.dot(d, u) / (z * t)) / 2 * H];
+        };
+    };
+    const corners = restSet.flatMap(([, parts]) => parts.flatMap(geom.obbCorners));
+    const land = camera(POSES.bs);
+    for (const c of corners) {
+        const [x, y] = land(c, 1440, 900);
+        assert.ok(x > 16 && x < 1440 - 352 - 16 && y > 16 && y < 900 - 16, `in the BS frame left of the dock (${x.toFixed(0)}, ${y.toFixed(0)})`);
+    }
+    const phone = camera({ ...POSES.bs, ...POSES.bs.portrait });
+    for (const c of corners) {
+        const [x, y] = phone(c, 390, 844);
+        assert.ok(x > 4 && x < 386 && y > 16 && y < 844 * 0.6, `in the phone frame above the dock (${x.toFixed(0)}, ${y.toFixed(0)})`);
+    }
+    // A ray from the eye to a point is blocked by an oriented box if it passes through it (slab test).
+    const blocks = (o, from, to) => {
+        let t0 = 0, t1 = 1;
+        const d = to.map((v, k) => v - from[k]);
+        const rel = from.map((v, k) => v - o.c[k]);
+        for (let a = 0; a < 3; a++) {
+            const e = geom.dot(o.axes[a], rel), g = geom.dot(o.axes[a], d);
+            const lo = -o.he[a], hi = o.he[a];
+            if (Math.abs(g) < 1e-12) {
+                if (e < lo || e > hi) return false;
+                continue;
+            }
+            let ta = (lo - e) / g, tb = (hi - e) / g;
+            if (ta > tb) [ta, tb] = [tb, ta];
+            t0 = Math.max(t0, ta);
+            t1 = Math.min(t1, tb);
+            if (t0 > t1) return false;
+        }
+        return t1 > 1e-6 && t0 < 1 - 1e-6;
+    };
+    const eye = POSES.bs.position;
+    for (const [name, shape, pose] of [["Battleship base", { min: [-0.1982, 0, -0.1307], max: [0.1982, 0.0507, 0.1307] }, P.REST.navalBox], ["Battleship lid", { min: [-0.2, 0, -0.1325], max: [0.2, 0.0525, 0.1325] }, P.REST.navalLid], ["dice box base", { min: [-0.1225, 0, -0.08], max: [0.1225, 0.1025, 0.08] }, P.REST.diceBox], ["dice box lid", { min: [-0.124, 0.058, -0.0815], max: [0.124, 0.108, 0.0815] }, P.REST.diceLid]]) {
+        const o = geom.obbOf(pose, shape);
+        const top = geom.obbCorners(o).filter((c) => c[1] > o.c[1]);
+        // The middle of its edge nearest the seat, at the felt.
+        const front = top.slice().sort((a, b) => b[2] - a[2]).slice(0, 2);
+        const mid = [(front[0][0] + front[1][0]) / 2, P.FELT_Y + 0.002, (front[0][2] + front[1][2]) / 2];
+        const shrink = (p) => p.map((v, k) => v + (o.c[k] - v) * 0.01);
+        const others = restSet.filter(([n]) => n !== name).flatMap(([, parts]) => parts);
+        for (const p of [...top, mid].map(shrink)) for (const b of others) assert.ok(!blocks(b, eye, p), `${name} seen from the seat (${b.name} in the way)`);
+    }
+}
 // ---- the T1 workspace on the lid grid (SPEC §6) ----
 const row = (cell) => "ABCDEFGHIJ"[Math.floor(cell / 10)];
 const col = (cell) => (cell % 10) + 1;

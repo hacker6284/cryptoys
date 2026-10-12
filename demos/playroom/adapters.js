@@ -1063,10 +1063,13 @@ export function createMegaDreifachAdapter() {
 }
 
 /**
- * BS (Battleship Diffie–Hellman): Alice's red unit flies off the shelf,
- * Bob's blue unit, the key dice and their cup out of the toy chest, onto the felt
- * (constants.js BS layout). The seed rolls both key grids; Play shows every
- * summary of the generated trace, Step every peg move of one.
+ * BS (Battleship Diffie–Hellman): the Battleship box (both units in it)
+ * flies off the shelf and the dice box (the cup and the dice in it) out of
+ * the toy chest, onto the felt, and they are unboxed there: the units to
+ * their seats, lids up, the cup and the dice to theirs (constants.js BS
+ * layout; bs-unbox-plan.js). Leaving repacks them before they fly home.
+ * The seed rolls both key grids; Play shows every summary of the generated
+ * trace, Step every peg move of one.
  */
 export function createBsAdapter() {
     const dock = createDock("bs", {
@@ -1136,7 +1139,7 @@ export function createBsAdapter() {
             world = nextWorld;
             poses = nextPoses;
             toys = createBsToys();
-            const pairs = [["bs", toys.units[0]], ["bsB", toys.units[1]], ["bsDice", toys.dice], ["bsCup", toys.cup]];
+            const pairs = [["bsBox", toys.boxes.naval.group], ["bsDiceBox", toys.boxes.dice.group]];
             for (const [name, toy] of pairs) {
                 const old = world.toys[name];
                 world.replaceToy(name, toy);
@@ -1144,7 +1147,7 @@ export function createBsAdapter() {
                 world.shelfHome(name);
             }
             stage = stageBs(world, toys, { prefersReducedMotion });
-            return toys.units[0];
+            return toys.boxes.naval.group;
         },
         async ready() {
             try {
@@ -1164,8 +1167,9 @@ export function createBsAdapter() {
         get busy() {
             return Boolean(entering && clock && !clock.dead(enterGen));
         },
-        leaveMs() {
-            return 0;
+        leaveMs({ snap = false } = {}) {
+            if (snap || Boolean(poses?.prefersReducedMotion?.())) return 0;
+            return stage?.repackMs() ?? 0;
         },
         view() {
             return stage;
@@ -1184,15 +1188,23 @@ export function createBsAdapter() {
                 const { sessionMod: mod } = await preload();
                 const specUrl = await dock.specUrl();
                 if (cancelEnter) return session;
-                // The director has flown the red unit off the shelf and, out
-                // of the chest, the blue unit and the dice; the follow shot
-                // eases on into the BS seat (no cut), then the dock.
+                // The director has flown the Battleship box off the shelf
+                // and, out of the chest, the dice box; the follow shot eases
+                // on into the BS seat (no cut). Once both boxes are down and
+                // the camera is in the seat they are unboxed in view, one
+                // move after another (bs-unbox-plan.js), on this clock (Skip
+                // finishes it at once); then the dock.
                 markBeat("bs-present");
                 poses?.followLive?.(null);
                 poses?.releaseFrame?.();
                 const seated = continueTo(poses, "bs", { duration: reduced ? 480 : 1400, restart: true });
-                for (const name of ["bsB", "bsDice", "bsCup"]) await waitToyIdle(world.toys[name], clock, enterGen);
+                for (const name of ["bsBox", "bsDiceBox"]) await waitToyIdle(world.toys[name], clock, enterGen);
                 await seated;
+                markBeat("bs-unbox");
+                const gen = enterGen;
+                const beat = clock;
+                await stage.unbox((ms, step) => beat.tween(ms, (t) => step(t * ms), { ease: (t) => t, generation: gen }));
+                markBeat("bs-unboxed");
                 if (cancelEnter) return session;
                 session = mod.createBsSession({ view: stage, specUrl, root, exposeTeach: true });
                 stage.rememberSeated();
@@ -1209,17 +1221,33 @@ export function createBsAdapter() {
                 poses?.unlockOrbit?.();
             }
         },
-        async leave() {
+        async leave({ snap = false } = {}) {
             cancelEnter = true;
+            // Mid-unbox: stop after the move in progress (Skip finishes it).
+            stage?.cancelUnbox();
             clock?.skip();
+            const reduced = snap || Boolean(poses?.prefersReducedMotion?.());
             session?.dispose();
             session = null;
             dock.close();
             stage?.settle();
             await stage?.clearShow();
+            // Back into the boxes (the moves done, backwards; snapped or
+            // reduced, at once), then the director flies the boxes home.
+            if (stage && !stage.packed) {
+                markBeat("bs-repack");
+                const beat = createBeatClock({ reduced });
+                const gen = beat.begin();
+                try {
+                    await stage.repack((ms, step) => beat.tween(ms, (t) => step(t * ms), { ease: (t) => t, generation: gen }), { snap: reduced });
+                } catch (err) {
+                    console.warn("BS repack failed", err);
+                    stage.packNow();
+                }
+            }
         },
         revealShelf() {
-            for (const name of ["bs", "bsB", "bsDice", "bsCup"]) if (world?.toys[name]) world.toys[name].visible = true;
+            for (const name of ["bsBox", "bsDiceBox"]) if (world?.toys[name]) world.toys[name].visible = true;
         },
     };
 }

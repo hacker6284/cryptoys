@@ -62,6 +62,15 @@ theorem place_tier_eq (b : Ecbs.Board) (home : Nat)
   dsimp only
   split <;> rfl
 
+theorem place_marker_eq (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_6marker =
+      b.sudo_5Board_6marker := by
+  unfold placeBoard
+  dsimp only
+  split <;> rfl
+
 attribute [local irreducible] placeBoard
 
 /-- White cell, accumulator not yet live. Across and up receive the base point. -/
@@ -94,7 +103,8 @@ theorem walk_copy_white (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
       (∀ (h : 4 < b2.sudo_5Board_4home.size), b2.sudo_5Board_4home[4] = embed y) ∧
       b2.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv2 ∧
       b2.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk2 ∧
-      mv2 = moves + pegCount x + pegCount y := by
+      mv2 = moves + pegCount x + pegCount y ∧
+      b2.sudo_5Board_6marker = b.sudo_5Board_6marker := by
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have h1H : 1 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -150,7 +160,7 @@ theorem walk_copy_white (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
   refine ⟨b2, mv1 + pegCount y,
       if pk1 < countHeld (b1.sudo_5Board_4held.set ⟨1, h1D1⟩ true) 7
         then countHeld (b1.sudo_5Board_4held.set ⟨1, h1D1⟩ true) 7 else pk1,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, rfl⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, rfl, ?_⟩
   · rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
         show Ecbs.base_across = ((3 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl,
@@ -199,6 +209,8 @@ theorem walk_copy_white (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
     exact hget.trans h4a1
   · rw [place_moves_eq]
   · rw [place_peak_nat b1 1 h1H1 h1D1 y mv1 pk1 (by rw [hpk1])]
+  · rw [place_marker_eq b1 1 h1H1 h1D1 y mv1 pk1,
+      place_marker_eq b 0 h0H h0D x moves peak]
 
 /-- SPEC.md §3 R8 lines 158–159. A white cell while the accumulator is empty
     copies the base point. No Frobenius, no chord. -/

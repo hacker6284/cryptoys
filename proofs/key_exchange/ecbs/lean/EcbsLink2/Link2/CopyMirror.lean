@@ -224,7 +224,8 @@ theorem walk_copy_red (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
         b2.sudo_5Board_4home[1] = embed (mirrorTrits y)) ∧
       mv2 = moves + pegCount x + pegCount (mirrorTrits y) ∧
       b2.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv2 ∧
-      b2.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk2 := by
+      b2.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk2 ∧
+      b2.sudo_5Board_6marker = b.sudo_5Board_6marker := by
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have h3H : 3 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -282,7 +283,7 @@ theorem walk_copy_red (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
   refine ⟨b2, mv1 + pegCount (mirrorTrits y),
       if pk1 < countHeld (b1.sudo_5Board_4held.set ⟨1, h1D1⟩ true) 7
         then countHeld (b1.sudo_5Board_4held.set ⟨1, h1D1⟩ true) 7 else pk1,
-      ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
         show Ecbs.base_across = ((3 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl,
@@ -305,5 +306,7 @@ theorem walk_copy_red (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
   · rw [hpegY]
   · rw [place_moves_eq, hpegY]
   · rw [place_peak_nat b1 1 h1H1 h1D1 (mirrorTrits y) mv1 pk1 (by rw [hpk1])]
+  · rw [place_marker_eq b1 1 h1H1 h1D1 (mirrorTrits y) mv1 pk1,
+      place_marker_eq b 0 h0H h0D x moves peak]
 
 end EcbsLink2.Link2

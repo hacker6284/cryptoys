@@ -52,6 +52,7 @@ import EcbsLink2.Link2.DemoPoint
 import EcbsLink2.Link2.Frobenius
 import EcbsLink2.Link2.WalkCopy
 import EcbsLink2.Link2.CopyMirror
+import EcbsLink2.Link2.WalkChord
 import EcbsLink2.Link2.OneField
 import EcbsLink2.Link2.CurveTest
 import EcbsLink2.Link2.CurveAsm

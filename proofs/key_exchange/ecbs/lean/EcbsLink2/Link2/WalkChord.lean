@@ -1,0 +1,195 @@
+/-
+  One cell of `walk_chord` while the accumulator is still empty.
+  A zero cell leaves the point homes alone. A white cell copies the base
+  point. A red cell copies it with the up coordinate negated. Each cell
+  lifts the script marker first. The board is abstract: homes, moves, and
+  the marker are hypotheses. Proof-only. Not a security claim.
+-/
+import EcbsLink2.Link2.CopyMirror
+
+namespace EcbsLink2.Link2
+
+open MegaDreifach.Link2
+open EcbsLink2.Spec
+
+/-- The marker is on the script (`marker ≥ 0`). `marker_lift` picks it up:
+    the index becomes `-1` and the control counter grows by one. Homes, held
+    flags, moves, and peak stay. -/
+theorem marker_lift_refines (b : Ecbs.Board) (marker ctrl : Nat)
+    (hm : b.sudo_5Board_6marker = Int.ofNat marker)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hfit : FitsLen (ctrl + 1)) :
+    Ecbs.marker_lift b =
+      .ok { b with
+        sudo_5Board_6marker := -1
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } } := by
+  unfold Ecbs.marker_lift
+  rw [hm]
+  have hge : decide (Int.ofNat marker ≥ (0 : Int)) = true := by
+    rw [decide_eq_true_eq]
+    exact Int.ofNat_nonneg marker
+  rw [hge, if_pos rfl, negI_one, ok_bind]
+  dsimp
+  rw [hc, addI_ofNat_one ctrl hfit, ok_bind, pure_eq_ok]
+  rfl
+
+/-- A zero cell, accumulator not live. The point homes are the ones
+    `marker_lift` left, which are the homes it was given. -/
+theorem chord_skip_cell (b : Ecbs.Board) (marker ctrl : Nat)
+    (hm : b.sudo_5Board_6marker = Int.ofNat marker)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hfit : FitsLen (ctrl + 1)) :
+    ∃ b1,
+      Ecbs.marker_lift b = .ok b1 ∧
+      b1.sudo_5Board_4home = b.sudo_5Board_4home ∧
+      b1.sudo_5Board_4held = b.sudo_5Board_4held ∧
+      b1.sudo_5Board_4cost.sudo_5Costs_5moves = b.sudo_5Board_4cost.sudo_5Costs_5moves ∧
+      b1.sudo_5Board_4cost.sudo_5Costs_4peak = b.sudo_5Board_4cost.sudo_5Costs_4peak ∧
+      b1.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b1.sudo_5Board_6marker = -1 := by
+  refine ⟨_, marker_lift_refines b marker ctrl hm hc hfit, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  all_goals simp
+
+/-- SPEC.md §3 R8. An empty cell does not cube and does not add while the
+    accumulator is empty. -/
+theorem walkStep_skip (n k bench : Nat) (base acc : List Nat × List Nat) :
+    walkStep n k bench base false acc 0 = some (false, acc) := by
+  unfold walkStep
+  simp
+
+/-- White cell, accumulator not live. Marker lifts, then across and up receive
+    the base point. This is the emitted not-live arm (`copy_band` twice, the
+    up copy unmirrored) and `walkStep` on colour 1. -/
+theorem chord_fresh_white (b : Ecbs.Board) (x y : List Nat) (n moves peak marker ctrl : Nat)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (hx : x.length = n) (hy : y.length = n)
+    (hf : FitsLen n)
+    (hfitx : FitsLen (moves + pegCount x))
+    (hfity : FitsLen (moves + pegCount x + pegCount y))
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hm : b.sudo_5Board_6marker = Int.ofNat marker)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hfitc : FitsLen (ctrl + 1))
+    (h0 : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = false)
+    (h1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = false)
+    (h3t : b.sudo_5Board_4held[3]'(by rw [hszD]; decide) = true)
+    (h3a : b.sudo_5Board_4home[3]'(by rw [hszH]; decide) = embed x)
+    (h4t : b.sudo_5Board_4held[4]'(by rw [hszD]; decide) = true)
+    (h4a : b.sudo_5Board_4home[4]'(by rw [hszH]; decide) = embed y) :
+    ∃ b2 mv2 pk2,
+      (do
+          let b ← Ecbs.marker_lift b
+          let b ← Ecbs.copy_band b Ecbs.across Ecbs.base_across false
+          Ecbs.copy_band b Ecbs.up Ecbs.base_up false) = .ok b2 ∧
+      (∀ (h : 0 < b2.sudo_5Board_4home.size), b2.sudo_5Board_4home[0] = embed x) ∧
+      (∀ (h : 1 < b2.sudo_5Board_4home.size), b2.sudo_5Board_4home[1] = embed y) ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv2 ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk2 ∧
+      mv2 = moves + pegCount x + pegCount y ∧
+      walkStep n 0 0 (x, y) false (x, y) 1 = some (true, (x, y)) := by
+  have hlift := marker_lift_refines b marker ctrl hm hc hfitc
+  let b1 := { b with
+    sudo_5Board_6marker := -1
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } }
+  have hhome : b1.sudo_5Board_4home = b.sudo_5Board_4home := rfl
+  have hheld : b1.sudo_5Board_4held = b.sudo_5Board_4held := rfl
+  have hszH1 : b1.sudo_5Board_4home.size = 8 := by rw [hhome, hszH]
+  have hszD1 : b1.sudo_5Board_4held.size = 8 := by rw [hheld, hszD]
+  have hn1 : b1.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    simp [b1, hn]
+  have hmoves1 : b1.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) := by
+    simp [b1, hmoves]
+  have hpeak1 : b1.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    simp [b1, hpeak]
+  have h0' : b1.sudo_5Board_4held[0]'(by rw [hszD1]; decide) = false := by
+    simpa [hheld] using h0
+  have h1' : b1.sudo_5Board_4held[1]'(by rw [hszD1]; decide) = false := by
+    simpa [hheld] using h1
+  have h3t' : b1.sudo_5Board_4held[3]'(by rw [hszD1]; decide) = true := by
+    simpa [hheld] using h3t
+  have h3a' : b1.sudo_5Board_4home[3]'(by rw [hszH1]; decide) = embed x := by
+    simpa [hhome] using h3a
+  have h4t' : b1.sudo_5Board_4held[4]'(by rw [hszD1]; decide) = true := by
+    simpa [hheld] using h4t
+  have h4a' : b1.sudo_5Board_4home[4]'(by rw [hszH1]; decide) = embed y := by
+    simpa [hhome] using h4a
+  obtain ⟨b2, mv2, pk2, hcopy, _, _, hx0, hy1, _, _, _, _, hmv, hpk, hsum, _⟩ :=
+    walk_copy_white b1 x y n moves peak hszH1 hszD1 hx hy hf hfitx hfity
+      hn1 hmoves1 hpeak1 h0' h1' h3t' h3a' h4t' h4a'
+  refine ⟨b2, mv2, pk2, ?_, hx0, hy1, hmv, hpk, hsum, ?_⟩
+  · rw [hlift, ok_bind]
+    simpa [b1] using hcopy
+  · simpa using walkStep_fresh_white n 0 0 (x, y) (x, y)
+
+/-- Red cell, accumulator not live. Across receives the base across and up
+    receives the negated base up. -/
+theorem chord_fresh_red (b : Ecbs.Board) (x y : List Nat) (n moves peak marker ctrl : Nat)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (hx : x.length = n) (hy : y.length = n) (hpos : 0 < n)
+    (hyt : allTritList y) (hf : FitsLen n)
+    (hfitx : FitsLen (moves + pegCount x))
+    (hfity : FitsLen (moves + pegCount x + pegCount y))
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hm : b.sudo_5Board_6marker = Int.ofNat marker)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hfitc : FitsLen (ctrl + 1))
+    (h0 : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = false)
+    (h1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = false)
+    (h3t : b.sudo_5Board_4held[3]'(by rw [hszD]; decide) = true)
+    (h3a : b.sudo_5Board_4home[3]'(by rw [hszH]; decide) = embed x)
+    (h4t : b.sudo_5Board_4held[4]'(by rw [hszD]; decide) = true)
+    (h4a : b.sudo_5Board_4home[4]'(by rw [hszH]; decide) = embed y) :
+    ∃ b2 mv2 pk2,
+      (do
+          let b ← Ecbs.marker_lift b
+          let b ← Ecbs.copy_band b Ecbs.across Ecbs.base_across false
+          Ecbs.copy_band b Ecbs.up Ecbs.base_up true) = .ok b2 ∧
+      (∀ (h : 0 < b2.sudo_5Board_4home.size), b2.sudo_5Board_4home[0] = embed x) ∧
+      (∀ (h : 1 < b2.sudo_5Board_4home.size),
+        b2.sudo_5Board_4home[1] = embed (mirrorTrits y)) ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv2 ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk2 ∧
+      mv2 = moves + pegCount x + pegCount (mirrorTrits y) ∧
+      walkStep n 0 0 (x, y) false (x, y) 2 =
+        some (true, (x, mirrorTrits y)) := by
+  have hlift := marker_lift_refines b marker ctrl hm hc hfitc
+  let b1 := { b with
+    sudo_5Board_6marker := -1
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } }
+  have hhome : b1.sudo_5Board_4home = b.sudo_5Board_4home := rfl
+  have hheld : b1.sudo_5Board_4held = b.sudo_5Board_4held := rfl
+  have hszH1 : b1.sudo_5Board_4home.size = 8 := by rw [hhome, hszH]
+  have hszD1 : b1.sudo_5Board_4held.size = 8 := by rw [hheld, hszD]
+  have hn1 : b1.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by simp [b1, hn]
+  have hmoves1 : b1.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) := by
+    simp [b1, hmoves]
+  have hpeak1 : b1.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    simp [b1, hpeak]
+  have h0' : b1.sudo_5Board_4held[0]'(by rw [hszD1]; decide) = false := by
+    simpa [hheld] using h0
+  have h1' : b1.sudo_5Board_4held[1]'(by rw [hszD1]; decide) = false := by
+    simpa [hheld] using h1
+  have h3t' : b1.sudo_5Board_4held[3]'(by rw [hszD1]; decide) = true := by
+    simpa [hheld] using h3t
+  have h3a' : b1.sudo_5Board_4home[3]'(by rw [hszH1]; decide) = embed x := by
+    simpa [hhome] using h3a
+  have h4t' : b1.sudo_5Board_4held[4]'(by rw [hszD1]; decide) = true := by
+    simpa [hheld] using h4t
+  have h4a' : b1.sudo_5Board_4home[4]'(by rw [hszH1]; decide) = embed y := by
+    simpa [hhome] using h4a
+  obtain ⟨b2, mv2, pk2, hcopy, hx0, hy1, hsum, hmv, hpk, _⟩ :=
+    walk_copy_red b1 x y n moves peak hszH1 hszD1 hx hy hpos hyt hf hfitx hfity
+      hn1 hmoves1 hpeak1 h0' h1' h3t' h3a' h4t' h4a'
+  refine ⟨b2, mv2, pk2, ?_, hx0, hy1, hmv, hpk, hsum, ?_⟩
+  · rw [hlift, ok_bind]
+    simpa [b1] using hcopy
+  · simpa using walkStep_fresh_red n 0 0 (x, y) (x, y)
+
+end EcbsLink2.Link2

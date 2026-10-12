@@ -38,7 +38,7 @@ export const DEMOS = Object.assign(Object.create(null), {
     bs: {
         title: "BS",
         pose: "bs",
-        toys: ["bs", "bsB", "bsDice", "bsCup"],
+        toys: ["bsBox", "bsDiceBox"],
         chest: true,
         deepLinkPlays: true,
         adapter: createBsAdapter(),

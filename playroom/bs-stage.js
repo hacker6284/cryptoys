@@ -1,6 +1,9 @@
 /**
  * BS on the playroom table: two Battleship travel units, lids up, and the
- * key dice (constants.js BS layout, every piece at its real size).
+ * key dice (constants.js BS layout, every piece at its real size). They
+ * wait packed in their retail boxes (the Battleship box holds both units,
+ * the dice box the cup and the dice) and are unboxed on the table
+ * (bs-unbox.js, bs-unbox-plan.js).
  *
  *   - Each player's ocean grid is the key grid: BUILD lays the fleet and a
  *     peg in every hole (SPEC §4.2); the walk cursor is two Destroyers on
@@ -10,7 +13,7 @@
  *     row I), C in I–J, registers in columns 1–9; column 10 is the control
  *     lane (hole 5: calling; hole 10: where the walk is).
  *   - The dice: the row cup's five d10s, the hole die (d12) and the d6,
- *     and their cup.
+ *     and their cup (lying in the dice box beside them).
  *
  * Play runs one beat per summary of the generated trace (bs.sudo
  * trace_exchange): the registers jump from one summary to the next. Step
@@ -27,8 +30,10 @@ import * as peg from "../anim/peg/index.js";
 import * as ship from "../anim/ship/index.js";
 import * as dice from "../anim/dice/index.js";
 import { createStageTime } from "./stage-time.js";
-import { BS_DICE, BS_GRID as G, REAL_SIZES } from "./constants.js";
+import { BS_DICE, BS_DICE_FACES, BS_DICE_YAW, BS_DIE_LIFT, BS_GRID as G, REAL_SIZES } from "./constants.js";
 import { lidMoves } from "../bs/expand.js";
+import { createBsUnbox } from "./bs-unbox.js";
+import { makeDieRest } from "./bs-unbox-plan.js";
 
 const MODELS = new URL("../bs/assets/models/", import.meta.url);
 export const BS_MODELS = {
@@ -40,6 +45,8 @@ export const BS_MODELS = {
     d12: "facehunter_d12_19mm_box.glb",
     d6: "facehunter_d6_16mm.glb",
     cup: "proc_dice_cup_83x102mm.glb",
+    navalBox: "proc_naval_game_box_400x265x52.glb",
+    diceBox: "proc_dice_game_box_120x114x89.glb",
 };
 
 // The unit GLB's grids: constants.js BS_GRID (one source with the microdemos).
@@ -58,10 +65,10 @@ const SHIP_NODE = {
     Destroyer: "ship_destroyer_2",
 };
 const D10_TINT = [0xd8443c, 0xf08a2c, 0xf2cf3a, 0x4caf50, 0x3f7fd8]; // red, orange, yellow, green, blue
-const D10_YAW = [0.3, -0.5, 0.9, 0.1, -0.8];
-const D12_YAW = 0.4;
-const D6_YAW = 0.25;
-const DEFAULT_FACES = { d10: [1, 2, 3, 4, 5], d12: 12, d6: 6 };
+const D10_YAW = BS_DICE_YAW.d10;
+const D12_YAW = BS_DICE_YAW.d12;
+const D6_YAW = BS_DICE_YAW.d6;
+const DEFAULT_FACES = BS_DICE_FACES;
 
 // ---- pure layout (tested in bs-layout.test.mjs) ------------------------
 
@@ -208,17 +215,22 @@ function shadows(root) {
 }
 
 /**
- * The BS toys as empty groups (world.toys bs, bsB, bsDice, bsCup) and load(), which
- * fills them with the models. Each group's origin is where it stands.
+ * The BS toys as empty groups and load(), which fills them with the
+ * models: the two boxes (world.toys bsBox and bsDiceBox, the toys the
+ * director flies), the units, the dice row and the cup (packed in the
+ * boxes, then on the felt). Each group's origin is where it stands.
  */
 export function createBsToys() {
     const units = [new THREE.Group(), new THREE.Group()];
-    units[0].name = "bs";
-    units[1].name = "bsB";
+    units[0].name = "bs-unit-red";
+    units[1].name = "bs-unit-blue";
     const diceToy = new THREE.Group();
-    diceToy.name = "bsDice";
+    diceToy.name = "bs-dice-row";
     const cupToy = new THREE.Group();
-    cupToy.name = "bsCup";
+    cupToy.name = "bs-cup";
+    const boxes = { naval: { group: new THREE.Group(), lid: null }, dice: { group: new THREE.Group(), lid: null } };
+    boxes.naval.group.name = "bsBox";
+    boxes.dice.group.name = "bsDiceBox";
     let loading = null;
     function load() {
         loading ??= (async () => {
@@ -227,7 +239,17 @@ export function createBsToys() {
             const loader = new GLTFLoader();
             const files = await Promise.all(Object.entries(BS_MODELS).map(async ([k, f]) => [k, await loadGlb(loader, f)]));
             const g = Object.fromEntries(files);
-            const parts = { units: [], templates: {}, dice: {} };
+            const parts = { units: [], templates: {}, dice: {}, boxes };
+            // The boxes: the base (and the Battleship box's card inserts) is
+            // the group, the lid a child at its origin while it is on.
+            for (const [key, file, lidName] of [["naval", "navalBox", "navalbox_lid"], ["dice", "diceBox", "dicebox_lid"]]) {
+                const root = g[file].scene;
+                shadows(root);
+                boxes[key].group.add(root);
+                const lid = root.getObjectByName(lidName);
+                boxes[key].group.add(lid);
+                boxes[key].lid = lid;
+            }
             for (const [p, key] of [[0, "red"], [1, "blue"]]) {
                 const root = g[key].scene;
                 shadows(root);
@@ -281,7 +303,7 @@ export function createBsToys() {
         })();
         return loading;
     }
-    return { units, dice: diceToy, cup: cupToy, load };
+    return { units, dice: diceToy, cup: cupToy, boxes, load };
 }
 
 // ---- the stage ----------------------------------------------------------------
@@ -302,14 +324,28 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
     const AX_LID = new THREE.Vector3(0, -1, 0);
     const restCache = new Map();
 
+    let unboxer = null;
     const ready = toys.load().then((p) => {
         parts = p;
         p.units.forEach((u, i) => units.push(rigUnit(u, i)));
-        for (const name of ["bs", "bsB", "bsDice", "bsCup"]) {
+        showDice(DEFAULT_FACES);
+        unboxer = createBsUnbox({
+            scene: world.scene,
+            rigs: {
+                naval: p.boxes.naval,
+                diceBox: p.boxes.dice,
+                units: p.units.map((u, i) => ({ group: toys.units[i], lid: u.lid })),
+                cup: toys.cup,
+                diceRow: toys.dice,
+                dice: p.dice,
+            },
+            rest: makeDieRest((kind, k) => (kind === "d10" ? p.dice.d10[k] : p.dice[kind]).userData.mesh, THREE.Quaternion, THREE.Vector3),
+        });
+        unboxer.packNow();
+        for (const name of ["bsBox", "bsDiceBox"]) {
             const toy = world.toys?.[name];
             if (toy && !toy.userData.flightBusy && toy.userData.seatSurface !== "table") world.shelfHome?.(name);
         }
-        showDice(DEFAULT_FACES);
         return p;
     });
 
@@ -407,19 +443,21 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
 
     function setDie(holder, kind, face, yaw) {
         holder.quaternion.copy(dice.restQuaternion(kind, face, yaw, THREE.Quaternion, THREE.Vector3));
-        holder.position.y = restY(holder, kind, face) + 0.0002;
+        holder.position.y = restY(holder, kind, face) + BS_DIE_LIFT;
         holder.userData.face = face;
     }
 
     function showDice(faces) {
+        // Only the dice on their row: packed (or not yet unpacked), a die lies in the dice box as packed.
         if (!parts) return;
-        parts.dice.d10.forEach((d, k) => setDie(d, "d10", faces.d10[k] ?? DEFAULT_FACES.d10[k], D10_YAW[k]));
-        setDie(parts.dice.d12, "d12", faces.d12, D12_YAW);
-        setDie(parts.dice.d6, "d6", faces.d6, D6_YAW);
+        const onRow = (d) => d.parent === toys.dice;
+        parts.dice.d10.forEach((d, k) => onRow(d) && setDie(d, "d10", faces.d10[k] ?? DEFAULT_FACES.d10[k], D10_YAW[k]));
+        if (onRow(parts.dice.d12)) setDie(parts.dice.d12, "d12", faces.d12, D12_YAW);
+        if (onRow(parts.dice.d6)) setDie(parts.dice.d6, "d6", faces.d6, D6_YAW);
     }
 
     function rollDie(holder, kind, face, yaw, tempo, run) {
-        return dice.roll(holder, kind, face, { yaw, tempo, run, landY: restY(holder, kind, face) + 0.0002 })
+        return dice.roll(holder, kind, face, { yaw, tempo, run, landY: restY(holder, kind, face) + BS_DIE_LIFT })
             .then((ok) => { holder.userData.face = face; return ok; });
     }
 
@@ -733,6 +771,29 @@ export function stageBs(world, toys, { prefersReducedMotion = () => false } = {}
             if (parts) render(index);
         },
         rememberSeated() {},
+        /** Lids off, units out and open, the cup and the dice out (bs-unbox.js), on `run`'s clock. */
+        async unbox(run) {
+            await ready;
+            await unboxer.unbox(run);
+        },
+        /** Stop the unboxing after the move it is in (leaving mid-unbox). */
+        cancelUnbox() {
+            unboxer?.cancel();
+        },
+        /** Everything back into its box: the moves done, backwards (snap: at once). */
+        async repack(run, opts) {
+            await ready;
+            await unboxer.repack(run, opts);
+        },
+        /** Everything into its box at once. */
+        packNow() {
+            unboxer?.packNow();
+        },
+        get packed() {
+            return unboxer ? unboxer.packed : true;
+        },
+        unboxMs: () => unboxer?.unboxMs() ?? 0,
+        repackMs: () => (unboxer && !unboxer.packed ? unboxer.repackMs() : 0),
         /** For checks: the board as drawn (lid cells, key pegs, ships shown, cursor) per player. */
         board: () => units.map((u) => ({ cells: Array.from(u.cells), key: Array.from(u.key), ships: u.shown, cursor: u.cursor })),
         index: () => index,

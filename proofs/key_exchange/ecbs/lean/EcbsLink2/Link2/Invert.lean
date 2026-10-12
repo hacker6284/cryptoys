@@ -5173,6 +5173,11 @@ structure ClimbBudget where
   fitTailM : FitsLen (moves0 + R * rungCharge n bench mMax + pegCharge n bench)
   /-- The outer settle's `2 · n` slides, past the settle reserved in `fitS`. -/
   fitTailS : FitsLen (slides0 + R * rungSlideCharge n mMax + 2 * n)
+  /-- One more copy, schoolbook, and fold after that tail: the check multiply.
+      `n` bounds the copied pegs. The schoolbook is at most `n · (n + 1)` and
+      the fold is at most three moves on each hole past `n`. -/
+  fitCheckM : FitsLen (moves0 + R * rungCharge n bench mMax + pegCharge n bench +
+    n + n * (n + 1) + 3 * (bench - n) + 2 * n)
   /-- Counter at the start of the climb. One `rungCtrl` step is at most
       `3 · mMax + 5`, so the counter after every rung still fits an i64. -/
   ctrl0 : Nat
@@ -6618,6 +6623,10 @@ structure TierSat (t : Spec.Tier) : Prop where
   fitRoomTailS : FitsLen (tierChargeSlides t (rowRoom t) + 2 * t.n)
   fitGeomTailM : FitsLen (tierChargeMoves t (geomCap t) + pegCharge t.n t.benchlen)
   fitGeomTailS : FitsLen (tierChargeSlides t (geomCap t) + 2 * t.n)
+  /-- Check multiply after the tail, at the control-row cap. One copy (`n`),
+      the schoolbook, and the fold, on top of `fitRoomTailM`. -/
+  fitCheckM : FitsLen (tierChargeMoves t (rowRoom t) + pegCharge t.n t.benchlen +
+    3 * t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) + 2 * t.n)
   cube_span : 3 * (t.n - 1) + t.combgap < t.benchlen
   mul_span : 2 * (t.n - 1) < t.benchlen
 
@@ -6683,7 +6692,9 @@ theorem tierSat_num (t : Spec.Tier) (origin room geom r : Nat) (climb : List Nat
     (hGmT : r * rungCharge t.n t.benchlen geom + pegCharge t.n t.benchlen ≤ i64MaxNat)
     (hGsT : r * rungSlideCharge t.n geom + 2 * t.n ≤ i64MaxNat)
     (hcube : 3 * (t.n - 1) + t.combgap < t.benchlen)
-    (hmul : 2 * (t.n - 1) < t.benchlen) : TierSat t := by
+    (hmul : 2 * (t.n - 1) < t.benchlen)
+    (hCk : r * rungCharge t.n t.benchlen room + pegCharge t.n t.benchlen +
+        3 * t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) + 2 * t.n ≤ i64MaxNat) : TierSat t := by
   refine
     { geom_miss := by rw [hO, hG]; exact hmiss
       origin_le := by rw [hO]; exact horigin
@@ -6712,6 +6723,10 @@ theorem tierSat_num (t : Spec.Tier) (origin room geom r : Nat) (climb : List Nat
         unfold FitsLen tierChargeSlides
         rw [hR, hG]
         exact hGsT
+      fitCheckM := by
+        unfold FitsLen tierChargeMoves
+        rw [hR, hRoom]
+        exact hCk
       cube_span := hcube
       mul_span := hmul }
 
@@ -6725,7 +6740,7 @@ theorem demo_tier_sat : TierSat Spec.demo := by
     (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide)
-    (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem toy_tier_sat : TierSat Spec.toy := by
   have hR : tierR Spec.toy = 4 := by unfold tierR; rw [toy_rungs]; decide
@@ -6737,7 +6752,7 @@ theorem toy_tier_sat : TierSat Spec.toy := by
     (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide)
-    (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem hobby_tier_sat : TierSat Spec.hobby := by
   have hR : tierR Spec.hobby = 5 := by unfold tierR; rw [hobby_rungs]; decide
@@ -6750,7 +6765,7 @@ theorem hobby_tier_sat : TierSat Spec.hobby := by
     (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide)
-    (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem serious_tier_sat : TierSat Spec.serious := by
   have hR : tierR Spec.serious = 7 := by unfold tierR; rw [serious_rungs]; decide
@@ -6763,7 +6778,7 @@ theorem serious_tier_sat : TierSat Spec.serious := by
     (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
     (by decide) (by decide) (by decide) (by decide)
-    (by decide) (by decide)
+    (by decide) (by decide) (by decide)
 
 theorem demo_climb_cap (done rest : List Nat)
     (hrs : tierClimb Spec.demo = done ++ rest) :

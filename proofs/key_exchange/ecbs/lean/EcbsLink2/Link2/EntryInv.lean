@@ -144,6 +144,20 @@ theorem entry_tail_moves_le (t : Spec.Tier) (xs : List Nat) (hx : xs.length = t.
   unfold tierChargeMoves at *
   omega
 
+/-- The two entry copies are at most `2 · n`, so the check multiply's extra
+    `n` (one more copy) still sits under the `3 · n` in `TierSat.fitCheckM`. -/
+theorem entry_check_le (t : Spec.Tier) (xs : List Nat) (hx : xs.length = t.n) :
+    pegCount xs + pegCount xs +
+        tierR t * rungCharge t.n t.benchlen (rowRoom t) +
+        pegCharge t.n t.benchlen +
+        t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) + 2 * t.n ≤
+      tierChargeMoves t (rowRoom t) + pegCharge t.n t.benchlen +
+        3 * t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) + 2 * t.n := by
+  have hle := pegCount_le xs
+  rw [hx] at hle
+  unfold tierChargeMoves
+  omega
+
 theorem entry_ops_le (t : Spec.Tier) (sat : TierSat t) (hR : 0 < tierR t) :
     1 + tierR t * (rowRoom t + 3) ≤ tierChargeOps t (geomCap t) := by
   have hlt := geom_room_lt t sat
@@ -354,6 +368,7 @@ def entryBudget (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
     simpa [tierChargeMoves] using
       (FitsLen.of_le sat.fitGeomTailM (entry_tail_moves_le t xs hx sat hR))
   fitTailS := by simpa [tierChargeSlides, Nat.zero_add] using sat.fitRoomTailS
+  fitCheckM := FitsLen.of_le sat.fitCheckM (entry_check_le t xs hx)
   ctrl0 := tierR t + 1
   fitCtrl := FitsLen.of_le lay.ctrlFit (entry_ctrl_le t hOk)
   x := xs
@@ -1149,6 +1164,28 @@ theorem invGap_cube (t : Spec.Tier) (xs : List Nat) :
         (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1 := by
   simp [invGap, tierClimb]
 
+/-- `fieldCube` keeps the first `n` holes of a bench-length strip. -/
+theorem fieldCube_length (n k bench : Nat) (x : List Nat) (hn : n ≤ bench) :
+    (fieldCube n k bench x).length = n := by
+  unfold fieldCube
+  change ((laneFold n (n - k) (combStrip n bench x)).take n).length = n
+  rw [List.length_take]
+  have hfold :=
+    laneFold_length n (n - k) (combStrip n bench x) (by rw [combStrip_length]; exact hn)
+  rw [hfold, combStrip_length]
+  omega
+
+/-- Cubing writes trits when the comb reaches, and `k ≤ n` so the fold gap fits. -/
+theorem fieldCube_trits (n k bench : Nat) (x : List Nat)
+    (hxs : allTritList x) (hspan : 3 * (n - 1) < bench) (hk : k ≤ n) :
+    allTritList (fieldCube n k bench x) := by
+  have hn : n ≤ bench := by omega
+  have hcs := combStrip_trits x n bench hxs hspan
+  have hnb : n ≤ (combStrip n bench x).length := by
+    rw [combStrip_length]; exact hn
+  have hlf := laneFold_trits n (n - k) (combStrip n bench x) hcs (by omega) hnb
+  simpa [fieldCube, laneFold] using allTritList_take hlf n
+
 /-- Home 5 after `invert` is `invGap` of the input. -/
 theorem invert_invGap (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
     (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t)
@@ -1160,5 +1197,194 @@ theorem invert_invGap (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
   refine ⟨bZ, h5, hok, ?_⟩
   simp [invGap, tierClimb]
   exact harr
+
+/-- Settled gap, the check-multiply frame, and the four tail steps, from one run. -/
+theorem final_cube_both
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [] b s base) (hon : s.onBench = true) (hge : 0 ≤ s.fromHole)
+    (ht : s.tally ≤ base.mMax) (hm : 0 < s.tally) :
+    ∃ (bU bC bOut bZ : Ecbs.Board),
+      Ecbs.unpark_rung b = .ok bU ∧
+      Ecbs.cube bU Ecbs.gap Ecbs.gap = .ok bC ∧
+      Ecbs.settle bC = .ok bOut ∧
+      Ecbs.tally_clear bOut = .ok bZ ∧
+      SettledHome bZ (fieldCube s.n s.k s.benchlen s.gap) ∧
+      CheckRead b bZ :=
+  Exists.elim (final_cube_settle h hon hge ht hm) fun bU p1 =>
+  Exists.elim p1 fun bC p2 =>
+  Exists.elim p2 fun bOut p3 =>
+  Exists.elim p3 fun bZ p4 =>
+  Exists.elim p4 fun _mv p5 =>
+  Exists.elim p5 fun _sl p6 =>
+  Exists.elim p6 fun _row hpack =>
+    ⟨bU, bC, bOut, bZ, hpack.1, hpack.2.1, hpack.2.2.1, hpack.2.2.2.1,
+      hpack.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.1⟩
+
+/-- The check multiply: home 5 holds `invGap`, home 2 still holds the input,
+    and `Ecbs.mul` with the export flags is `fieldMul` of that pair. -/
+theorem check_mul (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
+    (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t)
+    (hR : 0 < tierR t) (lay : TierShape t) :
+    ∃ (bZ bM : Ecbs.Board),
+      Ecbs.invert (bottomBoard t xs) ((2 : Nat) : Int) = .ok bZ ∧
+      Ecbs.mul bZ Ecbs.check_target Ecbs.gap ((2 : Nat) : Int) true false false = .ok bM ∧
+      (laneFold t.n (t.n - t.k)
+          (school t.n (invGap t.n t.k t.benchlen xs) xs (List.replicate t.benchlen 0) false)).take
+        t.n = fieldMul t.n t.k t.benchlen (invGap t.n t.k t.benchlen xs) xs := by
+  have hem := invert_emit t hOk xs hx htri sat hR lay
+  have hxLen : (entryBudget t hOk xs hx sat hR lay).x.length =
+      (entryBudget t hOk xs hx sat hR lay).n := by simpa [entryBudget] using hx
+  have hxT : allTritList (entryBudget t hOk xs hx sat hR lay).x := by
+    simpa [entryBudget] using htri
+  obtain ⟨b', s', hrun, hs', hK, hgap, htmax⟩ := climb_refines_emit (tierClimb t)
+      (tallyBoard t xs sat hR) (entryModel t xs) (entryBudget t hOk xs hx sat hR lay)
+      (entry_climbInv t hOk xs hx htri sat hR lay)
+      (entry_park_top t hOk xs hx sat hR lay) (by simp [entryModel])
+      (entry_cap t hOk xs hx sat hR lay) hxLen hxT
+  have hpos : 0 < (tierClimb t).length := by
+    simpa [tierClimb, List.length_reverse, tierR] using hR
+  cases hL : tierClimb t with
+  | nil => simp [hL] at hpos
+  | cons r rs =>
+      let hole : ClimbModel → Nat → Bool → Nat := fun s _ _ =>
+        climbAt (entryBudget t hOk xs hx sat hR lay).ladder0
+          (entryBudget t hOk xs hx sat hR lay).R s.ridx
+      let x := (entryBudget t hOk xs hx sat hR lay).x
+      have hon : s'.onBench = true := by
+        rw [hs', hL]; exact modelClimb_onBench (entryModel t xs) x hole r rs
+      have hge : 0 ≤ s'.fromHole := by
+        rw [hs', hL]; exact modelClimb_fromHole (entryModel t xs) x hole r rs
+      have hm : 0 < s'.tally := by
+        rw [hs', modelClimb_tally]; simp [entryModel]
+        exact Nat.lt_of_lt_of_le (by decide : (0 : Nat) < 1) (climbTally_ge 1 (tierClimb t))
+      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread⟩ :=
+        final_cube_both hK hon hge htmax hm
+      have hrun' : climbEmit (climbStepBoard ((2 : Nat) : Int)) (tallyBoard t xs sat hR)
+          (tierClimb t) = .ok b' := by simpa [entryBudget] using hrun
+      have hok : Ecbs.invert (bottomBoard t xs) ((2 : Nat) : Int) = .ok bZ := by
+        rw [hem, hrun', ok_bind]
+        simp [finalTail, hun, hc, hset, hz, ok_bind]
+      have hlay := modelClimb_params (entryModel t xs) x hole (tierClimb t)
+      have hn : s'.n = t.n := by rw [hs']; simpa [entryModel] using hlay.1
+      have hkS : s'.k = t.k := by rw [hs']; simpa [entryModel] using hlay.2.1
+      have hbL : s'.benchlen = t.benchlen := by rw [hs']; simpa [entryModel] using hlay.2.2
+      have hpair : (s'.gap, s'.tally) =
+          invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t) := by
+        simpa [entryModel, entryBudget] using hgap
+      have hgap1 : s'.gap = (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1 :=
+        congrArg Prod.fst hpair
+      have hcube : fieldCube s'.n s'.k s'.benchlen s'.gap =
+          invGap t.n t.k t.benchlen xs := by
+        rw [hn, hkS, hbL, hgap1]
+        exact (invGap_cube t xs).symm
+      have hArr : bZ.sudo_5Board_4home[5]'hsg.h5 = embed (invGap t.n t.k t.benchlen xs) := by
+        exact hsg.arr.trans (congrArg embed hcube)
+      let mv := hread.moves.choose
+      have hmv := hread.moves.choose_spec
+      let pk := hread.peak.choose
+      have hpk := hread.peak.choose_spec
+      let pS := hread.peakS.choose
+      have hpS := hread.peakS.choose_spec
+      let cOps := hread.ops0.choose
+      have hcOps := hread.ops0.choose_spec
+      let holeN := hread.hole.choose
+      have hholeN := hread.hole.choose_spec
+      let mvB := hread.fitMul.choose
+      have hB1 := hread.fitMul.choose_spec
+      let nB := hB1.choose
+      have hB2 := hB1.choose_spec
+      let benchB := hB2.choose
+      have hB3 := hB2.choose_spec
+      have hmvB : bZ.sudo_5Board_4cost.sudo_5Costs_5moves = (mvB : Int) := hB3.1
+      have hnB : bZ.sudo_5Board_1t.sudo_4Tier_1n = (nB : Int) := hB3.2.1
+      have hbB : bZ.sudo_5Board_1t.sudo_4Tier_8benchlen = (benchB : Int) := hB3.2.2.1
+      have hfitB : FitsLen (mvB + nB + nB * (nB + 1) + 3 * (benchB - nB) + 2 * nB) :=
+        hB3.2.2.2
+      have hmvEq : mv = mvB := by
+        apply Int.ofNat.inj
+        rw [ofNat_eq_natCast, ofNat_eq_natCast]
+        exact hmv.symm.trans hmvB
+      have hnEq : nB = t.n := by
+        apply Int.ofNat.inj
+        rw [ofNat_eq_natCast, ofNat_eq_natCast]
+        have htn : bZ.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) := by
+          rw [hread.tierEq, hK.shape.tierN, hn]
+        exact hnB.symm.trans htn
+      have hbEq : benchB = t.benchlen := by
+        apply Int.ofNat.inj
+        rw [ofNat_eq_natCast, ofNat_eq_natCast]
+        have htb : bZ.sudo_5Board_1t.sudo_4Tier_8benchlen = (t.benchlen : Int) := by
+          rw [hread.tierEq, hK.shape.tierB, hbL]
+        exact hbB.symm.trans htb
+      have hfitBig : FitsLen (mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) +
+          2 * t.n) := by
+        rw [← hmvEq, hnEq, hbEq] at hfitB
+        exact hfitB
+      have hpeg : pegCount xs ≤ t.n := by
+        rw [← hx]
+        exact pegCount_le xs
+      have hmul := mul_refines bZ 7 5 2 (invGap t.n t.k t.benchlen xs) xs
+          t.w t.h t.r t.n t.k mv holeN t.benchlen pk pS cOps
+          hread.marker hread.benchOff hread.opsGt hcOps.1 hcOps.2
+          (by rw [hread.tierEq]; simpa [hbL] using hK.shape.tierB)
+          hread.h5D hsg.h5 hread.held5 hArr
+          hread.h2D hread.h2H
+          (by
+            have hheld : b'.sudo_5Board_4held[2]'hread.h2D0 = true := by
+              simpa [entryBudget] using hK.shape.xHeld
+            exact hread.held2.trans hheld)
+          (by
+            have hhome : b'.sudo_5Board_4home[2]'hread.h2H0 = embed xs := by
+              simpa [entryBudget] using hK.shape.xArr
+            exact hread.home2.trans hhome)
+          hread.spareD hread.spareH hread.spareE hread.h7
+          (by decide) (by decide)
+          (by simpa [hn] using hK.shape.peg.n_pos)
+          (by rw [hread.tierEq]; simpa [hn] using hK.shape.tierN)
+          (by
+            rw [invGap_cube]
+            exact fieldCube_length t.n t.k t.benchlen
+              (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1
+              (by
+                have hs := sat.mul_span
+                omega))
+          hx
+          (by simpa [hn] using hK.shape.peg.fitN)
+          hmv hpk hpS
+          (by
+            apply FitsLen.of_le hfitBig
+            omega)
+          sat.mul_span
+          (by
+            have hsp : 3 * (s'.n - 1) < s'.benchlen := by
+              have hs := hK.shape.peg.span
+              omega
+            have htriG := fieldCube_trits s'.n s'.k s'.benchlen s'.gap
+              hK.shape.peg.trits hsp hK.shape.k_le
+            rw [hcube] at htriG
+            exact htriG)
+          (by
+            apply FitsLen.of_le (by simpa [hn] using hK.shape.peg.fit3)
+            omega)
+          (by
+            apply FitsLen.of_le hfitBig
+            omega)
+          lay.w0 lay.h0 lay.rlt lay.r0 lay.n_eq lay.k_le lay.gap
+          (by rw [hread.tierEq]; simpa using hK.shape.tierW)
+          (by rw [hread.tierEq]; simpa using hK.shape.tierH)
+          (by rw [hread.tierEq]; simpa using hK.shape.tierR)
+          (by rw [hread.tierEq]; simpa [hkS] using hK.shape.tierK)
+          (by rw [hholeN, ofNat_eq_natCast])
+          (by simpa [hbL] using hK.shape.peg.small)
+          (by simpa [hn] using hK.shape.peg.n_small)
+          (by simpa [hbL] using hK.shape.peg.fitBn)
+          (by
+            apply FitsLen.of_le hfitBig
+            omega)
+      obtain ⟨bM, hmulOk, -, -, -, htake, -⟩ := hmul
+      refine ⟨bZ, bM, hok, ?_, ?_⟩
+      · simpa [Ecbs.check_target, Ecbs.gap] using hmulOk
+      · simpa [invGap] using htake
 
 end EcbsLink2.Link2

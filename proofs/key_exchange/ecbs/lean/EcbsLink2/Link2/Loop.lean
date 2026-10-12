@@ -5,6 +5,7 @@
   drivers (`BsLink2.Link2.Loop`), which are not in the shared MegaDreifach library,
   so they are proved again here rather than imported from the BS package.
 -/
+import Ecbs
 import MegaDreifach.Link2.Loop
 
 namespace EcbsLink2.Link2
@@ -331,19 +332,45 @@ theorem fits_small {n : Nat} (h : n ≤ 1000000) : FitsLen n := by
 /-- The index scan `invert_checked` runs from `1` through `listLen v - 1`.
     The body reads `v[i]` and asserts it is `0` (sudo line 730). It does not
     return, and it breaks only on the last index or immediately when the range
-    is empty (`length = 1`, so `1 > 0`). -/
-def zeroScanStep {ρ : Type} (v : Array Int) (toV : Int) (i : Int) :
-    Except SudoRt.Trap (SudoRt.Flow Int ρ) :=
-  if i > toV then
-    pure (SudoRt.Flow.brk i)
-  else do
-    let c ← SudoRt.atL v i
-    let _u ← SudoRt.sudoAssertEq c (0 : Int) 730
-    if i == toV then
+    is empty (`length = 1`, so `1 > 0`). The `match ←` is the join the emitter
+    writes: an inner `do` of type `Flow Unit`, then `.ret` / `.brk` / `.cont`. -/
+def zeroScanStep (v : Array Int) (toV : Int) (i : Int) :
+    Except SudoRt.Trap (SudoRt.Flow Int Ecbs.Board) :=
+  do
+    if i > toV then
       pure (SudoRt.Flow.brk i)
-    else do
-      let i' ← SudoRt.addI i 1
-      pure (SudoRt.Flow.cont i')
+    else
+      match ← ((do
+        let _t1225 ← SudoRt.atL v i
+        let _as1226 ← SudoRt.sudoAssertEq _t1225 (0 : Int) 730
+        pure (SudoRt.Flow.cont ())) :
+          Except SudoRt.Trap (SudoRt.Flow _ Ecbs.Board)) with
+      | .ret r => pure (SudoRt.Flow.ret r)
+      | .brk _fs => pure (SudoRt.Flow.brk i)
+      | .cont _fs => do
+          if i == toV then
+            pure (SudoRt.Flow.brk i)
+          else do
+            let i' ← SudoRt.addI i (1 : Int)
+            pure (SudoRt.Flow.cont i')
+
+/-- In range, a passing read-and-assert is the last-index break or `i + 1`. -/
+theorem zeroScanStep_cont (v : Array Int) (toV i c : Int)
+    (hc : SudoRt.atL v i = .ok c)
+    (hu : SudoRt.sudoAssertEq c (0 : Int) 730 = .ok ())
+    (hng : ¬ i > toV) :
+    zeroScanStep v toV i =
+      (if i == toV then .ok (SudoRt.Flow.brk i)
+       else SudoRt.addI i (1 : Int) >>= fun i' => pure (SudoRt.Flow.cont i')) := by
+  simp only [zeroScanStep, hng, if_false, hc, hu, bind, Except.bind, pure, Except.pure]
+
+/-- In range, a failing assert is that error. The join is not reached. -/
+theorem zeroScanStep_fail (v : Array Int) (toV i c : Int) (e : SudoRt.Trap)
+    (hc : SudoRt.atL v i = .ok c)
+    (hu : SudoRt.sudoAssertEq c (0 : Int) 730 = .error e)
+    (hng : ¬ i > toV) :
+    zeroScanStep v toV i = .error e := by
+  simp only [zeroScanStep, hng, if_false, hc, hu, bind, Except.bind, pure, Except.pure]
 
 /-- `sudoAssertEq` against `0` fails at the given line, with that line in the detail. -/
 theorem sudoAssertEq_ne_zero (c : Nat) (h : c ≠ 0) (line : Nat) :
@@ -373,20 +400,21 @@ theorem hole0_assert (c : Nat) :
     unfold SudoRt.sudoAssert
     simp [h]
 
-private theorem zeroScan_step_zero {ρ : Type} (L : List Nat) (i : Nat)
+private theorem zeroScan_step_zero (L : List Nat) (i : Nat)
     (hi : i < L.length) (hz : L[i] = 0) (hto : i ≤ L.length - 1)
     (hf : FitsLen (i + 1)) :
-    zeroScanStep (ρ := ρ) (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i) =
+    zeroScanStep (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i) =
       if i = L.length - 1 then .ok (SudoRt.Flow.brk (Int.ofNat i))
       else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1))) := by
   have hng : ¬ Int.ofNat i > Int.ofNat (L.length - 1) := ofNat_not_gt hto
-  unfold zeroScanStep
-  simp only [hng, if_false]
   have hassert : SudoRt.sudoAssertEq (Int.ofNat 0) (0 : Int) 730 = .ok () := by
     unfold SudoRt.sudoAssertEq
     rw [sEq_ofNat_zero]
     rfl
-  rw [atL_embed L i hi, hz, ok_bind, hassert, ok_bind]
+  have hc : SudoRt.atL (embed L) (Int.ofNat i) = .ok (Int.ofNat 0) := by
+    rw [atL_embed L i hi, hz]
+  rw [zeroScanStep_cont (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i)
+    (Int.ofNat 0) hc hassert hng]
   by_cases hlast : i = L.length - 1
   · have heq : (i : Int) = ((L.length - 1 : Nat) : Int) := by rw [hlast]
     simp [heq, hlast, pure_eq_ok]
@@ -400,24 +428,22 @@ private theorem zeroScan_step_zero {ρ : Type} (L : List Nat) (i : Nat)
     rw [addI_ofNat_one i hf]
     simp [pure_eq_ok]
 
-private theorem zeroScan_step_nz {ρ : Type} (L : List Nat) (i : Nat)
+private theorem zeroScan_step_nz (L : List Nat) (i : Nat)
     (hi : i < L.length) (hnz : L[i] ≠ 0) (hto : i ≤ L.length - 1) :
-    zeroScanStep (ρ := ρ) (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i) =
+    zeroScanStep (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i) =
       .error { kind := "AssertFailed"
                detail := s!"line {730}: {SudoRt.Canon.canon (Int.ofNat L[i])} != {SudoRt.Canon.canon (0 : Int)}" } := by
   have hng : ¬ Int.ofNat i > Int.ofNat (L.length - 1) := ofNat_not_gt hto
-  unfold zeroScanStep
-  simp only [hng, if_false]
-  rw [atL_embed L i hi, ok_bind, sudoAssertEq_ne_zero L[i] hnz 730]
-  simp [Except.bind]
+  exact zeroScanStep_fail (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i)
+    (Int.ofNat L[i]) _ (atL_embed L i hi) (sudoAssertEq_ne_zero L[i] hnz 730) hng
 
 /-- Tail zeros from `i` through `L.length - 1`. The scan breaks into `after`
     at `L.length - 1`, or at `i` itself when `i` is already past that end
     (`L.length = 1` and `i = 1`). -/
-theorem zeroScan_ok {ρ α : Type} (L : List Nat) (i : Nat)
+theorem zeroScan_ok {α : Type} (L : List Nat) (i : Nat)
     (hpos : 0 < L.length) (hi : 1 ≤ i) (hiL : i ≤ L.length) (hf : FitsLen L.length)
     (htail : ∀ j, i ≤ j → ∀ hj : j < L.length, L[j] = 0)
-    (after : Int → Except SudoRt.Trap α) (onRet : ρ → Except SudoRt.Trap α) :
+    (after : Int → Except SudoRt.Trap α) (onRet : Ecbs.Board → Except SudoRt.Trap α) :
     SudoRt.runLoopOn (Int.ofNat i)
         (fuelRange (Int.ofNat i) (Int.ofNat (L.length - 1)))
         (fun k => zeroScanStep (embed L) (Int.ofNat (L.length - 1)) k)
@@ -431,7 +457,7 @@ theorem zeroScan_ok {ρ α : Type} (L : List Nat) (i : Nat)
     rw [fuelRange_gt (Iff.mpr (ofNat_lt_iff (L.length - 1) i) hgt),
       show (1 : Nat) = 0 + 1 from rfl, runLoopOn_succ]
     have hstep : zeroScanStep (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i) =
-        .ok (SudoRt.Flow.brk (ρ := ρ) (Int.ofNat i)) := by
+        .ok (SudoRt.Flow.brk (Int.ofNat i)) := by
       unfold zeroScanStep
       rw [if_pos (Iff.mpr (ofNat_lt_iff (L.length - 1) i) (by omega : L.length - 1 < i)),
         pure_eq_ok]
@@ -462,11 +488,11 @@ theorem zeroScan_ok {ρ α : Type} (L : List Nat) (i : Nat)
 
 /-- The first nonzero tail entry rejects the scan at sudo line 730.
     Earlier tail entries are zero, so the loop reaches that index. -/
-theorem zeroScan_err {ρ α : Type} (L : List Nat) (j : Nat)
+theorem zeroScan_err {α : Type} (L : List Nat) (j : Nat)
     (hpos : 0 < L.length) (hj : 1 ≤ j) (hjL : j < L.length) (hf : FitsLen L.length)
     (hbad : L[j] ≠ 0)
     (hpre : ∀ k, 1 ≤ k → ∀ hk : k < j, L[k]'(Nat.lt_trans hk hjL) = 0)
-    (after : Int → Except SudoRt.Trap α) (onRet : ρ → Except SudoRt.Trap α) :
+    (after : Int → Except SudoRt.Trap α) (onRet : Ecbs.Board → Except SudoRt.Trap α) :
     SudoRt.runLoopOn (1 : Int)
         (fuelRange (1 : Int) (Int.ofNat (L.length - 1)))
         (fun k => zeroScanStep (embed L) (Int.ofNat (L.length - 1)) k)

@@ -42,6 +42,7 @@ import EcbsLink2.Link2.TailLen
 import EcbsLink2.Link2.LoopInv
 import EcbsLink2.Link2.EntryInv
 import EcbsLink2.Link2.Mirror
+import EcbsLink2.Link2.CheckTail
 import EcbsLink2.Link2.RungLadder
 import EcbsLink2.Link2.MulKeep
 import EcbsLink2.Link2.Export

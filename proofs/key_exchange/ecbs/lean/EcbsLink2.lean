@@ -12,6 +12,7 @@ import EcbsLink2.Link2.Fold
 import EcbsLink2.Link2.FoldKey
 import EcbsLink2.Link2.Lane
 import EcbsLink2.Link2.Mul
+import EcbsLink2.Link2.MulSettle
 import EcbsLink2.Link2.Cube
 import EcbsLink2.Link2.BoardBuild
 import EcbsLink2.Link2.Invert
@@ -42,6 +43,7 @@ import EcbsLink2.Link2.TailLen
 import EcbsLink2.Link2.LoopInv
 import EcbsLink2.Link2.EntryInv
 import EcbsLink2.Link2.Mirror
+import EcbsLink2.Link2.Add
 import EcbsLink2.Link2.CheckTail
 import EcbsLink2.SpecCurve
 import EcbsLink2.Link2.OneField

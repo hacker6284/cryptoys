@@ -348,7 +348,7 @@ theorem multiply_refines (t : Spec.Tier) (lay : FieldLay t) (xs ys : List Nat)
       simpa [bU, ofNat_eq_natCast] using this)
     lay.small hnsm hfitB hfold
   obtain ⟨b', hok, hon, hto, hbench, htake, htail⟩ := hmul
-  obtain ⟨hhigh, hmov, hpeakM, hslides, ht, hhome, hheld, _h5⟩ := htail
+  obtain ⟨hhigh, hmov, hpeakM, hslides, ht, hhome, hheld, _h5, _hframe, _hmk, _hops⟩ := htail
   conv =>
     pattern (Ecbs.mul _ _ _ _ _ _ _)
     change Ecbs.mul bU ((5 : Nat) : Int) ((0 : Nat) : Int) ((1 : Nat) : Int) true false false

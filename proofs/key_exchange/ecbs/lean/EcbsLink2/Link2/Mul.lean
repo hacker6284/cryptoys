@@ -362,7 +362,12 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
         (b.sudo_5Board_4held.set ⟨6, hSpH⟩ true).set
           ⟨6, by rw [Array.size_set]; exact hSpH⟩ false ∧
       (∀ (h5 : 5 < b.sudo_5Board_4home.size) (h5' : 5 < b'.sudo_5Board_4home.size),
-        b'.sudo_5Board_4home[5]'h5' = b.sudo_5Board_4home[5]'h5) := by
+        b'.sudo_5Board_4home[5]'h5' = b.sudo_5Board_4home[5]'h5) ∧
+      (∀ (i : Nat) (hi : i < b.sudo_5Board_4home.size) (hi' : i < b'.sudo_5Board_4home.size),
+        i ≠ 6 → b'.sudo_5Board_4home[i]'hi' = b.sudo_5Board_4home[i]'hi) ∧
+      b'.sudo_5Board_9marker_on = false ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) := by
   unfold Ecbs.mul Ecbs.log_op
   simp only [hmk, hoff, Bool.false_eq_true, if_false, pure_eq_ok, toPure_eq_ok, ok_bind]
   rw [show Ecbs.op_mul = Int.ofNat 0 from rfl, atL_ofNat _ 0 hops, hop0, ok_bind,
@@ -604,23 +609,27 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     dsimp [bN, nb]
     unfold noteBench withMoves withHole
     split <;> simp [bF, withMoves, bL, hL]
-  have hkeep5 (h5 : 5 < b.sudo_5Board_4home.size)
-      (h5N : 5 < bN.sudo_5Board_4home.size) :
-      bN.sudo_5Board_4home[5]'h5N = b.sudo_5Board_4home[5]'h5 := by
-    have hne : (6 : Nat) ≠ 5 := by decide
-    have hszP : 5 < bP.sudo_5Board_4home.size := by
+  have hkeep (i : Nat) (hi : i < b.sudo_5Board_4home.size)
+      (hiN : i < bN.sudo_5Board_4home.size) (hne : i ≠ 6) :
+      bN.sudo_5Board_4home[i]'hiN = b.sudo_5Board_4home[i]'hi := by
+    have hne6 : (6 : Nat) ≠ i := Ne.symm hne
+    have hszP : i < bP.sudo_5Board_4home.size := by
       have hs := congrArg Array.size hhomeN
       rw [Array.size_set] at hs
-      exact hs.symm ▸ h5N
-    have hset5 : 5 < (bP.sudo_5Board_4home.set ⟨6, h6h⟩ (#[] : Array Int)).size := by
+      exact hs.symm ▸ hiN
+    have hset : i < (bP.sudo_5Board_4home.set ⟨6, h6h⟩ (#[] : Array Int)).size := by
       rw [Array.size_set]; exact hszP
     have hleft := Array.getElem_set_ne bP.sudo_5Board_4home ⟨6, h6h⟩
-      (#[] : Array Int) hset5 hne
-    have hgot := array_get_congr hhomeP 5 hszP
+      (#[] : Array Int) hset hne6
+    have hgot := array_get_congr hhomeP i hszP
     have hys := Array.getElem_set_ne b.sudo_5Board_4home ⟨6, hSpHome⟩ (embed ys)
-      (by rw [Array.size_set]; exact h5) hne
-    have hN := array_get_congr hhomeN 5 h5N
+      (by rw [Array.size_set]; exact hi) hne6
+    have hN := array_get_congr hhomeN i hiN
     exact hN.trans (hleft.trans (hgot.trans hys))
+  have hkeep5 (h5 : 5 < b.sudo_5Board_4home.size)
+      (h5N : 5 < bN.sudo_5Board_4home.size) :
+      bN.sudo_5Board_4home[5]'h5N = b.sudo_5Board_4home[5]'h5 :=
+    hkeep 5 h5 h5N (by decide)
   have hheldP : bP.sudo_5Board_4held =
       b.sudo_5Board_4held.set ⟨6, hSpH⟩ true := by
     rw [← hPB]
@@ -665,13 +674,33 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
       rw [← hPB]; unfold placeBoard; dsimp only; split <;> simp [bCopy, Array.size_set]
     · simp only [bF, withMoves, bL, Array.size_set]
       rw [← hPB]; unfold placeBoard; dsimp only; split <;> simp [bCopy, Array.size_set]
+  have hmkP : bP.sudo_5Board_9marker_on = false := by
+    rw [← hPB]
+    unfold placeBoard
+    dsimp only
+    split <;> simp [bCopy]
+  have hmkN : bN.sudo_5Board_9marker_on = false := by
+    dsimp [bN, nb]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, withMoves, bL, hmkS, hmkP]
+  have hopP : bP.sudo_5Board_4cost.sudo_5Costs_3ops =
+      bCopy.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    rw [← hPB]
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hopsN : bN.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) := by
+    dsimp [bN, nb]
+    unfold noteBench withMoves withHole
+    split <;> simp [bF, withMoves, bL, _hopS, hopP, bCopy]
   unfold Ecbs.note_peak
   rw [occupied_refines bN h7N, ok_bind, hpeakN]
   conv => zeta
   rw [ofNat_eq_natCast copied, decide_gt_nat]
   by_cases hlt : copied < countHeld bN.sudo_5Board_4held 7
   · rw [decide_eq_true hlt, if_pos rfl, pure_eq_ok, ok_bind]
-    refine ⟨_, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨_, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · unfold fieldMul; rfl
     · intro i hlo hi
       have hgap0 : 0 < n - k := by rw [hgap]; exact Nat.mul_pos hw0 hrP
@@ -705,9 +734,17 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
             (countHeld bN.sudo_5Board_4held 7 : Int) } }).sudo_5Board_4home =
           bN.sudo_5Board_4home := rfl
       exact (array_get_congr hhomeEq 5 h5').trans (hkeep5 h5 (hhomeEq ▸ h5'))
+    · intro i hi hi' hne
+      have hhomeEq : ({ bN with sudo_5Board_4cost :=
+          { bN.sudo_5Board_4cost with sudo_5Costs_4peak :=
+            (countHeld bN.sudo_5Board_4held 7 : Int) } }).sudo_5Board_4home =
+          bN.sudo_5Board_4home := rfl
+      exact (array_get_congr hhomeEq i hi').trans (hkeep i hi (hhomeEq ▸ hi') hne)
+    · simpa using hmkN
+    · simpa using hopsN
   · rw [(decide_eq_false_iff_not).mpr hlt]
     simp only [Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
-    refine ⟨bN, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨bN, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · unfold fieldMul; rfl
     · intro i hlo hi
       have hgap0 : 0 < n - k := by rw [hgap]; exact Nat.mul_pos hw0 hrP
@@ -732,6 +769,10 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     · exact hheldN
     · intro h5 h5'
       exact hkeep5 h5 h5'
+    · intro i hi hi' hne
+      exact hkeep i hi hi' hne
+    · exact hmkN
+    · exact hopsN
 
 /-- Bench off, `copy_second = false`. The board `Ecbs.mul` returns: ops slot 0 bumped,
     the second home cleared, the bench on and aimed at `dst` holding the folded product. -/

@@ -4,7 +4,7 @@
   those amounts is at most `rungCharge` / `rungSlideCharge` / `rungOpCharge`.
   Proof-only. Not a security claim.
 -/
-import EcbsLink2.Link2.Invert
+import EcbsLink2.Link2.ClimbEmit
 
 namespace EcbsLink2.Link2
 

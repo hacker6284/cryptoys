@@ -11,7 +11,7 @@
   the home, after that settle. `modelRung` leaves `onBench` true, which is
   this post-clear bench.
 -/
-import EcbsLink2.Link2.Invert
+import EcbsLink2.Link2.ClimbEmit
 
 namespace EcbsLink2.Link2
 

@@ -328,4 +328,185 @@ theorem fits_small {n : Nat} (h : n ≤ 1000000) : FitsLen n := by
   unfold FitsLen i64MaxNat
   omega
 
+/-- The index scan `invert_checked` runs from `1` through `listLen v - 1`.
+    The body reads `v[i]` and asserts it is `0` (sudo line 730). It does not
+    return, and it breaks only on the last index or immediately when the range
+    is empty (`length = 1`, so `1 > 0`). -/
+def zeroScanStep {ρ : Type} (v : Array Int) (toV : Int) (i : Int) :
+    Except SudoRt.Trap (SudoRt.Flow Int ρ) :=
+  if i > toV then
+    pure (SudoRt.Flow.brk i)
+  else do
+    let c ← SudoRt.atL v i
+    let _u ← SudoRt.sudoAssertEq c (0 : Int) 730
+    if i == toV then
+      pure (SudoRt.Flow.brk i)
+    else do
+      let i' ← SudoRt.addI i 1
+      pure (SudoRt.Flow.cont i')
+
+/-- `sudoAssertEq` against `0` fails at the given line, with that line in the detail. -/
+theorem sudoAssertEq_ne_zero (c : Nat) (h : c ≠ 0) (line : Nat) :
+    SudoRt.sudoAssertEq (Int.ofNat c) (0 : Int) line =
+      .error { kind := "AssertFailed"
+               detail := s!"line {line}: {SudoRt.Canon.canon (Int.ofNat c)} != {SudoRt.Canon.canon (0 : Int)}" } := by
+  unfold SudoRt.sudoAssertEq SudoRt.fail
+  rw [sEq_ofNat_zero, decide_eq_false h]
+  rfl
+
+/-- Hole 0 of the check product: accepted iff the coefficient is not zero.
+    Rejection is sudo line 728. -/
+theorem hole0_assert (c : Nat) :
+    SudoRt.sudoAssert (!(SudoRt.SEq.beq (Int.ofNat c) (0 : Int))) 728 =
+      if c = 0 then
+        .error { kind := "AssertFailed", detail := s!"line 728" }
+      else
+        .ok () := by
+  rw [sEq_ofNat_zero]
+  by_cases h : c = 0
+  · subst h
+    have hdec : decide ((0 : Nat) = 0) = true := rfl
+    rw [hdec, Bool.not_true]
+    unfold SudoRt.sudoAssert SudoRt.fail
+    rfl
+  · rw [decide_eq_false h, Bool.not_false]
+    unfold SudoRt.sudoAssert
+    simp [h]
+
+private theorem zeroScan_step_zero {ρ : Type} (L : List Nat) (i : Nat)
+    (hi : i < L.length) (hz : L[i] = 0) (hto : i ≤ L.length - 1)
+    (hf : FitsLen (i + 1)) :
+    zeroScanStep (ρ := ρ) (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i) =
+      if i = L.length - 1 then .ok (SudoRt.Flow.brk (Int.ofNat i))
+      else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1))) := by
+  have hng : ¬ Int.ofNat i > Int.ofNat (L.length - 1) := ofNat_not_gt hto
+  unfold zeroScanStep
+  simp only [hng, if_false]
+  have hassert : SudoRt.sudoAssertEq (Int.ofNat 0) (0 : Int) 730 = .ok () := by
+    unfold SudoRt.sudoAssertEq
+    rw [sEq_ofNat_zero]
+    rfl
+  rw [atL_embed L i hi, hz, ok_bind, hassert, ok_bind]
+  by_cases hlast : i = L.length - 1
+  · have heq : (i : Int) = ((L.length - 1 : Nat) : Int) := by rw [hlast]
+    simp [heq, hlast, pure_eq_ok]
+  · have hne : (i : Int) ≠ ((L.length - 1 : Nat) : Int) := by
+      intro h
+      exact hlast (Int.ofNat.inj (by
+        rw [← ofNat_eq_natCast i, ← ofNat_eq_natCast (L.length - 1)] at h
+        exact h))
+    simp [hne, hlast]
+    rw [show (i : Int) = Int.ofNat i from rfl]
+    rw [addI_ofNat_one i hf]
+    simp [pure_eq_ok]
+
+private theorem zeroScan_step_nz {ρ : Type} (L : List Nat) (i : Nat)
+    (hi : i < L.length) (hnz : L[i] ≠ 0) (hto : i ≤ L.length - 1) :
+    zeroScanStep (ρ := ρ) (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i) =
+      .error { kind := "AssertFailed"
+               detail := s!"line {730}: {SudoRt.Canon.canon (Int.ofNat L[i])} != {SudoRt.Canon.canon (0 : Int)}" } := by
+  have hng : ¬ Int.ofNat i > Int.ofNat (L.length - 1) := ofNat_not_gt hto
+  unfold zeroScanStep
+  simp only [hng, if_false]
+  rw [atL_embed L i hi, ok_bind, sudoAssertEq_ne_zero L[i] hnz 730]
+  simp [Except.bind]
+
+/-- Tail zeros from `i` through `L.length - 1`. The scan breaks into `after`
+    at `L.length - 1`, or at `i` itself when `i` is already past that end
+    (`L.length = 1` and `i = 1`). -/
+theorem zeroScan_ok {ρ α : Type} (L : List Nat) (i : Nat)
+    (hpos : 0 < L.length) (hi : 1 ≤ i) (hiL : i ≤ L.length) (hf : FitsLen L.length)
+    (htail : ∀ j, i ≤ j → ∀ hj : j < L.length, L[j] = 0)
+    (after : Int → Except SudoRt.Trap α) (onRet : ρ → Except SudoRt.Trap α) :
+    SudoRt.runLoopOn (Int.ofNat i)
+        (fuelRange (Int.ofNat i) (Int.ofNat (L.length - 1)))
+        (fun k => zeroScanStep (embed L) (Int.ofNat (L.length - 1)) k)
+        after onRet =
+      after (Int.ofNat (if L.length ≤ i then i else L.length - 1)) := by
+  generalize hd : L.length - i = d
+  induction d generalizing i with
+  | zero =>
+    have hiEq : i = L.length := by omega
+    have hgt : (L.length - 1 : Nat) < i := by omega
+    rw [fuelRange_gt (Iff.mpr (ofNat_lt_iff (L.length - 1) i) hgt),
+      show (1 : Nat) = 0 + 1 from rfl, runLoopOn_succ]
+    have hstep : zeroScanStep (embed L) (Int.ofNat (L.length - 1)) (Int.ofNat i) =
+        .ok (SudoRt.Flow.brk (ρ := ρ) (Int.ofNat i)) := by
+      unfold zeroScanStep
+      rw [if_pos (Iff.mpr (ofNat_lt_iff (L.length - 1) i) (by omega : L.length - 1 < i)),
+        pure_eq_ok]
+    rw [hstep]
+    simp [hiEq]
+  | succ d ih =>
+    have hiLt : i < L.length := by omega
+    have hto : i ≤ L.length - 1 := by omega
+    have hz : L[i]'(hiLt) = 0 := htail i (Nat.le_refl _) hiLt
+    have hfi : FitsLen (i + 1) := FitsLen.of_le hf (by omega)
+    rw [fuelRange_le hto, show (L.length - 1) - i + 1 = d + 1 from by omega, runLoopOn_succ]
+    rw [zeroScan_step_zero L i hiLt hz hto hfi]
+    by_cases hlast : i = L.length - 1
+    · simp [hlast]
+    · simp only [hlast, ite_false]
+      have hnext : L.length - (i + 1) = d := by omega
+      have htail' : ∀ j, i + 1 ≤ j → ∀ hj : j < L.length, L[j] = 0 := by
+        intro j hj1 hj
+        exact htail j (by omega) hj
+      have hfuel : d = fuelRange (Int.ofNat (i + 1)) (Int.ofNat (L.length - 1)) := by
+        rw [fuelRange_le (by omega : i + 1 ≤ L.length - 1)]
+        omega
+      rw [hfuel]
+      have hnot : ¬ L.length ≤ i + 1 := by omega
+      have hgot := ih (i + 1) (by omega) (by omega) htail' hnext
+      simp only [hnot, show ¬ L.length ≤ i from by omega] at hgot ⊢
+      exact hgot
+
+/-- The first nonzero tail entry rejects the scan at sudo line 730.
+    Earlier tail entries are zero, so the loop reaches that index. -/
+theorem zeroScan_err {ρ α : Type} (L : List Nat) (j : Nat)
+    (hpos : 0 < L.length) (hj : 1 ≤ j) (hjL : j < L.length) (hf : FitsLen L.length)
+    (hbad : L[j] ≠ 0)
+    (hpre : ∀ k, 1 ≤ k → ∀ hk : k < j, L[k]'(Nat.lt_trans hk hjL) = 0)
+    (after : Int → Except SudoRt.Trap α) (onRet : ρ → Except SudoRt.Trap α) :
+    SudoRt.runLoopOn (1 : Int)
+        (fuelRange (1 : Int) (Int.ofNat (L.length - 1)))
+        (fun k => zeroScanStep (embed L) (Int.ofNat (L.length - 1)) k)
+        after onRet =
+      .error { kind := "AssertFailed"
+               detail := s!"line {730}: {SudoRt.Canon.canon (Int.ofNat L[j])} != {SudoRt.Canon.canon (0 : Int)}" } := by
+  suffices ∀ i, 1 ≤ i → i ≤ j →
+      (∀ k, i ≤ k → ∀ hk : k < j, L[k]'(Nat.lt_trans hk hjL) = 0) →
+      SudoRt.runLoopOn (Int.ofNat i)
+          (fuelRange (Int.ofNat i) (Int.ofNat (L.length - 1)))
+          (fun k => zeroScanStep (embed L) (Int.ofNat (L.length - 1)) k)
+          after onRet =
+        .error { kind := "AssertFailed"
+                 detail := s!"line {730}: {SudoRt.Canon.canon (Int.ofNat L[j])} != {SudoRt.Canon.canon (0 : Int)}" } by
+    exact this 1 (Nat.le_refl _) hj hpre
+  intro i hi hij hprei
+  generalize hd : j - i = d
+  induction d generalizing i with
+  | zero =>
+    have hEq : i = j := by omega
+    have hiL : i < L.length := by omega
+    have hto : i ≤ L.length - 1 := by omega
+    rw [fuelRange_le hto, show (L.length - 1) - i + 1 = ((L.length - 1) - i) + 1 from rfl,
+      runLoopOn_succ, hEq, zeroScan_step_nz L j (by omega) hbad (by omega)]
+  | succ d ih =>
+    have hlt : i < j := by omega
+    have hiL : i < L.length := Nat.lt_trans hlt hjL
+    have hto : i ≤ L.length - 1 := by omega
+    have hz : L[i] = 0 := hprei i (Nat.le_refl _) hlt
+    have hfi : FitsLen (i + 1) := FitsLen.of_le hf (by omega)
+    have hnot : i ≠ L.length - 1 := by omega
+    rw [fuelRange_le hto, show (L.length - 1) - i + 1 = ((L.length - 1) - i) + 1 from rfl,
+      runLoopOn_succ, zeroScan_step_zero L i hiL hz hto hfi, if_neg hnot]
+    have hfuel : (L.length - 1) - i =
+        fuelRange (Int.ofNat (i + 1)) (Int.ofNat (L.length - 1)) := by
+      rw [fuelRange_le (by omega : i + 1 ≤ L.length - 1)]
+      omega
+    rw [hfuel]
+    exact ih (i + 1) (by omega) (by omega) (by
+      intro k hk1 hk2
+      exact hprei k (by omega) hk2) (by omega)
+
 end EcbsLink2.Link2

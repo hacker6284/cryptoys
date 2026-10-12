@@ -1233,6 +1233,11 @@ theorem check_mul (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       v = embed (fieldMul t.n t.k t.benchlen (invGap t.n t.k t.benchlen xs) xs) ∧
       bR.sudo_5Board_4home[5]'h5 = embed (invGap t.n t.k t.benchlen xs) ∧
       bR.sudo_5Board_8bench_on = false ∧
+      (∃ (h5D : 5 < bR.sudo_5Board_4held.size) (mv : Nat),
+        bR.sudo_5Board_4held[5]'h5D = true ∧
+        bR.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+        FitsLen (mv + t.n) ∧
+        bR.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int)) ∧
       (laneFold t.n (t.n - t.k)
           (school t.n (invGap t.n t.k t.benchlen xs) xs (List.replicate t.benchlen 0) false)).take
         t.n = fieldMul t.n t.k t.benchlen (invGap t.n t.k t.benchlen xs) xs := by
@@ -1387,7 +1392,7 @@ theorem check_mul (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
             apply FitsLen.of_le hfitBig
             omega)
       obtain ⟨bM, hmulOk, hon, -, hbench, htake, hrest⟩ := hmul
-      obtain ⟨-, hmov, -, -, htM, hsz, -, h5keep⟩ := hrest
+      obtain ⟨-, hmov, -, -, htM, hsz, hheld, h5keep⟩ := hrest
       have h5M : 5 < bM.sudo_5Board_4home.size := by
         rw [hsz]; exact hsg.h5
       have hhomeM : bM.sudo_5Board_4home[5]'h5M = embed (invGap t.n t.k t.benchlen xs) :=
@@ -1464,7 +1469,36 @@ theorem check_mul (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       have hhomeR : bR.sudo_5Board_4home[5]'h5R = embed gapL := by
         have hEq : bR.sudo_5Board_4home = bM.sudo_5Board_4home := by simp [bR]
         exact cell_eq_of hEq hhomeM
-      refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl, ?_⟩
+      let heldInner := bZ.sudo_5Board_4held.set ⟨6, hread.spareD⟩ true
+      let heldClear := heldInner.set ⟨6, by rw [Array.size_set]; exact hread.spareD⟩ false
+      have hheldDef : bM.sudo_5Board_4held = heldClear := by
+        simpa [heldClear, heldInner] using hheld
+      have h5DM : 5 < bM.sudo_5Board_4held.size := by
+        have hs := congrArg Array.size hheldDef
+        rw [Array.size_set, Array.size_set] at hs
+        exact hs.symm ▸ hread.h5D
+      have h5DR : 5 < bR.sudo_5Board_4held.size := by
+        simpa [bR] using h5DM
+      have hheldR : bR.sudo_5Board_4held[5]'h5DR = true := by
+        have hEq : bR.sudo_5Board_4held = bM.sudo_5Board_4held := by simp [bR]
+        have hget : heldClear[5]'(by rw [Array.size_set, Array.size_set]; exact hread.h5D) =
+            bZ.sudo_5Board_4held[5]'hread.h5D := by
+          simp [heldClear, heldInner, Array.getElem_set, show (5 : Nat) ≠ 6 by decide]
+        have hM : bM.sudo_5Board_4held[5]'h5DM = true :=
+          (cell_eq_of hheldDef hget).trans hread.held5
+        exact (cell_eq_of hEq hM).trans rfl
+      have hmvR : bR.sudo_5Board_4cost.sudo_5Costs_5moves = ((mvM + nz : Nat) : Int) := by
+        simp [bR, ofNat_eq_natCast]
+      have hfitR : FitsLen (mvM + nz + t.n) := by
+        apply FitsLen.of_le hfitBig
+        have hdef : mvM = mv + pegCount xs + schoolMoves gapL xs t.n t.n +
+            foldCharge t.n (t.n - t.k)
+              (school t.n gapL xs (List.replicate t.benchlen 0) false) := rfl
+        omega
+      have hnR : bR.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) := by
+        simp [bR, hnT]
+      refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl,
+        ⟨h5DR, mvM + nz, hheldR, hmvR, hfitR, hnR⟩, ?_⟩
       · simpa [Ecbs.check_target, Ecbs.gap] using hmulOk
       · exact congrArg embed htakeL
       · simpa [lane, gapL, invGap] using htake

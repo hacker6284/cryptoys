@@ -1073,7 +1073,7 @@ PACKAGES = {
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
-        "min": 3184,  # measured: check_axioms.py ecbs reports 3184 theorems
+        "min": 3201,  # measured: check_axioms.py ecbs reports 3201 theorems
         "required": ECBS_LINK2,
     },
     "megadreifach-heavy": {

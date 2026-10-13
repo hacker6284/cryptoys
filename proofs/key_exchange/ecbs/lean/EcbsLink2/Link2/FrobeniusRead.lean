@@ -598,6 +598,138 @@ theorem frobenius_affine_marker
     rw [upLane_take] at hget
     exact hget
 
+/-- One marker-on Frobenius: two cubes, two settles. The move charge is at most
+    eight pegs per home hole and six per folded bench hole. -/
+def cubeCharge (n bench : Nat) : Nat :=
+  8 * n + 6 * (bench - n)
+
+/-- The slide charge of that Frobenius: two pegs on the way in, two on the way out,
+    and a length-`n` home has at most `n` pegs. -/
+def slideCharge (n : Nat) : Nat :=
+  4 * n
+
+private theorem lenFit (n bench m : Nat) (hn : n ≤ 1000000) (hb : bench ≤ 1000001)
+    (hm : m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8) : FitsLen m := by
+  have hbig : 4 * (1000000 * 1000001) + 40 * 1000001 ≤ 9223372036854775807 := by
+    decide
+  have hp : n * (n + 1) ≤ 1000000 * 1000001 := Nat.mul_le_mul hn (by omega)
+  have h2 : 2 * (n * (n + 1)) ≤ 2 * (1000000 * 1000001) := Nat.mul_le_mul_left 2 hp
+  have h12 : 12 * bench ≤ 12 * 1000001 := Nat.mul_le_mul_left 12 hb
+  have h24 : 24 * n ≤ 24 * 1000000 := Nat.mul_le_mul_left 24 hn
+  have hsum : 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 ≤
+      4 * (1000000 * 1000001) + 40 * 1000001 := by omega
+  unfold FitsLen i64MaxNat
+  omega
+
+private theorem budgetRoom (moves n bench : Nat)
+    (hm : moves ≤ n * (n + 1) + 3 * (bench - n) + 6 * n) :
+    moves + cubeCharge n bench ≤
+      2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 := by
+  dsimp [cubeCharge]
+  omega
+
+private theorem slideRoom (n slides : Nat) (hsl : slides ≤ 2 * n) :
+    slides + slideCharge n ≤ 6 * n := by
+  dsimp [slideCharge]
+  omega
+
+private theorem six_n_room (n bench : Nat) :
+    6 * n ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 := by
+  omega
+
+/-- Pegs in the up field cube, and the counters the closing settle checks.
+    A length-`n` home has at most `n` pegs, so each check is `FitsLen.of_le`
+    of the cell's move and slide room. -/
+theorem up_out_le
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
+    pegCount ((upLane n k bench y).take n) ≤ n ∧
+      upMv2 a + 2 * pegCount ((upLane n k bench y).take n) ≤
+        moves + cubeCharge n bench ∧
+      upSl a + 2 * pegCount ((upLane n k bench y).take n) ≤
+        slides + slideCharge n := by
+  have hpt : pegCount ((upLane n k bench y).take n) ≤ n := by
+    refine Nat.le_trans (pegCount_le _) ?_
+    rw [List.length_take]
+    exact Nat.min_le_left _ _
+  have hpx : a.pegX ≤ n := a.hpegX
+  have hmv1 := a.hmv1le
+  have hmv : upMv a = a.mv1 + 2 * a.pegX := rfl
+  have hupLe : upMv a ≤ moves + 4 * n + 3 * (bench - n) := by
+    rw [hmv]
+    omega
+  have hcube := cubeMoves_le (upMv a) y n k bench
+  have hup : upMv2 a = cubeMoves (upMv a) y n k bench := rfl
+  have hcube2 : upMv2 a ≤ moves + 6 * n + 6 * (bench - n) := by
+    rw [hup]
+    omega
+  refine ⟨hpt, ?_, ?_⟩
+  · have hfin : upMv2 a + 2 * pegCount ((upLane n k bench y).take n) ≤
+        moves + 8 * n + 6 * (bench - n) := by
+      omega
+    rw [cubeCharge, ← Nat.add_assoc]
+    exact hfin
+  · have hsl : upSl a = slides + 2 * a.pegX := rfl
+    have hfin : upSl a + 2 * pegCount ((upLane n k bench y).take n) ≤ slides + 4 * n := by
+      rw [hsl]
+      omega
+    simpa [slideCharge] using hfin
+
+theorem up_settle_fit
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (hMv : FitsLen (moves + cubeCharge n bench))
+    (hSl : FitsLen (slides + slideCharge n)) :
+    FitsLen (2 * pegCount ((upLane n k bench y).take n)) ∧
+      FitsLen (upMv2 a + 2 * pegCount ((upLane n k bench y).take n)) ∧
+      FitsLen (upSl a + 2 * pegCount ((upLane n k bench y).take n)) := by
+  obtain ⟨hpt, hM, hS⟩ := up_out_le a
+  refine ⟨?_, FitsLen.of_le hMv hM, FitsLen.of_le hSl hS⟩
+  · exact FitsLen.of_le hMv (by
+      have h2 : 2 * pegCount ((upLane n k bench y).take n) ≤ 2 * n :=
+        Nat.mul_le_mul_left 2 hpt
+      dsimp [cubeCharge] at *
+      omega)
+
+/-- The same three checks, from the rung budget `down_across` already requires.
+    Homes of length `n` supply the peg bound. -/
+theorem up_settle_fit_budget
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (hnsm : n ≤ 1000000) (hb : bench ≤ 1000001)
+    (hmv : moves ≤ n * (n + 1) + 3 * (bench - n) + 6 * n)
+    (hsl : slides ≤ 2 * n) :
+    FitsLen (2 * pegCount ((upLane n k bench y).take n)) ∧
+      FitsLen (upMv2 a + 2 * pegCount ((upLane n k bench y).take n)) ∧
+      FitsLen (upSl a + 2 * pegCount ((upLane n k bench y).take n)) := by
+  have hMv := lenFit n bench _ hnsm hb (budgetRoom moves n bench hmv)
+  have hSl := lenFit n bench _ hnsm hb
+    (Nat.le_trans (slideRoom n slides hsl) (six_n_room n bench))
+  exact up_settle_fit a hMv hSl
+
+/-- `frobenius_affine_marker` with the settle checks proved from the home length. -/
+theorem frobenius_affine_len
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (hyt : allTritList y) (hy : y.length = n) (hn0 : 0 < n)
+    (hs1 : 1 < script) (hfitU : FitsLen ((ctrl + 1) + 2)) (hfitC : FitsLen (cOps + 2))
+    (hspan : 3 * (n - 1) + cg < bench)
+    (h3 : FitsLen (3 * (n - 1))) (hnFit : FitsLen n) (hbenchFit : FitsLen bench)
+    (hnbL : n ≤ a.laneX.length) (hnb : n ≤ bench)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hmv : moves ≤ n * (n + 1) + 3 * (bench - n) + 6 * n)
+    (hsl : slides ≤ 2 * n) :
+    ∃ bF,
+      Ecbs.frobenius_affine b = .ok bF ∧
+      bF.sudo_5Board_9marker_on = true ∧
+      bF.sudo_5Board_8bench_on = false ∧
+      (∀ h0 : 0 < bF.sudo_5Board_4home.size,
+        bF.sudo_5Board_4home[0] = embed (fieldCube n k bench x)) ∧
+      (∀ h1 : 1 < bF.sudo_5Board_4home.size,
+        bF.sudo_5Board_4home[1] = embed (fieldCube n k bench y)) := by
+  have hfit := up_settle_fit_budget a hnsm hsm.2.2.2 hmv hsl
+  exact frobenius_affine_marker a hyt hy hn0 hs1 hfitU hfitC hspan h3 hnFit hbenchFit
+    hnbL hnb hw0 hh0 hrR hrP hnE hkLe hgap hsm hnsm hfit.1 hfit.2.1 hfit.2.2
+
 end
 
 end EcbsLink2.Link2

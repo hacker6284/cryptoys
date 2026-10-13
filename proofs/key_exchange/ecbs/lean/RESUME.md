@@ -20,7 +20,7 @@ Compile peaks (VmHWM) before `across_up_cube` was added: MarkerMul 449356 kB, Fr
 - `up_close`: the closing settle writes that prefix into the up home and turns the bench off.
 - `frobenius_affine_marker`: `Ecbs.frobenius_affine` with the marker lifted equals that settle. Home 0 is `fieldCube` of across (`up_home0`), home 1 is `fieldCube` of up, the marker flag stays on, the bench ends off. The three settle `FitsLen` checks stay hypotheses.
 
-Compile peak (VmHWM) for that file: FrobeniusRead 237992 kB. 3150 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+Compile peak (VmHWM) for that file after the settle checks were discharged: FrobeniusRead 276480 kB. WalkLive 219316 kB. ChordRun 209024 kB. 3201 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
 ## Done in `WalkLoop.lean`
 
@@ -30,11 +30,22 @@ Compile peak (VmHWM) for that file: FrobeniusRead 237992 kB. 3150 theorems, axio
 - `walk_chord_white_open`: any run of empty cells, then one white cell. Across and up become the base point, the result is live and ok, and `walkRun` is that base point.
 - `walk_chord_red_open`: the same run of empty cells, then one red cell. Up is the negated base up.
 
-Compile peak (VmHWM) for that file: WalkLoop 298392 kB. 3184 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+Compile peak (VmHWM) for that file: WalkLoop 298392 kB. Axioms `propext`, `Classical.choice`, `Quot.sound` only.
+
+## Done in `WalkLive.lean`
+
+- `up_settle_fit` / `frobenius_affine_len`: the three settle `FitsLen` checks follow from a length-`n` home (`pegCount ≤ n`) and the cell's move and slide room (`cubeCharge`, `slideCharge`). They are not hypotheses of `frobenius_affine_len`.
+- `cellFit_consume` / `live_zero_fit`: the cell invariant carries `FitsLen` of the remaining charges. One live zero spends one charge.
+- `chordStep_live_zero`: a live zero cell is `marker_lift` then `frobenius_affine_len`. Homes become `fieldCube` of across and up, which is `walkStep` on colour 0. The Frobenius equation is not a hypothesis.
+
+## Done in `ChordRun.lean`
+
+- `trit_cancel` / `fieldSub_self`: a trit list subtracted from itself is the zero home. That is the empty chord run.
+- `chord_bump`: the chord op counter grows by one.
 
 ## Next
 
-Live cells: each later zero is `frobenius_affine_marker`, and each later white or red cell is that cube plus the chord add. Then `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+The chord add on a later white or red cell (`add_refines`, marker-on `mul`), then `chordStep` equals `walkStep` for every colour, then the full `walk_chord` induction. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

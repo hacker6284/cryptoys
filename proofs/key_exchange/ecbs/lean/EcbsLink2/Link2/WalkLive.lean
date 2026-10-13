@@ -6,6 +6,7 @@
 -/
 import EcbsLink2.Link2.WalkLoop
 import EcbsLink2.Link2.FrobeniusRead
+import EcbsLink2.Link2.ChordIf
 
 namespace EcbsLink2.Link2
 
@@ -116,5 +117,92 @@ theorem chordStep_live_zero
       hnbL hnb hw0 hh0 hrR hrP hnE hkLe hgap hsm hnsm hmv hsl
   refine ⟨bF, ?_, hflag, hbench, hx0, hy1, walkStep_live_zero n k bench x y⟩
   exact chordStep_cube cells i toN b0 b bF hi hlen hz hml hfrob hfiti
+
+/-- A live white or red cell whose chord add returns the reroll flag.
+    The emitted step returns `(live, false)` and turns the marker off.
+    It does not advance to the next cell. -/
+theorem chordStep_reroll (cells : List Nat) (i toN c : Nat)
+    (b0 b bF bA : Ecbs.Board)
+    (hi : i ≤ toN) (hlen : cells.length = toN + 1)
+    (hc : cells[i]'(by omega) = c) (hc0 : c ≠ 0) (hc2 : c ≤ 2)
+    (hml : Ecbs.marker_lift b0 = .ok b)
+    (hfrob : Ecbs.frobenius_affine b = .ok bF)
+    (hadd : Ecbs.chord_add_demo bF (SudoRt.SEq.beq (Int.ofNat c) (2 : Int)) =
+      .ok (false, bA)) :
+    chordStep (embed cells) (Int.ofNat toN) (Int.ofNat i, (b0, true)) =
+      .ok (SudoRt.Flow.ret ((true, false),
+        { bA with sudo_5Board_9marker_on := false })) := by
+  unfold chordStep
+  dsimp only
+  have hng : ¬ (Int.ofNat i > Int.ofNat toN) := ofNat_not_gt hi
+  rw [if_neg hng]
+  unfold chordBody
+  have hix : i < cells.length := by omega
+  rw [atL_embed cells i hix, ok_bind, hc]
+  have hge : decide (Int.ofNat c ≥ (0 : Int)) = true := by
+    rw [decide_eq_true_eq]
+    exact Int.ofNat_nonneg c
+  have hle : decide (Int.ofNat c ≤ (2 : Int)) = true := by
+    rw [decide_eq_true_eq, show (2 : Int) = Int.ofNat 2 from rfl, ofNat_le_iff]
+    exact hc2
+  rw [hge, if_pos rfl, hle, pure_eq_ok, ok_bind, sudoAssert_true, ok_bind]
+  rw [hml, ok_bind]
+  simp only [if_true]
+  rw [hfrob, ok_bind]
+  rw [show (0 : Int) = Int.ofNat 0 from rfl, sEq_ofNat c 0, decide_eq_false hc0]
+  simp only [Bool.not_false, if_true, Bool.not_true]
+  rw [if_neg (by decide : ¬ ((false : Bool) = true))]
+  rw [hadd, ok_bind]
+  dsimp only [Prod.fst, Prod.snd]
+  simp only [Bool.not_false, if_true]
+  rw [pure_eq_ok, ok_bind]
+  dsimp only
+  rw [pure_eq_ok]
+
+/-- A live white or red cell whose run is the zero home. The emitted step is
+    the reroll return `(live, false)` with the marker turned off, and `walkStep`
+    is `none`. -/
+theorem chordStep_empty_run
+    (cells : List Nat) (i toN c : Nat) (b0 b bF : Ecbs.Board)
+    (n k bench moves peak cOps : Nat)
+    (base acc : List Nat × List Nat)
+    (hi : i ≤ toN) (hlen : cells.length = toN + 1)
+    (hcAt : cells[i]'(by omega) = c) (hc : c = 1 ∨ c = 2)
+    (hml : Ecbs.marker_lift b0 = .ok b)
+    (hfrob : Ecbs.frobenius_affine b = .ok bF)
+    (hszH : bF.sudo_5Board_4home.size = 8) (hszD : bF.sudo_5Board_4held.size = 8)
+    (hops : 3 < bF.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop : bF.sudo_5Board_4cost.sudo_5Costs_3ops[3]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hx : base.1.length = n)
+    (htriB : allTritList base.1) (htriA : allTritList (fieldCube n k bench acc.1))
+    (hn : bF.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hmoves : bF.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : bF.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hfit : FitsLen (moves + 2 * n))
+    (h2e : bF.sudo_5Board_4held[2]'(by rw [hszD]; decide) = false)
+    (h0t : bF.sudo_5Board_4held[0]'(by rw [hszD]; decide) = true)
+    (h0a : bF.sudo_5Board_4home[0]'(by rw [hszH]; decide) =
+      embed (fieldCube n k bench acc.1))
+    (h3t : bF.sudo_5Board_4held[3]'(by rw [hszD]; decide) = true)
+    (h3a : bF.sudo_5Board_4home[3]'(by rw [hszH]; decide) = embed base.1)
+    (hzero : fieldSub n base.1 (fieldCube n k bench acc.1) = List.replicate n 0)
+    (hn0 : 0 < n) (hnb : n ≤ bench) :
+    ∃ bA : Ecbs.Board,
+      chordStep (embed cells) (Int.ofNat toN) (Int.ofNat i, (b0, true)) =
+        .ok (SudoRt.Flow.ret ((true, false),
+          { bA with sudo_5Board_9marker_on := false })) ∧
+      walkStep n k bench base true acc c = none := by
+  have hc0 : c ≠ 0 := by cases hc <;> omega
+  have hc2 : c ≤ 2 := by cases hc <;> omega
+  have hy : (fieldCube n k bench acc.1).length = n := fieldCube_length n k bench acc.1 hnb
+  obtain ⟨bA, hadd, _, _, _, _, _, _⟩ :=
+    chord_add_empty bF (SudoRt.SEq.beq (Int.ofNat c) (2 : Int))
+      base.1 (fieldCube n k bench acc.1) n moves peak cOps
+      hszH hszD hops hop hfops hx hy hn0 htriB htriA hn hmoves hpeak hfit
+      h2e h0t h0a h3t h3a hzero
+  refine ⟨bA, ?_, ?_⟩
+  · exact chordStep_reroll cells i toN c b0 b bF bA hi hlen hcAt hc0 hc2 hml hfrob hadd
+  · exact walkStep_empty_run n k bench base acc c hc hzero hn0 hnb
 
 end EcbsLink2.Link2

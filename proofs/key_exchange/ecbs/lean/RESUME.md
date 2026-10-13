@@ -63,9 +63,18 @@ Compile peak (VmHWM): ChordRise 255224 kB.
 
 - `chord_tail_after_inv`: if `invert_checked` on the marker-off board returns `bI`, restoring the flag and running the rise is `chord_rise`. What remains of `chordAddTail` is `chord_tail` on that board. The inverse on a walk board is still a hypothesis.
 
+## Done in `ChordGap.lean`
+
+- `chord_gap_mul`: the first multiply of `chord_tail`, gap times spare, with the marker seated. The bench prefix is `fieldMul` of the gap home by the spare home (first times second). `Spec.chordAdd` writes the slope as `fieldMul` of the rise by the inverse; commutativity of that product is not proved here.
+
+## Done in `WalkLive.lean` (reroll cell)
+
+- `chordStep_reroll`: a live white or red cell whose `chord_add_demo` returns the reroll flag is `Flow.ret ((true, false), marker off)`. The loop does not advance.
+- `chordStep_empty_run`: that flag is `chord_add_empty` when the run is the zero home, and `walkStep` is `none`.
+
 ## Next
 
-`chord_tail` on that board: gap times spare (`fieldMul` of the inverse by the rise; `Spec.chordAdd` multiplies the rise by the inverse), then the rest of the chord, so a successful later white or red cell matches `chordAdd`. Then the full `walk_chord` induction. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+The rest of `chord_tail` after `chord_gap_mul`: `clear` the gap, `settle` the product into it, then the square, the white peg, the across and the bottom, the mirror, and the last multiply, so a successful later white or red cell matches `chordAdd`. The inverse on a walk board is still a hypothesis (`invert_checked_some` is `bottomBoard`). Then the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no `FitsLen` hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

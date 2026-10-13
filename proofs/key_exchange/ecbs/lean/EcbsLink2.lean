@@ -69,6 +69,7 @@ import EcbsLink2.Link2.MarkerMul
 import EcbsLink2.Link2.MarkerCopy
 import EcbsLink2.Link2.MarkerCopyEq
 import EcbsLink2.Link2.ChordWhite
+import EcbsLink2.Link2.ChordAcross
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn
 import EcbsLink2.Link2.FrobeniusRead

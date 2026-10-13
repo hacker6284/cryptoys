@@ -8,6 +8,7 @@
 import EcbsLink2.Link2.MarkerMul
 import EcbsLink2.Link2.BandCopy
 import EcbsLink2.Link2.StripFold
+import EcbsLink2.SpecBase
 
 namespace EcbsLink2.Link2
 
@@ -520,11 +521,12 @@ theorem mul_onto_up (b : Ecbs.Board) (dst first second : Nat)
     let feed := markerUpFeed b m ctrl mx
     let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
       simpa [feed, markerUpFeed] using hops
-    let bU := { bumpOp feed 0 cOps hopsF with sudo_5Board_9marker_on := true }
+    let bOff := bumpOp feed 0 cOps hopsF
+    let bU := markerOn bOff
     let peg := pegCount home
     let bC := ontoCharge bU dst
-      (by simp only [bU, bumpOp_held, feed, markerUpFeed]; exact hD)
-      (by simp only [bU, bumpOp_home, feed, markerUpFeed]; exact hHD)
+      (by simp only [bU, markerOn_held, bOff, bumpOp_held, feed, markerUpFeed]; exact hD)
+      (by simp only [bU, markerOn_home, bOff, bumpOp_home, feed, markerUpFeed]; exact hHD)
       moves slides peg
     let pad := pref home bench n
     Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
@@ -532,11 +534,13 @@ theorem mul_onto_up (b : Ecbs.Board) (dst first second : Nat)
       mulAfter (Int.ofNat 0,
         (withMoves
             (mulPrep bC ((dst : Nat) : Int) (embed pad) second peakS
-              (by simp only [bC, ontoCharge_held_size, bU, bumpOp_held, feed, markerUpFeed]; exact hS)
-              (by simp only [bC, ontoCharge_home_size, bU, bumpOp_home, feed, markerUpFeed]; exact hHomeS))
+              (by simp only [bC, ontoCharge_held_size, bU, markerOn_held, bOff, bumpOp_held,
+                  feed, markerUpFeed]; exact hS)
+              (by simp only [bC, ontoCharge_home_size, bU, markerOn_home, bOff, bumpOp_home,
+                  feed, markerUpFeed]; exact hHomeS))
             (Int.ofNat (moves + 2 * peg + schoolMoves xs ys n n)),
           embed (school n xs ys pad false))) := by
-  intro feed hopsF bU peg bC pad
+  intro feed hopsF bOff bU peg bC pad
   rw [mul_keep_eq]
   unfold Ecbs.mulKeep
   rw [show Ecbs.op_mul = Int.ofNat 0 from rfl, atL_ofNat _ 0 hops, hop0, ok_bind,
@@ -564,49 +568,49 @@ theorem mul_onto_up (b : Ecbs.Board) (dst first second : Nat)
   simp only [ok_bind]
   have hU : { bumpOp feed 0 cOps hopsF with sudo_5Board_9marker_on := true } = bU := rfl
   rw [hU]
-  have hnB : bU.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
-    simp [bU, bumpOp, feed, markerUpFeed, hn]
-  rw [hnB]
-  have hoffP : (bumpOp feed 0 cOps hopsF).sudo_5Board_8bench_on = false := by
+  have hnP {h : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size} :
+      (bumpOp feed 0 cOps h).sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    simp only [bumpOp, feed, markerUpFeed, hn]
+  have hoffAny {h : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size} :
+      (bumpOp feed 0 cOps h).sudo_5Board_8bench_on = false := by
     simp only [bumpOp, feed, markerUpFeed, hoff]
-  rw [hoffP]
-  simp only [decide_False, Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
+  simp only [hnP, hoffAny, decide_False, Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
   have hoffB : bU.sudo_5Board_8bench_on = false := by
-    simp [bU, bumpOp, feed, markerUpFeed, hoff]
+    simp [bU, bOff, markerOn, bumpOp, feed, markerUpFeed, hoff]
   have hblB : bU.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by
-    simp [bU, bumpOp, feed, markerUpFeed, hbl]
+    simp [bU, bOff, markerOn, bumpOp, feed, markerUpFeed, hbl]
   have hDB : dst < bU.sudo_5Board_4held.size := by
-    simp [bU, bumpOp_held, feed, markerUpFeed]; exact hD
+    simp [bU, bOff, markerOn, bumpOp_held, feed, markerUpFeed]; exact hD
   have hHDB : dst < bU.sudo_5Board_4home.size := by
-    simp [bU, bumpOp_home, feed, markerUpFeed]; exact hHD
+    simp [bU, bOff, markerOn, bumpOp_home, feed, markerUpFeed]; exact hHD
   have hHeldDB : bU.sudo_5Board_4held[dst] = true := by
-    simp [bU, bumpOp_held, feed, markerUpFeed, hHeldD]
+    simp [bU, bOff, markerOn, bumpOp_held, feed, markerUpFeed, hHeldD]
   have hHomeDB : bU.sudo_5Board_4home[dst] = embed home := by
-    simp [bU, bumpOp_home, feed, markerUpFeed, hHomeD]
+    simp [bU, bOff, markerOn, bumpOp_home, feed, markerUpFeed, hHomeD]
   have hFB : first < bU.sudo_5Board_4held.size := by
-    simp [bU, bumpOp_held, feed, markerUpFeed]; exact hF
+    simp [bU, bOff, markerOn, bumpOp_held, feed, markerUpFeed]; exact hF
   have hHomeB : first < bU.sudo_5Board_4home.size := by
-    simp [bU, bumpOp_home, feed, markerUpFeed]; exact hHome
+    simp [bU, bOff, markerOn, bumpOp_home, feed, markerUpFeed]; exact hHome
   have hHFB : bU.sudo_5Board_4held[first] = true := by
-    simp [bU, bumpOp_held, feed, markerUpFeed, hHF]
+    simp [bU, bOff, markerOn, bumpOp_held, feed, markerUpFeed, hHF]
   have hArrB : bU.sudo_5Board_4home[first] = embed xs := by
-    simp [bU, bumpOp_home, feed, markerUpFeed, hArr]
+    simp [bU, bOff, markerOn, bumpOp_home, feed, markerUpFeed, hArr]
   have hSB : second < bU.sudo_5Board_4held.size := by
-    simp [bU, bumpOp_held, feed, markerUpFeed]; exact hS
+    simp [bU, bOff, markerOn, bumpOp_held, feed, markerUpFeed]; exact hS
   have hHomeSB : second < bU.sudo_5Board_4home.size := by
-    simp [bU, bumpOp_home, feed, markerUpFeed]; exact hHomeS
+    simp [bU, bOff, markerOn, bumpOp_home, feed, markerUpFeed]; exact hHomeS
   have hHSB : bU.sudo_5Board_4held[second] = true := by
-    simp [bU, bumpOp_held, feed, markerUpFeed, hHS]
+    simp [bU, bOff, markerOn, bumpOp_held, feed, markerUpFeed, hHS]
   have hYsB : bU.sudo_5Board_4home[second] = embed ys := by
-    simp [bU, bumpOp_home, feed, markerUpFeed, hYs]
+    simp [bU, bOff, markerOn, bumpOp_home, feed, markerUpFeed, hYs]
   have h7B : 7 ≤ bU.sudo_5Board_4held.size := by
-    simp [bU, bumpOp_held, feed, markerUpFeed]; exact h7
+    simp [bU, bOff, markerOn, bumpOp_held, feed, markerUpFeed]; exact h7
   have hmovesB : bU.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) := by
-    simp [bU, bumpOp, feed, markerUpFeed, hmoves]
+    simp [bU, bOff, markerOn, bumpOp, feed, markerUpFeed, hmoves]
   have hslidesB : bU.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int) := by
-    simp [bU, bumpOp, feed, markerUpFeed, hslides]
+    simp [bU, bOff, markerOn, bumpOp, feed, markerUpFeed, hslides]
   have hpeakB : bU.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
-    simp [bU, bumpOp, feed, markerUpFeed, hpeakS]
+    simp [bU, bOff, markerOn, bumpOp, feed, markerUpFeed, hpeakS]
   exact mul_onto_else bU dst first second home xs ys n moves slides peakS bench
     hoffB hblB hDB hHDB hHeldDB hHomeDB hFB hHomeB hHFB hArrB hSB hHomeSB hHSB hYsB
     h7B hneD1 hneD2 hne hn0 hnb hlenH hlenx hleny hf hmovesB hslidesB hpeakB
@@ -643,6 +647,456 @@ theorem onto_up_prep (b : Ecbs.Board) (dst second : Nat) (strip : Array Int)
     have hfinS : (⟨second, hHomeon⟩ : Fin _) = ⟨second, hHomeoff⟩ := Fin.ext rfl
     simp [hfinD, hfinS]
   all_goals rfl
+
+private theorem markerOn_mk (b : Ecbs.Board) :
+    { b with sudo_5Board_9marker_on := true } = markerOn b := (markerOn_def b).symm
+
+private theorem onto_fold_fit (moves peg sch n bench : Nat)
+    (hpeg : peg ≤ n) (hsch : sch ≤ n * (n + 1))
+    (hfold : FitsLen (moves + 2 * n + n * (n + 1) + 3 * (bench - n))) :
+    FitsLen (moves + 2 * peg + sch + 3 * (bench - n)) := by
+  refine FitsLen.of_le hfold ?_
+  omega
+
+/-- Marker seated. The onto multiply is the marker-off multiply of the board
+    `marker_step` leaves, with the flag put back. -/
+theorem mul_onto_up_eq (b : Ecbs.Board) (dst first second : Nat)
+    (home xs ys : List Nat)
+    (w h r n k moves slides hole peak peakS bench cOps m ctrl mx script : Nat)
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hm : b.sudo_5Board_6marker = Int.ofNat m)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hscript : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script)
+    (hbound : m + 1 < script) (hfitMk : FitsLen (m + 1))
+    (hfitC : FitsLen (ctrl + 2)) (hfit2 : FitsLen (m + 2))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hD : dst < b.sudo_5Board_4held.size)
+    (hHD : dst < b.sudo_5Board_4home.size)
+    (hHeldD : b.sudo_5Board_4held[dst] = true)
+    (hHomeD : b.sudo_5Board_4home[dst] = embed home)
+    (hF : first < b.sudo_5Board_4held.size)
+    (hHome : first < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs)
+    (hS : second < b.sudo_5Board_4held.size)
+    (hHomeS : second < b.sudo_5Board_4home.size)
+    (hHS : b.sudo_5Board_4held[second] = true)
+    (hYs : b.sudo_5Board_4home[second] = embed ys)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hneD1 : dst ≠ first) (hneD2 : dst ≠ second) (hne : first ≠ second)
+    (hn0 : 0 < n) (hnb : n ≤ bench)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenH : home.length = n) (hlenx : xs.length = n) (hleny : ys.length = n)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hspan : 2 * (n - 1) < bench)
+    (hhomeT : allTritList home) (hxsT : allTritList xs)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfitM : FitsLen (moves + 2 * n))
+    (hfitS : FitsLen (slides + 2 * n))
+    (hfm : FitsLen (moves + 2 * n + n * (n + 1)))
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * n + n * (n + 1) + 3 * (bench - n))) :
+    Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+        false true false =
+      (do
+        let r ← Ecbs.mul (markerUpFeed b m ctrl mx) ((dst : Nat) : Int)
+          ((first : Nat) : Int) ((second : Nat) : Int) false true false
+        pure { r with sudo_5Board_9marker_on := true }) := by
+  rw [mul_onto_up b dst first second home xs ys n moves slides peakS bench cOps m ctrl mx script
+      hmk hoff hm hc hx hscript hbound hfitMk hfitC hfit2 hops hop0 hfops hbl hD hHD hHeldD
+      hHomeD hF hHome hHF hArr hS hHomeS hHS hYs h7 hneD1 hneD2 hne hn0 hnb hn hlenH hlenx
+      hleny hf hmoves hslides hpeakS hspan hhomeT hxsT hfi hfitM hfitS hfm]
+  let feed := markerUpFeed b m ctrl mx
+  have hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    simpa [feed, markerUpFeed] using hops
+  dsimp only
+  simp only [markerOn_mk]
+  let bOff := bumpOp feed 0 cOps hopsF
+  let peg := pegCount home
+  let pad := pref home bench n
+  let sch := school n xs ys pad false
+  let mvN := moves + 2 * peg + schoolMoves xs ys n n
+  have hDoff : dst < bOff.sudo_5Board_4held.size := by
+    simp only [bOff, bumpOp_held, feed, markerUpFeed]; exact hD
+  have hHoff : dst < bOff.sudo_5Board_4home.size := by
+    simp only [bOff, bumpOp_home, feed, markerUpFeed]; exact hHD
+  have hDon : dst < (markerOn bOff).sudo_5Board_4held.size := by
+    rw [markerOn_held]; exact hDoff
+  have hHon : dst < (markerOn bOff).sudo_5Board_4home.size := by
+    rw [markerOn_home]; exact hHoff
+  have hSoff :
+      second < (ontoCharge bOff dst hDoff hHoff moves slides peg).sudo_5Board_4held.size := by
+    rw [ontoCharge_held_size]
+    simp only [bOff, bumpOp_held, feed, markerUpFeed]; exact hS
+  have hHomeoff :
+      second < (ontoCharge bOff dst hDoff hHoff moves slides peg).sudo_5Board_4home.size := by
+    rw [ontoCharge_home_size]
+    simp only [bOff, bumpOp_home, feed, markerUpFeed]; exact hHomeS
+  have hSon :
+      second <
+        (ontoCharge (markerOn bOff) dst hDon hHon moves slides peg).sudo_5Board_4held.size := by
+    rw [ontoCharge_held_size, markerOn_held]
+    have hS' := hSoff
+    rw [ontoCharge_held_size] at hS'
+    exact hS'
+  have hHomeon :
+      second <
+        (ontoCharge (markerOn bOff) dst hDon hHon moves slides peg).sudo_5Board_4home.size := by
+    rw [ontoCharge_home_size, markerOn_home]
+    have hH' := hHomeoff
+    rw [ontoCharge_home_size] at hH'
+    exact hH'
+  have hprep := onto_up_prep bOff dst second (embed pad) peakS moves slides peg mvN
+      hDoff hHoff hDon hHon hSoff hHomeoff hSon hHomeon
+  erw [hprep]
+  let bFold := withMoves
+      (mulPrep (ontoCharge bOff dst hDoff hHoff moves slides peg)
+        ((dst : Nat) : Int) (embed pad) second peakS hSoff hHomeoff)
+      (Int.ofNat mvN)
+  have hnle : n ≤ home.length := Nat.le_of_eq hlenH.symm
+  have hschLen : sch.length = bench := by
+    simpa [sch, pad, pref_length hnb hnle] using school_length xs ys pad false n
+  have hschT : allTritList sch :=
+    school_trits xs ys pad false n (pref_trits home bench n hhomeT hnb hnle)
+      (by
+        intro i hi
+        rw [pref_length hnb hnle]
+        have hi' : i ≤ n - 1 := Nat.le_sub_one_of_lt hi
+        have hle : i + (n - 1) ≤ 2 * (n - 1) := by
+          rw [Nat.two_mul]
+          exact Nat.add_le_add_right hi' (n - 1)
+        exact Nat.lt_of_le_of_lt hle hspan)
+  have hpegLe : peg ≤ n := by simpa [peg, hlenH] using pegCount_le home
+  have hflagB : bFold.sudo_5Board_9marker_on = false := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, bOff, bumpOp, feed,
+      markerUpFeed]
+  have hmB : bFold.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvN := by
+    simp [bFold, withMoves]
+  have hpeakB : bFold.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, bOff, bumpOp, feed,
+      markerUpFeed, hpeak]
+  have hholeB : bFold.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, bOff, bumpOp, feed,
+      markerUpFeed, hhole]
+  have h7B : 7 ≤ bFold.sudo_5Board_4held.size := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, Array.size_set, bOff,
+      bumpOp_held, feed, markerUpFeed]
+    exact h7
+  have hwB : bFold.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, bOff, bumpOp, feed,
+      markerUpFeed, hw]
+  have hhB : bFold.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, bOff, bumpOp, feed,
+      markerUpFeed, hh]
+  have hrB : bFold.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, bOff, bumpOp, feed,
+      markerUpFeed, hr]
+  have hnB : bFold.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat n := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, bOff, bumpOp, feed,
+      markerUpFeed, hn, ofNat_eq_natCast]
+  have hkB : bFold.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, bOff, bumpOp, feed,
+      markerUpFeed, hk]
+  have hblB : bFold.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, bOff, bumpOp, feed,
+      markerUpFeed, hbl]
+  have hfitF : FitsLen (mvN + 3 * (sch.length - n)) := by
+    rw [hschLen]
+    simp only [mvN]
+    exact onto_fold_fit moves peg (schoolMoves xs ys n n) n bench hpegLe
+      (schoolMoves_bound xs ys n) hfold
+  have hflagM := mulAfter_flag bFold sch w h r n k mvN hole bench peak hflagB
+      (by rw [hschLen]; exact hfitB) hwB hhB hrB hnB hkB hblB hw0 hh0 hrR hrP hnE hkLe hgap
+      hschT hmB hholeB hpeakB h7B (by rw [hschLen]; exact hsm) hnsm hfitF
+      (by rw [hschLen]; exact Nat.le_refl bench) (Nat.lt_of_lt_of_le hn0 hnb)
+  change mulAfter (Int.ofNat 0, (markerOn bFold, embed sch)) = _ at hflagM ⊢
+  erw [hflagM]
+  have hflagF : feed.sudo_5Board_9marker_on = false := by simp [feed, markerUpFeed]
+  have hoffF : feed.sudo_5Board_8bench_on = false := by simp [feed, markerUpFeed, hoff]
+  have hop0F : feed.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hopsF) = (cOps : Int) := by
+    simpa [feed, markerUpFeed] using hop0
+  have hOff := mul_onto_off feed dst first second home xs ys n moves slides peakS bench cOps
+      hflagF hoffF hopsF hop0F hfops
+      (by simp [feed, markerUpFeed, hbl])
+      (by simp [feed, markerUpFeed]; exact hD)
+      (by simp [feed, markerUpFeed]; exact hHD)
+      (by simp [feed, markerUpFeed, hHeldD])
+      (by simp [feed, markerUpFeed, hHomeD])
+      (by simp [feed, markerUpFeed]; exact hF)
+      (by simp [feed, markerUpFeed]; exact hHome)
+      (by simp [feed, markerUpFeed, hHF])
+      (by simp [feed, markerUpFeed, hArr])
+      (by simp [feed, markerUpFeed]; exact hS)
+      (by simp [feed, markerUpFeed]; exact hHomeS)
+      (by simp [feed, markerUpFeed, hHS])
+      (by simp [feed, markerUpFeed, hYs])
+      (by simp [feed, markerUpFeed]; exact h7)
+      hneD1 hneD2 hne hn0 hnb (by simp [feed, markerUpFeed, hn]) hlenH hlenx hleny hf
+      (by simp [feed, markerUpFeed, hmoves]) (by simp [feed, markerUpFeed, hslides])
+      (by simp [feed, markerUpFeed, hpeakS]) hspan hhomeT hxsT hfi hfitM hfitS hfm
+  erw [← hOff]
+  rfl
+
+/-- Marker off. The onto multiply returns the lane fold of the schoolbook laid
+    onto the destination. The length-`n` prefix is `fieldAdd` of that home and
+    `fieldMul` of the two factors. -/
+theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
+    (home xs ys : List Nat)
+    (w h r n k moves slides hole peak peakS bench cOps : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hD : dst < b.sudo_5Board_4held.size)
+    (hHD : dst < b.sudo_5Board_4home.size)
+    (hHeldD : b.sudo_5Board_4held[dst] = true)
+    (hHomeD : b.sudo_5Board_4home[dst] = embed home)
+    (hF : first < b.sudo_5Board_4held.size)
+    (hHome : first < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs)
+    (hS : second < b.sudo_5Board_4held.size)
+    (hHomeS : second < b.sudo_5Board_4home.size)
+    (hHS : b.sudo_5Board_4held[second] = true)
+    (hYs : b.sudo_5Board_4home[second] = embed ys)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hneD1 : dst ≠ first) (hneD2 : dst ≠ second) (hne : first ≠ second)
+    (hn0 : 0 < n) (hnb : n ≤ bench)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenH : home.length = n) (hlenx : xs.length = n) (hleny : ys.length = n)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hspan : 2 * (n - 1) < bench)
+    (hhomeT : allTritList home) (hxsT : allTritList xs)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfitM : FitsLen (moves + 2 * n))
+    (hfitS : FitsLen (slides + 2 * n))
+    (hfm : FitsLen (moves + 2 * n + n * (n + 1)))
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * n + n * (n + 1) + 3 * (bench - n))) :
+    ∃ b',
+      Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+          false true false = .ok b' ∧
+      b'.sudo_5Board_5bench =
+        embed (laneFold n (n - k) (school n xs ys (pref home bench n) false)) ∧
+      (laneFold n (n - k) (school n xs ys (pref home bench n) false)).take n =
+        fieldAdd n home (fieldMul n k bench xs ys) := by
+  have hOff := mul_onto_off b dst first second home xs ys n moves slides peakS bench cOps
+    hmk hoff hops hop0 hfops hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs
+    h7 hneD1 hneD2 hne hn0 hnb hn hlenH hlenx hleny hf hmoves hslides hpeakS hspan
+    hhomeT hxsT hfi hfitM hfitS hfm
+  let b0 := bumpOp b 0 cOps hops
+  let peg := pegCount home
+  let pad := pref home bench n
+  let sch := school n xs ys pad false
+  let mvN := moves + 2 * peg + schoolMoves xs ys n n
+  let bFold := withMoves
+      (mulPrep (ontoCharge b0 dst (by rw [bumpOp_held]; exact hD)
+          (by rw [bumpOp_home]; exact hHD) moves slides peg)
+        ((dst : Nat) : Int) (embed pad) second peakS
+        (by rw [ontoCharge_held_size, bumpOp_held]; exact hS)
+        (by rw [ontoCharge_home_size, bumpOp_home]; exact hHomeS))
+      (Int.ofNat mvN)
+  have hnle : n ≤ home.length := Nat.le_of_eq hlenH.symm
+  have hschLen : sch.length = bench := by
+    simpa [sch, pad, pref_length hnb hnle] using school_length xs ys pad false n
+  have hschT : allTritList sch :=
+    school_trits xs ys pad false n (pref_trits home bench n hhomeT hnb hnle)
+      (by
+        intro i hi
+        rw [pref_length hnb hnle]
+        have hi' : i ≤ n - 1 := Nat.le_sub_one_of_lt hi
+        have hle : i + (n - 1) ≤ 2 * (n - 1) := by
+          rw [Nat.two_mul]
+          exact Nat.add_le_add_right hi' (n - 1)
+        exact Nat.lt_of_le_of_lt hle hspan)
+  have hpegLe : peg ≤ n := by simpa [peg, hlenH] using pegCount_le home
+  have hmB : bFold.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvN := by
+    simp [bFold]
+  have hpeakB : bFold.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp, hpeak]
+  have hholeB : bFold.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp, hhole]
+  have h7B : 7 ≤ bFold.sudo_5Board_4held.size := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, Array.size_set, b0,
+      bumpOp_held]
+    exact h7
+  have hwB : bFold.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp, hw]
+  have hhB : bFold.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp, hh]
+  have hrB : bFold.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp, hr]
+  have hnB : bFold.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat n := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp, hn,
+      ofNat_eq_natCast]
+  have hkB : bFold.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp, hk]
+  have hblB : bFold.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp, hbl]
+  have hfitF : FitsLen (mvN + 3 * (sch.length - n)) := by
+    rw [hschLen]
+    simp only [mvN]
+    exact onto_fold_fit moves peg (schoolMoves xs ys n n) n bench hpegLe
+      (schoolMoves_bound xs ys n) hfold
+  have hOk := mulAfter_ok bFold sch w h r n k mvN hole bench peak
+      (by rw [hschLen]; exact hfitB) hwB hhB hrB hnB hkB hblB hw0 hh0 hrR hrP hnE hkLe hgap
+      hschT hmB hholeB hpeakB h7B (by rw [hschLen]; exact hsm) hnsm hfitF
+      (by rw [hschLen]; exact Nat.le_refl bench) (Nat.lt_of_lt_of_le hn0 hnb)
+  have hmul : Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+      false true false = .ok (ontoFoldBoard bFold sch n k mvN peak) := by
+    erw [hOff]
+    change mulAfter (Int.ofNat 0, (bFold, embed sch)) = .ok (ontoFoldBoard bFold sch n k mvN peak)
+    exact hOk
+  refine ⟨ontoFoldBoard bFold sch n k mvN peak, hmul, ?_, ?_⟩
+  · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
+  · exact onto_add n k bench xs ys home hhomeT hlenH (Or.inl hspan) hnb
+
+/-- Marker seated. The onto multiply is that fold with the flag put back. -/
+theorem mul_onto_up_prefix (b : Ecbs.Board) (dst first second : Nat)
+    (home xs ys : List Nat)
+    (w h r n k moves slides hole peak peakS bench cOps m ctrl mx script : Nat)
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hm : b.sudo_5Board_6marker = Int.ofNat m)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hscript : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script)
+    (hbound : m + 1 < script) (hfitMk : FitsLen (m + 1))
+    (hfitC : FitsLen (ctrl + 2)) (hfit2 : FitsLen (m + 2))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hD : dst < b.sudo_5Board_4held.size)
+    (hHD : dst < b.sudo_5Board_4home.size)
+    (hHeldD : b.sudo_5Board_4held[dst] = true)
+    (hHomeD : b.sudo_5Board_4home[dst] = embed home)
+    (hF : first < b.sudo_5Board_4held.size)
+    (hHome : first < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs)
+    (hS : second < b.sudo_5Board_4held.size)
+    (hHomeS : second < b.sudo_5Board_4home.size)
+    (hHS : b.sudo_5Board_4held[second] = true)
+    (hYs : b.sudo_5Board_4home[second] = embed ys)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hneD1 : dst ≠ first) (hneD2 : dst ≠ second) (hne : first ≠ second)
+    (hn0 : 0 < n) (hnb : n ≤ bench)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenH : home.length = n) (hlenx : xs.length = n) (hleny : ys.length = n)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hspan : 2 * (n - 1) < bench)
+    (hhomeT : allTritList home) (hxsT : allTritList xs)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfitM : FitsLen (moves + 2 * n))
+    (hfitS : FitsLen (slides + 2 * n))
+    (hfm : FitsLen (moves + 2 * n + n * (n + 1)))
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * n + n * (n + 1) + 3 * (bench - n))) :
+    ∃ b',
+      Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+          false true false = .ok (markerOn b') ∧
+      b'.sudo_5Board_5bench =
+        embed (laneFold n (n - k) (school n xs ys (pref home bench n) false)) ∧
+      (laneFold n (n - k) (school n xs ys (pref home bench n) false)).take n =
+        fieldAdd n home (fieldMul n k bench xs ys) := by
+  rw [mul_onto_up_eq b dst first second home xs ys w h r n k moves slides hole peak peakS bench
+      cOps m ctrl mx script hmk hoff hm hc hx hscript hbound hfitMk hfitC hfit2 hops hop0 hfops
+      hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs h7 hneD1 hneD2 hne hn0 hnb hn
+      hlenH hlenx hleny hf hmoves hslides hpeak hpeakS hspan hhomeT hxsT hfi hfitM hfitS hfm
+      hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm hnsm hfitB hfold]
+  let feed := markerUpFeed b m ctrl mx
+  have hFeed := mul_onto_off_fold feed dst first second home xs ys w h r n k moves slides hole
+      peak peakS bench cOps
+      (by simp [feed, markerUpFeed])
+      (by simp [feed, markerUpFeed, hoff])
+      (by simpa [feed, markerUpFeed] using hops)
+      (by simpa [feed, markerUpFeed] using hop0)
+      hfops
+      (by simp [feed, markerUpFeed, hbl])
+      (by simp [feed, markerUpFeed]; exact hD)
+      (by simp [feed, markerUpFeed]; exact hHD)
+      (by simp [feed, markerUpFeed, hHeldD])
+      (by simp [feed, markerUpFeed, hHomeD])
+      (by simp [feed, markerUpFeed]; exact hF)
+      (by simp [feed, markerUpFeed]; exact hHome)
+      (by simp [feed, markerUpFeed, hHF])
+      (by simp [feed, markerUpFeed, hArr])
+      (by simp [feed, markerUpFeed]; exact hS)
+      (by simp [feed, markerUpFeed]; exact hHomeS)
+      (by simp [feed, markerUpFeed, hHS])
+      (by simp [feed, markerUpFeed, hYs])
+      (by simp [feed, markerUpFeed]; exact h7)
+      hneD1 hneD2 hne hn0 hnb (by simp [feed, markerUpFeed, hn]) hlenH hlenx hleny hf
+      (by simp [feed, markerUpFeed, hmoves]) (by simp [feed, markerUpFeed, hslides])
+      (by simp [feed, markerUpFeed, hpeak]) (by simp [feed, markerUpFeed, hpeakS])
+      hspan hhomeT hxsT hfi hfitM hfitS hfm
+      (by simp [feed, markerUpFeed, hhole]) hw0 hh0 hrR hrP hnE hkLe hgap
+      (by simp [feed, markerUpFeed, hw]) (by simp [feed, markerUpFeed, hh])
+      (by simp [feed, markerUpFeed, hr]) (by simp [feed, markerUpFeed, hk])
+      hsm hnsm hfitB hfold
+  obtain ⟨b', hb, hbench, hpre⟩ := hFeed
+  have hflag : (do
+      let r ← Ecbs.mul feed ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+        false true false
+      pure { r with sudo_5Board_9marker_on := true }) = .ok (markerOn b') := by
+    rw [hb, ok_bind, pure_eq_ok, markerOn_mk]
+  refine ⟨b', ?_, hbench, hpre⟩
+  simpa [feed] using hflag
+
+/-- SPEC.md §3 R7 line 156. The new up is the slope times `(first x − new x)`,
+    minus the first up. That is the mirrored first up plus the same product,
+    which is what the onto multiply lays onto the up home. -/
+theorem card_y3 (n k bench : Nat) (slope dx y : List Nat) :
+    fieldAdd n (mirrorTrits y) (fieldMul n k bench slope dx) =
+      fieldSub n (fieldMul n k bench slope dx) y := by
+  rw [fieldSub, fieldAdd_comm]
 
 /-- The folded `onto` strip's length-`n` prefix is the home plus `fieldMul`. -/
 theorem mul_onto_add (n k bench : Nat) (xs ys home : List Nat)

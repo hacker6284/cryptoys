@@ -143,14 +143,18 @@ Compile peaks (VmHWM) under `ulimit -v 7000000`: StripLin 385028 kB, BandCopy 38
 - `mul_onto_school`. `mulFromHeld` on a strip that already holds the destination is `school_loop_refines` from that strip, then `mulAfter`.
 - `mul_onto_else`. Bench off, so `settle` is the identity. `mulElse` with `onto`, not `copy_second`, not `mirror`, clears the destination, charges `2 * pegCount` moves and the same number of slides, copies the home (`band_copy_after`), and is that schoolbook.
 - `mul_onto_off`. Marker off. `Ecbs.mul` is that `mulElse` after the op bump.
-- `mul_onto_up`. Marker on and already seated. `log_op` is `marker_step`, and the onto multiply is `mul_onto_else` on `{ bumpOp (markerUpFeed …) with marker_on := true }`. The flag stays on.
-- `ontoCharge_markerOn` / `onto_up_prep`. The marker flag commutes with the onto charge, the prep, and `withMoves`: doing them on `markerOn b` is `markerOn` of doing them on `b`. `rw` of that under the `mulAfter` left by `mul_onto_up` does not match. The pattern is `withMoves (mulPrep (ontoCharge (markerOn bOff) …) …)`; the goal still has `ontoCharge` of `{ bumpOp feed with marker_on := true }`.
+- `mul_onto_up`. Marker on and already seated. `log_op` is `marker_step`, and the onto multiply is `mul_onto_else` on `markerOn (bumpOp (markerUpFeed …) …)`. The flag stays on. The conclusion names `markerOn`, so it matches `onto_up_prep`.
+- `ontoCharge_markerOn` / `onto_up_prep`. The marker flag commutes with the onto charge, the prep, and `withMoves`.
+- `mul_onto_up_eq`. The seated onto multiply is the marker-off multiply of `markerUpFeed`, with the flag put back. `dsimp` then `simp only [markerOn_mk]` turns the record update into `markerOn`. `erw [onto_up_prep]` matches where `rw` does not. `mulAfter_flag` carries the flag across the fold, and `mul_onto_off` is the right-hand side.
+- `mulAfter_ok` / `ontoFoldBoard`. `mulAfter` on a marker-off board is `.ok` of the lane-fold bench, then `note_peak`.
+- `mul_onto_off_fold` / `mul_onto_up_prefix`. That bench's length-`n` prefix is `fieldAdd` of the destination home and `fieldMul` of the two factors. The seated result is the same board with the flag on.
+- `card_y3`. SPEC.md §3 R7 line 156. `fieldAdd` of `mirrorTrits y` and `fieldMul slope dx` is `fieldSub` of that product and `y`. That is the new up once the onto multiply's home is the mirrored first up and `dx` is `fieldSub` of the first x and the new x.
 
-Compile peaks (VmHWM) under `ulimit -v 7000000`: StripFold 210760 kB, BandCopy 239636 kB, MulOnto 291548 kB. Theorem count after `onto_up_prep` is re-audited on the next push. Axioms stay `propext`, `Classical.choice`, `Quot.sound` only.
+Compile peaks (VmHWM) under `ulimit -v 7000000`: StripFold 210760 kB, BandCopy 239636 kB, MarkerMul 441692 kB, MulOnto 306548 kB. 3486 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
 
 ## Next
 
-Join `mul_onto_up` to `mul_onto_off` of `markerUpFeed` by `mulAfter_flag`, so the seated onto multiply is the marker-off multiply with the flag put back. That is the last multiply in the chord (gap times across, onto the mirrored up). Then `chordStep` = `walkStep` for a live white or red cell with a nonempty run. The inverse on a walk board is still a hypothesis. Then discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Chain the chord tail for a live white or red cell with a nonempty run: `chord_gap_settle`, `chord_square_white`, `across_bottom_settle`, `chord_take_mirror`, then `mul_onto_up_prefix` of the gap by the across onto the mirrored up. `card_y3` reads that prefix as `Spec.chordAdd`'s new up. Clear the gap, settle the bench into the up, and `move_band` the new x. That cell is `chordStep` = `walkStep`. The inverse on a walk board is still a hypothesis. Then discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 
@@ -162,7 +166,7 @@ Join `mul_onto_up` to `mul_onto_off` of `markerUpFeed` by `mulAfter_flag`, so th
 
 - Restate the emitted stepper so the bridge is `rfl`. `markerOn` plus `@[simp] markerOn_flag` fixed the `noteBench_flag` goal that rejected a bare `rfl` on `{b with marker_on := true}`.
 - Do not `simp` a `marker_on = false` or `bench_on = false` hypothesis into a board constructor. Use `log_op_off` / `settle_off` with the proof.
-- `rw` is syntactic. `conv => lhs` when the rewrite also matches a dependent proof on the right. Change the school stepper to `rowStep` before rewriting `subI`.
+- `rw` is syntactic. `conv => lhs` when the rewrite also matches a dependent proof on the right. Change the school stepper to `rowStep` before rewriting `subI`. `simp only [markerOn_mk]` after `dsimp` turns `{ b with marker_on := true }` into `markerOn b`. `erw` matches `onto_up_prep` when the proof terms differ and `rw` does not.
 - Opaque boards and projection lemmas. Never evaluate a concrete board at tier scale.
 - Never `cases` a `Nat.le` proof. Keep `FitsLen` as a conjunct.
 - Only axioms `propext`, `Classical.choice`, `Quot.sound`. No `native_decide`, no `sorry`, no heartbeat bump.

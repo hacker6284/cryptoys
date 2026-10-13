@@ -384,6 +384,65 @@ theorem mulAfter_flag (b : Ecbs.Board) (sch : List Nat)
   rw [peakBoard_flag (markerOn nOff) peak (markerOn_flag nOff)]
   rw [markerOn_clear nOff hoffN]
 
+/-- Lane fold of one strip, then `note_peak`. The bench is `laneFold`. -/
+def ontoFoldBoard (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) : Ecbs.Board :=
+  peakBoard
+    { noteBench b (Int.ofNat (topIdx sch))
+        (Int.ofNat (mv + foldCharge n (n - k) sch)) with
+      sudo_5Board_5bench := embed (laneFold n (n - k) sch) }
+    peak
+
+theorem ontoFoldBoard_bench (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_5bench =
+      embed (laneFold n (n - k) sch) := rfl
+
+/-- `mulAfter` on a marker-off board is that fold. -/
+theorem mulAfter_ok (b : Ecbs.Board) (sch : List Nat)
+    (w h r n k mv hole bench peak : Nat)
+    (hfit : FitsLen sch.length)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat n)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hs : allTritList sch)
+    (hm : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv)
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ sch.length ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfm : FitsLen (mv + 3 * (sch.length - n)))
+    (hlen : sch.length ≤ bench) (hpos : 0 < bench) :
+    mulAfter (Int.ofNat 0, (b, embed sch)) =
+      .ok (ontoFoldBoard b sch n k mv peak) := by
+  unfold mulAfter ontoFoldBoard
+  rw [lane_fold_eq sch w h r n k bench b hfit hw hh hr hn hk hbl]
+  rw [lane_fold_refines sch w h r n k mv hole bench b
+      hw0 hh0 hrR hrP hnE hkLe hgap hs hm hhole hsm hnsm hfm hfit hlen hpos]
+  simp only [ok_bind, pure_eq_ok, Prod.fst, Prod.snd]
+  let top := Int.ofNat (topIdx sch)
+  let mvF := Int.ofNat (mv + foldCharge n (n - k) sch)
+  let folded := embed (laneFold n (n - k) sch)
+  let nOff := { noteBench b top mvF with sudo_5Board_5bench := folded }
+  have h7F : 7 ≤ nOff.sudo_5Board_4held.size := by
+    simp only [nOff, noteBench_held]
+    exact h7
+  have hpF : nOff.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    rw [show nOff.sudo_5Board_4cost.sudo_5Costs_4peak =
+        (noteBench b top mvF).sudo_5Board_4cost.sudo_5Costs_4peak from rfl,
+      noteBench_peak]
+    exact hpeak
+  conv =>
+    lhs
+    pattern (Ecbs.note_peak _)
+    change Ecbs.note_peak nOff
+  rw [note_peak_eq nOff peak h7F hpF]
+  simp only [ok_bind]
+
 /-- From the settled board through the schoolbook. The lane fold stays inside `mulAfter`. -/
 theorem mul_tail_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     (n moves bench peakS : Nat)

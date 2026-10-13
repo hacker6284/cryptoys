@@ -92,11 +92,15 @@ Compile peaks (VmHWM) under `ulimit -v 7000000`: FieldComm 230832 kB, ChordGap 2
 - Generic copy multiply (`copy_second = true`, `onto = false`, `mirror = false`). The inlined schoolbook is changed to `rowStep` after the board is reduced (`mul_copy_off_after`); a whole-term `rfl` of `Ecbs.mul` against that loop exceeds the heartbeat limit. `mul_copy_up_after` / `mul_copy_down_after` are the same body after `marker_step`. `mul_copy_up_eq` / `mul_copy_down_eq`: marker on, the emitted multiply is the marker-off multiply of the feed, with the flag put back.
 - `chord_square`: `mul` of the gap by a copy of itself into the bottom, marker seated. The bench prefix is `fieldMul` of that slope by itself (SPEC.md §3 R7 line 156). `FitsLen` of the copy and the marker script bound stay hypotheses, the same way `chord_gap_settle` leaves the settle charges.
 
-Compile peaks (VmHWM) under `ulimit -v 7000000`: MarkerCopy 388212 kB, MarkerCopyEq 385500 kB. 3354 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+Compile peaks (VmHWM) under `ulimit -v 7000000`: MarkerCopy 388212 kB, MarkerCopyEq 385500 kB, ChordWhite 384308 kB. 3356 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+
+## Done in `ChordWhite.lean`
+
+- `bench_white0_step`: the emitted white peg writes `(hole 0 + 1) mod 3` and charges one move. Chaining it onto `chord_square`, and showing the length-`n` prefix is `fieldAdd` with `whiteHole0`, is the next lemma.
 
 ## Next
 
-The white peg in hole 0, add the across, take away the bottom, clear the bottom and settle. Then mirror the up and the last multiply, so a successful later white or red cell matches `chordAdd`. The inverse on a walk board is still a hypothesis (`invert_checked_some` is `bottomBoard`). Then discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Chain `bench_white0_step` onto `chord_square`, then add the across, take away the bottom, clear the bottom and settle. Then mirror the up and the last multiply, so a successful later white or red cell matches `chordAdd`. The inverse on a walk board is still a hypothesis (`invert_checked_some` is `bottomBoard`). Then discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

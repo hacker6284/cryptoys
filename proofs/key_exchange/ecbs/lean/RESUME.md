@@ -63,9 +63,15 @@ Compile peak (VmHWM): ChordRise 255224 kB.
 
 - `chord_tail_after_inv`: if `invert_checked` on the marker-off board returns `bI`, restoring the flag and running the rise is `chord_rise`. What remains of `chordAddTail` is `chord_tail` on that board. The inverse on a walk board is still a hypothesis.
 
+## Done in `FieldComm.lean`
+
+- `fieldMul_comm` / `school_comm` / `slope_mul_swap`. SPEC.md §3 R7 line 156 names the slope as "rise over run", and `Spec.chordAdd` multiplies `fieldMul rise inv`. The same line's card says "do the gap times the spare": after the inverse sits in the gap and the rise sits in the spare, that product is `fieldMul inv rise`. The schoolbook strip does not depend on which factor is laid, and the lane fold is a function of that strip, so the two lists are equal. `Spec.chordAdd` is unchanged. This is not a spec/code mismatch: the formula and the card name the same product.
+
+Compile peak (VmHWM): FieldComm 234096 kB. 3293 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+
 ## Next
 
-`chord_tail` on that board: gap times spare (`fieldMul` of the inverse by the rise; `Spec.chordAdd` multiplies the rise by the inverse), then the rest of the chord, so a successful later white or red cell matches `chordAdd`. Then the full `walk_chord` induction. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+`chord_tail` on the board `chord_tail_after_inv` leaves: the emitted gap × spare is `fieldMul inv rise`, hence `fieldMul rise inv` by `slope_mul_swap`, then clear, settle, and the rest of the chord, so a successful later white or red cell matches `chordAdd`. Discharge the inverse hypothesis with `invert_checked`, lifted to marker-on if the walk keeps the flag up. Then the full `walk_chord` induction. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

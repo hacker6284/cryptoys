@@ -132,9 +132,24 @@ Compile peak (VmHWM) under `ulimit -v 7000000`: ChordTake 384964 kB. 3403 theore
 
 Compile peaks (VmHWM) under `ulimit -v 7000000`: StripLin 385028 kB, BandCopy 386132 kB. 3432 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
+## Done in `StripFold.lean`
+
+- `foldrHigh_pad` / `reduceStrip_pad` / `laneFold_pad`. The lane fold of a sum is the sum of the folds when the second summand has no peg at or above hole `n`. The fold over the offset list is its own induction; `foldHigh_pad` stays the one-hole step.
+- `laneFold_onto`. Laying the schoolbook onto that sum and folding is the folded product added to the pad.
+- `onto_add`. The length-`n` prefix is `fieldAdd` of the home and `fieldMul` of the two factors. `mul_onto_add` is the same fact next to the emitted multiply.
+
+## Done in `MulOnto.lean`
+
+- `mul_onto_school`. `mulFromHeld` on a strip that already holds the destination is `school_loop_refines` from that strip, then `mulAfter`.
+- `mul_onto_else`. Bench off, so `settle` is the identity. `mulElse` with `onto`, not `copy_second`, not `mirror`, clears the destination, charges `2 * pegCount` moves and the same number of slides, copies the home (`band_copy_after`), and is that schoolbook.
+- `mul_onto_off`. Marker off. `Ecbs.mul` is that `mulElse` after the op bump.
+- `mul_onto_up`. Marker on and already seated. `log_op` is `marker_step`, and the onto multiply is `mul_onto_else` on `{ bumpOp (markerUpFeed …) with marker_on := true }`. The flag stays on. It is not yet the off multiply of the feed with the flag put back; that is `mulAfter_flag` on these two `mulAfter`s.
+
+Compile peaks (VmHWM) under `ulimit -v 7000000`: StripFold 210760 kB, BandCopy 239636 kB, MulOnto 291232 kB. 3475 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
+
 ## Next
 
-The last multiply (`mul` of the up by the gap onto the up). The copy and the schoolbook-on-a-strip are in place; the lane fold of that sum, then the emitted `mulElse` assembly, are what remain of that arm. It is what makes a successful later white or red cell match `chordAdd`. The inverse on a walk board is still a hypothesis (`invert_checked_some` is `bottomBoard`). Then discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Join `mul_onto_up` to `mul_onto_off` of `markerUpFeed` by `mulAfter_flag`, so the seated onto multiply is the marker-off multiply with the flag put back. That is the last multiply in the chord (gap times across, onto the mirrored up). Then `chordStep` = `walkStep` for a live white or red cell with a nonempty run. The inverse on a walk board is still a hypothesis. Then discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

@@ -74,7 +74,9 @@ import EcbsLink2.Link2.BenchAdd
 import EcbsLink2.Link2.BenchSettle
 import EcbsLink2.Link2.ChordTake
 import EcbsLink2.Link2.StripLin
+import EcbsLink2.Link2.StripFold
 import EcbsLink2.Link2.BandCopy
+import EcbsLink2.Link2.MulOnto
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn
 import EcbsLink2.Link2.FrobeniusRead

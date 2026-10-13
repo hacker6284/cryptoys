@@ -10,13 +10,17 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
-theorem band_copy (xs : List Nat) (m n : Nat)
-    (hpos : 0 < n) (hn : n ≤ m) (hx : n ≤ xs.length) (hf : FitsLen n) :
+/-- The copy loop, then whatever `after` does with the finished strip. -/
+theorem band_copy_after {β} (xs : List Nat) (m n : Nat)
+    (after : Int × Array Int → Except SudoRt.Trap β)
+    (onRet : Ecbs.Board → Except SudoRt.Trap β)
+    (goal : Except SudoRt.Trap β)
+    (hpos : 0 < n) (hn : n ≤ m) (hx : n ≤ xs.length) (hf : FitsLen n)
+    (hpost : after (Int.ofNat (n - 1), embed (pref xs m n)) = goal) :
     SudoRt.runLoopOn (ρ := Ecbs.Board) ((0 : Int), embed (List.replicate m 0))
       (fuelRange 0 (Int.ofNat (n - 1)))
       (Ecbs.bandCopyStep (embed xs) (Int.ofNat (n - 1)))
-      (fun σ => pure σ.2) (fun _ => pure (embed (pref xs m n))) =
-      .ok (embed (pref xs m n)) := by
+      after onRet = goal := by
   have hfuel : fuelRange (0 : Int) (Int.ofNat (n - 1)) =
       fuelRange (Int.ofNat 0) (Int.ofNat (n - 1)) := by
     rw [show (0 : Int) = Int.ofNat 0 from rfl]
@@ -46,6 +50,19 @@ theorem band_copy (xs : List Nat) (m n : Nat)
       exact asc_tail (n - 1) i hfi _
   · intro st hs
     rw [Nat.sub_add_cancel (Nat.succ_le_of_lt hpos)] at hs
-    rw [hs, pure_eq_ok]
+    rw [hs]
+    exact hpost
+
+theorem band_copy (xs : List Nat) (m n : Nat)
+    (hpos : 0 < n) (hn : n ≤ m) (hx : n ≤ xs.length) (hf : FitsLen n) :
+    SudoRt.runLoopOn (ρ := Ecbs.Board) ((0 : Int), embed (List.replicate m 0))
+      (fuelRange 0 (Int.ofNat (n - 1)))
+      (Ecbs.bandCopyStep (embed xs) (Int.ofNat (n - 1)))
+      (fun σ => pure σ.2) (fun _ => pure (embed (pref xs m n))) =
+      .ok (embed (pref xs m n)) :=
+  band_copy_after xs m n (fun σ => pure σ.2) (fun _ => pure (embed (pref xs m n)))
+    (.ok (embed (pref xs m n))) hpos hn hx hf (by
+      dsimp
+      exact pure_eq_ok _)
 
 end EcbsLink2.Link2

@@ -20,7 +20,7 @@ Compile peaks (VmHWM) before `across_up_cube` was added: MarkerMul 449356 kB, Fr
 - `up_close`: the closing settle writes that prefix into the up home and turns the bench off.
 - `frobenius_affine_marker`: `Ecbs.frobenius_affine` with the marker lifted equals that settle. Home 0 is `fieldCube` of across (`up_home0`), home 1 is `fieldCube` of up, the marker flag stays on, the bench ends off. The three settle `FitsLen` checks stay hypotheses.
 
-Compile peaks (VmHWM): FrobeniusRead 276480 kB, WalkLive 219316 kB, ChordRun 271244 kB after `chord_copy_add`. ChordIf 277208 kB, ChordRise 255224 kB. 3233 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+Compile peaks (VmHWM): FrobeniusRead 276480 kB, WalkLive 219316 kB, ChordRun 271244 kB after `chord_copy_add`. ChordIf 277208 kB, ChordRise 255200 kB, ChordTail 256168 kB. 3235 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
 ## Done in `WalkLoop.lean`
 
@@ -59,9 +59,13 @@ Compile peak (VmHWM): ChordIf 277208 kB.
 
 Compile peak (VmHWM): ChordRise 255224 kB.
 
+## Done in `ChordTail.lean`
+
+- `chord_tail_after_inv`: if `invert_checked` on the marker-off board returns `bI`, restoring the flag and running the rise is `chord_rise`. What remains of `chordAddTail` is `chord_tail` on that board. The inverse on a walk board is still a hypothesis.
+
 ## Next
 
-The marker-on tail of `chordAddTail`: `invert_checked` with the marker held off, then `chord_rise`, then `chord_tail`, so a successful later white or red cell matches `chordAdd`. `chord_tail` multiplies gap by spare (`fieldMul` of the inverse by the rise; `Spec.chordAdd` multiplies rise by inverse). Then the full `walk_chord` induction. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+`chord_tail` on that board: gap times spare (`fieldMul` of the inverse by the rise; `Spec.chordAdd` multiplies the rise by the inverse), then the rest of the chord, so a successful later white or red cell matches `chordAdd`. Then the full `walk_chord` induction. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

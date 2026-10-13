@@ -20,7 +20,7 @@ Compile peaks (VmHWM) before `across_up_cube` was added: MarkerMul 449356 kB, Fr
 - `up_close`: the closing settle writes that prefix into the up home and turns the bench off.
 - `frobenius_affine_marker`: `Ecbs.frobenius_affine` with the marker lifted equals that settle. Home 0 is `fieldCube` of across (`up_home0`), home 1 is `fieldCube` of up, the marker flag stays on, the bench ends off. The three settle `FitsLen` checks stay hypotheses.
 
-Compile peak (VmHWM) for that file after the settle checks were discharged: FrobeniusRead 276480 kB. WalkLive 219316 kB. ChordRun 209024 kB. 3201 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+Compile peaks (VmHWM): FrobeniusRead 276480 kB, WalkLive 219316 kB, ChordRun 271244 kB after `chord_copy_add`. 3212 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
 ## Done in `WalkLoop.lean`
 
@@ -40,12 +40,14 @@ Compile peak (VmHWM) for that file: WalkLoop 298392 kB. Axioms `propext`, `Class
 
 ## Done in `ChordRun.lean`
 
-- `trit_cancel` / `fieldSub_self`: a trit list subtracted from itself is the zero home. That is the empty chord run.
+- `trit_cancel` / `fieldSub_self`: a trit list subtracted from itself is the zero home.
 - `chord_bump`: the chord op counter grows by one.
+- `chord_copy_add`: on that bumped board, copy the base across into the bottom and `add` the accumulator across away. The bottom is `fieldSub`. One `FitsLen (moves + 2 * n)` covers the copy and the add, because each home has at most `n` pegs.
+- `specInv_zero` / `walkStep_empty_run`: a zero run is not a peg in hole 0, so a live white or red cell is `none`. `is_zero_replicate` is the emitted check of that home.
 
 ## Next
 
-The chord add on a later white or red cell (`add_refines`, marker-on `mul`), then `chordStep` equals `walkStep` for every colour, then the full `walk_chord` induction. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Tie `chord_add_demo`'s generated `if is_zero` to `chord_copy_add` (the lets blocked a direct `rw`), then the rise and the marker-on tail so a successful later white or red cell matches `chordAdd`. Then the full `walk_chord` induction. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

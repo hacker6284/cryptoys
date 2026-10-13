@@ -61,6 +61,7 @@ import EcbsLink2.Link2.ChordRise
 import EcbsLink2.Link2.ChordTail
 import EcbsLink2.Link2.FieldComm
 import EcbsLink2.Link2.ChordGap
+import EcbsLink2.Link2.ChordClear
 import EcbsLink2.Link2.Marker
 import EcbsLink2.Link2.MarkerCube
 import EcbsLink2.Link2.MarkerMul

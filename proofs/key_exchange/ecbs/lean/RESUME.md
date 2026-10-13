@@ -101,11 +101,19 @@ Compile peaks (VmHWM) under `ulimit -v 7000000`: MarkerCopy 388212 kB, MarkerCop
 
 ## Done in `ChordAcross.lean`
 
-- `bench_add_emit`: the emitted `bench_add` is the copied loop. The bridge is `rfl`. The length-`n` prefix is not yet `fieldAdd` with the across (mirror off) or with the mirrored bottom.
+- `bench_add_emit`: the emitted `bench_add` is the copied loop. The bridge is `rfl`.
+
+## Done in `BenchAdd.lean`
+
+- `bench_add_prefix`: the ascending loop. On a length-`n` source and a bench at least that long, the bench becomes `addOnto` and moves grow by `pegCount` of the source. The bridge is `bench_add_emit` (`rfl`). The coefficient-indexed invariant is the same shape as `add_refines`.
+- `addOnto_off` / `addOnto_on` / `bench_add_field`: the length-`n` prefix is `fieldAdd` with the source, or with `mirrorTrits` when the mirror is on. `mirrorTrits` is what `mirror_refines` writes.
+- `bench_add_across_bottom`: across with the mirror off, then the bottom with the mirror on. The length-`n` prefix is `fieldAdd` of the starting prefix with the across, then with `mirrorTrits` of the bottom. SPEC.md §3 R7 line 156, add its across and take away the bottom. One `FitsLen (moves + 2 * n)` covers both.
+
+Compile peak (VmHWM) under `ulimit -v 7000000`: BenchAdd 385944 kB. 3397 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
 ## Next
 
-The `bench_add` loop as `fieldAdd` on the length-`n` prefix: across with the mirror off, then the bottom with the mirror on. Then clear the bottom and settle, mirror the up, and the last multiply, so a successful later white or red cell matches `chordAdd`. The inverse on a walk board is still a hypothesis (`invert_checked_some` is `bottomBoard`). Then discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Clear the bottom and settle, so that prefix is the new across in the bottom. Then mirror the up and the last multiply, so a successful later white or red cell matches `chordAdd`. The inverse on a walk board is still a hypothesis (`invert_checked_some` is `bottomBoard`). Then discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

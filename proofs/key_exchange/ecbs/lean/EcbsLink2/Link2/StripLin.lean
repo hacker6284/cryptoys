@@ -234,4 +234,88 @@ theorem school_onto (n : Nat) (a b pad : List Nat) (mir : Bool)
   rw [hsum] at hsch
   exact hsch
 
+private theorem trit_le (a b : Nat) : tritAdd a b ≤ 2 := by
+  unfold tritAdd
+  exact Nat.le_sub_one_of_lt (Nat.mod_lt _ (by decide))
+
+private theorem tritAdd_right (a : Nat) (ha : a ≤ 2) : tritAdd a 0 = a := by
+  have hlt : a < 3 := by omega
+  simp [tritAdd, Nat.mod_eq_of_lt hlt]
+
+/-- Adding `c` at one hole of a sum adds `c` on the first summand. -/
+theorem stripAdd_addAt (xs ys : List Nat) (j c : Nat)
+    (hj : j < xs.length) (_ : ys.length = xs.length) :
+    (stripAdd xs ys).set j (tritAdd (coeff (stripAdd xs ys) j) c) =
+      stripAdd (xs.set j (tritAdd (coeff xs j) c)) ys := by
+  apply List.ext_getElem
+  · simp [stripAdd_length, List.length_set]
+  · intro i hi _
+    have hi0 : i < xs.length := by
+      have hlenSet : ((stripAdd xs ys).set j (tritAdd (coeff (stripAdd xs ys) j) c)).length =
+          xs.length := by simp [stripAdd_length, List.length_set]
+      rw [hlenSet] at hi
+      exact hi
+    have hjs : j < (stripAdd xs ys).length := by rw [stripAdd_length]; exact hj
+    by_cases h : i = j
+    · cases h
+      rw [List.getElem_set_self (h := by rw [List.length_set]; exact hjs),
+        coeff_eq_get _ j hjs, stripAdd_get xs ys j hj, tritAdd_left,
+        stripAdd_get (xs.set j (tritAdd (coeff xs j) c)) ys j
+          (by rw [List.length_set]; exact hj),
+        coeff_set_eq xs j _ hj]
+    · have hne : j ≠ i := Ne.symm h
+      rw [List.getElem_set_ne hne, stripAdd_get xs ys i hi0,
+        stripAdd_get (xs.set j _) ys i (by rw [List.length_set]; exact hi0),
+        coeff_set_ne xs j _ i hi0 hne]
+
+/-- Folding a sum whose second summand is empty at this high hole moves only
+    the first summand's peg. -/
+theorem foldHigh_pad (n gap e : Nat) (xs ys : List Nat)
+    (hlen : ys.length = xs.length) (htx : allTritList xs)
+    (hy0 : n ≤ e → coeff ys e = 0) (hg : gap ≤ n) :
+    foldHigh n gap e (stripAdd xs ys) = stripAdd (foldHigh n gap e xs) ys := by
+  by_cases hlt : e < n
+  · simp [foldHigh, hlt]
+  · have hge : n ≤ e := by omega
+    by_cases he : e < xs.length
+    · have hye : coeff ys e = 0 := hy0 hge
+      have htr : coeff xs e ≤ 2 := by
+        rw [coeff_eq_get xs e he]
+        exact htx _ (List.getElem_mem he)
+      have hcs : coeff (stripAdd xs ys) e = coeff xs e := by
+        rw [coeff_eq_get _ e (by rw [stripAdd_length]; exact he), stripAdd_get xs ys e he,
+          hye, tritAdd_right _ htr]
+      by_cases hz : coeff xs e = 0
+      · simp [foldHigh, hcs, hz]
+      · have hn0 : e - n < xs.length := by omega
+        have hg0 : e - gap < xs.length := by
+          have hgle : gap ≤ e := by omega
+          omega
+        have hys0 : ys.set e 0 = ys := by
+          have hyel : ys[e]'(by rw [hlen]; exact he) = 0 := by
+            rw [← coeff_eq_get ys e (by rw [hlen]; exact he), hye]
+          rw [← hyel, list_set_id ys e (by rw [hlen]; exact he)]
+        have hclear : (stripAdd xs ys).set e 0 = stripAdd (xs.set e 0) ys := by
+          have hset := stripAdd_set xs ys e 0 0 he hlen
+          rw [hys0] at hset
+          simpa [tritAdd] using hset.symm
+        unfold foldHigh
+        simp only [hcs, hz, hlt, false_or, ite_false]
+        rw [hclear]
+        rw [stripAdd_addAt (xs.set e 0) ys (e - n) (coeff xs e)
+          (by rw [List.length_set]; exact hn0) (by rw [List.length_set]; exact hlen)]
+        rw [stripAdd_addAt ((xs.set e 0).set (e - n) (tritAdd (coeff (xs.set e 0) (e - n)) (coeff xs e)))
+          ys (e - gap) (coeff xs e) (by simp [List.length_set]; exact hg0)
+          (by simp [List.length_set]; exact hlen)]
+    · have hge2 : xs.length ≤ e := by omega
+      have hcx : coeff xs e = 0 := by
+        unfold coeff
+        rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none hge2]
+        rfl
+      have hcs : coeff (stripAdd xs ys) e = 0 := by
+        unfold coeff
+        rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (by rw [stripAdd_length]; exact hge2)]
+        simp [tritAdd]
+      simp [foldHigh, hcs, hcx]
+
 end EcbsLink2.Link2

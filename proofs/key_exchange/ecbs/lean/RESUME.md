@@ -127,7 +127,10 @@ Compile peak (VmHWM) under `ulimit -v 7000000`: ChordTake 384964 kB. 3403 theore
 ## Done in `StripLin.lean` / `BandCopy.lean`
 
 - `school_strip` / `school_onto`: the schoolbook adds onto its strip. Starting from a home is the zero-strip product added to that home.
+- `stripAdd_addAt` / `foldHigh_pad`: folding a sum whose second summand is empty at that high hole moves only the first summand's peg.
 - `band_copy`: the `onto` arm's copy loop writes the destination into a zero strip. The result is `pref`.
+
+Compile peaks (VmHWM) under `ulimit -v 7000000`: StripLin 385028 kB, BandCopy 386132 kB. 3432 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
 ## Next
 

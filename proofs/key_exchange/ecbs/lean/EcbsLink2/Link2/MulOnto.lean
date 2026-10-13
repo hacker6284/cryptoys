@@ -78,6 +78,24 @@ theorem ontoCharge_strict (b : Ecbs.Board) (dst : Nat)
     (ontoCharge b dst hD hH moves slides peg).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
       b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := rfl
 
+theorem ontoCharge_markerOn (b : Ecbs.Board) (dst : Nat)
+    (hD : dst < b.sudo_5Board_4held.size)
+    (hH : dst < b.sudo_5Board_4home.size)
+    (hD' : dst < (markerOn b).sudo_5Board_4held.size)
+    (hH' : dst < (markerOn b).sudo_5Board_4home.size)
+    (moves slides peg : Nat) :
+    ontoCharge (markerOn b) dst hD' hH' moves slides peg =
+      markerOn (ontoCharge b dst hD hH moves slides peg) := by
+  unfold ontoCharge markerOn
+  apply board_ext
+  case hheld =>
+    have hfin : (⟨dst, hD'⟩ : Fin _) = ⟨dst, hD⟩ := Fin.ext rfl
+    simp [hfin]
+  case hhome =>
+    have hfin : (⟨dst, hH'⟩ : Fin _) = ⟨dst, hH⟩ := Fin.ext rfl
+    simp [hfin]
+  all_goals rfl
+
 theorem ontoCharge_tier (b : Ecbs.Board) (dst : Nat)
     (hD : dst < b.sudo_5Board_4held.size)
     (hH : dst < b.sudo_5Board_4home.size)
@@ -593,6 +611,38 @@ theorem mul_onto_up (b : Ecbs.Board) (dst first second : Nat)
     hoffB hblB hDB hHDB hHeldDB hHomeDB hFB hHomeB hHFB hArrB hSB hHomeSB hHSB hYsB
     h7B hneD1 hneD2 hne hn0 hnb hlenH hlenx hleny hf hmovesB hslidesB hpeakB
     hspan hhomeT hxsT hfi hfitM hfitS hfm
+
+/-- Putting the marker flag on before the onto charge, the prep, and `withMoves`
+    is the same as putting it on afterwards. -/
+theorem onto_up_prep (b : Ecbs.Board) (dst second : Nat) (strip : Array Int)
+    (peakS moves slides peg mv : Nat)
+    (hDoff : dst < b.sudo_5Board_4held.size)
+    (hHoff : dst < b.sudo_5Board_4home.size)
+    (hDon : dst < (markerOn b).sudo_5Board_4held.size)
+    (hHon : dst < (markerOn b).sudo_5Board_4home.size)
+    (hSoff : second < (ontoCharge b dst hDoff hHoff moves slides peg).sudo_5Board_4held.size)
+    (hHomeoff : second < (ontoCharge b dst hDoff hHoff moves slides peg).sudo_5Board_4home.size)
+    (hSon : second < (ontoCharge (markerOn b) dst hDon hHon moves slides peg).sudo_5Board_4held.size)
+    (hHomeon : second < (ontoCharge (markerOn b) dst hDon hHon moves slides peg).sudo_5Board_4home.size) :
+    withMoves
+        (mulPrep (ontoCharge (markerOn b) dst hDon hHon moves slides peg)
+          ((dst : Nat) : Int) strip second peakS hSon hHomeon)
+        (Int.ofNat mv) =
+      markerOn (withMoves
+        (mulPrep (ontoCharge b dst hDoff hHoff moves slides peg)
+          ((dst : Nat) : Int) strip second peakS hSoff hHomeoff)
+        (Int.ofNat mv)) := by
+  unfold withMoves mulPrep strictBoard ontoCharge markerOn mulAimed
+  apply board_ext
+  case hheld =>
+    have hfinD : (⟨dst, hDon⟩ : Fin _) = ⟨dst, hDoff⟩ := Fin.ext rfl
+    have hfinS : (⟨second, hSon⟩ : Fin _) = ⟨second, hSoff⟩ := Fin.ext rfl
+    simp [hfinD, hfinS]
+  case hhome =>
+    have hfinD : (⟨dst, hHon⟩ : Fin _) = ⟨dst, hHoff⟩ := Fin.ext rfl
+    have hfinS : (⟨second, hHomeon⟩ : Fin _) = ⟨second, hHomeoff⟩ := Fin.ext rfl
+    simp [hfinD, hfinS]
+  all_goals rfl
 
 /-- The folded `onto` strip's length-`n` prefix is the home plus `fieldMul`. -/
 theorem mul_onto_add (n k bench : Nat) (xs ys home : List Nat)

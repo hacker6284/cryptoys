@@ -143,9 +143,10 @@ Compile peaks (VmHWM) under `ulimit -v 7000000`: StripLin 385028 kB, BandCopy 38
 - `mul_onto_school`. `mulFromHeld` on a strip that already holds the destination is `school_loop_refines` from that strip, then `mulAfter`.
 - `mul_onto_else`. Bench off, so `settle` is the identity. `mulElse` with `onto`, not `copy_second`, not `mirror`, clears the destination, charges `2 * pegCount` moves and the same number of slides, copies the home (`band_copy_after`), and is that schoolbook.
 - `mul_onto_off`. Marker off. `Ecbs.mul` is that `mulElse` after the op bump.
-- `mul_onto_up`. Marker on and already seated. `log_op` is `marker_step`, and the onto multiply is `mul_onto_else` on `{ bumpOp (markerUpFeed …) with marker_on := true }`. The flag stays on. It is not yet the off multiply of the feed with the flag put back; that is `mulAfter_flag` on these two `mulAfter`s.
+- `mul_onto_up`. Marker on and already seated. `log_op` is `marker_step`, and the onto multiply is `mul_onto_else` on `{ bumpOp (markerUpFeed …) with marker_on := true }`. The flag stays on.
+- `ontoCharge_markerOn` / `onto_up_prep`. The marker flag commutes with the onto charge, the prep, and `withMoves`: doing them on `markerOn b` is `markerOn` of doing them on `b`. `rw` of that under the `mulAfter` left by `mul_onto_up` does not match. The pattern is `withMoves (mulPrep (ontoCharge (markerOn bOff) …) …)`; the goal still has `ontoCharge` of `{ bumpOp feed with marker_on := true }`.
 
-Compile peaks (VmHWM) under `ulimit -v 7000000`: StripFold 210760 kB, BandCopy 239636 kB, MulOnto 291232 kB. 3475 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
+Compile peaks (VmHWM) under `ulimit -v 7000000`: StripFold 210760 kB, BandCopy 239636 kB, MulOnto 291548 kB. Theorem count after `onto_up_prep` is re-audited on the next push. Axioms stay `propext`, `Classical.choice`, `Quot.sound` only.
 
 ## Next
 

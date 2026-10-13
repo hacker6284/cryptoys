@@ -1,7 +1,7 @@
 /-
   The emitted `walk_chord` loop, restated so the bridge is `rfl`.
-  All-zero cells leave the homes alone and return not live.
-  Proof-only. Not a security claim.
+  Empty cells leave the homes alone. One white or red cell after them
+  copies the base point. Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.WalkChord
 import EcbsLink2.Link2.Loop
@@ -606,6 +606,204 @@ theorem walk_chord_white_open (b : Ecbs.Board) (zs : List Nat) (x y : List Nat)
             rw [hb]
             exact marker_lift_down (chordLift b ctrl) (by simp [chordLift])
           have hst := chordStep_zero (zs ++ [1]) i toN st.1 (chordLift b ctrl)
+            (by omega) hlen' (by simpa [hb] using hcell) hml hfiti
+          refine ⟨(chordLift b ctrl, false), ?_, ?_⟩
+          · have hneL : ¬ i + 1 = toN + 1 := by omega
+            have hne0 : ¬ i + 1 = 0 := by omega
+            simp [hneL, hne0]
+          · have hs : st = (chordLift b ctrl, false) := Prod.ext hb hlive
+            rw [hs]
+            simpa [hb, hlast] using hst
+    · intro st hI
+      have hs : st = (b2, true) := by simpa using hI
+      rw [hs]
+      simpa [bF] using after_live b2 (Int.ofNat toN) hmark2
+  · intro h
+    simpa [bF] using hx0 _
+  · intro h
+    simpa [bF] using hy1 _
+
+/-- Empty cells, then one red cell: the accumulator is the base point with up mirrored. -/
+theorem walkRun_open_red (n k bench : Nat) (x y : List Nat) (acc : List Nat × List Nat)
+    (zs : List Nat) (hz : ∀ c ∈ zs, c = 0) :
+    walkRun n k bench (x, y) false acc (zs ++ [2]) =
+      some (true, (x, mirrorTrits y)) := by
+  induction zs generalizing acc with
+  | nil =>
+    unfold walkRun
+    simp [walkStep]
+    unfold walkRun
+    rfl
+  | cons c cs ih =>
+    have hc : c = 0 := hz c (by simp)
+    unfold walkRun
+    simp only [walkStep, hc, ite_false, ite_true]
+    exact ih acc (fun z hz' => hz z (List.mem_cons_of_mem _ hz'))
+
+/-- Zeros, then one red cell. Across receives the base across and up receives
+    the negated base up. `walkRun` is that point. -/
+theorem walk_chord_red_open (b : Ecbs.Board) (zs : List Nat) (x y : List Nat)
+    (n k bench moves peak marker ctrl : Nat) (acc : List Nat × List Nat)
+    (hz : ∀ c ∈ zs, c = 0)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (hx : x.length = n) (hy : y.length = n) (hpos : 0 < n) (hyt : allTritList y)
+    (hf : FitsLen n)
+    (hfitx : FitsLen (moves + pegCount x))
+    (hfity : FitsLen (moves + pegCount x + pegCount y))
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hm : b.sudo_5Board_6marker = Int.ofNat marker)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hfitc : FitsLen (ctrl + 1))
+    (hfit : FitsLen (zs.length + 1))
+    (h0 : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = false)
+    (h1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = false)
+    (h3t : b.sudo_5Board_4held[3]'(by rw [hszD]; decide) = true)
+    (h3a : b.sudo_5Board_4home[3]'(by rw [hszH]; decide) = embed x)
+    (h4t : b.sudo_5Board_4held[4]'(by rw [hszD]; decide) = true)
+    (h4a : b.sudo_5Board_4home[4]'(by rw [hszH]; decide) = embed y) :
+    ∃ (b2 bF : Ecbs.Board),
+      Ecbs.walk_chord b (embed (zs ++ [2])) = .ok ((true, true), bF) ∧
+      bF = { b2 with sudo_5Board_9marker_on := false } ∧
+      (∀ h : 0 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[0] = embed x) ∧
+      (∀ h : 1 < bF.sudo_5Board_4home.size,
+        bF.sudo_5Board_4home[1] = embed (mirrorTrits y)) ∧
+      bF.sudo_5Board_9marker_on = false ∧
+      walkRun n k bench (x, y) false acc (zs ++ [2]) =
+        some (true, (x, mirrorTrits y)) := by
+  have hheldL := lift_held b ctrl
+  have hhomeL := lift_home b ctrl
+  have hszHL : (chordLift b ctrl).sudo_5Board_4home.size = 8 := by rw [hhomeL, hszH]
+  have hszDL : (chordLift b ctrl).sudo_5Board_4held.size = 8 := by rw [hheldL, hszD]
+  have hnL : (chordLift b ctrl).sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    simp [chordLift, chordFlag, hn]
+  have hmovesL : (chordLift b ctrl).sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) := by
+    simp [chordLift, chordFlag, hmoves]
+  have hpeakL : (chordLift b ctrl).sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    simp [chordLift, chordFlag, hpeak]
+  have h0L : (chordLift b ctrl).sudo_5Board_4held[0]'(by rw [hszDL]; decide) = false := by
+    simpa [hheldL] using h0
+  have h1L : (chordLift b ctrl).sudo_5Board_4held[1]'(by rw [hszDL]; decide) = false := by
+    simpa [hheldL] using h1
+  have h3tL : (chordLift b ctrl).sudo_5Board_4held[3]'(by rw [hszDL]; decide) = true := by
+    simpa [hheldL] using h3t
+  have h3aL : (chordLift b ctrl).sudo_5Board_4home[3]'(by rw [hszHL]; decide) = embed x := by
+    simpa [hhomeL] using h3a
+  have h4tL : (chordLift b ctrl).sudo_5Board_4held[4]'(by rw [hszDL]; decide) = true := by
+    simpa [hheldL] using h4t
+  have h4aL : (chordLift b ctrl).sudo_5Board_4home[4]'(by rw [hszHL]; decide) = embed y := by
+    simpa [hhomeL] using h4a
+  obtain ⟨b2, _mv2, _pk2, hcopy, hx0, hy1, _, _, _, hmarkB⟩ :=
+    walk_copy_red (chordLift b ctrl) x y n moves peak hszHL hszDL hx hy hpos hyt hf
+      hfitx hfity hnL hmovesL hpeakL h0L h1L h3tL h3aL h4tL h4aL
+  have hmark2 : b2.sudo_5Board_6marker = -1 := by
+    simpa [chordLift] using hmarkB
+  let bF := { b2 with sudo_5Board_9marker_on := false }
+  refine ⟨b2, bF, ?_, rfl, ?_, ?_, rfl,
+    walkRun_open_red n k bench x y acc zs hz⟩
+  · have hbeq : SudoRt.SEq.beq (Int.ofNat 2) (2 : Int) = true := by
+      rw [show (2 : Int) = Int.ofNat 2 from rfl, sEq_ofNat 2 2]
+      decide
+    have hcopyB :
+        (do
+            let board ← Ecbs.copy_band (chordLift b ctrl) Ecbs.across Ecbs.base_across false
+            Ecbs.copy_band board Ecbs.up Ecbs.base_up
+              (SudoRt.SEq.beq (Int.ofNat 2) (2 : Int))) = .ok b2 := by
+      rw [hbeq]
+      exact hcopy
+    rw [walk_chord_eq]
+    unfold walkChordGo
+    rw [listLen_embed]
+    have hposL : 0 < (zs ++ [2]).length := by simp
+    have hfitL : FitsLen (zs ++ [2]).length := by simpa [List.length_append] using hfit
+    have hsub := subI_ofNat_one (zs ++ [2]).length hposL hfitL
+    rw [hsub, ok_bind]
+    dsimp only
+    rw [except_bind_pure]
+    have hlen : (zs ++ [2]).length - 1 = zs.length := by simp
+    rw [hlen]
+    let toN := zs.length
+    change SudoRt.runLoopOn (ρ := (Bool × Bool) × Ecbs.Board)
+      (Int.ofNat 0, (chordFlag b, false))
+      (fuelRange (Int.ofNat 0) (Int.ofNat toN))
+      (chordStep (embed (zs ++ [2])) (Int.ofNat toN)) chordAfter (fun r => pure r) = _
+    refine asc_goal (α := Ecbs.Board × Bool)
+      (ρ := (Bool × Bool) × Ecbs.Board)
+      (β := (Bool × Bool) × Ecbs.Board)
+      (Inv := fun i (st : Ecbs.Board × Bool) =>
+        if i = toN + 1 then st = (b2, true)
+        else st.2 = false ∧ st.1 = if i = 0 then chordFlag b else chordLift b ctrl)
+      (fromN := 0) (toN := toN) (s0 := (chordFlag b, false))
+      (goal := .ok ((true, true), bF))
+      (Nat.zero_le _) (by simp) ?hstep ?hpost
+    · intro i st _hi hito hI
+      have hfiti : FitsLen (i + 1) := FitsLen.of_le hfit (by simp [toN]; omega)
+      have hlen' : (zs ++ [2]).length = toN + 1 := by simp [toN]
+      by_cases hlast : i = toN
+      · have hI0 : st.2 = false ∧ st.1 = if i = 0 then chordFlag b else chordLift b ctrl := by
+          have hne : ¬ i = toN + 1 := by omega
+          simpa [hne] using hI
+        have hcell : (zs ++ [2])[i]'(by simp [toN]; omega) = 2 := by
+          have hiL : zs.length ≤ i := by simp [toN, hlast]
+          rw [List.getElem_append_right hiL]
+          have h0i : i - zs.length = 0 := by simp [toN, hlast]
+          simp [h0i]
+        by_cases h0i : i = 0
+        · have hb : st.1 = chordFlag b := by simp [hI0.2, h0i]
+          have hlive : st.2 = false := hI0.1
+          have hml := lift_flag b marker ctrl hm hc hfitc
+          have hst := chordStep_fresh (zs ++ [2]) i toN 2 st.1 (chordLift b ctrl) b2
+            hito hlen' (by simpa [hb] using hcell) (by decide) (by decide)
+            (by rw [hb]; exact hml) hcopyB hfiti
+          refine ⟨(b2, true), ?_, ?_⟩
+          · have hnext : i + 1 = toN + 1 := by omega
+            simp [hnext]
+          · have hs : st = (chordFlag b, false) := Prod.ext hb hlive
+            rw [hs]
+            simpa [hlast, hb] using hst
+        · have hb : st.1 = chordLift b ctrl := by simp [hI0.2, h0i]
+          have hlive : st.2 = false := hI0.1
+          have hml : Ecbs.marker_lift st.1 = .ok (chordLift b ctrl) := by
+            rw [hb]
+            exact marker_lift_down (chordLift b ctrl) (by simp [chordLift])
+          have hst := chordStep_fresh (zs ++ [2]) i toN 2 st.1 (chordLift b ctrl) b2
+            hito hlen' (by simpa [hb] using hcell) (by decide) (by decide)
+            hml hcopyB hfiti
+          refine ⟨(b2, true), ?_, ?_⟩
+          · have hnext : i + 1 = toN + 1 := by omega
+            simp [hnext]
+          · have hs : st = (chordLift b ctrl, false) := Prod.ext hb hlive
+            rw [hs]
+            simpa [hlast, hb] using hst
+      · have hI0 : st.2 = false ∧ st.1 = if i = 0 then chordFlag b else chordLift b ctrl := by
+          have hne : ¬ i = toN + 1 := by omega
+          simpa [hne] using hI
+        have hcell : (zs ++ [2])[i]'(by simp [toN]; omega) = 0 := by
+          have hiL : i < zs.length := by
+            have hlt : i < toN := Nat.lt_of_le_of_ne hito hlast
+            simpa [toN] using hlt
+          rw [List.getElem_append_left hiL]
+          exact hz _ (List.getElem_mem _)
+        by_cases h0i : i = 0
+        · have hb : st.1 = chordFlag b := by simp [hI0.2, h0i]
+          have hlive : st.2 = false := hI0.1
+          have hml := lift_flag b marker ctrl hm hc hfitc
+          have hst := chordStep_zero (zs ++ [2]) i toN st.1 (chordLift b ctrl)
+            (by omega) hlen' (by simpa [hb] using hcell) (by rw [hb]; exact hml) hfiti
+          refine ⟨(chordLift b ctrl, false), ?_, ?_⟩
+          · have hneL : ¬ i + 1 = toN + 1 := by omega
+            have hne0 : ¬ i + 1 = 0 := by omega
+            simp [hneL, hne0]
+          · have hs : st = (chordFlag b, false) := Prod.ext hb hlive
+            rw [hs]
+            simpa [h0i, hb, hlast] using hst
+        · have hb : st.1 = chordLift b ctrl := by simp [hI0.2, h0i]
+          have hlive : st.2 = false := hI0.1
+          have hml : Ecbs.marker_lift st.1 = .ok (chordLift b ctrl) := by
+            rw [hb]
+            exact marker_lift_down (chordLift b ctrl) (by simp [chordLift])
+          have hst := chordStep_zero (zs ++ [2]) i toN st.1 (chordLift b ctrl)
             (by omega) hlen' (by simpa [hb] using hcell) hml hfiti
           refine ⟨(chordLift b ctrl, false), ?_, ?_⟩
           · have hneL : ¬ i + 1 = toN + 1 := by omega

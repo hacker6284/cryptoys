@@ -28,12 +28,13 @@ Compile peak (VmHWM) for that file: FrobeniusRead 237992 kB. 3150 theorems, axio
 - `chordStep_zero`, `chordStep_fresh`, `chordStep_cube`: one cell of that loop. A zero cell while the accumulator is empty only lifts the marker. A white or red cell while it is empty copies the base. A zero cell while it is live is `frobenius_affine`, taken as a hypothesis so the cube board stays abstract.
 - `walk_chord_zeros`: every cell empty, any length. The homes stay, the marker ends up, the result is not live and ok, and `walkRun` keeps the accumulator.
 - `walk_chord_white_open`: any run of empty cells, then one white cell. Across and up become the base point, the result is live and ok, and `walkRun` is that base point.
+- `walk_chord_red_open`: the same run of empty cells, then one red cell. Up is the negated base up.
 
-Compile peak (VmHWM) for that file: WalkLoop 264500 kB. 3182 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+Compile peak (VmHWM) for that file: WalkLoop 298392 kB. 3184 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
 ## Next
 
-The same induction for a red first cell, then live cells: each later zero is `frobenius_affine_marker`, and each later white or red cell is that cube plus the chord add. Then `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Live cells: each later zero is `frobenius_affine_marker`, and each later white or red cell is that cube plus the chord add. Then `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

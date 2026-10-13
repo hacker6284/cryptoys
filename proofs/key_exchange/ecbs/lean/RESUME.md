@@ -14,11 +14,19 @@ ECBS Link 2, branch `cursor/ecbs-link2-4113`. Pick up from this note.
 
 Compile peaks (VmHWM) before `across_up_cube` was added: MarkerMul 449356 kB, FrobeniusOn 385768 kB, MarkerBench 226532 kB. Re-measure FrobeniusOn after that theorem. All under 2 GB. 3089 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
+## Done in `FrobeniusRead.lean`
+
+- `across_up_field`: the up cube returns `{upBoard with marker_on := true}`, and `upBoard`'s bench prefix is `fieldCube` of the up input (`up_field`, `cube_off_eq` on the board `up_slide` leaves).
+- `up_close`: the closing settle writes that prefix into the up home and turns the bench off.
+- `frobenius_affine_marker`: `Ecbs.frobenius_affine` with the marker lifted equals that settle. Home 0 is `fieldCube` of across (`up_home0`), home 1 is `fieldCube` of up, the marker flag stays on, the bench ends off. The three settle `FitsLen` checks stay hypotheses.
+
+Compile peak (VmHWM) for that file: FrobeniusRead 237992 kB. 3150 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+
 ## Next
 
-The up cube equation is `across_up_cube`: on the board `down_across` leaves, `Ecbs.cube` of up onto up is `cube_bench_up` (`m = 0`, control `ctrl + 1`, max `max mx 1`). The bench is still on. Still open: `cube_settle_other` and `cube_off_eq` of that up home, then the closing `settle`, so the two homes are `fieldCube`. Do those by `rw` of the projection lemmas. A single declaration that also simplified `cubeOffBoard` exceeded the default heartbeat limit.
+General `walk_chord` by induction on cells, for every key length and colour sequence. The one-cell white case is `walk_chord_white_one`. A live cell calls `frobenius_affine` with the marker on (`frobenius_affine_marker`), then the chord add.
 
-After that, in order: general `walk_chord` by induction on cells; `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

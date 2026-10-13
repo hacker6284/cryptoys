@@ -58,6 +58,7 @@ import EcbsLink2.Link2.MarkerCube
 import EcbsLink2.Link2.MarkerMul
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn
+import EcbsLink2.Link2.FrobeniusRead
 import EcbsLink2.Link2.OneField
 import EcbsLink2.Link2.CurveTest
 import EcbsLink2.Link2.CurveAsm

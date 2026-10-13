@@ -56,6 +56,8 @@ import EcbsLink2.Link2.WalkChord
 import EcbsLink2.Link2.WalkLoop
 import EcbsLink2.Link2.WalkLive
 import EcbsLink2.Link2.ChordRun
+import EcbsLink2.Link2.ChordIf
+import EcbsLink2.Link2.ChordRise
 import EcbsLink2.Link2.Marker
 import EcbsLink2.Link2.MarkerCube
 import EcbsLink2.Link2.MarkerMul

@@ -699,6 +699,10 @@ ECBS_LINK2 = {
     "EcbsLink2.Link2.copy_band_refines",
     "EcbsLink2.Link2.settle_off",
     "EcbsLink2.Link2.settle_refines",
+    "EcbsLink2.Link2.chord_add_eq",
+    "EcbsLink2.Link2.chord_add_empty",
+    "EcbsLink2.Link2.chord_add_open",
+    "EcbsLink2.Link2.chord_rise",
 }
 LINK2_EXPORT_TABLES = {
     "megadreifach-v3": (ROOT.parent.parent / "primitives" / "hash" / "megadreifach" / "v3"
@@ -1073,7 +1077,7 @@ PACKAGES = {
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
-        "min": 3212,  # measured: check_axioms.py ecbs reports 3212 theorems
+        "min": 3233,  # measured: check_axioms.py ecbs reports 3233 theorems
         "required": ECBS_LINK2,
     },
     "megadreifach-heavy": {

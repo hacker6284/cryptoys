@@ -73,6 +73,7 @@ structure DownAcross (b : Ecbs.Board) (x y : List Nat)
   hzeroX : ∀ i, n ≤ i → ∀ hi : i < laneX.length, laneX[i] = 0
   hposX : 0 < laneX.length
   hpegX : pegX ≤ n
+  hpegDef : pegX = pegCount (laneX.take n)
   hmv1le : mv1 ≤ moves + 2 * n + 3 * (bench - n)
   hszD1 : b1.sudo_5Board_4held.size = 8
   hszH1 : b1.sudo_5Board_4home.size = 8
@@ -304,6 +305,7 @@ noncomputable def down_across (b : Ecbs.Board) (x y : List Nat)
     simp only [Array.getElem_set, if_true] at hget
     simpa [b1] using hget
   let pegX := pegCount (laneX.take n)
+  have hpegDef : pegX = pegCount (laneX.take n) := rfl
   have hpegX : pegX ≤ n := by
     dsimp [pegX]
     exact Nat.le_trans (pegCount_le _) (by rw [List.length_take]; exact Nat.min_le_left _ _)
@@ -384,11 +386,55 @@ noncomputable def down_across (b : Ecbs.Board) (x y : List Nat)
     fit _ (leMove _ (by omega))
   exact
     { b1, b1On, feed, laneX, mv1, pk1, peakS1, hole1, pegX,
-      hcube := hcube1, htakeX, hlenX, hzeroX, hposX, hpegX, hmv1le,
+      hcube := hcube1, htakeX, hlenX, hzeroX, hposX, hpegX, hpegDef, hmv1le,
       hszD1, hszH1, htier1, h0D, h0H, hmkOn, honOn, hmOn, hcOn, hxOn, hsOn,
       hopsOn, hopOn, hmv1N, hslOn, hpkOn, hbenchOn, htoOn, hemptyOn,
       hheld1On, hhome1On, hstrictOn, hholeOn, hnOn, hblOn, hcgOn,
       hwOn, hhOn, hrOn, hkOn, h0DOn, h0HOn, h1DOn, h1HOn, hszDOn, hszHOn, h7On,
       hfitLX, hpegFit, hfitMvX, hfitSlX, hfm2, hfold2 }
+
+/-- The up cube starts on the board the across cube leaves: the bench is still
+    on, aimed at across, and the marker is seated at 0. -/
+theorem across_up_cube (b : Ecbs.Board) (x y : List Nat)
+    (n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat)
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (hyt : allTritList y) (hy : y.length = n) (hn0 : 0 < n)
+    (hs1 : 1 < script) (hfitU : FitsLen ((ctrl + 1) + 2)) (hfitC : FitsLen (cOps + 2))
+    (hspan : 3 * (n - 1) + cg < bench)
+    (h3 : FitsLen (3 * (n - 1))) (hnFit : FitsLen n) (hbenchFit : FitsLen bench)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000) :
+    Ecbs.cube a.b1On ((1 : Nat) : Int) ((1 : Nat) : Int) =
+      (do
+        let r ← Ecbs.cube (markerUpFeed a.b1On 0 (ctrl + 1) (max mx 1))
+          ((1 : Nat) : Int) ((1 : Nat) : Int)
+        pure { r with sudo_5Board_9marker_on := true }) := by
+  have hfitM0 : FitsLen (0 + 1) := fits_small (by decide)
+  have hfit20 : FitsLen (0 + 2) := fits_small (by decide)
+  have hbound0 : 0 + 1 < script := hs1
+  have hne : (1 : Nat) ≠ 0 := by decide
+  have hnb : n ≤ a.laneX.length := by rw [a.hlenX]; omega
+  have hpegFit : FitsLen (2 * pegCount (List.take n a.laneX)) := by
+    rw [← a.hpegDef]; exact a.hpegFit
+  have hfitMv : FitsLen (a.mv1 + 2 * pegCount (List.take n a.laneX)) := by
+    rw [← a.hpegDef]; exact a.hfitMvX
+  have hfitSl : FitsLen (slides + 2 * pegCount (List.take n a.laneX)) := by
+    rw [← a.hpegDef]; exact a.hfitSlX
+  have hfm : FitsLen (a.mv1 + 2 * pegCount (List.take n a.laneX) + 2 * n) := by
+    rw [← a.hpegDef]; exact a.hfm2
+  have hfold : FitsLen (a.mv1 + 2 * pegCount (List.take n a.laneX) + 2 * n + 3 * (bench - n)) := by
+    rw [← a.hpegDef]; exact a.hfold2
+  exact cube_bench_up a.b1On 1 1 0 y a.laneX w h r n k a.mv1 slides a.hole1 bench a.pk1
+      a.peakS1 (cOps + 1) cg 0 (ctrl + 1) (max mx 1) script
+      a.hmkOn a.honOn a.hmOn a.hcOn a.hxOn a.hsOn hbound0 hfitM0 hfitU hfit20
+      a.hopsOn a.hopOn hfitC hne a.h1DOn a.h1HOn a.hheld1On a.hhome1On
+      a.h0DOn a.h0HOn a.h7On a.htoOn a.hemptyOn a.hbenchOn a.hstrictOn a.hpkOn
+      hn0 a.hnOn hy a.hposX hnb a.hzeroX
+      hnFit a.hfitLX a.hmv1N a.hslOn hpegFit hfitMv hfitSl
+      a.hblOn a.hcgOn hspan h3 hfm a.hholeOn hyt
+      hw0 hh0 hrR hrP hnE hkLe hgap a.hwOn a.hhOn a.hrOn a.hkOn hsm hnsm
+      hbenchFit hfold
 
 end EcbsLink2.Link2

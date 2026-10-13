@@ -12,13 +12,11 @@ ECBS Link 2, branch `cursor/ecbs-link2-4113`. Pick up from this note.
 - Across cube of `frobenius_affine` with the marker lifted. `EcbsLink2/Link2/FrobeniusOn.lean`, `down_across`.
   The emitted across cube is the flagged `cubeOffBoard` of `markerDownFeed`. The board it leaves has the bench on and the marker seated at 0. That is the board the up cube reads.
 
-Compile peaks on the rebuild after that (VmHWM): MarkerMul 449356 kB, FrobeniusOn 385768 kB, MarkerBench 226532 kB. All under 2 GB. 3087 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+Compile peaks (VmHWM) before `across_up_cube` was added: MarkerMul 449356 kB, FrobeniusOn 385768 kB, MarkerBench 226532 kB. Re-measure FrobeniusOn after that theorem. All under 2 GB. 3089 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
 ## Next
 
-The up cube of `frobenius_affine`. It starts with the bench still on, so it is `cube_bench_up` on the board `down_across` leaves (`m = 0`, control counter `ctrl + 1`, recorded max `max mx 1`), then `cube_settle_other` and `cube_off_eq` of the up home, then the closing `settle`. The homes are `fieldCube` of the two inputs. The flag stays on.
-
-One theorem that carried that whole tail exceeded the default heartbeat limit (`whnf`, 200000) inside `simpa` of `cubeOffBoard`. Split it. `down_across` already holds the across projections. The next declaration should only be the up-cube equation (`cube_bench_up`), and a later declaration should read the field cubes off `cube_off_bench` / `cube_off_home` by `rw`, not by `simpa` of the board.
+The up cube equation is `across_up_cube`: on the board `down_across` leaves, `Ecbs.cube` of up onto up is `cube_bench_up` (`m = 0`, control `ctrl + 1`, max `max mx 1`). The bench is still on. Still open: `cube_settle_other` and `cube_off_eq` of that up home, then the closing `settle`, so the two homes are `fieldCube`. Do those by `rw` of the projection lemmas. A single declaration that also simplified `cubeOffBoard` exceeded the default heartbeat limit.
 
 After that, in order: general `walk_chord` by induction on cells; `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 

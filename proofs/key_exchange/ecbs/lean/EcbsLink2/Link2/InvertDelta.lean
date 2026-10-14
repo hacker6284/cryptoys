@@ -619,12 +619,12 @@ theorem hobby_ctrl_fit :
   unfold FitsLen i64MaxNat
   decide!
 
-set_option maxRecDepth 4000 in
 theorem serious_ctrl_fit :
     FitsLen (Spec.serious.control +
       ((rungList (Spec.serious.n - 1)).length + 1) * (3 * Spec.serious.control + 5)) := by
+  rw [serious_rungs]
   unfold FitsLen i64MaxNat
-  decide!
+  decide
 
 /-- Setting the same ops index twice keeps the later value. -/
 theorem ops_set_set (a : Array Int) (i : Nat) (h : i < a.size) (u v : Int)

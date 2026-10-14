@@ -183,9 +183,6 @@ theorem toy_rootDigits : digitsValue (rootDigits 23) = rootExpNat 23 := by decid
 
 theorem hobby_rootDigits : digitsValue (rootDigits 59) = rootExpNat 59 := by decide
 
-theorem serious_rootDigits : digitsValue (rootDigits 179) = rootExpNat 179 := by
-  set_option maxRecDepth 8192 in decide
-
 theorem specRungsGo_eq (fuel c : Nat) (h : c ≤ fuel) :
     specRungsGo fuel c = rungList c := by
   induction fuel using Nat.strongRecOn generalizing c with

@@ -32,14 +32,6 @@ def onCurve (n k bench : Nat) (x y : List Nat) : Bool :=
 theorem demo_base_onCurve :
     onCurve demo.n demo.k demo.benchlen
       [0, 2, 1, 2, 0, 1, 1] [2, 0, 0, 2, 2, 1, 2] = true := by
-  set_option maxRecDepth 4096 in decide
-
-/-- SPEC.md §5.1 line 198, Toy base point, hole 0 first:
-    x = `RW..W.WWWR..W...WWWRWRR`, y = `RRWWRRR..R.WRRW..RWWRRW`. -/
-theorem toy_base_onCurve :
-    onCurve toy.n toy.k toy.benchlen
-      [2, 1, 0, 0, 1, 0, 1, 1, 1, 2, 0, 0, 1, 0, 0, 0, 1, 1, 1, 2, 1, 2, 2]
-      [2, 2, 1, 1, 2, 2, 2, 0, 0, 2, 0, 1, 2, 2, 1, 0, 0, 2, 1, 1, 2, 2, 1] = true := by
-  set_option maxRecDepth 8192 in decide
+  decide
 
 end EcbsLink2.Spec

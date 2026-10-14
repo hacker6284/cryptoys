@@ -355,6 +355,82 @@ def foldHigh (n gap e : Nat) (strip : List Nat) : List Nat :=
 def reduceStrip (n gap : Nat) (strip : List Nat) : List Nat :=
   (List.range (strip.length - n)).foldr (fun d st => foldHigh n gap (n + d) st) strip
 
+/-- One schoolbook row, or a skip when that coefficient is empty. -/
+def layRow (n : Nat) (first second : List Nat) (mirror : Bool)
+    (strip : List Nat) (i : Nat) : List Nat :=
+  let c := coeff second i
+  if c = 0 then strip else schoolRow n first i (decide (c = 2) != mirror) strip
+
+/-- `k` schoolbook rows, highest index first. `layDown strip (n-1) n` is `school`. -/
+def layDown (n : Nat) (first second : List Nat) (mirror : Bool)
+    (strip : List Nat) (high : Nat) : Nat → List Nat
+  | 0 => strip
+  | k + 1 => layDown n first second mirror (layRow n first second mirror strip high) (high - 1) k
+
+/-- `k` lane-fold steps, starting at `hole` and walking down. -/
+def foldDown (n gap : Nat) (strip : List Nat) (hole : Nat) : Nat → List Nat
+  | 0 => strip
+  | k + 1 => foldDown n gap (foldHigh n gap hole strip) (hole - 1) k
+
+theorem layDown_succ (n : Nat) (first second : List Nat) (mirror : Bool)
+    (strip : List Nat) (high k : Nat) :
+    layDown n first second mirror strip high (k + 1) =
+      layDown n first second mirror (layRow n first second mirror strip high) (high - 1) k := rfl
+
+private theorem lay_prefix (n : Nat) (first second : List Nat) (mirror : Bool)
+    (strip : List Nat) (m : Nat) :
+    (List.range m).foldr (fun i st => layRow n first second mirror st i) strip =
+      layDown n first second mirror strip (m - 1) m := by
+  induction m generalizing strip with
+  | zero => rfl
+  | succ m ih =>
+    rw [List.range_succ, List.foldr_append, layDown_succ]
+    simp [List.foldr]
+    exact ih (layRow n first second mirror strip m)
+
+theorem school_layDown (n : Nat) (first second strip : List Nat) (mirror : Bool) :
+    school n first second strip mirror =
+      layDown n first second mirror strip (n - 1) n := by
+  unfold school
+  simpa [layRow] using lay_prefix n first second mirror strip n
+
+theorem foldDown_succ (n gap : Nat) (strip : List Nat) (hole k : Nat) :
+    foldDown n gap strip hole (k + 1) =
+      foldDown n gap (foldHigh n gap hole strip) (hole - 1) k := rfl
+
+theorem foldDown_add (n gap : Nat) (strip : List Nat) (hole a b : Nat) :
+    foldDown n gap strip hole (a + b) =
+      foldDown n gap (foldDown n gap strip hole b) (hole - b) a := by
+  induction b generalizing strip hole with
+  | zero => simp [foldDown]
+  | succ b ih =>
+    rw [Nat.add_succ, foldDown_succ, ih, foldDown_succ]
+    have hb : hole - 1 - b = hole - (b + 1) := by omega
+    rw [hb]
+
+private theorem reduce_steps (n gap : Nat) (strip : List Nat) (m : Nat) :
+    (List.range m).foldr (fun d st => foldHigh n gap (n + d) st) strip =
+      foldDown n gap strip (n + m - 1) m := by
+  induction m generalizing strip with
+  | zero => rfl
+  | succ m ih =>
+    rw [List.range_succ, List.foldr_append, foldDown_succ]
+    simp [List.foldr]
+    have hhole : n + (m + 1) - 1 = n + m := by omega
+    rw [hhole]
+    exact ih (foldHigh n gap (n + m) strip)
+
+theorem reduce_foldDown (n gap : Nat) (strip : List Nat) :
+    reduceStrip n gap strip =
+      foldDown n gap strip (strip.length - 1) (strip.length - n) := by
+  unfold reduceStrip
+  rw [reduce_steps n gap strip (strip.length - n)]
+  by_cases hle : n ≤ strip.length
+  · have hhole : n + (strip.length - n) - 1 = strip.length - 1 := by omega
+    rw [hhole]
+  · have hm : strip.length - n = 0 := by omega
+    simp [hm, foldDown]
+
 /-- SPEC §3 R3, the lane fold: `reduceStrip` under `gap = n - k`. -/
 def laneFold (n gap : Nat) (strip : List Nat) : List Nat :=
   reduceStrip n gap strip

@@ -342,7 +342,7 @@ theorem curve_mul_gap (t : Spec.Tier) (lay : FieldLay t) (x y : List Nat)
     lay.small hnsm hfitB hfold
   obtain ⟨b', hok, hon, hto, hbench, htake, htail⟩ := hmul
   obtain ⟨hhigh, hmov, hpeakM, hslides, ht, hhsz, hheld, _h5, hframe, _hmk, _hops,
-      hstrict, hhole⟩ := htail
+      hstrict, hhole, _hmark, _hctrl, _hmx⟩ := htail
   have h2H : 2 < bU.sudo_5Board_4home.size := by rw [hHome8]; decide
   have h2D : 2 < bU.sudo_5Board_4held.size := by rw [hHeld8]; decide
   let sch := school n y y (List.replicate bench 0) false

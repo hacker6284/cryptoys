@@ -159,9 +159,21 @@ Compile peaks (VmHWM) under `ulimit -v 7000000`: StripFold 210760 kB, BandCopy 2
 
 Compile peak (VmHWM) for ChordUp under `ulimit -v 7000000`: 387512 kB. 3509 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
 
+## Done in `ChordCell.lean`
+
+- `walkStep_live_chord`: a live white or red cell whose run inverts is `some (true, (x3, y3))`, with `x3` and `y3` the SPEC.md §3 R7 line 156 formulas on the cubed accumulator.
+- `mul_refines` now also says the copy multiply keeps the marker index, the control counter, and the script maximum. `CurveTest` splits those three conjuncts off the hole equality.
+- `gap_settle_lay`: gap times spare, clear, settle. The gap is `fieldMul rise inv`. The spare is empty. Homes other than 5 and 6 stay. Marker, control, and the script maximum are the values `markerUpFeed` writes. Moves and slides are `mvGap` and `slGap`.
+- `square_white_lay`: on that board, square the slope and write the white peg. The bench prefix is slope² + 1. Homes other than the spare stay. The spare stays empty.
+- `gap_square_obtain`: those two, with `obtain` on the settled board. The `do` is the prefix of `chord_tail` through `bench_white0`.
+
+The across/bottom settle, the take, the mirror, the onto multiply, and `chord_up_slide` are not in that `obtain` yet. A first `x3_take_lay` simplified the settled record with `simp` and exceeded 200000 heartbeats. The next proof has to project that record (`settle_home_eq`, `benchAdd_home`) and not simplify it. The inverse on a walk board is still a hypothesis. The `FitsLen` charges of the gap and the square are still hypotheses of these theorems.
+
+Compile peak (VmHWM) for a clean `lake build EcbsLink2` under `ulimit -v 7000000`: 978612 kB. 3539 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+
 ## Next
 
-Assemble `chordStep` = `walkStep` for a live white or red cell with a nonempty run. Chain `chord_gap_settle`, `chord_square_white`, `across_bottom_settle`, `chord_take_mirror`, `mul_onto_up_prefix`, and `chord_up_slide` with `obtain` over abstract boards, in its own small file. `card_y3` reads the onto prefix as `Spec.chordAdd`'s new up. The inverse on a walk board is still a hypothesis. Then discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Finish the obtain chain: project the board after the two bench adds and the settle (no whole-record `simp`), then `chord_take_mirror`, `mul_onto_up_prefix` / `card_y3`, and `chord_up_slide`, and tie that to `chordStep` for a live white or red cell with a nonempty run. Discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

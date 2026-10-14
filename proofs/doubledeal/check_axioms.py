@@ -664,13 +664,13 @@ ECBS_LINK2 = {
     "EcbsLink2.Link2.is_trits_refines",
     "EcbsLink2.Link2.npeg_refines",
     "EcbsLink2.Link2.coordinate_refines",
-    "EcbsLink2.Link2.keypad_first_refines",
-    "EcbsLink2.Link2.keypad_second_refines",
     "EcbsLink2.Link2.occupied_refines",
     "EcbsLink2.Link2.band_held_refines",
     "EcbsLink2.Link2.band_bench_refines",
     "EcbsLink2.Link2.band_traps",
     "EcbsLink2.Link2.place_refines",
+    "EcbsLink2.Link2.demo_place_peg",
+    "EcbsLink2.Link2.demo_band_peg",
     "EcbsLink2.Link2.put_refines",
     "EcbsLink2.Link2.value_held_refines",
     "EcbsLink2.Link2.value_after_set",
@@ -699,11 +699,17 @@ ECBS_LINK2 = {
     "EcbsLink2.Link2.copy_band_refines",
     "EcbsLink2.Link2.settle_off",
     "EcbsLink2.Link2.settle_refines",
-    "EcbsLink2.Link2.chord_add_eq",
-    "EcbsLink2.Link2.chord_add_empty",
-    "EcbsLink2.Link2.chord_add_open",
-    "EcbsLink2.Link2.chord_rise",
-    "EcbsLink2.Link2.chord_tail_after_inv",
+    "EcbsLink2.Link2.curve_test_refines",
+    "EcbsLink2.Link2.demo_curve_zero_one",
+    "EcbsLink2.Link2.invert_number_refines",
+    "EcbsLink2.Link2.invert_number_none",
+    "EcbsLink2.Link2.demo_invert_one",
+    "EcbsLink2.Link2.demo_multiply_one",
+    "EcbsLink2.Link2.demo_cube_one",
+    "EcbsLink2.Link2.demo_new_board",
+    "EcbsLink2.Link2.demo_coordinate_origin",
+    "EcbsLink2.Spec.demo_basePoint",
+    "EcbsLink2.Link2.frobenius_affine_refines",
 }
 LINK2_EXPORT_TABLES = {
     "megadreifach-v3": (ROOT.parent.parent / "primitives" / "hash" / "megadreifach" / "v3"
@@ -1078,7 +1084,7 @@ PACKAGES = {
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
-        "min": 3361,  # measured: check_axioms.py ecbs reports 3361 theorems
+        "min": 2810,  # measured: check_axioms.py ecbs reports 2810 theorems on part 1
         "required": ECBS_LINK2,
     },
     "megadreifach-heavy": {

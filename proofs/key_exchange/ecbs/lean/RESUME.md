@@ -1,193 +1,37 @@
 # RESUME
 
-ECBS Link 2, branch `cursor/ecbs-link2-4113`. Pick up from this note.
+ECBS Link 2 part 1, branch `cursor/ecbs-link2-4113`. This branch is the finished slice. Do not continue the chord, the walk, or `base_point_of` here.
 
-## Done on this branch, past `d49b865d`
+The in-progress development, including every file this branch deleted, is on `cursor/ecbs-link2-part2` at `94eac79d491051b6f263cc0bf2f2d72116185c06`. That branch has no pull request.
 
-- Nocopy `mul` with the marker on. `EcbsLink2/Link2/MarkerMul.lean`.
-  `mul_down_eq`: marker lifted (`marker < 0`). `mul_up_eq`: marker already seated at `m`.
-  Both say the emitted nocopy multiply is `mulNoOffBoard` of the board `marker_step` leaves, with the flag put back. The schoolbook is `school_loop_refines`. The lane fold is `lane_fold_refines`. `add` still never reads the marker.
-- Bench-on cube with the marker seated. `EcbsLink2/Link2/MarkerBench.lean`, `cube_bench_up`.
-  The bench is on and aimed at `home`, which is not the cube's source. `Ecbs.cube` steps the marker, slides that bench, then runs the marker-off comb of the source, and the flag stays on. `settle_flag` is the slide. `cube_tail_flag` is the comb.
-- Across cube of `frobenius_affine` with the marker lifted. `EcbsLink2/Link2/FrobeniusOn.lean`, `down_across`.
-  The emitted across cube is the flagged `cubeOffBoard` of `markerDownFeed`. The board it leaves has the bench on and the marker seated at 0. That is the board the up cube reads.
+## Covered exports
 
-Compile peaks (VmHWM) before `across_up_cube` was added: MarkerMul 449356 kB, FrobeniusOn 385768 kB, MarkerBench 226532 kB. Re-measure FrobeniusOn after that theorem. All under 2 GB. 3089 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+Each row is a complete refinement: the hypotheses are the domain, and the Demo success is a separate theorem where the export has a success branch.
 
-## Done in `FrobeniusRead.lean`
+- `tier`: `tier_demo_refines`, `tier_toy_refines`, `tier_hobby_refines`, `tier_serious_refines`, `tier_rejects`. Domain: the four ASCII names, and any other array once the four comparisons are false (`AssertFailed`).
+- `phase_names`: `phase_names_refines`. No input.
+- `op_names`: `op_names_refines`. No input.
+- `new_board`: `new_board_refines` on `BoardOk`. Demo: `demo_new_board`.
+- `coordinate`: `coordinate_refines` on `GridOk`, `home < 7`, `i < n`. Demo: `demo_coordinate_origin`.
+- `place`: `place_refines`. Domain: empty home, `xs` of length `n` fitting an i64, natural moves and peak, `moves +` nonzero count fitting an i64, homes `0 .. 6` present. Demo: `demo_place_peg`.
+- `band`: `band_held_refines`, `band_bench_refines`, `band_traps`. Domain: the home index is inside the held array. An index past the array is `OutOfBounds` and is not claimed. Demo success: `demo_band_peg`.
+- `curve_test`: `curve_test_refines` on `FieldLay`, `TierSat`, two length-`n` trit lists. Demo: `demo_curve_zero_one`.
+- `invert_number`: `invert_number_refines` and `invert_number_none` on `BoardOk`, a length-`n` trit list, `TierSat`, `TierShape`, `0 < tierR`, and `fieldInv` some or none. Demo: `demo_invert_one`.
+- `multiply`: `multiply_refines` on `FieldLay`, across a length-`n` trit list, up a length-`n` list. Demo: `demo_multiply_one`.
+- `cube_number`: `cube_number_refines` on `FieldLay` with `3·(n−1) + combgap < benchlen`, input a length-`n` trit list. Demo: `demo_cube_one`.
 
-- `across_up_field`: the up cube returns `{upBoard with marker_on := true}`, and `upBoard`'s bench prefix is `fieldCube` of the up input (`up_field`, `cube_off_eq` on the board `up_slide` leaves).
-- `up_close`: the closing settle writes that prefix into the up home and turns the bench off.
-- `frobenius_affine_marker`: `Ecbs.frobenius_affine` with the marker lifted equals that settle. Home 0 is `fieldCube` of across (`up_home0`), home 1 is `fieldCube` of up, the marker flag stays on, the bench ends off. The three settle `FitsLen` checks stay hypotheses.
+`demo_basePoint` is `Spec.basePoint` on Demo. `frobenius_affine_refines` is the affine cube on a board that already holds the two homes. Neither is an export. `base_point_of` is not covered.
 
-Compile peaks (VmHWM): FrobeniusRead 276480 kB, WalkLive 219316 kB, ChordRun 271244 kB after `chord_copy_add`. ChordIf 277208 kB, ChordRise 255200 kB, ChordTail 256168 kB. 3235 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+## Not covered
 
-## Done in `WalkLoop.lean`
+`call_in`, `roll_key`, `exchange`, `receive_check`, `make_certificate`, `base_point_of`, `walk_key`, `fold`. They stay on `cursor/ecbs-link2-part2`.
 
-- `walk_chord_eq`: the emitted `walk_chord` is `walkChordGo`. The bridge is `rfl`.
-- `chordStep_zero`, `chordStep_fresh`, `chordStep_cube`: one cell of that loop. A zero cell while the accumulator is empty only lifts the marker. A white or red cell while it is empty copies the base. A zero cell while it is live is `frobenius_affine`, taken as a hypothesis so the cube board stays abstract.
-- `walk_chord_zeros`: every cell empty, any length. The homes stay, the marker ends up, the result is not live and ok, and `walkRun` keeps the accumulator.
-- `walk_chord_white_open`: any run of empty cells, then one white cell. Across and up become the base point, the result is live and ok, and `walkRun` is that base point.
-- `walk_chord_red_open`: the same run of empty cells, then one red cell. Up is the negated base up.
+Success-branch reachability is not proved for Toy, Hobby, and Serious. SPEC.md gives the Hobby and Serious base points only as hashes. Proving that `fieldInv` is the true field inverse is future work, not started.
 
-Compile peak (VmHWM) for that file: WalkLoop 298392 kB. Axioms `propext`, `Classical.choice`, `Quot.sound` only.
+## Gates
 
-## Done in `WalkLive.lean`
+A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeds.
 
-- `up_settle_fit` / `frobenius_affine_len`: the three settle `FitsLen` checks follow from a length-`n` home (`pegCount ≤ n`) and the cell's move and slide room (`cubeCharge`, `slideCharge`). They are not hypotheses of `frobenius_affine_len`.
-- `cellFit_consume` / `live_zero_fit`: the cell invariant carries `FitsLen` of the remaining charges. One live zero spends one charge.
-- `chordStep_live_zero`: a live zero cell is `marker_lift` then `frobenius_affine_len`. Homes become `fieldCube` of across and up, which is `walkStep` on colour 0. The Frobenius equation is not a hypothesis.
-
-## Done in `ChordRun.lean`
-
-- `trit_cancel` / `fieldSub_self`: a trit list subtracted from itself is the zero home.
-- `chord_bump`: the chord op counter grows by one.
-- `chord_copy_add`: on that bumped board, copy the base across into the bottom and `add` the accumulator across away. The bottom is `fieldSub`. One `FitsLen (moves + 2 * n)` covers the copy and the add, because each home has at most `n` pegs.
-- `specInv_zero` / `walkStep_empty_run`: a zero run is not a peg in hole 0, so a live white or red cell is `none`. `is_zero_replicate` is the emitted check of that home.
-
-## Done in `ChordIf.lean`
-
-- `chord_add_eq`: `Ecbs.chord_add_demo` is `chordAddEmit` by `rfl`. The generated cost lets are not the nested record update under `rw`; `except_pull` reassociates them onto `chordCopyAddGo`, and the `if is_zero` is that copy-then-add.
-- `chord_add_empty`: an empty run (`fieldSub` is `n` zeros) returns `.ok (false, bA)`. The bottom is that zero home. The walk, not this return, clears the marker.
-- `chord_add_open`: a nonempty run is `chordAddTail` on that board. The bottom is `fieldSub` of the two across homes. `is_zero_embed` is the check for any length-`n` home.
-
-Compile peak (VmHWM): ChordIf 277208 kB.
-
-## Done in `ChordRise.lean`
-
-- `chord_rise`, `chord_rise_white`, `chord_rise_red`: copy the base up into the empty spare (mirrored when the cell is red) and take the accumulator up away. The spare is `fieldSub`. Up and base up stay. The marker flag stays. One `FitsLen (moves + 2 * n)` covers the copy and the add.
-
-Compile peak (VmHWM): ChordRise 255224 kB.
-
-## Done in `ChordTail.lean`
-
-- `chord_tail_after_inv`: if `invert_checked` on the marker-off board returns `bI`, restoring the flag and running the rise is `chord_rise`. What remains of `chordAddTail` is `chord_tail` on that board. The inverse on a walk board is still a hypothesis.
-
-## Done in `ChordGap.lean`
-
-- `chord_gap_mul`: the first multiply of `chord_tail`, gap times spare, with the marker seated. The bench prefix is `fieldMul` of the gap home by the spare home (first times second).
-- `chord_gap_prefix_slope`: that prefix equals `fieldMul rise inv`, which is the slope in `Spec.chordAdd`. Both homes are trits.
-
-## Done in `ChordClear.lean`
-
-- `chord_gap_clear`: `mul` of the gap by the spare, then `clear` of the gap. The gap was still held, so the bench stays on and aimed at the gap, holding the lane fold of `fieldMul inv rise`. The gap home is empty. The move counter grows by `pegCount inv`, and that sum has to fit (`FitsLen`).
-
-## Done in `ChordSettle.lean`
-
-- `chord_gap_settle`: `mul`, then `clear` of the gap, then `settle`. The gap home is `fieldMul rise inv` (SPEC.md §3 R7 line 156, via `slope_mul_swap`). The bench turns off. The marker flag stays on. The settle charges (`FitsLen` of twice the prefix's peg count, on moves and on slides) stay hypotheses.
-
-## Done in `WalkLive.lean` (reroll cell)
-
-- `chordStep_reroll`: a live white or red cell whose `chord_add_demo` returns the reroll flag is `Flow.ret ((true, false), marker off)`. The loop does not advance.
-- `chordStep_empty_run`: that flag is `chord_add_empty` when the run is the zero home, and `walkStep` is `none`.
-
-## Done in `FieldComm.lean`
-
-- `fieldMul_comm` / `school_comm` / `slope_mul_swap`. SPEC.md §3 R7 line 156 names the slope as "rise over run", and `Spec.chordAdd` multiplies `fieldMul rise inv`. The same line's card says "do the gap times the spare": after the inverse sits in the gap and the rise sits in the spare, that product is `fieldMul inv rise`. The schoolbook strip does not depend on which factor is laid, and the lane fold is a function of that strip, so the two lists are equal. `Spec.chordAdd` is unchanged. This is not a spec/code mismatch: the formula and the card name the same product.
-
-Compile peaks (VmHWM) under `ulimit -v 7000000`: FieldComm 230832 kB, ChordGap 201624 kB, WalkLive 257864 kB, ChordClear 212968 kB, ChordSettle 298976 kB. 3313 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
-
-## Done in `MarkerCopy.lean` / `MarkerCopyEq.lean`
-
-- Generic copy multiply (`copy_second = true`, `onto = false`, `mirror = false`). The inlined schoolbook is changed to `rowStep` after the board is reduced (`mul_copy_off_after`); a whole-term `rfl` of `Ecbs.mul` against that loop exceeds the heartbeat limit. `mul_copy_up_after` / `mul_copy_down_after` are the same body after `marker_step`. `mul_copy_up_eq` / `mul_copy_down_eq`: marker on, the emitted multiply is the marker-off multiply of the feed, with the flag put back.
-- `chord_square`: `mul` of the gap by a copy of itself into the bottom, marker seated. The bench prefix is `fieldMul` of that slope by itself (SPEC.md §3 R7 line 156). `FitsLen` of the copy and the marker script bound stay hypotheses, the same way `chord_gap_settle` leaves the settle charges.
-
-Compile peaks (VmHWM) under `ulimit -v 7000000`: MarkerCopy 388212 kB, MarkerCopyEq 385500 kB, ChordWhite 380520 kB. 3361 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
-
-## Done in `ChordWhite.lean`
-
-- `bench_white0_step`: the emitted white peg writes `(hole 0 + 1) mod 3` and charges one move.
-- `take_set_white` / `chord_square_white`: on the square's bench, that write's length-`n` prefix is `fieldAdd` of the squared slope with `whiteHole0`. SPEC.md §3 R7 line 156, the plus one. One `FitsLen` of the move after the square stays a hypothesis.
-
-## Done in `ChordAcross.lean`
-
-- `bench_add_emit`: the emitted `bench_add` is the copied loop. The bridge is `rfl`.
-
-## Done in `BenchAdd.lean`
-
-- `bench_add_prefix`: the ascending loop. On a length-`n` source and a bench at least that long, the bench becomes `addOnto` and moves grow by `pegCount` of the source. The bridge is `bench_add_emit` (`rfl`). The coefficient-indexed invariant is the same shape as `add_refines`.
-- `addOnto_off` / `addOnto_on` / `bench_add_field`: the length-`n` prefix is `fieldAdd` with the source, or with `mirrorTrits` when the mirror is on. `mirrorTrits` is what `mirror_refines` writes.
-- `bench_add_across_bottom`: across with the mirror off, then the bottom with the mirror on. The length-`n` prefix is `fieldAdd` of the starting prefix with the across, then with `mirrorTrits` of the bottom. SPEC.md §3 R7 line 156, add its across and take away the bottom. One `FitsLen (moves + 2 * n)` covers both.
-
-Compile peak (VmHWM) under `ulimit -v 7000000`: BenchAdd 385944 kB.
-
-## Done in `BenchSettle.lean`
-
-- `clear_settle_held`: `clear` of the held home the bench is aimed at, then `settle`. The home becomes the length-`n` bench prefix. The bench turns off. The settle charges stay hypotheses.
-- `across_bottom_settle`: the across with the mirror off, the bottom with the mirror on, that clear, and that settle. The bottom home is `fieldAdd` of the starting prefix with the across, then with `mirrorTrits` of the bottom. SPEC.md §3 R7 line 156. The zero tail and the settle charges stay hypotheses.
-
-Compile peak (VmHWM) under `ulimit -v 7000000`: BenchSettle 385028 kB. 3402 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
-
-## Done in `ChordTake.lean`
-
-- `chord_take_mirror`: `add` of the bottom onto the across with the mirror on, then `mirror` of the up. The across becomes `fieldSub` of the old across and the bottom. The up becomes `mirrorTrits`. SPEC.md §3 R7 line 156, take the bottom away from its across and mirror its up. One `FitsLen (moves + 2 * n)` covers both.
-
-Compile peak (VmHWM) under `ulimit -v 7000000`: ChordTake 384964 kB. 3403 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
-
-## Done in `StripLin.lean` / `BandCopy.lean`
-
-- `school_strip` / `school_onto`: the schoolbook adds onto its strip. Starting from a home is the zero-strip product added to that home.
-- `stripAdd_addAt` / `foldHigh_pad`: folding a sum whose second summand is empty at that high hole moves only the first summand's peg.
-- `band_copy`: the `onto` arm's copy loop writes the destination into a zero strip. The result is `pref`.
-
-Compile peaks (VmHWM) under `ulimit -v 7000000`: StripLin 385028 kB, BandCopy 386132 kB. 3432 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
-
-## Done in `StripFold.lean`
-
-- `foldrHigh_pad` / `reduceStrip_pad` / `laneFold_pad`. The lane fold of a sum is the sum of the folds when the second summand has no peg at or above hole `n`. The fold over the offset list is its own induction; `foldHigh_pad` stays the one-hole step.
-- `laneFold_onto`. Laying the schoolbook onto that sum and folding is the folded product added to the pad.
-- `onto_add`. The length-`n` prefix is `fieldAdd` of the home and `fieldMul` of the two factors. `mul_onto_add` is the same fact next to the emitted multiply.
-
-## Done in `MulOnto.lean`
-
-- `mul_onto_school`. `mulFromHeld` on a strip that already holds the destination is `school_loop_refines` from that strip, then `mulAfter`.
-- `mul_onto_else`. Bench off, so `settle` is the identity. `mulElse` with `onto`, not `copy_second`, not `mirror`, clears the destination, charges `2 * pegCount` moves and the same number of slides, copies the home (`band_copy_after`), and is that schoolbook.
-- `mul_onto_off`. Marker off. `Ecbs.mul` is that `mulElse` after the op bump.
-- `mul_onto_up`. Marker on and already seated. `log_op` is `marker_step`, and the onto multiply is `mul_onto_else` on `markerOn (bumpOp (markerUpFeed …) …)`. The flag stays on. The conclusion names `markerOn`, so it matches `onto_up_prep`.
-- `ontoCharge_markerOn` / `onto_up_prep`. The marker flag commutes with the onto charge, the prep, and `withMoves`.
-- `mul_onto_up_eq`. The seated onto multiply is the marker-off multiply of `markerUpFeed`, with the flag put back. `dsimp` then `simp only [markerOn_mk]` turns the record update into `markerOn`. `erw [onto_up_prep]` matches where `rw` does not. `mulAfter_flag` carries the flag across the fold, and `mul_onto_off` is the right-hand side.
-- `mulAfter_ok` / `ontoFoldBoard`. `mulAfter` on a marker-off board is `.ok` of the lane-fold bench, then `note_peak`.
-- `mul_onto_off_fold` / `mul_onto_up_prefix`. That bench's length-`n` prefix is `fieldAdd` of the destination home and `fieldMul` of the two factors. The seated result is the same board with the flag on.
-- `card_y3`. SPEC.md §3 R7 line 156. `fieldAdd` of `mirrorTrits y` and `fieldMul slope dx` is `fieldSub` of that product and `y`. That is the new up once the onto multiply's home is the mirrored first up and `dx` is `fieldSub` of the first x and the new x.
-
-Compile peaks (VmHWM) under `ulimit -v 7000000`: StripFold 210760 kB, BandCopy 239636 kB, MarkerMul 441692 kB, MulOnto 306548 kB. 3486 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
-
-## Done in `ChordUp.lean`
-
-- `move_band_off`: bench already off, so `move_band`'s opening `settle` is the identity. `dst` is empty and `src` is held. The source home moves to `dst`. Moves and slides each grow by `2 * pegCount`. `note_peak` may raise the peak. One outer `settle_skip` drops the identity settle without unfolding the record; later lets are dropped one at a time (`zeta1`) and the board is generalised back to a variable so the record is not copied into itself.
-- `chord_up_slide`: on the board the onto multiply leaves (bench on and aimed at the up, up and across empty, gap still holding the slope, bottom holding the new x), `clear` the gap, `settle` into the up, and `move_band` the bottom into the across. The up is the length-`n` bench prefix. The across is the bottom's old home. The gap and the bottom end empty. The bench ends off. The marker flag stays. SPEC.md §3 R7 line 156. The settle charges and the move's `FitsLen`s stay hypotheses.
-
-Compile peak (VmHWM) for ChordUp under `ulimit -v 7000000`: 387512 kB. 3509 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
-
-## Done in `ChordCell.lean`
-
-- `walkStep_live_chord`: a live white or red cell whose run inverts is `some (true, (x3, y3))`, with `x3` and `y3` the SPEC.md §3 R7 line 156 formulas on the cubed accumulator.
-- `mul_refines` now also says the copy multiply keeps the marker index, the control counter, and the script maximum. `CurveTest` splits those three conjuncts off the hole equality.
-- `gap_settle_lay`: gap times spare, clear, settle. The gap is `fieldMul rise inv`. The spare is empty. Homes other than 5 and 6 stay. Marker, control, and the script maximum are the values `markerUpFeed` writes. Moves and slides are `mvGap` and `slGap`.
-- `square_white_lay`: on that board, square the slope and write the white peg. The bench prefix is slope² + 1. Homes other than the spare stay. The spare stays empty.
-- `gap_square_obtain`: those two, with `obtain` on the settled board. The `do` is the prefix of `chord_tail` through `bench_white0`.
-- `x3_settle_lay`: the across with the mirror off, the bottom with the mirror on, clear, and settle. The bottom is `chordX3` (slope² + 1 + across − run). The bench turns off. Marker, tier, moves, and slides are projections (`benchAddBoard_home`, `settle_home_eq`, `settle_ix`); the settled record is not simplified.
-
-The take, the mirror, the onto multiply, and `chord_up_slide` are not in that `obtain` yet. The inverse on a walk board is still a hypothesis. The `FitsLen` charges of the gap, the square, and this settle are still hypotheses.
-
-Compile peak (VmHWM) for a clean `lake build EcbsLink2` under `ulimit -v 7000000`: 978612 kB. 3540 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
-
-## Next
-
-Finish the obtain chain: project the board after the two bench adds and the settle (no whole-record `simp`), then `chord_take_mirror`, `mul_onto_up_prefix` / `card_y3`, and `chord_up_slide`, and tie that to `chordStep` for a live white or red cell with a nonempty run. Discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
-
-## Scope that stays in the PR body
-
-- Success-branch reachability is not proved for Toy, Hobby, or Serious.
-- SPEC.md gives the Hobby and Serious base points only as hashes.
-- Future work, not started: proving `fieldInv` is the true field inverse, so inverses could be checked as one-multiply certificates.
-
-## Proof rules that worked
-
-- Restate the emitted stepper so the bridge is `rfl`. `markerOn` plus `@[simp] markerOn_flag` fixed the `noteBench_flag` goal that rejected a bare `rfl` on `{b with marker_on := true}`.
-- Do not `simp` a `marker_on = false` or `bench_on = false` hypothesis into a board constructor. Use `log_op_off` / `settle_off` with the proof.
-- `rw` is syntactic. `conv => lhs` when the rewrite also matches a dependent proof on the right. Change the school stepper to `rowStep` before rewriting `subI`. `simp only [markerOn_mk]` after `dsimp` turns `{ b with marker_on := true }` into `markerOn b`. `erw` matches `onto_up_prep` when the proof terms differ and `rw` does not. A whole-term `zeta` of `move_band` exceeds 200000 heartbeats because each record update copies the previous board into every field. Drop one let (`zeta1`), then `generalize` the board back to a variable.
-- Opaque boards and projection lemmas. Never evaluate a concrete board at tier scale.
-- Never `cases` a `Nat.le` proof. Keep `FitsLen` as a conjunct.
-- Only axioms `propext`, `Classical.choice`, `Quot.sound`. No `native_decide`, no `sorry`, no heartbeat bump.
-- A whole-term `rfl` of `Ecbs.mul` against an inlined schoolbook exceeds 200000 heartbeats. Reduce the board, then `change` the stepper to `rowStep` and the fold to `mulAfter`.
+- Theorems: 2810
+- Axioms: `propext`, `Classical.choice`, `Quot.sound`
+- Largest remaining file: `EcbsLink2/Link2/ClimbEmit.lean`, VmHWM 1742012 kB

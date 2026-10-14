@@ -170,7 +170,7 @@ Compile peak (VmHWM) for ChordUp under `ulimit -v 7000000`: 387512 kB. 3509 theo
 
 The take, the mirror, the onto multiply, and `chord_up_slide` are not in that `obtain` yet. The inverse on a walk board is still a hypothesis. The `FitsLen` charges of the gap, the square, and this settle are still hypotheses.
 
-Compile peak (VmHWM) for a clean `lake build EcbsLink2` under `ulimit -v 7000000`: 978612 kB. 3539 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
+Compile peak (VmHWM) for a clean `lake build EcbsLink2` under `ulimit -v 7000000`: 978612 kB. 3540 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
 ## Next
 

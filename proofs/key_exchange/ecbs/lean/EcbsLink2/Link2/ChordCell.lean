@@ -853,4 +853,160 @@ theorem gap_square_obtain (b : Ecbs.Board) (inv rise : List Nat)
     simp only [except_pull]
   rw [hassoc, hdo, ok_bind, hW]
 
+/-- Two bench adds and the settle. The bottom is slope² + 1 + across − run.
+    Projections only: the settled record is not simplified. -/
+theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
+    (n k bench moves slides peak : Nat) (slope : List Nat)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (2 : Int))
+    (hbench : b.sudo_5Board_5bench = embed benchL)
+    (h0a : b.sudo_5Board_4home[0]'(by rw [hszH]; decide) = embed accX)
+    (h2t : b.sudo_5Board_4held[2]'(by rw [hszD]; decide) = true)
+    (h2a : b.sudo_5Board_4home[2]'(by rw [hszH]; decide) = embed run)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hx : accX.length = n) (hrun : run.length = n)
+    (hpos : 0 < n) (hbLen : benchL.length = bench) (hnb : n ≤ bench)
+    (htriX : allTritList accX) (htriR : allTritList run)
+    (htriB : allTritList (benchL.take n))
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < benchL.length, benchL[i] = 0)
+    (hpre : benchL.take n = fieldAdd n (fieldMul n k bench slope slope) (whiteHole0 n))
+    (hf : FitsLen n) (hfitL : FitsLen bench)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hfit1 : FitsLen (moves + n))
+    (hfitA : FitsLen (moves + pegCount accX + n))
+    (hfitC : FitsLen (moves + pegCount accX + pegCount run + pegCount run))
+    (hpeg : FitsLen (2 * pegCount (chordX3 n k bench slope accX run)))
+    (hfitM : FitsLen (moves + pegCount accX + pegCount run + pegCount run +
+        2 * pegCount (chordX3 n k bench slope accX run)))
+    (hfitS : FitsLen (slides + 2 * pegCount (chordX3 n k bench slope accX run))) :
+    let x3 := chordX3 n k bench slope accX run
+    ∃ bX,
+      (do
+          let b ← Ecbs.bench_add b Ecbs.across false
+          let b ← Ecbs.bench_add b Ecbs.bottom true
+          let b ← Ecbs.clear b Ecbs.bottom
+          Ecbs.settle b) = .ok bX ∧
+      bX.sudo_5Board_8bench_on = false ∧
+      (∀ h : 2 < bX.sudo_5Board_4home.size, bX.sudo_5Board_4home[2] = embed x3) ∧
+      bX.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      bX.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + pegCount accX + pegCount run + pegCount run + 2 * pegCount x3) ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount x3) := by
+  intro x3
+  have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
+  have h2H : 2 < b.sudo_5Board_4home.size := by rw [hszH]; decide
+  have h2D : 2 < b.sudo_5Board_4held.size := by rw [hszD]; decide
+  have h7 : 7 ≤ b.sudo_5Board_4held.size := by rw [hszD]; decide
+  have h1 := bench_add_prefix b 0 accX benchL n moves false h0H h0a hbench hx hpos
+    (by rw [hbLen]; exact hnb) htriX htriB hmoves hfit1
+  let L1 := addOnto benchL accX false n
+  let mv1 := moves + pegCount accX
+  let b1 := benchAddBoard b (embed L1) mv1
+  have hlen1 : L1.length = benchL.length := addOnto_length benchL accX false n
+  have h2H1 : 2 < b1.sudo_5Board_4home.size := by
+    rw [benchAddBoard_home]; exact h2H
+  have h2a1 : b1.sudo_5Board_4home[2]'(h2H1) = embed run := by
+    have hget := ix (benchAddBoard_home b (embed L1) mv1) 2 h2H1
+    exact hget.trans h2a
+  have htri1 : allTritList (L1.take n) := by
+    rw [addOnto_off benchL accX n (by rw [hbLen]; exact hnb)]
+    exact fieldAdd_span_trits _ _ _
+  have h2 := bench_add_prefix b1 2 run L1 n mv1 true h2H1 h2a1 rfl hrun hpos
+    (by rw [hlen1, hbLen]; exact hnb) htriR htri1 (by rw [benchAddBoard_moves]) hfitA
+  let L2 := addOnto L1 run true n
+  let mv2 := mv1 + pegCount run
+  let b2 := benchAddBoard b1 (embed L2) mv2
+  have hlen2 : L2.length = benchL.length := by rw [addOnto_length, hlen1]
+  have hzero2 : ∀ i, n ≤ i → ∀ hi : i < L2.length, L2[i] = 0 := by
+    intro i hi hlt
+    have hiB : i < benchL.length := by rw [hlen2] at hlt; exact hlt
+    rw [addOnto_high L1 run true n i hi (by rw [hlen1]; exact hiB),
+      addOnto_high benchL accX false n i hi hiB]
+    exact hzero i hi hiB
+  have hx3 : L2.take n = x3 := by
+    rw [addOnto_on L1 run n (by rw [hlen1, hbLen]; exact hnb),
+      addOnto_off benchL accX n (by rw [hbLen]; exact hnb), hpre]
+    rfl
+  have h2H2 : 2 < b2.sudo_5Board_4home.size := by rw [benchAddBoard_home]; exact h2H1
+  have h2D2 : 2 < b2.sudo_5Board_4held.size := by rw [benchAdd_held]; rw [benchAdd_held]; exact h2D
+  have h2t2 : b2.sudo_5Board_4held[2]'(h2D2) = true := by
+    have h1e := ix (benchAdd_held b1 (embed L2) mv2) 2 h2D2
+    have h0e := ix (benchAdd_held b (embed L1) mv1) 2
+      (by rw [benchAdd_held]; exact h2D)
+    exact h1e.trans (h0e.trans h2t)
+  have h2a2 : b2.sudo_5Board_4home[2]'(h2H2) = embed run := by
+    have h1e := ix (benchAddBoard_home b1 (embed L2) mv2) 2 h2H2
+    exact h1e.trans h2a1
+  have hclear := clear_held_refines b2 2 run mv2 h2H2 h2D2 h2t2 h2a2
+    (by rw [benchAddBoard_moves]) (by rw [hrun]; exact hf) hfitC
+  let bC := { b2 with
+    sudo_5Board_4home := b2.sudo_5Board_4home.set ⟨2, h2H2⟩ #[]
+    sudo_5Board_4held := b2.sudo_5Board_4held.set ⟨2, h2D2⟩ false
+    sudo_5Board_4cost := { b2.sudo_5Board_4cost with
+      sudo_5Costs_5moves := Int.ofNat (mv2 + pegCount run) } }
+  have hHc : 2 < bC.sudo_5Board_4home.size := by rw [show bC.sudo_5Board_4home.size = b2.sudo_5Board_4home.size from by rw [Array.size_set]]; exact h2H2
+  have hDc : 2 < bC.sudo_5Board_4held.size := by rw [show bC.sudo_5Board_4held.size = b2.sudo_5Board_4held.size from by rw [Array.size_set]]; exact h2D2
+  have h7c : 7 ≤ bC.sudo_5Board_4held.size := by
+    rw [show bC.sudo_5Board_4held.size = b.sudo_5Board_4held.size from by
+      rw [Array.size_set, benchAdd_held, benchAdd_held]]
+    exact h7
+  have hempty : bC.sudo_5Board_4held[2]'(hDc) = false := by
+    simp [bC, Array.getElem_set_eq]
+  have honC : bC.sudo_5Board_8bench_on = true := by
+    rw [show bC.sudo_5Board_8bench_on = b2.sudo_5Board_8bench_on from rfl,
+      (benchAdd_on b1 (embed L2) mv2).1, (benchAdd_on b (embed L1) mv1).1, hon]
+  have htoC : bC.sudo_5Board_8bench_to = (2 : Int) := by
+    rw [show bC.sudo_5Board_8bench_to = b2.sudo_5Board_8bench_to from rfl,
+      (benchAdd_on b1 (embed L2) mv2).2, (benchAdd_on b (embed L1) mv1).2, hto]
+  have hbenchC : bC.sudo_5Board_5bench = embed L2 := by
+    rw [show bC.sudo_5Board_5bench = b2.sudo_5Board_5bench from rfl, benchAddBoard_bench]
+  have hnC : bC.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    rw [show bC.sudo_5Board_1t = b2.sudo_5Board_1t from rfl, benchAdd_tier, benchAdd_tier, hn]
+  have hslC : bC.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int) := by
+    rw [show bC.sudo_5Board_4cost.sudo_5Costs_6slides = b2.sudo_5Board_4cost.sudo_5Costs_6slides from rfl,
+      benchAdd_slides, benchAdd_slides, hslides]
+  have hpkC : bC.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    rw [show bC.sudo_5Board_4cost.sudo_5Costs_4peak = b2.sudo_5Board_4cost.sudo_5Costs_4peak from rfl,
+      benchAdd_peak, benchAdd_peak, hpeak]
+  have hmvC : bC.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat (mv2 + pegCount run) := by
+    rw [show bC.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat (mv2 + pegCount run) from rfl]
+  have hset := settle_refines bC 2 L2 n (mv2 + pegCount run) slides peak hHc hDc h7c
+    honC htoC hempty hbenchC hnC
+    (by rw [hlen2, hbLen]; omega) (by rw [hlen2, hbLen]; exact hnb) hzero2 hf
+    (by rw [hlen2, hbLen]; exact hfitL) hmvC
+    (by rw [hslC, ofNat_eq_natCast]) (by rw [hpkC, ofNat_eq_natCast])
+    (by simpa [hx3] using hpeg)
+    (by simpa [mv1, mv2, hx3, Nat.add_assoc] using hfitM)
+    (by simpa [hx3] using hfitS)
+  let bX := settleBoard bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+  have hdo :
+      (do
+          let b ← Ecbs.bench_add b Ecbs.across false
+          let b ← Ecbs.bench_add b Ecbs.bottom true
+          let b ← Ecbs.clear b Ecbs.bottom
+          Ecbs.settle b) = .ok bX := by
+    rw [show Ecbs.across = ((0 : Nat) : Int) from rfl, h1, ok_bind]
+    rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, h2, ok_bind]
+    rw [hclear, ok_bind]
+    rw [hset]
+  refine ⟨bX, hdo, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · exact settle_bench_off bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+  · intro h2x
+    have hh := settle_home_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+    have hget := ix hh 2 h2x
+    simpa [Array.getElem_set_eq, hx3] using hget
+  · exact ((settle_ix bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).1).trans
+      ((benchAdd_marker b1 (embed L2) mv2).trans (benchAdd_marker b (embed L1) mv1))
+  · exact (settle_tier_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).trans
+      ((benchAdd_tier b1 (embed L2) mv2).trans (benchAdd_tier b (embed L1) mv1))
+  · have hmv := settle_moves_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+    rw [hmv, hx3]
+  · have hsl := settle_slides_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+    simpa [hx3] using hsl
+
 end EcbsLink2.Link2

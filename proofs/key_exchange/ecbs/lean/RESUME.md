@@ -166,8 +166,9 @@ Compile peak (VmHWM) for ChordUp under `ulimit -v 7000000`: 387512 kB. 3509 theo
 - `gap_settle_lay`: gap times spare, clear, settle. The gap is `fieldMul rise inv`. The spare is empty. Homes other than 5 and 6 stay. Marker, control, and the script maximum are the values `markerUpFeed` writes. Moves and slides are `mvGap` and `slGap`.
 - `square_white_lay`: on that board, square the slope and write the white peg. The bench prefix is slope² + 1. Homes other than the spare stay. The spare stays empty.
 - `gap_square_obtain`: those two, with `obtain` on the settled board. The `do` is the prefix of `chord_tail` through `bench_white0`.
+- `x3_settle_lay`: the across with the mirror off, the bottom with the mirror on, clear, and settle. The bottom is `chordX3` (slope² + 1 + across − run). The bench turns off. Marker, tier, moves, and slides are projections (`benchAddBoard_home`, `settle_home_eq`, `settle_ix`); the settled record is not simplified.
 
-The across/bottom settle, the take, the mirror, the onto multiply, and `chord_up_slide` are not in that `obtain` yet. A first `x3_take_lay` simplified the settled record with `simp` and exceeded 200000 heartbeats. The next proof has to project that record (`settle_home_eq`, `benchAdd_home`) and not simplify it. The inverse on a walk board is still a hypothesis. The `FitsLen` charges of the gap and the square are still hypotheses of these theorems.
+The take, the mirror, the onto multiply, and `chord_up_slide` are not in that `obtain` yet. The inverse on a walk board is still a hypothesis. The `FitsLen` charges of the gap, the square, and this settle are still hypotheses.
 
 Compile peak (VmHWM) for a clean `lake build EcbsLink2` under `ulimit -v 7000000`: 978612 kB. 3539 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 

@@ -2836,7 +2836,6 @@ private theorem clear_tmax (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves 
     (clearHeldBoard b home xs moves hH hD).sudo_5Board_4cost.sudo_5Costs_9tally_max =
       b.sudo_5Board_4cost.sudo_5Costs_9tally_max := rfl
 
-set_option maxHeartbeats 1000000 in
 /-- Final rung. After the gap mul and the clear, the emitter cubes that product
     onto the spare and multiplies the cube by the held input. This rung does not
     double the tally. Both results are the named live boards, and the same live

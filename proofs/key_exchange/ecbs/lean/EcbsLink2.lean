@@ -44,6 +44,8 @@ import EcbsLink2.Link2.Mirror
 import EcbsLink2.Link2.Add
 import EcbsLink2.Link2.CheckTail
 import EcbsLink2.SpecCurve
+import EcbsLink2.SpecDigits
+import EcbsLink2.SpecToy
 import EcbsLink2.SpecBase
 import EcbsLink2.Link2.BaseSpec
 import EcbsLink2.Link2.DemoPoint

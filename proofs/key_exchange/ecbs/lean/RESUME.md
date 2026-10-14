@@ -2,7 +2,7 @@
 
 ECBS Link 2 part 1, branch `cursor/ecbs-link2-4113`. This branch is the finished slice. Do not continue the chord, the walk, or `base_point_of` here.
 
-The in-progress development, including every file this branch deleted, is on `cursor/ecbs-link2-part2` at `94eac79d491051b6f263cc0bf2f2d72116185c06`. That branch has no pull request.
+The in-progress development, including every file this branch deleted, is on `cursor/ecbs-link2-part2` at `146c0c6a507d57a116bff3cc26ffb5973482e1e7`. That branch has no pull request. The same recursion-depth and heartbeat removal is on that commit.
 
 ## Covered exports
 
@@ -32,6 +32,7 @@ Success-branch reachability is not proved for Toy, Hobby, and Serious. SPEC.md g
 
 A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeds.
 
-- Theorems: 2810
+- Theorems: 2989
 - Axioms: `propext`, `Classical.choice`, `Quot.sound`
-- Largest remaining file: `EcbsLink2/Link2/ClimbEmit.lean`, VmHWM 1742012 kB
+- Largest remaining file: `EcbsLink2/Link2/ClimbEmit.lean`, VmHWM 1740496 kB
+- No `maxHeartbeats` or `maxRecDepth` option. The concrete `decide` facts are split into kernel steps, and `red_cube_mul` fits the default heartbeat limit.

@@ -54,8 +54,8 @@ theorem curve_copy_pack (b1 : Ecbs.Board) (x y : List Nat) (moves peak : Nat)
     (∀ (h : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
       b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = 1) := by
   intro b
-  obtain ⟨_, _, _, _, _, _, _, _, hszH0, hszD0⟩ := place_book b1 2 h2H h2D x moves peak
-  obtain ⟨_, _, hopsEq, _, _, hstrictEq, hholeEq⟩ := place_idle b1 2 h2H h2D x moves peak
+  obtain ⟨_, _, _, _, _, _, _, _, hszH0, hszD0⟩ := place_book b1 2 ⟨h2H, h2D⟩ x moves peak
+  obtain ⟨_, _, hopsEq, _, _, hstrictEq, hholeEq⟩ := place_idle b1 2 ⟨h2H, h2D⟩ x moves peak
   have hszH : b.sudo_5Board_4home.size = 8 := hszH0.trans hhs
   have hszD : b.sudo_5Board_4held.size = 8 := hszD0.trans hds
   have h3H : 3 < b1.sudo_5Board_4home.size := by rw [hhs]; decide
@@ -65,19 +65,19 @@ theorem curve_copy_pack (b1 : Ecbs.Board) (x y : List Nat) (moves peak : Nat)
   have h6D : 6 < b1.sudo_5Board_4held.size := by rw [hds]; decide
   refine ⟨hszH, hszD, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hstrictEq, hholeEq, ?_⟩
   · intro h2
-    exact place_home_here b1 2 h2H h2D x moves peak h2
+    exact place_home_here b1 2 ⟨h2H, h2D⟩ x moves peak h2
   · intro h2
-    exact place_held_here b1 2 h2H h2D x moves peak h2
+    exact place_held_here b1 2 ⟨h2H, h2D⟩ x moves peak h2
   · intro h3c
-    exact (place_home_other b1 2 3 h2H h2D x moves peak (by decide) h3H h3c).trans (h3 h3H)
+    exact (place_home_other b1 2 3 ⟨h2H, h2D⟩ x moves peak (by decide) h3H h3c).trans (h3 h3H)
   · intro h3c
-    exact (place_held_other b1 2 3 h2H h2D x moves peak (by decide) h3D h3c).trans (hh3 h3D)
+    exact (place_held_other b1 2 3 ⟨h2H, h2D⟩ x moves peak (by decide) h3D h3c).trans (hh3 h3D)
   · intro h4c
-    exact (place_home_other b1 2 4 h2H h2D x moves peak (by decide) h4H h4c).trans (h4 h4H)
+    exact (place_home_other b1 2 4 ⟨h2H, h2D⟩ x moves peak (by decide) h4H h4c).trans (h4 h4H)
   · intro h4c
-    exact (place_held_other b1 2 4 h2H h2D x moves peak (by decide) h4D h4c).trans (hh4 h4D)
+    exact (place_held_other b1 2 4 ⟨h2H, h2D⟩ x moves peak (by decide) h4D h4c).trans (hh4 h4D)
   · intro h6c
-    exact (place_held_other b1 2 6 h2H h2D x moves peak (by decide) h6D h6c).trans (hh6 h6D)
+    exact (place_held_other b1 2 6 ⟨h2H, h2D⟩ x moves peak (by decide) h6D h6c).trans (hh6 h6D)
   · intro h0
     exact (get_eq_of_array hopsEq 0 h0).trans (hop0b (hopsEq ▸ h0))
 

@@ -192,57 +192,55 @@ theorem red_open_view
     hopsE, hc1E, hpkSE, hholeE, htrits, hpieceM, hpieceS⟩
 
 theorem settle_park (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_9park_hole =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_9park_hole =
       b.sudo_5Board_9park_hole ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_7ladder0 =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_7ladder0 =
       b.sudo_5Board_7ladder0 ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_6nrungs =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_6nrungs =
       b.sudo_5Board_6nrungs ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_6tally0 =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_6tally0 =
       b.sudo_5Board_6tally0 ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_1t =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_1t =
       b.sudo_5Board_1t := by
   unfold settleBoard
   split <;> exact ⟨rfl, rfl, rfl, rfl, rfl⟩
 
 theorem cube_live_park (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
-    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9park_hole =
+    (bud : Budget b 1)
+    (hin : HomeIn b src) :
+    (cubeLiveBoard b dst src xs bud hin).sudo_5Board_9park_hole =
       b.sudo_5Board_9park_hole ∧
-    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_7ladder0 =
+    (cubeLiveBoard b dst src xs bud hin).sudo_5Board_7ladder0 =
       b.sudo_5Board_7ladder0 ∧
-    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_6nrungs =
+    (cubeLiveBoard b dst src xs bud hin).sudo_5Board_6nrungs =
       b.sudo_5Board_6nrungs ∧
-    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_6tally0 =
+    (cubeLiveBoard b dst src xs bud hin).sudo_5Board_6tally0 =
       b.sudo_5Board_6tally0 ∧
-    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9marker_on =
+    (cubeLiveBoard b dst src xs bud hin).sudo_5Board_9marker_on =
       false := by
   unfold cubeLiveBoard cubeOffBoard
-  have hs := settle_park b src hH hD xs n moves slides peak
+  have hs := settle_park b src ⟨hin.hH, hin.hD⟩ xs bud.n bud.moves bud.slides bud.peak
   exact ⟨hs.1, hs.2.1, hs.2.2.1, hs.2.2.2.1, rfl⟩
 
 theorem mul_live_park (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9park_hole =
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_9park_hole =
       b.sudo_5Board_9park_hole ∧
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_7ladder0 =
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_7ladder0 =
       b.sudo_5Board_7ladder0 ∧
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_6nrungs =
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_6nrungs =
       b.sudo_5Board_6nrungs ∧
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_6tally0 =
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_6tally0 =
       b.sudo_5Board_6tally0 ∧
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9marker_on =
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_9marker_on =
       false ∧
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_1t =
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_1t =
       b.sudo_5Board_1t := by
   unfold mulNoLiveBoard mulNoOffBoard
-  have hs := settle_park b second hH hD ys n moves slides peak
+  have hs := settle_park b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
   exact ⟨hs.1, hs.2.1, hs.2.2.1, hs.2.2.2.1, rfl, hs.2.2.2.2⟩
 
 theorem clearSlots_cast {entry a b : Array Int} {tally : Nat}
@@ -493,67 +491,44 @@ theorem red_unparked_delta
     rw [hcEeq]; exact hcLe
   have hfitO := clear_ops_fit base.ops0 base.R done.length base.mMax cE s.tally c1
     hT hstepR hent (by rw [hc1eq, hplus])
-  have hlive := cube_eq_live bClearU 6 5 xs base.w base.h base.r s.n s.k mvC slC holeN
-    s.benchlen pkC pkS c1 base.cg
-    hmarkU honU htoU h5HU h5DU h7U hemptyU hbenchU
-    hnU h.shape.peg.n_pos hposX hnleX hzeroX
-    h.shape.peg.fitN (by rw [hlenX]; exact h.shape.peg.fitBn)
-    hmovesU hslidesU hpeakU
-    (by
+  have hlive := cube_eq_live bClearU 6 5 xs base.w base.h base.r s.n s.k mvC slC holeN s.benchlen pkC pkS c1 base.cg hmarkU honU htoU h5HU h5DU h7U hemptyU hbenchU hnU h.shape.peg.n_pos hposX hnleX hzeroX h.shape.peg.fitN (by rw [hlenX]; exact h.shape.peg.fitBn) hmovesU hslidesU hpeakU (by
       have h2 := hfitM4.1
       have hidx : xs.take base.n = xs.take s.n := by rw [h.hn]
       rw [hidx] at h2
-      exact h2)
-    (by
+      exact h2) (by
       have h2 := hfitM4.2.1
       have hidx : xs.take base.n = xs.take s.n := by rw [h.hn]
       rw [hidx] at h2
-      exact h2)
-    (by
+      exact h2) (by
       have h2 := hfitS
       have hidx : xs.take base.n = xs.take s.n := by rw [h.hn]
       rw [hidx] at h2
-      exact h2)
-    hops1U hop1U (FitsLen.of_le base.fitO hfitO)
-    hblU hcgU h.shape.peg.span
-    htriX h.shape.peg.fit3
-    (by
+      exact h2) hops1U hop1U (FitsLen.of_le base.fitO hfitO) hblU hcgU h.shape.peg.span htriX h.shape.peg.fit3 (by
       have h2 := hfitM4.2.2.1
       have hidx : xs.take base.n = xs.take s.n := by rw [h.hn]
       have htwo : 2 * base.n = 2 * s.n := by rw [h.hn]
       rw [hidx, htwo] at h2
-      exact h2)
-    h.shape.w0 h.shape.h0 h.shape.rlt h.shape.r0
-    h.shape.n_eq h.shape.k_le h.shape.gap_eq
-    hwU hhU hrU hkU
-    hholeU hstrictU h.shape.peg.small h.shape.peg.n_small
-    h.shape.peg.fitBn
-    (by
+      exact h2) ⟨h.shape.w0, h.shape.h0, h.shape.rlt, h.shape.r0, h.shape.n_eq, h.shape.k_le, h.shape.gap_eq⟩ hwU hhU hrU hkU hholeU hstrictU h.shape.peg.small h.shape.peg.n_small h.shape.peg.fitBn (by
       have h2 := hfitM4.2.2.2
       have hidx : xs.take base.n = xs.take s.n := by rw [h.hn]
       have htwo : 2 * base.n = 2 * s.n := by rw [h.hn]
       have hsub : base.bench - base.n = s.benchlen - s.n := by rw [h.hn, h.hbench]
       rw [hidx, htwo, hsub] at h2
       exact h2)
-  have hEq : bCube0 = cubeLiveBoard bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U := by
+  have hEq : bCube0 = cubeLiveBoard bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩ := by
     injection hcubeU.symm.trans hlive
-  have hOps := cube_live_ops bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-    pkC pkS c1 h5HU h5DU hops1U
+  have hOps := cube_live_ops bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
   have hOpsB : bCube0.sudo_5Board_4cost.sudo_5Costs_3ops =
-      (cubeLiveBoard bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen pkC pkS c1
-        h5HU h5DU hops1U).sudo_5Board_4cost.sudo_5Costs_3ops :=
+      (cubeLiveBoard bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩).sudo_5Board_4cost.sudo_5Costs_3ops :=
     congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_3ops) hEq
   let occ1 := countHeld (bClearU.sudo_5Board_4held.set ⟨5, h5DU⟩ true) 7
   let bS := settleBoard bClearU 5 h5HU h5DU xs s.n mvC slC pkC
-  let hFs := settle_held_lt bClearU 5 h5HU h5DU xs s.n mvC slC pkC
+  let hFs := settle_held_lt bClearU 5 ⟨h5HU, h5DU⟩ xs s.n mvC slC pkC
   let occ2 := countHeld (bS.sudo_5Board_4held.set ⟨5, hFs⟩ false) 7
   let pkU := raisedPeak (raisedPeak pkC occ1) occ2
-  have hpkLive := cube_live_peak bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-    pkC pkS c1 h5HU h5DU hops1U
+  have hpkLive := cube_live_peak bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
   have hpkB : bCube0.sudo_5Board_4cost.sudo_5Costs_4peak =
-      (cubeLiveBoard bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen pkC pkS c1
-        h5HU h5DU hops1U).sudo_5Board_4cost.sudo_5Costs_4peak :=
+      (cubeLiveBoard bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩).sudo_5Board_4cost.sudo_5Costs_4peak :=
     congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_4peak) hEq
   have hpkU : bCube0.sudo_5Board_4cost.sudo_5Costs_4peak = (pkU : Int) := by
     have hraw := hpkB.trans hpkLive
@@ -575,13 +550,11 @@ theorem red_unparked_delta
     have hsz : bCube0.sudo_5Board_4cost.sudo_5Costs_3ops.size =
         bClearU.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
       rw [hEq]
-      exact cube_live_ops_size bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-        pkC pkS c1 h5HU h5DU hops1U
+      exact cube_live_ops_size bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
     exact hsz.symm ▸ h0u
   have hop0C : bCube0.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0cubeSz =
       bClearU.sudo_5Board_4cost.sudo_5Costs_3ops[0] :=
-    cube_live_op0 bClearU bCube0 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U hEq h0cubeSz
+    cube_live_op0 bClearU bCube0 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩ hEq h0cubeSz
   have hv0 : bCube0.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0cubeSz = (cC0 : Int) :=
     hop0C.trans hc0U
   let pegX := pegCount (xs.take s.n)
@@ -627,46 +600,37 @@ theorem red_unparked_delta
       exact Nat.min_le_left _ _)
   have hmvCubeB : bCube0.sudo_5Board_4cost.sudo_5Costs_5moves = (mvCube : Int) := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_5moves) hEq
-    have hlive := cube_live_moves bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U
+    have hlive := cube_live_moves bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
     simpa [mvCube, pegX, ofNat_eq_natCast] using hB.trans hlive
   have hslCubeB : bCube0.sudo_5Board_4cost.sudo_5Costs_6slides = (slCube : Int) := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_6slides) hEq
-    have hlive := cube_live_slides bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U
+    have hlive := cube_live_slides bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
     simpa [slCube, pegX, ofNat_eq_natCast] using hB.trans hlive
   have hbenchC : bCube0.sudo_5Board_5bench = embed ys := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_5bench) hEq
-    have hlive := cube_live_bench bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U
+    have hlive := cube_live_bench bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
     simpa [ys] using hB.trans hlive
   have hmkC : bCube0.sudo_5Board_9marker_on = false := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_9marker_on) hEq
-    exact hB.trans (cube_live_marker bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U)
+    exact hB.trans (cube_live_marker bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩)
   have honC : bCube0.sudo_5Board_8bench_on = true := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_8bench_on) hEq
-    exact hB.trans (cube_live_on bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U)
+    exact hB.trans (cube_live_on bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩)
   have htoC : bCube0.sudo_5Board_8bench_to = (6 : Int) := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_8bench_to) hEq
-    exact hB.trans (cube_live_to bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U)
+    exact hB.trans (cube_live_to bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩)
   have hheldSz : bCube0.sudo_5Board_4held.size = bClearU.sudo_5Board_4held.size := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held.size) hEq
-    exact hB.trans (cube_live_held_size bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U)
+    exact hB.trans (cube_live_held_size bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩)
   have h6DU : 6 < bClearU.sudo_5Board_4held.size := by rw [hheldU]; exact h6D
   have h6fU : bClearU.sudo_5Board_4held[6]'h6DU = false :=
     (arr_get hheldU 6 h6DU).trans (h6f (hheldU ▸ h6DU))
   have h6DC : 6 < bCube0.sudo_5Board_4held.size := by rw [hheldSz]; exact h6DU
   have hempty6 : bCube0.sudo_5Board_4held[6]'h6DC = false :=
-    (cube_live_held_other bClearU bCube0 6 5 6 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U hEq (by decide : (5 : Nat) ≠ 6) h6DU h6DC).trans h6fU
+    (cube_live_held_other bClearU bCube0 6 5 6 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩ hEq (by decide : (5 : Nat) ≠ 6) h6DU h6DC).trans h6fU
   have hhomeSz : bCube0.sudo_5Board_4home.size = bClearU.sudo_5Board_4home.size := by
     have hL := (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hEq).trans
-      (cube_live_home bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-        pkC pkS c1 h5HU h5DU hops1U)
+      (cube_live_home bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩)
     have hs := congrArg Array.size hL
     rw [Array.size_set] at hs
     exact hs
@@ -676,20 +640,17 @@ theorem red_unparked_delta
   have hholeC : bCube0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (holeC : Int) := by
     have hB := congrArg
       (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) hEq
-    have hlive := cube_live_hole bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U
+    have hlive := cube_live_hole bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
     simpa [holeC, ofNat_eq_natCast] using hB.trans hlive
   let peakSC := raisedPeak pkS (countHeld bS.sudo_5Board_4held 7)
   have hstrictC : bCube0.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakSC : Int) := by
     have hB := congrArg
       (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_11peak_strict) hEq
-    have hlive := cube_live_strict bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U
+    have hlive := cube_live_strict bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
     simpa [peakSC, bS, ofNat_eq_natCast] using hB.trans hlive
   have htierC : bCube0.sudo_5Board_1t = bClearU.sudo_5Board_1t := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_1t) hEq
-    exact hB.trans (cubeLive_fixed bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U).2.2.2
+    exact hB.trans (cubeLive_fixed bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩).2.2.2
   have hxDU : base.xHome < bClearU.sudo_5Board_4held.size := by
     rw [hheldU]; exact hkeep.heldLt
   have hxHU : base.xHome < bClearU.sudo_5Board_4home.size := by
@@ -703,12 +664,10 @@ theorem red_unparked_delta
   have hxDC : base.xHome < bCube0.sudo_5Board_4held.size := by rw [hheldSz]; exact hxDU
   have hxHC : base.xHome < bCube0.sudo_5Board_4home.size := by rw [hhomeSz]; exact hxHU
   have hxHeldC : bCube0.sudo_5Board_4held[base.xHome]'hxDC = true :=
-    (cube_live_held_other bClearU bCube0 6 5 base.xHome xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U hEq (Ne.symm h.shape.xNe5) hxDU hxDC).trans hxHeldU
+    (cube_live_held_other bClearU bCube0 6 5 base.xHome xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩ hEq (Ne.symm h.shape.xNe5) hxDU hxDC).trans hxHeldU
   have hxArrC : bCube0.sudo_5Board_4home[base.xHome]'hxHC = embed base.x := by
     have hL := (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hEq).trans
-      (cube_live_home bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-        pkC pkS c1 h5HU h5DU hops1U)
+      (cube_live_home bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩)
     have hget := arr_get hL base.xHome hxHC
     rw [hget, Array.getElem_set_ne _ ⟨5, h5HU⟩ _ _ (Ne.symm h.shape.xNe5)]
     exact hxArrU
@@ -736,81 +695,54 @@ theorem red_unparked_delta
     rw [hcE0eq]; exact hcLe0
   have hfitOp0 := mul_ops_fit base.ops0 base.R done.length base.mMax cE0 cC0
     hstepR hent0 h0plus
-  have hmulLive := mul_eq_live bCube0 5 base.xHome 6 base.x ys
-    base.w base.h base.r s.n s.k mvCube slCube holeC s.benchlen pkU peakSC cC0
-    hmkC honC htoC h6HC h6DC (by
+  have hmulLive := mul_eq_live bCube0 5 base.xHome 6 base.x ys base.w base.h base.r s.n s.k mvCube slCube holeC s.benchlen pkU peakSC cC0 hmkC honC htoC h6HC h6DC (by
       rw [hheldSz]
-      exact h7U)
-    hempty6 hbenchC
-    (by rw [htierC]; exact hnU) h.shape.peg.n_pos hposY hnleY hzeroY
-    h.shape.peg.fitN (by rw [hlenY]; exact h.shape.peg.fitBn)
-    hmvCubeB hslCubeB hpkU
-    (by
+      exact h7U) hempty6 hbenchC (by rw [htierC]; exact hnU) h.shape.peg.n_pos hposY hnleY hzeroY h.shape.peg.fitN (by rw [hlenY]; exact h.shape.peg.fitBn) hmvCubeB hslCubeB hpkU (by
       have h2 := hfitMul.1
       have hidx : ys.take base.n = ys.take s.n := by rw [h.hn]
       rw [hidx] at h2
-      exact h2)
-    (by
+      exact h2) (by
       have h2 := hfitMul.2.1
       have hidx : ys.take base.n = ys.take s.n := by rw [h.hn]
       rw [hidx] at h2
-      exact h2)
-    (by
+      exact h2) (by
       have h2 := hfitSl
       have hidx : ys.take base.n = ys.take s.n := by rw [h.hn]
       rw [hidx] at h2
-      exact h2)
-    h0cubeSz hv0 (FitsLen.of_le base.fitO hfitOp0)
-    (by rw [htierC]; exact hblU)
-    hxDC hxHC hxHeldC hxArrC h.shape.xNe6
-    (by rw [h.hn]; exact hxLen) hspan2 hxT
-    (FitsLen.of_le h.shape.peg.fit3
-      (Nat.mul_le_mul_right _ (by decide : (2 : Nat) ≤ 3)))
-    (by
+      exact h2) h0cubeSz hv0 (FitsLen.of_le base.fitO hfitOp0) (by rw [htierC]; exact hblU) hxDC hxHC hxHeldC hxArrC h.shape.xNe6 (by rw [h.hn]; exact hxLen) hspan2 hxT (FitsLen.of_le h.shape.peg.fit3
+      (Nat.mul_le_mul_right _ (by decide : (2 : Nat) ≤ 3))) (by
       have h2 := hfitMul.2.2.1
       have hidx : ys.take base.n = ys.take s.n := by rw [h.hn]
       have hnn : base.n * (base.n + 1) = s.n * (s.n + 1) := by rw [h.hn]
       rw [hidx, hnn] at h2
-      exact h2)
-    h.shape.w0 h.shape.h0 h.shape.rlt h.shape.r0
-    h.shape.n_eq h.shape.k_le h.shape.gap_eq
-    (by rw [htierC]; exact hwU) (by rw [htierC]; exact hhU)
-    (by rw [htierC]; exact hrU) (by rw [htierC]; exact hkU)
-    hholeC hstrictC h.shape.peg.small h.shape.peg.n_small
-    h.shape.peg.fitBn
-    (by
+      exact h2) ⟨h.shape.w0, h.shape.h0, h.shape.rlt, h.shape.r0, h.shape.n_eq, h.shape.k_le, h.shape.gap_eq⟩ (by rw [htierC]; exact hwU) (by rw [htierC]; exact hhU) (by rw [htierC]; exact hrU) (by rw [htierC]; exact hkU) hholeC hstrictC h.shape.peg.small h.shape.peg.n_small h.shape.peg.fitBn (by
       have h2 := hfitMul.2.2.2
       have hidx : ys.take base.n = ys.take s.n := by rw [h.hn]
       have hnn : base.n * (base.n + 1) = s.n * (s.n + 1) := by rw [h.hn]
       have hsub : base.bench - base.n = s.benchlen - s.n := by rw [h.hn, h.hbench]
       rw [hidx, hnn, hsub] at h2
       exact h2)
-  have hRedEq : bRed0 = mulNoLiveBoard bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
-      s.benchlen pkU peakSC cC0 h6HC h6DC h0cubeSz := by
+  have hRedEq : bRed0 = mulNoLiveBoard bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩ := by
     injection hredU.symm.trans hmulLive
-  have hmulOps := mul_live_ops bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
-    s.benchlen pkU peakSC cC0 h6HC h6DC h0cubeSz
-  have hsettleOps := settle_ops bCube0 6 h6HC h6DC ys s.n mvCube slCube pkU
-  have hidx0 := settle_ops_lt bCube0 0 6 h0cubeSz h6HC h6DC ys s.n mvCube slCube pkU
+  have hmulOps := mul_live_ops bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩
+  have hsettleOps := settle_ops bCube0 6 ⟨h6HC, h6DC⟩ ys s.n mvCube slCube pkU
+  have hidx0 := settle_ops_lt bCube0 0 6 h0cubeSz ⟨h6HC, h6DC⟩ ys s.n mvCube slCube pkU
   have hstep := ops_set_transport hsettleOps 0 hidx0 h0cubeSz
     (Int.ofNat (cC0 + 1)) (Int.ofNat (cC0 + 1)) rfl
   have hRedOpsB : bRed0.sudo_5Board_4cost.sudo_5Costs_3ops =
-      (mulNoLiveBoard bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC s.benchlen
-        pkU peakSC cC0 h6HC h6DC h0cubeSz).sudo_5Board_4cost.sudo_5Costs_3ops :=
+      (mulNoLiveBoard bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩).sudo_5Board_4cost.sudo_5Costs_3ops :=
     congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_3ops) hRedEq
   have hRedSet : bRed0.sudo_5Board_4cost.sudo_5Costs_3ops =
       bCube0.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, h0cubeSz⟩ (Int.ofNat (cC0 + 1)) :=
     hRedOpsB.trans (hmulOps.trans hstep)
   let occM1 := countHeld (bCube0.sudo_5Board_4held.set ⟨6, h6DC⟩ true) 7
   let bSM := settleBoard bCube0 6 h6HC h6DC ys s.n mvCube slCube pkU
-  let hFsM := settle_held_lt bCube0 6 h6HC h6DC ys s.n mvCube slCube pkU
+  let hFsM := settle_held_lt bCube0 6 ⟨h6HC, h6DC⟩ ys s.n mvCube slCube pkU
   let occM2 := countHeld (bSM.sudo_5Board_4held.set ⟨6, hFsM⟩ false) 7
   let pkR := raisedPeak (raisedPeak pkU occM1) occM2
-  have hpkMul := mul_live_peak bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
-    s.benchlen pkU peakSC cC0 h6HC h6DC h0cubeSz
+  have hpkMul := mul_live_peak bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩
   have hpkRB : bRed0.sudo_5Board_4cost.sudo_5Costs_4peak =
-      (mulNoLiveBoard bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC s.benchlen
-        pkU peakSC cC0 h6HC h6DC h0cubeSz).sudo_5Board_4cost.sudo_5Costs_4peak :=
+      (mulNoLiveBoard bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩).sudo_5Board_4cost.sudo_5Costs_4peak :=
     congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_4peak) hRedEq
   have hpkR : bRed0.sudo_5Board_4cost.sudo_5Costs_4peak = (pkR : Int) := by
     have hraw := hpkRB.trans hpkMul
@@ -872,10 +804,8 @@ theorem red_unparked_delta
     omega
   have hδRed : RungDelta b bRed0 base s.tally :=
     rungDelta_cube_mul hmvE hmvR hmovLoose hslE hslR hsldLoose hpk hpkR hpkRle hszR hslotsR
-  have hfixC := cube_live_park bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-    pkC pkS c1 h5HU h5DU hops1U
-  have hfixM := mul_live_park bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
-    s.benchlen pkU peakSC cC0 h6HC h6DC h0cubeSz
+  have hfixC := cube_live_park bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
+  have hfixM := mul_live_park bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩
   have hparkC : bCube0.sudo_5Board_9park_hole = bClearU.sudo_5Board_9park_hole :=
     (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_9park_hole) hEq).trans hfixC.1
   have hparkR : bRed0.sudo_5Board_9park_hole = bCube0.sudo_5Board_9park_hole :=
@@ -907,16 +837,17 @@ theorem red_unparked_delta
     exact hM.trans htierC
   have htierP : bClearU.sudo_5Board_1t = bClearP.sudo_5Board_1t := by
     rw [hClearEq]; rfl
-  let hFs5 := settle_held_lt bClearU 5 h5HU h5DU xs s.n mvC slC pkC
+  let hFs5 := settle_held_lt bClearU 5 ⟨h5HU, h5DU⟩ xs s.n mvC slC pkC
   have h5set : bCube0.sudo_5Board_4held =
       (settleBoard bClearU 5 h5HU h5DU xs s.n mvC slC pkC).sudo_5Board_4held.set
         ⟨5, hFs5⟩ false := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hEq
-    have hlive := cube_live_held bClearU 6 5 xs s.n s.k mvC slC holeN s.benchlen
-      pkC pkS c1 h5HU h5DU hops1U
+    have hlive := cube_live_held bClearU 6 5 xs ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
     simpa [hFs5] using hB.trans hlive
   have h5DC : 5 < bCube0.sudo_5Board_4held.size := by
-    rw [h5set, Array.size_set, settle_held_eq, Array.size_set, hheldU]
+    rw [h5set, Array.size_set,
+      settle_held_eq bClearU 5 ⟨h5HU, h5DU⟩ xs s.n mvC slC pkC,
+      Array.size_set, hheldU]
     exact h5D
   have h5fC : bCube0.sudo_5Board_4held[5]'h5DC = false := by
     have hget := arr_get h5set 5 h5DC
@@ -924,22 +855,22 @@ theorem red_unparked_delta
     exact Array.getElem_set_eq _ ⟨5, hFs5⟩ false rfl _
   have hhomeRsz : bRed0.sudo_5Board_4home.size = bCube0.sudo_5Board_4home.size := by
     have hL := (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hRedEq).trans
-      (mul_live_home bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
-        s.benchlen pkU peakSC cC0 h6HC h6DC h0cubeSz)
+      (mul_live_home bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩)
     have hs := congrArg Array.size hL
     rw [Array.size_set] at hs
     exact hs
   have h6HR : 6 < bRed0.sudo_5Board_4home.size := by rw [hhomeRsz]; exact h6HC
-  let hFsR := settle_held_lt bCube0 6 h6HC h6DC ys s.n mvCube slCube pkU
+  let hFsR := settle_held_lt bCube0 6 ⟨h6HC, h6DC⟩ ys s.n mvCube slCube pkU
   have hheldSet : bRed0.sudo_5Board_4held =
       (settleBoard bCube0 6 h6HC h6DC ys s.n mvCube slCube pkU).sudo_5Board_4held.set
         ⟨6, hFsR⟩ false := by
     have hB := congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hRedEq
-    have hlive := mul_live_held bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
-      s.benchlen pkU peakSC cC0 h6HC h6DC h0cubeSz
+    have hlive := mul_live_held bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩
     simpa [hFsR] using hB.trans hlive
   have hheldRsz : bRed0.sudo_5Board_4held.size = bCube0.sudo_5Board_4held.size := by
-    rw [hheldSet, Array.size_set, settle_held_eq, Array.size_set]
+    rw [hheldSet, Array.size_set,
+      settle_held_eq bCube0 6 ⟨h6HC, h6DC⟩ ys s.n mvCube slCube pkU,
+      Array.size_set]
   have h6DR : 6 < bRed0.sudo_5Board_4held.size := by rw [hheldRsz]; exact h6DC
   have h7R : 7 ≤ bRed0.sudo_5Board_4held.size := by
     rw [hheldRsz, hheldSz, hheldU]
@@ -954,7 +885,7 @@ theorem red_unparked_delta
     have hget := arr_get hheldSet 5 h5DR
     rw [hget]
     rw [Array.getElem_set_ne _ ⟨6, hFsR⟩ _ _ (by decide : (6 : Nat) ≠ 5)]
-    have hS := settle_held_eq bCube0 6 h6HC h6DC ys s.n mvCube slCube pkU
+    have hS := settle_held_eq bCube0 6 ⟨h6HC, h6DC⟩ ys s.n mvCube slCube pkU
     have hszS : 5 <
         (settleBoard bCube0 6 h6HC h6DC ys s.n mvCube slCube pkU).sudo_5Board_4held.size := by
       rw [hS, Array.size_set]
@@ -969,7 +900,7 @@ theorem red_unparked_delta
     have hget := arr_get hheldSet base.xHome hxDR
     rw [hget]
     rw [Array.getElem_set_ne _ ⟨6, hFsR⟩ _ _ (Ne.symm h.shape.xNe6)]
-    have hS := settle_held_eq bCube0 6 h6HC h6DC ys s.n mvCube slCube pkU
+    have hS := settle_held_eq bCube0 6 ⟨h6HC, h6DC⟩ ys s.n mvCube slCube pkU
     have hszS : base.xHome <
         (settleBoard bCube0 6 h6HC h6DC ys s.n mvCube slCube pkU).sudo_5Board_4held.size := by
       rw [hS, Array.size_set]
@@ -980,8 +911,7 @@ theorem red_unparked_delta
     exact (idx_irrel (h2 := hxDC)).trans hxHeldC
   have hxArrR : bRed0.sudo_5Board_4home[base.xHome]'hxHR = embed base.x := by
     have hL := (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hRedEq).trans
-      (mul_live_home bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
-        s.benchlen pkU peakSC cC0 h6HC h6DC h0cubeSz)
+      (mul_live_home bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩)
     have hget := arr_get hL base.xHome hxHR
     rw [hget]
     rw [Array.getElem_set_ne _ ⟨6, h6HC⟩ _ _ (Ne.symm h.shape.xNe6)]
@@ -995,8 +925,7 @@ theorem red_unparked_delta
     refine ⟨raisedPeak peakSC occ, ?_⟩
     have hB := congrArg
       (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_11peak_strict) hRedEq
-    have hlive := mul_live_strict bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
-      s.benchlen pkU peakSC cC0 h6HC h6DC h0cubeSz
+    have hlive := mul_live_strict bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩
     simpa [occ, ofNat_eq_natCast] using hB.trans hlive
   have hholeR : ∃ holeR : Nat,
       bRed0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (holeR : Int) := by
@@ -1005,8 +934,7 @@ theorem red_unparked_delta
     refine ⟨holeR, ?_⟩
     have hB := congrArg
       (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) hRedEq
-    have hlive := mulLive_hole bCube0 5 6 base.x ys s.n s.k mvCube slCube holeC
-      s.benchlen pkU peakSC cC0 h6HC h6DC h0cubeSz
+    have hlive := mulLive_hole bCube0 5 6 base.x ys ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩ ⟨h6HC, h6DC⟩
     simpa [holeR, ofNat_eq_natCast] using hB.trans hlive
   exact {
     delta := hδRed
@@ -1247,7 +1175,7 @@ theorem red_open_emit
     omega
   have hdouble := tally_double_withPark bClearU xs xsP s.t0 s.tally (s.ctrl + s.tally)
     (s.t0 + s.tally - 1) base.control tmax0 fromH ridxH
-    hm _hlenC _ht0C _hrowC
+    hm _hlenC _ht0C
     (by dsimp only [xs]; rw [paintRed_length, h.shape.rowLen]; exact hRoom)
     (by dsimp only [xsP]; rw [paintRed_length, afterPark_length, h.shape.rowLen]; exact hRoom)
     hRed hRedP hZero hZeroP _hctrlN (by rw [_hhighC, hHighEq]) rfl
@@ -1342,51 +1270,9 @@ theorem red_open_emit
         rw [size_embed, paintOnes_length, paintOnes_length, paintRed_length, h.shape.rowLen]
         exact hPast)
       hixP
-      (by
-        have hwide := paintOnes_get_hi (paintOnes xs s.t0 s.tally) (s.t0 + s.tally) s.tally
-          (s.t0 + 2 * s.tally) (Nat.le_of_eq hsumEq)
-          (by dsimp only [xs]; rw [paintOnes_length, paintRed_length, h.shape.rowLen]; exact hPast)
-        have hmid := paintOnes_get_hi xs s.t0 s.tally (s.t0 + 2 * s.tally) hle2
-          (by dsimp only [xs]; rw [paintRed_length, h.shape.rowLen]; exact hPast)
-        have hred := paintRed_get_hi s.row s.t0 s.tally (s.t0 + 2 * s.tally) hle2
-          (by rw [h.shape.rowLen]; exact hPast)
-        have htail := h.tailZero (2 * s.tally) (by omega)
-          (by
-            have hgrow := red_final_gt s.tally r rest hr hrest
-            have hwhole : climbTally s.tally (r :: rest) =
-                climbTally base.tally0 (done ++ (r :: rest)) := by
-              rw [h.htally0]
-              exact climbTally_prefix_rest base.tally0 done (r :: rest)
-            rw [← hwhole]; exact hgrow)
-          (by rw [h.shape.rowLen]; exact hPast)
-        have hlist0 :
-            (paintOnes (paintOnes xs s.t0 s.tally) (s.t0 + s.tally) s.tally)[s.t0 + 2 * s.tally]'(by
-              rw [paintOnes_length, paintOnes_length]
-              dsimp only [xs]
-              rw [paintRed_length, h.shape.rowLen]
-              exact hPast) = 0 :=
-          hwide.trans (hmid.trans (hred.trans htail))
-        have hixT : s.t0 + 2 * s.tally <
-            (withTally bRed0 rowD lenD ctrlD highD maxD).sudo_5Board_3row.size := by
-          rw [withTally_row]
-          dsimp only [rowD]
-          rw [size_embed, paintOnes_length, paintOnes_length, paintRed_length, h.shape.rowLen]
-          exact hPast
-        have harr : rowD[s.t0 + 2 * s.tally]'(by
-            dsimp only [rowD]
-            rw [size_embed, paintOnes_length, paintOnes_length, paintRed_length, h.shape.rowLen]
-            exact hPast) = 0 := by
-          dsimp only [rowD, embed]
-          rw [Array.getElem_mk, List.getElem_map, hlist0]
-          rfl
-        exact (getElem_congr_coll
-          (c := (withTally bRed0 rowD lenD ctrlD highD maxD).sudo_5Board_3row)
-          (d := rowD) (i := s.t0 + 2 * s.tally) (h := hixT)
-          (withTally_row _ _ _ _ _ _)).trans harr)
       hzeroCell
       (by simp [withTally, _htierRed, _hctrlN]) hPast
       (by simp [withTally, highD]) (by omega) hFitI
-      (by simp [withTally, ctrlD]) (FitsLen.of_le hCtrlU.2 (by omega))
       (by
         have h1 : FitsLen (s.ctrl + 2 + 3 * s.tally + 1) := by
           have hpos : 1 ≤ 2 * s.tally :=
@@ -2229,40 +2115,40 @@ theorem resume_copy
 /-- `place` writes one home. Marker, bench flag, tier, strict peak, and the
     recorded bench hole stay. -/
 theorem place_side (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (moves peak : Nat) :
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_9marker_on =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_9marker_on =
       b.sudo_5Board_9marker_on ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_8bench_on =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_8bench_on =
       b.sudo_5Board_8bench_on ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_1t = b.sudo_5Board_1t ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_1t = b.sudo_5Board_1t ∧
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
       b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
       b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
   unfold placeBoard
   dsimp only
   split <;> exact ⟨rfl, rfl, rfl, rfl, rfl⟩
 
 theorem place_held_src (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (moves peak : Nat)
-    (hF : home < (placeBoard b home hH hD xs moves peak).sudo_5Board_4held.size) :
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_4held[home] = true := by
-  have hEq : (placeBoard b home hH hD xs moves peak).sudo_5Board_4held =
-      b.sudo_5Board_4held.set ⟨home, hD⟩ true := by
+    (hF : home < (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4held.size) :
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4held[home] = true := by
+  have hEq : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4held =
+      b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true := by
     unfold placeBoard
     dsimp only
     split <;> rfl
   simpa [Array.getElem_set] using idx_get hEq home hF
 
 theorem place_home_src (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (moves peak : Nat)
-    (hF : home < (placeBoard b home hH hD xs moves peak).sudo_5Board_4home.size) :
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_4home[home] = embed xs := by
-  have hEq : (placeBoard b home hH hD xs moves peak).sudo_5Board_4home =
-      b.sudo_5Board_4home.set ⟨home, hH⟩ (embed xs) := by
+    (hF : home < (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4home.size) :
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4home[home] = embed xs := by
+  have hEq : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨home, hin.hH⟩ (embed xs) := by
     unfold placeBoard
     dsimp only
     split <;> rfl
@@ -2388,7 +2274,7 @@ theorem clear_withPark
   have hmvW : bW.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) := by
     simpa [bW, withPark] using hmoves
   rw [clear_held_refines bW home xs moves hHW hDW hheldW harrW hmvW hf hfit]
-  rw [← clearHeld_withPark b row ctrl fromHole ridx home xs moves hH hD]
+  rw [← clearHeld_withPark b row ctrl fromHole ridx home xs moves ⟨hH, hD⟩]
   rfl
 
 /-- Same cube-peg context, with a replacement row, counter, parked-from hole,

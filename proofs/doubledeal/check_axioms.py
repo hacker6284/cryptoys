@@ -22,7 +22,7 @@
     python3 proofs/doubledeal/check_axioms.py bs  # proofs/key_exchange/bs/lean
                                           # (BS Link 2: arithmetic, walk, check, exchange)
     python3 proofs/doubledeal/check_axioms.py ecbs  # proofs/key_exchange/ecbs/lean
-                                          # (ECBS Link 2: tier, coordinate, band, keypad)
+                                          # (ECBS Link 2 part 1: 11 exports covered)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,
@@ -643,8 +643,10 @@ BS_LINK2 = {
 # has three theorems; the traced `scramble_v1` and the demo's `apply_move` rows say they are
 # not claimed (no theorem), so those gaps are in the table rather than silent. BS is listed: its table has a row for each of
 # the 11 exports (build_letting_go went with letting go, SPEC §4.2: nobody lets go).
-# ECBS is listed: its table has a row for each of the 19 exports. The board machine
-# (new_board, place, fold, multiply, the exchange) says it is not claimed.
+# ECBS is listed: its table has a row for each of the 19 exports. Part 1 covers 11
+# (tier, phase_names, op_names, new_board, coordinate, place, band, curve_test,
+# invert_number, multiply, cube_number). Eight are not covered (call_in, roll_key,
+# exchange, receive_check, make_certificate, base_point_of, walk_key, fold).
 
 # proofs/key_exchange/ecbs/lean (ECBS Link 2; scope in its README): every theorem that
 # README cites by name. `--selftest` re-derives the list.
@@ -701,16 +703,50 @@ ECBS_LINK2 = {
     "EcbsLink2.Link2.settle_refines",
     "EcbsLink2.Link2.curve_test_refines",
     "EcbsLink2.Link2.demo_curve_zero_one",
+    "EcbsLink2.Link2.toy_curve_zero_one",
+    "EcbsLink2.Link2.hobby_curve_zero_one",
+    "EcbsLink2.Link2.serious_curve_zero_one",
     "EcbsLink2.Link2.invert_number_refines",
     "EcbsLink2.Link2.invert_number_none",
     "EcbsLink2.Link2.demo_invert_one",
+    "EcbsLink2.Link2.toy_invert_one",
+    "EcbsLink2.Link2.hobby_invert_one",
+    "EcbsLink2.Link2.serious_invert_one",
     "EcbsLink2.Link2.demo_multiply_one",
+    "EcbsLink2.Link2.demo_multiply_neg",
     "EcbsLink2.Link2.demo_cube_one",
+    "EcbsLink2.Link2.demo_invert_neg",
     "EcbsLink2.Link2.demo_new_board",
     "EcbsLink2.Link2.demo_coordinate_origin",
+    "EcbsLink2.Link2.FieldLay.fits",
+    "EcbsLink2.Link2.FieldLay.fits_n",
     "EcbsLink2.Spec.demo_basePoint",
     "EcbsLink2.Link2.frobenius_affine_refines",
 }
+# The 11 covered exports, each with the theorem that ties the emitted function,
+# and the 8 exports part 1 does not cover. `check_axioms.py ecbs` fails if a
+# covered theorem is missing from the audit. `--selftest` fails if the README
+# table disagrees with these two lists.
+ECBS_COVERED_EXPORTS = {
+    "tier": [
+        "tier_demo_refines", "tier_toy_refines", "tier_hobby_refines",
+        "tier_serious_refines", "tier_rejects",
+    ],
+    "phase_names": ["phase_names_refines"],
+    "op_names": ["op_names_refines"],
+    "new_board": ["new_board_refines"],
+    "coordinate": ["coordinate_refines"],
+    "place": ["place_refines"],
+    "band": ["band_held_refines", "band_bench_refines", "band_traps"],
+    "curve_test": ["curve_test_refines"],
+    "invert_number": ["invert_number_refines"],
+    "multiply": ["multiply_refines"],
+    "cube_number": ["cube_number_refines"],
+}
+ECBS_UNCOVERED_EXPORTS = [
+    "call_in", "roll_key", "exchange", "receive_check",
+    "make_certificate", "base_point_of", "walk_key", "fold",
+]
 LINK2_EXPORT_TABLES = {
     "megadreifach-v3": (ROOT.parent.parent / "primitives" / "hash" / "megadreifach" / "v3"
                         / "megadreifach.sudo", MD_V3_README),
@@ -1084,7 +1120,7 @@ PACKAGES = {
         "mode": "all",
         "key": "full",
         "known_sorry": set(),
-        "min": 2989,  # measured: check_axioms.py ecbs reports 2989 theorems on part 1
+        "min": 3027,  # measured: check_axioms.py ecbs reports 3027 theorems on part 1
         "required": ECBS_LINK2,
     },
     "megadreifach-heavy": {
@@ -1211,6 +1247,57 @@ def md_readme_cited(readme=MD_README, root=MD_LEAN):
             bad.append(f"README token `{t}` is ambiguous: {sorted(hits)}")
         cited |= hits
     return cited, bad
+
+
+def ecbs_export_rows(readme_text):
+    """Map each Emitted-function name to its theorem cell."""
+    rows, in_table = {}, False
+    for line in readme_text.splitlines():
+        if not line.lstrip().startswith("|"):
+            if in_table and rows:
+                break
+            continue
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if not cells:
+            continue
+        if cells[0] == EMITTED_HEADER:
+            in_table = True
+            continue
+        if not in_table or set(cells[0]) <= set("-: "):
+            continue
+        rows[cells[0].strip("`")] = cells[1] if len(cells) > 1 else ""
+    return rows
+
+
+def ecbs_export_problems(readme_text):
+    """The README's export table must name the 11 covered exports' theorems and
+    leave the 8 uncovered exports without a refinement theorem."""
+    rows = ecbs_export_rows(readme_text)
+    bad = []
+    if len(ECBS_COVERED_EXPORTS) != 11 or len(ECBS_UNCOVERED_EXPORTS) != 8:
+        bad.append(
+            f"expected 11 covered and 8 uncovered exports, "
+            f"got {len(ECBS_COVERED_EXPORTS)} and {len(ECBS_UNCOVERED_EXPORTS)}")
+    if set(ECBS_COVERED_EXPORTS) & set(ECBS_UNCOVERED_EXPORTS):
+        bad.append("an export is listed as both covered and uncovered")
+    for exp, thms in ECBS_COVERED_EXPORTS.items():
+        cell = rows.get(exp)
+        if cell is None:
+            bad.append(f"covered export {exp} has no README row")
+            continue
+        for th in thms:
+            if f"`{th}`" not in cell:
+                bad.append(f"covered export {exp} README row does not name `{th}`")
+    for exp in ECBS_UNCOVERED_EXPORTS:
+        cell = rows.get(exp)
+        if cell is None:
+            bad.append(f"uncovered export {exp} has no README row")
+            continue
+        if "none" not in cell:
+            bad.append(f"uncovered export {exp} README row does not say none")
+        if "_refines" in cell:
+            bad.append(f"uncovered export {exp} README row names a _refines theorem")
+    return bad
 
 
 SUDO_EXPORT = re.compile(r"^\s*export\s+func\s+([A-Za-z_]\w*)", re.M)
@@ -1468,6 +1555,13 @@ def selftest():
               f"{len(cited)} theorems cited in {readme.relative_to(ROOT.parent.parent)}"
               + (f"; cited but not listed: {missing}" if missing else "")
               + (f"; listed but not cited: {extra}" if extra else ""))
+    ecbs_bad = ecbs_export_problems((ECBS_LEAN / "README.md").read_text())
+    failed += bool(ecbs_bad)
+    covered = ", ".join(ECBS_COVERED_EXPORTS)
+    print(f"check_axioms selftest: {'ok' if not ecbs_bad else 'FAIL'} "
+          f"ECBS 11 covered exports ({covered}); "
+          f"8 not covered ({', '.join(ECBS_UNCOVERED_EXPORTS)})"
+          + (f": {'; '.join(ecbs_bad)}" if ecbs_bad else ""))
     # Every sudo export is in the README's "Emitted function" column (and only exports
     # are): the real packages, then planted negatives, including the real cbc-hmac README
     # with one row dropped, which must be reported as exactly that export missing. One
@@ -1597,6 +1691,14 @@ def main(argv) -> int:
         bad += heavy_generated_problems(seen, HEAVY_THEOREMS, HEAVY_GENERATED)
     for name in sorted(cfg.get("required", set()) - set(seen)):
         bad.append(f"required theorem {name} was not reported by the audit")
+    if pkg == "ecbs":
+        for exp, thms in ECBS_COVERED_EXPORTS.items():
+            for th in thms:
+                full = f"EcbsLink2.Link2.{th}"
+                if full not in seen:
+                    bad.append(f"covered export {exp} theorem {full} was not reported")
+        print("check_axioms: ecbs: 11 covered exports: "
+              + ", ".join(ECBS_COVERED_EXPORTS))
     for name in sorted(known_sorry - set(seen)):
         bad.append(f"KNOWN_SORRY entry {name} was not reported (renamed or removed?)")
     for name in re.findall(r"'(\S+?)' is an axiom declared in the package", out):

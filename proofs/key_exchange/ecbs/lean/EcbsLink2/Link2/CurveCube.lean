@@ -129,17 +129,17 @@ theorem curve_cube_step (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
   let bench := t.benchlen
   let cg := t.combgap
   let s := settleBoard b 5 h5H h5D lane n moves 0 pk
-  have hheldS := settle_held_eq b 5 h5H h5D lane n moves 0 pk
-  have hhomeS := settle_home_eq b 5 h5H h5D lane n moves 0 pk
-  have htierS := settle_tier_eq b 5 h5H h5D lane n moves 0 pk
-  have hmovS := settle_moves_eq b 5 h5H h5D lane n moves 0 pk
-  have hslS := settle_slides_eq b 5 h5H h5D lane n moves 0 pk
-  have hmkS := settle_marker_eq b 5 h5H h5D lane n moves 0 pk
-  have hoffS := settle_bench_off b 5 h5H h5D lane n moves 0 pk
-  have hstrictS := settle_strict_eq b 5 h5H h5D lane n moves 0 pk
-  have hholeS := settle_hole_eq b 5 h5H h5D lane n moves 0 pk
-  have hopsS := settle_ops b 5 h5H h5D lane n moves 0 pk
-  have hpeakS := settle_peak_eq b 5 h5H h5D lane n moves 0 pk hpeak
+  have hheldS := settle_held_eq b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have hhomeS := settle_home_eq b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have htierS := settle_tier_eq b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have hmovS := settle_moves_eq b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have hslS := settle_slides_eq b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have hmkS := settle_marker_eq b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have hoffS := settle_bench_off b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have hstrictS := settle_strict_eq b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have hholeS := settle_hole_eq b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have hopsS := settle_ops b 5 ⟨h5H, h5D⟩ lane n moves 0 pk
+  have hpeakS := settle_peak_eq b 5 ⟨h5H, h5D⟩ lane n moves 0 pk hpeak
   have hszHs : s.sudo_5Board_4home.size = 8 := by
     simp only [s, hhomeS, Array.size_set, hszH]
   have hszDs : s.sudo_5Board_4held.size = 8 := by
@@ -213,22 +213,7 @@ theorem curve_cube_step (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
   have hbounds := settledCube_le moves pegY n bench hmv hpegY
   have hmvSle : mvS ≤ n * (n + 1) + 3 * (bench - n) + 8 * n := by
     simpa [mvS] using hbounds.1
-  have hcube := curve_cube_bottom s x w h r n k mvS holeN bench pk peakS 0 cg
-    (by simpa [s] using hmkS.trans hmk)
-    (by simpa [s] using hoffS)
-    hops1s hop1s (fit 1 hbounds.2.2.2.2.2.2)
-    hfields.2.2.2.2.2.1 hfields.2.2.2.2.2.2 sat.cube_span
-    h2Ds h2Hs hheld2s hhome2s h7s lay.board.n_pos
-    (by rw [hfields.1]; exact ofNat_eq_natCast _)
-    (by simpa [n] using hx) (fit n hbounds.2.2.2.2.1)
-    hmvS hpkCube hstrictC hxt
-    (fit (3 * (n - 1)) hbounds.2.2.2.1)
-    (fit (mvS + 2 * n) (by simpa [mvS] using hbounds.2.1))
-    lay.w_pos lay.h_pos lay.r_lt lay.r_pos lay.n_eq lay.k_le lay.gap_eq
-    hfields.2.2.1 hfields.2.2.2.1 hfields.2.2.2.2.1 hfields.2.1
-    hholeC lay.small hnsm
-    (fit bench hbounds.2.2.2.2.2.1)
-    (fit (mvS + 2 * n + 3 * (bench - n)) (by simpa [mvS] using hbounds.2.2.1))
+  have hcube := curve_cube_bottom s x w h r n k mvS holeN bench pk peakS 0 cg (by simpa [s] using hmkS.trans hmk) (by simpa [s] using hoffS) hops1s hop1s (fit 1 hbounds.2.2.2.2.2.2) hfields.2.2.2.2.2.1 hfields.2.2.2.2.2.2 sat.cube_span h2Ds h2Hs hheld2s hhome2s h7s lay.board.n_pos (by rw [hfields.1]; exact ofNat_eq_natCast _) (by simpa [n] using hx) (fit n hbounds.2.2.2.2.1) hmvS hpkCube hstrictC hxt (fit (3 * (n - 1)) hbounds.2.2.2.1) (fit (mvS + 2 * n) (by simpa [mvS] using hbounds.2.1)) ⟨lay.w_pos, lay.h_pos, lay.r_lt, lay.r_pos, lay.n_eq, lay.k_le, lay.gap_eq⟩ hfields.2.2.1 hfields.2.2.2.1 hfields.2.2.2.2.1 hfields.2.1 hholeC lay.small hnsm (fit bench hbounds.2.2.2.2.2.1) (fit (mvS + 2 * n + 3 * (bench - n)) (by simpa [mvS] using hbounds.2.2.1))
   obtain ⟨bC, hok, honC, htoC, hbenchC, htakeC, hheldC, hhomeC, hmkC, hhigh, hmovC,
       hpeakC, hslidesC, htC, hopsC, hstrictC', hholeC'⟩ := hcube
   have hszHC : bC.sudo_5Board_4home.size = 8 := by

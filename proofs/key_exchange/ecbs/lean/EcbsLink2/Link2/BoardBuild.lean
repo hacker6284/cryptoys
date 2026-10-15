@@ -1474,7 +1474,7 @@ theorem demo_band_peg :
     Ecbs.band demoHeld 0 = .ok (embed demoPeg) := by
   have hlen : demoPeg.length = 7 := by decide
   refine band_held_refines demoHeld 0 demoPeg 7 ?hszD ?hszH ?hheld ?harr ?hn
-      (by simpa [hlen]) (fits_small (by decide))
+      (by simp [hlen]) (fits_small (by decide))
   · simp [demoHeld, demoBlank, blankOf, Array.size_set, Array.size_mkArray]
   · simp [demoHeld, demoBlank, blankOf, Array.size_set, Array.size_mkArray]
   · simp [demoHeld, demoBlank, blankOf, Array.getElem_set, Array.getElem_mkArray]

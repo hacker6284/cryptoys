@@ -1333,62 +1333,32 @@ theorem check_mul (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       have hpeg : pegCount xs ≤ t.n := by
         rw [← hx]
         exact pegCount_le xs
-      have hmul := mul_refines bZ 7 5 2 (invGap t.n t.k t.benchlen xs) xs
-          t.w t.h t.r t.n t.k mv holeN t.benchlen pk pS cOps
-          hread.marker hread.benchOff hread.opsGt hcOps.1 hcOps.2
-          (by rw [hread.tierEq]; simpa [hbL] using hK.shape.tierB)
-          hread.h5D hsg.h5 hread.held5 hArr
-          hread.h2D hread.h2H
-          (by
+      have hmul := mul_refines bZ 7 5 2 (invGap t.n t.k t.benchlen xs) xs t.w t.h t.r t.n t.k mv holeN t.benchlen pk pS cOps hread.marker hread.benchOff hread.opsGt hcOps.1 hcOps.2 (by rw [hread.tierEq]; simpa [hbL] using hK.shape.tierB) hread.h5D hsg.h5 hread.held5 hArr hread.h2D hread.h2H (by
             have hheld : b'.sudo_5Board_4held[2]'hread.h2D0 = true := by
               simpa [entryBudget] using hK.shape.xHeld
-            exact hread.held2.trans hheld)
-          (by
+            exact hread.held2.trans hheld) (by
             have hhome : b'.sudo_5Board_4home[2]'hread.h2H0 = embed xs := by
               simpa [entryBudget] using hK.shape.xArr
-            exact hread.home2.trans hhome)
-          hread.spareD hread.spareH hread.spareE hread.h7
-          (by decide) (by decide)
-          (by simpa [hn] using hK.shape.peg.n_pos)
-          (by rw [hread.tierEq]; simpa [hn] using hK.shape.tierN)
-          (by
+            exact hread.home2.trans hhome) hread.spareD hread.spareH hread.spareE hread.h7 (by decide) (by decide) (by simpa [hn] using hK.shape.peg.n_pos) (by rw [hread.tierEq]; simpa [hn] using hK.shape.tierN) (by
             rw [invGap_cube]
             exact fieldCube_length t.n t.k t.benchlen
               (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1
               (by
                 have hs := sat.mul_span
-                omega))
-          hx
-          (by simpa [hn] using hK.shape.peg.fitN)
-          hmv hpk hpS
-          (by
+                omega)) hx (by simpa [hn] using hK.shape.peg.fitN) hmv hpk hpS (by
             apply FitsLen.of_le hfitBig
-            omega)
-          sat.mul_span
-          (by
+            omega) sat.mul_span (by
             have hsp : 3 * (s'.n - 1) < s'.benchlen := by
               have hs := hK.shape.peg.span
               omega
             have htriG := fieldCube_trits s'.n s'.k s'.benchlen s'.gap
               hK.shape.peg.trits hsp hK.shape.k_le
             rw [hcube] at htriG
-            exact htriG)
-          (by
+            exact htriG) (by
             apply FitsLen.of_le (by simpa [hn] using hK.shape.peg.fit3)
-            omega)
-          (by
+            omega) (by
             apply FitsLen.of_le hfitBig
-            omega)
-          lay.w0 lay.h0 lay.rlt lay.r0 lay.n_eq lay.k_le lay.gap
-          (by rw [hread.tierEq]; simpa using hK.shape.tierW)
-          (by rw [hread.tierEq]; simpa using hK.shape.tierH)
-          (by rw [hread.tierEq]; simpa using hK.shape.tierR)
-          (by rw [hread.tierEq]; simpa [hkS] using hK.shape.tierK)
-          (by rw [hholeN, ofNat_eq_natCast])
-          (by simpa [hbL] using hK.shape.peg.small)
-          (by simpa [hn] using hK.shape.peg.n_small)
-          (by simpa [hbL] using hK.shape.peg.fitBn)
-          (by
+            omega) ⟨lay.w0, lay.h0, lay.rlt, lay.r0, lay.n_eq, lay.k_le, lay.gap⟩ (by rw [hread.tierEq]; simpa using hK.shape.tierW) (by rw [hread.tierEq]; simpa using hK.shape.tierH) (by rw [hread.tierEq]; simpa using hK.shape.tierR) (by rw [hread.tierEq]; simpa [hkS] using hK.shape.tierK) (by rw [hholeN, ofNat_eq_natCast]) (by simpa [hbL] using hK.shape.peg.small) (by simpa [hn] using hK.shape.peg.n_small) (by simpa [hbL] using hK.shape.peg.fitBn) (by
             apply FitsLen.of_le hfitBig
             omega)
       obtain ⟨bM, hmulOk, hon, -, hbench, htake, hrest⟩ := hmul

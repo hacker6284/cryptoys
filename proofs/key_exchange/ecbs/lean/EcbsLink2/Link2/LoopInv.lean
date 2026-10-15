@@ -169,9 +169,9 @@ theorem finalTail_idx (i : Int) (b : Ecbs.Board) :
 /-- `place` does not write the ladder, and neither does `copy_band` when it
     returns that board. -/
 theorem placeBoard_ladder (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (moves peak : Nat) :
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_6ladder =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_6ladder =
       b.sudo_5Board_6ladder := by
   simp [placeBoard]
   split <;> rfl
@@ -198,7 +198,7 @@ theorem copy_band_ladder (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     harr hempty hn hf hmoves hpeak hfit
   rw [heq] at h
   cases h
-  exact placeBoard_ladder b dst hHd hDd xs moves peak
+  exact placeBoard_ladder b dst ⟨hHd, hDd⟩ xs moves peak
 
 /-- One guarded rung rebuilds `ClimbInvL` at the next index. The length is the
     one `climb_step` stores (`tallyAfter`). The ladder is the board the rung

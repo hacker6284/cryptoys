@@ -154,4 +154,35 @@ theorem nnz_nonneg_count (xs : List Nat) :
     (xs.filter (· ≠ 0)).length ≤ xs.length :=
   List.length_filter_le _ _
 
+/-- The two index proofs a home update needs: the home array and the held array.
+    Same facts as the repeated `(home < home.size)` / `(home < held.size)` pair. -/
+structure HomeIn (b : Ecbs.Board) (home : Nat) where
+  hH : home < b.sudo_5Board_4home.size
+  hD : home < b.sudo_5Board_4held.size
+
+/-- Lane shape shared by `mul` and `cube`: positive `w`, `h`, `r`, with
+    `n = w·h − 1`, `k ≤ n`, and `n − k = w·r`. -/
+structure BoardShape (w h r n k : Nat) where
+  hw0 : 0 < w
+  hh0 : 0 < h
+  hrR : r < h
+  hrP : 0 < r
+  hnE : n = w * h - 1
+  hkLe : k ≤ n
+  hgap : n - k = w * r
+
+/-- The nine `Nat`s a live mul or cube threads, plus the ops-slot bound.
+    `slot = 0` is the mul counter and `slot = 1` is the cube counter. -/
+structure Budget (b : Ecbs.Board) (slot : Nat) where
+  n : Nat
+  k : Nat
+  moves : Nat
+  slides : Nat
+  hole : Nat
+  bench : Nat
+  peak : Nat
+  peakS : Nat
+  cOps : Nat
+  hops : slot < b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+
 end EcbsLink2.Link2

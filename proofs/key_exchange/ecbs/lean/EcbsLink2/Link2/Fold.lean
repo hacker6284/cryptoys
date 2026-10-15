@@ -243,7 +243,7 @@ theorem foldGeom_dest (w h r k e : Nat) (hw : 0 < w) (hh : 0 < h) (hr : r < h)
     have := row_ge w h e hw hh he
     have : r ≤ h - 1 := Nat.le_sub_one_of_lt hr
     omega
-  rw [foldGeom_refines w h r e hw hh hr he hsm, laneDest_eq hw hh he, laneDest2_eq hw hrw,
+  rw [foldGeom_refines w h r e hw hh hr he hsm, laneDest_eq hw hh he, laneDest2_eq hrw,
     Nat.mul_comm r w, ← hk]
 
 end EcbsLink2.Link2

@@ -113,46 +113,46 @@ private theorem set_true_id (a : Array Bool) (i : Nat) (hi : i < a.size) (ht : a
       simp [Array.getElem_set, hne]
 
 private theorem settle_off_mark (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_8bench_on = false ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_9marker_on =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_8bench_on = false ∧
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_9marker_on =
       b.sudo_5Board_9marker_on ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_1t = b.sudo_5Board_1t ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_1t = b.sudo_5Board_1t ∧
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops =
       b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
       b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
       b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_5moves =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_5moves =
       Int.ofNat (moves + 2 * pegCount (xs.take n)) ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_6slides =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_6slides =
       Int.ofNat (slides + 2 * pegCount (xs.take n)) := by
   unfold settleBoard
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   all_goals split <;> rfl
 
 private theorem settle_peak_of (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat)
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_4peak =
-      Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7)) := by
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7)) := by
   unfold settleBoard raisedPeak
   split
   · next hlt => simp [hlt]
   · next hnk => simpa [hnk, ofNat_eq_natCast] using hpeak
 
 private theorem place_lane (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (moves peak : Nat) :
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_5bench = b.sudo_5Board_5bench ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_8bench_to =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_5bench = b.sudo_5Board_5bench ∧
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_8bench_to =
       b.sudo_5Board_8bench_to ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_4home.size =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4home.size =
       b.sudo_5Board_4home.size ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_4held.size =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4held.size =
       b.sudo_5Board_4held.size := by
   unfold placeBoard
   dsimp only
@@ -354,8 +354,8 @@ theorem curve_on_prefix (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
     (by simpa [n] using hx) hfn
     (by simpa [mv1, n, k, bench] using hmov)
     hpeakPk hfit1
-  have hlane := place_lane b1 2 h2H1 h2D1 x mv1 pk1
-  have hidle := place_idle b1 2 h2H1 h2D1 x mv1 pk1
+  have hlane := place_lane b1 2 ⟨h2H1, h2D1⟩ x mv1 pk1
+  have hidle := place_idle b1 2 ⟨h2H1, h2D1⟩ x mv1 pk1
   have h2b : 2 < bCopy.sudo_5Board_4held.size := by
     rw [show bCopy.sudo_5Board_4held.size = b1.sudo_5Board_4held.size from by
       simpa [bCopy] using hlane.2.2.2]
@@ -373,7 +373,7 @@ theorem curve_on_prefix (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
       simpa [bCopy] using hlane.2.2.2]
     exact h7b
   have hmovC : bCopy.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvCopy := by
-    simpa [bCopy, mvCopy] using place_moves b1 2 h2H1 h2D1 x mv1 pk1
+    simpa [bCopy, mvCopy] using place_moves b1 2 ⟨h2H1, h2D1⟩ x mv1 pk1
   have hslideC : bCopy.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat 0 := by
     rw [show bCopy.sudo_5Board_4cost.sudo_5Costs_6slides =
       b1.sudo_5Board_4cost.sudo_5Costs_6slides from by simpa [bCopy] using hidle.2.2.2.1]
@@ -397,7 +397,7 @@ theorem curve_on_prefix (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
       Int.ofNat (raisedPeak pk1 (countHeld (bCopy.sudo_5Board_4held.set ⟨2, h2b⟩ true) 7)) := by
     rw [hoccEq]
     simpa [bCopy, raisedPeak] using
-      place_peak b1 2 h2H1 h2D1 x mv1 pk1 hpeakPk
+      place_peak b1 2 ⟨h2H1, h2D1⟩ x mv1 pk1 hpeakPk
   have hbenchC : bCopy.sudo_5Board_5bench = embed yLane := by
     rw [show bCopy.sudo_5Board_5bench = b1.sudo_5Board_5bench from by
       simpa [bCopy] using hlane.1, hbenchY]
@@ -414,7 +414,7 @@ theorem curve_on_prefix (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
     exact hmk1
   have hempty5 : bCopy.sudo_5Board_4held[5] = false := by
     have hF : 5 < bCopy.sudo_5Board_4held.size := h5Db
-    have hgot := place_held_other b1 2 5 h2H1 h2D1 x mv1 pk1 (by decide) h5D1 hF
+    have hgot := place_held_other b1 2 5 ⟨h2H1, h2D1⟩ x mv1 pk1 (by decide) h5D1 hF
     simpa [bCopy] using hgot.trans (hh5 h5D1)
   have htCopy : bCopy.sudo_5Board_1t = embTier t := by
     rw [show bCopy.sudo_5Board_1t = b1.sudo_5Board_1t from by simpa [bCopy] using hidle.2.2.2.2.1,

@@ -274,9 +274,9 @@ theorem mulOff_ladder (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
       b.sudo_5Board_6ladder := rfl
 
 theorem settleBoard_ladder (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_6ladder =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_6ladder =
       b.sudo_5Board_6ladder := by
   unfold settleBoard
   split <;> rfl

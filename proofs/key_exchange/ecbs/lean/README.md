@@ -7,7 +7,9 @@ Status: **part 1.** This branch proves that the code `sudoc` emits from [`ecbs.s
 
 `demo_basePoint` is the spec base point on Demo, equal to the coordinate pair written in SPEC.md §5.1. `frobenius_affine_refines` cubes the across home and the up home on a board that already holds those two length-n trit lists, with the marker off, the bench off, and the move and slide counters inside the stated bounds. It is not an export. `base_point_of` is not this theorem.
 
-Success-branch reachability is not proved for Toy, Hobby, and Serious. SPEC.md gives the Hobby and Serious base points only as hashes. Proving that `fieldInv` is the true field inverse is future work, not started.
+Demo also has one non-unit witness for each of `multiply` and `invert_number`. `negPeg` is a red peg in hole 0 (the constant `2`, not the unit). `demo_invert_neg` is `invert_number_refines` on that peg, and the export returns the same peg. `demo_multiply_neg` is `multiply_refines` on that peg times itself, and the export returns the unit. The two steps of the Demo climb are kernel `decide`; nothing raises the heartbeat or recursion limit.
+
+Toy, Hobby, and Serious each have a success witness for the unit (`toy_invert_one`, `hobby_invert_one`, `serious_invert_one`, and `toy_curve_zero_one`, `hobby_curve_zero_one`, `serious_curve_zero_one`). What those tiers do not have is the published base points, and inputs other than the unit. SPEC.md gives the Hobby and Serious base points only as hashes. Proving that `fieldInv` is the true field inverse is future work, not started.
 
 The climb inside the inverse uses this room. The numbers are the model's final tally and the control-row room, not a claim about the unfinished exports:
 
@@ -27,7 +29,7 @@ python3 ../../../doubledeal/check_axioms.py ecbs # every EcbsLink2 theorem: prop
 python3 ../../../doubledeal/security/checks/scan_sorry.py --root . --exclude Generated
 ```
 
-No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeds: 2989 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. The largest file is `EcbsLink2/Link2/ClimbEmit.lean`, compile peak (VmHWM) 1740496 kB. No `maxHeartbeats` or `maxRecDepth` option is set.
+No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeds: 3027 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. The largest file is `EcbsLink2/Link2/ClimbEmit.lean`, compile peak (VmHWM) 1749256 kB. No `maxHeartbeats` or `maxRecDepth` option is set. The 2 GB per-file cap and that clean build are checked by the weekly workflow [`.github/workflows/ecbs-link2-mem.yml`](../../../../.github/workflows/ecbs-link2-mem.yml) (`workflow_dispatch` and a Monday schedule), not by the pull-request `ecbs-lean` job.
 
 ## Generated Lean
 
@@ -66,8 +68,8 @@ Every `export func` of `ecbs.sudo` has a row. `check_axioms.py --selftest` check
 | `curve_test` | `curve_test_refines`, `demo_curve_zero_one` | On `FieldLay` and `TierSat`, for two length-`n` trit lists: the bool is the curve predicate. Demo at the zero across and the one-peg up returns true. Hobby and Serious published base points are not claimed. |
 | `base_point_of` | none: the root-strip search is not tied | |
 | `walk_key` | none: the key walk is not tied | |
-| `invert_number` | `invert_number_refines`, `invert_number_none`, `demo_invert_one` | On `BoardOk`, a length-`n` trit list, `TierSat`, `TierShape`, and `0 < tierR`: when the spec inverse is `some ans`, the export returns that list; when it is `none`, the kind is `AssertFailed`. Demo's one-peg list is returned as its own inverse. |
-| `multiply` | `multiply_refines`, `demo_multiply_one` | On `FieldLay` (a `BoardOk` tier whose `n`, `k`, `w`, `h`, `r`, and `benchlen` are the layout `mul_refines` uses, with `n ≤ 1000000` and `benchlen ≤ 1000001`): `new_board`, across `put`, up `put` (two held homes, so peak goes from 1 to 2), `mul`, `settle`, `value`. The array is embedded `Spec.fieldMul`. The across input is a trit list of length `n`. The up input has length `n`. Demo's one-peg list times itself returns that list. |
+| `invert_number` | `invert_number_refines`, `invert_number_none`, `demo_invert_one`, `demo_invert_neg` | On `BoardOk`, a length-`n` trit list, `TierSat`, `TierShape`, and `0 < tierR`: when the spec inverse is `some ans`, the export returns that list; when it is `none`, the kind is `AssertFailed`. Demo's one-peg list is returned as its own inverse. Demo's constant red peg (`negPeg`) is returned as its own inverse. |
+| `multiply` | `multiply_refines`, `demo_multiply_one`, `demo_multiply_neg` | On `FieldLay` (a `BoardOk` tier whose `n`, `k`, `w`, `h`, `r`, and `benchlen` are the layout `mul_refines` uses, with `n ≤ 1000000` and `benchlen ≤ 1000001`): `new_board`, across `put`, up `put` (two held homes, so peak goes from 1 to 2), `mul`, `settle`, `value`. The array is embedded `Spec.fieldMul`. The across input is a trit list of length `n`. The up input has length `n`. `FieldLay.fits` and `FieldLay.fits_n` are the `FitsLen` bounds this export and `cube_number` use. Demo's one-peg list times itself returns that list. Demo's constant red peg times itself returns the unit. |
 | `cube_number` | `cube_number_refines`, `demo_cube_one` | On `FieldLay`, with `3·(n−1) + combgap < benchlen`: `new_board`, across `put`, `cube` of that home onto itself, `settle`, `value`. The array is embedded `Spec.fieldCube`. The input is a trit list of length `n`. Demo's one-peg list cubes to itself. |
 | `fold` | none: `fold` starts with `new_board` and `fold_key`, and neither loop nest is tied | `Spec.foldKey` is the §6 row drop (read the original across, add in GF(3), keep `keeprows` rows). It is not a theorem about the emitted function. |
 

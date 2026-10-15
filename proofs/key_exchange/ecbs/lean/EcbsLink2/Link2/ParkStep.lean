@@ -11,9 +11,9 @@ open EcbsLink2.Spec
 
 /-- Settle copies the ladder, the rung count, and `tally_max`. -/
 theorem settle_keeps_frame (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    let s := settleBoard b home hH hD xs n moves slides peak
+    let s := settleBoard b home hin.hH hin.hD xs n moves slides peak
     s.sudo_5Board_7ladder0 = b.sudo_5Board_7ladder0 ∧
     s.sudo_5Board_6nrungs = b.sudo_5Board_6nrungs ∧
     s.sudo_5Board_4cost.sudo_5Costs_9tally_max =
@@ -38,8 +38,8 @@ theorem mulOff_keeps_frame (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat
 
 /-- Clear copies those three fields. -/
 theorem clearHeld_keeps_frame (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size) :
-    let c := clearHeldBoard b home xs moves hH hD
+    (hin : HomeIn b home) :
+    let c := clearHeldBoard b home xs moves hin.hH hin.hD
     c.sudo_5Board_7ladder0 = b.sudo_5Board_7ladder0 ∧
     c.sudo_5Board_6nrungs = b.sudo_5Board_6nrungs ∧
     c.sudo_5Board_4cost.sudo_5Costs_9tally_max =
@@ -77,10 +77,10 @@ theorem parkKeep_irrel (b : Ecbs.Board) (hole park rung i ctrl : Nat)
   rfl
 
 theorem place_of_eq {b b' : Ecbs.Board} (hbb : b = b') (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (moves peak : Nat) :
-    placeBoard b home hH hD xs moves peak =
-      placeBoard b' home (hbb ▸ hH) (hbb ▸ hD) xs moves peak := by
+    placeBoard b home hin.hH hin.hD xs moves peak =
+      placeBoard b' home (hbb ▸ hin.hH) (hbb ▸ hin.hD) xs moves peak := by
   cases hbb
   rfl
 
@@ -141,14 +141,12 @@ theorem idle_park_peg
     rw [h.inv.row, size_embed]; exact h.shape.park.holeLt
   have hPW := parkKeep_withPark b s.row hole s.parkAt r s.ridx s.ctrl hRowP hRowH
     h.inv.row h.shape.park.parkLt h.shape.park.holeLt
-  have hpl := placeBoard_withPark b (embed rowI) (Int.ofNat (s.ctrl + 2))
-    ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1))
-    6 h.shape.spareH h.shape.spareD s.gap mv pk
+  have hpl := placeBoard_withPark b (embed rowI) (Int.ofNat (s.ctrl + 2)) ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1)) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
   have hb0p : placeBoard b 6 h.shape.spareH h.shape.spareD s.gap mv pk = cE.b0 := hb0.symm
   have hplace : placeBoard
       (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
       6 h.shape.spareH h.shape.spareD s.gap mv pk = c.b0 := by
-    have h1 := place_of_eq hPW 6 h.shape.spareH h.shape.spareD s.gap mv pk
+    have h1 := place_of_eq hPW 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
     have hir := placeBoard_irrel
       (withPark b (embed rowI) (Int.ofNat (s.ctrl + 2)) ((hole : Nat) : Int)
         (Int.ofNat (s.ridx + 1)))
@@ -303,10 +301,7 @@ theorem parked_peg_ctx_ge
     exact FitsLen.of_le hCtrl4 hsum
   let c := pegCtxPark cIdle rowP (s.ctrl + 4) ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1))
     hRoomP (by rw [hmI]; exact hCtrl4)
-  have hpl := placeBoard_withPark
-    (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-    (embed rowP) (((s.ctrl + 4 : Nat) : Int)) ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1))
-    6 h.shape.spareH h.shape.spareD s.gap mv pk
+  have hpl := placeBoard_withPark (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) (embed rowP) (((s.ctrl + 4 : Nat) : Int)) ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1)) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
   have hframe' : bPark = withPark
       (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
       (embed rowP) (((s.ctrl + 4 : Nat) : Int)) ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1)) := by
@@ -314,7 +309,7 @@ theorem parked_peg_ctx_ge
   have hbc : placeBoard bPark 6 h6H h6D s.gap mv pk =
       withPark cIdle.b0 (embed rowP) (((s.ctrl + 4 : Nat) : Int))
         ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1)) := by
-    have h1 := place_of_eq hframe' 6 h6H h6D s.gap mv pk
+    have h1 := place_of_eq hframe' 6 ⟨h6H, h6D⟩ s.gap mv pk
     have hir := placeBoard_irrel
       (withPark (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
         (embed rowP) (((s.ctrl + 4 : Nat) : Int)) ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1)))
@@ -480,15 +475,13 @@ theorem parked_clear_ge
   -- Home 5 survives the idle copy. The peg loop keeps it.
   have h5D : 5 < cIdle.b0.sudo_5Board_4held.size := by
     rw [hplace]
-    have hsz := (place_book (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-      6 h.shape.spareH h.shape.spareD s.gap mv pk).2.2.2.2.2.2.2.2.2
+    have hsz := (place_book (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk).2.2.2.2.2.2.2.2.2
     rw [hsz]
     simp [parkKeepBoard]
     exact h.inv.hGs
   have h5H : 5 < cIdle.b0.sudo_5Board_4home.size := by
     rw [hplace]
-    have hsz := (place_book (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-      6 h.shape.spareH h.shape.spareD s.gap mv pk).2.2.2.2.2.2.2.2.1
+    have hsz := (place_book (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk).2.2.2.2.2.2.2.2.1
     rw [hsz]
     simp [parkKeepBoard]
     exact h.inv.hG
@@ -499,8 +492,7 @@ theorem parked_clear_ge
     have h5K : 5 < (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4held.size := by
       simp [parkKeepBoard]
       exact h.inv.hGs
-    have hcell := place_held_other (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-      6 5 h.shape.spareH h.shape.spareD s.gap mv pk (by decide) h5K hF
+    have hcell := place_held_other (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 5 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk (by decide) h5K hF
     have hpk : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4held[5] = true := by
       simp [parkKeepBoard]
       exact (h.inv.gapHome hhome).1
@@ -514,8 +506,7 @@ theorem parked_clear_ge
     have h5K : 5 < (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4home.size := by
       simp [parkKeepBoard]
       exact h.inv.hG
-    have hcell := place_home_other (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-      6 5 h.shape.spareH h.shape.spareD s.gap mv pk (by decide) h5K hF
+    have hcell := place_home_other (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 5 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk (by decide) h5K hF
     have hpk : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4home[5] =
         embed s.gap := by
       simp [parkKeepBoard]
@@ -526,7 +517,7 @@ theorem parked_clear_ge
     exact hfin.trans (congrArg embed hgI.symm)
   have hopsEq : cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops =
       b.sudo_5Board_4cost.sudo_5Costs_3ops := by
-    rw [hplace, place_ops_delta]
+    rw [hplace, place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
     simp [parkKeepBoard]
   have hopsZ : 0 < cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     rw [hopsEq]
@@ -641,66 +632,49 @@ theorem parked_clear_ge
   let ctrlM := Int.ofNat ((s.ctrl + 4) + s.tally)
   let fromH := ((hole : Nat) : Int)
   let ridxH := Int.ofNat (s.ridx + 1)
-  have hmulW := mul_eq_live_withPark d.b 5 5 6 cIdle.g d.xs cIdle.w cIdle.h cIdle.r cIdle.n cIdle.k
-    d.moves d.slides d.hole cIdle.bench d.peak d.peakS cMul
-    d.marker d.onB hto hH6 hD6 d.h7 hempty d.hbench
-    hnB cIdle.hn0 d.hpos d.hnle d.hzero cIdle.hf hfitL
-    d.hmoves d.hslides d.hpeak hpegF hfitM hfitS
-    hkeep.opsLt hkeep.op0 hfops hbl
-    hkeep.heldLt hkeep.homeLt hkeep.held hkeep.arr (by decide) cIdle.hlenx
-    hspan2 cIdle.hxsT hfi hfm
-    cIdle.hw0 cIdle.hh0 cIdle.hrR cIdle.hrP cIdle.hnE cIdle.hkLe cIdle.hgap hwF hhF hrF hkF
-    d.hHole d.hpeakS cIdle.hsm cIdle.hnsm cIdle.hfitB hfold
-    paint ctrlM fromH ridxH
+  have hmulW := mul_eq_live_withPark d.b 5 5 6 cIdle.g d.xs cIdle.w cIdle.h cIdle.r cIdle.n cIdle.k d.moves d.slides d.hole cIdle.bench d.peak d.peakS cMul d.marker d.onB hto hH6 hD6 d.h7 hempty d.hbench hnB cIdle.hn0 d.hpos d.hnle d.hzero cIdle.hf hfitL d.hmoves d.hslides d.hpeak hpegF hfitM hfitS hkeep.opsLt hkeep.op0 hfops hbl hkeep.heldLt hkeep.homeLt hkeep.held hkeep.arr (by decide) cIdle.hlenx hspan2 cIdle.hxsT hfi hfm ⟨cIdle.hw0, cIdle.hh0, cIdle.hrR, cIdle.hrP, cIdle.hnE, cIdle.hkLe, cIdle.hgap⟩ hwF hhF hrF hkF d.hHole d.hpeakS cIdle.hsm cIdle.hnsm cIdle.hfitB hfold paint ctrlM fromH ridxH
   have hmulP : Ecbs.mul
       (withPark (pegBoard cIdle cIdle.m) paint ctrlM fromH ridxH)
       (5 : Int) (5 : Int) (6 : Int) false false false =
       .ok (withPark
-        (mulNoLiveBoard d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole cIdle.bench
-          d.peak d.peakS cMul hH6 hD6 hkeep.opsLt)
+        (mulNoLiveBoard d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩)
         paint ctrlM fromH ridxH) := by
     have hcong := congrArg
       (fun bd => Ecbs.mul (withPark bd paint ctrlM fromH ridxH)
         (5 : Int) (5 : Int) (6 : Int) false false false) hPack.1
     exact hcong.symm.trans hmulW
-  let bU := mulNoLiveBoard d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-    cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+  let bU := mulNoLiveBoard d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
   have hmvU : bU.sudo_5Board_4cost.sudo_5Costs_5moves =
       Int.ofNat (mulMovesNo (d.moves + 2 * pegCount (d.xs.take cIdle.n)) cIdle.g
         (d.xs.take cIdle.n) cIdle.n cIdle.k cIdle.bench) :=
-    mul_live_moves d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole cIdle.bench
-      d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+    mul_live_moves d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
   let mvM := mulMovesNo (d.moves + 2 * pegCount (d.xs.take cIdle.n)) cIdle.g
     (d.xs.take cIdle.n) cIdle.n cIdle.k cIdle.bench
   have h5DU : 5 < bU.sudo_5Board_4held.size := by
-    have hHeld := mul_live_held d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-      cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+    have hHeld := mul_live_held d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
     have hsz : bU.sudo_5Board_4held.size = d.b.sudo_5Board_4held.size := by
       rw [hHeld]
       simp only [Array.size_set]
-      rw [settle_held_eq d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak, Array.size_set]
+      rw [settle_held_eq d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak, Array.size_set]
     rw [hsz]
     exact hkeep.heldLt
   have hheldU : bU.sudo_5Board_4held[5] = true := by
-    have hHeld := mul_live_held d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-      cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+    have hHeld := mul_live_held d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
     have h1 := arr_get hHeld 5 h5DU
     rw [h1, Array.getElem_set, if_neg (by decide : (6 : Nat) ≠ 5)]
     have hszS : 5 <
         (settleBoard d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak).sudo_5Board_4held.size := by
-      rw [settle_held_eq d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak, Array.size_set]
+      rw [settle_held_eq d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak, Array.size_set]
       exact hkeep.heldLt
-    have h2 := arr_get (settle_held_eq d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak) 5 hszS
+    have h2 := arr_get (settle_held_eq d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak) 5 hszS
     rw [h2, Array.getElem_set, if_neg (by decide : (6 : Nat) ≠ 5)]
     exact hkeep.held
   have h5HU : 5 < bU.sudo_5Board_4home.size := by
-    have hHome := mul_live_home d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-      cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+    have hHome := mul_live_home d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
     rw [hHome, Array.size_set]
     exact hkeep.homeLt
   have harrU : bU.sudo_5Board_4home[5] = embed cIdle.g := by
-    have hHome := mul_live_home d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-      cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+    have hHome := mul_live_home d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
     have h1 := arr_get hHome 5 h5HU
     rw [h1, Array.getElem_set, if_neg (by decide : (6 : Nat) ≠ 5)]
     exact hkeep.arr
@@ -751,23 +725,23 @@ theorem parked_clear_ge
       simpa [hmI, htI, hrowC] using hmulP)
     hclearW
   let bIdle0 := clearHeldBoard bU 5 cIdle.g mvM h5HU h5DU
-  have hC := clearHeld_book bU 5 cIdle.g mvM h5HU h5DU
-  have hMulB := mulLive_book d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-    cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+  have hC := clearHeld_book bU 5 cIdle.g mvM ⟨h5HU, h5DU⟩
+  have hMulB := mulLive_book d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
   have hPackB := pegPack_board cIdle cIdle.m cIdle.hm (Nat.le_refl _)
-  have hPl := place_book (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-    6 h.shape.spareH h.shape.spareD s.gap mv pk
+  have hPl := place_book (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
   have hPegF := pegPack_fixed cIdle cIdle.m cIdle.hm (Nat.le_refl _)
   have hpre : d.xs.take cIdle.n = cubeTimes cIdle.n cIdle.k cIdle.bench cIdle.g cIdle.m := by
     rw [d.hxs]
     exact cubeBenchIter_prefix cIdle.n cIdle.k cIdle.bench cIdle.g cIdle.hlenx cIdle.m
-  have hbenchM := mul_live_bench_gap d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides
-    d.hole cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
-    cIdle.hn0 cIdle.gap_pos cIdle.n_le
-  have haim := mul_live_aimed d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-    cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
-  have hmarkM := mul_live_marker d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-    cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+  have hbenchM : (mulNoLiveBoard d.b 5 6 cIdle.g d.xs
+        ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩).sudo_5Board_5bench =
+      embed (fieldMul cIdle.n cIdle.k cIdle.bench cIdle.g (d.xs.take cIdle.n) ++
+        List.replicate (cIdle.bench - cIdle.n) 0) :=
+    mul_live_bench_gap d.b 5 6 cIdle.g d.xs
+      ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
+      cIdle.hn0 cIdle.gap_pos cIdle.n_le
+  have haim := mul_live_aimed d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
+  have hmarkM := mul_live_marker d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
   have hbenchI : bIdle0.sudo_5Board_5bench =
       embed (fieldMul s.n s.k s.benchlen s.gap
         (cubeTimes s.n s.k s.benchlen s.gap s.tally) ++
@@ -801,7 +775,7 @@ theorem parked_clear_ge
   have hszP : d.b.sudo_5Board_4cost.sudo_5Costs_3ops.size =
       b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     rw [pegPack_ops_eq cIdle cIdle.m cIdle.hm (Nat.le_refl _), Array.size_set, hplace,
-      place_ops_delta]
+      place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
     simp [parkKeepBoard]
   have h1p : 1 < d.b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     rw [hszP]; exact h.shape.peg.opsGt
@@ -813,13 +787,11 @@ theorem parked_clear_ge
     rw [hget, Array.getElem_set, if_pos rfl, hmI]
     have hsz : cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-      rw [hplace, place_ops_delta]
+      rw [hplace, place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
       simp [parkKeepBoard]
     have h1b : 1 < cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
       rw [hsz]; exact h.shape.peg.opsGt
-    have hplaceOps := place_ops_delta
-      (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-      6 h.shape.spareH h.shape.spareD s.gap mv pk
+    have hplaceOps := place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
     have hgetB := arr_get (hplace ▸ hplaceOps) 1 h1b
     have hpkOps : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [parkKeepBoard]
@@ -837,16 +809,14 @@ theorem parked_clear_ge
     intro j hne he hp
     have hsz0 : cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-      rw [hplace, place_ops_delta]
+      rw [hplace, place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
       simp [parkKeepBoard]
     have hj0 : j < cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
       rw [hsz0]; exact he
     have hpB : j < (pegBoard cIdle cIdle.m).sudo_5Board_4cost.sudo_5Costs_3ops.size :=
       hPackB.1.symm ▸ hp
     have hneB := pegBoard_ops_ne cIdle cIdle.m cIdle.hm (Nat.le_refl _) j hne hj0 hpB
-    have hplaceOps := place_ops_delta
-      (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-      6 h.shape.spareH h.shape.spareD s.gap mv pk
+    have hplaceOps := place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
     have hpkOps : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [parkKeepBoard]
     have hjk : j < (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -858,18 +828,15 @@ theorem parked_clear_ge
     exact (arr_get hBB j hp).trans (hneB.trans hcellB)
   have hmulArr : bU.sudo_5Board_4cost.sudo_5Costs_3ops =
       d.b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, h0p⟩ ((c0 + 1 : Nat) : Int) := by
-    have hlive := mul_live_ops d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-      cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
-    have hset := settle_ops d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak
+    have hlive := mul_live_ops d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
+    have hset := settle_ops d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak
     have hcMul0 : cMul = c0 := by
       apply ofNat_inj_nat
       have h0b : 0 < cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-        rw [hplace, place_ops_delta]
+        rw [hplace, place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
         simp [parkKeepBoard]
         exact Nat.lt_trans (by decide : (0 : Nat) < 1) h.shape.peg.opsGt
-      have hplaceOps := place_ops_delta
-        (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-        6 h.shape.spareH h.shape.spareD s.gap mv pk
+      have hplaceOps := place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
       have hpkOps : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops =
           b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [parkKeepBoard]
       have h0k : 0 < (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -879,7 +846,7 @@ theorem parked_clear_ge
         ((arr_get hpkOps 0 h0k).trans hc0)
       exact hopZ.symm.trans hcell0
     rw [hlive]
-    have hidx := settle_ops_lt d.b 0 6 hkeep.opsLt hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak
+    have hidx := settle_ops_lt d.b 0 6 hkeep.opsLt ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak
     exact ops_set_transport hset 0 hidx h0p (Int.ofNat (cMul + 1)) ((c0 + 1 : Nat) : Int)
       (by rw [hcMul0, ofNat_eq_natCast])
   have hclrArr : bIdle0.sudo_5Board_4cost.sudo_5Costs_3ops =
@@ -910,17 +877,17 @@ theorem parked_clear_ge
     exact haim.2
   · rw [hC.2.2.2.2.2.2.2.2.2.2.2.1]
     exact hmarkM
-  · have hClear := clearHeld_keeps_frame bU 5 cIdle.g mvM h5HU h5DU
+  · have hClear := clearHeld_keeps_frame bU 5 cIdle.g mvM ⟨h5HU, h5DU⟩
     have hOff := mulOff_keeps_frame
       (settleBoard d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)
       5 6 cIdle.g (d.xs.take cIdle.n) cIdle.n cIdle.k
       (d.moves + 2 * pegCount (d.xs.take cIdle.n)) d.hole cIdle.bench
       (raisedPeak d.peak (countHeld (d.b.sudo_5Board_4held.set ⟨6, hD6⟩ true) 7))
       d.peakS cMul
-      (settle_ops_lt d.b 0 6 hkeep.opsLt hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)
-      (settle_held_lt d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)
-      (settle_home_lt d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)
-    have hSet := settle_keeps_frame d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak
+      (settle_ops_lt d.b 0 6 hkeep.opsLt ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak)
+      (settle_held_lt d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak)
+      (settle_home_lt d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak)
+    have hSet := settle_keeps_frame d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak
     have hLiveL : bU.sudo_5Board_7ladder0 = d.b.sudo_5Board_7ladder0 := by
       unfold bU mulNoLiveBoard
       exact hOff.1.trans hSet.1
@@ -941,7 +908,7 @@ theorem parked_clear_ge
     split <;> rfl
   · have hIdleN : bIdle0.sudo_5Board_6nrungs = bU.sudo_5Board_6nrungs := by
       unfold bIdle0
-      exact (clearHeld_keeps_frame bU 5 cIdle.g mvM h5HU h5DU).2.1
+      exact (clearHeld_keeps_frame bU 5 cIdle.g mvM ⟨h5HU, h5DU⟩).2.1
     have h1 : bIdle0.sudo_5Board_6nrungs = d.b.sudo_5Board_6nrungs :=
       hIdleN.trans
         (by
@@ -952,17 +919,17 @@ theorem parked_clear_ge
             (d.moves + 2 * pegCount (d.xs.take cIdle.n)) d.hole cIdle.bench
             (raisedPeak d.peak (countHeld (d.b.sudo_5Board_4held.set ⟨6, hD6⟩ true) 7))
             d.peakS cMul
-            (settle_ops_lt d.b 0 6 hkeep.opsLt hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)
-            (settle_held_lt d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)
-            (settle_home_lt d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)).2.1.trans
-            (settle_keeps_frame d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak).2.1)
+            (settle_ops_lt d.b 0 6 hkeep.opsLt ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak)
+            (settle_held_lt d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak)
+            (settle_home_lt d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak)).2.1.trans
+            (settle_keeps_frame d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak).2.1)
     rw [h1, hPegF.2.1, hplace]
     simp [placeBoard, parkKeepBoard]
     split <;> rfl
   · have hIdleT : bIdle0.sudo_5Board_4cost.sudo_5Costs_9tally_max =
         bU.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
       unfold bIdle0
-      exact (clearHeld_keeps_frame bU 5 cIdle.g mvM h5HU h5DU).2.2
+      exact (clearHeld_keeps_frame bU 5 cIdle.g mvM ⟨h5HU, h5DU⟩).2.2
     have h1 : bIdle0.sudo_5Board_4cost.sudo_5Costs_9tally_max =
         d.b.sudo_5Board_4cost.sudo_5Costs_9tally_max :=
       hIdleT.trans
@@ -974,10 +941,10 @@ theorem parked_clear_ge
             (d.moves + 2 * pegCount (d.xs.take cIdle.n)) d.hole cIdle.bench
             (raisedPeak d.peak (countHeld (d.b.sudo_5Board_4held.set ⟨6, hD6⟩ true) 7))
             d.peakS cMul
-            (settle_ops_lt d.b 0 6 hkeep.opsLt hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)
-            (settle_held_lt d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)
-            (settle_home_lt d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak)).2.2.trans
-            (settle_keeps_frame d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak).2.2)
+            (settle_ops_lt d.b 0 6 hkeep.opsLt ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak)
+            (settle_held_lt d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak)
+            (settle_home_lt d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak)).2.2.trans
+            (settle_keeps_frame d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak).2.2)
     rw [h1, hPegF.2.2.1, hplace]
     simp [placeBoard, parkKeepBoard]
     split <;> rfl
@@ -987,10 +954,12 @@ theorem parked_clear_ge
     exact h5DU
   · rw [hC.2.2.2.2.2.2.2.2.2.2.2.2.1, mul_live_home, Array.size_set]
     exact hH6
-  · rw [hC.2.2.2.2.2.2.2.2.2.2.2.2.2, mul_live_held, Array.size_set, settle_held_eq,
+  · rw [hC.2.2.2.2.2.2.2.2.2.2.2.2.2, mul_live_held, Array.size_set,
+      settle_held_eq d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak,
       Array.size_set]
     exact hD6
-  · rw [hC.2.2.2.2.2.2.2.2.2.2.2.2.2, mul_live_held, Array.size_set, settle_held_eq,
+  · rw [hC.2.2.2.2.2.2.2.2.2.2.2.2.2, mul_live_held, Array.size_set,
+      settle_held_eq d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak,
       Array.size_set]
     exact d.h7
   · intro h5
@@ -1004,10 +973,10 @@ theorem parked_clear_ge
       simp only [bIdle0, clearHeldBoard]
       rw [Array.getElem_set, if_neg (by decide : (5 : Nat) ≠ 6)]
     rw [hEq]
-    have hmulH := mul_live_held d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-      cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+    have hmulH := mul_live_held d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
     have h6u : 6 < bU.sudo_5Board_4held.size := by
-      rw [hmulH, Array.size_set, settle_held_eq, Array.size_set]
+      rw [hmulH, Array.size_set,
+        settle_held_eq d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak, Array.size_set]
       exact hD6
     rw [arr_get hmulH 6 h6u, Array.getElem_set, if_pos rfl]
   · have hszH : cIdle.b0.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
@@ -1046,32 +1015,24 @@ theorem parked_clear_ge
       congrArg (fun bd => bd.sudo_5Board_4home) hplace
     have hXheld : cIdle.b0.sudo_5Board_4held[base.xHome] = true :=
       (arr_get hHeldEq base.xHome hXD).trans
-        ((place_held_other (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-          6 base.xHome h.shape.spareH h.shape.spareD s.gap mv pk (Ne.symm h.shape.xNe6)
-          hParkD hPlaceD).trans (by simp [parkKeepBoard]; exact h.shape.xHeld))
+        ((place_held_other (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 base.xHome ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk (Ne.symm h.shape.xNe6) hParkD hPlaceD).trans (by simp [parkKeepBoard]; exact h.shape.xHeld))
     have hXarr : cIdle.b0.sudo_5Board_4home[base.xHome] = embed base.x :=
       (arr_get hHomeEq base.xHome hXH).trans
-        ((place_home_other (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-          6 base.xHome h.shape.spareH h.shape.spareD s.gap mv pk (Ne.symm h.shape.xNe6)
-          hParkH hPlaceH).trans (by simp [parkKeepBoard]; exact h.shape.xArr))
+        ((place_home_other (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 base.xHome ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk (Ne.symm h.shape.xNe6) hParkH hPlaceH).trans (by simp [parkKeepBoard]; exact h.shape.xArr))
     have hsz0 : 0 < cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := hopsZ
     have hKeep := pegPack_keep cIdle base.xHome base.x cMul cIdle.m cIdle.hm (Nat.le_refl _)
       hXD hXH (by rw [hsrcI]; exact h.shape.xNe6) hXheld hXarr hsz0 hopZ
     have hKeepB : CellKeep d.b base.xHome base.x :=
       { heldLt := hKeep.heldLt, held := hKeep.held, homeLt := hKeep.homeLt, arr := hKeep.arr }
-    have hMulK := mulLive_keep d.b 5 6 base.xHome cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides
-      d.hole cIdle.bench d.peak d.peakS cMul base.x hH6 hD6 hkeep.opsLt h.shape.xNe6
-      hKeepB.heldLt hKeepB.homeLt hKeepB.held hKeepB.arr
-    exact clearCell_keep bU 5 base.xHome cIdle.g mvM base.x h5HU h5DU
-      (Ne.symm h.shape.xNe5) hMulK
+    have hMulK := mulLive_keep d.b 5 6 base.xHome cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ base.x ⟨hH6, hD6⟩ h.shape.xNe6 hKeepB.heldLt hKeepB.homeLt hKeepB.held hKeepB.arr
+    exact clearCell_keep bU 5 base.xHome cIdle.g mvM base.x ⟨h5HU, h5DU⟩ (Ne.symm h.shape.xNe5) hMulK
   · refine ⟨raisedPeak d.peakS
       (countHeld (settleBoard d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak).sudo_5Board_4held 7), ?_⟩
     have hI : bIdle0.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
         bU.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
       simp only [bIdle0, clearHeldBoard]
     rw [hI]
-    exact mul_live_strict d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-      cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+    exact mul_live_strict d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
   · refine ⟨raisedHole d.hole (topIdx (school cIdle.n cIdle.g (d.xs.take cIdle.n)
       (List.replicate cIdle.bench 0) false)), ?_⟩
     have hI : bIdle0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
@@ -1080,10 +1041,8 @@ theorem parked_clear_ge
     rw [hI]
     simp only [bU, mulNoLiveBoard, mulNoOffBoard]
     rw [ofNat_eq_natCast]
-  · rw [hC.1, mul_live_row d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-      cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt, d.hrow, hrowI, htI, hmI]
-  · rw [hC.2.2.2.2.2.2.2.1, mul_live_ctrl d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves
-      d.slides d.hole cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt, d.hctrl, d.hctrlN,
+  · rw [hC.1, mul_live_row d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩, d.hrow, hrowI, htI, hmI]
+  · rw [hC.2.2.2.2.2.2.2.1, mul_live_ctrl d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩, d.hctrl, d.hctrlN,
       hctrlI, hmI]
   · refine
       { moves := ?_
@@ -1097,8 +1056,7 @@ theorem parked_clear_ge
     · refine ⟨sl, d.slides + 2 * pegCount (d.xs.take cIdle.n), hsl, ?_, ?_⟩
       · rw [withPark_slides]
         simp [bIdle0, clearHeldBoard]
-        exact mul_live_slides d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-          cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+        exact mul_live_slides d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
       · have hprev : d.slides ≤ sl + s.tally * (2 * s.n) := by
           have hEq : cIdle.slides0 + cIdle.m * (2 * cIdle.n) = sl + s.tally * (2 * s.n) := by
             rw [hsl0, hmI, hnI]
@@ -1122,11 +1080,15 @@ theorem parked_clear_ge
         simp [bIdle0, clearHeldBoard]
       have h2 : bU.sudo_5Board_4cost.sudo_5Costs_3ops.size =
           d.b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-        rw [mul_live_ops, Array.size_set, settle_ops]
+        rw [mul_live_ops d.b 5 6 cIdle.g d.xs
+            ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩
+            ⟨hH6, hD6⟩,
+          Array.size_set,
+          settle_ops d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak]
       have h3 : d.b.sudo_5Board_4cost.sudo_5Costs_3ops.size =
           b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
         rw [pegPack_ops_eq cIdle cIdle.m cIdle.hm (Nat.le_refl _), Array.size_set, hplace,
-          place_ops_delta]
+          place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
         simp [parkKeepBoard]
       rw [h1, h2, h3]
     · intro i hi
@@ -1137,7 +1099,7 @@ theorem parked_clear_ge
       have hszP : d.b.sudo_5Board_4cost.sudo_5Costs_3ops.size =
           b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
         rw [pegPack_ops_eq cIdle cIdle.m cIdle.hm (Nat.le_refl _), Array.size_set, hplace,
-          place_ops_delta]
+          place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
         simp [parkKeepBoard]
       have h1p : 1 < d.b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
         rw [hszP]; exact h.shape.peg.opsGt
@@ -1149,13 +1111,11 @@ theorem parked_clear_ge
         rw [hget, Array.getElem_set, if_pos rfl, hmI]
         have hsz : cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size =
             b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-          rw [hplace, place_ops_delta]
+          rw [hplace, place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
           simp [parkKeepBoard]
         have h1b : 1 < cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
           rw [hsz]; exact h.shape.peg.opsGt
-        have hplaceOps := place_ops_delta
-          (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-          6 h.shape.spareH h.shape.spareD s.gap mv pk
+        have hplaceOps := place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
         have hgetB := arr_get (hplace ▸ hplaceOps) 1 h1b
         have hpkOps : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops =
             b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [parkKeepBoard]
@@ -1173,16 +1133,14 @@ theorem parked_clear_ge
         intro j hne he hp
         have hsz0 : cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size =
             b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-          rw [hplace, place_ops_delta]
+          rw [hplace, place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
           simp [parkKeepBoard]
         have hj0 : j < cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
           rw [hsz0]; exact he
         have hpB : j < (pegBoard cIdle cIdle.m).sudo_5Board_4cost.sudo_5Costs_3ops.size :=
           hPackB.1.symm ▸ hp
         have hneB := pegBoard_ops_ne cIdle cIdle.m cIdle.hm (Nat.le_refl _) j hne hj0 hpB
-        have hplaceOps := place_ops_delta
-          (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-          6 h.shape.spareH h.shape.spareD s.gap mv pk
+        have hplaceOps := place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
         have hpkOps : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops =
             b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [parkKeepBoard]
         have hjk : j < (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -1194,25 +1152,22 @@ theorem parked_clear_ge
         exact (arr_get hBB j hp).trans (hneB.trans hcellB)
       have hmulArr : bU.sudo_5Board_4cost.sudo_5Costs_3ops =
           d.b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, h0p⟩ ((c0 + 1 : Nat) : Int) := by
-        have hlive := mul_live_ops d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-          cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
-        have hset := settle_ops d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak
+        have hlive := mul_live_ops d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
+        have hset := settle_ops d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak
         have hcMul : cMul = c0 := by
           apply ofNat_inj_nat
           have h0b : 0 < cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-            rw [hplace, place_ops_delta]
+            rw [hplace, place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
             simp [parkKeepBoard]
             exact Nat.lt_trans (by decide : (0 : Nat) < 1) h.shape.peg.opsGt
           have h0b : 0 < cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
             have hsz : cIdle.b0.sudo_5Board_4cost.sudo_5Costs_3ops.size =
                 b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-              rw [hplace, place_ops_delta]
+              rw [hplace, place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk]
               simp [parkKeepBoard]
             rw [hsz]
             exact Nat.lt_trans (by decide : (0 : Nat) < 1) h.shape.peg.opsGt
-          have hplaceOps := place_ops_delta
-            (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH)
-            6 h.shape.spareH h.shape.spareD s.gap mv pk
+          have hplaceOps := place_ops_delta (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
           have hpkOps : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops =
               b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [parkKeepBoard]
           have h0k : 0 < (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -1222,7 +1177,7 @@ theorem parked_clear_ge
             ((arr_get hpkOps 0 h0k).trans hc0)
           exact hopZ.symm.trans hcell
         rw [hlive]
-        have hidx := settle_ops_lt d.b 0 6 hkeep.opsLt hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak
+        have hidx := settle_ops_lt d.b 0 6 hkeep.opsLt ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak
         exact ops_set_transport hset 0 hidx h0p (Int.ofNat (cMul + 1)) ((c0 + 1 : Nat) : Int)
           (by rw [hcMul, ofNat_eq_natCast])
       have hclrArr : bIdle0.sudo_5Board_4cost.sudo_5Costs_3ops =
@@ -1279,7 +1234,7 @@ theorem parked_clear_ge
           exact hmax)
       let pkS := raisedPeak d.peak (countHeld (d.b.sudo_5Board_4held.set ⟨6, hD6⟩ true) 7)
       let bS := settleBoard d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak
-      let hFs := settle_held_lt d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak
+      let hFs := settle_held_lt d.b 6 ⟨hH6, hD6⟩ d.xs cIdle.n d.moves d.slides d.peak
       let pkM := raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨6, hFs⟩ false) 7)
       have hpkS : pkS ≤ max pk0 7 :=
         Nat.le_trans (raisedPeak_carry d.peak _ (countHeld_seven _))
@@ -1293,8 +1248,7 @@ theorem parked_clear_ge
           bU.sudo_5Board_4cost.sudo_5Costs_4peak := by
         simp only [bIdle0, clearHeldBoard]
       rw [hpkB]
-      exact mul_live_peak d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-        cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+      exact mul_live_peak d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
   · exact clearSlots_cast hslotsIdle (withPark_ops bIdle0 paint ctrlM fromH ridxH).symm
   · refine ⟨mv, mvM + pegCount cIdle.g, hmv, ?_, ?_⟩
     · rw [withPark_moves]
@@ -1312,8 +1266,7 @@ theorem parked_clear_ge
   · refine ⟨sl, d.slides + 2 * pegCount (d.xs.take cIdle.n), hsl, ?_, ?_⟩
     · rw [withPark_slides]
       simp [bIdle0, clearHeldBoard]
-      exact mul_live_slides d.b 5 6 cIdle.g d.xs cIdle.n cIdle.k d.moves d.slides d.hole
-        cIdle.bench d.peak d.peakS cMul hH6 hD6 hkeep.opsLt
+      exact mul_live_slides d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
     · have hslack := pegPack_slide_slack cIdle cIdle.m cIdle.hm (Nat.le_refl _)
       have hloop : d.slides + 2 * base.n ≤ sl + s.tally * (2 * base.n) := by
         have hraw := hslack
@@ -1845,7 +1798,7 @@ theorem white_open_ge
     rw [htierE, h.shape.tierC]
   have htallD := tally_double_withPark bIdle xs xsP s.t0 s.tally c0
     (s.t0 + s.tally - 1) base.control tmax0 ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1))
-    hm hlenE ht0E hrowIdle
+    hm hlenE ht0E
     (by simp [xs, paintRed_length, afterPark_length]; exact hRowLen)
     (by simp [xsP, paintRed_length, afterPark_length]; exact hRowLen)
     hRedIdle hRedPark hZeroIdle hZeroPark hctrlN
@@ -2361,8 +2314,7 @@ theorem parked_clear_unparked
           cU.row0 = s.row ∧ cU.ctrl0 = s.ctrl ∧ cU.g = s.gap ∧ cU.m = s.tally ∧
           cU.n = s.n ∧ cU.k = s.k ∧ cU.bench = s.benchlen ∧ cU.src = 6 ∧
           cU.t0 = s.t0 ∧
-          bMul = mulNoLiveBoard bLoop 5 6 cU.g ys cU.n cU.k moves slides hole cU.bench
-            peak peakS cOps hH hD hops ∧
+          bMul = mulNoLiveBoard bLoop 5 6 cU.g ys ⟨cU.n, cU.k, moves, slides, hole, cU.bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩ ∧
           ys = cubeBenchIter cU.n cU.k cU.bench cU.g cU.m ∧
           moves = (pegPack cU cU.m cU.hm (Nat.le_refl _)).moves ∧
           slides = (pegPack cU cU.m cU.hm (Nat.le_refl _)).slides ∧
@@ -2401,14 +2353,12 @@ theorem parked_clear_unparked
   let bKeep := parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH
   have hPW := parkKeep_withPark b s.row hole s.parkAt r s.ridx s.ctrl hRowP hRowH
     h.inv.row h.shape.park.parkLt h.shape.park.holeLt
-  have hplI := placeBoard_withPark b (embed rowI) (Int.ofNat (s.ctrl + 2))
-    ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1))
-    6 h.shape.spareH h.shape.spareD s.gap mv pk
+  have hplI := placeBoard_withPark b (embed rowI) (Int.ofNat (s.ctrl + 2)) ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1)) 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
   have hb0p : placeBoard b 6 h.shape.spareH h.shape.spareD s.gap mv pk = cE.b0 := hb0.symm
   have hIdle : placeBoard bKeep 6 h.shape.spareH h.shape.spareD s.gap mv pk =
       withPark cE.b0 (embed rowI) (Int.ofNat (s.ctrl + 2))
         ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1)) := by
-    have h1 := place_of_eq hPW 6 h.shape.spareH h.shape.spareD s.gap mv pk
+    have h1 := place_of_eq hPW 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
     have hir := placeBoard_irrel
       (withPark b (embed rowI) (Int.ofNat (s.ctrl + 2)) ((hole : Nat) : Int)
         (Int.ofNat (s.ridx + 1)))
@@ -2433,13 +2383,12 @@ theorem parked_clear_unparked
       withPark cE.b0 (embed rowP) ctrlReal fromH ridxH := by
     have hParkW : bPark = withPark bKeep (embed rowP) ctrlReal fromH ridxH := by
       rw [hParkEq, hframe, hKeepEq]
-    have h1 := place_of_eq hParkW 6 h6H h6D s.gap mvR pkR
+    have h1 := place_of_eq hParkW 6 ⟨h6H, h6D⟩ s.gap mvR pkR
     have hIH : 6 < bKeep.sudo_5Board_4home.size := by
       simpa [bKeep, parkKeepBoard] using h.shape.spareH
     have hID : 6 < bKeep.sudo_5Board_4held.size := by
       simpa [bKeep, parkKeepBoard] using h.shape.spareD
-    have hplP := placeBoard_withPark bKeep (embed rowP) ctrlReal fromH ridxH
-      6 hIH hID s.gap mvR pkR
+    have hplP := placeBoard_withPark bKeep (embed rowP) ctrlReal fromH ridxH 6 ⟨hIH, hID⟩ s.gap mvR pkR
     have hir := placeBoard_irrel
       (withPark bKeep (embed rowP) ctrlReal fromH ridxH)
       6 (hParkW ▸ h6H) (withPark_home _ _ _ _ _ ▸ hIH)
@@ -2501,8 +2450,7 @@ theorem parked_clear_unparked
       (hkU.trans hkM.symm) (hbU.trans hbM.symm) (hrowU.trans hrowM.symm)
       (ht0U.trans ht0M.symm) (hctrlU.trans hctrlM.symm) (hmU.trans hmM.symm)
     rw [hpegM, hloopU, hboards]
-  have hMulIn : mulNoLiveBoard bM 5 6 cM.g ys cM.n cM.k moves slides holeM cM.bench
-      peak peakS cOps hH hD hops = bMulR := by
+  have hMulIn : mulNoLiveBoard bM 5 6 cM.g ys ⟨cM.n, cM.k, moves, slides, holeM, cM.bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩ = bMulR := by
     have hmulR' : Ecbs.mul bM ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
         false false false = .ok bMulR := by
       rw [hbLoop]

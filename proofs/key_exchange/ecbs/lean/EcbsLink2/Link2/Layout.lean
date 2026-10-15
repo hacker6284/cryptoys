@@ -105,7 +105,7 @@ theorem laneDest_eq {w h e : Nat} (hw : 0 < w) (hh : 0 < h) (he : w * h - 1 ≤ 
       exact Nat.succ_sub_succ e (w * h - 1)
     rw [hform, Nat.mul_comm h w, htail]
 
-theorem laneDest2_eq {w r e : Nat} (hw : 0 < w) (hr : r ≤ e / w) :
+theorem laneDest2_eq {w r e : Nat} (hr : r ≤ e / w) :
     laneDest2 w r e = e - r * w := by
   unfold laneDest2
   have hsplit := div_split e w

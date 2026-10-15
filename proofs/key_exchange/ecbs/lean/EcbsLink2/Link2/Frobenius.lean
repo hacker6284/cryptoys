@@ -130,22 +130,7 @@ theorem frobenius_affine_refines (t : Spec.Tier) (lay : FieldLay t) (sat : TierS
   let b1 := cubeOffBoard b 0 0 x n k moves holeN bench pk peakS cOps hops1 h0D h0H
   have hcube1 : Ecbs.cube b ((0 : Nat) : Int) ((0 : Nat) : Int) = .ok b1 := by
     simpa [b1] using
-      cube_off_eq b 0 0 x w h r n k moves holeN bench pk peakS cOps cg
-        hmk hoff hops1 hop1 hfit1
-        hfields.2.2.2.2.2.1 hfields.2.2.2.2.2.2 sat.cube_span
-        h0D h0H hheld0 hhome0 h7 lay.board.n_pos hnCast
-        (by simpa [n] using hx) (fit n (leSmall n (by omega)))
-        hmovCast hpeakCast hstrictCast hxt
-        (fit (3 * (n - 1)) (leCube _ (Nat.le_refl _)))
-        (fit (moves + 2 * n) (leMove _ (by omega)))
-        lay.w_pos lay.h_pos lay.r_lt lay.r_pos lay.n_eq lay.k_le lay.gap_eq
-        (by rw [hfields.2.2.1])
-        (by rw [hfields.2.2.2.1])
-        (by rw [hfields.2.2.2.2.1])
-        (by rw [hfields.2.1])
-        hhole lay.small hnsm
-        (fit bench (leBench _ (Nat.le_refl _)))
-        (fit (moves + 2 * n + 3 * (bench - n)) (leMove _ (by omega)))
+      cube_off_eq b 0 0 x w h r n k moves holeN bench pk peakS cOps cg hmk hoff hops1 hop1 hfit1 hfields.2.2.2.2.2.1 hfields.2.2.2.2.2.2 sat.cube_span h0D h0H hheld0 hhome0 h7 lay.board.n_pos hnCast (by simpa [n] using hx) (fit n (leSmall n (by omega))) hmovCast hpeakCast hstrictCast hxt (fit (3 * (n - 1)) (leCube _ (Nat.le_refl _))) (fit (moves + 2 * n) (leMove _ (by omega))) ⟨lay.w_pos, lay.h_pos, lay.r_lt, lay.r_pos, lay.n_eq, lay.k_le, lay.gap_eq⟩ (by rw [hfields.2.2.1]) (by rw [hfields.2.2.2.1]) (by rw [hfields.2.2.2.2.1]) (by rw [hfields.2.1]) hhole lay.small hnsm (fit bench (leBench _ (Nat.le_refl _))) (fit (moves + 2 * n + 3 * (bench - n)) (leMove _ (by omega)))
   let laneX := laneFold n (n - k) (combStrip n bench x)
   have hlaneX : b1.sudo_5Board_5bench = embed laneX := by
     simpa [b1, laneX] using cube_off_bench b 0 0 x n k moves holeN bench pk peakS cOps hops1 h0D h0H
@@ -253,18 +238,18 @@ theorem frobenius_affine_refines (t : Spec.Tier) (lay : FieldLay t) (sat : TierS
       hops1b (by rw [hop1b])
       hfitC
   have hmkS : bS.sudo_5Board_9marker_on = false := by
-    rw [settle_marker_eq b1 0 h0H1 h0D1 laneX n mv1 slides pk1]; exact hmk1
+    rw [settle_marker_eq b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1]; exact hmk1
   have hoffS : bS.sudo_5Board_8bench_on = false :=
-    settle_bench_off b1 0 h0H1 h0D1 laneX n mv1 slides pk1
-  have hheldS := settle_held_eq b1 0 h0H1 h0D1 laneX n mv1 slides pk1
-  have hhomeS := settle_home_eq b1 0 h0H1 h0D1 laneX n mv1 slides pk1
-  have htierS := settle_tier_eq b1 0 h0H1 h0D1 laneX n mv1 slides pk1
-  have hmovS := settle_moves_eq b1 0 h0H1 h0D1 laneX n mv1 slides pk1
-  have hslS := settle_slides_eq b1 0 h0H1 h0D1 laneX n mv1 slides pk1
-  have hpeakS := settle_peak_eq b1 0 h0H1 h0D1 laneX n mv1 slides pk1 hpk1
-  have hstrictS := settle_strict_eq b1 0 h0H1 h0D1 laneX n mv1 slides pk1
-  have hholeS := settle_hole_eq b1 0 h0H1 h0D1 laneX n mv1 slides pk1
-  have hopsS := settle_ops b1 0 h0H1 h0D1 laneX n mv1 slides pk1
+    settle_bench_off b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1
+  have hheldS := settle_held_eq b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1
+  have hhomeS := settle_home_eq b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1
+  have htierS := settle_tier_eq b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1
+  have hmovS := settle_moves_eq b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1
+  have hslS := settle_slides_eq b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1
+  have hpeakS := settle_peak_eq b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1 hpk1
+  have hstrictS := settle_strict_eq b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1
+  have hholeS := settle_hole_eq b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1
+  have hopsS := settle_ops b1 0 ⟨h0H1, h0D1⟩ laneX n mv1 slides pk1
   have hszDS : bS.sudo_5Board_4held.size = 8 := by
     rw [hheldS, Array.size_set, hszD1]
   have hszHS : bS.sudo_5Board_4home.size = 8 := by
@@ -311,29 +296,7 @@ theorem frobenius_affine_refines (t : Spec.Tier) (lay : FieldLay t) (sat : TierS
   let b2 := cubeOffBoard bS 1 1 y n k mvS hole1 bench pkS peakS1 (cOps + 1) hops1S h1DS h1HS
   have hcube2 : Ecbs.cube bS ((1 : Nat) : Int) ((1 : Nat) : Int) = .ok b2 := by
     simpa [b2] using
-      cube_off_eq bS 1 1 y w h r n k mvS hole1 bench pkS peakS1 (cOps + 1) cg
-        hmkS hoffS hops1S (by rw [hop1S])
-        hfitC
-        (by rw [htierS, htier1, hfields.2.2.2.2.2.1])
-        (by rw [htierS, htier1, hfields.2.2.2.2.2.2])
-        sat.cube_span
-        h1DS h1HS hheld1S hhome1S h7S lay.board.n_pos
-        (by rw [htierS, htier1]; exact hnCast)
-        (by simpa [n] using hy) (fit n (leSmall n (by omega)))
-        (by rw [hmvS]; exact ofNat_eq_natCast _)
-        (by rw [hpkS]; exact ofNat_eq_natCast _)
-        (by rw [hstrictSeq]; exact ofNat_eq_natCast _)
-        hytS
-        (fit (3 * (n - 1)) (leCube _ (Nat.le_refl _)))
-        (fit (mvS + 2 * n) (leMove _ (by omega)))
-        lay.w_pos lay.h_pos lay.r_lt lay.r_pos lay.n_eq lay.k_le lay.gap_eq
-        (by rw [htierS, htier1, hfields.2.2.1])
-        (by rw [htierS, htier1, hfields.2.2.2.1])
-        (by rw [htierS, htier1, hfields.2.2.2.2.1])
-        (by rw [htierS, htier1, hfields.2.1])
-        hholeSeq lay.small hnsm
-        (fit bench (leBench _ (Nat.le_refl _)))
-        (fit (mvS + 2 * n + 3 * (bench - n)) (leMove _ (by omega)))
+      cube_off_eq bS 1 1 y w h r n k mvS hole1 bench pkS peakS1 (cOps + 1) cg hmkS hoffS hops1S (by rw [hop1S]) hfitC (by rw [htierS, htier1, hfields.2.2.2.2.2.1]) (by rw [htierS, htier1, hfields.2.2.2.2.2.2]) sat.cube_span h1DS h1HS hheld1S hhome1S h7S lay.board.n_pos (by rw [htierS, htier1]; exact hnCast) (by simpa [n] using hy) (fit n (leSmall n (by omega))) (by rw [hmvS]; exact ofNat_eq_natCast _) (by rw [hpkS]; exact ofNat_eq_natCast _) (by rw [hstrictSeq]; exact ofNat_eq_natCast _) hytS (fit (3 * (n - 1)) (leCube _ (Nat.le_refl _))) (fit (mvS + 2 * n) (leMove _ (by omega))) ⟨lay.w_pos, lay.h_pos, lay.r_lt, lay.r_pos, lay.n_eq, lay.k_le, lay.gap_eq⟩ (by rw [htierS, htier1, hfields.2.2.1]) (by rw [htierS, htier1, hfields.2.2.2.1]) (by rw [htierS, htier1, hfields.2.2.2.2.1]) (by rw [htierS, htier1, hfields.2.1]) hholeSeq lay.small hnsm (fit bench (leBench _ (Nat.le_refl _))) (fit (mvS + 2 * n + 3 * (bench - n)) (leMove _ (by omega)))
   let laneY := laneFold n (n - k) (combStrip n bench y)
   have hlaneY : b2.sudo_5Board_5bench = embed laneY := by
     simpa [b2, laneY] using
@@ -413,14 +376,14 @@ theorem frobenius_affine_refines (t : Spec.Tier) (lay : FieldLay t) (sat : TierS
       omega)))
   let bF := settleBoard b2 1 h1H2 h1D2 laneY n mv2 slS pk2
   have hbF : Ecbs.settle b2 = .ok bF := by simpa [bF] using hsettle2
-  have hheldF := settle_held_eq b2 1 h1H2 h1D2 laneY n mv2 slS pk2
-  have hhomeF := settle_home_eq b2 1 h1H2 h1D2 laneY n mv2 slS pk2
-  have htierF := settle_tier_eq b2 1 h1H2 h1D2 laneY n mv2 slS pk2
-  have hmovF := settle_moves_eq b2 1 h1H2 h1D2 laneY n mv2 slS pk2
-  have hslFeq := settle_slides_eq b2 1 h1H2 h1D2 laneY n mv2 slS pk2
-  have hpeakF := settle_peak_eq b2 1 h1H2 h1D2 laneY n mv2 slS pk2 hpk2
-  have hoffF := settle_bench_off b2 1 h1H2 h1D2 laneY n mv2 slS pk2
-  have hmkF := settle_marker_eq b2 1 h1H2 h1D2 laneY n mv2 slS pk2
+  have hheldF := settle_held_eq b2 1 ⟨h1H2, h1D2⟩ laneY n mv2 slS pk2
+  have hhomeF := settle_home_eq b2 1 ⟨h1H2, h1D2⟩ laneY n mv2 slS pk2
+  have htierF := settle_tier_eq b2 1 ⟨h1H2, h1D2⟩ laneY n mv2 slS pk2
+  have hmovF := settle_moves_eq b2 1 ⟨h1H2, h1D2⟩ laneY n mv2 slS pk2
+  have hslFeq := settle_slides_eq b2 1 ⟨h1H2, h1D2⟩ laneY n mv2 slS pk2
+  have hpeakF := settle_peak_eq b2 1 ⟨h1H2, h1D2⟩ laneY n mv2 slS pk2 hpk2
+  have hoffF := settle_bench_off b2 1 ⟨h1H2, h1D2⟩ laneY n mv2 slS pk2
+  have hmkF := settle_marker_eq b2 1 ⟨h1H2, h1D2⟩ laneY n mv2 slS pk2
   let mvF := mv2 + 2 * pegY
   let slF := slS + 2 * pegY
   let pkF := if pk2 < countHeld (b2.sudo_5Board_4held.set ⟨1, h1D2⟩ true) 7
@@ -518,7 +481,7 @@ theorem frobenius_affine_refines (t : Spec.Tier) (lay : FieldLay t) (sat : TierS
     have : 2 * pegY ≤ 2 * n := Nat.mul_le_mul_left 2 hpegY
     have : 2 * pegX ≤ 2 * n := Nat.mul_le_mul_left 2 hpegX
     omega
-  · have hopsF := settle_ops b2 1 h1H2 h1D2 laneY n mv2 slS pk2
+  · have hopsF := settle_ops b2 1 ⟨h1H2, h1D2⟩ laneY n mv2 slS pk2
     have hsz : b2.sudo_5Board_4cost.sudo_5Costs_3ops.size =
         bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
       simpa [b2, Array.size_set] using congrArg Array.size

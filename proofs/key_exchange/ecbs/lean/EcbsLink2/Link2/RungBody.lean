@@ -247,7 +247,8 @@ def rungNest (rung x : Int) (last : Bool) (b : Ecbs.Board) :
     else pure b
 
 /-- Mul, clear, the nest, and `Flow.cont`. Irreducible so a loop rewrite cannot
-    open it. `nest_cont` is a separate rewrite, after `unfold`. -/
+    open it. `nest_cont` is a separate rewrite, after `unfold`.
+    `rungTail` is rfl-tied scaffolding: `rungTail_eq` is `rfl` after `unfold`. -/
 @[irreducible] def rungTail (rung x : Int) (last : Bool) (b : Ecbs.Board) :
     Except SudoRt.Trap (SudoRt.Flow Ecbs.Board Ecbs.Board) :=
   do

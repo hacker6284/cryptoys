@@ -647,7 +647,7 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
       (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed (chordY3 n k bench
         (fieldMul n k bench rise inv) (fieldSub n accX (chordX3 n k bench
           (fieldMul n k bench rise inv) accX run)) accY)) := by
-  obtain ⟨bI, _, _, hinv0, _, _, _, _⟩ :=
+  obtain ⟨bI, _, _, hinv0, _, _, _, _, _, _⟩ :=
     open_checked { b with sudo_5Board_9marker_on := false } t run inv lay hOk sat hR hsh
       bud hmatch hacc
   have hinv : Ecbs.invert_checked { b with sudo_5Board_9marker_on := false } Ecbs.bottom =

@@ -222,12 +222,15 @@ Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 1579356 kB. Under 2
 
 - `RunFrame` / `copy_add_open`. The board `chordCopyAddGo` leaves, with the marker held off, is `OpenLay` for `fieldSub` of the two across homes. A climb budget on those counters is `OpenMatch`. The two across copies and the gap copy `invert` does next are one `FitsLen (moves + 3 · n)`. The climb `FitsLen`s are the budget, the same shape as `entryBudget`, starting from this board's counters rather than from zero.
 - `RiseRead` / `chord_add_point`. `open_checked` returns the inverse, so `chord_add_point` no longer takes `invert_checked` as a hypothesis. `RiseRead` is still a hypothesis: homes the rise keeps, and the counters `chord_tail_point` reads, on the board that return leaves. `chord_add_point_of_inv` is the previous statement, used by that call. The settle `FitsLen`s of the tail are still hypotheses.
+- `open_check_mul` / `open_checked` also say home 2 is still the input and still held. The climb keeps `xHome`, `CheckRead` keeps it through the final cube, and the check multiply keeps every home other than the spare. A red mirror writes home 5 only (`mirrorHome_other`).
 
-3971 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Compile peaks (VmHWM): CopyLay 321580 kB, ChordOpen 1118328 kB.
+Homes 0, 1, and 4 are not in `ClimbInvK`. The check multiply would keep them, but the climb has no fact that it left them alone. That is the rest of `RiseRead`.
+
+3971 theorems before the home-2 conjunct, axioms `propext`, `Classical.choice`, `Quot.sound` only. Compile peaks (VmHWM): CopyLay 321580 kB, ChordOpen 1118328 kB.
 
 ## Next
 
-Discharge `RiseRead` and the remaining settle rooms from the cell invariant, so a live white or red cell whose run inverts is `.ok` of Spec `chordAdd` with no inverse hypothesis. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Show a live board's homes 0, 1, and 4 survive the climb, so `RiseRead` is not a hypothesis, and discharge the tail's settle rooms from the cell invariant. A live white or red cell whose run inverts is then `.ok` of Spec `chordAdd`. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

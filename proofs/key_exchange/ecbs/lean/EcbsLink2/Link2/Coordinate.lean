@@ -234,4 +234,10 @@ theorem coordinate_refines (t : Spec.Tier) (ht : GridOk t) (home i : Nat)
       rw [addI_cast_ofNat _ _ (unit_add_fits t ht home hh), ok_bind,
         addI_ofNat_one _ (col_fits t ht i hi), ok_bind]
 
+/-- Demo, home 0, hole 0. The success branch of `coordinate` is inhabited. -/
+theorem demo_coordinate_origin :
+    Ecbs.coordinate (embTier Spec.demo) 0 0 =
+      .ok (embHole (Spec.coordinate Spec.demo 0 0)) :=
+  coordinate_refines Spec.demo demo_grid 0 0 (by decide) (by decide)
+
 end EcbsLink2.Link2

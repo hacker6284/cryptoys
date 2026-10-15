@@ -34,8 +34,8 @@ def rungSlideCharge (n m : Nat) : Nat :=
 def rungOpCharge (m : Nat) : Nat :=
   m + 3
 
-theorem mulCharge_ge (n bench : Nat) (moves : Nat) (xs ys : List Nat) (k : Nat)
-    (hn : n ≤ bench) (hp : pegCount (ys.take n) ≤ n) :
+theorem mulCharge_ge (n bench : Nat) (moves : Nat) (_xs ys : List Nat) (_k : Nat)
+    (_hn : n ≤ bench) (hp : pegCount (ys.take n) ≤ n) :
     moves + 2 * pegCount (ys.take n) + n * (n + 1) + 3 * (bench - n) ≤
       moves + mulCharge n bench := by
   unfold mulCharge
@@ -215,17 +215,12 @@ theorem rung_prefix_refines (b bPark : Ecbs.Board) (rung : Nat)
     (hD6 : 6 < (pegBoard c c.m).sudo_5Board_4held.size)
     (hops0 : 0 < (pegBoard c c.m).sudo_5Board_4cost.sudo_5Costs_3ops.size)
     (mulHyps : Ecbs.mul (pegBoard c c.m) (5 : Int) (5 : Int) (6 : Int) false false false =
-      .ok (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
-        pk pkS cOps hH6 hD6 hops0))
-    (hH5 : 5 < (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
-        pk pkS cOps hH6 hD6 hops0).sudo_5Board_4home.size)
-    (hD5 : 5 < (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
-        pk pkS cOps hH6 hD6 hops0).sudo_5Board_4held.size)
+      .ok (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys ⟨n, k, mvs, slides, holeM, bench, pk, pkS, cOps, hops0⟩ ⟨hH6, hD6⟩))
+    (hH5 : 5 < (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys ⟨n, k, mvs, slides, holeM, bench, pk, pkS, cOps, hops0⟩ ⟨hH6, hD6⟩).sudo_5Board_4home.size)
+    (hD5 : 5 < (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys ⟨n, k, mvs, slides, holeM, bench, pk, pkS, cOps, hops0⟩ ⟨hH6, hD6⟩).sudo_5Board_4held.size)
     (movesC : Nat)
-    (hClear : Ecbs.clear (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
-        pk pkS cOps hH6 hD6 hops0) (5 : Int) =
-      .ok (clearHeldBoard (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
-        pk pkS cOps hH6 hD6 hops0) 5 xs movesC hH5 hD5)) :
+    (hClear : Ecbs.clear (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys ⟨n, k, mvs, slides, holeM, bench, pk, pkS, cOps, hops0⟩ ⟨hH6, hD6⟩) (5 : Int) =
+      .ok (clearHeldBoard (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys ⟨n, k, mvs, slides, holeM, bench, pk, pkS, cOps, hops0⟩ ⟨hH6, hD6⟩) 5 xs movesC hH5 hD5)) :
     (do
         let b ← Ecbs.park_rung b (rung : Int)
         let b ← Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false
@@ -242,8 +237,7 @@ theorem rung_prefix_refines (b bPark : Ecbs.Board) (rung : Nat)
         let b := out.2
         let b ← Ecbs.mul b (5 : Int) (5 : Int) (6 : Int) false false false
         Ecbs.clear b (5 : Int)) =
-      .ok (clearHeldBoard (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys n k mvs slides holeM bench
-        pk pkS cOps hH6 hD6 hops0) 5 xs movesC hH5 hD5) := by
+      .ok (clearHeldBoard (mulNoLiveBoard (pegBoard c c.m) 5 6 xs ys ⟨n, k, mvs, slides, holeM, bench, pk, pkS, cOps, hops0⟩ ⟨hH6, hD6⟩) 5 xs movesC hH5 hD5) := by
   rw [hPark, ok_bind]
   rw [copy_band_refines bPark 6 5 g moves peak hHs hDs hH5s hD5s h7 hsrc harr hempty
       hn hf hmoves hpeak hfit, ok_bind]
@@ -771,7 +765,7 @@ theorem climbAt_ge (L R i : Nat) (hi : i < R) : L ≤ climbAt L R i := by
   unfold climbAt
   omega
 
-theorem climbAt_pred (L R i : Nat) (hi : i + 1 < R) :
+theorem climbAt_pred (L R i : Nat) (_hi : i + 1 < R) :
     climbAt L R (i + 1) = climbAt L R i - 1 := by
   unfold climbAt
   omega
@@ -781,7 +775,7 @@ theorem climbAt_end (L R i : Nat) (hL : 0 < L) (hi : i + 1 = R) :
   unfold climbAt
   omega
 
-theorem climbAt_ne_sum (L R i park : Nat) (hL : 0 < L) (hi : i ≤ R) (hp : park = L + R) :
+theorem climbAt_ne_sum (L R i park : Nat) (hL : 0 < L) (_hi : i ≤ R) (hp : park = L + R) :
     climbAt L R i ≠ park := by
   intro h
   unfold climbAt at h

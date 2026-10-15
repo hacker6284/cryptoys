@@ -161,7 +161,7 @@ private theorem tritAdd_le (a b : Nat) : tritAdd a b ≤ 2 := by
   omega
 
 private theorem trit_set {xs : List Nat} (hs : allTritList xs) {i v : Nat}
-    (hi : i < xs.length) (hv : v ≤ 2) : allTritList (xs.set i v) := by
+    (_hi : i < xs.length) (hv : v ≤ 2) : allTritList (xs.set i v) := by
   intro x hx
   rw [List.mem_iff_getElem] at hx
   obtain ⟨j, hj, rfl⟩ := hx

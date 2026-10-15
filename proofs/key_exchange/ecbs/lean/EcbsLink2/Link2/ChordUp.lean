@@ -459,42 +459,48 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
   let pk := if peak < countHeld (bC.sudo_5Board_4held.set ⟨up, hUpDc⟩ true) 7 then
       countHeld (bC.sudo_5Board_4held.set ⟨up, hUpDc⟩ true) 7 else peak
   have hAcHs : across < bS.sudo_5Board_4home.size := by
-    simpa [bS, settle_home_eq, Array.size_set, bC] using hAcH
+    rw [settle_home_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+    simpa [bC, Array.size_set] using hAcH
   have hAcDs : across < bS.sudo_5Board_4held.size := by
-    simpa [bS, settle_held_eq, Array.size_set, bC] using hAcD
+    rw [settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+    simpa [bC, Array.size_set] using hAcD
   have hBotHs : bottom < bS.sudo_5Board_4home.size := by
-    simpa [bS, settle_home_eq, Array.size_set, bC] using hBotH
+    rw [settle_home_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+    simpa [bC, Array.size_set] using hBotH
   have hBotDs : bottom < bS.sudo_5Board_4held.size := by
-    simpa [bS, settle_held_eq, Array.size_set, bC] using hBotD
+    rw [settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+    simpa [bC, Array.size_set] using hBotD
   have h7s : 7 ≤ bS.sudo_5Board_4held.size := by
-    simpa [bS, settle_held_eq, Array.size_set] using h7c
+    unfold bS
+    rw [settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+    exact h7c
   have hoffS : bS.sudo_5Board_8bench_on = false := by
-    simpa [bS] using settle_bench_off bC up hUpHc hUpDc benchL n mvC slides peak
+    simpa [bS] using settle_bench_off bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
   have hAcEs : bS.sudo_5Board_4held[across]'(hAcDs) = false := by
-    have heq := settle_held_eq bC up hUpHc hUpDc benchL n mvC slides peak
+    have heq := settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     have hget := idx_eq (by simpa [bS] using heq) across
       (by simpa [bS, heq, Array.size_set] using hAcDs)
     have hne : up ≠ across := hneUA
     simpa [Array.getElem_set_ne, hne, bC, Array.getElem_set_ne, hneAG.symm, hAcE] using hget
   have hBotTs : bS.sudo_5Board_4held[bottom]'(hBotDs) = true := by
-    have heq := settle_held_eq bC up hUpHc hUpDc benchL n mvC slides peak
+    have heq := settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     have hget := idx_eq (by simpa [bS] using heq) bottom
       (by simpa [bS, heq, Array.size_set] using hBotDs)
     simpa [Array.getElem_set_ne, hneUB, bC, Array.getElem_set_ne, hneBG.symm, hBotT] using hget
   have hBotAs : bS.sudo_5Board_4home[bottom]'(hBotHs) = embed x3 := by
-    have heq := settle_home_eq bC up hUpHc hUpDc benchL n mvC slides peak
+    have heq := settle_home_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     have hget := idx_eq (by simpa [bS] using heq) bottom
       (by simpa [bS, heq, Array.size_set] using hBotHs)
     simpa [Array.getElem_set_ne, hneUB, bC, Array.getElem_set_ne, hneBG.symm, hBotA] using hget
   have hmS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvS := by
     simpa [bS, mvS, mvC, pegY, Nat.add_assoc] using
-      settle_moves_eq bC up hUpHc hUpDc benchL n mvC slides peak
+      settle_moves_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
   have hsS : bS.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slS := by
     simpa [bS, slS, pegY] using
-      settle_slides_eq bC up hUpHc hUpDc benchL n mvC slides peak
+      settle_slides_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
   have hpS : bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
     simpa [bS, pk] using
-      settle_peak_eq bC up hUpHc hUpDc benchL n mvC slides peak hpC
+      settle_peak_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak hpC
   have hmove := move_band_off bS across bottom x3 mvS slS pk hoffS hAcHs hAcDs
     hBotHs hBotDs h7s hAcEs hBotTs hBotAs hfX hmS hsS hpS hfit2
     (by simpa [mvS, mvC, pegY, Nat.add_assoc] using hfitMM)
@@ -506,8 +512,10 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
     have hh := moveBand_home bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
     have hget := idx_eq (by simpa [b'] using hh) up (by simpa [b', hh] using h)
     have hUpS : up < bS.sudo_5Board_4home.size := by
-      simpa [bS, settle_home_eq, Array.size_set, bC] using hUpH
-    have heq := settle_home_eq bC up hUpHc hUpDc benchL n mvC slides peak
+      unfold bS
+      rw [settle_home_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+      simpa [bC, Array.size_set] using hUpH
+    have heq := settle_home_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     have hpre := idx_eq (by simpa [bS] using heq) up (by simpa [bS, heq] using hUpS)
     simpa [Array.getElem_set_ne, hneUA.symm, Array.getElem_set_ne, hneUB.symm,
       Array.getElem_set_eq, bS, hpre] using hget
@@ -515,8 +523,10 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
     have hh := moveBand_held bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
     have hget := idx_eq (by simpa [b'] using hh) up (by simpa [b', hh] using h)
     have hUpS : up < bS.sudo_5Board_4held.size := by
-      simpa [bS, settle_held_eq, Array.size_set, bC] using hUpD
-    have heq := settle_held_eq bC up hUpHc hUpDc benchL n mvC slides peak
+      unfold bS
+      rw [settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+      simpa [bC, Array.size_set] using hUpD
+    have heq := settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     have hpre := idx_eq (by simpa [bS] using heq) up (by simpa [bS, heq] using hUpS)
     simpa [Array.getElem_set_ne, hneUA.symm, Array.getElem_set_ne, hneUB.symm,
       Array.getElem_set_eq, hpre] using hget
@@ -542,8 +552,10 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
     rw [Array.getElem_set_ne (h := hneAG), Array.getElem_set_ne (h := hneBG)] at hget
     rw [hget]
     have hGapS : gap < bS.sudo_5Board_4home.size := by
-      simpa [bS, settle_home_eq, Array.size_set, bC] using hGapH
-    have heq := settle_home_eq bC up hUpHc hUpDc benchL n mvC slides peak
+      unfold bS
+      rw [settle_home_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+      simpa [bC, Array.size_set] using hGapH
+    have heq := settle_home_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     have hpre := idx_eq (by simpa [bS] using heq) gap hGapS
     simpa [Array.getElem_set_ne, hneUG, bC, Array.getElem_set_eq] using hpre
   · intro h
@@ -552,25 +564,31 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
     rw [Array.getElem_set_ne (h := hneAG), Array.getElem_set_ne (h := hneBG)] at hget
     rw [hget]
     have hGapDs : gap < bS.sudo_5Board_4held.size := by
-      simpa [bS, settle_held_eq, Array.size_set, bC] using hGapD
-    have heq := settle_held_eq bC up hUpHc hUpDc benchL n mvC slides peak
+      unfold bS
+      rw [settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+      simpa [bC, Array.size_set] using hGapD
+    have heq := settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     have hpre := idx_eq (by simpa [bS] using heq) gap hGapDs
     simpa [Array.getElem_set_ne, hneUG, bC, Array.getElem_set_eq] using hpre
   · simpa [b'] using
       (moveBand_on bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk).trans hoffS
   · have hflagS : bS.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
-      simpa [bS, bC] using settle_marker_eq bC up hUpHc hUpDc benchL n mvC slides peak
+      simpa [bS, bC] using settle_marker_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     simpa [b', hflagS] using
       moveBand_marker bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
   · have htS : bS.sudo_5Board_1t = b.sudo_5Board_1t := by
-      simpa [bS, bC] using settle_tier_eq bC up hUpHc hUpDc benchL n mvC slides peak
+      simpa [bS, bC] using settle_tier_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     simpa [b', htS] using
       moveBand_tier bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
   · have hszS : bS.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
-      simp [bS, settle_home_eq, Array.size_set, bC]
+      unfold bS
+      rw [settle_home_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+      simp [bC, Array.size_set]
     simp [b', hszS, moveBand_home, Array.size_set]
   · have hszS : bS.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
-      simp [bS, settle_held_eq, Array.size_set, bC]
+      unfold bS
+      rw [settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+      simp [bC, Array.size_set]
     simp [b', hszS, moveBand_held, Array.size_set]
   · simpa [b', mvS, mvC, pegY, Nat.add_assoc] using
       moveBand_moves bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk

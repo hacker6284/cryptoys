@@ -169,6 +169,16 @@ theorem serious_lay : FieldLay Spec.serious := by
   refine ⟨serious_board, by decide, by decide, by decide, by decide, by decide, by decide,
     by decide, by decide, by decide, by decide⟩
 
+/-- Every `FitsLen` bound `multiply_refines` and `cube_number_refines` discharge:
+    `n` itself, and any total at most the schoolbook of a million-trit factor plus a
+    short bench. -/
+theorem FieldLay.fits_n {t : Spec.Tier} (lay : FieldLay t) : FitsLen t.n :=
+  fits_small lay.n_small
+
+theorem FieldLay.fits {t : Spec.Tier} (_lay : FieldLay t) {k : Nat}
+    (hk : k ≤ 1000000 * 1000001 + 10 * 1000001) : FitsLen k :=
+  fits_budget hk
+
 private theorem up_home (t : Spec.Tier) (xs : List Nat) :
     1 < (boardAcross t xs).sudo_5Board_4home.size := by
   simp [boardAcross, built_home, Array.size_set, Array.size_mkArray]
@@ -247,7 +257,7 @@ private theorem up_at0 (t : Spec.Tier) (xs ys : List Nat)
   simp [boardUp, boardAcross, built_held, built_home, Array.getElem_set, Array.getElem_mkArray]
 
 private theorem up_at1 (t : Spec.Tier) (xs ys : List Nat)
-    (hD : 1 < (boardUp t xs ys).sudo_5Board_4held.size)
+    (_hD : 1 < (boardUp t xs ys).sudo_5Board_4held.size)
     (hH : 1 < (boardUp t xs ys).sudo_5Board_4home.size) :
     (boardUp t xs ys).sudo_5Board_4held[1] = true ∧
     (boardUp t xs ys).sudo_5Board_4home[1] = embed ys := by
@@ -281,18 +291,18 @@ theorem multiply_refines (t : Spec.Tier) (lay : FieldLay t) (xs ys : List Nat)
   have hprod : n * (n + 1) ≤ 1000000 * 1000001 := Nat.mul_le_mul hnsm (by omega)
   have hcap : px + py + py + n * (n + 1) + 3 * bench ≤
       1000000 * 1000001 + 10 * 1000001 := by omega
-  have hfn : FitsLen n := fits_small hnsm
-  have hfitC : FitsLen ((px + py) + py) := fits_budget (by omega)
-  have hfm : FitsLen ((px + py) + py + n * (n + 1)) := fits_budget (by omega)
+  have hfn : FitsLen n := lay.fits_n
+  have hfitC : FitsLen ((px + py) + py) := lay.fits (by omega)
+  have hfm : FitsLen ((px + py) + py + n * (n + 1)) := lay.fits (by omega)
   have hfold : FitsLen ((px + py) + py + n * (n + 1) + 3 * (bench - n)) :=
-    fits_budget (by omega)
-  have hfitB : FitsLen bench := fits_budget (by omega)
-  have hfi : FitsLen (2 * (n - 1)) := fits_budget (by omega)
-  have hpeg2 : FitsLen (px + py) := fits_budget (by omega)
+    lay.fits (by omega)
+  have hfitB : FitsLen bench := lay.fits (by omega)
+  have hfi : FitsLen (2 * (n - 1)) := lay.fits (by omega)
+  have hpeg2 : FitsLen (px + py) := lay.fits (by omega)
   unfold Ecbs.multiply
   rw [new_board_refines t lay.board]
   simp only [ok_bind, pure_eq_ok]
-  have hAcross := put_built_across t lay.board xs hx (fits_budget (by omega))
+  have hAcross := put_built_across t lay.board xs hx (lay.fits (by omega))
   conv =>
     pattern (Ecbs.put _ Ecbs.across _)
     change Ecbs.put (builtBoard t) ((0 : Nat) : Int) (embed xs)
@@ -319,34 +329,11 @@ theorem multiply_refines (t : Spec.Tier) (lay : FieldLay t) (xs ys : List Nat)
   have hD6 : 6 < bU.sudo_5Board_4held.size := by rw [hHeld8]; decide
   have hH6 : 6 < bU.sudo_5Board_4home.size := by rw [hHome8]; decide
   have h7b : 7 ≤ bU.sudo_5Board_4held.size := by rw [hHeld8]; decide
-  have hmul := mul_refines bU 5 0 1 xs ys w h r n k (px + py) 0 bench 2 0 0
-    (up_off t xs ys).1 (up_off t xs ys).2.1
-    (by simp [bU, up_ops, Array.size_mkArray])
-    (by simp [bU, up_ops, Array.getElem_mkArray, ofNat_eq_natCast])
-    (fits_small (by decide))
-    (by rw [up_tier]; rfl)
-    hD0 hH0 (up_at0 t xs ys hD0 hH0).1 (up_at0 t xs ys hD0 hH0).2
-    hD1 hH1 (up_at1 t xs ys hD1 hH1).1 (up_at1 t xs ys hD1 hH1).2
-    hD6 hH6 (up_spare t xs ys hD6) h7b
-    (by decide) (by decide)
-    lay.board.n_pos
-    (by rw [up_tier]; exact ofNat_eq_natCast _)
-    hx hy hfn
-    (by simp [bU, boardUp, ofNat_eq_natCast])
-    (by simp [bU, boardUp, ofNat_eq_natCast])
-    (by
+  have hmul := mul_refines bU 5 0 1 xs ys w h r n k (px + py) 0 bench 2 0 0 (up_off t xs ys).1 (up_off t xs ys).2.1 (by simp [bU, up_ops, Array.size_mkArray]) (by simp [bU, up_ops, Array.getElem_mkArray, ofNat_eq_natCast]) (lay.fits (by decide)) (by rw [up_tier]; rfl) hD0 hH0 (up_at0 t xs ys hD0 hH0).1 (up_at0 t xs ys hD0 hH0).2 hD1 hH1 (up_at1 t xs ys hD1 hH1).1 (up_at1 t xs ys hD1 hH1).2 hD6 hH6 (up_spare t xs ys hD6) h7b (by decide) (by decide) lay.board.n_pos (by rw [up_tier]; exact ofNat_eq_natCast _) hx hy hfn (by simp [bU, boardUp, ofNat_eq_natCast]) (by simp [bU, boardUp, ofNat_eq_natCast]) (by
       have := (up_off t xs ys).2.2.1
-      simpa [bU, ofNat_eq_natCast] using this)
-    hfitC lay.mul_span hxs hfi hfm
-    lay.w_pos lay.h_pos lay.r_lt lay.r_pos lay.n_eq lay.k_le lay.gap_eq
-    (by rw [up_tier]; rfl)
-    (by rw [up_tier]; rfl)
-    (by rw [up_tier]; rfl)
-    (by rw [up_tier]; rfl)
-    (by
+      simpa [bU, ofNat_eq_natCast] using this) hfitC lay.mul_span hxs hfi hfm ⟨lay.w_pos, lay.h_pos, lay.r_lt, lay.r_pos, lay.n_eq, lay.k_le, lay.gap_eq⟩ (by rw [up_tier]; rfl) (by rw [up_tier]; rfl) (by rw [up_tier]; rfl) (by rw [up_tier]; rfl) (by
       have := (up_off t xs ys).2.2.2.1
-      simpa [bU, ofNat_eq_natCast] using this)
-    lay.small hnsm hfitB hfold
+      simpa [bU, ofNat_eq_natCast] using this) lay.small hnsm hfitB hfold
   obtain ⟨b', hok, hon, hto, hbench, htake, htail⟩ := hmul
   obtain ⟨hhigh, hmov, hpeakM, hslides, ht, hhome, hheld, _h5, _hframe, _hmk, _hops,
       _hstrict, _hhole⟩ := htail
@@ -418,9 +405,9 @@ theorem multiply_refines (t : Spec.Tier) (lay : FieldLay t) (xs ys : List Nat)
       hfn (by rw [hlenL]; exact hfitB)
       hmov hslides0
       hpeakM
-      (fits_budget (by omega))
-      (fits_budget hmovN)
-      (fits_budget (by omega))
+      (lay.fits (by omega))
+      (lay.fits hmovN)
+      (lay.fits (by omega))
   conv =>
     lhs
     arg 2
@@ -487,12 +474,12 @@ theorem cube_number_refines (t : Spec.Tier) (lay : FieldLay t) (xs : List Nat)
   have hbnd : bench ≤ 1000001 := lay.small.2.2.2
   have hnb : n ≤ bench := by have := lay.mul_span; omega
   have hprod : n * (n + 1) ≤ 1000000 * 1000001 := Nat.mul_le_mul hnsm (by omega)
-  have hfn : FitsLen n := fits_small hnsm
-  have h3 : FitsLen (3 * (n - 1)) := fits_budget (by omega)
-  have hfm : FitsLen (px + 2 * n) := fits_budget (by omega)
-  have hfold : FitsLen (px + 2 * n + 3 * (bench - n)) := fits_budget (by omega)
-  have hfitB : FitsLen bench := fits_budget (by omega)
-  have hpeg : FitsLen px := fits_budget (by omega)
+  have hfn : FitsLen n := lay.fits_n
+  have h3 : FitsLen (3 * (n - 1)) := lay.fits (by omega)
+  have hfm : FitsLen (px + 2 * n) := lay.fits (by omega)
+  have hfold : FitsLen (px + 2 * n + 3 * (bench - n)) := lay.fits (by omega)
+  have hfitB : FitsLen bench := lay.fits (by omega)
+  have hpeg : FitsLen px := lay.fits (by omega)
   unfold Ecbs.cube_number
   rw [new_board_refines t lay.board]
   simp only [ok_bind, pure_eq_ok]
@@ -513,30 +500,11 @@ theorem cube_number_refines (t : Spec.Tier) (lay : FieldLay t) (xs : List Nat)
   have hD0 : 0 < bA.sudo_5Board_4held.size := by rw [hHeld8]; decide
   have hH0 : 0 < bA.sudo_5Board_4home.size := by rw [hHome8]; decide
   have h7b : 7 ≤ bA.sudo_5Board_4held.size := by rw [hHeld8]; decide
-  have hcube := cube_refines bA 0 0 xs w h r n k px 0 bench 1 0 0 cg
-    (ax_off t xs).1 (ax_off t xs).2.1
-    (by simp [bA, ax_ops, Array.size_mkArray])
-    (by simp [bA, ax_ops, Array.getElem_mkArray, ofNat_eq_natCast])
-    (fits_small (by decide))
-    (by rw [ax_tier]; rfl)
-    (by rw [ax_tier]; rfl)
-    hspan
-    hD0 hH0 (ax_at0 t xs hD0 hH0).1 (ax_at0 t xs hD0 hH0).2
-    h7b lay.board.n_pos
-    (by rw [ax_tier]; exact ofNat_eq_natCast _)
-    hx hfn
-    (by simp [bA, boardAcross, ofNat_eq_natCast])
-    (by simp [bA, boardAcross, built_peak, ofNat_eq_natCast])
-    (by
+  have hcube := cube_refines bA 0 0 xs w h r n k px 0 bench 1 0 0 cg (ax_off t xs).1 (ax_off t xs).2.1 (by simp [bA, ax_ops, Array.size_mkArray]) (by simp [bA, ax_ops, Array.getElem_mkArray, ofNat_eq_natCast]) (lay.fits (by decide)) (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl) hspan hD0 hH0 (ax_at0 t xs hD0 hH0).1 (ax_at0 t xs hD0 hH0).2 h7b lay.board.n_pos (by rw [ax_tier]; exact ofNat_eq_natCast _) hx hfn (by simp [bA, boardAcross, ofNat_eq_natCast]) (by simp [bA, boardAcross, built_peak, ofNat_eq_natCast]) (by
       have := (ax_off t xs).2.2.1
-      simpa [bA, ofNat_eq_natCast] using this)
-    hxs h3 hfm
-    lay.w_pos lay.h_pos lay.r_lt lay.r_pos lay.n_eq lay.k_le lay.gap_eq
-    (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl)
-    (by
+      simpa [bA, ofNat_eq_natCast] using this) hxs h3 hfm ⟨lay.w_pos, lay.h_pos, lay.r_lt, lay.r_pos, lay.n_eq, lay.k_le, lay.gap_eq⟩ (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl) (by rw [ax_tier]; rfl) (by
       have := (ax_off t xs).2.2.2.1
-      simpa [bA, ofNat_eq_natCast] using this)
-    lay.small hnsm hfitB hfold
+      simpa [bA, ofNat_eq_natCast] using this) lay.small hnsm hfitB hfold
   obtain ⟨b', hok, hon, hto, hbench, _htake, hhigh, hmov, hpeakM, hslides, ht, hhome, _hhomeArr, hheld, _hmk', _hrow', _hop',
       _htally', _hhigh', _hctrl'⟩ :=
     hcube
@@ -594,7 +562,7 @@ theorem cube_number_refines (t : Spec.Tier) (lay : FieldLay t) (xs : List Nat)
         exact hc)
       hfn (by rw [hlenL]; exact hfitB)
       hmov hslides0 hpeakM
-      (fits_budget (by omega)) (fits_budget hmovN) (fits_budget (by omega))
+      (lay.fits (by omega)) (lay.fits hmovN) (lay.fits (by omega))
   conv =>
     lhs
     arg 2

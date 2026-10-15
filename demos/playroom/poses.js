@@ -61,6 +61,25 @@ export const POSES = {
             fov: 50,
         },
     },
+    // BS: the whole unboxed set at real size, ~49° down: the Battleship
+    // box and its lid on the back line (seen over the units' open lids),
+    // the dice box and its lid left of the cup, both units (lids up) and
+    // the dice row in front; it spans 1.2 m, framed left of the dock
+    // (352 px wide) at 1440 × 900 (bs-layout.test checks every piece is in
+    // that frame).
+    bs: {
+        position: [DEN.x, 2.22, DEN.z + 1.10],
+        target: [DEN.x, 0.78, DEN.z - 0.16],
+        fov: 32,
+        overlays: { title: true, menu: false, teach: true },
+        // Phones: higher and wider, aimed below the set so it sits above
+        // the transport and dock.
+        portrait: {
+            position: [DEN.x - 0.22, 2.22, DEN.z + 1.22],
+            target: [DEN.x - 0.22, 0.76, DEN.z + 0.06],
+            fov: 68,
+        },
+    },
     // Legacy named travel shot. Production enter uses followTo and
     // does not snap or ease through this pose.
     unbox_travel: {
@@ -100,6 +119,8 @@ const ALIASES = {
     lean_deck: "doubledeal",
     drei: "drei",
     megadreifach: "drei",
+    bs: "bs",
+    battleship: "bs",
     unbox_travel: "unbox_travel",
     unbox: "unbox",
     unbox_deal: "unbox_deal",

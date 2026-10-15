@@ -286,7 +286,7 @@ theorem chord_square (b : Ecbs.Board) (slope : List Nat)
   have href := mul_refines (markerUpFeed b m ctrl mx) 2 5 5 slope slope w h r n k moves hole
     bench peak peakS cOps rfl hoff hops hop0 hfops hbl h5 h5h h5t h5a h5 h5h h5t h5a h6 h6h
     h6e h7 (by decide) (by decide) hn0 hn hlen hlen hf hmoves hpeak hpeakS hfitP hspan htri
-    hfi hfm hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hhole hsm hnsm hfitB hfold
+    hfi hfm ⟨hw0, hh0, hrR, hrP, hnE, hkLe, hgap⟩ hw hh hr hk hhole hsm hnsm hfitB hfold
   rcases href with ⟨b0, hb, hon, hto, hbench, htake, hhigh, hmv, _, hsl, ht, hsz, _, h5conj, _,
       _, _, _, _⟩
   rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, show Ecbs.gap = ((5 : Nat) : Int) from rfl]

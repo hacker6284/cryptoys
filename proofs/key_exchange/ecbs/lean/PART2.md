@@ -1,4 +1,10 @@
-# RESUME
+# ECBS Link 2 part 2
+
+Handoff for `cursor/ecbs-link2-part2` after `origin/main` (`884f1775`, part 1) was merged. Part 1's `HomeIn`, `BoardShape`, `Budget`, and `FieldLay.fits` stay. Part 2 call sites of `settle_*`, `place_*`, `mul_refines`, `mul_no_eq`, and `cube_off_eq` pass those bundles. This file is not `RESUME.md`.
+
+The EcbsLink2 build log has no `linter.unusedVariables` warnings. `demo_invert_hole1` is `invert_number` on Demo's white peg in hole 1 (`hole1Peg`); the export returns `hole1Inv`, a different list. `demo_multiply_hole1` is that peg times `hole1Inv`, and the export returns the unit. 3886 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. The build succeeded under `ulimit -v 7000000`.
+
+Next: the board `chord_add_open` leaves, marker off, meets `OpenLay` and `OpenMatch`, so `chord_add_point` can call `open_checked` and drop `hinv`. Then the remaining settle rooms, full `walk_chord`, `walk_fform`, `base_point_of`, and the other seven exports. Eight exports are not tied.
 
 ECBS Link 2 part 2, branch `cursor/ecbs-link2-part2`. Part 1 is PR #201 on `cursor/ecbs-link2-4113`. Pick up from this note.
 
@@ -220,7 +226,7 @@ Show the board `chord_add_open` leaves, with the marker held off, meets `OpenLay
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 
-Part 1 (`cursor/ecbs-link2-4113`, PR #201) is adding `HomeIn`, `BoardShape`, `Budget`, and `FieldLay.fits`, and deleting this file. Do not merge `main` into this branch until asked. New statements should be readable off those bundles: `OpenLay` is the homes and the control frame, `OpenMatch` is the one budget.
+`origin/main` at `884f1775` is merged. `HomeIn`, `BoardShape`, `Budget`, and `FieldLay.fits` are part 1's bundles. New statements should be readable off them: `OpenLay` is the homes and the control frame, `OpenMatch` is the one budget.
 
 ## Scope that stays in the PR body
 

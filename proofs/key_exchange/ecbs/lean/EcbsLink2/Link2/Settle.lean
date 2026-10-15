@@ -399,32 +399,32 @@ theorem bumpOp_bench (b : Ecbs.Board) (i cOps : Nat)
 /-- `settleBoard` when the held-count after the slide is strictly above the incoming peak.
     The new peak is that count. Ops are not written. -/
 theorem settle_peak (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat)
-    (hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) :
-    settleBoard b home hH hD xs n moves slides peak =
+    (hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7) :
+    settleBoard b home hin.hH hin.hD xs n moves slides peak =
       { b with
-        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
-        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hin.hH⟩ (embed (xs.take n))
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true
         sudo_5Board_8bench_on := false
         sudo_5Board_4cost := { b.sudo_5Board_4cost with
           sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
           sudo_5Costs_6slides := Int.ofNat (slides + 2 * pegCount (xs.take n))
           sudo_5Costs_4peak :=
-            Int.ofNat (countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) } } := by
+            Int.ofNat (countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7) } } := by
   unfold settleBoard
   rw [if_pos hpk]
 
 /-- `settleBoard` when the incoming peak is already at least the held-count. Peak stays.
     Ops are not written. -/
 theorem settle_keep (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat)
-    (hnk : ¬ peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7) :
-    settleBoard b home hH hD xs n moves slides peak =
+    (hnk : ¬ peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7) :
+    settleBoard b home hin.hH hin.hD xs n moves slides peak =
       { b with
-        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n))
-        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ true
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hin.hH⟩ (embed (xs.take n))
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true
         sudo_5Board_8bench_on := false
         sudo_5Board_4cost := { b.sudo_5Board_4cost with
           sudo_5Costs_5moves := Int.ofNat (moves + 2 * pegCount (xs.take n))
@@ -433,13 +433,13 @@ theorem settle_keep (b : Ecbs.Board) (home : Nat)
   rw [if_neg hnk]
 
 theorem settle_ops (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops =
       b.sudo_5Board_4cost.sudo_5Costs_3ops := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem bump_home_lt (b : Ecbs.Board) (i cOps home : Nat)
     (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
@@ -455,195 +455,195 @@ theorem bump_held_lt (b : Ecbs.Board) (i cOps home : Nat)
 
 theorem settle_ops_lt (b : Ecbs.Board) (i home : Nat)
     (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    i < (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-  rw [settle_ops]; exact hops
+    i < (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  rw [settle_ops b home hin xs n moves slides peak]; exact hops
 
 /-- `settle` after an ops bump is the ops bump after `settle`. The peak test depends on
     the held array and the incoming peak, neither of which the bump writes. -/
 theorem settle_bump_comm (b : Ecbs.Board) (i cOps : Nat)
     (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
-    (home : Nat) (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (home : Nat) (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
     settleBoard (bumpOp b i cOps hops) home
-        (bump_home_lt b i cOps home hops hH) (bump_held_lt b i cOps home hops hD)
+        (bump_home_lt b i cOps home hops hin.hH) (bump_held_lt b i cOps home hops hin.hD)
         xs n moves slides peak =
-      bumpOp (settleBoard b home hH hD xs n moves slides peak) i cOps
-        (settle_ops_lt b i home hops hH hD xs n moves slides peak) := by
+      bumpOp (settleBoard b home hin.hH hin.hD xs n moves slides peak) i cOps
+        (settle_ops_lt b i home hops ⟨hin.hH, hin.hD⟩ xs n moves slides peak) := by
   let bB := bumpOp b i cOps hops
-  let hHB := bump_home_lt b i cOps home hops hH
-  let hDB := bump_held_lt b i cOps home hops hD
+  let hHB := bump_home_lt b i cOps home hops hin.hH
+  let hDB := bump_held_lt b i cOps home hops hin.hD
   have hcount :
       countHeld (bB.sudo_5Board_4held.set ⟨home, hDB⟩ true) 7 =
-        countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7 := by
+        countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7 := by
     rfl
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
   · have hpkB : peak < countHeld (bB.sudo_5Board_4held.set ⟨home, hDB⟩ true) 7 := by
       rw [hcount]; exact hpk
-    apply Eq.trans (settle_peak bB home hHB hDB xs n moves slides peak hpkB)
+    apply Eq.trans (settle_peak bB home ⟨hHB, hDB⟩ xs n moves slides peak hpkB)
     apply board_ext
     case pos.hcost =>
-      simp only [bumpOp, bB, settle_peak b home hH hD xs n moves slides peak hpk]
+      simp only [bumpOp, bB, settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
       apply cost_ext <;> first
         | rfl
         | exact congrArg Int.ofNat hcount
         | (let v := Int.ofNat (cOps + 1)
-           let hs := settle_ops b home hH hD xs n moves slides peak
-           let hlt := settle_ops_lt b i home hops hH hD xs n moves slides peak
+           let hs := settle_ops b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak
+           let hlt := settle_ops_lt b i home hops ⟨hin.hH, hin.hD⟩ xs n moves slides peak
            exact ((set_fin b.sudo_5Board_4cost.sudo_5Costs_3ops i hops (hs ▸ hlt) v).trans
              (set_on_eq hs i hlt v).symm).trans (set_fin _ i hlt _ v))
-    all_goals simp only [bumpOp, bB, settle_peak b home hH hD xs n moves slides peak hpk]
+    all_goals simp only [bumpOp, bB, settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
   · have hnkB : ¬ peak < countHeld (bB.sudo_5Board_4held.set ⟨home, hDB⟩ true) 7 := by
       rw [hcount]; exact hpk
-    apply Eq.trans (settle_keep bB home hHB hDB xs n moves slides peak hnkB)
+    apply Eq.trans (settle_keep bB home ⟨hHB, hDB⟩ xs n moves slides peak hnkB)
     apply board_ext
     case neg.hcost =>
-      simp only [bumpOp, bB, settle_keep b home hH hD xs n moves slides peak hpk]
+      simp only [bumpOp, bB, settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
       apply cost_ext <;> first
         | rfl
         | (let v := Int.ofNat (cOps + 1)
-           let hs := settle_ops b home hH hD xs n moves slides peak
-           let hlt := settle_ops_lt b i home hops hH hD xs n moves slides peak
+           let hs := settle_ops b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak
+           let hlt := settle_ops_lt b i home hops ⟨hin.hH, hin.hD⟩ xs n moves slides peak
            exact ((set_fin b.sudo_5Board_4cost.sudo_5Costs_3ops i hops (hs ▸ hlt) v).trans
              (set_on_eq hs i hlt v).symm).trans (set_fin _ i hlt _ v))
-    all_goals simp only [bumpOp, bB, settle_keep b home hH hD xs n moves slides peak hpk]
+    all_goals simp only [bumpOp, bB, settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 /-- `settleBoard` turns the bench off. The ops array is not written. -/
 theorem settle_bench_off (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_8bench_on = false := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_8bench_on = false := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_held_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4held =
-      b.sudo_5Board_4held.set ⟨home, hD⟩ true := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4held =
+      b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_home_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4home =
-      b.sudo_5Board_4home.set ⟨home, hH⟩ (embed (xs.take n)) := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨home, hin.hH⟩ (embed (xs.take n)) := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_tier_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_1t =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_1t =
       b.sudo_5Board_1t := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_moves_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_5moves =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_5moves =
       Int.ofNat (moves + 2 * pegCount (xs.take n)) := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_slides_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_6slides =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_6slides =
       Int.ofNat (slides + 2 * pegCount (xs.take n)) := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_tally_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_6tally0 =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_6tally0 =
       b.sudo_5Board_6tally0 := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_ctrl_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
       b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_high_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_15control_highest =
       b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_marker_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_9marker_on =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_9marker_on =
       b.sudo_5Board_9marker_on := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_strict_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
       b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem settle_hole_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
       b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 /-- The peak `settleBoard` leaves: the held-count after the slide, when that exceeds
     the incoming peak, and the incoming peak otherwise. -/
 theorem settle_peak_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat)
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_4peak =
-      Int.ofNat (if peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-        then countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (if peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+        then countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
         else peak) := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk, if_pos hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk, hpeak, if_neg hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk, if_pos hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk, hpeak, if_neg hpk]
 
 theorem settle_held_lt (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    home < (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4held.size := by
-  rw [settle_held_eq b home hH hD xs n moves slides peak, Array.size_set]
-  exact hD
+    home < (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4held.size := by
+  rw [settle_held_eq b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak, Array.size_set]
+  exact hin.hD
 
 theorem settle_home_lt (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    home < (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4home.size := by
-  rw [settle_home_eq b home hH hD xs n moves slides peak, Array.size_set]
-  exact hH
+    home < (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4home.size := by
+  rw [settle_home_eq b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak, Array.size_set]
+  exact hin.hH
 
 /-- Replace the fields `tally_double` writes. A live `Ecbs.cube` and a live nocopy
     `Ecbs.mul` do not read them; they copy them onto the result. -/
@@ -718,29 +718,29 @@ theorem withTally_max (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : I
 
 /-- `settleBoard` does not read the tally fields, and it copies them onto the result. -/
 theorem settleBoard_withTally (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int)
-    (home : Nat) (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (home : Nat) (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
     settleBoard (withTally b row len ctrl high tmax) home
-        (withTally_home b row len ctrl high tmax ▸ hH)
-        (withTally_held b row len ctrl high tmax ▸ hD) xs n moves slides peak =
-      withTally (settleBoard b home hH hD xs n moves slides peak) row len ctrl high tmax := by
+        (withTally_home b row len ctrl high tmax ▸ hin.hH)
+        (withTally_held b row len ctrl high tmax ▸ hin.hD) xs n moves slides peak =
+      withTally (settleBoard b home hin.hH hin.hD xs n moves slides peak) row len ctrl high tmax := by
   let bT := withTally b row len ctrl high tmax
-  let hHT : home < bT.sudo_5Board_4home.size := withTally_home b row len ctrl high tmax ▸ hH
-  let hDT : home < bT.sudo_5Board_4held.size := withTally_held b row len ctrl high tmax ▸ hD
+  let hHT : home < bT.sudo_5Board_4home.size := withTally_home b row len ctrl high tmax ▸ hin.hH
+  let hDT : home < bT.sudo_5Board_4held.size := withTally_held b row len ctrl high tmax ▸ hin.hD
   have hcount :
       countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 =
-        countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7 := by
+        countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7 := by
     simp [bT, withTally]
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
   · have hpkT : peak < countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 := by
       simpa [hcount] using hpk
-    rw [settle_peak bT home hHT hDT xs n moves slides peak hpkT,
-      settle_peak b home hH hD xs n moves slides peak hpk]
+    rw [settle_peak bT home ⟨hHT, hDT⟩ xs n moves slides peak hpkT,
+      settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
     simp [bT, withTally]
   · have hpkT : ¬ peak < countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 := by
       simpa [hcount] using hpk
-    rw [settle_keep bT home hHT hDT xs n moves slides peak hpkT,
-      settle_keep b home hH hD xs n moves slides peak hpk]
+    rw [settle_keep bT home ⟨hHT, hDT⟩ xs n moves slides peak hpkT,
+      settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
     simp [bT, withTally]
 
 /-- Replace the row, the control counter, the parked-from hole, and the rung index.
@@ -891,21 +891,21 @@ theorem settleBoard_irrel (b : Ecbs.Board) (home : Nat)
 
 /-- `place` does not read the park fields, and it copies them onto the result. -/
 theorem placeBoard_withPark (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int)
-    (home : Nat) (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (home : Nat) (hin : HomeIn b home)
     (xs : List Nat) (moves peak : Nat) :
     placeBoard (withPark b row ctrl fromHole ridx) home
-        (withPark_home b row ctrl fromHole ridx ▸ hH)
-        (withPark_held b row ctrl fromHole ridx ▸ hD) xs moves peak =
-      withPark (placeBoard b home hH hD xs moves peak) row ctrl fromHole ridx := by
+        (withPark_home b row ctrl fromHole ridx ▸ hin.hH)
+        (withPark_held b row ctrl fromHole ridx ▸ hin.hD) xs moves peak =
+      withPark (placeBoard b home hin.hH hin.hD xs moves peak) row ctrl fromHole ridx := by
   unfold placeBoard
   let bW := withPark b row ctrl fromHole ridx
-  let hHW := withPark_home b row ctrl fromHole ridx ▸ hH
-  let hDW := withPark_held b row ctrl fromHole ridx ▸ hD
+  let hHW := withPark_home b row ctrl fromHole ridx ▸ hin.hH
+  let hDW := withPark_held b row ctrl fromHole ridx ▸ hin.hD
   have hcount :
       countHeld (bW.sudo_5Board_4held.set ⟨home, hDW⟩ true) 7 =
-        countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7 := by
+        countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7 := by
     simp [bW, withPark]
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
   · have hpkW : peak < countHeld (bW.sudo_5Board_4held.set ⟨home, hDW⟩ true) 7 := by
       simpa [hcount] using hpk
     simp [hpk, hpkW, bW, withPark]
@@ -915,29 +915,29 @@ theorem placeBoard_withPark (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ri
 
 /-- `settleBoard` does not read the park fields, and it copies them onto the result. -/
 theorem settleBoard_withPark (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int)
-    (home : Nat) (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (home : Nat) (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
     settleBoard (withPark b row ctrl fromHole ridx) home
-        (withPark_home b row ctrl fromHole ridx ▸ hH)
-        (withPark_held b row ctrl fromHole ridx ▸ hD) xs n moves slides peak =
-      withPark (settleBoard b home hH hD xs n moves slides peak) row ctrl fromHole ridx := by
+        (withPark_home b row ctrl fromHole ridx ▸ hin.hH)
+        (withPark_held b row ctrl fromHole ridx ▸ hin.hD) xs n moves slides peak =
+      withPark (settleBoard b home hin.hH hin.hD xs n moves slides peak) row ctrl fromHole ridx := by
   let bT := withPark b row ctrl fromHole ridx
-  let hHT : home < bT.sudo_5Board_4home.size := withPark_home b row ctrl fromHole ridx ▸ hH
-  let hDT : home < bT.sudo_5Board_4held.size := withPark_held b row ctrl fromHole ridx ▸ hD
+  let hHT : home < bT.sudo_5Board_4home.size := withPark_home b row ctrl fromHole ridx ▸ hin.hH
+  let hDT : home < bT.sudo_5Board_4held.size := withPark_held b row ctrl fromHole ridx ▸ hin.hD
   have hcount :
       countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 =
-        countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7 := by
+        countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7 := by
     simp [bT, withPark]
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
   · have hpkT : peak < countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 := by
       simpa [hcount] using hpk
-    rw [settle_peak bT home hHT hDT xs n moves slides peak hpkT,
-      settle_peak b home hH hD xs n moves slides peak hpk]
+    rw [settle_peak bT home ⟨hHT, hDT⟩ xs n moves slides peak hpkT,
+      settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
     simp [bT, withPark]
   · have hpkT : ¬ peak < countHeld (bT.sudo_5Board_4held.set ⟨home, hDT⟩ true) 7 := by
       simpa [hcount] using hpk
-    rw [settle_keep bT home hHT hDT xs n moves slides peak hpkT,
-      settle_keep b home hH hD xs n moves slides peak hpk]
+    rw [settle_keep bT home ⟨hHT, hDT⟩ xs n moves slides peak hpkT,
+      settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
     simp [bT, withPark]
 
 end EcbsLink2.Link2

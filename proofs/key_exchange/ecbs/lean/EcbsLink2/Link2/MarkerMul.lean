@@ -998,7 +998,7 @@ theorem mul_down_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     (by simpa [feed, markerDownFeed] using hmoves)
     (by simpa [feed, markerDownFeed] using hpeak)
     (by simpa [feed, markerDownFeed] using hpeakS) hspan hxsT hfi hfm
-    hw0 hh0 hrR hrP hnE hkLe hgap
+    ⟨hw0, hh0, hrR, hrP, hnE, hkLe, hgap⟩
     (by simpa [feed, markerDownFeed] using hw)
     (by simpa [feed, markerDownFeed] using hh)
     (by simpa [feed, markerDownFeed] using hr)
@@ -1310,7 +1310,7 @@ theorem mul_up_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     (by simpa [feed, markerUpFeed] using hmoves)
     (by simpa [feed, markerUpFeed] using hpeak)
     (by simpa [feed, markerUpFeed] using hpeakS) hspan hxsT hfi hfm
-    hw0 hh0 hrR hrP hnE hkLe hgap
+    ⟨hw0, hh0, hrR, hrP, hnE, hkLe, hgap⟩
     (by simpa [feed, markerUpFeed] using hw)
     (by simpa [feed, markerUpFeed] using hh)
     (by simpa [feed, markerUpFeed] using hr)

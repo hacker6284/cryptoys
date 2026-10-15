@@ -620,7 +620,7 @@ theorem red_open_ge
     rw [htierE, h.shape.tierC]
   have htallD := tally_double_withPark bIdle xs xsP s.t0 s.tally c0
     (s.t0 + s.tally - 1) base.control tmax0 fromH ridxH
-    hm hlenE ht0E hrowI
+    hm hlenE ht0E
     (by simp [xs, paintRed_length, afterPark_length]; exact hRowLen)
     (by simp [xsP, paintRed_length, afterPark_length]; exact hRowLen)
     hRedIdle hRedPark hZeroIdle hZeroPark hctrlB
@@ -696,7 +696,7 @@ theorem red_open_ge
         unfold bTall withTally
         rfl
       rw [ht, ht0Red])
-    hixTall hixOut hzeroTall hzeroOut
+    hixTall hixOut hzeroOut
     (by unfold bTall; rw [ withTally_tier, htierRed, hctrlN])
     hPastC
     (by
@@ -704,8 +704,6 @@ theorem red_open_ge
       rw [withTally_high])
     (by omega)
     (double_index_fit hPastC base.fitControl).1
-    hctrlTall
-    (FitsLen.of_le hfits.1 (by omega))
     (by
       have hEq : (c0 + 2 * s.tally) + 2 + 1 = s.ctrl + 4 + 3 * s.tally + 1 := by
         unfold c0

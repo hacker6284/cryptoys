@@ -34,6 +34,9 @@ export const smootherStepD = (t) => { t = clamp01(t); return 30 * t * t * (t - 1
 export const easeInOutCubic = (t) => { t = clamp01(t); return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2; };
 export const easeInOutSine = (t) => -(Math.cos(Math.PI * clamp01(t)) - 1) / 2;
 export const easeInQuad = (t) => { t = clamp01(t); return t * t; };
+export const easeInCubic = (t) => { t = clamp01(t); return t * t * t; };
+export const easeOutCubic = (t) => { t = clamp01(t); return 1 - (1 - t) ** 3; };
+export const easeInOutQuad = (t) => { t = clamp01(t); return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2; };
 
 // ---- quaternions ----
 export function quatFromEuler(x = 0, y = 0, z = 0) {

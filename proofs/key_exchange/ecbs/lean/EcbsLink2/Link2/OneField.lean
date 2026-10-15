@@ -10,7 +10,7 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
-theorem coeff_one_zero (n : Nat) (h : 0 < n) : coeff (onePeg n) 0 = 1 := by
+theorem coeff_one_zero (n : Nat) (_h : 0 < n) : coeff (onePeg n) 0 = 1 := by
   unfold coeff onePeg
   simp [List.getD_cons_zero]
 
@@ -156,7 +156,7 @@ theorem fieldMul_one (n k bench : Nat) (hpos : 0 < n) (hn : n ≤ bench) :
     exact set0_high_zero n bench e he hel hpos
   rw [hred, one_prefix n bench hpos hn]
 
-private theorem foldl_comb_one (n bench m : Nat) (hm : m ≤ n) (hpos : 0 < n) (hb : 0 < bench) :
+private theorem foldl_comb_one (n bench m : Nat) (hm : m ≤ n) (hpos : 0 < n) (_hb : 0 < bench) :
     (List.range m).foldl (fun s i =>
         let c := coeff (onePeg n) i
         if c = 0 then s else s.set (3 * i) c) (List.replicate bench 0) =
@@ -167,7 +167,7 @@ private theorem foldl_comb_one (n bench m : Nat) (hm : m ≤ n) (hpos : 0 < n) (
     rw [List.range_succ, List.foldl_append, List.foldl_cons, List.foldl_nil]
     by_cases hm0 : m = 0
     · subst hm0
-      simp [coeff_one_zero n hpos, hb, if_false]
+      simp [coeff_one_zero n hpos, _hb, if_false]
     · have hmpos : 0 < m := Nat.pos_of_ne_zero hm0
       rw [ih (Nat.le_of_lt (Nat.lt_of_lt_of_le (Nat.lt_succ_self m) hm))]
       simp [hm0, coeff_one_pos n m hpos hmpos]

@@ -30,20 +30,20 @@ theorem settleBoard_flag (b : Ecbs.Board) (home : Nat)
         peak < countHeld
           (({ b with sudo_5Board_9marker_on := true }).sudo_5Board_4held.set ⟨home, hD⟩ true) 7 :=
       hpk
-    rw [settle_peak ({ b with sudo_5Board_9marker_on := true }) home hH hD xs n moves slides peak
+    rw [settle_peak ({ b with sudo_5Board_9marker_on := true }) home ⟨hH, hD⟩ xs n moves slides peak
         hpkOn]
-    rw [settle_peak b home hH hD xs n moves slides peak hpk]
+    rw [settle_peak b home ⟨hH, hD⟩ xs n moves slides peak hpk]
   · have hnkOn :
         ¬ peak < countHeld
           (({ b with sudo_5Board_9marker_on := true }).sudo_5Board_4held.set ⟨home, hD⟩ true) 7 :=
       hpk
-    rw [settle_keep ({ b with sudo_5Board_9marker_on := true }) home hH hD xs n moves slides peak
+    rw [settle_keep ({ b with sudo_5Board_9marker_on := true }) home ⟨hH, hD⟩ xs n moves slides peak
         hnkOn]
-    rw [settle_keep b home hH hD xs n moves slides peak hpk]
+    rw [settle_keep b home ⟨hH, hD⟩ xs n moves slides peak hpk]
 
 theorem settle_flag (b : Ecbs.Board) (home : Nat) (xs : List Nat)
     (n moves slides peak : Nat)
-    (hflag : b.sudo_5Board_9marker_on = false)
+    (_hflag : b.sudo_5Board_9marker_on = false)
     (hH : home < b.sudo_5Board_4home.size)
     (hD : home < b.sudo_5Board_4held.size)
     (h7 : 7 ≤ b.sudo_5Board_4held.size)
@@ -199,59 +199,59 @@ theorem cube_bench_up (b : Ecbs.Board) (dst src home : Nat) (xs ys : List Nat)
     then countHeld (bF.sudo_5Board_4held.set ⟨home, hDhF⟩ true) 7
     else peak
   have hflagS : bS.sudo_5Board_9marker_on = false := by
-    rw [settle_marker_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_marker_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     exact hfeedB
   have hFs : src < bS.sudo_5Board_4held.size := by
-    rw [settle_held_eq bF home hHhF hDhF ys n moves slides peak, Array.size_set]
+    rw [settle_held_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak, Array.size_set]
     simpa [bF, bumpOp, feed, markerUpFeed] using hF
   have hHomes : src < bS.sudo_5Board_4home.size := by
-    rw [settle_home_eq bF home hHhF hDhF ys n moves slides peak, Array.size_set]
+    rw [settle_home_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak, Array.size_set]
     simpa [bF, bumpOp, feed, markerUpFeed] using hHome
   have hHFs : bS.sudo_5Board_4held[src] = true := by
     have hget := array_at_eq
-      (settle_held_eq bF home hHhF hDhF ys n moves slides peak) src hFs
+      (settle_held_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak) src hFs
     have hneH : home ≠ src := hne.symm
     simp only [Array.getElem_set, hneH] at hget
     exact hget.trans (by simpa [bF, bumpOp, feed, markerUpFeed] using hHF)
   have hArrs : bS.sudo_5Board_4home[src] = embed xs := by
     have hget := array_at_eq
-      (settle_home_eq bF home hHhF hDhF ys n moves slides peak) src hHomes
+      (settle_home_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak) src hHomes
     have hneH : home ≠ src := hne.symm
     simp only [Array.getElem_set, hneH] at hget
     exact hget.trans (by simpa [bF, bumpOp, feed, markerUpFeed] using hArr)
   have h7s : 7 ≤ bS.sudo_5Board_4held.size := by
-    rw [settle_held_eq bF home hHhF hDhF ys n moves slides peak, Array.size_set]
+    rw [settle_held_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak, Array.size_set]
     exact h7F
   have hpS : bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
-    rw [settle_strict_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_strict_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     simpa [bF, bumpOp, feed, markerUpFeed] using hp
   have hpeakS : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (peakT : Int) := by
-    rw [settle_peak_eq bF home hHhF hDhF ys n moves slides peak hpeakF, ofNat_eq_natCast]
+    rw [settle_peak_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak hpeakF, ofNat_eq_natCast]
   have hnS : bS.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
-    rw [settle_tier_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_tier_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     exact hnF
   have hmovS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (movesT : Int) := by
-    rw [settle_moves_eq bF home hHhF hDhF ys n moves slides peak, ofNat_eq_natCast]
+    rw [settle_moves_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak, ofNat_eq_natCast]
   have hblS : bS.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by
-    rw [settle_tier_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_tier_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     simpa [bF, bumpOp, feed, markerUpFeed] using hbl
   have hcgS : bS.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg := by
-    rw [settle_tier_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_tier_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     simpa [bF, bumpOp, feed, markerUpFeed] using hcg
   have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
-    rw [settle_hole_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_hole_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     simpa [bF, bumpOp, feed, markerUpFeed] using hhole
   have hwS : bS.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by
-    rw [settle_tier_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_tier_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     simpa [bF, bumpOp, feed, markerUpFeed] using hw
   have hhS : bS.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h := by
-    rw [settle_tier_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_tier_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     simpa [bF, bumpOp, feed, markerUpFeed] using hh
   have hrS : bS.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by
-    rw [settle_tier_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_tier_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     simpa [bF, bumpOp, feed, markerUpFeed] using hr
   have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
-    rw [settle_tier_eq bF home hHhF hDhF ys n moves slides peak]
+    rw [settle_tier_eq bF home ⟨hHhF, hDhF⟩ ys n moves slides peak]
     simpa [bF, bumpOp, feed, markerUpFeed] using hk
   exact cube_tail_flag bS dst src xs w h r n k movesT hole bench peakT peakS cg
     hflagS hFs hHomes hHFs hArrs h7s hpS hpeakS hn0 hnS hlenx hf hmovS hblS hcgS hspan h3 hfm

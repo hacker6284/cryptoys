@@ -178,7 +178,7 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       hmarkG, hridxG, hladG, _, hctrlG, _, _, _, _, hstrictG, hholeG, hhighG, _,
       htmaxG, _, _, hopsG⟩
   have hrowG : bG.sudo_5Board_3row = embed (paintedRow t) := by
-    rw [place_row_out bB 5 h5H h5D xs lay.moves lay.peak,
+    rw [place_row_out bB 5 ⟨h5H, h5D⟩ xs lay.moves lay.peak,
       show bB.sudo_5Board_3row = b.sudo_5Board_3row from rfl, lay.hrow]
   have horigin : tallyOrigin t < t.control := origin_lt t sat
   have hrowSz : tallyOrigin t < bG.sudo_5Board_3row.size := by
@@ -225,18 +225,18 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
     simpa [entryRow, ofNat_eq_natCast] using
       embed_set (paintedRow t) (tallyOrigin t) 1 hlenP
   have hszHG : bG.sudo_5Board_4home.size = 8 := by
-    rw [place_home_out bB 5 h5H h5D xs lay.moves lay.peak, Array.size_set, hszHB]
+    rw [place_home_out bB 5 ⟨h5H, h5D⟩ xs lay.moves lay.peak, Array.size_set, hszHB]
   have hszDG : bG.sudo_5Board_4held.size = 8 := by
-    rw [place_held_out bB 5 h5H h5D xs lay.moves lay.peak, Array.size_set, hszDB]
+    rw [place_held_out bB 5 ⟨h5H, h5D⟩ xs lay.moves lay.peak, Array.size_set, hszDB]
   have h5HG : 5 < bG.sudo_5Board_4home.size := by rw [hszHG]; decide
   have h5DG : 5 < bG.sudo_5Board_4held.size := by rw [hszDG]; decide
   have h6DG : 6 < bG.sudo_5Board_4held.size := by rw [hszDG]; decide
   have h2HG : 2 < bG.sudo_5Board_4home.size := by rw [hszHG]; decide
   have h2DG : 2 < bG.sudo_5Board_4held.size := by rw [hszDG]; decide
   have hhomeG : bG.sudo_5Board_4home = bB.sudo_5Board_4home.set ⟨5, h5H⟩ (embed xs) :=
-    place_home_out bB 5 h5H h5D xs lay.moves lay.peak
+    place_home_out bB 5 ⟨h5H, h5D⟩ xs lay.moves lay.peak
   have hheldG : bG.sudo_5Board_4held = bB.sudo_5Board_4held.set ⟨5, h5D⟩ true :=
-    place_held_out bB 5 h5H h5D xs lay.moves lay.peak
+    place_held_out bB 5 ⟨h5H, h5D⟩ xs lay.moves lay.peak
   have h5t : bG.sudo_5Board_4held[5]'h5DG = true := by
     have hget := Array.getElem_set_eq bB.sudo_5Board_4held ⟨5, h5D⟩ true rfl
       (by rw [Array.size_set]; exact h5D)
@@ -271,7 +271,7 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
   have hpk : bG.sudo_5Board_4cost.sudo_5Costs_4peak =
       Int.ofNat (raisedPeak lay.peak
         (countHeld (b.sudo_5Board_4held.set ⟨5, by rw [lay.szD]; decide⟩ true) 7)) := by
-    rw [place_peak_out bB 5 h5H h5D xs lay.moves lay.peak hpeakB, hcount]
+    rw [place_peak_out bB 5 ⟨h5H, h5D⟩ xs lay.moves lay.peak hpeakB, hcount]
   have hbump :
       (do
         let ix := Ecbs.op_inv
@@ -291,7 +291,7 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
   · rw [show bT.sudo_5Board_9marker_on = bG.sudo_5Board_9marker_on from rfl, hmarkG,
       show bB.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on from rfl, lay.marker]
   · rw [show bT.sudo_5Board_8bench_on = bG.sudo_5Board_8bench_on from rfl,
-      place_on_out bB 5 h5H h5D xs lay.moves lay.peak,
+      place_on_out bB 5 ⟨h5H, h5D⟩ xs lay.moves lay.peak,
       show bB.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on from rfl, lay.bench]
   · rw [show bT.sudo_5Board_6tally0 = bG.sudo_5Board_6tally0 from rfl, ht0G,
       show bB.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 from rfl, lay.ht0]
@@ -318,10 +318,10 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
   · intro h; exact idx_irrel.trans h2aG
   · rw [show bT.sudo_5Board_4cost.sudo_5Costs_5moves =
         bG.sudo_5Board_4cost.sudo_5Costs_5moves from rfl,
-      place_moves_out bB 5 h5H h5D xs lay.moves lay.peak]
+      place_moves_out bB 5 ⟨h5H, h5D⟩ xs lay.moves lay.peak]
   · rw [show bT.sudo_5Board_4cost.sudo_5Costs_6slides =
         bG.sudo_5Board_4cost.sudo_5Costs_6slides from rfl,
-      place_slides_out bB 5 h5H h5D xs lay.moves lay.peak,
+      place_slides_out bB 5 ⟨h5H, h5D⟩ xs lay.moves lay.peak,
       show bB.sudo_5Board_4cost.sudo_5Costs_6slides =
         b.sudo_5Board_4cost.sudo_5Costs_6slides from rfl, lay.hslides]
   · rw [show bT.sudo_5Board_4cost.sudo_5Costs_4peak =
@@ -993,7 +993,7 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
                 Nat.le_add_right _ _
               _ ≤ mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) + 2 * t.n :=
                 Nat.le_add_right _ _)
-          hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap
+          ⟨hsh.w0, hsh.h0, hsh.rlt, hsh.r0, hsh.n_eq, hsh.k_le, hsh.gap⟩
           (by
             have h1 : bZ.sudo_5Board_1t.sudo_4Tier_1w =
                 b'.sudo_5Board_1t.sudo_4Tier_1w := by rw [hread.tierEq]

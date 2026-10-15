@@ -118,7 +118,7 @@ theorem chord_gap_settle (b : Ecbs.Board) (inv rise : List Nat)
     (hfitSM : FitsLen (mulMovesNo moves inv rise n k bench + pegCount inv +
         2 * pegCount ((gapProduct n k bench inv rise).take n)))
     (hfitSS : FitsLen (slides + 2 * pegCount ((gapProduct n k bench inv rise).take n))) :
-    let bM := gapMulBoard b inv rise n k moves hole bench peak peakS cOps m ctrl mx hops hS hHomeS
+    let _bM := gapMulBoard b inv rise n k moves hole bench peak peakS cOps m ctrl mx hops hS hHomeS
     let mv := mulMovesNo moves inv rise n k bench + pegCount inv
     let xs := gapProduct n k bench inv rise
     let peakC := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨6, hS⟩ false) 7)
@@ -230,15 +230,15 @@ theorem chord_gap_settle (b : Ecbs.Board) (inv rise : List Nat)
   refine ⟨bC, hH, hD, bS, ?_, rfl, ?_, ?_, ?_⟩
   · rw [hmulEq, ok_bind, hclearEq, ok_bind]
     simpa [bS, show Ecbs.gap = ((5 : Nat) : Int) from rfl] using hset
-  · have hhome := settle_home_eq bC 5 hH hD xs n mv slides peakC
+  · have hhome := settle_home_eq bC 5 ⟨hH, hD⟩ xs n mv slides peakC
     have htake : xs.take n = fieldMul n k bench rise inv := by
       have hpre : xs.take n = fieldMul n k bench inv rise := by
         simpa [xs, gapProduct] using mul_no_prefix n k bench inv rise
       rw [hpre]
       exact (slope_mul_swap n k bench rise inv hrT hxsT).symm
     simpa [bS, htake] using hhome
-  · simpa [bS] using settle_bench_off bC 5 hH hD xs n mv slides peakC
+  · simpa [bS] using settle_bench_off bC 5 ⟨hH, hD⟩ xs n mv slides peakC
   · have hflag : bC.sudo_5Board_9marker_on = true := by
       simp only [bC]
       exact (gapMul_bench b inv rise n k moves hole bench peak peakS cOps m ctrl mx hops hS hHomeS).2.2.2
-    simpa [bS, hflag] using settle_marker_eq bC 5 hH hD xs n mv slides peakC
+    simpa [bS, hflag] using settle_marker_eq bC 5 ⟨hH, hD⟩ xs n mv slides peakC

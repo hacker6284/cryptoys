@@ -5,8 +5,6 @@
 import EcbsLink2.Link2.RungBody
 import EcbsLink2.Link2.RungLadder
 
-set_option linter.unusedVariables false
-
 namespace Ecbs
 
 /-- Copy `r` onto the strip, index `0` through `_toV`. `Ecbs.mul` inlines this once. -/
@@ -156,7 +154,7 @@ def mulKeep (b : Board) (dst : Int) («first» : Int) (second : Int) (copy_secon
     let _io622 ← log_op b
     let b := _io622
     let n := ((b).sudo_5Board_1t).sudo_4Tier_1n
-    let strip := (#[] : Array (Int))
+    let _strip := (#[] : Array (Int))
     let _t623 ← (if onto then (do
   pure (b).sudo_5Board_8bench_on) else pure false)
     let _t624 ← (if _t623 then (do

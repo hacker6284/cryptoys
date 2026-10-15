@@ -214,24 +214,24 @@ theorem move_tail_bound_outer (mv pegs n bench : Nat) (hpeg : 2 * pegs ≤ 2 * n
 /-- `settle` writes a home and the move, slide, and peak counters. The row,
     the tally bookkeeping, the control counter, and the tier stay. -/
 theorem settleBoard_plain (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_3row =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_3row =
       b.sudo_5Board_3row ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_9tally_len =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_9tally_len =
       b.sudo_5Board_9tally_len ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_6tally0 =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_6tally0 =
       b.sudo_5Board_6tally0 ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
       b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_15control_highest =
       b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_1t =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_1t =
       b.sudo_5Board_1t := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
     exact ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
     exact ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 /-- Unpark writes the parked colour back and clears the park hole. Both holes
@@ -434,18 +434,18 @@ theorem final_cube_settle
   have hcubeEq : Ecbs.cube bU Ecbs.gap Ecbs.gap = Ecbs.cube bS (5 : Int) (5 : Int) := by
     simpa [bS, Ecbs.gap] using hslideEq
   have hoffS : bS.sudo_5Board_8bench_on = false :=
-    settle_bench_off bU 5 h5H h5D xs s.n mv sl pk
+    settle_bench_off bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
   have hF : 5 < bS.sudo_5Board_4held.size :=
-    settle_held_lt bU 5 h5H h5D xs s.n mv sl pk
+    settle_held_lt bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
   have hHome : 5 < bS.sudo_5Board_4home.size :=
-    settle_home_lt bU 5 h5H h5D xs s.n mv sl pk
+    settle_home_lt bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
   have hHF : bS.sudo_5Board_4held[5] = true := by
-    have heq := settle_held_eq bU 5 h5H h5D xs s.n mv sl pk
+    have heq := settle_held_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
     have hget := arr_get heq 5 hF
     exact hget.trans (Array.getElem_set_eq _ ⟨5, h5D⟩ true rfl
       (by rw [Array.size_set]; exact h5D))
   have hArr : bS.sudo_5Board_4home[5] = embed s.gap := by
-    have heq := settle_home_eq bU 5 h5H h5D xs s.n mv sl pk
+    have heq := settle_home_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
     have hget := arr_get heq 5 hHome
     have hset := Array.getElem_set_eq _ ⟨5, h5H⟩ (embed (xs.take s.n)) rfl
       (by rw [Array.size_set]; exact h5H)
@@ -453,31 +453,31 @@ theorem final_cube_settle
   let pegs := pegCount (xs.take s.n)
   let mvS : Nat := mv + 2 * pegs
   have hmvS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mvS : Int) := by
-    rw [settle_moves_eq bU 5 h5H h5D xs s.n mv sl pk, ofNat_eq_natCast]
+    rw [settle_moves_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk, ofNat_eq_natCast]
   let slS : Nat := sl + 2 * pegs
   have hslS : bS.sudo_5Board_4cost.sudo_5Costs_6slides = (slS : Int) := by
-    rw [settle_slides_eq bU 5 h5H h5D xs s.n mv sl pk, ofNat_eq_natCast]
+    rw [settle_slides_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk, ofNat_eq_natCast]
   let pkS : Nat :=
     if pk < countHeld (bU.sudo_5Board_4held.set ⟨5, h5D⟩ true) 7 then
       countHeld (bU.sudo_5Board_4held.set ⟨5, h5D⟩ true) 7 else pk
   have hpkS : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (pkS : Int) := by
-    rw [settle_peak_eq bU 5 h5H h5D xs s.n mv sl pk hpkB, ofNat_eq_natCast]
+    rw [settle_peak_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk hpkB, ofNat_eq_natCast]
   have htierS : bS.sudo_5Board_1t = b.sudo_5Board_1t :=
-    (settle_tier_eq bU 5 h5H h5D xs s.n mv sl pk).trans htierU
+    (settle_tier_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk).trans htierU
   have hmkS : bS.sudo_5Board_9marker_on = false :=
-    (settle_marker_eq bU 5 h5H h5D xs s.n mv sl pk).trans hmk
+    (settle_marker_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk).trans hmk
   have hopsS : 1 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-    rw [settle_ops bU 5 h5H h5D xs s.n mv sl pk]; exact hops1
+    rw [settle_ops bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk]; exact hops1
   have hopS : bS.sudo_5Board_4cost.sudo_5Costs_3ops[1] = (cOps : Int) := by
-    have hget := arr_get (settle_ops bU 5 h5H h5D xs s.n mv sl pk) 1 hopsS
+    have hget := arr_get (settle_ops bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk) 1 hopsS
     exact hget.trans hop1
   obtain ⟨peakS, hpeakS0⟩ := h.shape.peg.peakS
   have hpeakS : bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
-    rw [settle_strict_eq bU 5 h5H h5D xs s.n mv sl pk, hstrictU]
+    rw [settle_strict_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk, hstrictU]
     exact hpeakS0
   obtain ⟨holeN, hhole0⟩ := h.shape.peg.holeM
   have hhole : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (holeN : Int) := by
-    rw [settle_hole_eq bU 5 h5H h5D xs s.n mv sl pk, hholeU]
+    rw [settle_hole_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk, hholeU]
     exact hhole0
   have hbody : mvS + 2 * s.n + 3 * (s.benchlen - s.n) ≤
       mv + 2 * base.n + pegCharge base.n base.bench := by
@@ -500,31 +500,9 @@ theorem final_cube_settle
   have hfm : FitsLen (mvS + 2 * s.n) :=
     FitsLen.of_le hfold (Nat.le_add_right _ _)
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
-    rw [settle_held_eq bU 5 h5H h5D xs s.n mv sl pk, Array.size_set]
+    rw [settle_held_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk, Array.size_set]
     exact h7
-  have hcube := cube_refines bS 5 5 s.gap base.w base.h base.r s.n s.k mvS holeN
-      s.benchlen pkS peakS cOps base.cg
-    hmkS hoffS hopsS hopS hfops
-    (by rw [htierS, h.shape.tierB, ofNat_eq_natCast])
-    (by rw [htierS, h.shape.tierCg, ofNat_eq_natCast])
-    h.shape.peg.span
-    hF hHome hHF hArr h7S h.shape.peg.n_pos
-    (by rw [htierS]; exact h.shape.tierN)
-    h.shape.gapLen h.shape.peg.fitN hmvS hpkS hpeakS h.shape.peg.trits h.shape.peg.fit3
-    hfm
-    h.shape.w0 h.shape.h0 h.shape.rlt h.shape.r0
-    h.shape.n_eq
-    h.shape.k_le
-    h.shape.gap_eq
-    (by rw [htierS, h.shape.tierW, ofNat_eq_natCast])
-    (by rw [htierS, h.shape.tierH, ofNat_eq_natCast])
-    (by rw [htierS, h.shape.tierR, ofNat_eq_natCast])
-    (by rw [htierS, h.shape.tierK, ofNat_eq_natCast])
-    (by rw [hhole, ofNat_eq_natCast])
-    h.shape.peg.small
-    h.shape.peg.n_small
-    h.shape.peg.fitBn
-    hfold
+  have hcube := cube_refines bS 5 5 s.gap base.w base.h base.r s.n s.k mvS holeN s.benchlen pkS peakS cOps base.cg hmkS hoffS hopsS hopS hfops (by rw [htierS, h.shape.tierB, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierCg, ofNat_eq_natCast]) h.shape.peg.span hF hHome hHF hArr h7S h.shape.peg.n_pos (by rw [htierS]; exact h.shape.tierN) h.shape.gapLen h.shape.peg.fitN hmvS hpkS hpeakS h.shape.peg.trits h.shape.peg.fit3 hfm ⟨h.shape.w0, h.shape.h0, h.shape.rlt, h.shape.r0, h.shape.n_eq, h.shape.k_le, h.shape.gap_eq⟩ (by rw [htierS, h.shape.tierW, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierH, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierR, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierK, ofNat_eq_natCast]) (by rw [hhole, ofNat_eq_natCast]) h.shape.peg.small h.shape.peg.n_small h.shape.peg.fitBn hfold
   obtain ⟨bC, hrunC, honC, htoC, hbenchC, htakeC, hzeroC, hmvC, _hpkC, hslC,
       _htierC, _hszH, _hhomeC, _hheldC, _hmkC, _hrowC, _hopsC, _ht0C, _hhighC, _hctrlC⟩ :=
     hcube
@@ -589,36 +567,12 @@ theorem final_cube_settle
   let bOut := settleBoard bC 5 h5HC h5DC fold s.n
       (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
       (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
-  have hplainS := settleBoard_plain bU 5 h5H h5D xs s.n mv sl pk
-  have hOff := cube_off_eq bS 5 5 s.gap base.w base.h base.r s.n s.k mvS holeN
-      s.benchlen pkS peakS cOps base.cg
-    hmkS hoffS hopsS hopS hfops
-    (by rw [htierS, h.shape.tierB, ofNat_eq_natCast])
-    (by rw [htierS, h.shape.tierCg, ofNat_eq_natCast])
-    h.shape.peg.span
-    hF hHome hHF hArr h7S h.shape.peg.n_pos
-    (by rw [htierS]; exact h.shape.tierN)
-    h.shape.gapLen h.shape.peg.fitN hmvS hpkS hpeakS h.shape.peg.trits h.shape.peg.fit3
-    hfm
-    h.shape.w0 h.shape.h0 h.shape.rlt h.shape.r0
-    h.shape.n_eq
-    h.shape.k_le
-    h.shape.gap_eq
-    (by rw [htierS, h.shape.tierW, ofNat_eq_natCast])
-    (by rw [htierS, h.shape.tierH, ofNat_eq_natCast])
-    (by rw [htierS, h.shape.tierR, ofNat_eq_natCast])
-    (by rw [htierS, h.shape.tierK, ofNat_eq_natCast])
-    (by rw [hhole, ofNat_eq_natCast])
-    h.shape.peg.small
-    h.shape.peg.n_small
-    h.shape.peg.fitBn
-    hfold
+  have hplainS := settleBoard_plain bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
+  have hOff := cube_off_eq bS 5 5 s.gap base.w base.h base.r s.n s.k mvS holeN s.benchlen pkS peakS cOps base.cg hmkS hoffS hopsS hopS hfops (by rw [htierS, h.shape.tierB, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierCg, ofNat_eq_natCast]) h.shape.peg.span hF hHome hHF hArr h7S h.shape.peg.n_pos (by rw [htierS]; exact h.shape.tierN) h.shape.gapLen h.shape.peg.fitN hmvS hpkS hpeakS h.shape.peg.trits h.shape.peg.fit3 hfm ⟨h.shape.w0, h.shape.h0, h.shape.rlt, h.shape.r0, h.shape.n_eq, h.shape.k_le, h.shape.gap_eq⟩ (by rw [htierS, h.shape.tierW, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierH, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierR, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierK, ofNat_eq_natCast]) (by rw [hhole, ofNat_eq_natCast]) h.shape.peg.small h.shape.peg.n_small h.shape.peg.fitBn hfold
   have hbC : bC = cubeOffBoard bS 5 5 s.gap s.n s.k mvS holeN s.benchlen pkS peakS cOps
       hopsS hF hHome :=
     Except.ok.inj (hrunC.symm.trans hOff)
-  have hplainO := settleBoard_plain bC 5 h5HC h5DC fold s.n
-      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
-      (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+  have hplainO := settleBoard_plain bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
   obtain ⟨bRow, row, hunR, hrowE, hlenR⟩ := unpark_row_embed h hge
   have hbU : bU = bRow := Except.ok.inj (hun.symm.trans hunR)
   have hrowOut : bOut.sudo_5Board_3row = embed row := by
@@ -689,9 +643,7 @@ theorem final_cube_settle
       (Int.ofNat (s.ctrl + 2 + s.tally)) with sudo_5Board_9tally_len := 0 }
   have hclearZ : Ecbs.tally_clear bOut = .ok bZ := by
     simpa [bZ] using hclear
-  have hhomeOut := settle_home_eq bC 5 h5HC h5DC fold s.n
-      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
-      (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+  have hhomeOut := settle_home_eq bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
   have htake : fold.take s.n = fieldCube s.n s.k s.benchlen s.gap := htakeC
   have h5Z : 5 < bZ.sudo_5Board_4home.size := by
     have h5O : 5 < bOut.sudo_5Board_4home.size := by
@@ -723,8 +675,8 @@ theorem final_cube_settle
     cell_eq_of hhomeU (Eq.refl (b.sudo_5Board_4home[2]'h2H0))
   have hheld2U : bU.sudo_5Board_4held[2]'h2DU = b.sudo_5Board_4held[2]'h2D0 :=
     cell_eq_of hheldU (Eq.refl (b.sudo_5Board_4held[2]'h2D0))
-  have hhomeS := settle_home_eq bU 5 h5H h5D xs s.n mv sl pk
-  have hheldS := settle_held_eq bU 5 h5H h5D xs s.n mv sl pk
+  have hhomeS := settle_home_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
+  have hheldS := settle_held_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
   have h2HS : 2 < bS.sudo_5Board_4home.size := by
     rw [hhomeS, Array.size_set]; exact h2HU
   have h2DS : 2 < bS.sudo_5Board_4held.size := by
@@ -753,9 +705,7 @@ theorem final_cube_settle
       rw [Array.size_set]; exact h2DS
     exact cell_eq_of _hheldC
       (Array.getElem_set_ne bS.sudo_5Board_4held ⟨5, hF⟩ false hsz hne52)
-  have hheldOut := settle_held_eq bC 5 h5HC h5DC fold s.n
-      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
-      (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+  have hheldOut := settle_held_eq bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
   have h2HO : 2 < bOut.sudo_5Board_4home.size := by
     rw [hhomeOut, Array.size_set]; exact h2HC
   have h2DO : 2 < bOut.sudo_5Board_4held.size := by
@@ -825,15 +775,11 @@ theorem final_cube_settle
   have hmkZ : bZ.sudo_5Board_9marker_on = false := by
     have hmkC : bC.sudo_5Board_9marker_on = false := by
       rw [hbC]; simp [cubeOffBoard]
-    have hmkO := (settle_marker_eq bC 5 h5HC h5DC fold s.n
-        (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
-        (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))).trans hmkC
+    have hmkO := (settle_marker_eq bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))).trans hmkC
     simpa [bZ, touchRow] using hmkO
   have hbonZ : bZ.sudo_5Board_8bench_on = false := by
     simpa [bZ, touchRow] using
-      (settle_bench_off bC 5 h5HC h5DC fold s.n
-        (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
-        (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7)))
+      (settle_bench_off bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7)))
   have hops0 : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
     Nat.lt_trans (by decide : (0 : Nat) < 1) h.shape.peg.opsGt
   obtain ⟨c0, hc0, hle0⟩ := h.ops 0 hops0
@@ -845,14 +791,12 @@ theorem final_cube_settle
     exact FitsLen.of_le base.fitO hcap
   have hopsZ : 0 < bZ.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     have hopsUeq := hopsU
-    have hSops := settle_ops bU 5 h5H h5D xs s.n mv sl pk
+    have hSops := settle_ops bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
     have hCops : bC.sudo_5Board_4cost.sudo_5Costs_3ops =
         bS.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, by
           rw [hSops, hopsU]; exact h.shape.peg.opsGt⟩ (Int.ofNat (cOps + 1)) := by
       rw [hbC]; simp [cubeOffBoard]
-    have hOops := settle_ops bC 5 h5HC h5DC fold s.n
-        (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
-        (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+    have hOops := settle_ops bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
     have hZops : bZ.sudo_5Board_4cost.sudo_5Costs_3ops =
         bOut.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [bZ, touchRow]
     rw [hZops, hOops, hCops, Array.size_set, hSops, hopsUeq]
@@ -860,7 +804,7 @@ theorem final_cube_settle
   have hopZ : bZ.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsZ = (c0 : Int) := by
     have hU : bU.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(by rw [hopsU]; exact hops0) = (c0 : Int) :=
       cell_eq_of hopsU hc0
-    have hSops := settle_ops bU 5 h5H h5D xs s.n mv sl pk
+    have hSops := settle_ops bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
     have hS : bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(by rw [hSops, hopsU]; exact hops0) =
         (c0 : Int) := (cell_eq_of hSops hU)
     have hCset : bC.sudo_5Board_4cost.sudo_5Costs_3ops =
@@ -874,25 +818,20 @@ theorem final_cube_settle
     have hC : bC.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(by rw [hCset]; exact hsz) = (c0 : Int) :=
       (cell_eq_of hCset (Array.getElem_set_ne _ ⟨1, by rw [hSops, hopsU]; exact h.shape.peg.opsGt⟩
         (Int.ofNat (cOps + 1)) hsz hne10)).trans hS
-    have hOops := settle_ops bC 5 h5HC h5DC fold s.n
-        (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
-        (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+    have hOops := settle_ops bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
     have hO : bOut.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(by rw [hOops, hCset]; exact hsz) =
         (c0 : Int) := (cell_eq_of hOops hC)
     have hZops : bZ.sudo_5Board_4cost.sudo_5Costs_3ops = bOut.sudo_5Board_4cost.sudo_5Costs_3ops := by
       simp [bZ, touchRow]
     exact cell_eq_of hZops hO
-  have hmvOut := settle_moves_eq bC 5 h5HC h5DC fold s.n
-      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
-      (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+  have hmvOut := settle_moves_eq bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
   have hmvNat : bZ.sudo_5Board_4cost.sudo_5Costs_5moves =
       ((cubeMoves mvS s.gap s.n s.k s.benchlen + 2 * pegCount (fold.take s.n) : Nat) : Int) := by
     have hEq : bZ.sudo_5Board_4cost.sudo_5Costs_5moves = bOut.sudo_5Board_4cost.sudo_5Costs_5moves := by
       simp [bZ, touchRow]
     rw [hEq, hmvOut, ofNat_eq_natCast]
   let pkC : Nat := raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7)
-  have hpkOut := settle_peak_eq bC 5 h5HC h5DC fold s.n
-      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS pkC hpkCnat
+  have hpkOut := settle_peak_eq bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS pkC hpkCnat
   have hpkNat : bZ.sudo_5Board_4cost.sudo_5Costs_4peak =
       ((if pkC < countHeld (bC.sudo_5Board_4held.set ⟨5, h5DC⟩ true) 7
         then countHeld (bC.sudo_5Board_4held.set ⟨5, h5DC⟩ true) 7 else pkC : Nat) : Int) := by
@@ -902,16 +841,14 @@ theorem final_cube_settle
   have hpsC : bC.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
       ((raisedPeak peakS (countHeld bS.sudo_5Board_4held 7) : Nat) : Int) := by
     rw [hbC, cube_off_strict, ofNat_eq_natCast]
-  have hpsO := (settle_strict_eq bC 5 h5HC h5DC fold s.n
-      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS pkC).trans hpsC
+  have hpsO := (settle_strict_eq bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS pkC).trans hpsC
   have hpsZ : bZ.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
       ((raisedPeak peakS (countHeld bS.sudo_5Board_4held 7) : Nat) : Int) := by
     simpa [bZ, touchRow] using hpsO
   have hholeC : bC.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
       ((raisedHole holeN (topIdx (combStrip s.n s.benchlen s.gap)) : Nat) : Int) := by
     rw [hbC, cube_off_hole, ofNat_eq_natCast]
-  have hholeO := (settle_hole_eq bC 5 h5HC h5DC fold s.n
-      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS pkC).trans hholeC
+  have hholeO := (settle_hole_eq bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS pkC).trans hholeC
   have hholeZ : bZ.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
       ((raisedHole holeN (topIdx (combStrip s.n s.benchlen s.gap)) : Nat) : Int) := by
     simpa [bZ, touchRow] using hholeO
@@ -975,9 +912,7 @@ theorem final_cube_settle
       (cell_eq_of (ha := h5DO) (hb := h5set) hheldOut hget)
   refine ⟨bU, bC, bOut, bZ, mv, sl, row, hun, hprog, by simpa [bOut] using hsettle,
     hclearZ, hmvB, hslB, by simpa [bOut] using
-      (settle_bench_off bC 5 h5HC h5DC fold s.n
-        (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
-        (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))),
+      (settle_bench_off bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))),
     hrowOut, rfl, rfl, rfl, rfl, ⟨h5Z, hgetZ⟩,
     ⟨h2H0, h2D0, h2HZ, h2DZ, hhome2Z, hheld2Z, hmkZ, hbonZ, h6DZ, h6HZ, hspareZ, h7Z,
       hopsZ, ⟨c0, hopZ, hfit0⟩,

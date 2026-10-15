@@ -47,7 +47,7 @@ theorem mul_settles_first (b : Ecbs.Board) (dst s1 s2 : Int) (m : Bool)
     Ecbs.mul b dst s1 s2 m false false =
       (Ecbs.settle b >>= fun b' => Ecbs.mul b' dst s1 s2 m false false) ∧
       (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_8bench_on = false := by
-  refine ⟨?_, settle_bench_off b home hH hD xs n moves slides peak⟩
+  refine ⟨?_, settle_bench_off b home ⟨hH, hD⟩ xs n moves slides peak⟩
   have hset := settle_refines b home xs n moves slides peak hH hD h7 hon hto hempty
     hbench hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
   rw [hset, ok_bind]
@@ -55,20 +55,20 @@ theorem mul_settles_first (b : Ecbs.Board) (dst s1 s2 : Int) (m : Bool)
   have hmkS : bS.sudo_5Board_9marker_on = false := by
     by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
     · rw [show bS = settleBoard b home hH hD xs n moves slides peak from rfl,
-        settle_peak b home hH hD xs n moves slides peak hpk, hmk]
+        settle_peak b home ⟨hH, hD⟩ xs n moves slides peak hpk, hmk]
     · rw [show bS = settleBoard b home hH hD xs n moves slides peak from rfl,
-        settle_keep b home hH hD xs n moves slides peak hpk, hmk]
+        settle_keep b home ⟨hH, hD⟩ xs n moves slides peak hpk, hmk]
   have hoffS : bS.sudo_5Board_8bench_on = false :=
-    settle_bench_off b home hH hD xs n moves slides peak
+    settle_bench_off b home ⟨hH, hD⟩ xs n moves slides peak
   have hmkRaw :
       (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_9marker_on = false :=
     hmkS
   unfold Ecbs.mul Ecbs.log_op
   simp only [hmk, hmkRaw, Bool.false_eq_true, if_false, pure_eq_ok, toPure_eq_ok, ok_bind]
   have hopsS : 0 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
-    settle_ops_lt b 0 home hops hH hD xs n moves slides peak
+    settle_ops_lt b 0 home hops ⟨hH, hD⟩ xs n moves slides peak
   have hop0S : bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsS = (cOps : Int) := by
-    have hget := get_eq_of_array (settle_ops b home hH hD xs n moves slides peak) 0 hopsS
+    have hget := get_eq_of_array (settle_ops b home ⟨hH, hD⟩ xs n moves slides peak) 0 hopsS
     exact hget.trans hop0
   conv =>
     lhs
@@ -102,7 +102,7 @@ theorem mul_settles_first (b : Ecbs.Board) (dst s1 s2 : Int) (m : Bool)
       (by simp [bumpOp, hmoves]) (by simp [bumpOp, hslides]) (by simp [bumpOp, hpeak])
       hpeg hfitM hfitS
   rw [hsetL, ok_bind]
-  rw [settle_bump_comm b 0 cOps hops home hH hD xs n moves slides peak]
+  rw [settle_bump_comm b 0 cOps hops home ⟨hH, hD⟩ xs n moves slides peak]
   let bR : Ecbs.Board :=
     { bS with
       sudo_5Board_9marker_on := false

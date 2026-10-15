@@ -908,7 +908,7 @@ theorem cube_down_eq (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       hw hh hr hk hsm hnsm hfitB hfold]
   rw [cube_off_eq (markerDownFeed b ctrl mx) dst src xs w h r n k moves hole bench peak peakS
       cOps cg rfl hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf
-      hmoves hpeak hp hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hhole
+      hmoves hpeak hp hxsT h3 hfm ⟨hw0, hh0, hrR, hrP, hnE, hkLe, hgap⟩ hw hh hr hk hhole
       hsm hnsm hfitB hfold]
   simp only [ok_bind, pure_eq_ok]
 
@@ -966,7 +966,7 @@ theorem cube_up_eq (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       hw hh hr hk hsm hnsm hfitB hfold]
   rw [cube_off_eq (markerUpFeed b m ctrl mx) dst src xs w h r n k moves hole bench peak peakS
       cOps cg rfl hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf
-      hmoves hpeak hp hxsT h3 hfm hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hhole
+      hmoves hpeak hp hxsT h3 hfm ⟨hw0, hh0, hrR, hrP, hnE, hkLe, hgap⟩ hw hh hr hk hhole
       hsm hnsm hfitB hfold]
   simp only [ok_bind, pure_eq_ok]
 

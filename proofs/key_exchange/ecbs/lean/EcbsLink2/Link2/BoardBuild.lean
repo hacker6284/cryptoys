@@ -1432,4 +1432,53 @@ theorem new_board_refines (t : Spec.Tier) (h : BoardOk t) :
       rw [except_bind_pure, except_bind_pure, except_bind_pure, pure_eq_ok]
       simp [builtBoard, midBoard, placed, blankOf]
 
+/-- Demo `new_board` returns the model board. `BoardOk` holds (`demo_board`). -/
+theorem demo_new_board :
+    Ecbs.new_board (embTier Spec.demo) = .ok (builtBoard Spec.demo) :=
+  new_board_refines Spec.demo demo_board
+
+private def demoBlank : Ecbs.Board :=
+  blankOf (embTier Spec.demo) Spec.demo.control Spec.demo.script
+
+private def demoPeg : List Nat := [1, 0, 0, 0, 0, 0, 0]
+
+private theorem demoBlank_sizes :
+    0 < demoBlank.sudo_5Board_4home.size ∧
+    0 < demoBlank.sudo_5Board_4held.size ∧
+    7 ≤ demoBlank.sudo_5Board_4held.size := by
+  simp [demoBlank, blankOf, Array.size_mkArray]
+
+private theorem demoPeg_count : pegCount demoPeg = 1 := by
+  decide
+
+/-- Demo `place` of one peg into an empty home 0. The fresh board is the one `new_board` starts from. -/
+theorem demo_place_peg :
+    Ecbs.place demoBlank 0 (embed demoPeg) =
+      .ok (placeBoard demoBlank 0 demoBlank_sizes.1 demoBlank_sizes.2.1 demoPeg 0 0) := by
+  refine place_refines demoBlank 0 demoPeg 0 0 demoBlank_sizes.1 demoBlank_sizes.2.1
+      demoBlank_sizes.2.2 ?hempty ?hn (fits_small (by decide)) ?hm ?hp ?hfit
+  · simp [demoBlank, blankOf, Array.getElem_mkArray]
+  · simp [demoBlank, blankOf, embTier, Spec.demo, demoPeg, ofNat_eq_natCast]
+  · simp [demoBlank, blankOf]
+  · simp [demoBlank, blankOf]
+  · simpa [demoPeg_count] using (fits_small (by decide : (1 : Nat) ≤ 1000000))
+
+/-- A Demo tier with home 0 held and storing the one-peg list. -/
+private def demoHeld : Ecbs.Board :=
+  { demoBlank with
+    sudo_5Board_4home := demoBlank.sudo_5Board_4home.set ⟨0, demoBlank_sizes.1⟩ (embed demoPeg)
+    sudo_5Board_4held := demoBlank.sudo_5Board_4held.set ⟨0, demoBlank_sizes.2.1⟩ true }
+
+/-- Demo `band` of a held home returns that one-peg list. -/
+theorem demo_band_peg :
+    Ecbs.band demoHeld 0 = .ok (embed demoPeg) := by
+  have hlen : demoPeg.length = 7 := by decide
+  refine band_held_refines demoHeld 0 demoPeg 7 ?hszD ?hszH ?hheld ?harr ?hn
+      (by simp [hlen]) (fits_small (by decide))
+  · simp [demoHeld, demoBlank, blankOf, Array.size_set, Array.size_mkArray]
+  · simp [demoHeld, demoBlank, blankOf, Array.size_set, Array.size_mkArray]
+  · simp [demoHeld, demoBlank, blankOf, Array.getElem_set, Array.getElem_mkArray]
+  · simp [demoHeld, demoBlank, blankOf, Array.getElem_set, Array.getElem_mkArray]
+  · simp [demoHeld, demoBlank, blankOf, embTier, Spec.demo, hlen, ofNat_eq_natCast]
+
 end EcbsLink2.Link2

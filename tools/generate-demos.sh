@@ -55,8 +55,11 @@ test -f demos/scramble/generated/scramble.mjs
 test -f demos/doubledeal/generated/doubledeal.mjs
 test -f demos/megadreifach/generated/megadreifach.mjs
 test -f demos/megadreifach/generated/kats.json
+test -f demos/bs/generated/bs.mjs
+test -f demos/bs/generated/kats.json
 test -f demos/scramble/SPEC.md
 test -f demos/doubledeal/SPEC.md
 test -f demos/megadreifach/SPEC.md
+test -f demos/bs/SPEC.md
 for t in demos/*/*.test.mjs; do node "$t"; done
 touch demos/.nojekyll

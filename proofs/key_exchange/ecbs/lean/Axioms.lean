@@ -1,6 +1,7 @@
 /-
-  Axiom audit of the ECBS Link 2 package. Run by the shared gate
-  `python3 ../../../doubledeal/check_axioms.py ecbs` (after `lake build`). Prints the
+  Axiom audit of the ECBS Link 2 package. The gate is
+  `proofs/doubledeal/check_axioms.py` (`python3 ../../../doubledeal/check_axioms.py ecbs`
+  after `lake build`). Prints the
   axioms of EVERY theorem declared in an `EcbsLink2.*` module, private ones included,
   then `audited N`. The checker allows only propext, Classical.choice and Quot.sound;
   anything else (sorryAx, Lean.ofReduceBool from native_decide, a user axiom), an

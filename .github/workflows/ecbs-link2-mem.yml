@@ -1,0 +1,27 @@
+name: ecbs-link2-mem
+
+# Per-module memory of a cache-free EcbsLink2 build. Heavy checks stay out of
+# pull_request and push CI; the PR gate remains `ecbs-lean` in proofs.yml.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * 1"  # Mondays 05:23 UTC
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  ecbs-link2-mem:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v5
+      # Install elan only. No build and no GitHub olean/Mathlib cache: the
+      # script below deletes EcbsLink2 oleans and builds them from source.
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/key_exchange/ecbs/lean
+          build: "false"
+          use-github-cache: "false"
+      - name: Cache-free EcbsLink2 build and per-module VmHWM
+        run: python3 proofs/key_exchange/ecbs/lean/mem_peak.py

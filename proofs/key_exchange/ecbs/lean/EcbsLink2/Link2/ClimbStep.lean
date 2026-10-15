@@ -171,14 +171,14 @@ private theorem red_open_body (b : Ecbs.Board) (rung m : Nat) (x : Int)
 
 /-- Idle final white rung. The emitted nest is the clear. -/
 theorem dispatch_idle_white_final (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hF : fromHole < 0) (hwhite : rung ≠ 2) (hlast : last = true) :
+    (last : Bool) (_hF : fromHole < 0) (hwhite : rung ≠ 2) (hlast : last = true) :
     climbRung b rung last x m = progWhiteFinal b rung m := by
   rw [hlast]
   exact white_final_body b rung m x hwhite
 
 /-- Idle non-final white rung. The emitted nest is the clear, then the double. -/
 theorem dispatch_idle_white_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hF : fromHole < 0) (hwhite : rung ≠ 2) (hlast : last = false) :
+    (last : Bool) (_hF : fromHole < 0) (hwhite : rung ≠ 2) (hlast : last = false) :
     climbRung b rung last x m = progWhiteOpen b rung m := by
   rw [hlast]
   exact white_open_body b rung m x hwhite
@@ -186,7 +186,7 @@ theorem dispatch_idle_white_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : I
 /-- Idle non-final red rung. The emitted nest doubles, cubes, multiplies, and
     lays one peg. -/
 theorem dispatch_idle_red_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hF : fromHole < 0) (hr : rung = 2) (hlast : last = false) :
+    (last : Bool) (_hF : fromHole < 0) (hr : rung = 2) (hlast : last = false) :
     climbRung b rung last x m = progRedOpen b rung m x := by
   rw [hlast]
   exact red_open_body b rung m x hr
@@ -194,35 +194,35 @@ theorem dispatch_idle_red_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int
 /-- Idle final red rung. The emitted nest cubes and multiplies, and does not
     double or lay the extra peg. -/
 theorem dispatch_idle_red_final (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hF : fromHole < 0) (hr : rung = 2) (hlast : last = true) :
+    (last : Bool) (_hF : fromHole < 0) (hr : rung = 2) (hlast : last = true) :
     climbRung b rung last x m = progRedFinal b m x := by
   rw [hlast]
   exact red_final_body b rung m x hr
 
 /-- Parked final white rung. Same emitted nest as the idle final white rung. -/
 theorem dispatch_park_white_final (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hge : 0 ≤ fromHole) (hwhite : rung ≠ 2) (hlast : last = true) :
+    (last : Bool) (_hge : 0 ≤ fromHole) (hwhite : rung ≠ 2) (hlast : last = true) :
     climbRung b rung last x m = progWhiteFinal b rung m := by
   rw [hlast]
   exact white_final_body b rung m x hwhite
 
 /-- Parked non-final white rung. -/
 theorem dispatch_park_white_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hge : 0 ≤ fromHole) (hwhite : rung ≠ 2) (hlast : last = false) :
+    (last : Bool) (_hge : 0 ≤ fromHole) (hwhite : rung ≠ 2) (hlast : last = false) :
     climbRung b rung last x m = progWhiteOpen b rung m := by
   rw [hlast]
   exact white_open_body b rung m x hwhite
 
 /-- Parked final red rung. -/
 theorem dispatch_park_red_final (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hge : 0 ≤ fromHole) (hr : rung = 2) (hlast : last = true) :
+    (last : Bool) (_hge : 0 ≤ fromHole) (hr : rung = 2) (hlast : last = true) :
     climbRung b rung last x m = progRedFinal b m x := by
   rw [hlast]
   exact red_final_body b rung m x hr
 
 /-- Parked non-final red rung. -/
 theorem dispatch_park_red_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hge : 0 ≤ fromHole) (hr : rung = 2) (hlast : last = false) :
+    (last : Bool) (_hge : 0 ≤ fromHole) (hr : rung = 2) (hlast : last = false) :
     climbRung b rung last x m = progRedOpen b rung m x := by
   rw [hlast]
   exact red_open_body b rung m x hr
@@ -450,11 +450,11 @@ theorem peg_loop_of_body (src m : Nat) (b b' : Ecbs.Board) (hm : 0 < m)
 
 /-- After `settle`, the bench is off, so a second `settle` is the identity. -/
 theorem settle_idem (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    Ecbs.settle (settleBoard b home hH hD xs n moves slides peak) =
-      .ok (settleBoard b home hH hD xs n moves slides peak) :=
-  settle_off _ (settle_bench_off b home hH hD xs n moves slides peak)
+    Ecbs.settle (settleBoard b home hin.hH hin.hD xs n moves slides peak) =
+      .ok (settleBoard b home hin.hH hin.hD xs n moves slides peak) :=
+  settle_off _ (settle_bench_off b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak)
 
 /-- The resume record is unpark followed by the keep-park. -/
 theorem park_rung_resume_board (b : Ecbs.Board) (holes : List Nat)
@@ -511,7 +511,7 @@ theorem park_rung_settle_comm
     obtain ⟨hRowPS, hRowHS, hEqS⟩ := hkeepS hFs
     have hcomm := parkKeep_settle_comm b hole s.parkAt r s.ridx s.ctrl 5
       hRowP hRowH h5H h5D xs s.n moves slides peak
-    have hrow := settleBoard_row b 5 h5H h5D xs s.n moves slides peak
+    have hrow := settleBoard_row b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak
     refine ⟨parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH,
       by rw [parkKeep_home]; exact h5H,
       by rw [parkKeep_held]; exact h5D,
@@ -560,7 +560,7 @@ theorem park_rung_settle_comm
       hRowS hRowH hRowP hPrevB hColour hpos h.shape.tierC hsrc.2.1 h.shape.park.parkIn
       h.inv.high hsrc.2.2.1 h.shape.park.parkLe h.inv.ctrl h.shape.park.fit2
       h.shape.park.fit4 h.shape.park.parkNe (Ne.symm hsrc.2.2.2) h.shape.park.fitI
-    have hrow := settleBoard_row b 5 h5H h5D xs s.n moves slides peak
+    have hrow := settleBoard_row b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak
     have hClimbS : Ecbs.climb_holes bS = .ok (embed holes) := by
       simpa [holes] using hS.shape.park.climbH
     have hIdxS : bS.sudo_5Board_8rung_idx = (s.ridx : Int) := hS.inv.ridx
@@ -628,16 +628,16 @@ theorem copy_band_settle
     (hspare : b.sudo_5Board_4held[6] = false)
     (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
     (hlen : n ≤ xs.length) (hf : FitsLen n)
-    (hpos : 0 < xs.length) (hfitL : FitsLen xs.length)
-    (hzero : ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0)
+    (_hpos : 0 < xs.length) (_hfitL : FitsLen xs.length)
+    (_hzero : ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0)
     (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
     (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
-    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (_hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
     (hfitC : FitsLen (moves + pegCount (xs.take n)))
     (hfitCS : FitsLen (moves + 2 * pegCount (xs.take n) + pegCount (xs.take n)))
-    (hpeg : FitsLen (2 * pegCount (xs.take n)))
-    (hfitM : FitsLen (moves + 2 * pegCount (xs.take n)))
-    (hfitS : FitsLen (slides + 2 * pegCount (xs.take n))) :
+    (_hpeg : FitsLen (2 * pegCount (xs.take n)))
+    (_hfitM : FitsLen (moves + 2 * pegCount (xs.take n)))
+    (_hfitS : FitsLen (slides + 2 * pegCount (xs.take n))) :
     let g := xs.take n
     let bS := settleBoard b 5 h5H h5D xs n moves slides peak
     let pkS := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨5, h5D⟩ true) 7)
@@ -645,9 +645,9 @@ theorem copy_band_settle
     let c6 := countHeld (b.sudo_5Board_4held.set ⟨6, h6D⟩ true) 7
     let pkP := raisedPeak peak c6
     let h5C : 5 < bC.sudo_5Board_4home.size := by
-      rw [place_size_home b 6 h6H h6D g moves peak]; exact h5H
+      rw [place_size_home b 6 ⟨h6H, h6D⟩ g moves peak]; exact h5H
     let h5Cd : 5 < bC.sudo_5Board_4held.size := by
-      rw [place_size_held b 6 h6H h6D g moves peak]; exact h5D
+      rw [place_size_held b 6 ⟨h6H, h6D⟩ g moves peak]; exact h5D
     ∃ (h6HS : 6 < bS.sudo_5Board_4home.size) (h6DS : 6 < bS.sudo_5Board_4held.size),
       Ecbs.copy_band b ((6 : Nat) : Int) ((5 : Nat) : Int) false =
         .ok (placeBoard b 6 h6H h6D g moves peak) ∧
@@ -657,33 +657,33 @@ theorem copy_band_settle
         settleBoard bC 5 h5C h5Cd xs n (moves + pegCount g) slides pkP := by
   intro g bS pkS bC c6 pkP h5C h5Cd
   have h6HS : 6 < bS.sudo_5Board_4home.size := by
-    rw [settle_home_eq b 5 h5H h5D xs n moves slides peak, Array.size_set]; exact h6H
+    rw [settle_home_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak, Array.size_set]; exact h6H
   have h6DS : 6 < bS.sudo_5Board_4held.size := by
-    rw [settle_held_eq b 5 h5H h5D xs n moves slides peak, Array.size_set]; exact h6D
+    rw [settle_held_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak, Array.size_set]; exact h6D
   have h5HS : 5 < bS.sudo_5Board_4home.size := by
-    rw [settle_home_eq b 5 h5H h5D xs n moves slides peak, Array.size_set]; exact h5H
+    rw [settle_home_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak, Array.size_set]; exact h5H
   have h5DS : 5 < bS.sudo_5Board_4held.size := by
-    rw [settle_held_eq b 5 h5H h5D xs n moves slides peak, Array.size_set]; exact h5D
+    rw [settle_held_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak, Array.size_set]; exact h5D
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
-    rw [settle_held_eq b 5 h5H h5D xs n moves slides peak, Array.size_set]; exact h7
+    rw [settle_held_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak, Array.size_set]; exact h7
   have hheld5 : bS.sudo_5Board_4held[5] = true := by
-    rw [idx_get (settle_held_eq b 5 h5H h5D xs n moves slides peak) 5 h5DS, Array.getElem_set]
+    rw [idx_get (settle_held_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak) 5 h5DS, Array.getElem_set]
     simp
   have harr5 : bS.sudo_5Board_4home[5] = embed g := by
-    rw [idx_get (settle_home_eq b 5 h5H h5D xs n moves slides peak) 5 h5HS, Array.getElem_set]
+    rw [idx_get (settle_home_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak) 5 h5HS, Array.getElem_set]
     rfl
   have hspareS : bS.sudo_5Board_4held[6] = false := by
-    rw [idx_get (settle_held_eq b 5 h5H h5D xs n moves slides peak) 6 h6DS,
+    rw [idx_get (settle_held_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak) 6 h6DS,
       Array.getElem_set, if_neg (by decide : (5 : Nat) ≠ 6)]
     exact hspare
   have hmvS : bS.sudo_5Board_4cost.sudo_5Costs_5moves =
       ((moves + 2 * pegCount g : Nat) : Int) := by
-    rw [settle_moves_eq b 5 h5H h5D xs n moves slides peak, ofNat_eq_natCast]
+    rw [settle_moves_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak, ofNat_eq_natCast]
   have hpkS : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (pkS : Int) := by
-    rw [settle_peak_eq b 5 h5H h5D xs n moves slides peak hpk]
+    rw [settle_peak_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak hpk]
     simp [pkS, raisedPeak, ofNat_eq_natCast]
   have hnS : bS.sudo_5Board_1t.sudo_4Tier_1n = (g.length : Int) := by
-    rw [settle_tier_eq b 5 h5H h5D xs n moves slides peak, hn]
+    rw [settle_tier_eq b 5 ⟨h5H, h5D⟩ xs n moves slides peak, hn]
     have hg : g.length = n := by
       simp [g, List.length_take, Nat.min_eq_left hlen]
     rw [hg]
@@ -693,7 +693,7 @@ theorem copy_band_settle
     h6HS h6DS h5HS h5DS h7S hheld5 harr5 hspareS hnS
     (by simp [g, List.length_take, Nat.min_eq_left hlen]; exact hf)
     hmvS hpkS hfitCS
-  have hcomm := place_settle_comm b 5 6 h5H h5D h6H h6D (by decide) xs g n moves slides peak hpk
+  have hcomm := place_settle_comm b 5 6 ⟨h5H, h5D⟩ h6H h6D (by decide) xs g n moves slides peak hpk
   refine ⟨h6HS, h6DS, hcopy, ?_, ?_⟩
   · simpa [g, bS, pkS] using hcopyS
   · simpa [g, bS, pkS, bC, c6, pkP, h5C, h5Cd] using hcomm
@@ -732,18 +732,18 @@ theorem bench_of_park
 /-- `place` leaves the tally origin, the marker, the bench, the tier, and the
     ops array where they were. -/
 theorem place_frame (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (moves peak : Nat) :
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_6tally0 =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_6tally0 =
         b.sudo_5Board_6tally0 ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_9marker_on =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_9marker_on =
         b.sudo_5Board_9marker_on ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_5bench =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_5bench =
         b.sudo_5Board_5bench ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_8bench_to =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_8bench_to =
         b.sudo_5Board_8bench_to ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_1t = b.sudo_5Board_1t ∧
-    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_1t = b.sudo_5Board_1t ∧
+    (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops := by
   unfold placeBoard
   dsimp only
@@ -960,9 +960,9 @@ theorem climbClear_slide
       hfitC hfitCS hpegF hfitM hfitSl
   let bC := placeBoard bPark 6 h6HP h6DP (xs.take s.n) moves peak
   let h5C : 5 < bC.sudo_5Board_4home.size := by
-    rw [place_size_home bPark 6 h6HP h6DP (xs.take s.n) moves peak]; exact hHp
+    rw [place_size_home bPark 6 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak]; exact hHp
   let h5Cd : 5 < bC.sudo_5Board_4held.size := by
-    rw [place_size_held bPark 6 h6HP h6DP (xs.take s.n) moves peak]; exact hDp
+    rw [place_size_held bPark 6 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak]; exact hDp
   let mvC := moves + pegCount (xs.take s.n)
   let pkC := raisedPeak peak (countHeld (bPark.sudo_5Board_4held.set ⟨6, h6DP⟩ true) 7)
   let bCS := settleBoard bC 5 h5C h5Cd xs s.n mvC slides pkC
@@ -973,26 +973,26 @@ theorem climbClear_slide
     exact settleBoard_irrel bC 5 _ h5C _ h5Cd xs s.n mvC slides pkC
   have hprow := park_row h.toCore hpark
   obtain ⟨ht0Pl, hmkPl, hbenchPl, htoPl, htierPl, hopsPl⟩ :=
-    place_frame bPark 6 h6HP h6DP (xs.take s.n) moves peak
+    place_frame bPark 6 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak
   have hrowC : bC.sudo_5Board_3row =
       embed (afterPark s.row s.fromHole s.parkAt
         (climbAt base.ladder0 base.R s.ridx) r) := by
-    rw [place_row_out bPark 6 h6HP h6DP (xs.take s.n) moves peak]
+    rw [place_row_out bPark 6 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak]
     exact hprow.1
   have ht0C : bC.sudo_5Board_6tally0 = (s.t0 : Int) := by
     rw [ht0Pl, hprow.2, h.inv.t0]
   have hrowS : bCS.sudo_5Board_3row =
       embed (afterPark s.row s.fromHole s.parkAt
         (climbAt base.ladder0 base.R s.ridx) r) := by
-    rw [settle_row_out bC 5 h5C h5Cd xs s.n mvC slides pkC, hrowC]
+    rw [settle_row_out bC 5 ⟨h5C, h5Cd⟩ xs s.n mvC slides pkC, hrowC]
   have ht0S : bCS.sudo_5Board_6tally0 = (s.t0 : Int) := by
-    rw [settle_tally_eq bC 5 h5C h5Cd xs s.n mvC slides pkC, ht0C]
+    rw [settle_tally_eq bC 5 ⟨h5C, h5Cd⟩ xs s.n mvC slides pkC, ht0C]
   have hscanC := white_after_park h.toCore hm bC hrowC ht0C
   have hscanS := white_after_park h.toCore hm bCS hrowS ht0S
   have hmkC : bC.sudo_5Board_9marker_on = false := by
     rw [hmkPl, hfix.2.2.2.2.2.2.2.2.2.2.1, h.inv.marker]
   have honC : bC.sudo_5Board_8bench_on = true := by
-    rw [place_on_out bPark 6 h6HP h6DP (xs.take s.n) moves peak]
+    rw [place_on_out bPark 6 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak]
     exact honP
   have htoC : bC.sudo_5Board_8bench_to = (5 : Int) := htoPl.trans htoP
   have hbenchC : bC.sudo_5Board_5bench = embed xs := hbenchPl.trans hbenchP
@@ -1000,19 +1000,18 @@ theorem climbClear_slide
     rw [show bC.sudo_5Board_1t = bPark.sudo_5Board_1t from htierPl]
     exact hnP
   have h7C : 7 ≤ bC.sudo_5Board_4held.size := by
-    rw [place_size_held bPark 6 h6HP h6DP (xs.take s.n) moves peak]
+    rw [place_size_held bPark 6 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak]
     exact h7P
   have hemptyC : bC.sudo_5Board_4held[5] = false := by
-    rw [place_held_other bPark 6 5 h6HP h6DP (xs.take s.n) moves peak
-      (by decide : (6 : Nat) ≠ 5) h5DP h5Cd]
+    rw [place_held_other bPark 6 5 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak (by decide : (6 : Nat) ≠ 5) h5DP h5Cd]
     exact hemptyP
   have hmvC : bC.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvC := by
-    simpa [bC, mvC] using place_moves_out bPark 6 h6HP h6DP (xs.take s.n) moves peak
+    simpa [bC, mvC] using place_moves_out bPark 6 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak
   have hslC : bC.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides := by
-    rw [place_slides_out bPark 6 h6HP h6DP (xs.take s.n) moves peak, hslP,
+    rw [place_slides_out bPark 6 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak, hslP,
       ofNat_eq_natCast]
   have hpkC : bC.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pkC := by
-    have hpkOut := place_peak_out bPark 6 h6HP h6DP (xs.take s.n) moves peak hpkP
+    have hpkOut := place_peak_out bPark 6 ⟨h6HP, h6DP⟩ (xs.take s.n) moves peak hpkP
     simpa [bC, pkC] using hpkOut
   have hfitCube : FitsLen (mvC + 2 * pegCount (xs.take s.n)) := by
     apply FitsLen.of_le hfitCS
@@ -1195,10 +1194,9 @@ theorem climb_step_bench_of
     base.mMax moves (pegCount (xs.take s.n)) hk hmvRes hpegs base.fitM
   have hroomS := bench_slide_headroom_of base.slides0 base.R done.length base.n
     base.mMax slides (pegCount (xs.take s.n)) hk hslRes hpegs base.fitS
-  have hmvS := settle_moves_eq b 5 h5H h5D xs s.n moves slides peak
-  have hslS := settle_slides_eq b 5 h5H h5D xs s.n moves slides peak
-  have hpkS := settle_peak_eq b 5 h5H h5D xs s.n moves slides peak
-    (by rw [hpk, ofNat_eq_natCast])
+  have hmvS := settle_moves_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak
+  have hslS := settle_slides_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak
+  have hpkS := settle_peak_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak (by rw [hpk, ofNat_eq_natCast])
   let pegs := pegCount (xs.take s.n)
   let mvS : Nat := moves + 2 * pegs
   let slS : Nat := slides + 2 * pegs
@@ -1217,7 +1215,7 @@ theorem climb_step_bench_of
   have hprog : climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' := by
     rw [hprogEq bS hslideB]
     exact hprogS'
-  have hops := settle_ops b 5 h5H h5D xs s.n moves slides peak
+  have hops := settle_ops b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak
   obtain ⟨pk0, hpk0, _⟩ := h.peak
   have hpkN : peak = pk0 := ofNat_inj_nat (hpk.symm.trans hpk0)
   have hpkLe : pkS ≤ max pk0 7 := by

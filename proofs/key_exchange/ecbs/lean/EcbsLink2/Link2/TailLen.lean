@@ -31,10 +31,9 @@ theorem cubeOffBoard_tally_len (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       b.sudo_5Board_9tally_len := rfl
 
 theorem cubeLiveBoard_tally_len (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : src < b.sudo_5Board_4home.size) (hD : src < b.sudo_5Board_4held.size)
-    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (cubeLiveBoard b dst src xs n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9tally_len =
+    (bud : Budget b 1)
+    (hin : HomeIn b src) :
+    (cubeLiveBoard b dst src xs bud hin).sudo_5Board_9tally_len =
       b.sudo_5Board_9tally_len := by
   simp [cubeLiveBoard, cubeOffBoard, settleBoard]
   split <;> rfl

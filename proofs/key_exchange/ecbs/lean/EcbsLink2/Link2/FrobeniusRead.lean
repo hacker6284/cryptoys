@@ -180,7 +180,7 @@ def upMv (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctr
 theorem up_moves
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4cost.sudo_5Costs_5moves = (upMv a : Int) := by
-  rw [upSettled, settle_moves_eq, ← a.hpegDef, ofNat_eq_natCast]
+  rw [upSettled, settle_moves_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, ← a.hpegDef, ofNat_eq_natCast]
   rfl
 
 def upPk (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
@@ -192,7 +192,7 @@ def upPk (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctr
 theorem up_peak
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4cost.sudo_5Costs_4peak = (upPk a : Int) := by
-  rw [upSettled, settle_peak_eq _ _ _ _ _ _ _ _ _
+  rw [upSettled, settle_peak_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1
       (by rw [upFeed_peak a]; exact a.hpkOn), ofNat_eq_natCast]
   rfl
 
@@ -201,34 +201,34 @@ theorem up_off_flag
     (upSettled a).sudo_5Board_9marker_on = false ∧
       (upSettled a).sudo_5Board_8bench_on = false := by
   refine ⟨?_, ?_⟩
-  · rw [upSettled, settle_marker_eq]; exact upFeed_flag a
-  · rw [upSettled]; exact settle_bench_off _ _ _ _ _ _ _ _ _
+  · rw [upSettled, settle_marker_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1]; exact upFeed_flag a
+  · rw [upSettled]; exact settle_bench_off (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1
 
 theorem up_strict
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4cost.sudo_5Costs_11peak_strict = (a.peakS1 : Int) := by
-  rw [upSettled, settle_strict_eq, upFeed_strict]; exact a.hstrictOn
+  rw [upSettled, settle_strict_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_strict]; exact a.hstrictOn
 
 theorem up_hole
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat a.hole1 := by
-  rw [upSettled, settle_hole_eq, upFeed_hole]; exact a.hholeOn
+  rw [upSettled, settle_hole_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_hole]; exact a.hholeOn
 
 theorem up_held_size
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4held.size = 8 := by
-  rw [upSettled, settle_held_eq, Array.size_set, upFeed_held]; exact a.hszDOn
+  rw [upSettled, settle_held_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, Array.size_set, upFeed_held]; exact a.hszDOn
 
 theorem up_home_size
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4home.size = 8 := by
-  rw [upSettled, settle_home_eq, Array.size_set, upFeed_home]; exact a.hszHOn
+  rw [upSettled, settle_home_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, Array.size_set, upFeed_home]; exact a.hszHOn
 
 theorem up_held1
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4held[1]'(by rw [up_held_size a]; decide) = true := by
   have hsz : 1 < (upSettled a).sudo_5Board_4held.size := by rw [up_held_size a]; decide
-  have heq := settle_held_eq (upFeed a) 0 (upH a) (upD a) a.laneX n a.mv1 slides a.pk1
+  have heq := settle_held_eq (upFeed a) 0 ⟨(upH a), (upD a)⟩ a.laneX n a.mv1 slides a.pk1
   have hget := idx_eq heq 1 hsz
   have hne : (0 : Nat) ≠ 1 := by decide
   simp only [Array.getElem_set, hne] at hget
@@ -241,7 +241,7 @@ theorem up_home1
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4home[1]'(by rw [up_home_size a]; decide) = embed y := by
   have hsz : 1 < (upSettled a).sudo_5Board_4home.size := by rw [up_home_size a]; decide
-  have heq := settle_home_eq (upFeed a) 0 (upH a) (upD a) a.laneX n a.mv1 slides a.pk1
+  have heq := settle_home_eq (upFeed a) 0 ⟨(upH a), (upD a)⟩ a.laneX n a.mv1 slides a.pk1
   have hget := idx_eq heq 1 hsz
   have hne : (0 : Nat) ≠ 1 := by decide
   simp only [Array.getElem_set, hne] at hget
@@ -253,48 +253,48 @@ theorem up_home1
 theorem up_n
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
-  rw [upSettled, settle_tier_eq, upFeed_tier]; exact a.hnOn
+  rw [upSettled, settle_tier_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_tier]; exact a.hnOn
 
 theorem up_w
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by
-  rw [upSettled, settle_tier_eq, upFeed_tier]; exact a.hwOn
+  rw [upSettled, settle_tier_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_tier]; exact a.hwOn
 
 theorem up_h
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h := by
-  rw [upSettled, settle_tier_eq, upFeed_tier]; exact a.hhOn
+  rw [upSettled, settle_tier_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_tier]; exact a.hhOn
 
 theorem up_r
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by
-  rw [upSettled, settle_tier_eq, upFeed_tier]; exact a.hrOn
+  rw [upSettled, settle_tier_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_tier]; exact a.hrOn
 
 theorem up_k
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
-  rw [upSettled, settle_tier_eq, upFeed_tier]; exact a.hkOn
+  rw [upSettled, settle_tier_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_tier]; exact a.hkOn
 
 theorem up_bl
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by
-  rw [upSettled, settle_tier_eq, upFeed_tier]; exact a.hblOn
+  rw [upSettled, settle_tier_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_tier]; exact a.hblOn
 
 theorem up_cg
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg := by
-  rw [upSettled, settle_tier_eq, upFeed_tier]; exact a.hcgOn
+  rw [upSettled, settle_tier_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_tier]; exact a.hcgOn
 
 theorem up_ops_lt
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     1 < (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-  rw [upSettled, settle_ops, upFeed_ops]; exact a.hopsOn
+  rw [upSettled, settle_ops (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, upFeed_ops]; exact a.hopsOn
 
 theorem up_ops1
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops[1]'(up_ops_lt a) =
       ((cOps + 1 : Nat) : Int) := by
-  have heq := settle_ops (upFeed a) 0 (upH a) (upD a) a.laneX n a.mv1 slides a.pk1
+  have heq := settle_ops (upFeed a) 0 ⟨(upH a), (upD a)⟩ a.laneX n a.mv1 slides a.pk1
   have hget := idx_eq heq 1 (up_ops_lt a)
   have hsrc : (upFeed a).sudo_5Board_4cost.sudo_5Costs_3ops[1]'(by
       rw [upFeed_ops a]; exact a.hopsOn) = ((cOps + 1 : Nat) : Int) := by
@@ -336,7 +336,7 @@ theorem frob_up_off
     (cOps + 1) cg (up_off_flag a).1 (up_off_flag a).2 (up_ops_lt a) (up_ops1 a) hfitC
     (up_bl a) (up_cg a) hspan (up1D a) (up1H a) (up_held1 a) (up_home1 a) h7
     hn0 (up_n a) hy hnFit (up_moves a) (up_peak a) (up_strict a) hyt h3 hfm
-    hw0 hh0 hrR hrP hnE hkLe hgap (up_w a) (up_h a) (up_r a) (up_k a) (up_hole a)
+    ⟨hw0, hh0, hrR, hrP, hnE, hkLe, hgap⟩ (up_w a) (up_h a) (up_r a) (up_k a) (up_hole a)
     hsm hnsm hbenchFit hfold
 
 /-- The bench `up_off` leaves has `fieldCube` of the up input as its length-`n` prefix. -/
@@ -418,7 +418,7 @@ theorem up_board_mv
 theorem up_sl_settled
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (upSettled a).sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat (upSl a) := by
-  rw [upSettled, upSl, settle_slides_eq, ← a.hpegDef]
+  rw [upSettled, upSl, settle_slides_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1, ← a.hpegDef]
 
 theorem up_board_sl
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
@@ -521,7 +521,7 @@ theorem up_home0
   have hget := idx_eq hcube 0 hsz
   have hne : (1 : Nat) ≠ 0 := by decide
   simp only [Array.getElem_set, hne, if_false] at hget
-  have hset := settle_home_eq (upFeed a) 0 (upH a) (upD a) a.laneX n a.mv1 slides a.pk1
+  have hset := settle_home_eq (upFeed a) 0 ⟨(upH a), (upD a)⟩ a.laneX n a.mv1 slides a.pk1
   have hget0 := idx_eq hset 0 (by rw [hset, Array.size_set]; exact upH a)
   simp only [Array.getElem_set, if_true] at hget0
   have htake : embed (List.take n a.laneX) = embed (fieldCube n k bench x) :=
@@ -577,11 +577,11 @@ theorem frobenius_affine_marker
     rw [hup, ok_bind]
     show (Ecbs.settle (upFlag a) >>= fun r => pure r) = Except.ok bF
     rw [hset, ok_bind, pure_eq_ok]
-  · rw [settle_marker_eq]; rfl
-  · exact settle_bench_off (upFlag a) 1 (upFlagH a) (upFlag1 a) (upLane n k bench y) n
+  · rw [settle_marker_eq (upFlag a) 1 ⟨upFlagH a, upFlag1 a⟩ (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)]; rfl
+  · exact settle_bench_off (upFlag a) 1 ⟨(upFlagH a), (upFlag1 a)⟩ (upLane n k bench y) n
       (upMv2 a) (upSl a) (upPk2 a)
   · intro h0
-    have hsetH := settle_home_eq (upFlag a) 1 (upFlagH a) (upFlag1 a) (upLane n k bench y) n
+    have hsetH := settle_home_eq (upFlag a) 1 ⟨(upFlagH a), (upFlag1 a)⟩ (upLane n k bench y) n
       (upMv2 a) (upSl a) (upPk2 a)
     have hget := idx_eq hsetH 0 h0
     have hne : (1 : Nat) ≠ 0 := by decide
@@ -591,7 +591,7 @@ theorem frobenius_affine_marker
     have hgetU := idx_eq hflag 0 (by rw [hflag]; exact h0U)
     exact hget.trans (hgetU.trans (up_home0 a))
   · intro h1
-    have hsetH := settle_home_eq (upFlag a) 1 (upFlagH a) (upFlag1 a) (upLane n k bench y) n
+    have hsetH := settle_home_eq (upFlag a) 1 ⟨(upFlagH a), (upFlag1 a)⟩ (upLane n k bench y) n
       (upMv2 a) (upSl a) (upPk2 a)
     have hget := idx_eq hsetH 1 h1
     simp only [Array.getElem_set, if_true] at hget

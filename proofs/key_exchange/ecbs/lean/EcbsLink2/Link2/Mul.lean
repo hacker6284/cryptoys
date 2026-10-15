@@ -338,8 +338,7 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
     (hfm : FitsLen (moves + pegCount ys + n * (n + 1)))
-    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
-    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (shape : BoardShape w h r n k)
     (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
     (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
     (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
@@ -536,7 +535,7 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     simp [bF, withMoves, bL, htS, htP, hbl]
   rw [lane_fold_eq sch w h r n k bench bF hfitS hwB hhB hrB hnB hkB hblB]
   rw [lane_fold_refines sch w h r n k mvF hole bench bF
-      hw0 hh0 hrR hrP hnE hkLe hgap
+      shape.hw0 shape.hh0 shape.hrR shape.hrP shape.hnE shape.hkLe shape.hgap
       (by
         have htri : allTritList sch := by
           simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits _)
@@ -798,7 +797,7 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
       ?_, ?_, ?_⟩
     · unfold fieldMul; rfl
     · intro i hlo hi
-      have hgap0 : 0 < n - k := by rw [hgap]; exact Nat.mul_pos hw0 hrP
+      have hgap0 : 0 < n - k := by rw [shape.hgap]; exact Nat.mul_pos shape.hw0 shape.hrP
       have hnb : n ≤ bench := by omega
       exact laneFold_high n (n - k) sch i hn0 hgap0 (by rw [hlenS]; exact hnb) hlo
         (by rw [hlenS]; exact hi)
@@ -854,7 +853,7 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
       ?_, ?_, ?_⟩
     · unfold fieldMul; rfl
     · intro i hlo hi
-      have hgap0 : 0 < n - k := by rw [hgap]; exact Nat.mul_pos hw0 hrP
+      have hgap0 : 0 < n - k := by rw [shape.hgap]; exact Nat.mul_pos shape.hw0 shape.hrP
       have hnb : n ≤ bench := by omega
       exact laneFold_high n (n - k) sch i hn0 hgap0 (by rw [hlenS]; exact hnb) hlo
         (by rw [hlenS]; exact hi)
@@ -1067,8 +1066,7 @@ theorem mul_no_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
     (hfm : FitsLen (moves + n * (n + 1)))
-    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
-    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (shape : BoardShape w h r n k)
     (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
     (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
     (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
@@ -1217,7 +1215,7 @@ theorem mul_no_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     simp [bF, withMoves, bL, htS, bCopy, hbl]
   rw [lane_fold_eq sch w h r n k bench bF hfitS hwB hhB hrB hnB hkB hblB]
   rw [lane_fold_refines sch w h r n k mvF hole bench bF
-      hw0 hh0 hrR hrP hnE hkLe hgap
+      shape.hw0 shape.hh0 shape.hrR shape.hrP shape.hnE shape.hkLe shape.hgap
       (by
         have htri : allTritList sch := by
           simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits _)
@@ -1484,8 +1482,7 @@ theorem mul_refines_nocopy (b : Ecbs.Board) (dst first second : Nat) (xs ys : Li
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
     (hfm : FitsLen (moves + n * (n + 1)))
-    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
-    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (shape : BoardShape w h r n k)
     (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
     (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
     (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
@@ -1520,12 +1517,9 @@ theorem mul_refines_nocopy (b : Ecbs.Board) (dst first second : Nat) (xs ys : Li
       b'.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
-  rw [mul_no_eq b dst first second xs ys w h r n k moves hole bench peak peakS cOps
-      hmk hoff hops hop0 hfops hbl hF hHome hHF hArr hS hHomeS hHS hYs h7 hne hn0 hn
-      hlenx hleny hf hmoves hpeak hpeakS hspan hxsT hfi hfm hw0 hh0 hrR hrP hnE hkLe hgap
-      hwF hhF hrF hkF hHole hsm hnsm hfitB hfold]
+  rw [mul_no_eq b dst first second xs ys w h r n k moves hole bench peak peakS cOps hmk hoff hops hop0 hfops hbl hF hHome hHF hArr hS hHomeS hHS hYs h7 hne hn0 hn hlenx hleny hf hmoves hpeak hpeakS hspan hxsT hfi hfm ⟨shape.hw0, shape.hh0, shape.hrR, shape.hrP, shape.hnE, shape.hkLe, shape.hgap⟩ hwF hhF hrF hkF hHole hsm hnsm hfitB hfold]
   refine ⟨_, rfl, rfl, rfl, rfl, mul_no_prefix n k bench xs ys,
-      mul_no_high xs ys n k bench hn0 (by rw [hgap]; exact Nat.mul_pos hw0 hrP),
+      mul_no_high xs ys n k bench hn0 (by rw [shape.hgap]; exact Nat.mul_pos shape.hw0 shape.hrP),
       rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl⟩
   · simp [mulNoOffBoard, Array.size_set]
 
@@ -1562,18 +1556,18 @@ theorem mul_live_eq (b : Ecbs.Board) (dst first second : Nat) (ys : List Nat)
   have hmkS : bS.sudo_5Board_9marker_on = false := by
     by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7
     · rw [show bS = settleBoard b second hH hD ys n moves slides peak from rfl,
-        settle_peak b second hH hD ys n moves slides peak hpk, hmk]
+        settle_peak b second ⟨hH, hD⟩ ys n moves slides peak hpk, hmk]
     · rw [show bS = settleBoard b second hH hD ys n moves slides peak from rfl,
-        settle_keep b second hH hD ys n moves slides peak hpk, hmk]
+        settle_keep b second ⟨hH, hD⟩ ys n moves slides peak hpk, hmk]
   have hmkRaw :
       (settleBoard b second hH hD ys n moves slides peak).sudo_5Board_9marker_on = false :=
     hmkS
   unfold Ecbs.mul Ecbs.log_op
   simp only [hmk, hmkRaw, Bool.false_eq_true, if_false, pure_eq_ok, toPure_eq_ok, ok_bind]
   have hopsS : 0 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
-    settle_ops_lt b 0 second hops hH hD ys n moves slides peak
+    settle_ops_lt b 0 second hops ⟨hH, hD⟩ ys n moves slides peak
   have hop0S : bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsS = (cOps : Int) := by
-    exact (array_get_congr (settle_ops b second hH hD ys n moves slides peak) 0 hopsS).trans hop0
+    exact (array_get_congr (settle_ops b second ⟨hH, hD⟩ ys n moves slides peak) 0 hopsS).trans hop0
   conv =>
     lhs
     rw [show Ecbs.op_mul = Int.ofNat 0 from rfl, atL_ofNat _ 0 hops, hop0, ok_bind,
@@ -1606,13 +1600,13 @@ theorem mul_live_eq (b : Ecbs.Board) (dst first second : Nat) (ys : List Nat)
       (by simp [bumpOp, hmoves]) (by simp [bumpOp, hslides]) (by simp [bumpOp, hpeak])
       hpeg hfitM hfitS
   rw [hsetL, ok_bind]
-  rw [settle_bump_comm b 0 cOps hops second hH hD ys n moves slides peak]
+  rw [settle_bump_comm b 0 cOps hops second ⟨hH, hD⟩ ys n moves slides peak]
   have hoffS : bS.sudo_5Board_8bench_on = false := by
     by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7
     · rw [show bS = settleBoard b second hH hD ys n moves slides peak from rfl,
-        settle_peak b second hH hD ys n moves slides peak hpk]
+        settle_peak b second ⟨hH, hD⟩ ys n moves slides peak hpk]
     · rw [show bS = settleBoard b second hH hD ys n moves slides peak from rfl,
-        settle_keep b second hH hD ys n moves slides peak hpk]
+        settle_keep b second ⟨hH, hD⟩ ys n moves slides peak hpk]
   let bR : Ecbs.Board :=
     { bS with
       sudo_5Board_9marker_on := false
@@ -1630,23 +1624,21 @@ theorem mul_live_eq (b : Ecbs.Board) (dst first second : Nat) (ys : List Nat)
     all_goals simp [bR, bumpOp]
   rw [hbR]
   rw [settle_off (bumpOp bS 0 cOps hopsS) (by simp [bumpOp, hoffS]), ok_bind]
-  rw [settle_tier_eq b second hH hD ys n moves slides peak]
+  rw [settle_tier_eq b second ⟨hH, hD⟩ ys n moves slides peak]
 
 /-- `Ecbs.mul` with `copy_second = false` on a live bench: slide into `second`, then
     `mulNoOffBoard`. The op-count bump is the one inside that board. -/
 def mulNoLiveBoard (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size)
-    (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) : Ecbs.Board :=
-  let bS := settleBoard b second hH hD ys n moves slides peak
-  let zp := ys.take n
-  let mv := moves + 2 * pegCount zp
-  let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7)
-  mulNoOffBoard bS dst second xs zp n k mv hole bench pk peakS cOps
-    (settle_ops_lt b 0 second hops hH hD ys n moves slides peak)
-    (settle_held_lt b second hH hD ys n moves slides peak)
-    (settle_home_lt b second hH hD ys n moves slides peak)
+    (bud : Budget b 0)
+    (hin : HomeIn b second) : Ecbs.Board :=
+  let bS := settleBoard b second hin.hH hin.hD ys bud.n bud.moves bud.slides bud.peak
+  let zp := ys.take bud.n
+  let mv := bud.moves + 2 * pegCount zp
+  let pk := raisedPeak bud.peak (countHeld (b.sudo_5Board_4held.set ⟨second, hin.hD⟩ true) 7)
+  mulNoOffBoard bS dst second xs zp bud.n bud.k mv bud.hole bud.bench pk bud.peakS bud.cOps
+    (settle_ops_lt b 0 second bud.hops ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+    (settle_held_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+    (settle_home_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
 
 /-- Bench on and aimed at `second`, with a zero tail. `Ecbs.mul` (`copy_second = false`)
     returns `mulNoLiveBoard`. -/
@@ -1685,8 +1677,7 @@ theorem mul_eq_live (b : Ecbs.Board) (dst first second : Nat)
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
     (hfm : FitsLen (moves + 2 * pegCount (ys.take n) + n * (n + 1)))
-    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
-    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (shape : BoardShape w h r n k)
     (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
     (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
     (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
@@ -1698,32 +1689,31 @@ theorem mul_eq_live (b : Ecbs.Board) (dst first second : Nat)
     (hfitB : FitsLen bench)
     (hfold : FitsLen (moves + 2 * pegCount (ys.take n) + n * (n + 1) + 3 * (bench - n))) :
     Ecbs.mul b (dst : Int) (first : Int) (second : Int) false false false =
-      .ok (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps
-        hH hD hops) := by
+      .ok (mulNoLiveBoard b dst second xs ys ⟨n, k, moves, slides, hole, bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩) := by
   rw [mul_live_eq b dst first second ys n moves slides peak cOps hmk hon hto hH hD h7 hempty
       hbench hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hops hop0 hfops]
   let bS := settleBoard b second hH hD ys n moves slides peak
   let zp := ys.take n
   let mv := moves + 2 * pegCount zp
   let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7)
-  let hFs := settle_held_lt b second hH hD ys n moves slides peak
-  have hHomes := settle_home_lt b second hH hD ys n moves slides peak
+  let hFs := settle_held_lt b second ⟨hH, hD⟩ ys n moves slides peak
+  have hHomes := settle_home_lt b second ⟨hH, hD⟩ ys n moves slides peak
   have hlenz : zp.length = n := by
     simp [zp, List.length_take, Nat.min_eq_left hnle]
-  have htS := settle_tier_eq b second hH hD ys n moves slides peak
+  have htS := settle_tier_eq b second ⟨hH, hD⟩ ys n moves slides peak
   have hmkS : bS.sudo_5Board_9marker_on = false := by
-    rw [settle_marker_eq b second hH hD ys n moves slides peak]; exact hmk
+    rw [settle_marker_eq b second ⟨hH, hD⟩ ys n moves slides peak]; exact hmk
   have hoffS : bS.sudo_5Board_8bench_on = false :=
-    settle_bench_off b second hH hD ys n moves slides peak
+    settle_bench_off b second ⟨hH, hD⟩ ys n moves slides peak
   have hopsS : 0 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
-    settle_ops_lt b 0 second hops hH hD ys n moves slides peak
+    settle_ops_lt b 0 second hops ⟨hH, hD⟩ ys n moves slides peak
   have hop0S : bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsS = (cOps : Int) := by
-    exact (array_get_congr (settle_ops b second hH hD ys n moves slides peak) 0 hopsS).trans hop0
+    exact (array_get_congr (settle_ops b second ⟨hH, hD⟩ ys n moves slides peak) 0 hopsS).trans hop0
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
-    rw [settle_held_eq b second hH hD ys n moves slides peak, Array.size_set]; exact h7
+    rw [settle_held_eq b second ⟨hH, hD⟩ ys n moves slides peak, Array.size_set]; exact h7
   have hHS : bS.sudo_5Board_4held[second]'hFs = true := by
     have hset : bS.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨second, hD⟩ true :=
-      settle_held_eq b second hH hD ys n moves slides peak
+      settle_held_eq b second ⟨hH, hD⟩ ys n moves slides peak
     have hFsB : second < bS.sudo_5Board_4held.size := hFs
     rw [show bS.sudo_5Board_4held[second] =
         (b.sudo_5Board_4held.set ⟨second, hD⟩ true)[second]'(hset ▸ hFsB) from
@@ -1732,19 +1722,19 @@ theorem mul_eq_live (b : Ecbs.Board) (dst first second : Nat)
   have hYs : bS.sudo_5Board_4home[second]'hHomes = embed zp := by
     have hset : bS.sudo_5Board_4home =
         b.sudo_5Board_4home.set ⟨second, hH⟩ (embed (ys.take n)) :=
-      settle_home_eq b second hH hD ys n moves slides peak
+      settle_home_eq b second ⟨hH, hD⟩ ys n moves slides peak
     have hHomeB : second < bS.sudo_5Board_4home.size := hHomes
     rw [show bS.sudo_5Board_4home[second] =
         (b.sudo_5Board_4home.set ⟨second, hH⟩ (embed (ys.take n)))[second]'(hset ▸ hHomeB) from
       array_get_congr hset second hHomeB]
     simp [zp, Array.getElem_set]
   have hF1 : first < bS.sudo_5Board_4held.size := by
-    rw [settle_held_eq b second hH hD ys n moves slides peak, Array.size_set]; exact hF
+    rw [settle_held_eq b second ⟨hH, hD⟩ ys n moves slides peak, Array.size_set]; exact hF
   have hHome1 : first < bS.sudo_5Board_4home.size := by
-    rw [settle_home_eq b second hH hD ys n moves slides peak, Array.size_set]; exact hHome
+    rw [settle_home_eq b second ⟨hH, hD⟩ ys n moves slides peak, Array.size_set]; exact hHome
   have hHF1 : bS.sudo_5Board_4held[first]'hF1 = true := by
     have hset : bS.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨second, hD⟩ true :=
-      settle_held_eq b second hH hD ys n moves slides peak
+      settle_held_eq b second ⟨hH, hD⟩ ys n moves slides peak
     rw [show bS.sudo_5Board_4held[first] =
         (b.sudo_5Board_4held.set ⟨second, hD⟩ true)[first]'(hset ▸ hF1) from
       array_get_congr hset first hF1]
@@ -1753,20 +1743,20 @@ theorem mul_eq_live (b : Ecbs.Board) (dst first second : Nat)
   have hArr1 : bS.sudo_5Board_4home[first]'hHome1 = embed xs := by
     have hset : bS.sudo_5Board_4home =
         b.sudo_5Board_4home.set ⟨second, hH⟩ (embed (ys.take n)) :=
-      settle_home_eq b second hH hD ys n moves slides peak
+      settle_home_eq b second ⟨hH, hD⟩ ys n moves slides peak
     rw [show bS.sudo_5Board_4home[first] =
         (b.sudo_5Board_4home.set ⟨second, hH⟩ (embed (ys.take n)))[first]'(hset ▸ hHome1) from
       array_get_congr hset first hHome1]
     rw [Array.getElem_set, if_neg (by simpa using hne.symm)]
     exact hArr
   have hmovS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) := by
-    rw [settle_moves_eq b second hH hD ys n moves slides peak]
+    rw [settle_moves_eq b second ⟨hH, hD⟩ ys n moves slides peak]
     simp [mv, zp, ofNat_eq_natCast]
   have hpkS : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) := by
-    rw [settle_peak_eq b second hH hD ys n moves slides peak hpeak]
+    rw [settle_peak_eq b second ⟨hH, hD⟩ ys n moves slides peak hpeak]
     simp [pk, raisedPeak, ofNat_eq_natCast]
   have hstrict : bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
-    rw [settle_strict_eq b second hH hD ys n moves slides peak]; exact hpeakS
+    rw [settle_strict_eq b second ⟨hH, hD⟩ ys n moves slides peak]; exact hpeakS
   have hblS : bS.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by rw [htS]; exact hbl
   have hnS : bS.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by rw [htS]; exact hn
   have hwS : bS.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by rw [htS]; exact hwF
@@ -1774,29 +1764,25 @@ theorem mul_eq_live (b : Ecbs.Board) (dst first second : Nat)
   have hrS : bS.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by rw [htS]; exact hrF
   have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by rw [htS]; exact hkF
   have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
-    rw [settle_hole_eq b second hH hD ys n moves slides peak]; exact hHole
-  rw [mul_no_eq bS dst first second xs zp w h r n k mv hole bench pk peakS cOps
-      hmkS hoffS hopsS hop0S hfops hblS hF1 hHome1 hHF1 hArr1 hFs hHomes hHS hYs h7S hne
-      hn0 hnS hlenx hlenz hf hmovS hpkS hstrict hspan hxsT hfi hfm hw0 hh0 hrR hrP hnE hkLe
-      hgap hwS hhS hrS hkS hholeS hsm hnsm hfitB hfold]
+    rw [settle_hole_eq b second ⟨hH, hD⟩ ys n moves slides peak]; exact hHole
+  rw [mul_no_eq bS dst first second xs zp w h r n k mv hole bench pk peakS cOps hmkS hoffS hopsS hop0S hfops hblS hF1 hHome1 hHF1 hArr1 hFs hHomes hHS hYs h7S hne hn0 hnS hlenx hlenz hf hmovS hpkS hstrict hspan hxsT hfi hfm ⟨shape.hw0, shape.hh0, shape.hrR, shape.hrP, shape.hnE, shape.hkLe, shape.hgap⟩ hwS hhS hrS hkS hholeS hsm hnsm hfitB hfold]
   rfl
 
 private theorem settle_row_eq (b : Ecbs.Board) (home : Nat)
-    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
-    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_3row =
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_3row =
       b.sudo_5Board_3row := by
-  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hD⟩ true) 7
-  · rw [settle_peak b home hH hD xs n moves slides peak hpk]
-  · rw [settle_keep b home hH hD xs n moves slides peak hpk]
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
 theorem mul_live_bench (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    let zp := ys.take n
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_5bench =
-      embed (laneFold n (n - k) (school n xs zp (List.replicate bench 0) false)) := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    let zp := ys.take bud.n
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_5bench =
+      embed (laneFold bud.n (bud.n - bud.k) (school bud.n xs zp (List.replicate bud.bench 0) false)) := by
   simp [mulNoLiveBoard, mul_no_bench]
 
 theorem mul_live_prefix (n k bench : Nat) (xs ys : List Nat) :
@@ -1805,98 +1791,88 @@ theorem mul_live_prefix (n k bench : Nat) (xs ys : List Nat) :
   mul_no_prefix n k bench xs (ys.take n)
 
 theorem mul_live_moves (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    let zp := ys.take n
-    let mv := moves + 2 * pegCount zp
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_5moves =
-      Int.ofNat (mulMovesNo mv xs zp n k bench) := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    let zp := ys.take bud.n
+    let mv := bud.moves + 2 * pegCount zp
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (mulMovesNo mv xs zp bud.n bud.k bud.bench) := by
   simp [mulNoLiveBoard, mul_no_moves]
 
 theorem mul_live_slides (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    let zp := ys.take n
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_6slides =
-      Int.ofNat (slides + 2 * pegCount zp) := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    let zp := ys.take bud.n
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (bud.slides + 2 * pegCount zp) := by
   unfold mulNoLiveBoard
-  rw [mul_no_slides, settle_slides_eq]
+  rw [mul_no_slides, settle_slides_eq b second hin ys bud.n bud.moves bud.slides bud.peak]
 
 theorem mul_live_peak (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    let bS := settleBoard b second hH hD ys n moves slides peak
-    let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7)
-    let hFs := settle_held_lt b second hH hD ys n moves slides peak
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_4peak =
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    let bS := settleBoard b second hin.hH hin.hD ys bud.n bud.moves bud.slides bud.peak
+    let pk := raisedPeak bud.peak (countHeld (b.sudo_5Board_4held.set ⟨second, hin.hD⟩ true) 7)
+    let hFs := settle_held_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4cost.sudo_5Costs_4peak =
       Int.ofNat (raisedPeak pk (countHeld (bS.sudo_5Board_4held.set ⟨second, hFs⟩ false) 7)) := by
   simp [mulNoLiveBoard, mul_no_peak]
 
 theorem mul_live_tally (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_6tally0 =
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_6tally0 =
       b.sudo_5Board_6tally0 := by
   unfold mulNoLiveBoard
-  rw [mul_no_tally, settle_tally_eq]
+  rw [mul_no_tally, settle_tally_eq b second hin ys bud.n bud.moves bud.slides bud.peak]
 
 theorem mul_live_highest (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4cost.sudo_5Costs_15control_highest =
       b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   unfold mulNoLiveBoard
-  rw [mul_no_highest, settle_high_eq]
+  rw [mul_no_highest, settle_high_eq b second hin ys bud.n bud.moves bud.slides bud.peak]
 
 theorem mul_live_row (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_3row =
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_3row =
       b.sudo_5Board_3row := by
   unfold mulNoLiveBoard
-  rw [mul_no_row, settle_row_eq]
+  rw [mul_no_row, settle_row_eq b second hin ys bud.n bud.moves bud.slides bud.peak]
 
 theorem mul_live_ctrl (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4cost.sudo_5Costs_4ctrl =
       b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
   unfold mulNoLiveBoard
-  rw [mul_no_ctrl, settle_ctrl_eq]
+  rw [mul_no_ctrl, settle_ctrl_eq b second hin ys bud.n bud.moves bud.slides bud.peak]
 
 theorem mul_live_marker (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_9marker_on =
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_9marker_on =
       false := by
   simp [mulNoLiveBoard, mul_no_marker]
 
 theorem mul_live_held (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    let hFs := settle_held_lt b second hH hD ys n moves slides peak
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4held =
-      (settleBoard b second hH hD ys n moves slides peak).sudo_5Board_4held.set ⟨second, hFs⟩ false := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    let hFs := settle_held_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4held =
+      (settleBoard b second hin.hH hin.hD ys bud.n bud.moves bud.slides bud.peak).sudo_5Board_4held.set ⟨second, hFs⟩ false := by
   simp [mulNoLiveBoard, mul_no_held]
 
 theorem mul_live_home (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4home =
-      b.sudo_5Board_4home.set ⟨second, hH⟩ #[] := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨second, hin.hH⟩ #[] := by
   unfold mulNoLiveBoard
   rw [mul_no_home]
-  have hhome := settle_home_eq b second hH hD ys n moves slides peak
+  have hhome := settle_home_eq b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
   apply Array.ext
   · rw [Array.size_set, hhome, Array.size_set, Array.size_set]
   · intro i hi1 _hi2
@@ -1904,9 +1880,9 @@ theorem mul_live_home (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
     · simp [Array.getElem_set, hie]
     · rw [Array.getElem_set, if_neg (by simpa using hie),
         Array.getElem_set, if_neg (by simpa using hie)]
-      have hget {a c : Array (Array Int)} (h : a = c) (k : Nat) (ha : k < a.size) :
-          a[k] = c[k]'(h ▸ ha) := by induction h; rfl
-      have hiS : i < (settleBoard b second hH hD ys n moves slides peak).sudo_5Board_4home.size := by
+      have hget {a c : Array (Array Int)} (h : a = c) (idx : Nat) (ha : idx < a.size) :
+          a[idx] = c[idx]'(h ▸ ha) := by induction h; rfl
+      have hiS : i < (settleBoard b second hin.hH hin.hD ys bud.n bud.moves bud.slides bud.peak).sudo_5Board_4home.size := by
         rw [Array.size_set] at hi1; exact hi1
       rw [hget hhome i hiS]
       rw [Array.getElem_set, if_neg (by simpa using hie)]
@@ -1914,35 +1890,32 @@ theorem mul_live_home (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
 /-- The strict peak a live nocopy mul records: the incoming strict peak, raised
     against the held-count on the settled board. -/
 theorem mul_live_strict (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
-      Int.ofNat (raisedPeak peakS
-        (countHeld (settleBoard b second hH hD ys n moves slides peak).sudo_5Board_4held 7)) := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      Int.ofNat (raisedPeak bud.peakS
+        (countHeld (settleBoard b second hin.hH hin.hD ys bud.n bud.moves bud.slides bud.peak).sudo_5Board_4held 7)) := by
   unfold mulNoLiveBoard mulNoOffBoard
   rfl
 
 /-- A live nocopy mul does not change the tier. -/
 theorem mul_live_tier (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_1t =
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_1t =
       b.sudo_5Board_1t := by
   unfold mulNoLiveBoard mulNoOffBoard
-  exact settle_tier_eq b second hH hD ys n moves slides peak
+  exact settle_tier_eq b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
 
 /-- Ops after a live nocopy mul: slot 0 is the incoming count plus one.
     Settle does not write ops, and the mul writes only slot 0. -/
 theorem mul_live_ops (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops).sudo_5Board_4cost.sudo_5Costs_3ops =
-      (settleBoard b second hH hD ys n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops.set
-        ⟨0, settle_ops_lt b 0 second hops hH hD ys n moves slides peak⟩
-        (Int.ofNat (cOps + 1)) := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4cost.sudo_5Costs_3ops =
+      (settleBoard b second hin.hH hin.hD ys bud.n bud.moves bud.slides bud.peak).sudo_5Board_4cost.sudo_5Costs_3ops.set
+        ⟨0, settle_ops_lt b 0 second bud.hops ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak⟩
+        (Int.ofNat (bud.cOps + 1)) := by
   unfold mulNoLiveBoard
   rw [mul_no_ops]
 
@@ -1964,12 +1937,10 @@ theorem mulNoOffBoard_withTally (b : Ecbs.Board) (row : Array Int) (len ctrl hig
 
 theorem mulNoLiveBoard_transport {b b' : Ecbs.Board} (hbb : b = b')
     (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops =
-      mulNoLiveBoard b' dst second xs ys n k moves slides hole bench peak peakS cOps
-        (hbb ▸ hH) (hbb ▸ hD) (hbb ▸ hops) := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    mulNoLiveBoard b dst second xs ys bud hin =
+      mulNoLiveBoard b' dst second xs ys ⟨bud.n, bud.k, bud.moves, bud.slides, bud.hole, bud.bench, bud.peak, bud.peakS, bud.cOps, (hbb ▸ bud.hops)⟩ ⟨(hbb ▸ hin.hH), (hbb ▸ hin.hD)⟩ := by
   cases hbb
   rfl
 
@@ -1989,54 +1960,48 @@ theorem mulNoOffBoard_transport
 /-- A live nocopy mul copies the tally fields and does not read them. -/
 theorem mulNoLiveBoard_withTally (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int)
     (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    mulNoLiveBoard (withTally b row len ctrl high tmax) dst second xs ys n k moves slides hole
-        bench peak peakS cOps
-        (withTally_home b row len ctrl high tmax ▸ hH)
-        (withTally_held b row len ctrl high tmax ▸ hD)
-        (withTally_ops b row len ctrl high tmax ▸ hops) =
-      withTally (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps
-        hH hD hops) row len ctrl high tmax := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    mulNoLiveBoard (withTally b row len ctrl high tmax) dst second xs ys ⟨bud.n, bud.k, bud.moves, bud.slides, bud.hole, bud.bench, bud.peak, bud.peakS, bud.cOps, (withTally_ops b row len ctrl high tmax ▸ bud.hops)⟩ ⟨(withTally_home b row len ctrl high tmax ▸ hin.hH), (withTally_held b row len ctrl high tmax ▸ hin.hD)⟩ =
+      withTally (mulNoLiveBoard b dst second xs ys bud hin) row len ctrl high tmax := by
   unfold mulNoLiveBoard
   let bW := withTally b row len ctrl high tmax
-  let hHW := withTally_home b row len ctrl high tmax ▸ hH
-  let hDW := withTally_held b row len ctrl high tmax ▸ hD
-  let hopsW := withTally_ops b row len ctrl high tmax ▸ hops
-  let bS := settleBoard b second hH hD ys n moves slides peak
-  let bSW := settleBoard bW second hHW hDW ys n moves slides peak
-  let zp := ys.take n
-  let mv := moves + 2 * pegCount zp
-  let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7)
+  let hHW := withTally_home b row len ctrl high tmax ▸ hin.hH
+  let hDW := withTally_held b row len ctrl high tmax ▸ hin.hD
+  let hopsW := withTally_ops b row len ctrl high tmax ▸ bud.hops
+  let bS := settleBoard b second hin.hH hin.hD ys bud.n bud.moves bud.slides bud.peak
+  let bSW := settleBoard bW second hHW hDW ys bud.n bud.moves bud.slides bud.peak
+  let zp := ys.take bud.n
+  let mv := bud.moves + 2 * pegCount zp
+  let pk := raisedPeak bud.peak (countHeld (b.sudo_5Board_4held.set ⟨second, hin.hD⟩ true) 7)
   have hs : bSW = withTally bS row len ctrl high tmax :=
-    settleBoard_withTally b row len ctrl high tmax second hH hD ys n moves slides peak
-  have hpk : raisedPeak peak (countHeld (bW.sudo_5Board_4held.set ⟨second, hDW⟩ true) 7) = pk := by
+    settleBoard_withTally b row len ctrl high tmax second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
+  have hpk : raisedPeak bud.peak (countHeld (bW.sudo_5Board_4held.set ⟨second, hDW⟩ true) 7) = pk := by
     simp [pk, bW, hDW, withTally]
   change
-    mulNoOffBoard bSW dst second xs zp n k mv hole bench
-        (raisedPeak peak (countHeld (bW.sudo_5Board_4held.set ⟨second, hDW⟩ true) 7))
-        peakS cOps
-        (settle_ops_lt bW 0 second hopsW hHW hDW ys n moves slides peak)
-        (settle_held_lt bW second hHW hDW ys n moves slides peak)
-        (settle_home_lt bW second hHW hDW ys n moves slides peak) =
+    mulNoOffBoard bSW dst second xs zp bud.n bud.k mv bud.hole bud.bench
+        (raisedPeak bud.peak (countHeld (bW.sudo_5Board_4held.set ⟨second, hDW⟩ true) 7))
+        bud.peakS bud.cOps
+        (settle_ops_lt bW 0 second hopsW ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak)
+        (settle_held_lt bW second ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak)
+        (settle_home_lt bW second ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak) =
       withTally
-        (mulNoOffBoard bS dst second xs zp n k mv hole bench pk peakS cOps
-          (settle_ops_lt b 0 second hops hH hD ys n moves slides peak)
-          (settle_held_lt b second hH hD ys n moves slides peak)
-          (settle_home_lt b second hH hD ys n moves slides peak))
+        (mulNoOffBoard bS dst second xs zp bud.n bud.k mv bud.hole bud.bench pk bud.peakS bud.cOps
+          (settle_ops_lt b 0 second bud.hops ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+          (settle_held_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+          (settle_home_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak))
         row len ctrl high tmax
   rw [hpk]
   exact Eq.trans
-    (mulNoOffBoard_transport hs dst second xs zp n k mv hole bench pk peakS cOps
-      (settle_ops_lt bW 0 second hopsW hHW hDW ys n moves slides peak)
-      (settle_held_lt bW second hHW hDW ys n moves slides peak)
-      (settle_home_lt bW second hHW hDW ys n moves slides peak))
-    (mulNoOffBoard_withTally bS row len ctrl high tmax dst second xs zp n k mv hole bench
-      pk peakS cOps
-      (settle_ops_lt b 0 second hops hH hD ys n moves slides peak)
-      (settle_held_lt b second hH hD ys n moves slides peak)
-      (settle_home_lt b second hH hD ys n moves slides peak))
+    (mulNoOffBoard_transport hs dst second xs zp bud.n bud.k mv bud.hole bud.bench pk bud.peakS bud.cOps
+      (settle_ops_lt bW 0 second hopsW ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak)
+      (settle_held_lt bW second ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak)
+      (settle_home_lt bW second ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak))
+    (mulNoOffBoard_withTally bS row len ctrl high tmax dst second xs zp bud.n bud.k mv bud.hole bud.bench
+      pk bud.peakS bud.cOps
+      (settle_ops_lt b 0 second bud.hops ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+      (settle_held_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+      (settle_home_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak))
 
 /-- `Ecbs.mul` with `copy_second = false` does not read the tally fields.
     On a board that agrees with `b` on every field the live mul reads, the result
@@ -2076,8 +2041,7 @@ theorem mul_eq_live_withTally (b : Ecbs.Board) (dst first second : Nat)
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
     (hfm : FitsLen (moves + 2 * pegCount (ys.take n) + n * (n + 1)))
-    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
-    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (shape : BoardShape w h r n k)
     (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
     (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
     (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
@@ -2092,15 +2056,10 @@ theorem mul_eq_live_withTally (b : Ecbs.Board) (dst first second : Nat)
     Ecbs.mul (withTally b row len ctrl high tmax) (dst : Int) (first : Int) (second : Int)
         false false false =
       .ok (withTally
-        (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops)
+        (mulNoLiveBoard b dst second xs ys ⟨n, k, moves, slides, hole, bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩)
         row len ctrl high tmax) := by
-  have hlive := mulNoLiveBoard_withTally b row len ctrl high tmax dst second xs ys n k moves
-    slides hole bench peak peakS cOps hH hD hops
-  have hmul := mul_eq_live (withTally b row len ctrl high tmax) dst first second xs ys
-    w h r n k moves slides hole bench peak peakS cOps
-    hmk hon hto hH hD h7 hempty hbench hn hn0 hpos hnle hzero hf hfitL hmoves hslides hpeak
-    hpeg hfitM hfitS hops hop0 hfops hbl hF hHome hHF hArr hne hlenx hspan hxsT hfi hfm
-    hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF hHole hpeakS hsm hnsm hfitB hfold
+  have hlive := mulNoLiveBoard_withTally b row len ctrl high tmax dst second xs ys ⟨n, k, moves, slides, hole, bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩
+  have hmul := mul_eq_live (withTally b row len ctrl high tmax) dst first second xs ys w h r n k moves slides hole bench peak peakS cOps hmk hon hto hH hD h7 hempty hbench hn hn0 hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hops hop0 hfops hbl hF hHome hHF hArr hne hlenx hspan hxsT hfi hfm ⟨shape.hw0, shape.hh0, shape.hrR, shape.hrP, shape.hnE, shape.hkLe, shape.hgap⟩ hwF hhF hrF hkF hHole hpeakS hsm hnsm hfitB hfold
   rw [hmul]
   exact congrArg Except.ok hlive
 
@@ -2136,54 +2095,48 @@ theorem mulNoOffBoard_withPark (b : Ecbs.Board) (row : Array Int) (ctrl fromHole
 /-- A live nocopy mul copies the park fields and does not read them. -/
 theorem mulNoLiveBoard_withPark (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int)
     (dst second : Nat) (xs ys : List Nat)
-    (n k moves slides hole bench peak peakS cOps : Nat)
-    (hH : second < b.sudo_5Board_4home.size) (hD : second < b.sudo_5Board_4held.size)
-    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
-    mulNoLiveBoard (withPark b row ctrl fromHole ridx) dst second xs ys n k moves slides hole
-        bench peak peakS cOps
-        (withPark_home b row ctrl fromHole ridx ▸ hH)
-        (withPark_held b row ctrl fromHole ridx ▸ hD)
-        (withPark_ops b row ctrl fromHole ridx ▸ hops) =
-      withPark (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps
-        hH hD hops) row ctrl fromHole ridx := by
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    mulNoLiveBoard (withPark b row ctrl fromHole ridx) dst second xs ys ⟨bud.n, bud.k, bud.moves, bud.slides, bud.hole, bud.bench, bud.peak, bud.peakS, bud.cOps, (withPark_ops b row ctrl fromHole ridx ▸ bud.hops)⟩ ⟨(withPark_home b row ctrl fromHole ridx ▸ hin.hH), (withPark_held b row ctrl fromHole ridx ▸ hin.hD)⟩ =
+      withPark (mulNoLiveBoard b dst second xs ys bud hin) row ctrl fromHole ridx := by
   unfold mulNoLiveBoard
   let bW := withPark b row ctrl fromHole ridx
-  let hHW := withPark_home b row ctrl fromHole ridx ▸ hH
-  let hDW := withPark_held b row ctrl fromHole ridx ▸ hD
-  let hopsW := withPark_ops b row ctrl fromHole ridx ▸ hops
-  let bS := settleBoard b second hH hD ys n moves slides peak
-  let bSW := settleBoard bW second hHW hDW ys n moves slides peak
-  let zp := ys.take n
-  let mv := moves + 2 * pegCount zp
-  let pk := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨second, hD⟩ true) 7)
+  let hHW := withPark_home b row ctrl fromHole ridx ▸ hin.hH
+  let hDW := withPark_held b row ctrl fromHole ridx ▸ hin.hD
+  let hopsW := withPark_ops b row ctrl fromHole ridx ▸ bud.hops
+  let bS := settleBoard b second hin.hH hin.hD ys bud.n bud.moves bud.slides bud.peak
+  let bSW := settleBoard bW second hHW hDW ys bud.n bud.moves bud.slides bud.peak
+  let zp := ys.take bud.n
+  let mv := bud.moves + 2 * pegCount zp
+  let pk := raisedPeak bud.peak (countHeld (b.sudo_5Board_4held.set ⟨second, hin.hD⟩ true) 7)
   have hs : bSW = withPark bS row ctrl fromHole ridx :=
-    settleBoard_withPark b row ctrl fromHole ridx second hH hD ys n moves slides peak
-  have hpk : raisedPeak peak (countHeld (bW.sudo_5Board_4held.set ⟨second, hDW⟩ true) 7) = pk := by
+    settleBoard_withPark b row ctrl fromHole ridx second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
+  have hpk : raisedPeak bud.peak (countHeld (bW.sudo_5Board_4held.set ⟨second, hDW⟩ true) 7) = pk := by
     simp [pk, bW, hDW, withPark]
   change
-    mulNoOffBoard bSW dst second xs zp n k mv hole bench
-        (raisedPeak peak (countHeld (bW.sudo_5Board_4held.set ⟨second, hDW⟩ true) 7))
-        peakS cOps
-        (settle_ops_lt bW 0 second hopsW hHW hDW ys n moves slides peak)
-        (settle_held_lt bW second hHW hDW ys n moves slides peak)
-        (settle_home_lt bW second hHW hDW ys n moves slides peak) =
+    mulNoOffBoard bSW dst second xs zp bud.n bud.k mv bud.hole bud.bench
+        (raisedPeak bud.peak (countHeld (bW.sudo_5Board_4held.set ⟨second, hDW⟩ true) 7))
+        bud.peakS bud.cOps
+        (settle_ops_lt bW 0 second hopsW ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak)
+        (settle_held_lt bW second ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak)
+        (settle_home_lt bW second ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak) =
       withPark
-        (mulNoOffBoard bS dst second xs zp n k mv hole bench pk peakS cOps
-          (settle_ops_lt b 0 second hops hH hD ys n moves slides peak)
-          (settle_held_lt b second hH hD ys n moves slides peak)
-          (settle_home_lt b second hH hD ys n moves slides peak))
+        (mulNoOffBoard bS dst second xs zp bud.n bud.k mv bud.hole bud.bench pk bud.peakS bud.cOps
+          (settle_ops_lt b 0 second bud.hops ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+          (settle_held_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+          (settle_home_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak))
         row ctrl fromHole ridx
   rw [hpk]
   exact Eq.trans
-    (mulNoOffBoard_transport hs dst second xs zp n k mv hole bench pk peakS cOps
-      (settle_ops_lt bW 0 second hopsW hHW hDW ys n moves slides peak)
-      (settle_held_lt bW second hHW hDW ys n moves slides peak)
-      (settle_home_lt bW second hHW hDW ys n moves slides peak))
-    (mulNoOffBoard_withPark bS row ctrl fromHole ridx dst second xs zp n k mv hole bench
-      pk peakS cOps
-      (settle_ops_lt b 0 second hops hH hD ys n moves slides peak)
-      (settle_held_lt b second hH hD ys n moves slides peak)
-      (settle_home_lt b second hH hD ys n moves slides peak))
+    (mulNoOffBoard_transport hs dst second xs zp bud.n bud.k mv bud.hole bud.bench pk bud.peakS bud.cOps
+      (settle_ops_lt bW 0 second hopsW ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak)
+      (settle_held_lt bW second ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak)
+      (settle_home_lt bW second ⟨hHW, hDW⟩ ys bud.n bud.moves bud.slides bud.peak))
+    (mulNoOffBoard_withPark bS row ctrl fromHole ridx dst second xs zp bud.n bud.k mv bud.hole bud.bench
+      pk bud.peakS bud.cOps
+      (settle_ops_lt b 0 second bud.hops ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+      (settle_held_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak)
+      (settle_home_lt b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak))
 
 /-- `Ecbs.mul` with `copy_second = false` does not read the park fields.
     On a board that agrees with `b` on every field the live mul reads, the result
@@ -2223,8 +2176,7 @@ theorem mul_eq_live_withPark (b : Ecbs.Board) (dst first second : Nat)
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
     (hfm : FitsLen (moves + 2 * pegCount (ys.take n) + n * (n + 1)))
-    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
-    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (shape : BoardShape w h r n k)
     (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
     (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
     (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
@@ -2239,15 +2191,10 @@ theorem mul_eq_live_withPark (b : Ecbs.Board) (dst first second : Nat)
     Ecbs.mul (withPark b row ctrl fromHole ridx) (dst : Int) (first : Int) (second : Int)
         false false false =
       .ok (withPark
-        (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops)
+        (mulNoLiveBoard b dst second xs ys ⟨n, k, moves, slides, hole, bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩)
         row ctrl fromHole ridx) := by
-  have hlive := mulNoLiveBoard_withPark b row ctrl fromHole ridx dst second xs ys n k moves
-    slides hole bench peak peakS cOps hH hD hops
-  have hmul := mul_eq_live (withPark b row ctrl fromHole ridx) dst first second xs ys
-    w h r n k moves slides hole bench peak peakS cOps
-    hmk hon hto hH hD h7 hempty hbench hn hn0 hpos hnle hzero hf hfitL hmoves hslides hpeak
-    hpeg hfitM hfitS hops hop0 hfops hbl hF hHome hHF hArr hne hlenx hspan hxsT hfi hfm
-    hw0 hh0 hrR hrP hnE hkLe hgap hwF hhF hrF hkF hHole hpeakS hsm hnsm hfitB hfold
+  have hlive := mulNoLiveBoard_withPark b row ctrl fromHole ridx dst second xs ys ⟨n, k, moves, slides, hole, bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩
+  have hmul := mul_eq_live (withPark b row ctrl fromHole ridx) dst first second xs ys w h r n k moves slides hole bench peak peakS cOps hmk hon hto hH hD h7 hempty hbench hn hn0 hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hops hop0 hfops hbl hF hHome hHF hArr hne hlenx hspan hxsT hfi hfm ⟨shape.hw0, shape.hh0, shape.hrR, shape.hrP, shape.hnE, shape.hkLe, shape.hgap⟩ hwF hhF hrF hkF hHole hpeakS hsm hnsm hfitB hfold
   rw [hmul]
   exact congrArg Except.ok hlive
 
@@ -2288,8 +2235,7 @@ theorem mul_eq_live_withPark_withTally
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
     (hfm : FitsLen (moves + 2 * pegCount (ys.take n) + n * (n + 1)))
-    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
-    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (shape : BoardShape w h r n k)
     (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
     (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
     (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
@@ -2305,7 +2251,7 @@ theorem mul_eq_live_withPark_withTally
         (dst : Int) (first : Int) (second : Int) false false false =
       .ok (withPark
         (withTally
-          (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops)
+          (mulNoLiveBoard b dst second xs ys ⟨n, k, moves, slides, hole, bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩)
           rowD len ctrlD high tmax)
         rowP ctrlP fromHole ridx) := by
   rw [withPark_withTally]
@@ -2343,18 +2289,13 @@ theorem mul_eq_live_withPark_withTally
     simpa [bW, withPark] using hHole
   have hpeakSW : bW.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
     simpa [bW, withPark] using hpeakS
-  have hrun := mul_eq_live_withTally bW dst first second xs ys w h r n k moves slides hole bench
-    peak peakS cOps hmkW honW htoW hHW hDW h7W hemptyW hbenchW hnW hn0 hpos hnle hzero
-    hf hfitL hmovesW hslidesW hpeakW hpeg hfitM hfitS hopsW hop0W hfops hblW hFW hHomeW
-    hHFW hArrW hne hlenx hspan hxsT hfi hfm hw0 hh0 hrR hrP hnE hkLe hgap hwW hhW hrW hkW
-    hHoleW hpeakSW hsm hnsm hfitB hfold rowP len ctrlP high tmax
+  have hrun := mul_eq_live_withTally bW dst first second xs ys w h r n k moves slides hole bench peak peakS cOps hmkW honW htoW hHW hDW h7W hemptyW hbenchW hnW hn0 hpos hnle hzero hf hfitL hmovesW hslidesW hpeakW hpeg hfitM hfitS hopsW hop0W hfops hblW hFW hHomeW hHFW hArrW hne hlenx hspan hxsT hfi hfm ⟨shape.hw0, shape.hh0, shape.hrR, shape.hrP, shape.hnE, shape.hkLe, shape.hgap⟩ hwW hhW hrW hkW hHoleW hpeakSW hsm hnsm hfitB hfold rowP len ctrlP high tmax
   rw [hrun]
-  have hlive := mulNoLiveBoard_withPark b rowP ctrlP fromHole ridx dst second xs ys n k moves
-    slides hole bench peak peakS cOps hH hD hops
+  have hlive := mulNoLiveBoard_withPark b rowP ctrlP fromHole ridx dst second xs ys ⟨n, k, moves, slides, hole, bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩
   rw [hlive]
   exact congrArg Except.ok
     (withPark_withTally
-      (mulNoLiveBoard b dst second xs ys n k moves slides hole bench peak peakS cOps hH hD hops)
+      (mulNoLiveBoard b dst second xs ys ⟨n, k, moves, slides, hole, bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩)
       rowD rowP len ctrlD high tmax ctrlP fromHole ridx).symm
 
 end EcbsLink2.Link2

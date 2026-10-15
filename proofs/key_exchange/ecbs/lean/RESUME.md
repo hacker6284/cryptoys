@@ -186,11 +186,19 @@ Compile peak (VmHWM) for a clean `lake build EcbsLink2` under `ulimit -v 7000000
 
 `x3_settle_lay` now also says which homes stay, and `chord_take_mirror` says the same for the take. `mul_onto_up_prefix` returns `OntoLay`: the destination and the second factor are empty, the bench is on and aimed at the destination, and the other homes stay.
 
-Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 1579356 kB. 3747 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded. Under 2 GB.
+Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 1579356 kB. Under 2 GB.
+
+## Done in `ChordOpen.lean` and `WalkLive.lean`
+
+- `chord_tail_point`: obtain `bottom_lay`, obtain `point_from_bottom`, then `rw [chord_tail_across_up]` and `chord_do_join`. `Ecbs.chord_tail` on the across and the up is `.ok`, home 0 is `chordX3`, home 1 is `chordY3`. The tail `FitsLen`s are passed in, not rebuilt with `omega`.
+- `chordStep_open`: a live white or red cell whose `chord_add_demo` returns `(true, bA)` stays live. The index advances unless the cell is last.
+- `chordStep_live_spec`: that step, together with a `walkStep` hypothesis for the same point. `walkStep_live_chord` is the spec side. The chord add is still a hypothesis: `chord_tail_after_inv` does not yet hand its rise board to `chord_tail_point`, and `invert_checked` on a walk board is still a hypothesis.
+
+Compile peak (VmHWM) for a fresh elaboration of ChordOpen: 353308 kB.
 
 ## Next
 
-One declaration that both applies `bottom_lay` and applies `point_from_bottom` exceeds the default 200000 heartbeats at `whnf`. Do not raise it. `chord_do_join` is the bridge: obtain the prefix, obtain the slide, then rewrite. `chordStep` for a live white or red cell with a nonempty run is still open: `marker_lift`, `frobenius_affine_len`, `chord_add_open`, `chord_tail_after_inv` (the inverse on a walk board is still a hypothesis), then `chord_tail_across_up` and `chord_do_join`, with `walkStep_live_chord`. Discharge the remaining settle rooms inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Wire `chord_add_open` and `chord_tail_after_inv` so the rise board is the board `chord_tail_point` reads, then `chordStep_live_spec` needs no add hypothesis. Discharge the remaining settle rooms inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

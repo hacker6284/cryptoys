@@ -159,6 +159,45 @@ theorem chordStep_reroll (cells : List Nat) (i toN c : Nat)
   dsimp only
   rw [pure_eq_ok]
 
+/-- A live white or red cell whose chord add returns the new point.
+    The step stays live. The index advances unless this cell is the last. -/
+theorem chordStep_open (cells : List Nat) (i toN c : Nat)
+    (b0 b bF bA : Ecbs.Board)
+    (hi : i ≤ toN) (hlen : cells.length = toN + 1)
+    (hc : cells[i]'(by omega) = c) (hc0 : c ≠ 0) (hc2 : c ≤ 2)
+    (hml : Ecbs.marker_lift b0 = .ok b)
+    (hfrob : Ecbs.frobenius_affine b = .ok bF)
+    (hadd : Ecbs.chord_add_demo bF (SudoRt.SEq.beq (Int.ofNat c) (2 : Int)) =
+      .ok (true, bA))
+    (hfiti : FitsLen (i + 1)) :
+    chordStep (embed cells) (Int.ofNat toN) (Int.ofNat i, (b0, true)) =
+      if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, (bA, true)))
+      else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), (bA, true))) := by
+  unfold chordStep
+  dsimp only
+  have hng : ¬ (Int.ofNat i > Int.ofNat toN) := ofNat_not_gt hi
+  rw [if_neg hng]
+  unfold chordBody
+  have hix : i < cells.length := by omega
+  rw [atL_embed cells i hix, ok_bind, hc]
+  have hge : decide (Int.ofNat c ≥ (0 : Int)) = true := by
+    rw [decide_eq_true_eq]
+    exact Int.ofNat_nonneg c
+  have hle : decide (Int.ofNat c ≤ (2 : Int)) = true := by
+    rw [decide_eq_true_eq, show (2 : Int) = Int.ofNat 2 from rfl, ofNat_le_iff]
+    exact hc2
+  rw [hge, if_pos rfl, hle, pure_eq_ok, ok_bind, sudoAssert_true, ok_bind]
+  rw [hml, ok_bind]
+  simp only [if_true]
+  rw [hfrob, ok_bind]
+  rw [show (0 : Int) = Int.ofNat 0 from rfl, sEq_ofNat c 0, decide_eq_false hc0]
+  simp only [Bool.not_false, if_true, Bool.not_true]
+  rw [if_neg (by decide : ¬ ((false : Bool) = true))]
+  rw [hadd, ok_bind]
+  dsimp only [Prod.fst, Prod.snd]
+  simp only [Bool.not_true, if_false, pure_eq_ok, ok_bind]
+  exact asc_tail toN i hfiti (bA, true)
+
 /-- A live white or red cell whose run is the zero home. The emitted step is
     the reroll return `(live, false)` with the marker turned off, and `walkStep`
     is `none`. -/

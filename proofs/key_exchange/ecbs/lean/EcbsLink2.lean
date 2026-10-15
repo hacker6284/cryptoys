@@ -82,6 +82,7 @@ import EcbsLink2.Link2.BandCopy
 import EcbsLink2.Link2.MulOnto
 import EcbsLink2.Link2.ChordCell
 import EcbsLink2.Link2.ChordLay
+import EcbsLink2.Link2.ChordOpen
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn
 import EcbsLink2.Link2.FrobeniusRead

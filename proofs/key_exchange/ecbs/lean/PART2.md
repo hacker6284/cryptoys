@@ -236,6 +236,8 @@ Homes 0, 1, and 4 are on `ClimbBudget` (`side0`, `side1`, `side4`, and the three
 - `tailRoom_of`. Every settle `FitsLen` in `TailRoom` follows from one move room `FitsLen (moves0 + tailMoveCap n bench)`, one slide room `FitsLen (slides + tailSlideCap n)`, and one room each for the marker (`m + 3 < script` and `FitsLen (m + 4)`), the control counter (`FitsLen (ctrl + 6)`), and ops slot 0 (`FitsLen (cOps + 3)`). A length-`n` home has at most `n` pegs, so `pegCount` never appears in those rooms.
 - `chord_add_point` takes those five rooms on the climb budget (`checkMoveCap + tailMoveCap`, and the same shape for slides, control, and ops) and on the lay's marker. It builds `TailRoom` and the tail is unconditional: `chordAddTail` is `.ok (true, b')`, home 0 is `chordX3`, home 1 is `chordY3`.
 
+4141 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 979360 kB VmHWM; unchanged modules were replayed. The last build that elaborated the climb peaked at 1703936 kB. Both are under 2 GB.
+
 ## Next
 
 A live white or red cell whose run inverts is `.ok` of Spec `chordAdd`, once the cell invariant supplies those five rooms. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.

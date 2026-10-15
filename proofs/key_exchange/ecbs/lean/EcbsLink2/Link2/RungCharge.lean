@@ -718,6 +718,11 @@ structure ClimbBudget where
   held0 : Bool
   held1 : Bool
   held4 : Bool
+  /-- The tier record, the script-marker index, and its maximum at the start
+      of the climb. A rung does not write them. -/
+  tierSnap : Ecbs.Tier
+  markSnap : Int
+  mxSnap : Int
 
 /-- One rung's counter growth: at most one `rungCharge` of the current tally,
     one slide charge, `mMax + 3` on every ops slot, and a peak that is
@@ -1053,6 +1058,100 @@ theorem side_settle {b : Ecbs.Board} {base : ClimbBudget}
   exact side_arrays
     (side_set h home hin.hH hin.hD hne0 hne1 hne4 (embed (xs.take n)) true) hH hD
 
+/-- Size 8, the tier record, the script-marker index, and its maximum.
+    The climb writes homes and counters. These four stay the entry values. -/
+structure QuietKeep (b : Ecbs.Board) (base : ClimbBudget) : Prop where
+  szH : b.sudo_5Board_4home.size = 8
+  szD : b.sudo_5Board_4held.size = 8
+  tier : b.sudo_5Board_1t = base.tierSnap
+  marker : b.sudo_5Board_6marker = base.markSnap
+  mx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = base.mxSnap
+
+theorem quiet_of {b b' : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base)
+    (hszH : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size)
+    (hszD : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size)
+    (ht : b'.sudo_5Board_1t = b.sudo_5Board_1t)
+    (hm : b'.sudo_5Board_6marker = b.sudo_5Board_6marker)
+    (hx : b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) :
+    QuietKeep b' base :=
+  { szH := hszH.trans h.szH
+    szD := hszD.trans h.szD
+    tier := ht.trans h.tier
+    marker := hm.trans h.marker
+    mx := hx.trans h.mx }
+
+theorem quiet_withTally {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (row : Array Int) (len ctrl high tmax : Int) :
+    QuietKeep (withTally b row len ctrl high tmax) base :=
+  quiet_of h
+    (congrArg Array.size (withTally_home b row len ctrl high tmax))
+    (congrArg Array.size (withTally_held b row len ctrl high tmax))
+    (withTally_tier b row len ctrl high tmax)
+    (withTally_ix b row len ctrl high tmax)
+    (withTally_mx b row len ctrl high tmax)
+
+theorem quiet_withPark {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (row : Array Int) (ctrl fromHole ridx : Int) :
+    QuietKeep (withPark b row ctrl fromHole ridx) base :=
+  quiet_of h
+    (congrArg Array.size (withPark_home b row ctrl fromHole ridx))
+    (congrArg Array.size (withPark_held b row ctrl fromHole ridx))
+    (withPark_tier b row ctrl fromHole ridx)
+    (withPark_ix b row ctrl fromHole ridx)
+    (withPark_mx b row ctrl fromHole ridx)
+
+theorem quiet_clear {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (home : Nat) (xs : List Nat) (moves : Nat)
+    (hin : HomeIn b home) :
+    QuietKeep (clearHeldBoard b home xs moves hin.hH hin.hD) base := by
+  refine quiet_of h ?_ ?_ rfl rfl rfl
+  · simp [clearHeldBoard, Array.size_set, h.szH]
+  · simp [clearHeldBoard, Array.size_set, h.szD]
+
+theorem quiet_place {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (home : Nat)
+    (hin : HomeIn b home) (xs : List Nat) (moves peak : Nat) :
+    QuietKeep (placeBoard b home hin.hH hin.hD xs moves peak) base := by
+  have hH : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨home, hin.hH⟩ (embed xs) := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hD : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4held =
+      b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have ht : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_1t =
+      b.sudo_5Board_1t := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hm : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_6marker =
+      b.sudo_5Board_6marker := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hx : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  exact quiet_of h (by rw [hH, Array.size_set]) (by rw [hD, Array.size_set]) ht hm hx
+
+theorem quiet_settle {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (home : Nat)
+    (hin : HomeIn b home) (xs : List Nat) (n moves slides peak : Nat) :
+    QuietKeep (settleBoard b home hin.hH hin.hD xs n moves slides peak) base := by
+  refine quiet_of h ?_ ?_ ?_ ?_ ?_
+  · rw [settle_home_eq b home hin xs n moves slides peak, Array.size_set, h.szH]
+  · rw [settle_held_eq b home hin xs n moves slides peak, Array.size_set, h.szD]
+  · exact settle_tier_eq b home hin xs n moves slides peak
+  · exact settle_ix_eq b home hin xs n moves slides peak
+  · exact settle_mx_eq b home hin xs n moves slides peak
+
 /-- What one rung reads off the board, beyond the gap polynomial and the counters.
     The spare (home 6) is empty. When the gap sits on the bench, home 5 is clear.
     When it sits in the home, the bench is off. The input home stays held. The
@@ -1092,6 +1191,7 @@ structure ClimbShape (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
   k_le : s.k ≤ s.n
   gap_eq : s.n - s.k = base.w * base.r
   side : SideKeep b base
+  quiet : QuietKeep b base
   park : ParkRead b s rest base
   peg : PegRead b s base
 

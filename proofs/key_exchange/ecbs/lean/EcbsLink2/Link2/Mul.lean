@@ -910,6 +910,22 @@ def mulNoOffBoard (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
       sudo_5Costs_3ops :=
         b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) } }
 
+theorem mul_no_ix (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hS : second < b.sudo_5Board_4held.size)
+    (hHomeS : second < b.sudo_5Board_4home.size) :
+    (mulNoOffBoard b dst second xs ys n k moves hole bench peak peakS cOps hops hS hHomeS).sudo_5Board_6marker =
+      b.sudo_5Board_6marker := rfl
+
+theorem mul_no_mx (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hS : second < b.sudo_5Board_4held.size)
+    (hHomeS : second < b.sudo_5Board_4home.size) :
+    (mulNoOffBoard b dst second xs ys n k moves hole bench peak peakS cOps hops hS hHomeS).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := rfl
+
 theorem mul_no_bench (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
     (n k moves hole bench peak peakS cOps : Nat)
     (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
@@ -1906,6 +1922,24 @@ theorem mul_live_tier (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
       b.sudo_5Board_1t := by
   unfold mulNoLiveBoard mulNoOffBoard
   exact settle_tier_eq b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
+
+theorem mul_live_ix (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_6marker =
+      b.sudo_5Board_6marker := by
+  unfold mulNoLiveBoard
+  rw [mul_no_ix]
+  exact settle_ix_eq b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
+
+theorem mul_live_mx (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (bud : Budget b 0)
+    (hin : HomeIn b second) :
+    (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+  unfold mulNoLiveBoard
+  rw [mul_no_mx]
+  exact settle_mx_eq b second ⟨hin.hH, hin.hD⟩ ys bud.n bud.moves bud.slides bud.peak
 
 /-- Ops after a live nocopy mul: slot 0 is the incoming count plus one.
     Settle does not write ops, and the mul writes only slot 0. -/

@@ -1025,7 +1025,8 @@ theorem gap_clear_emit
         c.g = s.gap ∧ c.n = s.n ∧ c.k = s.k ∧ c.bench = s.benchlen ∧ c.src = 6 ∧
         ∃ bPark, Ecbs.park_rung b (r : Int) = .ok bPark ∧
           Ecbs.copy_band bPark ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok c.b0) ∧
-      SideKeep bClear base := by
+      SideKeep bClear base ∧
+      QuietKeep bClear base := by
   let hole := climbAt base.ladder0 base.R s.ridx
   obtain ⟨c, bMul, hmul, hrow, hctrl, hfromB, hridxB, hlenB, hrow0, hctrl0, hmT, ht0c,
       hfrom, hridx, hlen0, hlive⟩ := parked_gap_mul h hM hS hF hm hT hhome
@@ -1263,8 +1264,37 @@ theorem gap_clear_emit
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hnamed)
   have hsideClear : SideKeep bClear base :=
     side_clear hsideMul 5 c.g mvM ⟨h5H, h5D⟩ (by decide) (by decide) (by decide)
+  have hquietPark : QuietKeep bPark0 base := by
+    refine quiet_of h.shape.quiet ?_ ?_ ?_ ?_ ?_
+    · rw [hPK]; simp [parkKeepBoard]
+    · rw [hPK]; simp [parkKeepBoard]
+    · rw [hPK]; simp [parkKeepBoard]
+    · rw [hPK]; simp [parkKeepBoard]
+    · rw [hPK]; simp [parkKeepBoard]
+  have hquietPlace := quiet_place hquietPark 6 ⟨h6H, h6D⟩ s.gap mv pk
+  have hquietB0 : QuietKeep c.b0 base :=
+    quiet_of hquietPlace
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hplace))
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hplace))
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_1t) hplace)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_6marker) hplace)
+      (congrArg (fun bd : Ecbs.Board =>
+        bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) hplace)
+  have hquietPeg : QuietKeep (pegBoard c c.m) base := quiet_pegBoard c hquietB0
+  have hquietMul0 := quiet_mulLive hquietPeg 5 6 c.g ys
+    ⟨c.n, c.k, moves, slides, holeM, c.bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩
+  have hquietMul : QuietKeep bMul base :=
+    quiet_of hquietMul0
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hnamed))
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hnamed))
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_1t) hnamed)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_6marker) hnamed)
+      (congrArg (fun bd : Ecbs.Board =>
+        bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) hnamed)
+  have hquietClear : QuietKeep bClear base :=
+    quiet_clear hquietMul 5 c.g mvM ⟨h5H, h5D⟩
   refine ⟨bClear, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hC.1, hrow, hrow0, ht0c, hmT]
   · rw [hC.2.2.2.2.2.2.2.1, hctrl, hctrl0, hmT]
   · rw [hC.2.1, hfromB, hfrom]
@@ -1650,6 +1680,7 @@ theorem gap_clear_emit
   · exact ⟨c, bMul, hClear, hmul, hrow0, hctrl0, hmT, ht0c, hg, hn, hk, hbch, hsrc,
       ⟨bPark, hpark, hcopy⟩⟩
   · exact hsideClear
+  · exact hquietClear
 
 /-- Idle final white rung. The park hole is the cell after the ladder
     (`ladder0 + R`). The emitted park-through-clear is the `ClimbInvK`
@@ -1693,7 +1724,7 @@ theorem white_final_k
   rcases hAll with ⟨hrun, hrowE, hctrlE, hfromE, hridxE, hlenE, ht0E, hparkE,
       hhighE, hmarkE, hbonE, htoE, hbenchE, htierE, hladE, hnrE, htmaxE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, htrits, hopsE, hc1E, hpkSE,
-      hholeE, hδs, _hctx, hside⟩
+      hholeE, hδs, _hctx, hside, hquiet⟩
   obtain ⟨hδ, hslots, hpieceM, hpieceS⟩ := hδs
   have hFrom : s.fromHole = -1 := h.shape.park.fromIdle hF
   have hMod := model_final_white s base.x r hole hwhite hF
@@ -1915,7 +1946,7 @@ theorem white_final_k
       (by rw [htierE]; exact h.shape.tierCg)
       (by rw [htierE]; exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
-      hpark' hpeg' hside
+      hpark' hpeg' hside hquiet
   have htmax : ∃ tmax : Nat,
       b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < s'.tally → tmax < 2 * s'.tally) := by
@@ -1977,7 +2008,7 @@ theorem white_open_k
   rcases hAll with ⟨hrun, hrowE, hctrlE, hfromE, hridxE, hlenE, ht0E, hparkE,
       hhighE, hmarkE, hbonE, htoE, hbenchE, htierE, hladE, hnrE, htmaxE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, htrits, hopsE, hc1E, hpkSE,
-      hholeE, hδs, _hctx, hside⟩
+      hholeE, hδs, _hctx, hside, hquiet⟩
   obtain ⟨hδ, hslots, hpieceM, hpieceS⟩ := hδs
   have hFrom : s.fromHole = -1 := h.shape.park.fromIdle hF
   have hMod := model_open_white s base.x r hole hwhite hF
@@ -2423,6 +2454,7 @@ theorem white_open_k
       (by rw [hlenRow]; exact h.shape.rowLen)
       hpark' hpeg'
       (side_arrays hside rfl rfl)
+      (quiet_of hquiet rfl rfl rfl rfl rfl)
   have hδ' : RungDelta b b' base s.tally :=
     rungDelta_cost hδ (by simp [b']) (by simp [b']) (by simp [b']) (by simp [b'])
   have hClearTight := rungTight_of_clear hδ hpieceM hpieceS

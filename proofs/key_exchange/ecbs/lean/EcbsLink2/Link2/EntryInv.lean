@@ -386,6 +386,9 @@ def entryBudget (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
   held0 := false
   held1 := false
   held4 := false
+  tierSnap := embTier t
+  markSnap := -1
+  mxSnap := 0
 
 theorem tally_home (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
     (tallyBoard t xs sat hR).sudo_5Board_4home = (gapBoard t xs).sudo_5Board_4home := by
@@ -892,6 +895,16 @@ theorem entry_shape (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
           held4 := by
             simpa [entryBudget] using
               tally_side_held t xs sat hR 4 (by decide) (by decide) (by decide) }
+      quiet :=
+        { szH := hsizeH
+          szD := hsizeD
+          tier := by rw [tally_emb t xs sat hR]; rfl
+          marker := by
+            simp [tallyBoard, gapBoard, bumpedBoard, bumpOp, bottomBoard, builtBoard,
+              midBoard, placed, blankOf, entryBudget]
+          mx := by
+            simp [tallyBoard, gapBoard, bumpedBoard, bumpOp, bottomBoard, builtBoard,
+              midBoard, placed, blankOf, entryBudget] }
       park := entry_park t hOk xs hx sat hR lay
       peg := entry_peg t hOk xs hx htri sat hR lay }
 
@@ -1309,7 +1322,9 @@ theorem final_cube_both
       Ecbs.settle bC = .ok bOut ∧
       Ecbs.tally_clear bOut = .ok bZ ∧
       SettledHome bZ (fieldCube s.n s.k s.benchlen s.gap) ∧
-      CheckRead b bZ :=
+      CheckRead b bZ ∧
+      SideKeep bZ base ∧
+      QuietKeep bZ base :=
   Exists.elim (final_cube_settle h hon hge ht hm) fun bU p1 =>
   Exists.elim p1 fun bC p2 =>
   Exists.elim p2 fun bOut p3 =>
@@ -1319,7 +1334,9 @@ theorem final_cube_both
   Exists.elim p6 fun _row hpack =>
     ⟨bU, bC, bOut, bZ, hpack.1, hpack.2.1, hpack.2.2.1, hpack.2.2.2.1,
       hpack.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.1⟩
+      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2⟩
 
 /-- The check multiply: home 5 holds `invGap`, home 2 still holds the input,
     and `Ecbs.mul` with the export flags is `fieldMul` of that pair. -/
@@ -1367,7 +1384,7 @@ theorem check_mul (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       have hm : 0 < s'.tally := by
         rw [hs', modelClimb_tally]; simp [entryModel]
         exact Nat.lt_of_lt_of_le (by decide : (0 : Nat) < 1) (climbTally_ge 1 (tierClimb t))
-      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread⟩ :=
+      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread, _hside, _hquiet⟩ :=
         final_cube_both hK hon hge htmax hm
       have hrun' : climbEmit (climbStepBoard ((2 : Nat) : Int)) (tallyBoard t xs sat hR)
           (tierClimb t) = .ok b' := by simpa [entryBudget] using hrun

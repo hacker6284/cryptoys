@@ -103,6 +103,7 @@ structure RedOpenId
   h6f : ∀ h6 : 6 < bIdle.sudo_5Board_4held.size, bIdle.sudo_5Board_4held[6] = false
   hkeep : CellKeep bIdle base.xHome base.x
   side : SideKeep bIdle base
+  quiet : QuietKeep bIdle base
   hps : ∃ ps : Nat, bIdle.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int)
   hhn : ∃ hn : Nat, bIdle.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (hn : Int)
   hrowIdle : bIdle.sudo_5Board_3row =
@@ -164,7 +165,7 @@ theorem red_open_idents
       _hysP, _hmvP, _hslP, _hhoP, _hpkP, _hpsP, hcopyP⟩ := hpackP
   obtain ⟨bClearG, bIdle, hrun, hframe, hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E,
       hparkE, hhighE, htierE, hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f,
-      hkeep, ⟨ps, hpsEq⟩, ⟨hnat, hhnEq⟩, hrowIdle, hctrlIdle, hδ, hslots, hpieceM, hpieceS, hside⟩ :=
+      hkeep, ⟨ps, hpsEq⟩, ⟨hnat, hhnEq⟩, hrowIdle, hctrlIdle, hδ, hslots, hpieceM, hpieceS, hside, hquiet⟩ :=
     parked_clear_ge h hM hS hge hm hT hhome
   obtain ⟨bLoopC, bMulC, bClearC, bCubeC, bRedC, hmulC, hclearC, hcubeC, hredC,
       _bounds, _lenC, _t0C, _rowC, hctrlN, _highC, _ctrlC, _maxC, _t0Cu, ht0Red,
@@ -193,7 +194,7 @@ theorem red_open_idents
     bClearU bCubeP bRedP bClearG bIdle bClearC bCubeC bRedC
     hclearProg hcubeU hredU hrelP hrun hframe
     hbenchE hbonE htoE hmarkE hlenE ht0E hparkE hhighE htierE hladE hnrE htmaxE
-    h5H h5D h6H h6D h7E h5f h6f hkeep hside
+    h5H h5D h6H h6D h7E h5f h6f hkeep hside hquiet
     ⟨ps, hpsEq⟩ ⟨hnat, hhnEq⟩
     hrowIdle hctrlIdle hδ hslots hpieceM hpieceS
     hclearSame hredSame hcubeBoth hmulBoth hctrlN ht0Red htierRed

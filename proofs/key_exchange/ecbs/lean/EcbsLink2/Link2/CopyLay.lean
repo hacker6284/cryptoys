@@ -89,6 +89,32 @@ private theorem addKeep (b : Ecbs.Board) (home : Nat)
     rfl, rfl, rfl, rfl⟩
 
 /-- Holding the marker off touches only that flag. -/
+private theorem addIx (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (arr : Array Int) (mv : Nat) :
+    (addBoard b home hH arr mv).sudo_5Board_6marker = b.sudo_5Board_6marker := by
+  unfold addBoard withMoves
+  rfl
+
+private theorem addMx (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (arr : Array Int) (mv : Nat) :
+    (addBoard b home hH arr mv).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+  unfold addBoard withMoves
+  rfl
+
+private theorem bumpIx (b : Ecbs.Board) (i c : Nat)
+    (h : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i c h).sudo_5Board_6marker = b.sudo_5Board_6marker := by
+  unfold bumpOp
+  rfl
+
+private theorem bumpMx (b : Ecbs.Board) (i c : Nat)
+    (h : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i c h).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+  unfold bumpOp
+  rfl
+
 private theorem offKeep (b : Ecbs.Board) :
     let b' := { b with sudo_5Board_9marker_on := false }
     b'.sudo_5Board_9marker_on = false ∧
@@ -166,6 +192,10 @@ structure RunFrame (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat) wher
   held1 : b.sudo_5Board_4held[1]'(by rw [szD]; decide) = flag1
   home4 : b.sudo_5Board_4home[4]'(by rw [szH]; decide) = embed y4
   held4 : b.sudo_5Board_4held[4]'(by rw [szD]; decide) = flag4
+  mark : Nat
+  mx : Nat
+  hmark : b.sudo_5Board_6marker = Int.ofNat mark
+  hmx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx
   lenX : baseX.length = t.n
   lenA : accX.length = t.n
   triX : allTritList baseX
@@ -332,6 +362,8 @@ private theorem finish_copy
       b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨3, fr.ops3⟩ (Int.ofNat (fr.chordOps + 1)))
     (hops2Off : 2 < bOff.sudo_5Board_4cost.sudo_5Costs_3ops.size)
     (hhop2 : bOff.sudo_5Board_4cost.sudo_5Costs_3ops[2]'hops2Off = Int.ofNat fr.cOps)
+    (hmarkOff : bOff.sudo_5Board_6marker = Int.ofNat fr.mark)
+    (hmxOff : bOff.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat fr.mx)
     (hfitCopy : FitsLen (mv + pegCount xs))
     (hxsDef : xs = fieldSub t.n baseX accX)
     (hmvEq : mv = runMoves fr.moves baseX accX)
@@ -391,6 +423,10 @@ private theorem finish_copy
       held1 := idx_irrel.trans hflag1
       home4 := idx_irrel.trans hside4
       held4 := idx_irrel.trans hflag4
+      mark := fr.mark
+      mx := fr.mx
+      hmark := hmarkOff
+      hmx := hmxOff
       len := by rw [hxsDef]; exact fieldSub_length t.n baseX accX
       tri := by rw [hxsDef]; exact fieldSub_trits t.n baseX accX
       tier := htierOff
@@ -468,10 +504,13 @@ private theorem finish_copy
       side4 := fr.y4
       held0 := true
       held1 := fr.flag1
-      held4 := fr.flag4 }
+      held4 := fr.flag4
+      tierSnap := embTier t
+      markSnap := Int.ofNat fr.mark
+      mxSnap := Int.ofNat fr.mx }
   have hmatch : OpenMatch lay baseB := by
     refine ⟨rfl, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl,
-      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
     apply congrArg (fun occ => raisedPeak lay.peak occ)
     apply countHeld_congr
     apply congrArg (fun i => bOff.sudo_5Board_4held.set i true)
@@ -621,8 +660,8 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
             (embed (fieldAdd t.n baseX (mirrorTrits accX))) mv from rfl, hmv]
     simpa [hbEq] using hrest
   rcases place_rest bB 2 hinB.hH hinB.hD baseX fr.moves fr.peak with
-    ⟨htier1, _, _, _, _, _, _, _, hl01, hnr1, hpark1, ht01, _, hfrom1, htlen1, _,
-      hridx1, hlad1, _, hctrl1, _, _, _, _, hstrict1, hhole1, hhigh1, _, htmax1, _, _,
+    ⟨htier1, _, _, _, _, _, _, _, hl01, hnr1, hpark1, ht01, hmark1, hfrom1, htlen1, _,
+      hridx1, hlad1, _, hctrl1, _, _, _, _, hstrict1, hhole1, hhigh1, hmx1, htmax1, _, _,
       hops1⟩
   have hrow1 := place_row_out bB 2 hinB baseX fr.moves fr.peak
   have hslide1 := place_slides_out bB 2 hinB baseX fr.moves fr.peak
@@ -759,6 +798,14 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
       exact pegCount_le xs
     simp only [mv, runMoves]
     omega
+  have hmarkOff : bOff.sudo_5Board_6marker = Int.ofNat fr.mark := by
+    have hEq : bOff.sudo_5Board_6marker = bA.sudo_5Board_6marker := by simp [bOff]
+    rw [hEq, addIx b1 2 h2H1 arr mv, hmark1, bumpIx b 3 fr.chordOps fr.ops3, fr.hmark]
+  have hmxOff : bOff.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat fr.mx := by
+    have hEq : bOff.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        bA.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by simp [bOff]
+    rw [hEq, addMx b1 2 h2H1 arr mv, hmx1, bumpMx b 3 fr.chordOps fr.ops3, fr.hmx]
   let pk := raisedPeak fr.peak
     (countHeld (bB.sudo_5Board_4held.set ⟨2, hinB.hD⟩ true) 7)
   exact finish_copy b t baseX accX fr hOk sat hM hS hO hTailM hTailS hCheck hCtrl
@@ -766,7 +813,7 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     hheldB hszDB hszD1 hplaceD hheldBA hszHOff hszDOff hmkO hbenchOff hheld2 hhome2
     hheld5 hheld6 htierOff hmovesOff hslidesOff hpkOff hctrlOff hhighOff htallyOff
     ht0Off hrowOff htmaxOff hladOff hl0Off hnrOff hparkOff hfromOff hridxOff
-    hstrictOff hholeOff hopsEq hops2Off hhop2 hfitCopy
+    hstrictOff hholeOff hopsEq hops2Off hhop2 hmarkOff hmxOff hfitCopy
     rfl rfl rfl
 
 

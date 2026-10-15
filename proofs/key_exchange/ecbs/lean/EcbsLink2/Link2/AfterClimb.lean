@@ -315,6 +315,8 @@ structure CheckRead (b0 b : Ecbs.Board) : Prop where
   ops0 : ∃ c : Nat, b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'opsGt = (c : Int) ∧
     FitsLen (c + 1)
   moves : ∃ mv : Nat, b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int)
+  slides : ∃ sl : Nat, b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int)
+  ctrl : ∃ c : Nat, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c : Int)
   peak : ∃ pk : Nat, b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int)
   peakS : ∃ p : Nat, b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int)
   hole : ∃ hole : Nat, b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (hole : Int)
@@ -361,10 +363,13 @@ theorem final_cube_settle
       CheckRead b bZ ∧
       FitsLen (mv + 2 * base.n + pegCharge base.n base.bench) ∧
       FitsLen (sl + 2 * base.n + 2 * base.n) ∧
-      FitsLen (s.ctrl + 2 + s.tally) := by
+      FitsLen (s.ctrl + 2 + s.tally) ∧
+      SideKeep bZ base ∧
+      QuietKeep bZ base := by
   have hk : done.length ≤ base.R := by simpa using h.kLe
   obtain ⟨bU, hun, _, _, hhomeU, hheldU, hbonU, htoU, hbenchU, hmvU, hslU, hpkU,
-      hctrlU, ht0U, htierU, hmkU, hopsU, hstrictU, hholeU, hlenU, hhighU⟩ :=
+      hctrlU, ht0U, htierU, hmkU, hopsU, hstrictU, hholeU, hlenU, hhighU,
+      hmarkU, hmxU⟩ :=
     unpark_after_climb h hge
   obtain ⟨mv, hmv, htailM⟩ := tail_move_fit h hon hk
   obtain ⟨sl, hsl, htailS⟩ := tail_slide_fit h hon hk
@@ -910,16 +915,69 @@ theorem final_cube_settle
       rw [Array.getElem_set, if_pos rfl]
     exact cell_eq_of (ha := h5DZ) (hb := h5DO) hEq
       (cell_eq_of (ha := h5DO) (hb := h5set) hheldOut hget)
+  have hsideU : SideKeep bU base :=
+    side_arrays h.shape.side hhomeU hheldU
+  have hsideS : SideKeep bS base :=
+    side_settle hsideU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk (by decide) (by decide) (by decide)
+  have hsideC : SideKeep bC base := by
+    have hset := side_set hsideS 5 hHome hF (by decide) (by decide) (by decide)
+      (#[] : Array Int) false
+    exact side_arrays hset _hhomeC _hheldC
+  have hsideOut : SideKeep bOut base :=
+    side_settle hsideC 5 ⟨h5HC, h5DC⟩ fold s.n
+      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
+      (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+      (by decide) (by decide) (by decide)
+  have hsideZ : SideKeep bZ base := by
+    have hH : bZ.sudo_5Board_4home = bOut.sudo_5Board_4home := by simp [bZ, touchRow]
+    have hD : bZ.sudo_5Board_4held = bOut.sudo_5Board_4held := by simp [bZ, touchRow]
+    exact side_arrays hsideOut hH hD
+  have hquietU : QuietKeep bU base :=
+    quiet_of h.shape.quiet
+      (congrArg Array.size hhomeU) (congrArg Array.size hheldU)
+      htierU hmarkU hmxU
+  have hquietS : QuietKeep bS base :=
+    quiet_settle hquietU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
+  have hquietC : QuietKeep bC base := by
+    refine quiet_of hquietS ?_ ?_ ?_ ?_ ?_
+    · rw [hbC, cube_off_home, Array.size_set]
+    · rw [hbC, cube_off_held, Array.size_set]
+    · rw [hbC, cube_off_tier]
+    · rw [hbC, cube_off_ix]
+    · rw [hbC, cube_off_mx]
+  have hquietOut : QuietKeep bOut base :=
+    quiet_settle hquietC 5 ⟨h5HC, h5DC⟩ fold s.n
+      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
+      (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+  have hquietZ : QuietKeep bZ base := by
+    refine quiet_of hquietOut ?_ ?_ ?_ ?_ ?_
+    · simp [bZ, touchRow]
+    · simp [bZ, touchRow]
+    · simp [bZ, touchRow]
+    · simp [bZ, touchRow]
+    · simp [bZ, touchRow]
+  have hslZ : bZ.sudo_5Board_4cost.sudo_5Costs_6slides =
+      ((slS + 2 * pegCount (fold.take s.n) : Nat) : Int) := by
+    have hEq : bZ.sudo_5Board_4cost.sudo_5Costs_6slides =
+        bOut.sudo_5Board_4cost.sudo_5Costs_6slides := by simp [bZ, touchRow]
+    rw [hEq, settle_slides_eq bC 5 ⟨h5HC, h5DC⟩ fold s.n
+      (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
+      (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7)),
+      ofNat_eq_natCast]
+  have hctrlZ : bZ.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      ((s.ctrl + 2 + s.tally : Nat) : Int) := by
+    simp [bZ, touchRow, ofNat_eq_natCast]
   refine ⟨bU, bC, bOut, bZ, mv, sl, row, hun, hprog, by simpa [bOut] using hsettle,
     hclearZ, hmvB, hslB, by simpa [bOut] using
       (settle_bench_off bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))),
     hrowOut, rfl, rfl, rfl, rfl, ⟨h5Z, hgetZ⟩,
     ⟨h2H0, h2D0, h2HZ, h2DZ, hhome2Z, hheld2Z, hmkZ, hbonZ, h6DZ, h6HZ, hspareZ, h7Z,
       hopsZ, ⟨c0, hopZ, hfit0⟩,
-      ⟨_, hmvNat⟩, ⟨_, hpkNat⟩, ⟨_, hpsZ⟩, ⟨_, hholeZ⟩, h5DZ, hheld5Z,
+      ⟨_, hmvNat⟩, ⟨_, hslZ⟩, ⟨_, hctrlZ⟩, ⟨_, hpkNat⟩, ⟨_, hpsZ⟩, ⟨_, hholeZ⟩,
+      h5DZ, hheld5Z,
       (by simpa [bZ, touchRow] using htierOut),
       ⟨mvZ, base.n, base.bench, hmvZ, hnZ, hbZlen, hfitZ⟩⟩,
-    htailM, htailS, tail_ctrl_fit h hk ht⟩
+    htailM, htailS, tail_ctrl_fit h hk ht, hsideZ, hquietZ⟩
 
 /-- The final tail's boards and the settled gap. The i64 bounds stay inside
     `final_cube_settle` and are not opened here. -/

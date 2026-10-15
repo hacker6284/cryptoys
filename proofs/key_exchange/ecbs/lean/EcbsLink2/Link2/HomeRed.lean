@@ -127,14 +127,15 @@ theorem red_open_view
         b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
         bClearP.sudo_5Board_4cost.sudo_5Costs_6slides = (slC : Int) ∧
         slC ≤ sl + s.tally * (2 * base.n)) ∧
-      SideKeep bClearP base := by
+      SideKeep bClearP base ∧
+      QuietKeep bClearP base := by
 
   let hole := climbAt base.ladder0 base.R s.ridx
   obtain ⟨bClearP, hAll⟩ := gap_clear_emit h hM hS hF hm hT hhome h.parkBelow h.holeBelow
   rcases hAll with ⟨hrun, _hrowE, _hctrlE, _hfromE, _hridxE, _hlenE, ht0E, hparkE,
       _hhighE, hmarkE, hbonE, htoE, hbenchE, htierE, hladE, hnrE, htmaxE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, htrits, hopsE, hc1E, hpkSE,
-      hholeE, hδs, hctx, hside⟩
+      hholeE, hδs, hctx, hside, hquiet⟩
   obtain ⟨hδ, hslots, hpieceM, hpieceS⟩ := hδs
   obtain ⟨cG, bMulG, hclearG, hmulG, hrowG, hctrlG, hmG, ht0G, hgG, hnG, hkG, hbG, hsrcG,
       ⟨bParkG, hparkG, hcopyG⟩⟩ := hctx
@@ -190,7 +191,7 @@ theorem red_open_view
     hhighC, hctrlC, hmaxC, ht0Red, htierRed, hcubeBoth, hmulBoth, hrel, honR, htoR,
     hlenR, hbenchR, hδ, hslots, hladE, hnrE, hparkE, ht0E, hmarkE, htierE, htmaxE,
     hcubeU, hredU, hbonE, htoE, hbenchE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep,
-    hopsE, hc1E, hpkSE, hholeE, htrits, hpieceM, hpieceS, hside⟩
+    hopsE, hc1E, hpkSE, hholeE, htrits, hpieceM, hpieceS, hside, hquiet⟩
 
 theorem settle_park (b : Ecbs.Board) (home : Nat)
     (hin : HomeIn b home)
@@ -275,6 +276,7 @@ structure RedCarry (b bRed bClear : Ecbs.Board) (base : ClimbBudget) (tally xHom
   empty6 : bRed.sudo_5Board_4held[6]'held6 = false
   keep : CellKeep bRed xHome x
   side : SideKeep bRed base
+  quiet : QuietKeep bRed base
   strict : ∃ p : Nat, bRed.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int)
   hole : ∃ h : Nat, bRed.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int)
   opsTight : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
@@ -345,7 +347,8 @@ theorem red_unparked_delta
       b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
       bClearP.sudo_5Board_4cost.sudo_5Costs_6slides = (slC : Int) ∧
       slC ≤ sl + s.tally * (2 * base.n))
-    (hsideC : SideKeep bClearP base) :
+    (hsideC : SideKeep bClearP base)
+    (hquietC : QuietKeep bClearP base) :
     RedCarry b bRed0 bClearP base s.tally base.xHome base.x := by
   have hmarkU : bClearU.sudo_5Board_9marker_on = false := by
     have hback : bClearU.sudo_5Board_9marker_on = bClearP.sudo_5Board_9marker_on := by
@@ -941,6 +944,40 @@ theorem red_unparked_delta
     side_arrays hsideMul0
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hRedEq)
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hRedEq)
+  have hquietU : QuietKeep bClearU base := by
+    have hH : bClearU.sudo_5Board_4home = bClearP.sudo_5Board_4home := by
+      rw [hClearEq, withPark_home]
+    have hD : bClearU.sudo_5Board_4held = bClearP.sudo_5Board_4held := by
+      rw [hClearEq, withPark_held]
+    have ht : bClearU.sudo_5Board_1t = bClearP.sudo_5Board_1t := by
+      rw [hClearEq]; exact (withPark_tier _ _ _ _ _).symm
+    have hm : bClearU.sudo_5Board_6marker = bClearP.sudo_5Board_6marker := by
+      rw [hClearEq]; exact (withPark_ix _ _ _ _ _).symm
+    have hx : bClearU.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        bClearP.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+      rw [hClearEq]; exact (withPark_mx _ _ _ _ _).symm
+    exact quiet_of hquietC (congrArg Array.size hH) (congrArg Array.size hD) ht hm hx
+  have hquietCube0 := quiet_cubeLive hquietU 6 5 xs
+    ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
+  have hquietCube : QuietKeep bCube0 base :=
+    quiet_of hquietCube0
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hEq))
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hEq))
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_1t) hEq)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_6marker) hEq)
+      (congrArg (fun bd : Ecbs.Board =>
+        bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) hEq)
+  have hquietMul0 := quiet_mulLive hquietCube 5 6 base.x ys
+    ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩
+    ⟨h6HC, h6DC⟩
+  have hquietR : QuietKeep bRed0 base :=
+    quiet_of hquietMul0
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hRedEq))
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hRedEq))
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_1t) hRedEq)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_6marker) hRedEq)
+      (congrArg (fun bd : Ecbs.Board =>
+        bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) hRedEq)
   have hstrictR : ∃ p : Nat,
       bRed0.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) := by
     let occ := countHeld
@@ -974,6 +1011,7 @@ theorem red_unparked_delta
     empty6 := h6fR
     keep := hkeepR
     side := hsideR
+    quiet := hquietR
     strict := hstrictR
     hole := hholeR
     opsTight := hopsTight }
@@ -1041,6 +1079,9 @@ theorem red_open_emit
         bAdd.sudo_5Board_8bench_to = bR.sudo_5Board_8bench_to ∧
         bAdd.sudo_5Board_9marker_on = bR.sudo_5Board_9marker_on ∧
         bAdd.sudo_5Board_1t = bR.sudo_5Board_1t ∧
+        bAdd.sudo_5Board_6marker = bR.sudo_5Board_6marker ∧
+        bAdd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+          bR.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
         bAdd.sudo_5Board_7ladder0 = bR.sudo_5Board_7ladder0 ∧
         bAdd.sudo_5Board_6nrungs = bR.sudo_5Board_6nrungs ∧
         bAdd.sudo_5Board_9park_hole = bR.sudo_5Board_9park_hole ∧
@@ -1089,7 +1130,7 @@ theorem red_open_emit
       hrel, honR, htoR, hlenR, hbenchR, hδ, hslots, hladE, hnrE, hparkE,
       ht0E, hmarkE, htierE, _htmaxE, hcubeU, hredU, hbonE, htoE, hbenchE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, hopsE, hc1E, hpkSE, hholeE,
-      htrits, hpieceM, hpieceS, hside⟩ :=
+      htrits, hpieceM, hpieceS, hside, hquiet⟩ :=
     red_open_view h hM hS hF hm hT hhome hxLen hxT
   let fromH := ((hole : Nat) : Int)
   let ridxH := Int.ofNat (s.ridx + 1)
@@ -1366,7 +1407,7 @@ theorem red_open_emit
       (Int.ofNat (s.ridx + 1))
       hClear0 hδ hslots hmarkE htierE hcubeU hredU hrel
       hbonE htoE hbenchE h5H h5D h6H h6D h7E h5f h6f hkeep hopsE hc1E hpkSE hholeE
-      htrits hpieceM hpieceS hside
+      htrits hpieceM hpieceS hside hquiet
   have hδRed : RungDelta b bRed0 base s.tally := hpack.delta
   refine ⟨_, hprog, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · simp [withPark, withTally, ctrlD]
@@ -1404,7 +1445,7 @@ theorem red_open_emit
       (by rw [withPark_ops, withTally_ops])
       (by rw [withPark_peak, withTally_peak])
   · refine ⟨bClearP, bClearU, bCube0, bRed0,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
       hClear0, hδ, hslots, hrel, hladE, hnrE, hparkE, ht0E, hmarkE, htierE,
       honR, htoR, hlenR, ht0Red, hbenchR, hpack⟩
     · rw [withPark_moves]; rfl
@@ -1418,6 +1459,8 @@ theorem red_open_emit
     · rw [withPark_to]; rfl
     · rw [withPark_marker]; rfl
     · rw [withPark_tier]; rfl
+    · rw [withPark_ix]; rfl
+    · rw [withPark_mx]; rfl
     · rw [withPark_ladder]; rfl
     · rw [withPark_nrungs]; rfl
     · rw [withPark_park]; rfl
@@ -1468,7 +1511,7 @@ theorem red_open_k
   obtain ⟨bAdd, hprog, hctrlA, hlenA, hhighA, hfromA, hridxA, hrowA, htmaxA, hδA,
       _bCP, _bCU, _bC, bR,
       hmvA, hslA, hopsA, hpkA,
-      hheldA, hhomeA, hbenchA, honA, htoA, hmarkA, htierA,
+      hheldA, hhomeA, hbenchA, honA, htoA, hmarkA, htierA, hixA, hmxA,
       hladA, hnrA, hparkA, ht0A, hstrictA, hholeA,
       _hClear, _hδC, _hslots, hrel,
       hladE, hnrE, hparkE, _ht0E, _hmarkE, htierE,
@@ -1813,6 +1856,9 @@ theorem red_open_k
       (by rw [htierB]; exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
       hpark' hpeg (side_arrays hcarry.side hhomeA hheldA)
+      (quiet_of hcarry.quiet
+        (congrArg Array.size hhomeA) (congrArg Array.size hheldA)
+        htierA hixA hmxA)
   have htmax : ∃ tmax : Nat,
       bAdd.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < s'.tally → tmax < 2 * s'.tally) := by
@@ -2585,7 +2631,7 @@ theorem red_final_k
       hrel, honR, htoR, _hlenR, hbenchR, hδ, hslots, hladE, hnrE, hparkE,
       _ht0E, _hmarkE, htierE, _htmaxE, hcubeU, hredU, hbonE, htoE, hbenchE,
       _h5H, _h5D, _h6H, _h6D, _h7E, _h5f, _h6f, _hkeep, hopsE, _hc1E, _hpkSE, _hholeE,
-      _htrits, hpieceM, hpieceS, hside⟩ :=
+      _htrits, hpieceM, hpieceS, hside, hquiet⟩ :=
     red_open_view h hM hS hF hm hT hhome hxLen hxT
   have hpack :=
     red_unparked_delta h hM hS
@@ -2598,7 +2644,7 @@ theorem red_final_k
       (Int.ofNat (s.ridx + 1))
       hClearEq hδ hslots _hmarkE htierE hcubeU hredU hrel
       hbonE htoE hbenchE _h5H _h5D _h6H _h6D _h7E _h5f _h6f _hkeep hopsE _hc1E
-      _hpkSE _hholeE _htrits hpieceM hpieceS hside
+      _hpkSE _hholeE _htrits hpieceM hpieceS hside hquiet
   let hole := climbAt base.ladder0 base.R s.ridx
   let rowU := bClearU.sudo_5Board_3row
   let lenU := bClearU.sudo_5Board_9tally_len
@@ -2981,6 +3027,9 @@ theorem red_final_k
       (by rw [withPark_tier]; simpa [withTally, hpack.tier, htierE] using h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
       hpark' hpeg' (side_arrays hpack.side hhomeB hheldB)
+      (quiet_of hpack.quiet
+        (congrArg Array.size hhomeB) (congrArg Array.size hheldB)
+        rfl rfl rfl)
   have htmax : ∃ tmax : Nat,
       b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < s'.tally → tmax < 2 * s'.tally) := by

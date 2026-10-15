@@ -560,6 +560,22 @@ theorem cube_off_tier (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_1t =
       b.sudo_5Board_1t := rfl
 
+theorem cube_off_ix (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_6marker =
+      b.sudo_5Board_6marker := rfl
+
+theorem cube_off_mx (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := rfl
+
 theorem cube_off_ctrl (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     (n k moves hole bench peak peakS cOps : Nat)
     (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
@@ -1611,6 +1627,22 @@ theorem cube_live_tier (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       b.sudo_5Board_1t := by
   unfold cubeLiveBoard
   rw [cube_off_tier, settle_tier_eq b src hin xs bud.n bud.moves bud.slides bud.peak]
+
+theorem cube_live_ix (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (bud : Budget b 1)
+    (hin : HomeIn b src) :
+    (cubeLiveBoard b dst src xs bud hin).sudo_5Board_6marker =
+      b.sudo_5Board_6marker := by
+  unfold cubeLiveBoard
+  rw [cube_off_ix, settle_ix_eq b src hin xs bud.n bud.moves bud.slides bud.peak]
+
+theorem cube_live_mx (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (bud : Budget b 1)
+    (hin : HomeIn b src) :
+    (cubeLiveBoard b dst src xs bud hin).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+  unfold cubeLiveBoard
+  rw [cube_off_mx, settle_mx_eq b src hin xs bud.n bud.moves bud.slides bud.peak]
 
 theorem cube_live_ctrl (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     (bud : Budget b 1)

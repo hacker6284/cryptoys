@@ -89,6 +89,10 @@ theorem red_open_finish
     (htierB : b'.sudo_5Board_1t = b.sudo_5Board_1t)
     (hhomeB : b'.sudo_5Board_4home = bRed.sudo_5Board_4home)
     (hheldB : b'.sudo_5Board_4held = bRed.sudo_5Board_4held)
+    (htierRed : b'.sudo_5Board_1t = bRed.sudo_5Board_1t)
+    (hixB : b'.sudo_5Board_6marker = bRed.sudo_5Board_6marker)
+    (hmxB : b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      bRed.sudo_5Board_4cost.sudo_5Costs_17script_marker_max)
     (hcarry : RedCarry b bRed bClear base s.tally base.xHome base.x)
     (hopsB : 1 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size)
     (hopsF : b'.sudo_5Board_4cost.sudo_5Costs_3ops = bRed.sudo_5Board_4cost.sudo_5Costs_3ops)
@@ -441,6 +445,9 @@ theorem red_open_finish
       (by rw [htierB]; exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
       hpark' hpeg' (side_arrays hcarry.side hhomeB hheldB)
+      (quiet_of hcarry.quiet
+        (congrArg Array.size hhomeB) (congrArg Array.size hheldB)
+        htierRed hixB hmxB)
   have htmaxS : ∃ tmax : Nat,
       b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < s'.tally → tmax < 2 * s'.tally) := by
@@ -506,7 +513,7 @@ theorem red_open_ge
   obtain ⟨bClearU, bCubeP, bRedP, bClearG, bIdle, bClearC, bCubeC, bRedC,
       hclearProg, hcubeU, hredU, hrelP, hrun, hframe,
       hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E, hparkE, hhighE, htierE,
-      hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, hside,
+      hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, hside, hquiet,
       hpsE, hhnE, hrowIdle, hctrlIdle, hδ, hslots, hpieceM, hpieceS,
       hclearSame, hredSame, hcubeBoth, hmulBoth, hctrlN, ht0Red, htierRed,
       honC, htoC, hbenchC⟩ := V
@@ -882,13 +889,22 @@ theorem red_open_ge
     have hD : bClearP.sudo_5Board_4held = bIdle.sudo_5Board_4held := by
       rw [hP, hframe, withPark_held]
     exact side_arrays hside hH hD
+  have hquietP : QuietKeep bClearP base := by
+    have hH : bClearP.sudo_5Board_4home = bIdle.sudo_5Board_4home := by
+      rw [hP, hframe, withPark_home]
+    have hD : bClearP.sudo_5Board_4held = bIdle.sudo_5Board_4held := by
+      rw [hP, hframe, withPark_held]
+    exact quiet_of hquiet (congrArg Array.size hH) (congrArg Array.size hD)
+      (by rw [hP, hframe, withPark_tier])
+      (by rw [hP, hframe, withPark_ix])
+      (by rw [hP, hframe, withPark_mx])
   have hcarry :=
     red_unparked_delta h hM hS
       hm hT hhome hxLen hxT
       bClearP bClearU bCubeP bRedP rowP ctrlP fromH ridxH rfl
       hδP hslotsP hmarkP htierP hcubeU hredU hrelP
       hbonP htoP hbenchP h5HP h5DP h6HP h6DP h7P h5fP h6fP hkeepP hopsP hc1P
-      hpkP hholeP htrits hpieceMP hpieceSP hsideP
+      hpkP hholeP htrits hpieceMP hpieceSP hsideP hquietP
   obtain ⟨hgap, htall, honM, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
       hparkM, hnM, hkM, hbM⟩ := model_open_red_ge s base.x r hole hr hge
   let s' := modelRung s base.x r hole false
@@ -1117,7 +1133,21 @@ theorem red_open_ge
     unfold b' bRec
     rw [withPark_tmax]
     simp only [Int.ofNat_eq_coe]
+  have htierRed : b'.sudo_5Board_1t = bRedP.sudo_5Board_1t := by
+    unfold b'
+    rw [withPark_tier, htierRec, hredSame]
+  have hixF : b'.sudo_5Board_6marker = bRedP.sudo_5Board_6marker := by
+    unfold b'
+    rw [withPark_ix]
+    unfold bRec bTall
+    rw [withTally_ix, hredSame]
+  have hmxF : b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      bRedP.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+    unfold b'
+    rw [withPark_mx]
+    unfold bRec bTall
+    rw [withTally_mx, hredSame]
   exact ⟨b', hprog, red_open_finish h hge hr hrest hParkAt hCap hT hinv hδ' hladB hnrB
-    htierB hhomeB hheldB hcarry hopsB hopsF hstrictF hholeF htmaxEq hprog, hTight⟩
+    htierB hhomeB hheldB htierRed hixF hmxF hcarry hopsB hopsF hstrictF hholeF htmaxEq hprog, hTight⟩
 
 end EcbsLink2.Link2

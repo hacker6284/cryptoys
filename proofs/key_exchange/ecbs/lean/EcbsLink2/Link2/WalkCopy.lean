@@ -71,6 +71,15 @@ theorem place_marker_eq (b : Ecbs.Board) (home : Nat)
   dsimp only
   split <;> rfl
 
+theorem place_mx_eq (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+  unfold placeBoard
+  dsimp only
+  split <;> rfl
+
 attribute [local irreducible] placeBoard
 
 /-- White cell, accumulator not yet live. Across and up receive the base point. -/

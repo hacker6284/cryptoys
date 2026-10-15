@@ -450,7 +450,8 @@ theorem shape_refresh {b : Ecbs.Board} {s : ClimbModel} {done : List Nat}
     (hrow : s'.row.length = base.control)
     (hpark : ParkRead b' s' rest base)
     (hpeg : PegRead b' s' base)
-    (hside : SideKeep b' base) :
+    (hside : SideKeep b' base)
+    (hquiet : QuietKeep b' base) :
     ClimbShape b' s' rest base := by
   refine
     { spareH := hspareH
@@ -484,6 +485,7 @@ theorem shape_refresh {b : Ecbs.Board} {s : ClimbModel} {done : List Nat}
       k_le := by rw [hk, hn]; exact h.k_le
       gap_eq := by rw [hn, hk]; exact h.gap_eq
       side := hside
+      quiet := hquiet
       park := hpark
       peg := hpeg }
 
@@ -1727,6 +1729,82 @@ theorem pegPack_keep (c : PegCtx) (first : Nat) (xs0 : List Nat) (cMul : Nat)
       (Nat.lt_of_succ_le hle) first xs0 cMul
       ih.heldLt ih.homeLt hne ih.held ih.arr ih.opsLt ih.op0
     simpa [pegPack, pegNext] using hlive
+
+theorem quiet_pegStep {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (t0 j : Nat)
+    (hrow : t0 + j < b.sudo_5Board_3row.size) (ctrl : Nat) :
+    QuietKeep (pegStep b t0 j hrow ctrl) base :=
+  quiet_of h rfl rfl rfl rfl rfl
+
+theorem quiet_cubeLive {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (dst src : Nat) (xs : List Nat)
+    (bud : Budget b 1) (hin : HomeIn b src) :
+    QuietKeep (cubeLiveBoard b dst src xs bud hin) base := by
+  refine quiet_of h ?_ ?_ (cube_live_tier b dst src xs bud hin)
+    (cube_live_ix b dst src xs bud hin) (cube_live_mx b dst src xs bud hin)
+  · rw [cube_live_home b dst src xs bud hin, Array.size_set]
+  · rw [cube_live_held b dst src xs bud hin, Array.size_set,
+      settle_held_eq b src hin xs bud.n bud.moves bud.slides bud.peak, Array.size_set]
+
+theorem quiet_mulLive {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (dst second : Nat) (xs ys : List Nat)
+    (bud : Budget b 0) (hin : HomeIn b second) :
+    QuietKeep (mulNoLiveBoard b dst second xs ys bud hin) base := by
+  refine quiet_of h ?_ ?_ (mul_live_tier b dst second xs ys bud hin)
+    (mul_live_ix b dst second xs ys bud hin) (mul_live_mx b dst second xs ys bud hin)
+  · rw [mul_live_home b dst second xs ys bud hin, Array.size_set]
+  · rw [mul_live_held b dst second xs ys bud hin, Array.size_set,
+      settle_held_eq b second hin ys bud.n bud.moves bud.slides bud.peak, Array.size_set]
+
+theorem quiet_offPeg (c : PegCtx) {base : ClimbBudget}
+    (h : QuietKeep c.b0 base) : QuietKeep (offPeg c) base := by
+  have hCube : QuietKeep
+      (cubeOffBoard c.b0 c.src c.src c.g c.n c.k c.moves0 c.hole0 c.bench
+        c.peak0 c.peakS0 c.cOps0 c.hops0 c.hF c.hHome) base := by
+    refine quiet_of h ?_ ?_
+      (cube_off_tier c.b0 c.src c.src c.g c.n c.k c.moves0 c.hole0 c.bench
+        c.peak0 c.peakS0 c.cOps0 c.hops0 c.hF c.hHome)
+      (cube_off_ix c.b0 c.src c.src c.g c.n c.k c.moves0 c.hole0 c.bench
+        c.peak0 c.peakS0 c.cOps0 c.hops0 c.hF c.hHome)
+      (cube_off_mx c.b0 c.src c.src c.g c.n c.k c.moves0 c.hole0 c.bench
+        c.peak0 c.peakS0 c.cOps0 c.hops0 c.hF c.hHome)
+    · rw [cube_off_home, Array.size_set]
+    · rw [cube_off_held, Array.size_set]
+  unfold offPeg
+  exact quiet_pegStep hCube c.t0 0 (offRowPr c) c.ctrl0
+
+theorem quiet_livePeg (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m)
+    {base : ClimbBudget} (h : QuietKeep d.b base) :
+    QuietKeep (livePegBoard c d hi) base := by
+  have hCube := quiet_cubeLive h c.src c.src d.xs
+    ⟨c.n, c.k, d.moves, d.slides, d.hole, c.bench, d.peak, d.peakS, d.cOps, d.hops⟩
+    ⟨d.hH, d.hD⟩
+  unfold livePegBoard
+  exact quiet_pegStep hCube c.t0 i (liveRowPr c d hi) d.ctrl
+
+theorem quiet_pegPack (c : PegCtx) {base : ClimbBudget}
+    (h : QuietKeep c.b0 base) (i : Nat) (h0 : 0 < i) (hle : i ≤ c.m) :
+    QuietKeep (pegPack c i h0 hle).b base := by
+  match i with
+  | 0 => exact absurd h0 (Nat.not_lt_zero 0)
+  | 1 => simpa [pegPack, pegFromOff] using quiet_offPeg c h
+  | n + 2 =>
+    have hle1 : n + 1 ≤ c.m := Nat.le_of_succ_le hle
+    have ih := quiet_pegPack c h (n + 1) (Nat.succ_pos n) hle1
+    have hlive := quiet_livePeg c (pegPack c (n + 1) (Nat.succ_pos n) hle1)
+      (Nat.lt_of_succ_le hle) ih
+    simpa [pegPack, pegNext] using hlive
+
+theorem quiet_pegBoard (c : PegCtx) {base : ClimbBudget}
+    (h : QuietKeep c.b0 base) : QuietKeep (pegBoard c c.m) base := by
+  have hpack := quiet_pegPack c h c.m c.hm (Nat.le_refl _)
+  have hboard := (pegPack_board c c.m c.hm (Nat.le_refl _)).1
+  exact quiet_of hpack
+    (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hboard.symm))
+    (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hboard.symm))
+    (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_1t) hboard.symm)
+    (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_6marker) hboard.symm)
+    (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) hboard.symm)
 
 /-- The bench-off peg writes home `src`. Homes 0, 1, and 4 stay. -/
 theorem side_offPeg (c : PegCtx) {base : ClimbBudget}

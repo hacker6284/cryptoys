@@ -367,9 +367,11 @@ private theorem finish_copy
     (hfitCopy : FitsLen (mv + pegCount xs))
     (hxsDef : xs = fieldSub t.n baseX accX)
     (hmvEq : mv = runMoves fr.moves baseX accX)
-    (hbOff : bOff = { bA with sudo_5Board_9marker_on := false }) :
+    (hbOff : bOff = { bA with sudo_5Board_9marker_on := false })
+    (hflag : bA.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on) :
     ∃ bA,
       chordCopyAddGo b = .ok bA ∧
+      bA.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
       ∃ (lay : OpenLay { bA with sudo_5Board_9marker_on := false } t xs)
         (base : ClimbBudget),
         OpenMatch lay base ∧
@@ -377,7 +379,15 @@ private theorem finish_copy
         lay.slides = fr.slides ∧
         lay.ctrl = fr.ctrl ∧
         lay.cOps = fr.cOps ∧
-        lay.opsCap = fr.opsCap := by
+        lay.opsCap = fr.opsCap ∧
+        lay.mark = fr.mark ∧
+        lay.mx = fr.mx ∧
+        lay.side1 = fr.y1 ∧
+        lay.flag1 = fr.flag1 ∧
+        lay.side4 = fr.y4 ∧
+        lay.flag4 = fr.flag4 ∧
+        lay.side0 = accX ∧
+        lay.flag0 = true := by
   have h0HOff : 0 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
   have h0DOff : 0 < bOff.sudo_5Board_4held.size := by rw [hszDOff]; decide
   have h1HOff : 1 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
@@ -516,7 +526,8 @@ private theorem finish_copy
     apply congrArg (fun i => bOff.sudo_5Board_4held.set i true)
     exact Fin.ext rfl
   cases hbOff
-  exact ⟨bA, hdo, lay, baseB, hmatch, hmvEq, rfl, rfl, rfl, rfl⟩
+  exact ⟨bA, hdo, hflag, lay, baseB, hmatch, hmvEq, rfl, rfl, rfl, rfl,
+    rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     (fr : RunFrame b t baseX accX) (hOk : BoardOk t) (sat : TierSat t)
@@ -539,6 +550,7 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     (hCtrl : FitsLen ((fr.ctrl + 1) + (tierR t + 1) * (3 * rowRoom t + 5))) :
     ∃ bA,
       chordCopyAddGo b = .ok bA ∧
+      bA.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
       ∃ (lay : OpenLay { bA with sudo_5Board_9marker_on := false } t
           (fieldSub t.n baseX accX))
         (base : ClimbBudget),
@@ -547,7 +559,15 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
         lay.slides = fr.slides ∧
         lay.ctrl = fr.ctrl ∧
         lay.cOps = fr.cOps ∧
-        lay.opsCap = fr.opsCap := by
+        lay.opsCap = fr.opsCap ∧
+        lay.mark = fr.mark ∧
+        lay.mx = fr.mx ∧
+        lay.side1 = fr.y1 ∧
+        lay.flag1 = fr.flag1 ∧
+        lay.side4 = fr.y4 ∧
+        lay.flag4 = fr.flag4 ∧
+        lay.side0 = accX ∧
+        lay.flag0 = true := by
   let xs := fieldSub t.n baseX accX
   have hpos : 0 < t.n := hOk.n_pos
   have hpegB : pegCount baseX ≤ t.n := by rw [← fr.lenX]; exact pegCount_le baseX
@@ -808,13 +828,21 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     rw [hEq, addMx b1 2 h2H1 arr mv, hmx1, bumpMx b 3 fr.chordOps fr.ops3, fr.hmx]
   let pk := raisedPeak fr.peak
     (countHeld (bB.sudo_5Board_4held.set ⟨2, hinB.hD⟩ true) 7)
+  have hflag : bA.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+    have hB : bB.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+      simp [bB, bumpOp]
+    have h1 : b1.sudo_5Board_9marker_on = bB.sudo_5Board_9marker_on :=
+      (place_idle bB 2 hinB baseX fr.moves fr.peak).1
+    have hA : bA.sudo_5Board_9marker_on = b1.sudo_5Board_9marker_on := by
+      simp [bA, addBoard, withMoves]
+    exact hA.trans (h1.trans hB)
   exact finish_copy b t baseX accX fr hOk sat hM hS hO hTailM hTailS hCheck hCtrl
     xs bA bOff bB b1 arr mv pk hinB h2H1 hdo hhomeB hszHB hszH1 hplaceH hhomeOff
     hheldB hszDB hszD1 hplaceD hheldBA hszHOff hszDOff hmkO hbenchOff hheld2 hhome2
     hheld5 hheld6 htierOff hmovesOff hslidesOff hpkOff hctrlOff hhighOff htallyOff
     ht0Off hrowOff htmaxOff hladOff hl0Off hnrOff hparkOff hfromOff hridxOff
     hstrictOff hholeOff hopsEq hops2Off hhop2 hmarkOff hmxOff hfitCopy
-    rfl rfl rfl
+    rfl rfl rfl hflag
 
 
 

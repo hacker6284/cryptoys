@@ -245,9 +245,20 @@ Homes 0, 1, and 4 are on `ClimbBudget` (`side0`, `side1`, `side4`, and the three
 
 4147 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 484748 kB VmHWM. The climb was replayed. Under 2 GB.
 
+## Done in `ChordNext.lean`
+
+- `cellMoveCharge` / `cellSlideCharge` / `cellCtrlCharge` / `cellOpsCharge`. One live cell adds at most that much. `live_move_le` uses `pegCount ≤ n`. The slide, control, and ops charges are exact.
+- `cell_rooms_left` / `marker_room_left`. A fuel of further cells, plus this cell's charge, leaves this cell's `FitsLen` and the same rooms at the next counters. The marker walks a fixed step; `mark + step * (fuel + 1) < script` leaves `fuel` steps.
+- `climb_high_ge` / `settle_high_mark`. At the end of the ladder `control_highest` is `t0 + tally - 1`. `final_cube_settle` carries that value through unpark, the final cube, the settle, and `tally_clear`. It is not strictly below `t0`. `RunFrame.highLt` is the first cell, where the high still sits under the tally origin. The settled board does not have it.
+- `tally_start_again`. The next tally start, once the high is already at or above the origin and `tally_max` is already positive. The white peg is written. The high and the maximum stay. `tally_put_keep` and `tally_note_keep` are the two branches `tally_start_raise` does not take.
+
+The check multiply, the rise, and the chord tail are not yet shown to keep this high. `set_control` never lowers it, and `finalTail` does not write it.
+
+4158 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 991828 kB VmHWM. The rebuild that re-elaborated ChordLay after the high conjunct peaked at 1594024 kB. Both are under 2 GB.
+
 ## Next
 
-The cell invariant re-establishes `RunFrame` and the five rooms for the next cell. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Thread that high through the check multiply and the chord tail, then the high-water climb entry the next cell reads. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

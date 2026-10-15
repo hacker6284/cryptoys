@@ -413,7 +413,8 @@ theorem final_cube_settle
       FitsLen (s.ctrl + 2 + s.tally) ∧
       SideKeep bZ base ∧
       QuietKeep bZ base ∧
-      PostCubeBound bZ base := by
+      PostCubeBound bZ base ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) := by
   have hk : done.length ≤ base.R := by simpa using h.kLe
   obtain ⟨bU, hun, _, _, hhomeU, hheldU, hbonU, htoU, hbenchU, hmvU, hslU, hpkU,
       hctrlU, ht0U, htierU, hmkU, hopsU, hstrictU, hholeU, hlenU, hhighU,
@@ -1063,6 +1064,8 @@ theorem final_cube_settle
         exact hslZ, hslideLe⟩
       ctrl := ⟨s.ctrl + 2 + s.tally, hctrlZ, hctrlLe⟩
       ops := ⟨hopsZ, c0, hopZ, hopsLe⟩ }
+  have hhighZ : bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) := by
+    simpa [bZ, touchRow] using hhighOut
   refine ⟨bU, bC, bOut, bZ, mv, sl, row, hun, hprog, by simpa [bOut] using hsettle,
     hclearZ, hmvB, hslB, by simpa [bOut] using
       (settle_bench_off bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))),
@@ -1073,7 +1076,7 @@ theorem final_cube_settle
       h5DZ, hheld5Z,
       (by simpa [bZ, touchRow] using htierOut),
       ⟨mvZ, base.n, base.bench, hmvZ, hnZ, hbZlen, hfitZ⟩⟩,
-    htailM, htailS, tail_ctrl_fit h hk ht, hsideZ, hquietZ, hpost⟩
+    htailM, htailS, tail_ctrl_fit h hk ht, hsideZ, hquietZ, hpost, hhighZ⟩
 
 /-- The final tail's boards and the settled gap. The i64 bounds stay inside
     `final_cube_settle` and are not opened here. -/

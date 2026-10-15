@@ -1325,7 +1325,8 @@ theorem final_cube_both
       CheckRead b bZ ∧
       SideKeep bZ base ∧
       QuietKeep bZ base ∧
-      PostCubeBound bZ base :=
+      PostCubeBound bZ base ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) :=
   Exists.elim (final_cube_settle h hon hge ht hm) fun bU p1 =>
   Exists.elim p1 fun bC p2 =>
   Exists.elim p2 fun bOut p3 =>
@@ -1338,7 +1339,8 @@ theorem final_cube_both
       hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
       hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
       hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2⟩
+      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
+      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2⟩
 
 /-- The check multiply: home 5 holds `invGap`, home 2 still holds the input,
     and `Ecbs.mul` with the export flags is `fieldMul` of that pair. -/
@@ -1386,7 +1388,7 @@ theorem check_mul (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       have hm : 0 < s'.tally := by
         rw [hs', modelClimb_tally]; simp [entryModel]
         exact Nat.lt_of_lt_of_le (by decide : (0 : Nat) < 1) (climbTally_ge 1 (tierClimb t))
-      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread, _hside, _hquiet, _hbound⟩ :=
+      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread, _hside, _hquiet, _hbound, _hhigh⟩ :=
         final_cube_both hK hon hge htmax hm
       have hrun' : climbEmit (climbStepBoard ((2 : Nat) : Int)) (tallyBoard t xs sat hR)
           (tierClimb t) = .ok b' := by simpa [entryBudget] using hrun

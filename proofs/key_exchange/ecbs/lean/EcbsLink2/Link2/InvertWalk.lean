@@ -996,7 +996,7 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         rw [hs', modelClimb_tally]
         simp [openModel, entryModel]
         exact Nat.lt_of_lt_of_le (by decide : (0 : Nat) < 1) (climbTally_ge 1 (tierClimb t))
-      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread, hsideZ, hquietZ, hbound⟩ :=
+      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread, hsideZ, hquietZ, hbound, _hhigh⟩ :=
         final_cube_both hKpost hon hge htmax hmt
       have hrun' : climbEmit (climbStepBoard ((2 : Nat) : Int)) bT (tierClimb t) =
           .ok b' := by simpa [hm.xHome] using hrun

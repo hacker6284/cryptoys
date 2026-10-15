@@ -199,13 +199,26 @@ Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 1579356 kB. Under 2
 
 3755 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. The earlier fresh elaboration of ChordOpen, before `chord_add_point`, peaked at 353308 kB.
 
+## Done in `InvertWalk.lean`
+
+- `OpenLay`: the marker-off board `invert` reads. The control row is still the painted ladder, the ladder array is climb order, the gap and the spare are empty, and home `bottom` holds the input. Counters are naturals, with room for the gap copy and the tally peg.
+- `OpenMatch`: the climb budget is those counters after the copy, and the tier's ladder. The peak is whatever `place` leaves when the gap becomes held.
+- `open_tally`: bump `op_inv`, copy the bottom into the gap, lay the white peg at the tally origin. The gap is the input. The control counter grows by one.
+- `open_climb`: that board satisfies `ClimbInvK` at the empty prefix. The model is `entryModel` with the walk's control counter.
+- `open_invert`: `Ecbs.invert` on that board is the climb bound into the final tail.
+- `open_invGap`: home 5 after that `invert` is `invGap` of the bottom.
+
+3817 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. InvertWalk elaborated at 353328 kB VmHWM. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeded.
+
+The hole-0 check, the zero tail, and the optional mirror are still ahead of `invert_checked`. `chord_add_point` still takes `invert_checked` as a hypothesis. The cell invariant still has to show a live board meets `OpenLay`, and that its counters meet `OpenMatch`.
+
 ## Next
 
-Wire `chord_add_open` and `chord_tail_after_inv` so the rise board is the board `chord_tail_point` reads, then `chordStep_live_spec` needs no add hypothesis. Discharge the remaining settle rooms inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Discharge `invert_checked` on this open board: the check multiply, the hole-0 assert, the zero tail, and the red mirror, so home 5 is the list `fieldInv` returns. Then the cell invariant supplies `OpenLay` and the budget, and `chord_add_point` no longer takes the inverse as a hypothesis. After that, the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 
-Part 1 (`cursor/ecbs-link2-4113`, PR #201) is adding `HomeIn`, `BoardShape`, `Budget`, and `FieldLay.fits`, and deleting this file. Do not merge `main` into this branch until asked. New statements should be readable off those bundles: `slide_point` already takes the four homes and two rooms, not the multiply's budget.
+Part 1 (`cursor/ecbs-link2-4113`, PR #201) is adding `HomeIn`, `BoardShape`, `Budget`, and `FieldLay.fits`, and deleting this file. Do not merge `main` into this branch until asked. New statements should be readable off those bundles: `OpenLay` is the homes and the control frame, `OpenMatch` is the one budget.
 
 ## Scope that stays in the PR body
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { applyLidMoves, lidMoves } from "./expand.js";
-import { diceFromSeed, regString } from "./trace.js";
+import { diceFromSeed, regString, rollDice } from "./trace.js";
 import { loadGenerated } from "./gen.test-helper.mjs";
 import { stubThree } from "../playroom/three-stub.mjs";
 
@@ -80,5 +80,16 @@ assert.equal(seeded.K, seeded.Kb);
 checkShow("seed cryptoys", seeded);
 assert.notDeepEqual(diceFromSeed("a"), diceFromSeed("b"), "different seeds, different dice");
 assert.deepEqual(diceFromSeed("x"), diceFromSeed("x"), "a seed always throws the same faces");
+// The demo's dice: a blank seed throws fresh faces each time, a seed repeats them.
+assert.notDeepEqual(rollDice(""), rollDice(""), "blank seed: fresh throws");
+assert.notDeepEqual(rollDice(), rollDice("  "), "blank seed: fresh throws");
+assert.deepEqual(rollDice("dbg"), rollDice("dbg"), "a seed repeats the throws");
+assert.deepEqual(rollDice(" dbg "), diceFromSeed("dbg"), "the seed is trimmed");
+{
+    const a = worker.answer({ op: "show", seed: "" }).show, b = worker.answer({ op: "show", seed: "" }).show;
+    assert.notEqual(a.A + a.B, b.A + b.B, "blank seed: a new exchange each roll");
+    const c = worker.answer({ op: "show", seed: "dbg" }).show, d = worker.answer({ op: "show", seed: "dbg" }).show;
+    assert.equal(c.A + c.B + c.K, d.A + d.B + d.K, "fixed seed: the same exchange");
+}
 
 console.log("bs expand tests ok");

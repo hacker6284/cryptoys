@@ -59,7 +59,7 @@ function el(tag, id = "", dataset = {}) {
 }
 
 function makeRoot() {
-    const ids = ["seed", "roll", "out-a", "out-b", "out-k", "status", "error", "anim-note", "teach", "teach-card",
+    const ids = ["seed", "roll", "out-throw", "out-a", "out-b", "out-k", "status", "error", "anim-note", "teach", "teach-card",
         "teach-pos", "play", "step", "skip-end", "reset", "speed", "kat", "kat-menu", "spec", "spec-body",
         "spec-btn", "spec-close", "speed-out"];
     const byId = Object.fromEntries(ids.map((id) => [id, el(id.startsWith("out-") ? "textarea" : "div", id)]));
@@ -116,8 +116,8 @@ async function setup(seed) {
     return { root, view, session, exchange, kats: JSON.parse(katsFile).vectors.filter((v) => v.kind === "exchange") };
 }
 
-test("the seed builds both keys; A, B and K are the generated exchange's", { skip: !ready }, async () => {
-    const { root, view, session, exchange } = await setup();
+test("a seed builds both keys; A, B and K are the generated exchange's", { skip: !ready }, async () => {
+    const { root, view, session, exchange } = await setup("cryptoys");
     const $ = root.byId;
     assert.equal($.seed.value, "cryptoys");
     const want = exchange("cryptoys");
@@ -177,14 +177,30 @@ test("the next-phase jump lands on the last beat of BUILD", { skip: !ready }, as
     session.dispose();
 });
 
-test("Roll keys picks a fresh seed and new keys", { skip: !ready }, async () => {
-    const { root, session, exchange } = await setup();
-    root.byId.roll.fire("click");
-    await new Promise((r) => setTimeout(r, 600));
-    await session.ready();
-    const seed = root.byId.seed.value;
-    assert.match(seed, /^[0-9a-f]{8}$/);
-    assert.equal(root.byId["out-k"].value, exchange(seed).K);
+test("by default the demo rolls fresh dice; no seed is needed", { skip: !ready }, async () => {
+    const { root, session } = await setup();
+    const $ = root.byId;
+    assert.equal($.seed.value, "", "the debug seed starts blank");
+    assert.equal($.play.disabled, false, "Play works without a seed");
+    assert.match($.status.textContent, /^Fresh rolls · [\d,]+ steps$/);
+    const first = $["out-a"].value;
+    assert.match(first, /^[.WR]{18}$/);
+    const seen = new Set([first]);
+    for (let i = 0; i < 3; i++) {
+        $.roll.fire("click");
+        await new Promise((r) => setTimeout(r, 0));
+        await session.ready();
+        while (session.state().hasShow === false) await new Promise((r) => setTimeout(r, 20));
+        seen.add($["out-a"].value);
+    }
+    assert.ok(seen.size > 1, "Roll dice throws again");
+    session.dispose();
+});
+
+test("each BUILD step shows its throw", { skip: !ready }, async () => {
+    const { root, session } = await setup("t1");
+    await session.step(1);
+    assert.match(root.byId["out-throw"].value, /^Alice · .*die 1: \d+$/);
     session.dispose();
 });
 

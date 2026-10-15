@@ -4,8 +4,8 @@
  * bs.sudo: the keys from BUILD (trace_build inside trace_exchange), every
  * multiplication, start, tidy, clear and shot from trace_exchange, and the
  * outputs A, B and K. This file only turns its records into plain numbers
- * and orders them into beats (one beat per summary), and turns a seed into
- * the dice faces BUILD reads (the seed is the input, like a cup of dice).
+ * and orders them into beats (one beat per summary), and rolls the dice
+ * faces BUILD reads (fresh throws; an optional debug seed repeats them).
  * The peg moves of one step come from the generated step_moves (worker.js).
  */
 import { plain } from "../shared/sudo-plain.js";
@@ -51,26 +51,37 @@ function sfc32([a, b, c, d]) {
 // (50 ships at most), d10 50 dice plus their zero faces.
 export const STREAM = { d12: 120, d6: 240, d10: 300 };
 
+function cryptoRandom() {
+    const b = new Uint32Array(1);
+    globalThis.crypto.getRandomValues(b);
+    return b[0] / 4294967296;
+}
+
+function throwAll(rnd) {
+    const roll = (sides, from) => Math.floor(rnd() * sides) + from;
+    return {
+        d12: Array.from({ length: STREAM.d12 }, () => roll(12, 1)),
+        d6: Array.from({ length: STREAM.d6 }, () => roll(6, 1)),
+        d10: Array.from({ length: STREAM.d10 }, () => roll(10, 0)),
+    };
+}
+
 /** Each player's dice faces for a seed: { a: { d12, d6, d10 }, b: … } (d10 0-9, 0 the zero face). */
 export function diceFromSeed(seed) {
     const out = {};
-    for (const who of ["a", "b"]) {
-        const rnd = sfc32(cyrb128(`bs:${seed}:${who}`));
-        const roll = (sides, from) => Math.floor(rnd() * sides) + from;
-        out[who] = {
-            d12: Array.from({ length: STREAM.d12 }, () => roll(12, 1)),
-            d6: Array.from({ length: STREAM.d6 }, () => roll(6, 1)),
-            d10: Array.from({ length: STREAM.d10 }, () => roll(10, 0)),
-        };
-    }
+    for (const who of ["a", "b"]) out[who] = throwAll(sfc32(cyrb128(`bs:${seed}:${who}`)));
     return out;
 }
 
-/** A fresh seed for "Roll keys" (8 hex digits). */
-export function randomSeed() {
-    const b = new Uint32Array(1);
-    globalThis.crypto.getRandomValues(b);
-    return b[0].toString(16).padStart(8, "0");
+/**
+ * The players' throws. No seed (the default): fresh, unrepeatable throws
+ * from crypto.getRandomValues. A seed (the optional debug field): the same
+ * throws every time.
+ */
+export function rollDice(seed = "") {
+    const s = String(seed ?? "").trim();
+    if (s) return diceFromSeed(s);
+    return { a: throwAll(cryptoRandom), b: throwAll(cryptoRandom) };
 }
 
 // ---- trace → show -----------------------------------------------------------

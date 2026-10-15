@@ -1,7 +1,9 @@
 /**
  * BS session: the dock, the keys and the show.
  *
- * The seed (or "Roll keys") picks the dice faces; the worker runs the
+ * The demo rolls both players' dice ("Roll dice" rolls again): fresh
+ * throws by default; the optional debug seed makes them repeatable. Each
+ * BUILD beat shows its throw in the Throw field; the worker runs the
  * generated trace_exchange on them and the view plays the show: one beat per
  * summary (each BUILD hole, each multiplication, start, tidy, clear and
  * shot). Step plays the step's own peg moves (expand.js), fast. A, B and K
@@ -12,11 +14,8 @@ import { bindGrowFields } from "../shared/grow-field.js";
 import { openSpec, renderTeachCard, sessionScope } from "../shared/session.js";
 import { bindSpeedSlider } from "../shared/speed.js";
 import { bindTeachKeys, setDisabled } from "../shared/teach.js";
-import { SPEC, captionFor } from "./captions.js";
+import { PLAYERS, SPEC, captionFor } from "./captions.js";
 import { createKeys } from "./keys.js";
-import { randomSeed } from "./trace.js";
-
-export const DEFAULT_SEED = "cryptoys";
 
 export function createBsSession({
     view,
@@ -25,10 +24,11 @@ export function createBsSession({
     exposeTeach = false,
     keys = createKeys(),
     katsUrl = new URL("./generated/kats.json", import.meta.url).href,
-    seed: firstSeed = DEFAULT_SEED,
+    seed: firstSeed = "",
 } = {}) {
     const { abort, listen, $, $$ } = sessionScope(root);
     const seedEl = $("#seed");
+    const throwEl = $("#out-throw");
     const outA = $("#out-a");
     const outB = $("#out-b");
     const outK = $("#out-k");
@@ -79,13 +79,13 @@ export function createBsSession({
             if (!r) return `Known answer “${kat.name}”…`;
             return `Known answer “${kat.name}” (${kat.tier}): ${verdict(r)}`;
         }
-        if (!seedText()) return "Type a seed or roll the keys.";
-        if (!show || showGen !== gen) return "Building the keys…";
-        return `Seed “${seedText()}” · ${show.beats.length.toLocaleString("en")} steps`;
+        if (!show || showGen !== gen) return "Rolling the dice…";
+        const how = seedText() ? `Seed “${seedText()}”` : "Fresh rolls";
+        return `${how} · ${show.beats.length.toLocaleString("en")} steps`;
     }
 
     function syncControls() {
-        const can = playable() && (Boolean(kat) || Boolean(seedText()));
+        const can = playable();
         for (const id of ["#play", "#step", "#skip-end"]) {
             setDisabled($(id), !can && !(show && id === "#play" && playing));
         }
@@ -119,13 +119,12 @@ export function createBsSession({
 
     async function ensureShow() {
         if (!playable()) return false;
-        if (!kat && !seedText()) return false;
         if (show && showGen === gen) return true;
         if (!loading) {
             const mine = gen;
             const seed = seedText();
             const vector = kat;
-            status("Building the keys…");
+            status("Rolling the dice…");
             loading = (async () => {
                 const reply = vector ? await keys.showVector(vector) : await keys.show(seed);
                 if (disposed || mine !== gen) return false;
@@ -156,6 +155,7 @@ export function createBsSession({
         checked = null;
         dropShow();
         setOutputs(null);
+        if (throwEl) throwEl.value = "";
         syncControls();
         if (kat && !playable()) {
             const mine = gen;
@@ -173,6 +173,19 @@ export function createBsSession({
             return;
         }
         await ensureShow();
+    }
+
+    // The throw of one BUILD beat, from the generated trace's read (the faces the cup shows).
+    function throwAt(index) {
+        const beat = show?.beats[index];
+        if (beat?.kind !== "build") return "";
+        const read = show.reads[beat.player][beat.read];
+        const parts = [];
+        if (read.cup.length) parts.push(`cup ${read.cup.join(" ")}`);
+        if (read.d12.length) parts.push(`d12 ${read.d12.join(" ")}`);
+        if (read.d6.length) parts.push(`d6 ${read.d6.join(" ")}`);
+        parts.push(`die ${read.die + 1}: ${read.face}`);
+        return `${PLAYERS[beat.player]} · ${parts.join(" · ")}`;
     }
 
     function captionAt(index) {
@@ -207,6 +220,7 @@ export function createBsSession({
         cursor = Math.max(-1, Math.min(show.beats.length - 1, index));
         await view.seek(cursor);
         status(captionAt(cursor));
+        if (throwEl) throwEl.value = throwAt(cursor);
         renderTeach();
         syncControls();
     }
@@ -214,6 +228,7 @@ export function createBsSession({
     async function playOne(mine, expanded) {
         cursor += 1;
         status(captionAt(cursor));
+        if (throwEl) throwEl.value = throwAt(cursor);
         renderTeach();
         syncControls();
         const beat = show.beats[cursor];
@@ -313,7 +328,7 @@ export function createBsSession({
         }
     }
 
-    function setSeed(next) {
+    function setSeed(next = "") {
         kat = null;
         if (seedEl) seedEl.value = next;
         return refresh();
@@ -359,7 +374,7 @@ export function createBsSession({
         setKatOpen(katMenu.hidden);
         if (!katMenu.hidden && !kats.length) void loadKats();
     }, listen);
-    $("#roll")?.addEventListener("click", () => void setSeed(randomSeed()), listen);
+    $("#roll")?.addEventListener("click", () => void setSeed(""), listen);
     let typing = 0;
     seedEl?.addEventListener("input", () => {
         kat = null;
@@ -404,7 +419,7 @@ export function createBsSession({
 
     // The dock's speed (shared/speed.js); 1× is the stage's locked tempo.
     bindSpeedSlider(root, (multiplier) => view.setSpeed?.(multiplier), listen);
-    if (seedEl && !seedEl.value) seedEl.value = firstSeed;
+    if (seedEl && !seedEl.value && firstSeed) seedEl.value = firstSeed;
     const first = refresh();
 
     const api = {

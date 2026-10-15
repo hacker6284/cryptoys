@@ -2,7 +2,8 @@
  * BS off the main thread. Everything here calls the sudoc-generated module
  * built from primitives/key_exchange/bs/bs.sudo (no hand-written step):
  *
- * - `show`: the dice for a seed (trace.js diceFromSeed), or a known-answer
+ * - `show`: the players' throws (trace.js rollDice: fresh by default,
+ *   repeatable with the optional debug seed), or a known-answer
  *   vector's dice, through the generated trace_exchange (BUILD both key
  *   grids with every hole's moves, both public walks, the calls, the checks
  *   and both shared walks), ordered into one beat per summary by trace.js
@@ -18,7 +19,7 @@ import * as host from "./generated/bs.mjs";
 import * as raw from "./generated/_bs_impl.mjs";
 import * as rt from "./generated/_sudo_rt.mjs";
 import { plain } from "../shared/sudo-plain.js";
-import { buildShow, diceFromSeed, regString, runTrace } from "./trace.js";
+import { buildShow, regString, rollDice, runTrace } from "./trace.js";
 
 export const SHOW_TIER = "T1";
 
@@ -60,8 +61,9 @@ function checkVector(v) {
 export function answer({ op, seed, vector, step }) {
     if (op === "show") {
         if (vector) return { show: showFor(vector.tier, vector.dice_a, vector.dice_b, { tier: vector.tier, kat: vector.name }) };
-        const dice = diceFromSeed(String(seed ?? ""));
-        return { show: showFor(SHOW_TIER, dice.a, dice.b, { tier: SHOW_TIER, seed: String(seed ?? "") }) };
+        const s = String(seed ?? "").trim();
+        const dice = rollDice(s);
+        return { show: showFor(SHOW_TIER, dice.a, dice.b, { tier: SHOW_TIER, seed: s }) };
     }
     if (op === "moves") return { step, moves: movesFor(step) };
     if (op === "check") return checkVector(vector);

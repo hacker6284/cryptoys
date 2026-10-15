@@ -421,6 +421,25 @@ html:not([data-playroom-debug="1"]) .playroom-puzzle-note {
   width: 100%;
 }
 
+/* BS: the optional debug seed, collapsed under a summary styled like the other labels. */
+.playroom-dock .bs-debug {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.playroom-dock .bs-debug > summary.playroom-label {
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+/* BS: a throw line wraps over two rows rather than squeezing into one. */
+.playroom-dock textarea.bs-throw {
+  min-height: calc(2 * 1.4em + 1.1rem);
+  font-variant-numeric: tabular-nums;
+}
+
 .playroom-note {
   display: flex;
   flex-direction: column;

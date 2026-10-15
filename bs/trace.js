@@ -4,8 +4,8 @@
  * bs.sudo: the keys from BUILD (trace_build inside trace_exchange), every
  * multiplication, start, tidy, clear and shot from trace_exchange, and the
  * outputs A, B and K. This file only turns its records into plain numbers
- * and orders them into beats (one beat per summary), and turns a seed into
- * the dice faces BUILD reads (the seed is the input, like a cup of dice).
+ * and orders them into beats (one beat per summary), and rolls the dice
+ * faces BUILD reads (fresh throws; an optional debug seed repeats them).
  * The peg moves of one step come from the generated step_moves (worker.js).
  */
 import { plain } from "../shared/sudo-plain.js";
@@ -17,7 +17,7 @@ export function regString(r) {
 
 // ---- seed → dice --------------------------------------------------------
 
-// cyrb128 string hash and sfc32: a small seeded generator for the dice faces.
+// cyrb128 string hash and sfc32: a small seeded generator of raw u32s for the dice faces.
 function cyrb128(str) {
     let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
     for (let i = 0; i < str.length; i++) {
@@ -43,7 +43,7 @@ function sfc32([a, b, c, d]) {
         b = c + (c << 3) | 0;
         c = (c << 21) | (c >>> 11);
         c = c + t | 0;
-        return (t >>> 0) / 4294967296;
+        return t >>> 0;
     };
 }
 
@@ -51,26 +51,59 @@ function sfc32([a, b, c, d]) {
 // (50 ships at most), d10 50 dice plus their zero faces.
 export const STREAM = { d12: 120, d6: 240, d10: 300 };
 
+const U32 = 2 ** 32;
+
+/**
+ * One fair face 0..sides-1 from a source of raw u32s: reject x in the
+ * top 2^32 mod sides values (they would favour the low faces), then x % sides.
+ */
+export function face(sides, nextU32) {
+    const limit = U32 - (U32 % sides);
+    for (;;) {
+        const x = nextU32();
+        if (x < limit) return x % sides;
+    }
+}
+
+// Fresh u32s from crypto.getRandomValues, one batched buffer at a time.
+function cryptoU32s() {
+    const buf = new Uint32Array(1024);
+    let i = buf.length;
+    return () => {
+        if (i >= buf.length) {
+            globalThis.crypto.getRandomValues(buf);
+            i = 0;
+        }
+        return buf[i++];
+    };
+}
+
+function throwAll(nextU32) {
+    const roll = (sides, from) => face(sides, nextU32) + from;
+    return {
+        d12: Array.from({ length: STREAM.d12 }, () => roll(12, 1)),
+        d6: Array.from({ length: STREAM.d6 }, () => roll(6, 1)),
+        d10: Array.from({ length: STREAM.d10 }, () => roll(10, 0)),
+    };
+}
+
 /** Each player's dice faces for a seed: { a: { d12, d6, d10 }, b: … } (d10 0-9, 0 the zero face). */
 export function diceFromSeed(seed) {
     const out = {};
-    for (const who of ["a", "b"]) {
-        const rnd = sfc32(cyrb128(`bs:${seed}:${who}`));
-        const roll = (sides, from) => Math.floor(rnd() * sides) + from;
-        out[who] = {
-            d12: Array.from({ length: STREAM.d12 }, () => roll(12, 1)),
-            d6: Array.from({ length: STREAM.d6 }, () => roll(6, 1)),
-            d10: Array.from({ length: STREAM.d10 }, () => roll(10, 0)),
-        };
-    }
+    for (const who of ["a", "b"]) out[who] = throwAll(sfc32(cyrb128(`bs:${seed}:${who}`)));
     return out;
 }
 
-/** A fresh seed for "Roll keys" (8 hex digits). */
-export function randomSeed() {
-    const b = new Uint32Array(1);
-    globalThis.crypto.getRandomValues(b);
-    return b[0].toString(16).padStart(8, "0");
+/**
+ * The players' throws. No seed (the default): fresh, unrepeatable throws
+ * from crypto.getRandomValues. A seed (the optional debug field): the same
+ * throws every time.
+ */
+export function rollDice(seed = "") {
+    const s = String(seed ?? "").trim();
+    if (s) return diceFromSeed(s);
+    const next = cryptoU32s();
+    return { a: throwAll(next), b: throwAll(next) };
 }
 
 // ---- trace → show -----------------------------------------------------------

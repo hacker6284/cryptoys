@@ -17,8 +17,6 @@ import { bindTeachKeys, setDisabled } from "../shared/teach.js";
 import { PLAYERS, SPEC, captionFor } from "./captions.js";
 import { createKeys } from "./keys.js";
 
-export const DEFAULT_SEED = "";
-
 export function createBsSession({
     view,
     specUrl,
@@ -26,7 +24,7 @@ export function createBsSession({
     exposeTeach = false,
     keys = createKeys(),
     katsUrl = new URL("./generated/kats.json", import.meta.url).href,
-    seed: firstSeed = DEFAULT_SEED,
+    seed: firstSeed = "",
 } = {}) {
     const { abort, listen, $, $$ } = sessionScope(root);
     const seedEl = $("#seed");
@@ -191,7 +189,6 @@ export function createBsSession({
     }
 
     function captionAt(index) {
-        if (throwEl) throwEl.value = throwAt(index);
         return captionFor(show, index)?.short ?? describeReady();
     }
 
@@ -223,6 +220,7 @@ export function createBsSession({
         cursor = Math.max(-1, Math.min(show.beats.length - 1, index));
         await view.seek(cursor);
         status(captionAt(cursor));
+        if (throwEl) throwEl.value = throwAt(cursor);
         renderTeach();
         syncControls();
     }
@@ -230,6 +228,7 @@ export function createBsSession({
     async function playOne(mine, expanded) {
         cursor += 1;
         status(captionAt(cursor));
+        if (throwEl) throwEl.value = throwAt(cursor);
         renderTeach();
         syncControls();
         const beat = show.beats[cursor];

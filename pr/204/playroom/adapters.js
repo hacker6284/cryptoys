@@ -1076,12 +1076,12 @@ export function createBsAdapter() {
     const dock = createDock("bs", {
         controls: `
             <div class="playroom-ctl">
-              <button type="button" class="seg-btn on" id="roll">Roll dice</button>
+              <button type="button" class="seg-btn on" id="roll" title="Throw fresh dice (clears the debug seed)">Roll dice</button>
             </div>`,
         fields: `
           <label class="playroom-ctl playroom-ctl--field" for="out-throw">
             <span class="playroom-label">Throw</span>
-            <textarea id="out-throw" class="digest grow-field" rows="1" readonly spellcheck="false" autocomplete="off"></textarea>
+            <textarea id="out-throw" class="bs-throw grow-field" rows="2" readonly spellcheck="false" autocomplete="off"></textarea>
           </label>
           <details class="bs-debug">
             <summary class="playroom-label">Debug</summary>

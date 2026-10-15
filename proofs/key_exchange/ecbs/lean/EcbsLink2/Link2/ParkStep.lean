@@ -400,7 +400,8 @@ theorem parked_clear_ge
       (∃ sl slC : Nat,
         b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
         bClear.sudo_5Board_4cost.sudo_5Costs_6slides = (slC : Int) ∧
-        slC ≤ sl + s.tally * (2 * base.n)) := by
+        slC ≤ sl + s.tally * (2 * base.n)) ∧
+      SideKeep bIdle base := by
   let hole := climbAt base.ladder0 base.R s.ridx
   obtain ⟨bPark, bCopy, cIdle, _cP, hpark, hcopy, hFrame, _hc0, _hrowP, _hctrlP,
       _hmP, _htP, _hsrcP, _hgP, hrowI, hctrlI, hmI, htI, hsrcI, hgI,
@@ -865,8 +866,30 @@ theorem parked_clear_ge
     s.tally c0 c1
     (Nat.lt_trans (by decide : (0 : Nat) < 1) h.shape.peg.opsGt) h.shape.peg.opsGt
     hc0 hc1 hNat h0p h1p hp1 hpNe hszP hmulArr hclrArr
+  have hsidePark : SideKeep
+      (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) base :=
+    side_arrays h.shape.side (by unfold parkKeepBoard; rfl) (by unfold parkKeepBoard; rfl)
+  have hsidePlace := side_place hsidePark 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
+    (by decide) (by decide) (by decide)
+  have hsideB0 : SideKeep cIdle.b0 base :=
+    side_arrays hsidePlace
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hplace)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hplace)
+  have hsidePeg : SideKeep (pegBoard cIdle cIdle.m) base :=
+    side_pegBoard cIdle hsideB0 (by rw [hsrcI]; decide) (by rw [hsrcI]; decide)
+      (by rw [hsrcI]; decide)
+  have hboard := (pegPack_board cIdle cIdle.m cIdle.hm (Nat.le_refl _)).1
+  have hsideD : SideKeep d.b base :=
+    side_arrays hsidePeg
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hboard)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hboard)
+  have hsideU := side_mulLive hsideD 5 6 cIdle.g d.xs
+    ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩
+    ⟨hH6, hD6⟩ (by decide) (by decide) (by decide)
+  have hsideIdle : SideKeep bIdle0 base :=
+    side_clear hsideU 5 cIdle.g mvM ⟨h5HU, h5DU⟩ (by decide) (by decide) (by decide)
   refine ⟨withPark bIdle0 paint ctrlM fromH ridxH, bIdle0, ?_, ?_, hbenchI, ?_, ?_, ?_,
-      hlenI, ht0I, hparkI, hhighI, htierI, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      hlenI, ht0I, hparkI, hhighI, htierI, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · simpa [hmI] using hrun
   · unfold paint ctrlM rowP
     rw [htI, hmI]
@@ -1279,6 +1302,7 @@ theorem parked_clear_ge
         have hcn : cIdle.n = base.n := hnI.trans h.hn
         exact Nat.le_trans hle (Nat.le_of_eq (congrArg (fun k => 2 * k) hcn))
       omega
+  · exact hsideIdle
 
 
 theorem final_white_ctrl_fit_ge (ctrl tally ctrl0 done R mMax : Nat)
@@ -1343,7 +1367,7 @@ theorem white_final_ge
   let s' := modelRung s base.x r hole true
   obtain ⟨b', bIdle, hrun, hframe, hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E, hparkE,
       hhighE, htierE, hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep,
-      ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
+      ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, hslots, hpieceM, hpieceS, hside⟩ :=
     parked_clear_ge h hM hS hge hm hT hhome
   obtain ⟨hgap, htall, hon, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
       hparkM, hnM, hkM, hbM⟩ := model_final_white_ge s base.x r hole hwhite hge
@@ -1646,6 +1670,12 @@ theorem white_final_ge
       (by rw [htierB]; exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
       hpark' hpeg'
+      (by
+        have hHome : b'.sudo_5Board_4home = bIdle.sudo_5Board_4home := by
+          rw [hframe, withPark_home]
+        have hHeld : b'.sudo_5Board_4held = bIdle.sudo_5Board_4held := by
+          rw [hframe, withPark_held]
+        exact side_arrays hside hHome hHeld)
   have htmax : ∃ tmax : Nat,
       b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < s'.tally → tmax < 2 * s'.tally) := by
@@ -1717,7 +1747,7 @@ theorem white_open_ge
   have habove := h.srcAbove hge
   obtain ⟨bClear, bIdle, hrun, hframe, hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E, hparkE,
       hhighE, htierE, hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep,
-      ⟨ps, hps⟩, ⟨hnat, hhn⟩, hrowIdle, hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
+      ⟨ps, hps⟩, ⟨hnat, hhn⟩, hrowIdle, hctrlIdle, hδ, hslots, hpieceM, hpieceS, hside⟩ :=
     parked_clear_ge h hM hS hge hm hT hhome
   obtain ⟨hgap, htall, hon, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
       hparkM, hnM, hkM, hbM⟩ := model_open_white_ge s base.x r hole hwhite hge
@@ -2205,6 +2235,13 @@ theorem white_open_ge
       (by unfold b'; rw [withPark_tier, htierE]; exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
       hpark' hpeg'
+      (by
+        have hInH : bIn.sudo_5Board_4home = bIdle.sudo_5Board_4home := by simp [bIn]
+        have hInD : bIn.sudo_5Board_4held = bIdle.sudo_5Board_4held := by simp [bIn]
+        exact side_withPark (side_arrays hside hInH hInD)
+          (embed (paintOnes (paintOnes xsP s.t0 s.tally) (s.t0 + s.tally) s.tally))
+          (Int.ofNat (c0 + 2 + 2 * s.tally)) ((hole : Nat) : Int)
+          (Int.ofNat (s.ridx + 1)))
   have htmax : ∃ tmax : Nat,
       b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < s'.tally → tmax < 2 * s'.tally) := by

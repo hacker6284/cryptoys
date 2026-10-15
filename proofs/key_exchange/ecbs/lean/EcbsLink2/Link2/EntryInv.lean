@@ -380,6 +380,12 @@ def entryBudget (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
   control := t.control
   fitControl := fits_of hOk.fits_control
   ladder0 := t.script + 2
+  side0 := []
+  side1 := []
+  side4 := []
+  held0 := false
+  held1 := false
+  held4 := false
 
 theorem tally_home (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
     (tallyBoard t xs sat hR).sudo_5Board_4home = (gapBoard t xs).sudo_5Board_4home := by
@@ -745,6 +751,75 @@ theorem entry_peg (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
         simp [entryModel]
         exact FitsLen.of_le (fits_of hOk.fits_n) (by omega) }
 
+/-- A fresh tally board's homes other than 2 and 5 are the blank `new_board` left. -/
+theorem tally_side_held (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t)
+    (i : Nat) (hi : i < 8) (hne2 : i ≠ 2) (hne5 : i ≠ 5) :
+    (tallyBoard t xs sat hR).sudo_5Board_4held[i]'(by
+      rw [tally_held_size t xs sat hR]; exact hi) = false := by
+  have hblank := built_held_blank t
+  have hib : i < (Array.mkArray 8 false).size := by simp [Array.size_mkArray]; exact hi
+  have hzero : (Array.mkArray 8 false)[i]'hib = false := by simp [Array.getElem_mkArray]
+  have hbuilt : (builtBoard t).sudo_5Board_4held[i]'(by rw [hblank]; exact hib) = false := by
+    rw [idx_get hblank i (by rw [hblank]; exact hib)]
+    exact hzero
+  have hbot := bottom_held_eq t xs
+  have hiset : i < ((builtBoard t).sudo_5Board_4held.set ⟨2, held2_lt t⟩ true).size := by
+    rw [Array.size_set, hblank]; exact hib
+  have hset := Array.getElem_set_ne (builtBoard t).sudo_5Board_4held ⟨2, held2_lt t⟩
+      true hiset (Ne.symm hne2)
+  have hbottom : (bottomBoard t xs).sudo_5Board_4held[i]'(by rw [hbot]; exact hiset) = false :=
+    cell_eq_of hbot (hset.trans hbuilt)
+  have hbump : (bumpedBoard t xs).sudo_5Board_4held = (bottomBoard t xs).sudo_5Board_4held := by
+    simp [bumpedBoard, bumpOp]
+  have hbumped : (bumpedBoard t xs).sudo_5Board_4held[i]'(by rw [hbump, hbot]; exact hiset) =
+      false := cell_eq_of hbump hbottom
+  have harr : (tallyBoard t xs sat hR).sudo_5Board_4held =
+      (bumpedBoard t xs).sudo_5Board_4held.set ⟨5, bumped_held5 t xs⟩ true :=
+    (tally_held t xs sat hR).trans (gap_held_eq t xs)
+  have h5 := bumped_held5 t xs
+  have hsz : i < ((bumpedBoard t xs).sudo_5Board_4held.set ⟨5, h5⟩ true).size := by
+    rw [Array.size_set, hbump, hbot]; exact hiset
+  have hgap := Array.getElem_set_ne (bumpedBoard t xs).sudo_5Board_4held ⟨5, h5⟩ true hsz
+    (Ne.symm hne5)
+  exact cell_eq_of harr (hgap.trans hbumped)
+
+theorem tally_side_home (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t)
+    (i : Nat) (hi : i < 8) (hne2 : i ≠ 2) (hne5 : i ≠ 5) :
+    (tallyBoard t xs sat hR).sudo_5Board_4home[i]'(by
+      rw [tally_home_size t xs sat hR]; exact hi) = embed [] := by
+  have hblank := built_home_blank t
+  have hib : i < (Array.mkArray 8 (#[] : Array Int)).size := by
+    simp [Array.size_mkArray]; exact hi
+  have hzero : (Array.mkArray 8 (#[] : Array Int))[i]'hib = #[] := by
+    simp [Array.getElem_mkArray]
+  have hbuilt : (builtBoard t).sudo_5Board_4home[i]'(by rw [hblank]; exact hib) = #[] := by
+    rw [idx_get hblank i (by rw [hblank]; exact hib)]
+    exact hzero
+  have hbot := bottom_home_eq t xs
+  have hiset : i < ((builtBoard t).sudo_5Board_4home.set ⟨2, home2_lt t⟩ (embed xs)).size := by
+    rw [Array.size_set, hblank]; exact hib
+  have hset := Array.getElem_set_ne (builtBoard t).sudo_5Board_4home ⟨2, home2_lt t⟩
+      (embed xs) hiset (Ne.symm hne2)
+  have hbottom : (bottomBoard t xs).sudo_5Board_4home[i]'(by rw [hbot]; exact hiset) = #[] :=
+    cell_eq_of hbot (hset.trans hbuilt)
+  have hbump : (bumpedBoard t xs).sudo_5Board_4home = (bottomBoard t xs).sudo_5Board_4home := by
+    simp [bumpedBoard, bumpOp]
+  have hbumped : (bumpedBoard t xs).sudo_5Board_4home[i]'(by rw [hbump, hbot]; exact hiset) =
+      #[] := cell_eq_of hbump hbottom
+  have harr : (tallyBoard t xs sat hR).sudo_5Board_4home =
+      (bumpedBoard t xs).sudo_5Board_4home.set ⟨5, bumped_home5 t xs⟩ (embed xs) :=
+    (tally_home t xs sat hR).trans (gap_home_eq t xs)
+  have h5 := bumped_home5 t xs
+  have hsz : i < ((bumpedBoard t xs).sudo_5Board_4home.set ⟨5, h5⟩ (embed xs)).size := by
+    rw [Array.size_set, hbump, hbot]; exact hiset
+  have hgap := Array.getElem_set_ne (bumpedBoard t xs).sudo_5Board_4home ⟨5, h5⟩
+      (embed xs) hsz (Ne.symm hne5)
+  have hcell : (tallyBoard t xs sat hR).sudo_5Board_4home[i]'(by
+      rw [tally_home_size t xs sat hR]; exact hi) = #[] :=
+    cell_eq_of harr (hgap.trans (idx_irrel.trans hbumped))
+  have hempty : (#[] : Array Int) = embed [] := by simp [embed]
+  exact hcell.trans hempty
+
 theorem entry_shape (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
     (hx : xs.length = t.n) (htri : allTritList xs) (sat : TierSat t) (hR : 0 < tierR t)
     (lay : TierShape t) :
@@ -792,6 +867,31 @@ theorem entry_shape (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       n_eq := by simpa [entryModel, entryBudget] using lay.n_eq
       k_le := by simpa [entryModel] using lay.k_le
       gap_eq := by simpa [entryModel, entryBudget] using lay.gap
+      side :=
+        { h0H := by rw [hsizeH]; decide
+          h0D := by rw [hsizeD]; decide
+          h1H := by rw [hsizeH]; decide
+          h1D := by rw [hsizeD]; decide
+          h4H := by rw [hsizeH]; decide
+          h4D := by rw [hsizeD]; decide
+          home0 := by
+            simpa [entryBudget] using
+              tally_side_home t xs sat hR 0 (by decide) (by decide) (by decide)
+          held0 := by
+            simpa [entryBudget] using
+              tally_side_held t xs sat hR 0 (by decide) (by decide) (by decide)
+          home1 := by
+            simpa [entryBudget] using
+              tally_side_home t xs sat hR 1 (by decide) (by decide) (by decide)
+          held1 := by
+            simpa [entryBudget] using
+              tally_side_held t xs sat hR 1 (by decide) (by decide) (by decide)
+          home4 := by
+            simpa [entryBudget] using
+              tally_side_home t xs sat hR 4 (by decide) (by decide) (by decide)
+          held4 := by
+            simpa [entryBudget] using
+              tally_side_held t xs sat hR 4 (by decide) (by decide) (by decide) }
       park := entry_park t hOk xs hx sat hR lay
       peg := entry_peg t hOk xs hx htri sat hR lay }
 

@@ -157,6 +157,15 @@ structure RunFrame (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat) wher
   home0 : b.sudo_5Board_4home[0]'(by rw [szH]; decide) = embed accX
   held3 : b.sudo_5Board_4held[3]'(by rw [szD]; decide) = true
   home3 : b.sudo_5Board_4home[3]'(by rw [szH]; decide) = embed baseX
+  /-- Homes 1 and 4, which the copy does not write. Home 0 is the accumulator. -/
+  y1 : List Nat
+  y4 : List Nat
+  flag1 : Bool
+  flag4 : Bool
+  home1 : b.sudo_5Board_4home[1]'(by rw [szH]; decide) = embed y1
+  held1 : b.sudo_5Board_4held[1]'(by rw [szD]; decide) = flag1
+  home4 : b.sudo_5Board_4home[4]'(by rw [szH]; decide) = embed y4
+  held4 : b.sudo_5Board_4held[4]'(by rw [szD]; decide) = flag4
   lenX : baseX.length = t.n
   lenA : accX.length = t.n
   triX : allTritList baseX
@@ -204,8 +213,272 @@ structure RunFrame (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat) wher
     ∃ c, b.sudo_5Board_4cost.sudo_5Costs_3ops[i]'hi = Int.ofNat c ∧
       (if i = 2 then c + 1 else if i = 3 then c + 1 else c) ≤ opsCap
 
+/-- Placing at home 2, then adding at home 2, leaves every other home. -/
+private theorem copy_side_home
+    (b bB b1 bOff : Ecbs.Board) (baseX : List Nat) (arr : Array Int)
+    (hin : HomeIn bB 2) (h2H1 : 2 < b1.sudo_5Board_4home.size)
+    (hhomeB : bB.sudo_5Board_4home = b.sudo_5Board_4home)
+    (hszHB : bB.sudo_5Board_4home.size = 8)
+    (hszH1 : b1.sudo_5Board_4home.size = 8)
+    (hplace : b1.sudo_5Board_4home =
+      bB.sudo_5Board_4home.set ⟨2, hin.hH⟩ (embed baseX))
+    (hadd : bOff.sudo_5Board_4home = b1.sudo_5Board_4home.set ⟨2, h2H1⟩ arr)
+    (i : Nat) (hne : (2 : Nat) ≠ i) {hiB : i < b.sudo_5Board_4home.size} {v : Array Int}
+    (hv : b.sudo_5Board_4home[i]'hiB = v)
+    (hOff : i < bOff.sudo_5Board_4home.size) :
+    bOff.sudo_5Board_4home[i]'hOff = v := by
+  have hneF : (⟨2, hin.hH⟩ : Fin _).1 ≠ i := hne
+  have hi8 : i < 8 := by rw [← hhomeB, hszHB] at hiB; exact hiB
+  have hsz1 : i < (bB.sudo_5Board_4home.set ⟨2, hin.hH⟩ (embed baseX)).size := by
+    rw [Array.size_set, hszHB]; exact hi8
+  have hget1 := Array.getElem_set_ne bB.sudo_5Board_4home ⟨2, hin.hH⟩
+    (embed baseX) hsz1 hneF
+  have hB : bB.sudo_5Board_4home[i]'(by rw [hszHB]; exact hi8) = v :=
+    cell_eq_of hhomeB hv
+  have h1 : b1.sudo_5Board_4home[i]'(by rw [hszH1]; exact hi8) = v :=
+    (cell_eq_of hplace hget1).trans (idx_irrel.trans hB)
+  have hneA : (⟨2, h2H1⟩ : Fin _).1 ≠ i := hne
+  have hszA : i < (b1.sudo_5Board_4home.set ⟨2, h2H1⟩ arr).size := by
+    rw [Array.size_set, hszH1]; exact hi8
+  have hgetA := Array.getElem_set_ne b1.sudo_5Board_4home ⟨2, h2H1⟩ arr hszA hneA
+  exact cell_eq_of hadd (hgetA.trans (idx_irrel.trans h1))
+
+/-- The same for held flags. `add` does not write them; `place` writes home 2. -/
+private theorem copy_side_held
+    (b bB b1 bOff : Ecbs.Board) (hin : HomeIn bB 2)
+    (hheldB : bB.sudo_5Board_4held = b.sudo_5Board_4held)
+    (hszDB : bB.sudo_5Board_4held.size = 8)
+    (hszD1 : b1.sudo_5Board_4held.size = 8)
+    (hplace : b1.sudo_5Board_4held = bB.sudo_5Board_4held.set ⟨2, hin.hD⟩ true)
+    (hadd : bOff.sudo_5Board_4held = b1.sudo_5Board_4held)
+    (i : Nat) (hne : (2 : Nat) ≠ i) {hiB : i < b.sudo_5Board_4held.size} {v : Bool}
+    (hv : b.sudo_5Board_4held[i]'hiB = v)
+    (hOff : i < bOff.sudo_5Board_4held.size) :
+    bOff.sudo_5Board_4held[i]'hOff = v := by
+  have hneF : (⟨2, hin.hD⟩ : Fin _).1 ≠ i := hne
+  have hi8 : i < 8 := by rw [← hheldB, hszDB] at hiB; exact hiB
+  have hsz1 : i < (bB.sudo_5Board_4held.set ⟨2, hin.hD⟩ true).size := by
+    rw [Array.size_set, hszDB]; exact hi8
+  have hget1 := Array.getElem_set_ne bB.sudo_5Board_4held ⟨2, hin.hD⟩ true hsz1 hneF
+  have hB : bB.sudo_5Board_4held[i]'(by rw [hszDB]; exact hi8) = v :=
+    cell_eq_of hheldB hv
+  have h1 : b1.sudo_5Board_4held[i]'(by rw [hszD1]; exact hi8) = v :=
+    (cell_eq_of hplace hget1).trans (idx_irrel.trans hB)
+  exact cell_eq_of hadd h1
+
 /-- `chordCopyAddGo`, with the marker held off, is `OpenLay` for the run.
     The counters after that copy, plus the climb room, are `OpenMatch`. -/
+private theorem finish_copy
+    (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
+    (fr : RunFrame b t baseX accX) (hOk : BoardOk t) (sat : TierSat t)
+    (hM : FitsLen ((fr.moves + pegCount baseX + pegCount accX) +
+      pegCount (fieldSub t.n baseX accX) +
+      tierR t * rungCharge t.n t.benchlen (rowRoom t)))
+    (hS : FitsLen (fr.slides + tierR t * rungSlideCharge t.n (rowRoom t)))
+    (hO : FitsLen (fr.opsCap + tierR t * (rowRoom t + 3)))
+    (hTailM : FitsLen ((fr.moves + pegCount baseX + pegCount accX) +
+      pegCount (fieldSub t.n baseX accX) +
+      tierR t * rungCharge t.n t.benchlen (rowRoom t) +
+      pegCharge t.n t.benchlen))
+    (hTailS : FitsLen (fr.slides + tierR t * rungSlideCharge t.n (rowRoom t) +
+      2 * t.n))
+    (hCheck : FitsLen ((fr.moves + pegCount baseX + pegCount accX) +
+      pegCount (fieldSub t.n baseX accX) +
+      tierR t * rungCharge t.n t.benchlen (rowRoom t) +
+      pegCharge t.n t.benchlen + t.n + t.n * (t.n + 1) +
+      3 * (t.benchlen - t.n) + 2 * t.n))
+    (hCtrl : FitsLen ((fr.ctrl + 1) + (tierR t + 1) * (3 * rowRoom t + 5)))
+    (xs : List Nat) (bA bOff bB b1 : Ecbs.Board) (arr : Array Int) (mv pk : Nat)
+    (hinB : HomeIn bB 2) (h2H1 : 2 < b1.sudo_5Board_4home.size)
+    (hdo : chordCopyAddGo b = .ok bA)
+    (hhomeB : bB.sudo_5Board_4home = b.sudo_5Board_4home)
+    (hszHB : bB.sudo_5Board_4home.size = 8)
+    (hszH1 : b1.sudo_5Board_4home.size = 8)
+    (hplaceH : b1.sudo_5Board_4home =
+      bB.sudo_5Board_4home.set ⟨2, hinB.hH⟩ (embed baseX))
+    (hhomeOff : bOff.sudo_5Board_4home = b1.sudo_5Board_4home.set ⟨2, h2H1⟩ arr)
+    (hheldB : bB.sudo_5Board_4held = b.sudo_5Board_4held)
+    (hszDB : bB.sudo_5Board_4held.size = 8)
+    (hszD1 : b1.sudo_5Board_4held.size = 8)
+    (hplaceD : b1.sudo_5Board_4held = bB.sudo_5Board_4held.set ⟨2, hinB.hD⟩ true)
+    (hheldBA : bOff.sudo_5Board_4held = b1.sudo_5Board_4held)
+    (hszHOff : bOff.sudo_5Board_4home.size = 8)
+    (hszDOff : bOff.sudo_5Board_4held.size = 8)
+    (hmkO : bOff.sudo_5Board_9marker_on = false)
+    (hbenchOff : bOff.sudo_5Board_8bench_on = false)
+    (hheld2 : bOff.sudo_5Board_4held[2]'(by rw [hszDOff]; decide) = true)
+    (hhome2 : bOff.sudo_5Board_4home[2]'(by rw [hszHOff]; decide) = embed xs)
+    (hheld5 : bOff.sudo_5Board_4held[5]'(by rw [hszDOff]; decide) = false)
+    (hheld6 : bOff.sudo_5Board_4held[6]'(by rw [hszDOff]; decide) = false)
+    (htierOff : bOff.sudo_5Board_1t = embTier t)
+    (hmovesOff : bOff.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv)
+    (hslidesOff : bOff.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat fr.slides)
+    (hpkOff : bOff.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk)
+    (hctrlOff : bOff.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat fr.ctrl)
+    (hhighOff : bOff.sudo_5Board_4cost.sudo_5Costs_15control_highest = Int.ofNat fr.high)
+    (htallyOff : bOff.sudo_5Board_9tally_len = 0)
+    (ht0Off : bOff.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t))
+    (hrowOff : bOff.sudo_5Board_3row = embed (paintedRow t))
+    (htmaxOff : bOff.sudo_5Board_4cost.sudo_5Costs_9tally_max = 0)
+    (hladOff : bOff.sudo_5Board_6ladder = embed (tierClimb t))
+    (hl0Off : bOff.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2))
+    (hnrOff : bOff.sudo_5Board_6nrungs = Int.ofNat (tierR t))
+    (hparkOff : bOff.sudo_5Board_9park_hole = Int.ofNat (t.script + 2 + tierR t))
+    (hfromOff : bOff.sudo_5Board_11parked_from = -1)
+    (hridxOff : bOff.sudo_5Board_8rung_idx = 0)
+    (hstrictOff : bOff.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat fr.peakS)
+    (hholeOff : bOff.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat fr.hole)
+    (hopsEq : bOff.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨3, fr.ops3⟩ (Int.ofNat (fr.chordOps + 1)))
+    (hops2Off : 2 < bOff.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hhop2 : bOff.sudo_5Board_4cost.sudo_5Costs_3ops[2]'hops2Off = Int.ofNat fr.cOps)
+    (hfitCopy : FitsLen (mv + pegCount xs))
+    (hxsDef : xs = fieldSub t.n baseX accX)
+    (hmvEq : mv = runMoves fr.moves baseX accX)
+    (hbOff : bOff = { bA with sudo_5Board_9marker_on := false }) :
+    ∃ bA,
+      chordCopyAddGo b = .ok bA ∧
+      ∃ (lay : OpenLay { bA with sudo_5Board_9marker_on := false } t xs)
+        (base : ClimbBudget),
+        OpenMatch lay base ∧
+        lay.moves = runMoves fr.moves baseX accX ∧
+        lay.slides = fr.slides ∧
+        lay.ctrl = fr.ctrl ∧
+        lay.cOps = fr.cOps ∧
+        lay.opsCap = fr.opsCap := by
+  have h0HOff : 0 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
+  have h0DOff : 0 < bOff.sudo_5Board_4held.size := by rw [hszDOff]; decide
+  have h1HOff : 1 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
+  have h1DOff : 1 < bOff.sudo_5Board_4held.size := by rw [hszDOff]; decide
+  have h4HOff : 4 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
+  have h4DOff : 4 < bOff.sudo_5Board_4held.size := by rw [hszDOff]; decide
+  have hside0 : bOff.sudo_5Board_4home[0]'h0HOff = embed accX :=
+    copy_side_home b bB b1 bOff baseX arr hinB h2H1 hhomeB hszHB hszH1 hplaceH
+      hhomeOff 0 (by decide) fr.home0 h0HOff
+  have hflag0 : bOff.sudo_5Board_4held[0]'h0DOff = true :=
+    copy_side_held b bB b1 bOff hinB hheldB hszDB hszD1 hplaceD hheldBA
+      0 (by decide) fr.held0 h0DOff
+  have hside1 : bOff.sudo_5Board_4home[1]'h1HOff = embed fr.y1 :=
+    copy_side_home b bB b1 bOff baseX arr hinB h2H1 hhomeB hszHB hszH1 hplaceH
+      hhomeOff 1 (by decide) fr.home1 h1HOff
+  have hflag1 : bOff.sudo_5Board_4held[1]'h1DOff = fr.flag1 :=
+    copy_side_held b bB b1 bOff hinB hheldB hszDB hszD1 hplaceD hheldBA
+      1 (by decide) fr.held1 h1DOff
+  have hside4 : bOff.sudo_5Board_4home[4]'h4HOff = embed fr.y4 :=
+    copy_side_home b bB b1 bOff baseX arr hinB h2H1 hhomeB hszHB hszH1 hplaceH
+      hhomeOff 4 (by decide) fr.home4 h4HOff
+  have hflag4 : bOff.sudo_5Board_4held[4]'h4DOff = fr.flag4 :=
+    copy_side_held b bB b1 bOff hinB hheldB hszDB hszD1 hplaceD hheldBA
+      4 (by decide) fr.held4 h4DOff
+  let lay : OpenLay bOff t xs :=
+    { szH := hszHOff
+      szD := hszDOff
+      marker := hmkO
+      bench := hbenchOff
+      held2 := idx_irrel.trans hheld2
+      home2 := idx_irrel.trans hhome2
+      held5 := idx_irrel.trans hheld5
+      held6 := idx_irrel.trans hheld6
+      side0 := accX
+      side1 := fr.y1
+      side4 := fr.y4
+      flag0 := true
+      flag1 := fr.flag1
+      flag4 := fr.flag4
+      home0 := idx_irrel.trans hside0
+      held0 := idx_irrel.trans hflag0
+      home1 := idx_irrel.trans hside1
+      held1 := idx_irrel.trans hflag1
+      home4 := idx_irrel.trans hside4
+      held4 := idx_irrel.trans hflag4
+      len := by rw [hxsDef]; exact fieldSub_length t.n baseX accX
+      tri := by rw [hxsDef]; exact fieldSub_trits t.n baseX accX
+      tier := htierOff
+      moves := mv
+      slides := fr.slides
+      peak := pk
+      ctrl := fr.ctrl
+      high := fr.high
+      cOps := fr.cOps
+      opsCap := fr.opsCap
+      peakS := fr.peakS
+      hole := fr.hole
+      hmoves := hmovesOff
+      hslides := hslidesOff
+      hpeak := hpkOff
+      hctrl := hctrlOff
+      hhigh := hhighOff
+      highLt := fr.highLt
+      htally := htallyOff
+      ht0 := ht0Off
+      hrow := hrowOff
+      htmax := htmaxOff
+      hlad := hladOff
+      hl0 := hl0Off
+      hnr := hnrOff
+      hpark := hparkOff
+      hfrom := hfromOff
+      hridx := hridxOff
+      hstrict := hstrictOff
+      hhole := hholeOff
+      ops2 := hops2Off
+      hop2 := idx_irrel.trans hhop2
+      fitOps := fr.fitInv
+      fitCopy := hfitCopy
+      fitCtrl := fr.fitCtrl
+      opsAll := by
+        intro i hi
+        have hi' : i < (b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨3, fr.ops3⟩
+            (Int.ofNat (fr.chordOps + 1))).size := by
+          rw [← hopsEq]; exact hi
+        obtain ⟨c, hc, hle⟩ := ops_chord_cap b.sudo_5Board_4cost.sudo_5Costs_3ops
+          fr.chordOps fr.opsCap fr.ops3 fr.hop3 fr.opsRoom i hi'
+        exact ⟨c, cell_eq_of hopsEq hc, hle⟩ }
+  let baseB : ClimbBudget :=
+    { n := t.n
+      bench := t.benchlen
+      moves0 := mv + pegCount xs
+      slides0 := fr.slides
+      ops0 := fr.opsCap
+      peak0 := raisedPeak pk
+        (countHeld (bOff.sudo_5Board_4held.set ⟨5, by rw [lay.szD]; decide⟩ true) 7)
+      tally0 := 1
+      R := tierR t
+      mMax := rowRoom t
+      mMax_le := by simpa [geomCap] using sat.room_le_geom
+      fitM := by rw [hmvEq, hxsDef]; exact hM
+      fitS := hS
+      fitO := hO
+      fitTailM := by rw [hmvEq, hxsDef]; exact hTailM
+      fitTailS := hTailS
+      fitCheckM := by rw [hmvEq, hxsDef]; exact hCheck
+      ctrl0 := fr.ctrl + 1
+      fitCtrl := hCtrl
+      x := xs
+      xHome := 2
+      w := t.w
+      h := t.h
+      r := t.r
+      cg := t.combgap
+      control := t.control
+      fitControl := fits_of hOk.fits_control
+      ladder0 := t.script + 2
+      side0 := accX
+      side1 := fr.y1
+      side4 := fr.y4
+      held0 := true
+      held1 := fr.flag1
+      held4 := fr.flag4 }
+  have hmatch : OpenMatch lay baseB := by
+    refine ⟨rfl, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl,
+      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+    apply congrArg (fun occ => raisedPeak lay.peak occ)
+    apply countHeld_congr
+    apply congrArg (fun i => bOff.sudo_5Board_4held.set i true)
+    exact Fin.ext rfl
+  cases hbOff
+  exact ⟨bA, hdo, lay, baseB, hmatch, hmvEq, rfl, rfl, rfl, rfl⟩
+
 theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     (fr : RunFrame b t baseX accX) (hOk : BoardOk t) (sat : TierSat t)
     (hM : FitsLen ((fr.moves + pegCount baseX + pegCount accX) +
@@ -454,6 +727,14 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
       fr.hhole]
   have hbenchOff : bOff.sudo_5Board_8bench_on = false := by
     rw [hbenchO, hbenchA, hon1, hbenchB, fr.bench]
+  have hhomeOff : bOff.sudo_5Board_4home = b1.sudo_5Board_4home.set ⟨2, h2H1⟩ arr :=
+    hhomeO.trans hhomeA
+  have hplaceH : b1.sudo_5Board_4home =
+      bB.sudo_5Board_4home.set ⟨2, hinB.hH⟩ (embed baseX) :=
+    place_home_out bB 2 hinB baseX fr.moves fr.peak
+  have hplaceD : b1.sudo_5Board_4held =
+      bB.sudo_5Board_4held.set ⟨2, hinB.hD⟩ true :=
+    place_held_out bB 2 hinB baseX fr.moves fr.peak
   have hopsEq : bOff.sudo_5Board_4cost.sudo_5Costs_3ops =
       b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨3, fr.ops3⟩
         (Int.ofNat (fr.chordOps + 1)) := by
@@ -480,94 +761,14 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     omega
   let pk := raisedPeak fr.peak
     (countHeld (bB.sudo_5Board_4held.set ⟨2, hinB.hD⟩ true) 7)
-  let lay : OpenLay bOff t xs :=
-    { szH := hszHOff
-      szD := hszDOff
-      marker := hmkO
-      bench := hbenchOff
-      held2 := idx_irrel.trans hheld2
-      home2 := idx_irrel.trans hhome2
-      held5 := idx_irrel.trans hheld5
-      held6 := idx_irrel.trans hheld6
-      len := fieldSub_length t.n baseX accX
-      tri := fieldSub_trits t.n baseX accX
-      tier := htierOff
-      moves := mv
-      slides := fr.slides
-      peak := pk
-      ctrl := fr.ctrl
-      high := fr.high
-      cOps := fr.cOps
-      opsCap := fr.opsCap
-      peakS := fr.peakS
-      hole := fr.hole
-      hmoves := hmovesOff
-      hslides := hslidesOff
-      hpeak := hpkOff
-      hctrl := hctrlOff
-      hhigh := hhighOff
-      highLt := fr.highLt
-      htally := htallyOff
-      ht0 := ht0Off
-      hrow := hrowOff
-      htmax := htmaxOff
-      hlad := hladOff
-      hl0 := hl0Off
-      hnr := hnrOff
-      hpark := hparkOff
-      hfrom := hfromOff
-      hridx := hridxOff
-      hstrict := hstrictOff
-      hhole := hholeOff
-      ops2 := hops2Off
-      hop2 := idx_irrel.trans hhop2
-      fitOps := fr.fitInv
-      fitCopy := hfitCopy
-      fitCtrl := fr.fitCtrl
-      opsAll := by
-        intro i hi
-        have hi' : i < (b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨3, fr.ops3⟩
-            (Int.ofNat (fr.chordOps + 1))).size := by
-          rw [← hopsEq]; exact hi
-        obtain ⟨c, hc, hle⟩ := ops_chord_cap b.sudo_5Board_4cost.sudo_5Costs_3ops
-          fr.chordOps fr.opsCap fr.ops3 fr.hop3 fr.opsRoom i hi'
-        exact ⟨c, cell_eq_of hopsEq hc, hle⟩ }
-  let baseB : ClimbBudget :=
-    { n := t.n
-      bench := t.benchlen
-      moves0 := mv + pegCount xs
-      slides0 := fr.slides
-      ops0 := fr.opsCap
-      peak0 := raisedPeak pk
-        (countHeld (bOff.sudo_5Board_4held.set ⟨5, by rw [lay.szD]; decide⟩ true) 7)
-      tally0 := 1
-      R := tierR t
-      mMax := rowRoom t
-      mMax_le := by simpa [geomCap] using sat.room_le_geom
-      fitM := hM
-      fitS := hS
-      fitO := hO
-      fitTailM := hTailM
-      fitTailS := hTailS
-      fitCheckM := hCheck
-      ctrl0 := fr.ctrl + 1
-      fitCtrl := hCtrl
-      x := xs
-      xHome := 2
-      w := t.w
-      h := t.h
-      r := t.r
-      cg := t.combgap
-      control := t.control
-      fitControl := fits_of hOk.fits_control
-      ladder0 := t.script + 2 }
-  have hmatch : OpenMatch lay baseB := by
-    refine ⟨rfl, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl,
-      rfl, rfl, rfl⟩
-    apply congrArg (fun occ => raisedPeak lay.peak occ)
-    apply countHeld_congr
-    apply congrArg (fun i => bOff.sudo_5Board_4held.set i true)
-    exact Fin.ext rfl
-  refine ⟨bA, hdo, lay, baseB, hmatch, rfl, rfl, rfl, rfl, rfl⟩
+  exact finish_copy b t baseX accX fr hOk sat hM hS hO hTailM hTailS hCheck hCtrl
+    xs bA bOff bB b1 arr mv pk hinB h2H1 hdo hhomeB hszHB hszH1 hplaceH hhomeOff
+    hheldB hszDB hszD1 hplaceD hheldBA hszHOff hszDOff hmkO hbenchOff hheld2 hhome2
+    hheld5 hheld6 htierOff hmovesOff hslidesOff hpkOff hctrlOff hhighOff htallyOff
+    ht0Off hrowOff htmaxOff hladOff hl0Off hnrOff hparkOff hfromOff hridxOff
+    hstrictOff hholeOff hopsEq hops2Off hhop2 hfitCopy
+    rfl rfl rfl
+
+
 
 end EcbsLink2.Link2

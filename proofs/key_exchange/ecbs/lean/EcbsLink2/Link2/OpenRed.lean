@@ -440,7 +440,7 @@ theorem red_open_finish
       (by rw [htierB]; exact h.shape.tierCg)
       (by rw [htierB]; exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
-      hpark' hpeg'
+      hpark' hpeg' (side_arrays hcarry.side hhomeB hheldB)
   have htmaxS : ∃ tmax : Nat,
       b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < s'.tally → tmax < 2 * s'.tally) := by
@@ -506,7 +506,7 @@ theorem red_open_ge
   obtain ⟨bClearU, bCubeP, bRedP, bClearG, bIdle, bClearC, bCubeC, bRedC,
       hclearProg, hcubeU, hredU, hrelP, hrun, hframe,
       hbenchE, hbonE, htoE, hmarkE, hlenE, ht0E, hparkE, hhighE, htierE,
-      hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep,
+      hladE, hnrE, htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, hside,
       hpsE, hhnE, hrowIdle, hctrlIdle, hδ, hslots, hpieceM, hpieceS,
       hclearSame, hredSame, hcubeBoth, hmulBoth, hctrlN, ht0Red, htierRed,
       honC, htoC, hbenchC⟩ := V
@@ -876,13 +876,19 @@ theorem red_open_ge
     obtain ⟨sl, slC, hsl, hslC, hle⟩ := hpieceS
     refine ⟨sl, slC, hsl, ?_, hle⟩
     simpa [hP] using hslC
+  have hsideP : SideKeep bClearP base := by
+    have hH : bClearP.sudo_5Board_4home = bIdle.sudo_5Board_4home := by
+      rw [hP, hframe, withPark_home]
+    have hD : bClearP.sudo_5Board_4held = bIdle.sudo_5Board_4held := by
+      rw [hP, hframe, withPark_held]
+    exact side_arrays hside hH hD
   have hcarry :=
     red_unparked_delta h hM hS
       hm hT hhome hxLen hxT
       bClearP bClearU bCubeP bRedP rowP ctrlP fromH ridxH rfl
       hδP hslotsP hmarkP htierP hcubeU hredU hrelP
       hbonP htoP hbenchP h5HP h5DP h6HP h6DP h7P h5fP h6fP hkeepP hopsP hc1P
-      hpkP hholeP htrits hpieceMP hpieceSP
+      hpkP hholeP htrits hpieceMP hpieceSP hsideP
   obtain ⟨hgap, htall, honM, hwork, hctrlM, hhighM, hrowM, hfromM, hridxM, ht0M,
       hparkM, hnM, hkM, hbM⟩ := model_open_red_ge s base.x r hole hr hge
   let s' := modelRung s base.x r hole false

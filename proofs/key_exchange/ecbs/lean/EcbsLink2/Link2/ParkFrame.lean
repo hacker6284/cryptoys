@@ -169,7 +169,7 @@ theorem red_final_ge
     parked_clear_unparked h hM hS hge hm hT hhome hxLen hxT
   obtain ⟨bClear, bIdle, hrunI, hframe, hbenchE, hbonE, htoE, hmarkE, _hlenE, ht0E,
       hparkE, _hhighE, htierE, hladE, hnrE, _htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f,
-      hkeep, ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
+      hkeep, ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, hslots, hpieceM, hpieceS, hside⟩ :=
     parked_clear_ge h hM hS hge hm hT hhome
   have hboards : withPark bClearU rowP ctrlP fromH ridxH = bClear := by
     have hjoin := hclearProg.symm.trans hrunI
@@ -276,13 +276,19 @@ theorem red_final_ge
     obtain ⟨sl, slC, hsl, hslC, hle⟩ := hpieceS
     refine ⟨sl, slC, hsl, ?_, hle⟩
     simpa [hP] using hslC
+  have hsideP : SideKeep bClearP base := by
+    have hH : bClearP.sudo_5Board_4home = bIdle.sudo_5Board_4home := by
+      rw [hP, hframe, withPark_home]
+    have hD : bClearP.sudo_5Board_4held = bIdle.sudo_5Board_4held := by
+      rw [hP, hframe, withPark_held]
+    exact side_arrays hside hH hD
   have hpack :=
     red_unparked_delta h hM hS
       hm hT hhome hxLen hxT
       bClearP bClearU bCube bRed rowP ctrlP fromH ridxH rfl
       hδP hslotsP hmarkP htierP hcubeU hredU hrel
       hbonP htoP hbenchP h5HP h5DP h6HP h6DP h7P h5fP h6fP hkeepP hopsP hc1P
-      hpkP hholeP htrits hpieceMP hpieceSP
+      hpkP hholeP htrits hpieceMP hpieceSP hsideP
   let b' := withPark bRed rowP ctrlP fromH ridxH
   have hprog :
       (do
@@ -571,7 +577,7 @@ theorem red_final_ge
       (by rw [htierB]; exact h.shape.tierCg)
       (by rw [htierB]; exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
-      hpark' hpeg'
+      hpark' hpeg' (side_arrays hpack.side hhomeB hheldB)
   have htmax : ∃ tmax : Nat,
       b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
         (0 < s'.tally → tmax < 2 * s'.tally) := by

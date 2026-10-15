@@ -975,6 +975,8 @@ theorem climbShape_slideGap {b : Ecbs.Board} {s : ClimbModel} {rest : List Nat}
       n_eq := h.n_eq
       k_le := h.k_le
       gap_eq := h.gap_eq
+      side := side_settle h.side 5 ⟨h5H, h5D⟩ xs s.n moves slides peak
+        (by decide) (by decide) (by decide)
       park := parkRead_slideGap h.park xs s.n moves slides peak h5H h5D
       peg := pegRead_slideGap h.peg xs s.n moves slides peak h5H h5D }
 

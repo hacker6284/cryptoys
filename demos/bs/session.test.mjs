@@ -200,7 +200,17 @@ test("by default the demo rolls fresh dice; no seed is needed", { skip: !ready }
 test("each BUILD step shows its throw", { skip: !ready }, async () => {
     const { root, session } = await setup("t1");
     await session.step(1);
-    assert.match(root.byId["out-throw"].value, /^Alice · .*die 1: \d+$/);
+    // The exact faces of that step's generated read (worker → trace_exchange).
+    const { answer } = await import("./worker.js");
+    const read = answer({ op: "show", seed: "t1" }).show.reads[0][0];
+    const want = [
+        read.cup.length ? `cup ${read.cup.join(" ")}` : null,
+        read.d12.length ? `d12 ${read.d12.join(" ")}` : null,
+        read.d6.length ? `d6 ${read.d6.join(" ")}` : null,
+        `die ${read.die + 1}: ${read.face}`,
+    ].filter(Boolean).join(" · ");
+    assert.ok(read.cup.length && read.d12.length, "the first hole throws the cup and a d12");
+    assert.equal(root.byId["out-throw"].value, `Alice · ${want}`);
     session.dispose();
 });
 

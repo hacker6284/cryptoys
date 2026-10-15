@@ -17,7 +17,7 @@ export function regString(r) {
 
 // ---- seed → dice --------------------------------------------------------
 
-// cyrb128 string hash and sfc32: a small seeded generator for the dice faces.
+// cyrb128 string hash and sfc32: a small seeded generator of raw u32s for the dice faces.
 function cyrb128(str) {
     let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
     for (let i = 0; i < str.length; i++) {
@@ -43,7 +43,7 @@ function sfc32([a, b, c, d]) {
         b = c + (c << 3) | 0;
         c = (c << 21) | (c >>> 11);
         c = c + t | 0;
-        return (t >>> 0) / 4294967296;
+        return t >>> 0;
     };
 }
 
@@ -51,14 +51,35 @@ function sfc32([a, b, c, d]) {
 // (50 ships at most), d10 50 dice plus their zero faces.
 export const STREAM = { d12: 120, d6: 240, d10: 300 };
 
-function cryptoRandom() {
-    const b = new Uint32Array(1);
-    globalThis.crypto.getRandomValues(b);
-    return b[0] / 4294967296;
+const U32 = 2 ** 32;
+
+/**
+ * One fair face 0..sides-1 from a source of raw u32s: reject x in the
+ * top 2^32 mod sides values (they would favour the low faces), then x % sides.
+ */
+export function face(sides, nextU32) {
+    const limit = U32 - (U32 % sides);
+    for (;;) {
+        const x = nextU32();
+        if (x < limit) return x % sides;
+    }
 }
 
-function throwAll(rnd) {
-    const roll = (sides, from) => Math.floor(rnd() * sides) + from;
+// Fresh u32s from crypto.getRandomValues, one batched buffer at a time.
+function cryptoU32s() {
+    const buf = new Uint32Array(1024);
+    let i = buf.length;
+    return () => {
+        if (i >= buf.length) {
+            globalThis.crypto.getRandomValues(buf);
+            i = 0;
+        }
+        return buf[i++];
+    };
+}
+
+function throwAll(nextU32) {
+    const roll = (sides, from) => face(sides, nextU32) + from;
     return {
         d12: Array.from({ length: STREAM.d12 }, () => roll(12, 1)),
         d6: Array.from({ length: STREAM.d6 }, () => roll(6, 1)),
@@ -81,7 +102,8 @@ export function diceFromSeed(seed) {
 export function rollDice(seed = "") {
     const s = String(seed ?? "").trim();
     if (s) return diceFromSeed(s);
-    return { a: throwAll(cryptoRandom), b: throwAll(cryptoRandom) };
+    const next = cryptoU32s();
+    return { a: throwAll(next), b: throwAll(next) };
 }
 
 // ---- trace → show -----------------------------------------------------------

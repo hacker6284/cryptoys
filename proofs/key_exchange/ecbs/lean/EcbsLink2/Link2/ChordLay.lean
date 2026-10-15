@@ -571,4 +571,89 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
     rw [hassoc, htDo, ok_bind]
     exact hmul
 
+/-- The lane fold's holes from `n` up are empty. One fact for the settle's tail. -/
+theorem fold_tail (n gap : Nat) (strip : List Nat)
+    (hn0 : 0 < n) (hg : 0 < gap) (hn : n ≤ strip.length) :
+    ∀ i, n ≤ i → ∀ hi : i < (laneFold n gap strip).length, (laneFold n gap strip)[i] = 0 := by
+  intro i hlo hi
+  have hlen := laneFold_length n gap strip hn
+  have hiS : i < strip.length := by rwa [hlen] at hi
+  rw [← coeff_eq_get _ _ hi]
+  exact laneFold_high n gap strip i hn0 hg hn hlo hiS
+
+/-- Clear the gap, settle the bench into the up, and move the bottom into the
+    across. Homes are 1, 0, 2, 5 on a board of eight. The up is the bench
+    prefix and the across is the bottom's list. One move room and one slide
+    room cover the settle and the move: a length-`n` home has at most `n` pegs.
+    Those two rooms are what a later budget supplies. -/
+theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
+    (n moves slides peak : Nat)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (h5t : b.sudo_5Board_4held[5]'(by rw [hszD]; decide) = true)
+    (h5a : b.sudo_5Board_4home[5]'(by rw [hszH]; decide) = embed slope)
+    (h1e : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = false)
+    (h0e : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = false)
+    (h2t : b.sudo_5Board_4held[2]'(by rw [hszD]; decide) = true)
+    (h2a : b.sudo_5Board_4home[2]'(by rw [hszH]; decide) = embed x3)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (1 : Int))
+    (hbench : b.sudo_5Board_5bench = embed benchL)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenS : slope.length = n) (hlenX : x3.length = n)
+    (hpos : 0 < benchL.length) (hnle : n ≤ benchL.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < benchL.length, benchL[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen benchL.length)
+    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hRoomM : FitsLen (moves + 5 * n)) (hRoomS : FitsLen (slides + 4 * n)) :
+    ∃ b',
+      (do
+          let b ← Ecbs.clear b Ecbs.gap
+          let b ← Ecbs.settle b
+          Ecbs.move_band b Ecbs.across Ecbs.bottom) = .ok b' ∧
+      (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed x3) ∧
+      (∀ h : 1 < b'.sudo_5Board_4home.size,
+        b'.sudo_5Board_4home[1] = embed (benchL.take n)) ∧
+      b'.sudo_5Board_8bench_on = false ∧
+      b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+  have hpegY : pegCount (benchL.take n) ≤ n := by
+    have hlen : (benchL.take n).length = n := by
+      simp [List.length_take, Nat.min_eq_left hnle]
+    simpa [hlen] using pegCount_le (benchL.take n)
+  have hpegX : pegCount x3 ≤ n := by
+    simpa [hlenX] using pegCount_le x3
+  have hpegS : pegCount slope ≤ n := by
+    simpa [hlenS] using pegCount_le slope
+  have hfitClear : FitsLen (moves + pegCount slope) :=
+    FitsLen.of_le hRoomM (by omega)
+  have hpeg : FitsLen (2 * pegCount (benchL.take n)) :=
+    FitsLen.of_le hRoomM (by omega)
+  have hfitSM : FitsLen (moves + pegCount slope + 2 * pegCount (benchL.take n)) :=
+    FitsLen.of_le hRoomM (by omega)
+  have hfitSS : FitsLen (slides + 2 * pegCount (benchL.take n)) :=
+    FitsLen.of_le hRoomS (by omega)
+  have hfit2 : FitsLen (2 * pegCount x3) :=
+    FitsLen.of_le hRoomM (by omega)
+  have hfitMM : FitsLen (moves + pegCount slope + 2 * pegCount (benchL.take n) +
+      2 * pegCount x3) := FitsLen.of_le hRoomM (by omega)
+  have hfitMS : FitsLen (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3) :=
+    FitsLen.of_le hRoomS (by omega)
+  obtain ⟨b', hdo, hUp, _, hAc, _, _, _, _, _, hoff, hflag, _, _, _, _, _⟩ :=
+    chord_up_slide b 1 0 2 5 slope x3 benchL n moves slides peak
+      (by rw [hszH]; decide) (by rw [hszD]; decide)
+      (by rw [hszH]; decide) (by rw [hszD]; decide)
+      (by rw [hszH]; decide) (by rw [hszD]; decide)
+      (by rw [hszH]; decide) (by rw [hszD]; decide)
+      (by rw [hszD]; decide)
+      (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+      h5t h5a h1e h0e h2t h2a hon hto hbench hn hlenS hlenX hpos hnle hzero
+      hf hfitL hmv hsl hpk hfitClear hpeg hfitSM hfitSS hfit2 hfitMM hfitMS
+  refine ⟨b', ?_, ?_, ?_, hoff, hflag⟩
+  · exact hdo
+  · intro h0
+    exact hAc h0
+  · intro h1
+    exact hUp h1
+
 end EcbsLink2.Link2

@@ -176,15 +176,19 @@ Compile peak (VmHWM) for a clean `lake build EcbsLink2` under `ulimit -v 7000000
 
 - `square_kept`: gap times spare, clear, settle, then the square and the white peg. The bench prefix is slope² + 1, with a zero tail. Homes other than the spare stay, and home 5 is the slope.
 - `bottom_lay`: that square, then the two bench adds, the clear, and the settle. The bottom is `chordX3` (slope² + 1 + across − run). Across stays the cubed across, the gap stays the slope, the bench ends off. SPEC.md §3 R7 line 156. The `FitsLen` charges of the settle stay hypotheses.
-- `point_from_bottom`: on that board, `add` of the bottom onto the across with the mirror on, `mirror` of the up, then the onto multiply of the gap by that difference. The bench prefix is `chordY3`. `card_y3` is the mirrored up plus the product. The clear, the settle into the up, and `move_band` of the bottom into the across are not in this `obtain` yet.
+- `point_from_bottom`: on that board, `add` of the bottom onto the across with the mirror on, `mirror` of the up, then the onto multiply of the gap by that difference. The bench prefix is `chordY3`. `card_y3` is the mirrored up plus the product.
+- `fold_tail`: after the lane fold, holes from `n` up are empty.
+- `slide_point`: clear the gap, settle the bench into the up, and move the bottom into the across. Homes are 1, 0, 2, 5. The up is the bench prefix and the across is the bottom's list. `FitsLen (moves + 5 * n)` and `FitsLen (slides + 4 * n)` cover the settle and the move, because a length-`n` home has at most `n` pegs. Those two rooms are the ones a later budget supplies. The seven settle `FitsLen`s are not hypotheses.
 
 `x3_settle_lay` now also says which homes stay, and `chord_take_mirror` says the same for the take. `mul_onto_up_prefix` returns `OntoLay`: the destination and the second factor are empty, the bench is on and aimed at the destination, and the other homes stay.
 
-Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 388052 kB. 3743 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
+Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: measured with the package build. 3745 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
 
 ## Next
 
-On the board `point_from_bottom` leaves (`markerOn` of the onto fold), call `chord_up_slide`. The up becomes `chordY3` and the across becomes `chordX3`. That is `chord_tail` for a nonempty run. Then `chordStep` for a live white or red cell, with `walkStep_live_chord`. Discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+`point_from_bottom` leaves the bench prefix `chordY3` and `slide_point` writes that prefix into the up and the bottom into the across. The obtain that passes that board to `slide_point` is still open: the onto result's empty across and up, and the kept bottom and gap, are `OntoLay` and are not yet a conclusion of `point_from_bottom`. After that obtain, `chord_tail` for a nonempty run is `chordStep` for a live white or red cell, with `walkStep_live_chord`. Discharge the remaining settle rooms inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+
+Part 1 (`cursor/ecbs-link2-4113`, PR #201) is adding `HomeIn`, `BoardShape`, `Budget`, and `FieldLay.fits`, and deleting this file. Do not merge `main` into this branch until asked. New statements should be readable off those bundles: `slide_point` already takes the four homes and two rooms, not the multiply's budget.
 
 ## Scope that stays in the PR body
 

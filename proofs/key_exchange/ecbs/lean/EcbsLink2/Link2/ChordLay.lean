@@ -112,7 +112,11 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
       ∃ peakW strictW holeW,
         bW.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakW ∧
         bW.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictW ∧
-        bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeW := by
+        bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeW ∧
+      bW.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+      (∀ h : 0 < bW.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+        bW.sudo_5Board_4cost.sudo_5Costs_3ops[0] = Int.ofNat (cOps + 2)) := by
   intro slope
   obtain ⟨bS, hdo, _hmkS, hoffS, hmS, hcS, hxS, htS, hmvS, hslS, hszHs, hszDs, h5a, h5t,
       h6e, hhome, hheld, hopsEq, peakG, strictG, holeG, hpk, hst, hho⟩ :=
@@ -214,7 +218,15 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
       have hne5 : (5 : Nat) ≠ 6 := by decide
       exact (hheldIW 5 hne5 hiS hi').trans ((h5t hiS).trans hHF.symm)
     · exact (hheldIW i hne hiS hi').trans (hheld i h5i hne hi hiS)
-  · exact ⟨pk, st, ho, hpkW, hstW, hhoW⟩
+  · refine ⟨pk, st, ho, hpkW, hstW, hhoW, ?_, ?_⟩
+    · have hszS : bS.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        rw [hopsEq, Array.size_set]
+      rw [_hopsW, Array.size_set]
+      exact hszS
+    · intro h0
+      have hget := ix _hopsW 0 h0
+      simpa [Array.getElem_set] using hget
 
 /-- The square, then the two bench adds and the settle. The bottom is
     slope² + 1 + across − run. Across, up, and the gap stay. -/
@@ -311,15 +323,36 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
       (∀ h : 5 < bX.sudo_5Board_4held.size, bX.sudo_5Board_4held[5] = true) ∧
       bX.sudo_5Board_9marker_on = true ∧
       bX.sudo_5Board_4home.size = 8 ∧
-      bX.sudo_5Board_4held.size = 8 := by
+      bX.sudo_5Board_4held.size = 8 ∧
+      bX.sudo_5Board_6marker = Int.ofNat (m + 2) ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 4) ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max (max mx (m + 2)) (m + 3)) ∧
+      bX.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (mvSq (mvGap moves inv rise n k bench) slope n k bench +
+          pegCount accX + pegCount run + pegCount run + 2 * pegCount x3) ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slGap slides inv rise n k bench + 2 * pegCount x3) ∧
+      (∀ h : 2 < bX.sudo_5Board_4held.size, bX.sudo_5Board_4held[2] = true) ∧
+      (∀ h : 1 < bX.sudo_5Board_4home.size, bX.sudo_5Board_4home[1] = b.sudo_5Board_4home[1]) ∧
+      (∀ h : 1 < bX.sudo_5Board_4held.size, bX.sudo_5Board_4held[1] = b.sudo_5Board_4held[1]) ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_3ops.size = b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+      (∀ h : 0 < bX.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+        bX.sudo_5Board_4cost.sudo_5Costs_3ops[0] = Int.ofNat (cOps + 2)) ∧
+      ∃ peakX strictX holeX,
+        bX.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakX ∧
+        bX.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictX ∧
+        bX.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeX := by
   intro slope x3
   have h7 : 7 ≤ b.sudo_5Board_4held.size := by rw [hszD]; decide
   have hF : 5 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have hHome : 5 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have hS : 6 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have hHomeS : 6 < b.sudo_5Board_4home.size := by rw [hszH]; decide
-  obtain ⟨bW, benchL, hsq, hbench, hpre, hlen, hzero, hon, hto, hszHW, hszDW, _hmkW, _hmW,
-      _hcW, _hxW, htW, hmvW, hslW, hkeep, h5a, h5t, hheldK, peakW, _strictW, _holeW, _hpk, _hst, _hho⟩ :=
+  obtain ⟨bW, benchL, hsq, hbench, hpre, hlen, hzero, hon, hto, hszHW, hszDW, hmkW, hmW,
+      hcW, hxW, htW, hmvW, hslW, hkeep, h5a, h5t, hheldK, peakW, strictW, holeW, hpkW, hstW, hhoW,
+      opsSz, hop0W⟩ :=
     square_kept b inv rise w h r n k moves hole bench slides peak peakS cOps m ctrl mx script
       hmk hoff hm hc hx hscript hbound hfitM hfitC hfit2 hfitC4 hfit3 hops hop0 hfops hfops2 hbl
       hF hHome hHF hArr hS hHomeS hHS hYs h7 hn0 hn hlenx hleny hf hmoves hslides hpeak hpeakS
@@ -340,15 +373,15 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
       ((slGap slides inv rise n k bench : Nat) : Int) := by
     rw [hslW, ofNat_eq_natCast]
   have hpkI : bW.sudo_5Board_4cost.sudo_5Costs_4peak = (peakW : Int) := by
-    rw [_hpk, ofNat_eq_natCast]
+    rw [hpkW, ofNat_eq_natCast]
   have h0aW : bW.sudo_5Board_4home[0]'h0H = embed accX :=
     (hkeep 0 (by decide) (by decide) (by rw [hszH]; decide) h0H).trans h0a
   have h2tW : bW.sudo_5Board_4held[2]'h2D = true :=
     (hheldK 2 (by decide) (by rw [hszD]; decide) h2D).trans h2t
   have h2aW : bW.sudo_5Board_4home[2]'h2H = embed run :=
     (hkeep 2 (by decide) (by decide) (by rw [hszH]; decide) h2H).trans h2a
-  obtain ⟨bX, hx3do, hoffX, h2x, _hmX, _htX, _hmvX, _hslX, hszX, hszDX, hflagX, _h2tX, hkeepX,
-      hheldX, _hcX, _hxX, _hopX, _hstX, _hhoX, _peakX, _hpkX⟩ :=
+  obtain ⟨bX, hx3do, hoffX, h2x, hmX, htX, hmvX, hslX, hszX, hszDX, hflagX, h2tX, hkeepX,
+      hheldX, hcX, hxX, hopX, hstX, hhoX, peakXN, hpkX⟩ :=
     x3_settle_lay bW accX run benchL n k bench
       (mvSq (mvGap moves inv rise n k bench) slope n k bench)
       (slGap slides inv rise n k bench) peakW slope
@@ -356,8 +389,10 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
       h0aW h2tW h2aW
       (by rw [htW]; exact hn) hxLen hrun hn0 hlen hnb htriX htriR htriB hzero hpre hf hfitB
       hmvI hslI hpkI hfit1 hfitA hfitRun hpegX hfitMX hfitSX
-  refine ⟨bX, ?_, hoffX, h2x, ?_, ?_, ?_, ?_, hflagX.trans _hmkW,
-      hszX.trans (hszHW.trans hszH), hszDX.trans (hszDW.trans hszD)⟩
+  refine ⟨bX, ?_, hoffX, h2x, ?_, ?_, ?_, ?_, hflagX.trans hmkW,
+      hszX.trans (hszHW.trans hszH), hszDX.trans (hszDW.trans hszD),
+      hmX.trans hmW, hcX.trans hcW, hxX.trans hxW, htX.trans htW,
+      hmvX, hslX, h2tX, ?_, ?_, ?_, ?_, ?_⟩
   · have hassoc :
         (do
             let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
@@ -396,6 +431,105 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
   · intro h5
     have h5W : 5 < bW.sudo_5Board_4held.size := by rw [hszDX] at h5; exact h5
     exact (hheldX 5 (by decide) h5W h5).trans (h5t h5W)
+  · intro h1
+    have h1W : 1 < bW.sudo_5Board_4home.size := by rw [hszX] at h1; exact h1
+    have h1b : 1 < b.sudo_5Board_4home.size := by rw [hszH]; decide
+    exact (hkeepX 1 (by decide) h1W h1).trans
+      (hkeep 1 (by decide) (by decide) h1b h1W)
+  · intro h1
+    have h1W : 1 < bW.sudo_5Board_4held.size := by rw [hszDX] at h1; exact h1
+    have h1b : 1 < b.sudo_5Board_4held.size := by rw [hszD]; decide
+    exact (hheldX 1 (by decide) h1W h1).trans (hheldK 1 (by decide) h1b h1W)
+  · rw [hopX, opsSz]
+  · intro h0
+    have hget := ix hopX 0 h0
+    exact hget.trans (hop0W (hopX ▸ h0))
+  · exact ⟨peakXN, strictW, holeW, hpkX, hstX.trans hstW, hhoX.trans hhoW⟩
+
+/-- The lane fold's holes from `n` up are empty. One fact for the settle's tail. -/
+theorem fold_tail (n gap : Nat) (strip : List Nat)
+    (hn0 : 0 < n) (hg : 0 < gap) (hn : n ≤ strip.length) :
+    ∀ i, n ≤ i → ∀ hi : i < (laneFold n gap strip).length, (laneFold n gap strip)[i] = 0 := by
+  intro i hlo hi
+  have hlen := laneFold_length n gap strip hn
+  have hiS : i < strip.length := by rwa [hlen] at hi
+  rw [← coeff_eq_get _ _ hi]
+  exact laneFold_high n gap strip i hn0 hg hn hlo hiS
+
+/-- Clear the gap, settle the bench into the up, and move the bottom into the
+    across. Homes are 1, 0, 2, 5 on a board of eight. The up is the bench
+    prefix and the across is the bottom's list. One move room and one slide
+    room cover the settle and the move: a length-`n` home has at most `n` pegs.
+    Those two rooms are what a later budget supplies. -/
+theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
+    (n moves slides peak : Nat)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (h5t : b.sudo_5Board_4held[5]'(by rw [hszD]; decide) = true)
+    (h5a : b.sudo_5Board_4home[5]'(by rw [hszH]; decide) = embed slope)
+    (h1e : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = false)
+    (h0e : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = false)
+    (h2t : b.sudo_5Board_4held[2]'(by rw [hszD]; decide) = true)
+    (h2a : b.sudo_5Board_4home[2]'(by rw [hszH]; decide) = embed x3)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (1 : Int))
+    (hbench : b.sudo_5Board_5bench = embed benchL)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenS : slope.length = n) (hlenX : x3.length = n)
+    (hpos : 0 < benchL.length) (hnle : n ≤ benchL.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < benchL.length, benchL[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen benchL.length)
+    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hRoomM : FitsLen (moves + 5 * n)) (hRoomS : FitsLen (slides + 4 * n)) :
+    ∃ b',
+      (do
+          let b ← Ecbs.clear b Ecbs.gap
+          let b ← Ecbs.settle b
+          Ecbs.move_band b Ecbs.across Ecbs.bottom) = .ok b' ∧
+      (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed x3) ∧
+      (∀ h : 1 < b'.sudo_5Board_4home.size,
+        b'.sudo_5Board_4home[1] = embed (benchL.take n)) ∧
+      b'.sudo_5Board_8bench_on = false ∧
+      b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+  have hpegY : pegCount (benchL.take n) ≤ n := by
+    have hlen : (benchL.take n).length = n := by
+      simp [List.length_take, Nat.min_eq_left hnle]
+    simpa [hlen] using pegCount_le (benchL.take n)
+  have hpegX : pegCount x3 ≤ n := by
+    simpa [hlenX] using pegCount_le x3
+  have hpegS : pegCount slope ≤ n := by
+    simpa [hlenS] using pegCount_le slope
+  have hfitClear : FitsLen (moves + pegCount slope) :=
+    FitsLen.of_le hRoomM (by omega)
+  have hpeg : FitsLen (2 * pegCount (benchL.take n)) :=
+    FitsLen.of_le hRoomM (by omega)
+  have hfitSM : FitsLen (moves + pegCount slope + 2 * pegCount (benchL.take n)) :=
+    FitsLen.of_le hRoomM (by omega)
+  have hfitSS : FitsLen (slides + 2 * pegCount (benchL.take n)) :=
+    FitsLen.of_le hRoomS (by omega)
+  have hfit2 : FitsLen (2 * pegCount x3) :=
+    FitsLen.of_le hRoomM (by omega)
+  have hfitMM : FitsLen (moves + pegCount slope + 2 * pegCount (benchL.take n) +
+      2 * pegCount x3) := FitsLen.of_le hRoomM (by omega)
+  have hfitMS : FitsLen (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3) :=
+    FitsLen.of_le hRoomS (by omega)
+  obtain ⟨b', hdo, hUp, _, hAc, _, _, _, _, _, hoff, hflag, _, _, _, _, _⟩ :=
+    chord_up_slide b 1 0 2 5 slope x3 benchL n moves slides peak
+      (by rw [hszH]; decide) (by rw [hszD]; decide)
+      (by rw [hszH]; decide) (by rw [hszD]; decide)
+      (by rw [hszH]; decide) (by rw [hszD]; decide)
+      (by rw [hszH]; decide) (by rw [hszD]; decide)
+      (by rw [hszD]; decide)
+      (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
+      h5t h5a h1e h0e h2t h2a hon hto hbench hn hlenS hlenX hpos hnle hzero
+      hf hfitL hmv hsl hpk hfitClear hpeg hfitSM hfitSS hfit2 hfitMM hfitMS
+  refine ⟨b', ?_, ?_, ?_, hoff, hflag⟩
+  · exact hdo
+  · intro h0
+    exact hAc h0
+  · intro h1
+    exact hUp h1
 
 /-- Take the bottom from the across, mirror the up, lay the slope times that
     difference onto the up, and slide the new x across. SPEC.md §3 R7 line 156.
@@ -447,20 +581,52 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
     (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
     (hnsm : n ≤ 1000000) (hfitB : FitsLen bench)
     (hfold : FitsLen (moves + pegCount x3 + pegCount accY + 2 * n + n * (n + 1) +
-        3 * (bench - n))) :
+        3 * (bench - n)))
+    (hTailM : FitsLen (moves + pegCount x3 + pegCount accY + 2 * n + n * (n + 1) +
+        3 * (bench - n) + 5 * n))
+    (hTailS : FitsLen (slides + 6 * n)) :
     let dx := fieldSub n accX x3
     let yMir := mirrorTrits accY
     let y3 := chordY3 n k bench slope dx accY
-    ∃ bM,
+    let benchL := laneFold n (n - k) (school n slope dx (pref yMir bench n) false)
+    ∃ bM b',
       (do
           let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
           let b ← Ecbs.mirror b Ecbs.up
           Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false) =
         .ok (markerOn bM) ∧
-      bM.sudo_5Board_5bench =
-        embed (laneFold n (n - k) (school n slope dx (pref yMir bench n) false)) ∧
-      (laneFold n (n - k) (school n slope dx (pref yMir bench n) false)).take n = y3 := by
-  intro dx yMir y3
+      (markerOn bM).sudo_5Board_5bench = embed benchL ∧
+      benchL.take n = y3 ∧
+      (markerOn bM).sudo_5Board_4home.size = 8 ∧
+      (markerOn bM).sudo_5Board_4held.size = 8 ∧
+      (∀ h : 0 < (markerOn bM).sudo_5Board_4held.size,
+        (markerOn bM).sudo_5Board_4held[0] = false) ∧
+      (∀ h : 0 < (markerOn bM).sudo_5Board_4home.size,
+        (markerOn bM).sudo_5Board_4home[0] = (#[] : Array Int)) ∧
+      (∀ h : 1 < (markerOn bM).sudo_5Board_4held.size,
+        (markerOn bM).sudo_5Board_4held[1] = false) ∧
+      (∀ h : 1 < (markerOn bM).sudo_5Board_4home.size,
+        (markerOn bM).sudo_5Board_4home[1] = (#[] : Array Int)) ∧
+      (∀ h : 2 < (markerOn bM).sudo_5Board_4held.size,
+        (markerOn bM).sudo_5Board_4held[2] = true) ∧
+      (∀ h : 2 < (markerOn bM).sudo_5Board_4home.size,
+        (markerOn bM).sudo_5Board_4home[2] = embed x3) ∧
+      (∀ h : 5 < (markerOn bM).sudo_5Board_4held.size,
+        (markerOn bM).sudo_5Board_4held[5] = true) ∧
+      (∀ h : 5 < (markerOn bM).sudo_5Board_4home.size,
+        (markerOn bM).sudo_5Board_4home[5] = embed slope) ∧
+      (markerOn bM).sudo_5Board_8bench_on = true ∧
+      (markerOn bM).sudo_5Board_8bench_to = (1 : Int) ∧
+      (do
+          let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+          let b ← Ecbs.mirror b Ecbs.up
+          let b ← Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false
+          let b ← Ecbs.clear b Ecbs.gap
+          let b ← Ecbs.settle b
+          Ecbs.move_band b Ecbs.across Ecbs.bottom) = .ok b' ∧
+      (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed x3) ∧
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed y3) := by
+  intro dx yMir y3 benchL
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have h1H : 1 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -548,14 +714,112 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
       hfitMo hfitSo hfm hhoM
       hw0 hh0 hrR hrP hnE hkLe hgap hwT hhT hrT hkT hsm hnsm hfitB hfold
   let sch := school n slope dx (pref yMir bench n) false
-  let benchL := laneFold n (n - k) sch
+  have hbenchL : benchL = laneFold n (n - k) sch := rfl
   have hpreY : benchL.take n = y3 := by
     have hswap : fieldAdd n yMir (fieldMul n k bench slope dx) =
         fieldAdd n (mirrorTrits accY) (fieldMul n k bench slope dx) := rfl
     rw [show benchL.take n = fieldAdd n yMir (fieldMul n k bench slope dx) from hpreM, hswap]
     simpa [y3, yMir, dx, chordY3, fieldSub] using
       (card_y3 n k bench slope dx accY)
-  refine ⟨bM, ?_, hbenchM, hpreY⟩
+  let bU := markerOn bM
+  have hszMH : bM.sudo_5Board_4home.size = 8 := by
+    rw [hlay.szH]
+    simp [bumpOp, markerUpFeed, hszT, hszH]
+  have hszMD : bM.sudo_5Board_4held.size = 8 := by
+    rw [hlay.szD]
+    have hs : bT.sudo_5Board_4held.size = 8 := by rw [hheldT, hszD]
+    simpa [bumpOp, markerUpFeed] using hs
+  have hszU : bU.sudo_5Board_4home.size = 8 ∧ bU.sudo_5Board_4held.size = 8 := by
+    simp [bU, markerOn, hszMH, hszMD]
+  have h0eU : bU.sudo_5Board_4held[0]'(by rw [hszU.2]; decide) = false := by
+    simpa [bU, markerOn_held] using hlay.heldS (by rw [hszMD]; decide)
+  have h0aU : bU.sudo_5Board_4home[0]'(by rw [hszU.1]; decide) = (#[] : Array Int) := by
+    simpa [bU, markerOn_home] using hlay.homeS (by rw [hszMH]; decide)
+  have h1eU : bU.sudo_5Board_4held[1]'(by rw [hszU.2]; decide) = false := by
+    simpa [bU, markerOn_held] using hlay.heldD (by rw [hszMD]; decide)
+  have h1aU : bU.sudo_5Board_4home[1]'(by rw [hszU.1]; decide) = (#[] : Array Int) := by
+    simpa [bU, markerOn_home] using hlay.homeD (by rw [hszMH]; decide)
+  have h2tU : bU.sudo_5Board_4held[2]'(by rw [hszU.2]; decide) = true := by
+    have hkeep := hlay.heldK 2 (by decide) (by decide)
+      (by rw [← hlay.szD, hszMD]; decide) (by rw [hszMD]; decide)
+    simpa [bU, markerOn_held, bumpOp, markerUpFeed, hheldT, h2t] using hkeep
+  have h2aU : bU.sudo_5Board_4home[2]'(by rw [hszU.1]; decide) = embed x3 := by
+    have hkeep := hlay.homeK 2 (by decide) (by decide)
+      (by rw [← hlay.szH, hszMH]; decide) (by rw [hszMH]; decide)
+    have hbt := (hkeepT 2 (by decide) (by decide) h2H h2HT).trans h2a
+    simpa [bU, markerOn_home, bumpOp, markerUpFeed, hbt] using hkeep
+  have h5tU : bU.sudo_5Board_4held[5]'(by rw [hszU.2]; decide) = true := by
+    have hkeep := hlay.heldK 5 (by decide) (by decide)
+      (by rw [← hlay.szD, hszMD]; decide) (by rw [hszMD]; decide)
+    simpa [bU, markerOn_held, bumpOp, markerUpFeed, hheldT, h5t] using hkeep
+  have h5aU : bU.sudo_5Board_4home[5]'(by rw [hszU.1]; decide) = embed slope := by
+    have hkeep := hlay.homeK 5 (by decide) (by decide)
+      (by rw [← hlay.szH, hszMH]; decide) (by rw [hszMH]; decide)
+    simpa [bU, markerOn_home, bumpOp, markerUpFeed, h5aT] using hkeep
+  have honU : bU.sudo_5Board_8bench_on = true := by
+    simpa [bU, markerOn_on] using hlay.on
+  have htoU : bU.sudo_5Board_8bench_to = (1 : Int) := by
+    simpa [bU, markerOn] using hlay.to_
+  have hbenchU : bU.sudo_5Board_5bench = embed benchL := by
+    simpa [bU, markerOn] using hbenchM
+  have hnU : bU.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    have ht : bU.sudo_5Board_1t = bT.sudo_5Board_1t := by
+      rw [show bU.sudo_5Board_1t = bM.sudo_5Board_1t from by simp [bU, markerOn], hlay.tier]
+      simp [bumpOp, markerUpFeed]
+    simpa [ht] using hnT
+  let mvF := (moves + pegCount x3 + pegCount accY + 2 * pegCount yMir +
+      schoolMoves slope dx n n) + foldCharge n (n - k) sch
+  let slF := slides + 2 * pegCount yMir
+  have hmvU : bU.sudo_5Board_4cost.sudo_5Costs_5moves = (mvF : Int) := by
+    rw [show bU.sudo_5Board_4cost.sudo_5Costs_5moves = bM.sudo_5Board_4cost.sudo_5Costs_5moves from
+      by simp [bU, markerOn], hlay.moves, ofNat_eq_natCast]
+  have hslU : bU.sudo_5Board_4cost.sudo_5Costs_6slides = (slF : Int) := by
+    rw [show bU.sudo_5Board_4cost.sudo_5Costs_6slides = bM.sudo_5Board_4cost.sudo_5Costs_6slides from
+      by simp [bU, markerOn], hlay.slides, ofNat_eq_natCast]
+  obtain ⟨pkU, hpkU⟩ := hlay.peak
+  have hpkB : bU.sudo_5Board_4cost.sudo_5Costs_4peak = (pkU : Int) := by
+    rw [show bU.sudo_5Board_4cost.sudo_5Costs_4peak = bM.sudo_5Board_4cost.sudo_5Costs_4peak from
+      by simp [bU, markerOn], hpkU, ofNat_eq_natCast]
+  have hlenB : benchL.length = bench := by
+    have hpref : (pref yMir bench n).length = bench := pref_length hnb (by rw [hyM]; exact Nat.le_refl _)
+    have hschLen : sch.length = bench := by
+      simpa [sch, hpref] using school_length slope dx (pref yMir bench n) false n
+    have hfoldLen := laneFold_length n (n - k) sch (by rw [hschLen]; exact hnb)
+    simpa [hbenchL, hfoldLen, hschLen]
+  have hzero : ∀ i, n ≤ i → ∀ hi : i < benchL.length, benchL[i] = 0 := by
+    intro i hlo hi
+    have hg : 0 < n - k := by rw [hgap]; exact Nat.mul_pos hw0 hrP
+    have hstrip : n ≤ sch.length := by
+      have hpref : (pref yMir bench n).length = bench := pref_length hnb (by rw [hyM]; exact Nat.le_refl _)
+      have hschLen : sch.length = bench := by
+        simpa [sch, hpref] using school_length slope dx (pref yMir bench n) false n
+      rw [hschLen]; exact hnb
+    have htail := fold_tail n (n - k) sch hn0 hg hstrip i hlo
+    simpa [hbenchL] using htail (by simpa [hbenchL] using hi)
+  have hpx : pegCount x3 ≤ n := by simpa [hx3] using pegCount_le x3
+  have hpy : pegCount accY ≤ n := by simpa [hyA] using pegCount_le accY
+  have hpym : pegCount yMir ≤ n := by simpa [hyM] using pegCount_le yMir
+  have hschB : schoolMoves slope dx n n ≤ n * (n + 1) := schoolMoves_bound slope dx n
+  have hfoldB : foldCharge n (n - k) sch ≤ 3 * (bench - n) := by
+    have hle := foldCharge_bound n (n - k) sch
+    have hpref : (pref yMir bench n).length = bench := pref_length hnb (by rw [hyM]; exact Nat.le_refl _)
+    have hlenS : sch.length = bench := by
+      simpa [sch, hpref] using school_length slope dx (pref yMir bench n) false n
+    simpa [hlenS] using hle
+  have hmvLe : mvF + 5 * n ≤
+      moves + pegCount x3 + pegCount accY + 2 * n + n * (n + 1) + 3 * (bench - n) + 5 * n := by
+    dsimp [mvF]
+    omega
+  have hslLe : slF + 4 * n ≤ slides + 6 * n := by
+    dsimp [slF]
+    omega
+  obtain ⟨b', hslide, hAc, hUp, _, _⟩ :=
+    slide_point bU slope x3 benchL n mvF slF pkU
+      hszU.1 hszU.2 h5tU h5aU h1eU h0eU h2tU h2aU honU htoU hbenchU hnU
+      hslope hx3 (by rw [hlenB]; omega) (by rw [hlenB]; exact hnb) hzero
+      hf (by simpa [hlenB] using hfitB) hmvU hslU hpkB
+      (FitsLen.of_le hTailM hmvLe) (FitsLen.of_le hTailS hslLe)
+  refine ⟨bM, b', ?_, ?_, hpreY, hszU.1, hszU.2, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, honU, htoU, ?_, hAc, ?_⟩
   · have hassoc :
         (do
             let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
@@ -570,90 +834,169 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
       simp only [except_pull]
     rw [hassoc, htDo, ok_bind]
     exact hmul
+  · simpa [bU] using hbenchU
+  · intro h0
+    simpa [bU] using h0eU
+  · intro h0
+    simpa [bU] using h0aU
+  · intro h1
+    simpa [bU] using h1eU
+  · intro h1
+    simpa [bU] using h1aU
+  · intro h2
+    simpa [bU] using h2tU
+  · intro h2
+    simpa [bU] using h2aU
+  · intro h5
+    simpa [bU] using h5tU
+  · intro h5
+    simpa [bU] using h5aU
+  · have hassoc :
+        (do
+            let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+            let b ← Ecbs.mirror b Ecbs.up
+            let b ← Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false
+            let b ← Ecbs.clear b Ecbs.gap
+            let b ← Ecbs.settle b
+            Ecbs.move_band b Ecbs.across Ecbs.bottom) =
+        (do
+            let b ←
+              (do
+                let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+                let b ← Ecbs.mirror b Ecbs.up
+                Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false)
+            let b ← Ecbs.clear b Ecbs.gap
+            let b ← Ecbs.settle b
+            Ecbs.move_band b Ecbs.across Ecbs.bottom) := by
+      simp only [except_pull]
+    rw [hassoc]
+    have hmulDo :
+        (do
+            let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+            let b ← Ecbs.mirror b Ecbs.up
+            Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false) =
+          .ok bU := by
+      have hassoc2 :
+          (do
+              let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+              let b ← Ecbs.mirror b Ecbs.up
+              Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false) =
+          (do
+              let b ←
+                (do
+                  let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+                  Ecbs.mirror b Ecbs.up)
+              Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false) := by
+        simp only [except_pull]
+      rw [hassoc2, htDo, ok_bind]
+      simpa [bU] using hmul
+    rw [hmulDo, ok_bind]
+    exact hslide
+  · intro h1
+    simpa [hpreY] using hUp h1
 
-/-- The lane fold's holes from `n` up are empty. One fact for the settle's tail. -/
-theorem fold_tail (n gap : Nat) (strip : List Nat)
-    (hn0 : 0 < n) (hg : 0 < gap) (hn : n ≤ strip.length) :
-    ∀ i, n ≤ i → ∀ hi : i < (laneFold n gap strip).length, (laneFold n gap strip)[i] = 0 := by
-  intro i hlo hi
-  have hlen := laneFold_length n gap strip hn
-  have hiS : i < strip.length := by rwa [hlen] at hi
-  rw [← coeff_eq_get _ _ hi]
-  exact laneFold_high n gap strip i hn0 hg hn hlo hiS
 
-/-- Clear the gap, settle the bench into the up, and move the bottom into the
-    across. Homes are 1, 0, 2, 5 on a board of eight. The up is the bench
-    prefix and the across is the bottom's list. One move room and one slide
-    room cover the settle and the move: a length-`n` home has at most `n` pegs.
-    Those two rooms are what a later budget supplies. -/
-theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
-    (n moves slides peak : Nat)
-    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
-    (h5t : b.sudo_5Board_4held[5]'(by rw [hszD]; decide) = true)
-    (h5a : b.sudo_5Board_4home[5]'(by rw [hszH]; decide) = embed slope)
-    (h1e : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = false)
-    (h0e : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = false)
-    (h2t : b.sudo_5Board_4held[2]'(by rw [hszD]; decide) = true)
-    (h2a : b.sudo_5Board_4home[2]'(by rw [hszH]; decide) = embed x3)
-    (hon : b.sudo_5Board_8bench_on = true)
-    (hto : b.sudo_5Board_8bench_to = (1 : Int))
-    (hbench : b.sudo_5Board_5bench = embed benchL)
-    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
-    (hlenS : slope.length = n) (hlenX : x3.length = n)
-    (hpos : 0 < benchL.length) (hnle : n ≤ benchL.length)
-    (hzero : ∀ i, n ≤ i → ∀ hi : i < benchL.length, benchL[i] = 0)
-    (hf : FitsLen n) (hfitL : FitsLen benchL.length)
-    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
-    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
-    (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
-    (hRoomM : FitsLen (moves + 5 * n)) (hRoomS : FitsLen (slides + 4 * n)) :
-    ∃ b',
+/-- The emitted chord tail is the square-and-settle prefix, then the slide,
+    then the generated `pure`. -/
+theorem chord_do_join (b bX b' : Ecbs.Board)
+    (hpre :
       (do
+          let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
           let b ← Ecbs.clear b Ecbs.gap
           let b ← Ecbs.settle b
-          Ecbs.move_band b Ecbs.across Ecbs.bottom) = .ok b' ∧
-      (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed x3) ∧
-      (∀ h : 1 < b'.sudo_5Board_4home.size,
-        b'.sudo_5Board_4home[1] = embed (benchL.take n)) ∧
-      b'.sudo_5Board_8bench_on = false ∧
-      b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
-  have hpegY : pegCount (benchL.take n) ≤ n := by
-    have hlen : (benchL.take n).length = n := by
-      simp [List.length_take, Nat.min_eq_left hnle]
-    simpa [hlen] using pegCount_le (benchL.take n)
-  have hpegX : pegCount x3 ≤ n := by
-    simpa [hlenX] using pegCount_le x3
-  have hpegS : pegCount slope ≤ n := by
-    simpa [hlenS] using pegCount_le slope
-  have hfitClear : FitsLen (moves + pegCount slope) :=
-    FitsLen.of_le hRoomM (by omega)
-  have hpeg : FitsLen (2 * pegCount (benchL.take n)) :=
-    FitsLen.of_le hRoomM (by omega)
-  have hfitSM : FitsLen (moves + pegCount slope + 2 * pegCount (benchL.take n)) :=
-    FitsLen.of_le hRoomM (by omega)
-  have hfitSS : FitsLen (slides + 2 * pegCount (benchL.take n)) :=
-    FitsLen.of_le hRoomS (by omega)
-  have hfit2 : FitsLen (2 * pegCount x3) :=
-    FitsLen.of_le hRoomM (by omega)
-  have hfitMM : FitsLen (moves + pegCount slope + 2 * pegCount (benchL.take n) +
-      2 * pegCount x3) := FitsLen.of_le hRoomM (by omega)
-  have hfitMS : FitsLen (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3) :=
-    FitsLen.of_le hRoomS (by omega)
-  obtain ⟨b', hdo, hUp, _, hAc, _, _, _, _, _, hoff, hflag, _, _, _, _, _⟩ :=
-    chord_up_slide b 1 0 2 5 slope x3 benchL n moves slides peak
-      (by rw [hszH]; decide) (by rw [hszD]; decide)
-      (by rw [hszH]; decide) (by rw [hszD]; decide)
-      (by rw [hszH]; decide) (by rw [hszD]; decide)
-      (by rw [hszH]; decide) (by rw [hszD]; decide)
-      (by rw [hszD]; decide)
-      (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
-      h5t h5a h1e h0e h2t h2a hon hto hbench hn hlenS hlenX hpos hnle hzero
-      hf hfitL hmv hsl hpk hfitClear hpeg hfitSM hfitSS hfit2 hfitMM hfitMS
-  refine ⟨b', ?_, ?_, ?_, hoff, hflag⟩
-  · exact hdo
-  · intro h0
-    exact hAc h0
-  · intro h1
-    exact hUp h1
+          let b ← Ecbs.mul b Ecbs.bottom Ecbs.gap Ecbs.gap true false false
+          let b ← Ecbs.bench_white0 b
+          let b ← Ecbs.bench_add b Ecbs.across false
+          let b ← Ecbs.bench_add b Ecbs.bottom true
+          let b ← Ecbs.clear b Ecbs.bottom
+          Ecbs.settle b) = .ok bX)
+    (hpost :
+      (do
+          let b ← Ecbs.add bX Ecbs.across Ecbs.bottom true
+          let b ← Ecbs.mirror b Ecbs.up
+          let b ← Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false
+          let b ← Ecbs.clear b Ecbs.gap
+          let b ← Ecbs.settle b
+          Ecbs.move_band b Ecbs.across Ecbs.bottom) = .ok b') :
+    (do
+        let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
+        let b ← Ecbs.clear b Ecbs.gap
+        let b ← Ecbs.settle b
+        let b ← Ecbs.mul b Ecbs.bottom Ecbs.gap Ecbs.gap true false false
+        let b ← Ecbs.bench_white0 b
+        let b ← Ecbs.bench_add b Ecbs.across false
+        let b ← Ecbs.bench_add b Ecbs.bottom true
+        let b ← Ecbs.clear b Ecbs.bottom
+        let b ← Ecbs.settle b
+        let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+        let b ← Ecbs.mirror b Ecbs.up
+        let b ← Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false
+        let b ← Ecbs.clear b Ecbs.gap
+        let b ← Ecbs.settle b
+        let b ← Ecbs.move_band b Ecbs.across Ecbs.bottom
+        pure b) = .ok b' := by
+  have hassoc :
+      (do
+          let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
+          let b ← Ecbs.clear b Ecbs.gap
+          let b ← Ecbs.settle b
+          let b ← Ecbs.mul b Ecbs.bottom Ecbs.gap Ecbs.gap true false false
+          let b ← Ecbs.bench_white0 b
+          let b ← Ecbs.bench_add b Ecbs.across false
+          let b ← Ecbs.bench_add b Ecbs.bottom true
+          let b ← Ecbs.clear b Ecbs.bottom
+          let b ← Ecbs.settle b
+          let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+          let b ← Ecbs.mirror b Ecbs.up
+          let b ← Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false
+          let b ← Ecbs.clear b Ecbs.gap
+          let b ← Ecbs.settle b
+          let b ← Ecbs.move_band b Ecbs.across Ecbs.bottom
+          pure b) =
+      (do
+          let b ←
+            (do
+              let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
+              let b ← Ecbs.clear b Ecbs.gap
+              let b ← Ecbs.settle b
+              let b ← Ecbs.mul b Ecbs.bottom Ecbs.gap Ecbs.gap true false false
+              let b ← Ecbs.bench_white0 b
+              let b ← Ecbs.bench_add b Ecbs.across false
+              let b ← Ecbs.bench_add b Ecbs.bottom true
+              let b ← Ecbs.clear b Ecbs.bottom
+              Ecbs.settle b)
+          let b ←
+            (do
+              let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+              let b ← Ecbs.mirror b Ecbs.up
+              let b ← Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false
+              let b ← Ecbs.clear b Ecbs.gap
+              let b ← Ecbs.settle b
+              Ecbs.move_band b Ecbs.across Ecbs.bottom)
+          pure b) := by
+    simp only [except_pull]
+  rw [hassoc, hpre, ok_bind, hpost, ok_bind, pure_eq_ok]
+
+/-- The generated `chord_tail` on the across and the up is that do. -/
+theorem chord_tail_across_up (b : Ecbs.Board) :
+    Ecbs.chord_tail b Ecbs.across Ecbs.up =
+      (do
+          let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
+          let b ← Ecbs.clear b Ecbs.gap
+          let b ← Ecbs.settle b
+          let b ← Ecbs.mul b Ecbs.bottom Ecbs.gap Ecbs.gap true false false
+          let b ← Ecbs.bench_white0 b
+          let b ← Ecbs.bench_add b Ecbs.across false
+          let b ← Ecbs.bench_add b Ecbs.bottom true
+          let b ← Ecbs.clear b Ecbs.bottom
+          let b ← Ecbs.settle b
+          let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
+          let b ← Ecbs.mirror b Ecbs.up
+          let b ← Ecbs.mul b Ecbs.up Ecbs.gap Ecbs.across false true false
+          let b ← Ecbs.clear b Ecbs.gap
+          let b ← Ecbs.settle b
+          let b ← Ecbs.move_band b Ecbs.across Ecbs.bottom
+          pure b) := by
+  rfl
 
 end EcbsLink2.Link2

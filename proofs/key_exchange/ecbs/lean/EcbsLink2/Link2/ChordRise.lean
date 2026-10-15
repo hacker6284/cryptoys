@@ -42,6 +42,52 @@ private theorem place_flag (b : Ecbs.Board) (home : Nat)
   dsimp only
   split <;> rfl
 
+private theorem place_same (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_1t = b.sudo_5Board_1t ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_6slides =
+        b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_8bench_on = b.sudo_5Board_8bench_on ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_5bench = b.sudo_5Board_5bench ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_8bench_to = b.sudo_5Board_8bench_to ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+  unfold placeBoard
+  dsimp only
+  split <;> exact ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+
+private theorem place_home_at (b : Ecbs.Board)
+    (hH : 6 < b.sudo_5Board_4home.size) (hD : 6 < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak i : Nat) (hne : (6 : Nat) ≠ i)
+    (hi : i < b.sudo_5Board_4home.size) :
+    (placeBoard b 6 hH hD xs moves peak).sudo_5Board_4home[i]'(by
+      rw [place_home_eq, Array.size_set]; exact hi) = b.sudo_5Board_4home[i] := by
+  have hset := place_home_eq b 6 hH hD xs moves peak
+  have hget := idx_eq hset i (by rw [hset, Array.size_set]; exact hi)
+  simp only [Array.getElem_set, hne, if_false] at hget
+  exact hget
+
+private theorem place_held_at (b : Ecbs.Board)
+    (hH : 6 < b.sudo_5Board_4home.size) (hD : 6 < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak i : Nat) (hne : (6 : Nat) ≠ i)
+    (hi : i < b.sudo_5Board_4held.size) :
+    (placeBoard b 6 hH hD xs moves peak).sudo_5Board_4held[i]'(by
+      rw [place_held_eq, Array.size_set]; exact hi) = b.sudo_5Board_4held[i] := by
+  have hset := place_held_eq b 6 hH hD xs moves peak
+  have hget := idx_eq hset i (by rw [hset, Array.size_set]; exact hi)
+  simp only [Array.getElem_set, hne, if_false] at hget
+  exact hget
+
 /-- `add` of the spare by the up, mirror on. The spare becomes `fieldSub`.
     Up and base up stay. The marker flag stays. -/
 theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
@@ -71,7 +117,34 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
       bR.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) ∧
       bR.sudo_5Board_4cost.sudo_5Costs_5moves =
         ((moves + pegCount accY : Nat) : Int) ∧
-      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      (∀ h : 0 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[0] = b.sudo_5Board_4home[0]'(by rw [hszH]; decide)) ∧
+      (∀ h : 0 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[0] = b.sudo_5Board_4held[0]'(by rw [hszD]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[2] = b.sudo_5Board_4home[2]'(by rw [hszH]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[2] = b.sudo_5Board_4held[2]'(by rw [hszD]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[5] = b.sudo_5Board_4home[5]'(by rw [hszH]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[5] = b.sudo_5Board_4held[5]'(by rw [hszD]; decide)) ∧
+      bR.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      bR.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      bR.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on ∧
+      bR.sudo_5Board_5bench = b.sudo_5Board_5bench ∧
+      bR.sudo_5Board_8bench_to = b.sudo_5Board_8bench_to ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_4peak = b.sudo_5Board_4cost.sudo_5Costs_4peak := by
   have h6H : 6 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h6D : 6 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have h1H : 1 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -83,7 +156,8 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
   let bR := addBoard b 6 h6H (embed (fieldAdd n ySrc (mirrorTrits accY)))
     (moves + pegCount accY)
   have hsub : fieldAdd n ySrc (mirrorTrits accY) = fieldSub n ySrc accY := rfl
-  refine ⟨bR, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bR, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl]
     simpa [bR, hsub] using hadd
@@ -133,6 +207,60 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
       simp [bR, addBoard, withMoves]
     rw [ht, hn]
   · simp [bR, addBoard, withMoves, ofNat_eq_natCast]
+  · simp [bR, addBoard, withMoves]
+  · intro h
+    have hset : bR.sudo_5Board_4home =
+        b.sudo_5Board_4home.set ⟨6, h6H⟩ (embed (fieldAdd n ySrc (mirrorTrits accY))) := by
+      simp [bR, addBoard, withMoves]
+    have h0 : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
+    have hget := idx_eq hset 0 (by rw [hset, Array.size_set]; exact h0)
+    have hne : (6 : Nat) ≠ 0 := by decide
+    simp only [Array.getElem_set, hne, if_false] at hget
+    exact hget
+  · intro h
+    have hheld : bR.sudo_5Board_4held = b.sudo_5Board_4held := by
+      simp [bR, addBoard, withMoves]
+    have h0 : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
+    exact idx_eq hheld 0 (by rw [hheld]; exact h0)
+  · intro h
+    have hset : bR.sudo_5Board_4home =
+        b.sudo_5Board_4home.set ⟨6, h6H⟩ (embed (fieldAdd n ySrc (mirrorTrits accY))) := by
+      simp [bR, addBoard, withMoves]
+    have h2 : 2 < b.sudo_5Board_4home.size := by rw [hszH]; decide
+    have hget := idx_eq hset 2 (by rw [hset, Array.size_set]; exact h2)
+    have hne : (6 : Nat) ≠ 2 := by decide
+    simp only [Array.getElem_set, hne, if_false] at hget
+    exact hget
+  · intro h
+    have hheld : bR.sudo_5Board_4held = b.sudo_5Board_4held := by
+      simp [bR, addBoard, withMoves]
+    have h2 : 2 < b.sudo_5Board_4held.size := by rw [hszD]; decide
+    exact idx_eq hheld 2 (by rw [hheld]; exact h2)
+  · intro h
+    have hset : bR.sudo_5Board_4home =
+        b.sudo_5Board_4home.set ⟨6, h6H⟩ (embed (fieldAdd n ySrc (mirrorTrits accY))) := by
+      simp [bR, addBoard, withMoves]
+    have h5 : 5 < b.sudo_5Board_4home.size := by rw [hszH]; decide
+    have hget := idx_eq hset 5 (by rw [hset, Array.size_set]; exact h5)
+    have hne : (6 : Nat) ≠ 5 := by decide
+    simp only [Array.getElem_set, hne, if_false] at hget
+    exact hget
+  · intro h
+    have hheld : bR.sudo_5Board_4held = b.sudo_5Board_4held := by
+      simp [bR, addBoard, withMoves]
+    have h5 : 5 < b.sudo_5Board_4held.size := by rw [hszD]; decide
+    exact idx_eq hheld 5 (by rw [hheld]; exact h5)
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
+  · simp [bR, addBoard, withMoves]
   · simp [bR, addBoard, withMoves]
 
 /-- What `place` of the spare leaves: that home holds `ys`, and up and base up stay. -/
@@ -254,7 +382,34 @@ theorem chord_rise_white (b : Ecbs.Board) (baseY accY : List Nat)
       bR.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) ∧
       bR.sudo_5Board_4cost.sudo_5Costs_5moves =
         ((moves + pegCount baseY + pegCount accY : Nat) : Int) ∧
-      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      (∀ h : 0 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[0] = b.sudo_5Board_4home[0]'(by rw [hszH]; decide)) ∧
+      (∀ h : 0 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[0] = b.sudo_5Board_4held[0]'(by rw [hszD]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[2] = b.sudo_5Board_4home[2]'(by rw [hszH]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[2] = b.sudo_5Board_4held[2]'(by rw [hszD]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[5] = b.sudo_5Board_4home[5]'(by rw [hszH]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[5] = b.sudo_5Board_4held[5]'(by rw [hszD]; decide)) ∧
+      bR.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      bR.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      bR.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on ∧
+      bR.sudo_5Board_5bench = b.sudo_5Board_5bench ∧
+      bR.sudo_5Board_8bench_to = b.sudo_5Board_8bench_to ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      ∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
   have hpeg : pegCount baseY ≤ n := by rw [← hyB]; exact pegCount_le baseY
   have hfitn : FitsLen n := FitsLen.of_le hfit (by omega)
   have hfitC : FitsLen (moves + pegCount baseY) := FitsLen.of_le hfit (by omega)
@@ -278,17 +433,51 @@ theorem chord_rise_white (b : Ecbs.Board) (baseY accY : List Nat)
       ((moves + pegCount baseY : Nat) : Int) := by
     rw [hplace.2.2.2.1, ofNat_eq_natCast]
   have hflag1 : b1.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := hplace.2.2.2.2.1
-  obtain ⟨bR, hadd, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, hflag⟩ :=
+  obtain ⟨bR, hadd, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, hflag,
+      h0aR, h0tR, h2aR, h2tR, h5aR, h5tR, htR, hmR, hcR, hxR, hslR, hopR, honR, hbR, htoR,
+      hhoR, hstR, hpkR⟩ :=
     rise_add b1 baseY accY baseY n (moves + pegCount baseY) hszH1 hszD1 hyB hyA hpos
       htriB htriA hn1 hmoves1 hfitA hplace.2.2.2.2.2.2.1 hplace.2.2.2.2.2.1
       hplace.2.2.2.2.2.2.2.2.1 hplace.2.2.2.2.2.2.2.1
       hplace.2.2.2.2.2.2.2.2.2.2 hplace.2.2.2.2.2.2.2.2.2.1
-  refine ⟨bR, ?_, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, ?_, ?_⟩
+  refine ⟨bR, ?_, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
         show Ecbs.base_up = ((4 : Nat) : Int) from rfl, hcopy, ok_bind]
     simpa [b1] using hadd
   · simpa [Nat.add_assoc] using hmv
   · rw [hflag, hflag1]
+  · intro h
+    exact (h0aR h).trans (place_home_at b h6H h6D baseY moves peak 0 (by decide)
+      (by rw [hszH]; decide))
+  · intro h
+    exact (h0tR h).trans (place_held_at b h6H h6D baseY moves peak 0 (by decide)
+      (by rw [hszD]; decide))
+  · intro h
+    exact (h2aR h).trans (place_home_at b h6H h6D baseY moves peak 2 (by decide)
+      (by rw [hszH]; decide))
+  · intro h
+    exact (h2tR h).trans (place_held_at b h6H h6D baseY moves peak 2 (by decide)
+      (by rw [hszD]; decide))
+  · intro h
+    exact (h5aR h).trans (place_home_at b h6H h6D baseY moves peak 5 (by decide)
+      (by rw [hszH]; decide))
+  · intro h
+    exact (h5tR h).trans (place_held_at b h6H h6D baseY moves peak 5 (by decide)
+      (by rw [hszD]; decide))
+  · exact htR.trans (place_same b 6 h6H h6D baseY moves peak).1
+  · exact hmR.trans (place_same b 6 h6H h6D baseY moves peak).2.1
+  · exact hcR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.1
+  · exact hxR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.1
+  · exact hslR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.2.1
+  · exact hopR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.2.2.1
+  · exact honR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.2.2.2.1
+  · exact hbR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.2.2.2.2.1
+  · exact htoR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.2.2.2.2.2.1
+  · exact hhoR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.2.2.2.2.2.2.1
+  · exact hstR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.2.2.2.2.2.2.2
+  · have hpk := place_peak_nat b 6 h6H h6D baseY moves peak hpeak
+    exact ⟨_, hpkR.trans hpk⟩
 
 /-- Red rise. The spare becomes the negated base up minus the accumulator up. -/
 theorem chord_rise_red (b : Ecbs.Board) (baseY accY : List Nat)
@@ -321,7 +510,34 @@ theorem chord_rise_red (b : Ecbs.Board) (baseY accY : List Nat)
       bR.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) ∧
       bR.sudo_5Board_4cost.sudo_5Costs_5moves =
         ((moves + pegCount baseY + pegCount accY : Nat) : Int) ∧
-      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      (∀ h : 0 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[0] = b.sudo_5Board_4home[0]'(by rw [hszH]; decide)) ∧
+      (∀ h : 0 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[0] = b.sudo_5Board_4held[0]'(by rw [hszD]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[2] = b.sudo_5Board_4home[2]'(by rw [hszH]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[2] = b.sudo_5Board_4held[2]'(by rw [hszD]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[5] = b.sudo_5Board_4home[5]'(by rw [hszH]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[5] = b.sudo_5Board_4held[5]'(by rw [hszD]; decide)) ∧
+      bR.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      bR.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      bR.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on ∧
+      bR.sudo_5Board_5bench = b.sudo_5Board_5bench ∧
+      bR.sudo_5Board_8bench_to = b.sudo_5Board_8bench_to ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      ∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
   have hpeg : pegCount baseY ≤ n := by rw [← hyB]; exact pegCount_le baseY
   have hpegM : pegCount (mirrorTrits baseY) = pegCount baseY := pegCount_mirror baseY htriB
   have hlenM : (mirrorTrits baseY).length = n := by rw [mirror_length, hyB]
@@ -349,18 +565,52 @@ theorem chord_rise_red (b : Ecbs.Board) (baseY accY : List Nat)
       ((moves + pegCount baseY : Nat) : Int) := by
     rw [hplace.2.2.2.1, hpegM, ofNat_eq_natCast]
   have hflag1 : b1.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := hplace.2.2.2.2.1
-  obtain ⟨bR, hadd, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, hflag⟩ :=
+  obtain ⟨bR, hadd, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, hflag,
+      h0aR, h0tR, h2aR, h2tR, h5aR, h5tR, htR, hmR, hcR, hxR, hslR, hopR, honR, hbR, htoR,
+      hhoR, hstR, hpkR⟩ :=
     rise_add b1 (mirrorTrits baseY) accY baseY n (moves + pegCount baseY) hszH1 hszD1
       hlenM hyA hpos htriM htriA hn1 hmoves1 hfitA
       hplace.2.2.2.2.2.2.1 hplace.2.2.2.2.2.1
       hplace.2.2.2.2.2.2.2.2.1 hplace.2.2.2.2.2.2.2.1
       hplace.2.2.2.2.2.2.2.2.2.2 hplace.2.2.2.2.2.2.2.2.2.1
-  refine ⟨bR, ?_, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, ?_, ?_⟩
+  refine ⟨bR, ?_, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
         show Ecbs.base_up = ((4 : Nat) : Int) from rfl, hcopy, ok_bind]
     simpa [b1] using hadd
   · simpa [Nat.add_assoc] using hmv
   · rw [hflag, hflag1]
+  · intro h
+    exact (h0aR h).trans (place_home_at b h6H h6D (mirrorTrits baseY) moves peak 0 (by decide)
+      (by rw [hszH]; decide))
+  · intro h
+    exact (h0tR h).trans (place_held_at b h6H h6D (mirrorTrits baseY) moves peak 0 (by decide)
+      (by rw [hszD]; decide))
+  · intro h
+    exact (h2aR h).trans (place_home_at b h6H h6D (mirrorTrits baseY) moves peak 2 (by decide)
+      (by rw [hszH]; decide))
+  · intro h
+    exact (h2tR h).trans (place_held_at b h6H h6D (mirrorTrits baseY) moves peak 2 (by decide)
+      (by rw [hszD]; decide))
+  · intro h
+    exact (h5aR h).trans (place_home_at b h6H h6D (mirrorTrits baseY) moves peak 5 (by decide)
+      (by rw [hszH]; decide))
+  · intro h
+    exact (h5tR h).trans (place_held_at b h6H h6D (mirrorTrits baseY) moves peak 5 (by decide)
+      (by rw [hszD]; decide))
+  · exact htR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).1
+  · exact hmR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.1
+  · exact hcR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.1
+  · exact hxR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.1
+  · exact hslR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.2.1
+  · exact hopR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.2.2.1
+  · exact honR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.2.2.2.1
+  · exact hbR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.2.2.2.2.1
+  · exact htoR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.2.2.2.2.2.1
+  · exact hhoR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.2.2.2.2.2.2.1
+  · exact hstR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.2.2.2.2.2.2.2
+  · have hpk := place_peak_nat b 6 h6H h6D (mirrorTrits baseY) moves peak hpeak
+    exact ⟨_, hpkR.trans hpk⟩
 
 /-- The rise, white or red. `red` mirrors the base up before the subtraction. -/
 theorem chord_rise (b : Ecbs.Board) (red : Bool) (baseY accY : List Nat)
@@ -394,7 +644,34 @@ theorem chord_rise (b : Ecbs.Board) (red : Bool) (baseY accY : List Nat)
       bR.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) ∧
       bR.sudo_5Board_4cost.sudo_5Costs_5moves =
         ((moves + pegCount baseY + pegCount accY : Nat) : Int) ∧
-      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      (∀ h : 0 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[0] = b.sudo_5Board_4home[0]'(by rw [hszH]; decide)) ∧
+      (∀ h : 0 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[0] = b.sudo_5Board_4held[0]'(by rw [hszD]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[2] = b.sudo_5Board_4home[2]'(by rw [hszH]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[2] = b.sudo_5Board_4held[2]'(by rw [hszD]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[5] = b.sudo_5Board_4home[5]'(by rw [hszH]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[5] = b.sudo_5Board_4held[5]'(by rw [hszD]; decide)) ∧
+      bR.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      bR.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      bR.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on ∧
+      bR.sudo_5Board_5bench = b.sudo_5Board_5bench ∧
+      bR.sudo_5Board_8bench_to = b.sudo_5Board_8bench_to ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      ∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
   cases red
   · simpa using
       chord_rise_white b baseY accY n moves peak hszH hszD hyB hyA hpos htriB htriA

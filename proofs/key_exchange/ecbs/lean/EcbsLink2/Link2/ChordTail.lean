@@ -59,12 +59,62 @@ theorem chord_tail_after_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
       bR.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) ∧
       bR.sudo_5Board_4cost.sudo_5Costs_5moves =
         ((moves + pegCount baseY + pegCount accY : Nat) : Int) ∧
-      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+      bR.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      (∀ h : 0 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[0] =
+          (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[0]'(by
+            rw [hszH]; decide)) ∧
+      (∀ h : 0 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[0] =
+          (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[0]'(by
+            rw [hszD]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[2] =
+          (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[2]'(by
+            rw [hszH]; decide)) ∧
+      (∀ h : 2 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[2] =
+          (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[2]'(by
+            rw [hszD]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[5] =
+          (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[5]'(by
+            rw [hszH]; decide)) ∧
+      (∀ h : 5 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[5] =
+          (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[5]'(by
+            rw [hszD]; decide)) ∧
+      bR.sudo_5Board_1t = (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t ∧
+      bR.sudo_5Board_6marker =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_6marker ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_6slides =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_3ops =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      bR.sudo_5Board_8bench_on =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_8bench_on ∧
+      bR.sudo_5Board_5bench =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_5bench ∧
+      bR.sudo_5Board_8bench_to =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_8bench_to ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      ∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
   let bR0 := restoreMarker bI b.sudo_5Board_9marker_on
-  obtain ⟨bR, hrise, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, hflag⟩ :=
+  obtain ⟨bR, hrise, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, hflag,
+      h0aR, h0tR, h2aR, h2tR, h5aR, h5tR, htR, hmR, hcR, hxR, hslR, hopR, honR, hbR, htoR,
+      hhoR, hstR, pk, hpk⟩ :=
     chord_rise bR0 red baseY accY n moves peak hszH hszD hyB hyA hpos htriB htriA
       hn hmoves hpeak hfit h6e h4t h4a h1t h1a
-  refine ⟨bR, ?_, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, ?_⟩
+  refine ⟨bR, ?_, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, ?_,
+      h0aR, h0tR, h2aR, h2tR, h5aR, h5tR, htR, hmR, hcR, hxR, hslR, hopR, honR, hbR, htoR,
+      hhoR, hstR, ⟨pk, hpk⟩⟩
   · unfold chordAddTail
     dsimp only
     rw [hinv, ok_bind]

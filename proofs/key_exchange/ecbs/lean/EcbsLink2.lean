@@ -60,6 +60,7 @@ import EcbsLink2.Link2.WalkLoop
 import EcbsLink2.Link2.WalkLive
 import EcbsLink2.Link2.ChordRun
 import EcbsLink2.Link2.ChordIf
+import EcbsLink2.Link2.CopyLay
 import EcbsLink2.Link2.ChordRise
 import EcbsLink2.Link2.ChordTail
 import EcbsLink2.Link2.FieldComm

@@ -218,11 +218,16 @@ Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 1579356 kB. Under 2
 
 3822 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. The `EcbsLink2` build that included `open_checked` peaked at 490888 kB VmHWM. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeded.
 
-`chord_add_point` still takes `invert_checked` as a hypothesis. The cell invariant still has to show a live board meets `OpenLay`, and that its counters meet `OpenMatch`.
+## Done in `CopyLay.lean` and `ChordOpen.lean`
+
+- `RunFrame` / `copy_add_open`. The board `chordCopyAddGo` leaves, with the marker held off, is `OpenLay` for `fieldSub` of the two across homes. A climb budget on those counters is `OpenMatch`. The two across copies and the gap copy `invert` does next are one `FitsLen (moves + 3 · n)`. The climb `FitsLen`s are the budget, the same shape as `entryBudget`, starting from this board's counters rather than from zero.
+- `RiseRead` / `chord_add_point`. `open_checked` returns the inverse, so `chord_add_point` no longer takes `invert_checked` as a hypothesis. `RiseRead` is still a hypothesis: homes the rise keeps, and the counters `chord_tail_point` reads, on the board that return leaves. `chord_add_point_of_inv` is the previous statement, used by that call. The settle `FitsLen`s of the tail are still hypotheses.
+
+3971 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Compile peaks (VmHWM): CopyLay 321580 kB, ChordOpen 1118328 kB.
 
 ## Next
 
-Show the board `chord_add_open` leaves, with the marker held off, meets `OpenLay` and `OpenMatch`, and call `open_checked` so `chord_add_point` no longer takes the inverse as a hypothesis. Discharge the remaining settle rooms from that same cell invariant. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Discharge `RiseRead` and the remaining settle rooms from the cell invariant, so a live white or red cell whose run inverts is `.ok` of Spec `chordAdd` with no inverse hypothesis. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

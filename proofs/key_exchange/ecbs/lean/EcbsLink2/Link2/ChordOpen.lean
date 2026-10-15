@@ -6,6 +6,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.ChordLay
+import EcbsLink2.Link2.InvertWalk
 
 namespace EcbsLink2.Link2
 
@@ -265,9 +266,67 @@ theorem chordStep_live_spec (cells : List Nat) (i toN c : Nat)
   exact ⟨chordStep_open cells i toN c b0 b bF bA hi hlen hcAt hc0 hc2 hml hfrob hadd hfiti,
     hwalk⟩
 
+/-- Homes and counters on the board `invert_checked` returns, with the marker
+    flag put back. The inverse itself is not a field: `open_checked` supplies it. -/
+structure RiseRead (b bI : Ecbs.Board) (baseY accY accX run inv : List Nat)
+    (n moves0 peak0 slides peakS hole m ctrl mx script bench cOps w h r k : Nat) where
+  szH : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home.size = 8
+  szD : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held.size = 8
+  hn : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t.sudo_4Tier_1n = (n : Int)
+  hmoves : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_5moves =
+    (moves0 : Int)
+  hpeak : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_4peak =
+    (peak0 : Int)
+  h6e : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[6]'(by
+    rw [szD]; decide) = false
+  h4t : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[4]'(by
+    rw [szD]; decide) = true
+  h4a : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[4]'(by
+    rw [szH]; decide) = embed baseY
+  h1t : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[1]'(by
+    rw [szD]; decide) = true
+  h1a : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[1]'(by
+    rw [szH]; decide) = embed accY
+  h0a : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[0]'(by
+    rw [szH]; decide) = embed accX
+  h0t : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[0]'(by
+    rw [szD]; decide) = true
+  h2a : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[2]'(by
+    rw [szH]; decide) = embed run
+  h2t : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[2]'(by
+    rw [szD]; decide) = true
+  h5a : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[5]'(by
+    rw [szH]; decide) = embed inv
+  h5t : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[5]'(by
+    rw [szD]; decide) = true
+  hoff : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_8bench_on = false
+  hm : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_6marker = Int.ofNat m
+  hc : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+    Int.ofNat ctrl
+  hx : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+    Int.ofNat mx
+  hscript : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t.sudo_4Tier_6script =
+    Int.ofNat script
+  hops : 0 < (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_3ops.size
+  hop0 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_3ops[0]'hops =
+    (cOps : Int)
+  hbl : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t.sudo_4Tier_8benchlen =
+    Int.ofNat bench
+  hsl : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_6slides =
+    Int.ofNat slides
+  hstrict : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+    (peakS : Int)
+  hhole : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+    Int.ofNat hole
+  hw : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w
+  hh : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h
+  hr : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r
+  hk : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k
+
 /-- The nonempty chord add, once `invert_checked` has returned. Across, bottom,
-    and gap are the homes the rise keeps. `chord_tail_point` runs on that board. -/
-theorem chord_add_point (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
+    and gap are the homes the rise keeps. `chord_tail_point` runs on that board.
+    `chord_add_point` obtains the return from `open_checked`. -/
+theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
     (baseY accY accX run inv rise : List Nat)
     (w h r n k moves0 moves hole bench slides peak0 peakS cOps m ctrl mx script : Nat)
     (hinv : Ecbs.invert_checked { b with sudo_5Board_9marker_on := false } Ecbs.bottom = .ok bI)
@@ -487,6 +546,154 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
     simpa [chordX3, fieldMul] using hAc h
   · intro h
     simpa [chordY3, chordX3, fieldMul, fieldSub] using hUp h
+
+/-- The nonempty chord add. `open_checked` returns the inverse, so this no longer
+    takes `invert_checked` as a hypothesis. `RiseRead` is the board that return
+    leaves: homes the rise keeps, and the counters `chord_tail_point` reads. -/
+theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
+    (baseY accY accX run inv rise : List Nat)
+    (w h r n k moves0 moves hole bench slides peak0 peakS cOps m ctrl mx script : Nat)
+    (lay : OpenLay { b with sudo_5Board_9marker_on := false } t run)
+    (bud : ClimbBudget) (hmatch : OpenMatch lay bud)
+    (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t) (hsh : TierShape t)
+    (hacc : fieldInv t.n t.k t.benchlen run = some inv)
+    (hread : ∀ bI,
+      Ecbs.invert_checked { b with sudo_5Board_9marker_on := false } Ecbs.bottom = .ok bI →
+      RiseRead b bI baseY accY accX run inv n moves0 peak0 slides peakS hole m ctrl mx
+        script bench cOps w h r k)
+    (hyB : baseY.length = n) (hyA : accY.length = n) (hpos : 0 < n)
+    (htriB : allTritList baseY) (htriA : allTritList accY)
+    (hfit0 : FitsLen (moves0 + 2 * n))
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hbound : m + 2 < script) (hbound3 : m + 3 < script)
+    (hfitM : FitsLen (m + 1)) (hfitC : FitsLen (ctrl + 2)) (hfit2 : FitsLen (m + 2))
+    (hfitC4 : FitsLen (ctrl + 4)) (hfit3 : FitsLen (m + 3))
+    (hfitC6 : FitsLen (ctrl + 6)) (hfit4 : FitsLen (m + 4))
+    (hfops : FitsLen (cOps + 1)) (hfops2 : FitsLen (cOps + 2)) (hfops3 : FitsLen (cOps + 3))
+    (hsum : moves = moves0 + pegCount baseY + pegCount accY)
+    (hriseL : rise = fieldSub n (if red then mirrorTrits baseY else baseY) accY)
+    (hxLen : accX.length = n) (hyLen : accY.length = n) (hrunL : run.length = n)
+    (hinvL : inv.length = n) (hriseN : rise.length = n)
+    (htriX : allTritList accX) (htriY : allTritList accY) (htriR : allTritList run)
+    (htriI : allTritList inv) (htriRise : allTritList rise)
+    (hf : FitsLen n)
+    (hspan : 2 * (n - 1) < bench)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfm : FitsLen (moves + n * (n + 1)))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000) (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + n * (n + 1) + 3 * (bench - n)))
+    (hfitClear : FitsLen (mulMovesNo moves inv rise n k bench + pegCount inv))
+    (hpegG : FitsLen (2 * pegCount ((gapProduct n k bench inv rise).take n)))
+    (hfitSM : FitsLen (mulMovesNo moves inv rise n k bench + pegCount inv +
+        2 * pegCount ((gapProduct n k bench inv rise).take n)))
+    (hfitSS : FitsLen (slides + 2 * pegCount ((gapProduct n k bench inv rise).take n)))
+    (hfmS : FitsLen (mvGap moves inv rise n k bench +
+        pegCount (fieldMul n k bench rise inv) + n * (n + 1)))
+    (hfoldS : FitsLen (mvGap moves inv rise n k bench +
+        pegCount (fieldMul n k bench rise inv) + n * (n + 1) + 3 * (bench - n)))
+    (hfitW : FitsLen (mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench))
+    (hfit1 : FitsLen (mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench + n))
+    (hfitA : FitsLen (mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench +
+        pegCount accX + n))
+    (hfitRun : FitsLen (mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench +
+        pegCount accX + pegCount run + pegCount run))
+    (hpegX : FitsLen (2 * pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run)))
+    (hfitMX : FitsLen (mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench +
+        pegCount accX + pegCount run + pegCount run +
+        2 * pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run)))
+    (hfitSX : FitsLen (slGap slides inv rise n k bench +
+        2 * pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run)))
+    (hTailM : let slope := fieldMul n k bench rise inv
+      let x3 := chordX3 n k bench slope accX run
+      let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
+        pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
+      FitsLen (mvX + pegCount x3 + pegCount accY + 2 * n + n * (n + 1) +
+        3 * (bench - n) + 5 * n))
+    (hTailS : let slope := fieldMul n k bench rise inv
+      let x3 := chordX3 n k bench slope accX run
+      let slX := slGap slides inv rise n k bench + 2 * pegCount x3
+      FitsLen (slX + 6 * n))
+    (hfitP : let slope := fieldMul n k bench rise inv
+      let x3 := chordX3 n k bench slope accX run
+      let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
+        pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
+      FitsLen (mvX + 2 * n))
+    (hfitMo : let slope := fieldMul n k bench rise inv
+      let x3 := chordX3 n k bench slope accX run
+      let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
+        pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
+      FitsLen (mvX + pegCount x3 + pegCount accY + 2 * n))
+    (hfmP : let slope := fieldMul n k bench rise inv
+      let x3 := chordX3 n k bench slope accX run
+      let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
+        pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
+      FitsLen (mvX + pegCount x3 + pegCount accY + 2 * n + n * (n + 1)))
+    (hfoldP : let slope := fieldMul n k bench rise inv
+      let x3 := chordX3 n k bench slope accX run
+      let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
+        pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
+      FitsLen (mvX + pegCount x3 + pegCount accY + 2 * n + n * (n + 1) + 3 * (bench - n)))
+    (hfitSo : let slope := fieldMul n k bench rise inv
+      let x3 := chordX3 n k bench slope accX run
+      let slX := slGap slides inv rise n k bench + 2 * pegCount x3
+      FitsLen (slX + 2 * n)) :
+    ∃ b',
+      chordAddTail b red = .ok (true, b') ∧
+      (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed (chordX3 n k bench
+        (fieldMul n k bench rise inv) accX run)) ∧
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed (chordY3 n k bench
+        (fieldMul n k bench rise inv) (fieldSub n accX (chordX3 n k bench
+          (fieldMul n k bench rise inv) accX run)) accY)) := by
+  obtain ⟨bI, _, _, hinv0, _, _, _, _⟩ :=
+    open_checked { b with sudo_5Board_9marker_on := false } t run inv lay hOk sat hR hsh
+      bud hmatch hacc
+  have hinv : Ecbs.invert_checked { b with sudo_5Board_9marker_on := false } Ecbs.bottom =
+      .ok bI := by
+    simpa [Ecbs.bottom] using hinv0
+  have hr := hread bI hinv
+  have hszH := hr.szH
+  have hszD := hr.szD
+  have h6e : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[6]'(by
+      rw [hszD]; decide) = false := idx_irrel.trans hr.h6e
+  have h4t : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[4]'(by
+      rw [hszD]; decide) = true := idx_irrel.trans hr.h4t
+  have h4a : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[4]'(by
+      rw [hszH]; decide) = embed baseY := idx_irrel.trans hr.h4a
+  have h1t0 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[1]'(by
+      rw [hszD]; decide) = true := idx_irrel.trans hr.h1t
+  have h1a0 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[1]'(by
+      rw [hszH]; decide) = embed accY := idx_irrel.trans hr.h1a
+  have h0a0 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[0]'(by
+      rw [hszH]; decide) = embed accX := idx_irrel.trans hr.h0a
+  have h0t0 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[0]'(by
+      rw [hszD]; decide) = true := idx_irrel.trans hr.h0t
+  have h2a0 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[2]'(by
+      rw [hszH]; decide) = embed run := idx_irrel.trans hr.h2a
+  have h2t0 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[2]'(by
+      rw [hszD]; decide) = true := idx_irrel.trans hr.h2t
+  have h5a0 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4home[5]'(by
+      rw [hszH]; decide) = embed inv := idx_irrel.trans hr.h5a
+  have h5t0 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4held[5]'(by
+      rw [hszD]; decide) = true := idx_irrel.trans hr.h5t
+  have hop00 : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_3ops[0]'hr.hops =
+      (cOps : Int) := hr.hop0
+  exact chord_add_point_of_inv b red bI baseY accY accX run inv rise
+    w h r n k moves0 moves hole bench slides peak0 peakS cOps m ctrl mx script
+    hinv hszH hszD hyB hyA hpos htriB htriA hr.hn hr.hmoves hr.hpeak hfit0
+    h6e h4t h4a h1t0 h1a0 h0a0 h0t0 h2a0 h2t0 h5a0 h5t0
+    hmk hr.hoff hr.hm hr.hc hr.hx hr.hscript
+    hbound hbound3 hfitM hfitC hfit2 hfitC4 hfit3 hfitC6 hfit4
+    hr.hops hop00 hfops hfops2 hfops3 hr.hbl
+    hsum hriseL hxLen hyLen hrunL hinvL hriseN
+    htriX htriY htriR htriI htriRise hf
+    hr.hsl hr.hstrict hr.hhole
+    hspan hfi hfm hw0 hh0 hrR hrP hnE hkLe hgap
+    hr.hw hr.hh hr.hr hr.hk
+    hsm hnsm hfitB hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW hfit1 hfitA
+    hfitRun hpegX hfitMX hfitSX hTailM hTailS hfitP hfitMo hfmP hfoldP hfitSo
 
 /-- `chordAddTail` after the inverse is `chord_tail` on the rise board.
     A tail that returns `b'` is the pair `(true, b')`. -/

@@ -1068,20 +1068,28 @@ export function createMegaDreifachAdapter() {
  * the toy chest, onto the felt, and they are unboxed there: the units to
  * their seats, lids up, the cup and the dice to theirs (constants.js BS
  * layout; bs-unbox-plan.js). Leaving repacks them before they fly home.
- * The seed rolls both key grids; Play shows every summary of the generated
+ * The demo rolls both players' dice (fresh each time; an optional debug
+ * seed repeats the throws) and shows each throw; Play shows every summary of the generated
  * trace, Step every peg move of one.
  */
 export function createBsAdapter() {
     const dock = createDock("bs", {
         controls: `
             <div class="playroom-ctl">
-              <button type="button" class="seg-btn on" id="roll">Roll keys</button>
+              <button type="button" class="seg-btn on" id="roll" title="Throw fresh dice (clears the debug seed)">Roll dice</button>
             </div>`,
         fields: `
-          <label class="playroom-ctl playroom-ctl--field" for="seed">
-            <span class="playroom-label">Seed</span>
-            <input id="seed" class="grow-field" type="text" spellcheck="false" autocomplete="off" placeholder="Any text">
+          <label class="playroom-ctl playroom-ctl--field" for="out-throw">
+            <span class="playroom-label">Throw</span>
+            <textarea id="out-throw" class="bs-throw grow-field" rows="2" readonly spellcheck="false" autocomplete="off"></textarea>
           </label>
+          <details class="bs-debug">
+            <summary class="playroom-label">Debug</summary>
+            <label class="playroom-ctl playroom-ctl--field" for="seed">
+              <span class="playroom-label">Seed (optional)</span>
+              <input id="seed" class="grow-field" type="text" spellcheck="false" autocomplete="off" placeholder="Blank: fresh rolls">
+            </label>
+          </details>
           <div id="kat-menu" class="drei-kat-menu" role="group" aria-label="Known-answer tests" hidden></div>
           <label class="playroom-ctl playroom-ctl--field" for="out-a">
             <span class="playroom-label">A</span>

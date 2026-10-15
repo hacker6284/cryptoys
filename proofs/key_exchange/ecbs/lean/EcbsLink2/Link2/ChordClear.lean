@@ -41,6 +41,16 @@ theorem gapMul_held (b : Ecbs.Board) (inv rise : List Nat)
   unfold gapMulBoard mulNoOffBoard markerUpFeed
   rfl
 
+theorem gapMul_high (b : Ecbs.Board) (inv rise : List Nat)
+    (n k moves hole bench peak peakS cOps m ctrl mx : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hS : 6 < b.sudo_5Board_4held.size)
+    (hHomeS : 6 < b.sudo_5Board_4home.size) :
+    (gapMulBoard b inv rise n k moves hole bench peak peakS cOps m ctrl mx hops hS hHomeS).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+  unfold gapMulBoard mulNoOffBoard markerUpFeed
+  rfl
+
 theorem gapMul_moves (b : Ecbs.Board) (inv rise : List Nat)
     (n k moves hole bench peak peakS cOps m ctrl mx : Nat)
     (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)

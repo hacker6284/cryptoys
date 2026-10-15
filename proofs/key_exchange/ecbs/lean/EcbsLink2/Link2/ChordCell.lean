@@ -289,10 +289,12 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
         ∀ hi' : i < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[i] = b.sudo_5Board_4held[i]) ∧
       bS.sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) ∧
-      ∃ peakG strictG holeG,
+      (∃ peakG strictG holeG,
         bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakG ∧
         bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictG ∧
-        bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG := by
+        bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG) ∧
+      bS.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   intro slope
   have hmul := chord_gap_mul b inv rise w h r n k moves hole bench peak peakS cOps m ctrl mx
     script hmk hoff hm hc hx hscript hbound hfitM hfitC hfit2 hops hop0 hfops hbl hF hHome hHF
@@ -403,7 +405,7 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
     simpa [slope] using (slope_mul_swap n k bench rise inv hrT hxsT).symm
   have hmix := gapMul_ix b inv rise n k moves hole bench peak peakS cOps m ctrl mx hops hS hHomeS
   have hsix := settle_ix bC 5 hH hD xs n mv slides peakC
-  refine ⟨bS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hmulEq, ok_bind, hclearEq, ok_bind]
     simpa [bS, show Ecbs.gap = ((5 : Nat) : Int) from rfl] using hset
   · have hflag : bC.sudo_5Board_9marker_on = true := by
@@ -495,6 +497,11 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
         unfold gapMulBoard mulNoOffBoard markerUpFeed
         rfl
       simpa [bS, hho] using settle_hole_eq bC 5 ⟨hH, hD⟩ xs n mv slides peakC
+  · have hM := gapMul_high b inv rise n k moves hole bench peak peakS cOps m ctrl mx hops hS hHomeS
+    have hC : bC.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        bM.sudo_5Board_4cost.sudo_5Costs_15control_highest := by simp [bC]
+    simpa [bS] using
+      (settle_high_eq bC 5 ⟨hH, hD⟩ xs n mv slides peakC).trans (hC.trans hM)
 
 /-- The square and the white peg. Homes other than the spare stay.
     The bench prefix is slope² + 1. -/
@@ -569,10 +576,12 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
       (∀ h : 6 < bW.sudo_5Board_4held.size, bW.sudo_5Board_4held[6] = false) ∧
       bW.sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) ∧
-      ∃ peakG strictG holeG,
+      (∃ peakG strictG holeG,
         bW.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakG ∧
         bW.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictG ∧
-        bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG := by
+        bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG) ∧
+      bW.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   let feed := markerUpFeed b m ctrl mx
   have hup := mul_copy_up_eq b 2 5 5 slope slope w h r n k moves hole bench peak peakS cOps
     m ctrl mx script hmk hoff hm hc hx hscript hbound hfitM hfitCtrl hfit2 hops hop0 hfops
@@ -597,7 +606,7 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
     (by simp [feed, markerUpFeed, hr]) (by simp [feed, markerUpFeed, hk])
     (by simp [feed, markerUpFeed, hhole]) hsm hnsm hfitB hfold
   rcases href with ⟨b0, hb, hon, hto, hbench, htake, hhigh, hmv, hpk, hsl, ht, hsz, hheld,
-      _h5, hkeep, _hmk, hopsR, hstrict, hholeR, hmark, hctrl, hmxR⟩
+      _h5, hkeep, _hmk, hopsR, hstrict, hholeR, hmark, hctrl, hmxR, hhi0⟩
   let bF := { b0 with sudo_5Board_9marker_on := true }
   have hmulF : Ecbs.mul b Ecbs.bottom Ecbs.gap Ecbs.gap true false false = .ok bF := by
     rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, show Ecbs.gap = ((5 : Nat) : Int) from rfl,
@@ -650,7 +659,7 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
       unfold coeff
       simp [hpos]
     simpa [benchL, hc0, htakeL] using hset
-  refine ⟨bW, benchL, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bW, benchL, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hmulF, ok_bind, hwhite]
   · simp [bW, bF]
   · simpa [bW, bF] using hon
@@ -714,6 +723,10 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
     · simpa [bW, bF, peakG] using hpk
     · simpa [bW, bF, feed, markerUpFeed] using hstrict
     · simpa [bW, bF, sch] using hholeR
+  · have hfeed : feed.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+      simp [feed, markerUpFeed]
+    simpa [bW, bF] using hhi0.trans hfeed
 
 /-- Gap settle, then the square, obtained from the settled board. -/
 theorem gap_square_obtain (b : Ecbs.Board) (inv rise : List Nat)
@@ -787,12 +800,14 @@ theorem gap_square_obtain (b : Ecbs.Board) (inv rise : List Nat)
       bW.sudo_5Board_8bench_to = Ecbs.bottom := by
   intro slope
   obtain ⟨bS, hdo, _hmkS, hoffS, hmS, hcS, hxS, htS, hmvS, _hslS, hszHs, hszDs, h5a, h5t,
-      h6e, _hhome, _hheld, hopsEq, peakG, strictG, holeG, hpk, hst, hho⟩ :=
+      h6e, _hhome, _hheld, hopsEq, hpeak⟩ :=
     gap_settle_lay b inv rise w h r n k moves hole bench slides peak peakS cOps m ctrl mx
       script hmk hoff hm hc hx hscript (by omega) hfitM hfitC hfit2 hops hop0 hfops hbl
       hF hHome hHF hArr hS hHomeS hHS hYs h7 hn0 hn hlenx hleny hf hmoves hslides hpeak
       hpeakS hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm
       hnsm hfitB hfold hfitClear hpeg hfitSM hfitSS
+  obtain ⟨hp, _hhiS⟩ := hpeak
+  obtain ⟨peakG, strictG, holeG, hpk, hst, hho⟩ := hp
   have hlenS : slope.length = n := by
     simp only [slope]
     rw [← mul_no_prefix n k bench rise inv]
@@ -830,8 +845,7 @@ theorem gap_square_obtain (b : Ecbs.Board) (inv rise : List Nat)
     simp only [slope]
     exact FitsLen.of_le hfmS (by omega)
   obtain ⟨bW, benchL, hW, _hmkW, honW, htoW, _hmW, _hcW, _hxW, _htW, _hmvW, _hslW,
-      _hszW, _hheldW, hbenchW, hpreW, _hlenW, hzeroW, _hhomeW, _hheldIW, _h6W, _hopsW,
-      _pk, _st, _ho, _hpk, _hst, _hho⟩ :=
+      _hszW, _hheldW, hbenchW, hpreW, _hlenW, hzeroW, _⟩ :=
     square_white_lay bS slope w h r n k (mvGap moves inv rise n k bench) holeG bench
       peakG strictG (cOps + 1) (m + 1) (ctrl + 2) (max mx (m + 2)) script
       _hmkS hoffS hmS hcS hxS hscriptS hbound hfit2 hfitC4 hfit3 hopsSz hop0S hfops2 hblS

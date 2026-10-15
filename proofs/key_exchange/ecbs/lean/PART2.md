@@ -254,6 +254,16 @@ Homes 0, 1, and 4 are on `ClimbBudget` (`side0`, `side1`, `side4`, and the three
 
 The check multiply, the rise, and the chord tail are not yet shown to keep this high. `set_control` never lowers it, and `finalTail` does not write it.
 
+## Done in the high-water export
+
+- `mul_refines` keeps `control_highest`. The copy multiply does not write that field.
+- `open_check_mul` / `open_checked` / `checked_high_mark`. The board `invert_checked` leaves has the same high as the board `tally_clear` leaves, and that high is at least `tallyOrigin`. The next cell's tally start is `tally_start_again`. `RunFrame.highLt` remains the first cell, where the mark still sits strictly under the origin.
+- `gapMul_high` / `gap_settle_lay` / `square_white_lay` / `square_kept`. The gap multiply, its clear, its settle, and the slope square keep the recorded high. `gap_settle_high` is that settle.
+
+The bench adds, the across/bottom settle, the take, the onto multiply, and the closing slide are not yet exported. They update moves, homes, and the bench; the same projection is what the gap and the square use.
+
+4162 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 979408 kB VmHWM. The ChordLay elaboration in this group peaked at 1578636 kB. Both are under 2 GB.
+
 4158 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 991828 kB VmHWM. The rebuild that re-elaborated ChordLay after the high conjunct peaked at 1594024 kB. Both are under 2 GB.
 
 ## Next

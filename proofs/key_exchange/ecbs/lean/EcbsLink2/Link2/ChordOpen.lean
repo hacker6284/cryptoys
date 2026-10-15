@@ -1030,9 +1030,10 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
             (fieldSub t.n accX (chordX3 t.n t.k t.benchlen
               (fieldMul t.n t.k t.benchlen rise inv) accX run)) accY)) := by
   obtain ⟨bI, _h5, _h5D, hinv0, h5aI, h5tI, hnT, _hlenA, h2aI, h2tI, h0aI, h0tI,
-      h1aI, h1tI, h4aI, h4tI, hcarry, hbnd⟩ :=
+      h1aI, h1tI, h4aI, h4tI, hcarry, hbnd, hwater⟩ :=
     open_checked { b with sudo_5Board_9marker_on := false } t run inv lay hOk sat hR hsh
       bud hmatch hacc
+  have _hwater := hwater
   have hinv : Ecbs.invert_checked { b with sudo_5Board_9marker_on := false } Ecbs.bottom =
       .ok bI := by simpa [Ecbs.bottom] using hinv0
   let bF := restoreMarker bI b.sudo_5Board_9marker_on

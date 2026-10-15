@@ -109,22 +109,26 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
       (∀ i, i ≠ 6 → ∀ hi : i < b.sudo_5Board_4held.size,
         ∀ hi' : i < bW.sudo_5Board_4held.size,
           bW.sudo_5Board_4held[i] = b.sudo_5Board_4held[i]) ∧
-      ∃ peakW strictW holeW,
+      (∃ peakW strictW holeW,
         bW.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakW ∧
         bW.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictW ∧
         bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeW ∧
       bW.sudo_5Board_4cost.sudo_5Costs_3ops.size =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
       (∀ h : 0 < bW.sudo_5Board_4cost.sudo_5Costs_3ops.size,
-        bW.sudo_5Board_4cost.sudo_5Costs_3ops[0] = Int.ofNat (cOps + 2)) := by
+        bW.sudo_5Board_4cost.sudo_5Costs_3ops[0] = Int.ofNat (cOps + 2))) ∧
+      bW.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   intro slope
   obtain ⟨bS, hdo, _hmkS, hoffS, hmS, hcS, hxS, htS, hmvS, hslS, hszHs, hszDs, h5a, h5t,
-      h6e, hhome, hheld, hopsEq, peakG, strictG, holeG, hpk, hst, hho⟩ :=
+      h6e, hhome, hheld, hopsEq, hpeak⟩ :=
     gap_settle_lay b inv rise w h r n k moves hole bench slides peak peakS cOps m ctrl mx
       script hmk hoff hm hc hx hscript (by omega) hfitM hfitC hfit2 hops hop0 hfops hbl
       hF hHome hHF hArr hS hHomeS hHS hYs h7 hn0 hn hlenx hleny hf hmoves hslides hpeak
       hpeakS hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm
       hnsm hfitB hfold hfitClear hpeg hfitSM hfitSS
+  obtain ⟨hp, hhiS⟩ := hpeak
+  obtain ⟨peakG, strictG, holeG, hpk, hst, hho⟩ := hp
   have hlenS : slope.length = n := by
     simp only [slope]
     rw [← mul_no_prefix n k bench rise inv]
@@ -163,15 +167,17 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
     exact FitsLen.of_le hfmS (by omega)
   obtain ⟨bW, benchL, hW, _hmkW, honW, htoW, hmW, hcW, hxW, htW, hmvW, hslW,
       hszW, hheldW, hbenchW, hpreW, hlenW, hzeroW, hhomeW, hheldIW, _h6W, _hopsW,
-      pk, st, ho, hpkW, hstW, hhoW⟩ :=
+      hrest⟩ :=
     square_white_lay bS slope w h r n k (mvGap moves inv rise n k bench) holeG bench
       peakG strictG (cOps + 1) (m + 1) (ctrl + 2) (max mx (m + 2)) script
       _hmkS hoffS hmS hcS hxS hscriptS hbound hfit2 hfitC4 hfit3 hopsSz hop0S hfops2 hblS
       h5dS h5hS (h5t h5dS) (h5a h5hS) h6dS h6hS (h6e h6dS) h7S hn0 hnS hlenS hf hmvS
       hpk hst hspan htriS hfi hfmS hfitP hho hw0 hh0 hrR hrP hnE hkLe hgap hwS hhS hrS hkS
       hsm hnsm hfitB hfoldS hfitW
+  obtain ⟨hp, _hhiW⟩ := hrest
+  obtain ⟨pk, st, ho, hpkW, hstW, hhoW⟩ := hp
   refine ⟨bW, benchL, ?_, hbenchW, hpreW, hlenW, hzeroW, honW, htoW, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · have hassoc :
         (do
             let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
@@ -227,6 +233,7 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
     · intro h0
       have hget := ix _hopsW 0 h0
       simpa [Array.getElem_set] using hget
+  · exact _hhiW.trans hhiS
 
 /-- The square, then the two bench adds and the settle. The bottom is
     slope² + 1 + across − run. Across, up, and the gap stay. -/
@@ -351,13 +358,14 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
   have hS : 6 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have hHomeS : 6 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   obtain ⟨bW, benchL, hsq, hbench, hpre, hlen, hzero, hon, hto, hszHW, hszDW, hmkW, hmW,
-      hcW, hxW, htW, hmvW, hslW, hkeep, h5a, h5t, hheldK, peakW, strictW, holeW, hpkW, hstW, hhoW,
-      opsSz, hop0W⟩ :=
+      hcW, hxW, htW, hmvW, hslW, hkeep, h5a, h5t, hheldK, htail⟩ :=
     square_kept b inv rise w h r n k moves hole bench slides peak peakS cOps m ctrl mx script
       hmk hoff hm hc hx hscript hbound hfitM hfitC hfit2 hfitC4 hfit3 hops hop0 hfops hfops2 hbl
       hF hHome hHF hArr hS hHomeS hHS hYs h7 hn0 hn hlenx hleny hf hmoves hslides hpeak hpeakS
       hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm hnsm hfitB
       hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW
+  obtain ⟨hpW, _hhiW⟩ := htail
+  obtain ⟨peakW, strictW, holeW, hpkW, hstW, hhoW, opsSz, hop0W⟩ := hpW
   have hnb : n ≤ bench := by omega
   have htriB : allTritList (benchL.take n) := by
     rw [hpre]

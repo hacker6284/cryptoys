@@ -265,4 +265,16 @@ theorem chordStep_live_spec (cells : List Nat) (i toN c : Nat)
   exact ⟨chordStep_open cells i toN c b0 b bF bA hi hlen hcAt hc0 hc2 hml hfrob hadd hfiti,
     hwalk⟩
 
+/-- `chordAddTail` after the inverse is `chord_tail` on the rise board.
+    A tail that returns `b'` is the pair `(true, b')`. -/
+theorem chord_add_from_tail (b bR b' : Ecbs.Board) (red : Bool)
+    (hadd :
+      chordAddTail b red =
+        (do
+          let b ← Ecbs.chord_tail bR Ecbs.across Ecbs.up
+          pure (true, b)))
+    (htail : Ecbs.chord_tail bR Ecbs.across Ecbs.up = .ok b') :
+    chordAddTail b red = .ok (true, b') := by
+  rw [hadd, htail, ok_bind, pure_eq_ok]
+
 end EcbsLink2.Link2

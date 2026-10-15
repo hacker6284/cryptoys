@@ -193,8 +193,9 @@ Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 1579356 kB. Under 2
 - `chord_tail_point`: obtain `bottom_lay`, obtain `point_from_bottom`, then `rw [chord_tail_across_up]` and `chord_do_join`. `Ecbs.chord_tail` on the across and the up is `.ok`, home 0 is `chordX3`, home 1 is `chordY3`. The tail `FitsLen`s are passed in, not rebuilt with `omega`.
 - `chordStep_open`: a live white or red cell whose `chord_add_demo` returns `(true, bA)` stays live. The index advances unless the cell is last.
 - `chordStep_live_spec`: that step, together with a `walkStep` hypothesis for the same point. `walkStep_live_chord` is the spec side. The chord add is still a hypothesis: `chord_tail_after_inv` does not yet hand its rise board to `chord_tail_point`, and `invert_checked` on a walk board is still a hypothesis.
+- `chord_add_from_tail`: if `chordAddTail` is `chord_tail` on the rise board and that tail returns `b'`, the add returns `(true, b')`.
 
-Compile peak (VmHWM) for a fresh elaboration of ChordOpen: 353308 kB. 3750 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeded.
+Compile peak (VmHWM) for a fresh elaboration of ChordOpen: 353308 kB. 3751 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeded.
 
 ## Next
 

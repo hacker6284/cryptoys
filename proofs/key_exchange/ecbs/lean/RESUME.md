@@ -182,7 +182,7 @@ Compile peak (VmHWM) for a clean `lake build EcbsLink2` under `ulimit -v 7000000
 
 `x3_settle_lay` now also says which homes stay, and `chord_take_mirror` says the same for the take. `mul_onto_up_prefix` returns `OntoLay`: the destination and the second factor are empty, the bench is on and aimed at the destination, and the other homes stay.
 
-Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: measured with the package build. 3745 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
+Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 388884 kB. 3745 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
 
 ## Next
 

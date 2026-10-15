@@ -221,20 +221,24 @@ Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 1579356 kB. Under 2
 ## Done in `CopyLay.lean` and `ChordOpen.lean`
 
 - `RunFrame` / `copy_add_open`. The board `chordCopyAddGo` leaves, with the marker held off, is `OpenLay` for `fieldSub` of the two across homes. A climb budget on those counters is `OpenMatch`. The two across copies and the gap copy `invert` does next are one `FitsLen (moves + 3 · n)`. The climb `FitsLen`s are the budget, the same shape as `entryBudget`, starting from this board's counters rather than from zero.
-- `RiseRead` / `chord_add_point`. `open_checked` returns the inverse, so `chord_add_point` no longer takes `invert_checked` as a hypothesis. `RiseRead` is still a hypothesis: homes the rise keeps, and the counters `chord_tail_point` reads, on the board that return leaves. `chord_add_point_of_inv` is the previous statement, used by that call. The settle `FitsLen`s of the tail are still hypotheses.
+- `RiseRead` / `chord_add_point`. `open_checked` returns the inverse, so `chord_add_point` no longer takes `invert_checked` as a hypothesis. `chord_add_point_of_inv` is the tail once the counters are known. The settle `FitsLen`s are discharged below.
 - `open_check_mul` / `open_checked` also say home 2 is still the input and still held. The climb keeps `xHome`, `CheckRead` keeps it through the final cube, and the check multiply keeps every home other than the spare. A red mirror writes home 5 only (`mirrorHome_other`).
 
 Homes 0, 1, and 4 are on `ClimbBudget` (`side0`, `side1`, `side4`, and the three held flags) and `ClimbShape` carries `SideKeep`. A rung writes the gap and the spare; `shape_refresh` is handed the three cells it did not write. The fresh tally board starts them empty. A walk board records them on `OpenLay` and `OpenMatch`, and `copy_add_open` shows the copy-add leaves them.
 
 `QuietKeep` is the rest of that frame: home and held arrays stay length 8, the tier record stays `tierSnap`, and the script-marker index and its maximum stay `markSnap` and `mxSnap`. The fresh tally board starts the marker at `-1` and the maximum at `0`. A walk board records a natural index and maximum on `OpenLay` and `RunFrame`. `final_cube_settle` returns `QuietKeep` on the settled board. `open_check_mul` turns that into `RiseCarry` on the board the check leaves (size 8, `embTier`, the lay's marker and maximum, spare empty, bench off, and the counters as naturals). A red mirror keeps every one of those fields except the move counter, which stays a natural. `open_checked` returns `RiseCarry` for both branches.
 
-`chord_add_point` no longer takes `RiseRead`. It obtains `open_checked` and builds `RiseRead`: homes 0, 1, 2, 4, and 5 and the held flags are the lay and the inverse, and the counters are the naturals `RiseCarry` reads. The tail is the conclusion of `chord_add_point_of_inv` once a `TailRoom` grants the settle `FitsLen`s for those counters. Those rooms are still a hypothesis.
+`chord_add_point` no longer takes `RiseRead`. It obtains `open_checked` and builds `RiseRead`: homes 0, 1, 2, 4, and 5 and the held flags are the lay and the inverse, and the counters are the naturals `RiseCarry` reads.
 
-4123 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. The `lake build EcbsLink2` that included this frame peaked at 1703936 kB VmHWM under `ulimit -v 7000000`. The following `ChordOpen` rebuild succeeded under the same ulimit.
+## Done in `AfterClimb.lean`, `InvertWalk.lean`, and `ChordOpen.lean`
+
+- `PostCubeBound` / `CheckBound`. The board the final cube leaves has moves, slides, control, and ops slot 0 at most `checkMoveCap`, `checkSlideCap`, `checkCtrlCap`, and `checkOpsCap`. The check multiply, including a red mirror, stays inside the move cap: the white branch has one `n` of slack and the mirror spends at most that many pegs.
+- `tailRoom_of`. Every settle `FitsLen` in `TailRoom` follows from one move room `FitsLen (moves0 + tailMoveCap n bench)`, one slide room `FitsLen (slides + tailSlideCap n)`, and one room each for the marker (`m + 3 < script` and `FitsLen (m + 4)`), the control counter (`FitsLen (ctrl + 6)`), and ops slot 0 (`FitsLen (cOps + 3)`). A length-`n` home has at most `n` pegs, so `pegCount` never appears in those rooms.
+- `chord_add_point` takes those five rooms on the climb budget (`checkMoveCap + tailMoveCap`, and the same shape for slides, control, and ops) and on the lay's marker. It builds `TailRoom` and the tail is unconditional: `chordAddTail` is `.ok (true, b')`, home 0 is `chordX3`, home 1 is `chordY3`.
 
 ## Next
 
-Discharge `TailRoom` from the cell invariant (one coarse `FitsLen` and `pegCount ≤ n`). A live white or red cell whose run inverts is then `.ok` of Spec `chordAdd`. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+A live white or red cell whose run inverts is `.ok` of Spec `chordAdd`, once the cell invariant supplies those five rooms. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

@@ -962,7 +962,10 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         bR.sudo_5Board_4home[4] = embed lay.side4) ∧
       (∀ h4 : 4 < bR.sudo_5Board_4held.size,
         bR.sudo_5Board_4held[4] = lay.flag4) ∧
-      RiseCarry bR t lay.mark lay.mx := by
+      RiseCarry bR t lay.mark lay.mx ∧
+      CheckBound bR base ∧
+      (∃ mv : Nat, bR.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+        mv + t.n ≤ checkMoveCap base) := by
   obtain ⟨bT, hem, hK⟩ := open_invert b t xs lay hOk sat hR hsh base hm
   have hpark : (openModel t xs lay.ctrl).parkAt = base.ladder0 + base.R := by
     simp [openModel, entryModel, hm.ladder0, hm.R]
@@ -993,7 +996,7 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         rw [hs', modelClimb_tally]
         simp [openModel, entryModel]
         exact Nat.lt_of_lt_of_le (by decide : (0 : Nat) < 1) (climbTally_ge 1 (tierClimb t))
-      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread, hsideZ, hquietZ⟩ :=
+      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread, hsideZ, hquietZ, hbound⟩ :=
         final_cube_both hKpost hon hge htmax hmt
       have hrun' : climbEmit (climbStepBoard ((2 : Nat) : Int)) bT (tierClimb t) =
           .ok b' := by simpa [hm.xHome] using hrun
@@ -1378,6 +1381,31 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         have hM : bM.sudo_5Board_4held[6]'h6M = false := cell_eq_of hheld hget
         have hEq : bR.sudo_5Board_4held = bM.sudo_5Board_4held := by simp [bR]
         exact cell_eq_of hEq hM
+      obtain ⟨mvB, hmvB, hmvBLe⟩ := hbound.move
+      obtain ⟨slB, hslB, hslBLe⟩ := hbound.slide
+      obtain ⟨ctrlB, hctrlB, hctrlBLe⟩ := hbound.ctrl
+      obtain ⟨_gtB, opB, hopB, hopBLe⟩ := hbound.ops
+      have hwhiteTight : mvM + nz ≤ mv + (t.n * (t.n + 1)) +
+          3 * (t.benchlen - t.n) + 2 * t.n := by
+        have hdef : mvM = mv + pegCount xs + schoolMoves gapL xs t.n t.n +
+            foldCharge t.n (t.n - t.k)
+              (school t.n gapL xs (List.replicate t.benchlen 0) false) := rfl
+        have hpeg : pegCount xs ≤ t.n := by rw [← lay.len]; exact pegCount_le xs
+        rw [hdef]
+        omega
+      have hmvSame : mv = mvB := by
+        apply Int.ofNat.inj
+        rw [ofNat_eq_natCast, ofNat_eq_natCast]
+        exact hmv.symm.trans hmvB
+      have hwhiteCap : mv + (t.n * (t.n + 1)) + 3 * (t.benchlen - t.n) + 2 * t.n ≤
+          checkMoveCap base := by
+        have hcap := hmvBLe
+        rw [← hmvSame, hm.n, hm.bench] at hcap
+        omega
+      have hwhiteSlack : mvM + nz + t.n ≤ checkMoveCap base := by
+        have hcap := hmvBLe
+        rw [← hmvSame, hm.n, hm.bench] at hcap
+        omega
       have hcarryR : RiseCarry bR t lay.mark lay.mx :=
         { szH := hszHR
           szD := hszDR
@@ -1428,9 +1456,48 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
                 rw [hopsM]; exact hsz0) = Int.ofNat (cOps + 1) :=
               (cell_eq_of hopsM hget)
             simpa [hEq, ofNat_eq_natCast] using hM }
+      have hbnd : CheckBound bR base :=
+        { move := ⟨mvM + nz, by simpa [bR, ofNat_eq_natCast] using hmvR,
+            Nat.le_trans hwhiteTight hwhiteCap⟩
+          slide := by
+            have hslR : bR.sudo_5Board_4cost.sudo_5Costs_6slides =
+                bZ.sudo_5Board_4cost.sudo_5Costs_6slides := by
+              have hslM' : bM.sudo_5Board_4cost.sudo_5Costs_6slides =
+                  bZ.sudo_5Board_4cost.sudo_5Costs_6slides := hslM
+              exact (by simp [bR] : bR.sudo_5Board_4cost.sudo_5Costs_6slides =
+                bM.sudo_5Board_4cost.sudo_5Costs_6slides).trans hslM'
+            exact ⟨slB, hslR.trans hslB, hslBLe⟩
+          ctrl := by
+            have hcR : bR.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrlB : Int) := by
+              exact (by simp [bR] : bR.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+                bM.sudo_5Board_4cost.sudo_5Costs_4ctrl).trans (hcM.trans hctrlB)
+            exact ⟨ctrlB, hcR, hctrlBLe⟩
+          ops := by
+            refine ⟨?_, cOps + 1, ?_, ?_⟩
+            · have hEq : bR.sudo_5Board_4cost.sudo_5Costs_3ops =
+                  bM.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [bR]
+              rw [hEq, hopsM, Array.size_set]
+              exact hread.opsGt
+            · have hEq : bR.sudo_5Board_4cost.sudo_5Costs_3ops =
+                  bM.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [bR]
+              have hsz0 : 0 < (bZ.sudo_5Board_4cost.sudo_5Costs_3ops.set
+                  ⟨0, hread.opsGt⟩ (Int.ofNat (cOps + 1))).size := by
+                rw [Array.size_set]; exact hread.opsGt
+              have hget := Array.getElem_set_eq bZ.sudo_5Board_4cost.sudo_5Costs_3ops
+                ⟨0, hread.opsGt⟩ (Int.ofNat (cOps + 1)) rfl hsz0
+              have hM : bM.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(by
+                  rw [hopsM]; exact hsz0) = Int.ofNat (cOps + 1) :=
+                cell_eq_of hopsM hget
+              simpa [hEq, ofNat_eq_natCast] using hM
+            · have hcSame : cOps = opB := by
+                apply Int.ofNat.inj
+                rw [ofNat_eq_natCast, ofNat_eq_natCast]
+                exact hcOps.1.symm.trans (idx_irrel.trans hopB)
+              rw [hcSame]
+              exact hopBLe }
       refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl,
         ⟨h5DR, mvM + nz, hheldR, hmvR, hfitR, hnR⟩, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-        hcarryR⟩
+        hcarryR, hbnd, ⟨mvM + nz, by simpa [bR, ofNat_eq_natCast] using hmvR, hwhiteSlack⟩⟩
       · simpa [Ecbs.check_target, Ecbs.gap] using hmulOk
       · exact congrArg embed htakeL
       · intro _
@@ -1479,7 +1546,8 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
       (∀ h1 : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1] = lay.flag1) ∧
       (∀ h4 : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4] = embed lay.side4) ∧
       (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4] = lay.flag4) ∧
-      RiseCarry b' t lay.mark lay.mx := by
+      RiseCarry b' t lay.mark lay.mx ∧
+      CheckBound b' base := by
   have hpos : 0 < t.n := hOk.n_pos
   have hnbench := mul_span_n t.n t.benchlen hpos sat.mul_span
   have hspan3 := cube_span_le t.n t.benchlen t.combgap sat.cube_span
@@ -1496,7 +1564,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
   have htriG : allTritList g := invGap_trits t xs sat hsh hpos lay.len lay.tri
   have hlenG : g.length = t.n := invGap_length t xs sat hpos
   obtain ⟨_bZ, _bM, bR, _v, h5, hinv, hmul, hread, hv, hhome5, _hbench, hframe, hhome2, hheld2,
-      h0a, h0t, h1a, h1t, h4a, h4t, hcarry⟩ :=
+      h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, hslack⟩ :=
     open_check_mul b t xs lay hOk sat hR hsh base hm
   obtain ⟨h5D, mv, hheld, hmv, hfit, hnT⟩ := hframe
   have hfitn : FitsLen t.n := FitsLen.of_le hfit (Nat.le_add_left t.n mv)
@@ -1528,7 +1596,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
         Bool.false_eq_true, if_false]
       rcases hshape with ⟨_, hans⟩ | ⟨hv2, _⟩
       · refine ⟨bR, h5, h5D, rfl, ?_, hheld, hnT, ?_, hhome2, hheld2,
-            h0a, h0t, h1a, h1t, h4a, h4t, hcarry⟩
+            h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd⟩
         · rw [hans]
           simpa [g] using hhome5
         · rw [hans]
@@ -1555,7 +1623,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
           rw [show bM.sudo_5Board_4held = bR.sudo_5Board_4held from
             mirrorHome_held bR 5 h5 _ _]
           exact h5D
-        refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+        refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
         · rw [hans]
           exact mirrorHome_at bR 5 h5 (embed (mirrorTrits g)) (mv + pegCount g) h5'
         · exact hheld
@@ -1669,6 +1737,26 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
                 refine ⟨c, ?_⟩
                 simp [bM, mirrorHome, withMoves]
                 exact hc }
+        · obtain ⟨mvW, hmvW, hroom⟩ := hslack
+          obtain ⟨slW, hslW, hslLe⟩ := hbnd.slide
+          obtain ⟨cW, hcW, hcLe⟩ := hbnd.ctrl
+          obtain ⟨gtW, opW, hopW, hopLe⟩ := hbnd.ops
+          have hmvW' : mv = mvW := by
+            apply Int.ofNat.inj
+            rw [ofNat_eq_natCast, ofNat_eq_natCast]
+            exact hmv.symm.trans hmvW
+          have hpegG : pegCount g ≤ t.n := by
+            rw [← hlenG]
+            exact pegCount_le g
+          refine
+            { move := ⟨mv + pegCount g, by
+                simp [bM, mirrorHome, withMoves, ofNat_eq_natCast], ?_⟩
+              slide := ⟨slW, by simp [bM, mirrorHome, withMoves, hslW], hslLe⟩
+              ctrl := ⟨cW, by simp [bM, mirrorHome, withMoves, hcW], hcLe⟩
+              ops := ⟨by simp [bM, mirrorHome, withMoves]; exact gtW, opW,
+                by simp [bM, mirrorHome, withMoves]; exact hopW, hopLe⟩ }
+          rw [hmvW']
+          omega
   · intro k
     rfl
   · intro j hj1 hj

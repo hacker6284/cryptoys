@@ -625,9 +625,372 @@ structure TailRoom (n k bench script : Nat)
     let slX := slGap slides inv rise n k bench + 2 * pegCount x3
     FitsLen (slX + 2 * n)
 
+/-- Moves the chord tail can add after the rise, when every home has length `n`.
+    Three schoolbooks, three folds, and the settles in between. -/
+def tailMoveCap (n bench : Nat) : Nat :=
+  3 * (n * (n + 1)) + 9 * (bench - n) + 24 * n + 1
+
+/-- Slides the chord tail can add: the gap settle, the bottom settle, and the
+    closing move of the bottom into the across. -/
+def tailSlideCap (n : Nat) : Nat :=
+  10 * n
+
+private theorem spend3 {a b c a' b' c' : Nat}
+    (ha : a ≤ a') (hb : b ≤ b') (hc : c ≤ c') :
+    a + b + c ≤ a' + b' + c' := by
+  omega
+
+private theorem fieldAdd_len (n : Nat) (xs ys : List Nat) :
+    (fieldAdd n xs ys).length = n := by
+  simp [fieldAdd, List.length_map, List.length_range]
+
+private theorem chordX3_len (n k bench : Nat) (slope accX run : List Nat) :
+    (chordX3 n k bench slope accX run).length = n := by
+  unfold chordX3
+  rw [fieldAdd_len]
+
+private theorem school_fold_le (xs ys : List Nat) (n k bench : Nat) :
+    foldCharge n (n - k) (school n xs ys (List.replicate bench 0) false) ≤
+      3 * (bench - n) := by
+  have hlen : (school n xs ys (List.replicate bench 0) false).length = bench := by
+    rw [school_length, List.length_replicate]
+  have hF := foldCharge_bound n (n - k)
+    (school n xs ys (List.replicate bench 0) false)
+  rw [hlen] at hF
+  exact hF
+
+private theorem mulNo_le (moves : Nat) (xs ys : List Nat) (n k bench : Nat) :
+    mulMovesNo moves xs ys n k bench ≤
+      moves + n * (n + 1) + 3 * (bench - n) := by
+  have hdef : mulMovesNo moves xs ys n k bench =
+      moves + schoolMoves xs ys n n +
+        foldCharge n (n - k) (school n xs ys (List.replicate bench 0) false) := rfl
+  rw [hdef]
+  exact Nat.add_le_add (Nat.add_le_add_left (schoolMoves_bound xs ys n) moves)
+    (school_fold_le xs ys n k bench)
+
+private theorem mulYes_le (moves : Nat) (xs ys : List Nat) (n k bench : Nat)
+    (hpeg : pegCount ys ≤ n) :
+    mulMoves moves xs ys n k bench ≤
+      moves + n + n * (n + 1) + 3 * (bench - n) := by
+  have hdef : mulMoves moves xs ys n k bench =
+      moves + pegCount ys + schoolMoves xs ys n n +
+        foldCharge n (n - k) (school n xs ys (List.replicate bench 0) false) := rfl
+  rw [hdef]
+  have hsch := schoolMoves_bound xs ys n
+  have hfold := school_fold_le xs ys n k bench
+  omega
+
+private theorem le_move (moves0 moves extra n bench : Nat)
+    (hmov : moves ≤ moves0 + 2 * n)
+    (hextra : 2 * n + extra ≤ tailMoveCap n bench) :
+    moves + extra ≤ moves0 + tailMoveCap n bench := by
+  omega
+
+private theorem fitsFrom (moves0 moves n bench goal extra : Nat)
+    (hBig : FitsLen (moves0 + tailMoveCap n bench))
+    (hmov : moves ≤ moves0 + 2 * n)
+    (hgoal : goal ≤ moves + extra)
+    (hroom : 2 * n + extra ≤ tailMoveCap n bench) :
+    FitsLen goal :=
+  FitsLen.of_le hBig (Nat.le_trans hgoal (le_move moves0 moves extra n bench hmov hroom))
+
+private theorem fitsSlide (slides n goal extra : Nat)
+    (hBig : FitsLen (slides + tailSlideCap n))
+    (hgoal : goal ≤ slides + extra)
+    (hroom : extra ≤ tailSlideCap n) :
+    FitsLen goal :=
+  FitsLen.of_le hBig (Nat.le_trans hgoal (Nat.add_le_add_left hroom slides))
+
+/-- Every settle `FitsLen` in `TailRoom`, from one move room, one slide room,
+    and one room each for the marker, the control counter, and ops slot 0.
+    A length-`n` home has at most `n` pegs. -/
+theorem tailRoom_of (n k bench script moves0 moves hole slides peakS cOps m ctrl : Nat)
+    (inv rise accX accY run : List Nat)
+    (hmov : moves ≤ moves0 + 2 * n)
+    (hinv : inv.length = n)
+    (hx : accX.length = n) (hy : accY.length = n) (hrun : run.length = n)
+    (hnb : n ≤ bench)
+    (hBig : FitsLen (moves0 + tailMoveCap n bench))
+    (hBigS : FitsLen (slides + tailSlideCap n))
+    (hMark : m + 3 < script) (hMarkF : FitsLen (m + 4))
+    (hCtrl : FitsLen (ctrl + 6)) (hOps : FitsLen (cOps + 3)) :
+    TailRoom n k bench script moves0 moves hole slides peakS cOps m ctrl
+      inv rise accX accY run := by
+  have hpegI : pegCount inv ≤ n := by rw [← hinv]; exact pegCount_le inv
+  have hpegX : pegCount accX ≤ n := by rw [← hx]; exact pegCount_le accX
+  have hpegY : pegCount accY ≤ n := by rw [← hy]; exact pegCount_le accY
+  have hpegRun : pegCount run ≤ n := by rw [← hrun]; exact pegCount_le run
+  have hprod : pegCount ((gapProduct n k bench inv rise).take n) ≤ n :=
+    pegCount_take_le (gapProduct n k bench inv rise) n
+  have hlenS : (fieldMul n k bench rise inv).length = n :=
+    fieldMul_length n k bench rise inv hnb
+  have hpegS : pegCount (fieldMul n k bench rise inv) ≤ n := by
+    have h := pegCount_le (fieldMul n k bench rise inv)
+    rwa [hlenS] at h
+  have hlenX3 : (chordX3 n k bench (fieldMul n k bench rise inv) accX run).length = n :=
+    chordX3_len n k bench _ accX run
+  have hpegX3 : pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run) ≤ n := by
+    have h := pegCount_le (chordX3 n k bench (fieldMul n k bench rise inv) accX run)
+    rwa [hlenX3] at h
+  have hno := mulNo_le moves inv rise n k bench
+  have hgap : mvGap moves inv rise n k bench ≤
+      moves + n * (n + 1) + 3 * (bench - n) + 3 * n := by
+    have hdef : mvGap moves inv rise n k bench =
+        mulMovesNo moves inv rise n k bench + pegCount inv +
+          2 * pegCount ((gapProduct n k bench inv rise).take n) := rfl
+    rw [hdef]
+    omega
+  have hsq : mvSq (mvGap moves inv rise n k bench)
+      (fieldMul n k bench rise inv) n k bench ≤
+      moves + 2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 4 * n + 1 := by
+    have hdef : mvSq (mvGap moves inv rise n k bench)
+        (fieldMul n k bench rise inv) n k bench =
+        mulMoves (mvGap moves inv rise n k bench)
+          (fieldMul n k bench rise inv) (fieldMul n k bench rise inv) n k bench + 1 := rfl
+    have hmul := mulYes_le (mvGap moves inv rise n k bench)
+      (fieldMul n k bench rise inv) (fieldMul n k bench rise inv) n k bench hpegS
+    rw [hdef]
+    omega
+  let mvX := mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench +
+    pegCount accX + pegCount run + pegCount run +
+    2 * pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run)
+  have hmvX : mvX ≤ moves + 2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 9 * n + 1 := by
+    have h := hsq
+    omega
+  let slX := slGap slides inv rise n k bench +
+    2 * pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run)
+  have hslX : slX ≤ slides + 4 * n := by
+    have hdef : slGap slides inv rise n k bench =
+        slides + 2 * pegCount ((gapProduct n k bench inv rise).take n) := rfl
+    change slGap slides inv rise n k bench +
+      2 * pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run) ≤ _
+    rw [hdef]
+    omega
+  have htailM : mvX + pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run) +
+      pegCount accY + 2 * n + n * (n + 1) + 3 * (bench - n) + 5 * n ≤
+      moves0 + tailMoveCap n bench := by
+    have h := hmvX
+    unfold tailMoveCap at *
+    generalize n * (n + 1) = S at *
+    generalize bench - n = D at *
+    omega
+  have htailS : slX + 6 * n ≤ slides + tailSlideCap n := by
+    have h := hslX
+    unfold tailSlideCap
+    omega
+  refine
+    { fit0 := FitsLen.of_le hBig (
+      by
+        unfold tailMoveCap
+        generalize n * (n + 1) = S
+        generalize bench - n = D
+        omega)
+      bound := by omega
+      bound3 := hMark
+      fitM := FitsLen.of_le hMarkF (by omega)
+      fitC := FitsLen.of_le hCtrl (by omega)
+      fit2 := FitsLen.of_le hMarkF (by omega)
+      fitC4 := FitsLen.of_le hCtrl (by omega)
+      fit3 := FitsLen.of_le hMarkF (by omega)
+      fitC6 := hCtrl
+      fit4 := hMarkF
+      fops := FitsLen.of_le hOps (by omega)
+      fops2 := FitsLen.of_le hOps (by omega)
+      fops3 := hOps
+      fi := FitsLen.of_le hBig (
+      by
+        unfold tailMoveCap
+        generalize n * (n + 1) = S
+        generalize bench - n = D
+        omega)
+      fm := fitsFrom moves0 moves n bench
+        (moves + n * (n + 1))
+        (n * (n + 1))
+        hBig hmov (by omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fitB := FitsLen.of_le hBig (
+      by
+        have hcancel := Nat.sub_add_cancel hnb
+        unfold tailMoveCap
+        generalize n * (n + 1) = S at *
+        generalize bench - n = D at *
+        omega)
+      fold := fitsFrom moves0 moves n bench
+        (moves + n * (n + 1) + 3 * (bench - n))
+        (n * (n + 1) + 3 * (bench - n))
+        hBig hmov (by omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fitClear := fitsFrom moves0 moves n bench
+        (mulMovesNo moves inv rise n k bench + pegCount inv)
+        (n * (n + 1) + 3 * (bench - n) + n)
+        hBig hmov (by have h := Nat.add_le_add hno hpegI; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      pegG := FitsLen.of_le hBig (
+      by
+        have h := Nat.mul_le_mul_left 2 hprod
+        unfold tailMoveCap
+        generalize n * (n + 1) = S
+        generalize bench - n = D
+        omega)
+      fitSM := fitsFrom moves0 moves n bench
+        (mvGap moves inv rise n k bench)
+        (n * (n + 1) + 3 * (bench - n) + 3 * n)
+        hBig hmov (by omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fitSS := fitsSlide slides n (slides + 2 * pegCount ((gapProduct n k bench inv rise).take n)) (2 * n) hBigS
+        (by
+          have h := Nat.mul_le_mul_left 2 hprod
+          omega)
+        (by unfold tailSlideCap; omega)
+      fmS := fitsFrom moves0 moves n bench
+        (mvGap moves inv rise n k bench + pegCount (fieldMul n k bench rise inv) + n * (n + 1))
+        (2 * (n * (n + 1)) + 3 * (bench - n) + 4 * n)
+        hBig hmov (by have h := hgap; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      foldS := fitsFrom moves0 moves n bench
+        (mvGap moves inv rise n k bench + pegCount (fieldMul n k bench rise inv) + n * (n + 1) + 3 * (bench - n))
+        (2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 4 * n)
+        hBig hmov (by have h := hgap; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fitW := fitsFrom moves0 moves n bench
+        (mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench)
+        (2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 4 * n + 1)
+        hBig hmov (
+        by
+          have h := hsq
+          omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fit1 := fitsFrom moves0 moves n bench
+        (mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench + n)
+        (2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 5 * n + 1)
+        hBig hmov (by have h := hsq; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fitA := fitsFrom moves0 moves n bench
+        (mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench + pegCount accX + n)
+        (2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 6 * n + 1)
+        hBig hmov (by have h := hsq; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fitRun := fitsFrom moves0 moves n bench
+        (mvSq (mvGap moves inv rise n k bench) (fieldMul n k bench rise inv) n k bench + pegCount accX + pegCount run + pegCount run)
+        (2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 7 * n + 1)
+        hBig hmov (by have h := hsq; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      pegX := FitsLen.of_le hBig (
+      by
+        have h := Nat.mul_le_mul_left 2 hpegX3
+        unfold tailMoveCap
+        generalize n * (n + 1) = S
+        generalize bench - n = D
+        omega)
+      fitMX := fitsFrom moves0 moves n bench
+        mvX
+        (2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 9 * n + 1)
+        hBig hmov (
+        by
+          have h := hmvX
+          omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fitSX := fitsSlide slides n slX (4 * n) hBigS hslX (by unfold tailSlideCap; omega)
+      tailM :=
+      by
+        simpa [mvX] using (FitsLen.of_le hBig htailM)
+      tailS :=
+      by
+        simpa [slX] using (FitsLen.of_le hBigS htailS)
+      fitP := fitsFrom moves0 moves n bench
+        (mvX + 2 * n)
+        (2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 11 * n + 1)
+        hBig hmov (by have h := hmvX; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fitMo := fitsFrom moves0 moves n bench
+        (mvX + pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run) +
+          pegCount accY + 2 * n)
+        (2 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 13 * n + 1)
+        hBig hmov (by have h := hmvX; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fmP := fitsFrom moves0 moves n bench
+        (mvX + pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run) +
+          pegCount accY + 2 * n + n * (n + 1))
+        (3 * (n * (n + 1)) + 2 * (3 * (bench - n)) + 13 * n + 1)
+        hBig hmov (by have h := hmvX; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      foldP := fitsFrom moves0 moves n bench
+        (mvX + pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run) +
+          pegCount accY + 2 * n + n * (n + 1) + 3 * (bench - n))
+        (3 * (n * (n + 1)) + 3 * (3 * (bench - n)) + 13 * n + 1)
+        hBig hmov (by have h := hmvX; omega)
+        (by
+            unfold tailMoveCap
+            generalize n * (n + 1) = S
+            generalize bench - n = D
+            omega)
+      fitSo := by
+        simpa [slX] using
+          (fitsSlide slides n (slX + 2 * n) (6 * n) hBigS (by
+            have h := hslX
+            omega) (by unfold tailSlideCap; omega)) }
+
+
 /-- The nonempty chord add. `open_checked` returns the inverse and `RiseCarry`
-    reads the counters, so `RiseRead` is built here. The tail runs once `TailRoom`
-    grants the settle bounds for those counters. -/
+    reads the counters, so `RiseRead` is built here. One move room and one slide
+    room, plus the marker, control, and ops rooms, discharge `TailRoom`. -/
 theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
     (baseY accY accX run inv rise : List Nat)
     (lay : OpenLay { b with sudo_5Board_9marker_on := false } t run)
@@ -649,23 +1012,25 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
     (hw0 : 0 < t.w) (hh0 : 0 < t.h) (hrR : t.r < t.h) (hrP : 0 < t.r)
     (hnE : t.n = t.w * t.h - 1) (hkLe : t.k ≤ t.n) (hgap : t.n - t.k = t.w * t.r)
     (hsm : t.w ≤ 1000000 ∧ t.h ≤ 1000000 ∧ t.r ≤ 1000000 ∧ t.benchlen ≤ 1000001)
-    (hnsm : t.n ≤ 1000000) :
+    (hnsm : t.n ≤ 1000000)
+    (hChord : FitsLen (checkMoveCap bud + tailMoveCap bud.n bud.bench))
+    (hChordS : FitsLen (checkSlideCap bud + tailSlideCap bud.n))
+    (hMark : lay.mark + 3 < t.script) (hMarkF : FitsLen (lay.mark + 4))
+    (hCtrl : FitsLen (checkCtrlCap bud + 6))
+    (hOps : FitsLen (checkOpsCap bud + 3)) :
     ∃ (bI : Ecbs.Board) (moves0 peak0 slides peakS hole ctrl cOps : Nat),
       RiseRead b bI baseY accY accX run inv t.n moves0 peak0 slides peakS hole
         lay.mark ctrl lay.mx t.script t.benchlen cOps t.w t.h t.r t.k ∧
-      (TailRoom t.n t.k t.benchlen t.script moves0
-          (moves0 + pegCount baseY + pegCount accY) hole slides peakS cOps
-          lay.mark ctrl inv rise accX accY run →
-        ∃ b',
-          chordAddTail b red = .ok (true, b') ∧
-          (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed
-            (chordX3 t.n t.k t.benchlen (fieldMul t.n t.k t.benchlen rise inv) accX run)) ∧
-          (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed
-            (chordY3 t.n t.k t.benchlen (fieldMul t.n t.k t.benchlen rise inv)
-              (fieldSub t.n accX (chordX3 t.n t.k t.benchlen
-                (fieldMul t.n t.k t.benchlen rise inv) accX run)) accY))) := by
+      ∃ b',
+        chordAddTail b red = .ok (true, b') ∧
+        (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed
+          (chordX3 t.n t.k t.benchlen (fieldMul t.n t.k t.benchlen rise inv) accX run)) ∧
+        (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed
+          (chordY3 t.n t.k t.benchlen (fieldMul t.n t.k t.benchlen rise inv)
+            (fieldSub t.n accX (chordX3 t.n t.k t.benchlen
+              (fieldMul t.n t.k t.benchlen rise inv) accX run)) accY)) := by
   obtain ⟨bI, _h5, _h5D, hinv0, h5aI, h5tI, hnT, _hlenA, h2aI, h2tI, h0aI, h0tI,
-      h1aI, h1tI, h4aI, h4tI, hcarry⟩ :=
+      h1aI, h1tI, h4aI, h4tI, hcarry, hbnd⟩ :=
     open_checked { b with sudo_5Board_9marker_on := false } t run inv lay hOk sat hR hsh
       bud hmatch hacc
   have hinv : Ecbs.invert_checked { b with sudo_5Board_9marker_on := false } Ecbs.bottom =
@@ -748,9 +1113,57 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
         hh := by simp [bF, restoreMarker, hcarry.tier, embTier, ofNat_eq_natCast]
         hr := by simp [bF, restoreMarker, hcarry.tier, embTier, ofNat_eq_natCast]
         hk := by simp [bF, restoreMarker, hcarry.tier, embTier, ofNat_eq_natCast] }
-  refine ⟨bI, moves0, peak0, slides, peakS, hole, ctrl, cOps, hr, ?_⟩
-  intro room
   let moves := moves0 + pegCount baseY + pegCount accY
+  obtain ⟨mvC, hmvC, hmvLe⟩ := hbnd.move
+  have hmv0 : moves0 = mvC := by
+    apply Int.ofNat.inj
+    rw [ofNat_eq_natCast, ofNat_eq_natCast]
+    exact hmoves.symm.trans hmvC
+  have hmoveFit : FitsLen (moves0 + tailMoveCap t.n t.benchlen) := by
+    apply FitsLen.of_le hChord
+    rw [hmatch.n, hmatch.bench, hmv0]
+    omega
+  obtain ⟨slC, hslC, hslLe⟩ := hbnd.slide
+  have hsl0 : slides = slC := by
+    apply Int.ofNat.inj
+    rw [ofNat_eq_natCast, ofNat_eq_natCast]
+    exact hsl.symm.trans hslC
+  have hslideFit : FitsLen (slides + tailSlideCap t.n) := by
+    apply FitsLen.of_le hChordS
+    rw [hmatch.n, hsl0]
+    omega
+  obtain ⟨cC, hcC, hcLe⟩ := hbnd.ctrl
+  have hc0 : ctrl = cC := by
+    apply Int.ofNat.inj
+    rw [ofNat_eq_natCast, ofNat_eq_natCast]
+    exact hctrl.symm.trans hcC
+  have hctrlFit : FitsLen (ctrl + 6) := by
+    apply FitsLen.of_le hCtrl
+    rw [hc0]
+    omega
+  obtain ⟨_gtC, opC, hopC, hopLe⟩ := hbnd.ops
+  have hopEq : cOps = opC := by
+    apply Int.ofNat.inj
+    rw [ofNat_eq_natCast, ofNat_eq_natCast]
+    exact hop0.symm.trans (idx_irrel.trans hopC)
+  have hopsFit : FitsLen (cOps + 3) := by
+    apply FitsLen.of_le hOps
+    rw [hopEq]
+    omega
+  have hpegB : pegCount baseY ≤ t.n := by rw [← hyB]; exact pegCount_le baseY
+  have hpegA : pegCount accY ≤ t.n := by rw [← hyA]; exact pegCount_le accY
+  have hmovRise : moves ≤ moves0 + 2 * t.n := by
+    rw [show moves = moves0 + pegCount baseY + pegCount accY from rfl]
+    omega
+  have hnb : t.n ≤ t.benchlen := by
+    have hsp := hspan
+    omega
+  have room : TailRoom t.n t.k t.benchlen t.script moves0 moves hole slides peakS cOps
+      lay.mark ctrl inv rise accX accY run :=
+    tailRoom_of t.n t.k t.benchlen t.script moves0 moves hole slides peakS cOps
+      lay.mark ctrl inv rise accX accY run hmovRise hinvL hxLen hyLen hrunL hnb
+      hmoveFit hslideFit hMark hMarkF hctrlFit hopsFit
+  refine ⟨bI, moves0, peak0, slides, peakS, hole, ctrl, cOps, hr, ?_⟩
   exact chord_add_point_of_inv b red bI baseY accY accX run inv rise
     t.w t.h t.r t.n t.k moves0 moves hole t.benchlen slides peak0 peakS cOps
     lay.mark ctrl lay.mx t.script

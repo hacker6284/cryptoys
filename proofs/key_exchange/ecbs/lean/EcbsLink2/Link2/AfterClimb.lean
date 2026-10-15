@@ -332,6 +332,53 @@ structure CheckRead (b0 b : Ecbs.Board) : Prop where
     b.sudo_5Board_1t.sudo_4Tier_8benchlen = (bench : Int) ∧
     FitsLen (mv + n + n * (n + 1) + 3 * (bench - n) + 2 * n)
 
+/-- Move envelope of the check multiply: the climb, the final cube, one copy,
+    the schoolbook, the fold, and the check's settle. -/
+def checkMoveCap (base : ClimbBudget) : Nat :=
+  base.moves0 + base.R * rungCharge base.n base.bench base.mMax +
+    pegCharge base.n base.bench + base.n + base.n * (base.n + 1) +
+    3 * (base.bench - base.n) + 2 * base.n
+
+/-- Slide envelope after the final settle: the climb plus the reserved `2 · n`. -/
+def checkSlideCap (base : ClimbBudget) : Nat :=
+  base.slides0 + base.R * rungSlideCharge base.n base.mMax + 2 * base.n
+
+/-- Control counter after unpark and `tally_clear`, at the control-row cap. -/
+def checkCtrlCap (base : ClimbBudget) : Nat :=
+  base.ctrl0 + base.R * (3 * base.mMax + 5) + 2 + base.mMax
+
+/-- Ops slot 0 after the check multiply's bump, at the climb's ops envelope. -/
+def checkOpsCap (base : ClimbBudget) : Nat :=
+  base.ops0 + base.R * (base.mMax + 3)
+
+/-- Post-check counters against the climb envelopes. The move fact is `≤`,
+    not the one-`n` slack: a red mirror may spend that slack. -/
+structure CheckBound (b : Ecbs.Board) (base : ClimbBudget) : Prop where
+  move : ∃ mv : Nat, b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+    mv ≤ checkMoveCap base
+  slide : ∃ sl : Nat, b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
+    sl ≤ checkSlideCap base
+  ctrl : ∃ c : Nat, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c : Int) ∧
+    c ≤ checkCtrlCap base
+  ops : ∃ (gt : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) (c : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'gt = (c : Int) ∧
+      c ≤ checkOpsCap base
+
+/-- Counters the final cube leaves, each at most the climb's envelope.
+    The check multiply spends inside `checkMoveCap`; what it returns is still
+    at most that cap. -/
+structure PostCubeBound (b : Ecbs.Board) (base : ClimbBudget) : Prop where
+  move : ∃ mv : Nat, b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+    mv + base.n + base.n * (base.n + 1) + 3 * (base.bench - base.n) +
+      2 * base.n ≤ checkMoveCap base
+  slide : ∃ sl : Nat, b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
+    sl ≤ checkSlideCap base
+  ctrl : ∃ c : Nat, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c : Int) ∧
+    c ≤ checkCtrlCap base
+  ops : ∃ (gt : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) (c : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'gt = (c : Int) ∧
+      c + 1 ≤ checkOpsCap base
+
 /-- Unpark, the final cube of the gap onto the gap, and the outer settle.
     The cube's internal settle spends the reserved `2 · n`. The comb, the fold,
     and the outer settle spend `pegCharge`. The outer settle's slides spend
@@ -365,7 +412,8 @@ theorem final_cube_settle
       FitsLen (sl + 2 * base.n + 2 * base.n) ∧
       FitsLen (s.ctrl + 2 + s.tally) ∧
       SideKeep bZ base ∧
-      QuietKeep bZ base := by
+      QuietKeep bZ base ∧
+      PostCubeBound bZ base := by
   have hk : done.length ≤ base.R := by simpa using h.kLe
   obtain ⟨bU, hun, _, _, hhomeU, hheldU, hbonU, htoU, hbenchU, hmvU, hslU, hpkU,
       hctrlU, ht0U, htierU, hmkU, hopsU, hstrictU, hholeU, hlenU, hhighU,
@@ -956,6 +1004,7 @@ theorem final_cube_settle
     · simp [bZ, touchRow]
     · simp [bZ, touchRow]
     · simp [bZ, touchRow]
+  let slZ : Nat := slS + 2 * pegCount (fold.take s.n)
   have hslZ : bZ.sudo_5Board_4cost.sudo_5Costs_6slides =
       ((slS + 2 * pegCount (fold.take s.n) : Nat) : Int) := by
     have hEq : bZ.sudo_5Board_4cost.sudo_5Costs_6slides =
@@ -967,6 +1016,53 @@ theorem final_cube_settle
   have hctrlZ : bZ.sudo_5Board_4cost.sudo_5Costs_4ctrl =
       ((s.ctrl + 2 + s.tally : Nat) : Int) := by
     simp [bZ, touchRow, ofNat_eq_natCast]
+  have hslideLe : slZ ≤ checkSlideCap base := by
+    have hpegs2 : 2 * pegs ≤ 2 * base.n := by
+      rw [← h.hn]
+      exact Nat.mul_le_mul_left 2 hpegs
+    have hpegF2 : 2 * pegCount (fold.take s.n) ≤ 2 * base.n := by
+      rw [← h.hn]
+      exact Nat.mul_le_mul_left 2 hpegF
+    have hsum : slZ ≤ sl + 2 * base.n + 2 * base.n := by
+      rw [show slZ = sl + 2 * pegs + 2 * pegCount (fold.take s.n) from rfl]
+      omega
+    obtain ⟨slI, hslI, hleI⟩ := h.slides
+    have hsame : sl = slI := by
+      apply Int.ofNat.inj
+      rw [ofNat_eq_natCast, ofNat_eq_natCast]
+      exact hsl.symm.trans hslI
+    have hres : sl + 2 * base.n ≤
+        base.slides0 + done.length * rungSlideCharge base.n base.mMax := by
+      simpa [hon, hsame] using hleI
+    have hmul : done.length * rungSlideCharge base.n base.mMax ≤
+        base.R * rungSlideCharge base.n base.mMax :=
+      Nat.mul_le_mul_right _ hk
+    have hcap : sl + 2 * base.n + 2 * base.n ≤ checkSlideCap base := by
+      unfold checkSlideCap
+      omega
+    exact Nat.le_trans hsum hcap
+  have hctrlLe : s.ctrl + 2 + s.tally ≤ checkCtrlCap base := by
+    have hbase := h.ctrlLe
+    have htally := ht
+    have hmul : done.length * (3 * base.mMax + 5) ≤
+        base.R * (3 * base.mMax + 5) :=
+      Nat.mul_le_mul_right _ hk
+    unfold checkCtrlCap
+    omega
+  have hopsLe : c0 + 1 ≤ checkOpsCap base := by
+    have hstep : c0 + 1 ≤ base.ops0 + done.length * (base.mMax + 3) := by
+      simpa [hon] using hle0
+    have hmul : done.length * (base.mMax + 3) ≤ base.R * (base.mMax + 3) :=
+      Nat.mul_le_mul_right _ hk
+    unfold checkOpsCap
+    exact Nat.le_trans hstep (Nat.add_le_add_left hmul _)
+  have hpost : PostCubeBound bZ base :=
+    { move := ⟨mvZ, hmvZ, by unfold checkMoveCap; exact hcapZ⟩
+      slide := ⟨slZ, by
+        rw [show (slZ : Int) = ((slS + 2 * pegCount (fold.take s.n) : Nat) : Int) from rfl]
+        exact hslZ, hslideLe⟩
+      ctrl := ⟨s.ctrl + 2 + s.tally, hctrlZ, hctrlLe⟩
+      ops := ⟨hopsZ, c0, hopZ, hopsLe⟩ }
   refine ⟨bU, bC, bOut, bZ, mv, sl, row, hun, hprog, by simpa [bOut] using hsettle,
     hclearZ, hmvB, hslB, by simpa [bOut] using
       (settle_bench_off bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))),
@@ -977,7 +1073,7 @@ theorem final_cube_settle
       h5DZ, hheld5Z,
       (by simpa [bZ, touchRow] using htierOut),
       ⟨mvZ, base.n, base.bench, hmvZ, hnZ, hbZlen, hfitZ⟩⟩,
-    htailM, htailS, tail_ctrl_fit h hk ht, hsideZ, hquietZ⟩
+    htailM, htailS, tail_ctrl_fit h hk ht, hsideZ, hquietZ, hpost⟩
 
 /-- The final tail's boards and the settled gap. The i64 bounds stay inside
     `final_cube_settle` and are not opened here. -/

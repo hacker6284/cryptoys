@@ -38,7 +38,34 @@ theorem chord_take_mirror (b : Ecbs.Board) (xs x3 ys : List Nat) (n moves : Nat)
           let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
           Ecbs.mirror b Ecbs.up) = .ok b' ∧
       b'.sudo_5Board_4home[0] = embed (fieldSub n xs x3) ∧
-      b'.sudo_5Board_4home[1] = embed (mirrorTrits ys) := by
+      b'.sudo_5Board_4home[1] = embed (mirrorTrits ys) ∧
+      b'.sudo_5Board_4held = b.sudo_5Board_4held ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      b'.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on ∧
+      b'.sudo_5Board_8bench_to = b.sudo_5Board_8bench_to ∧
+      b'.sudo_5Board_5bench = b.sudo_5Board_5bench ∧
+      b'.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak =
+        b.sudo_5Board_4cost.sudo_5Costs_4peak ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + pegCount x3 + pegCount ys) ∧
+      (∀ i, i ≠ 0 → i ≠ 1 → ∀ hi : i < b.sudo_5Board_4home.size,
+        ∀ hi' : i < b'.sudo_5Board_4home.size,
+          b'.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]) := by
   have hfit1 : FitsLen (moves + n) := FitsLen.of_le hfit (by omega)
   have hp3 : pegCount x3 ≤ n := by rw [← hx3]; exact pegCount_le x3
   have hadd := add_refines b 0 2 xs x3 n moves h0H h0D h2H h2D h0t h0a h2t h2a hn hx3 hx
@@ -66,10 +93,31 @@ theorem chord_take_mirror (b : Ecbs.Board) (xs x3 ys : List Nat) (n moves : Nat)
     simpa [bM, mirrorHome, bA, addBoard, withMoves, Array.size_set] using h0H
   have h1s : 1 < bM.sudo_5Board_4home.size := by
     simpa [bM, mirrorHome, Array.size_set] using h1Hb
-  refine ⟨bM, h0s, h1s, rfl, ?_, ?_⟩
+  refine ⟨bM, h0s, h1s, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · have hsub : fieldAdd n xs (mirrorTrits x3) = fieldSub n xs x3 := by
       simp [fieldSub]
     simp [bM, mirrorHome, Array.getElem_set_ne, bA, addBoard, withMoves, Array.getElem_set_eq, hsub]
   · simp [bM, mirrorHome, Array.get_set_eq]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, Array.size_set, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, bA, addBoard, withMoves]
+  · simp [bM, mirrorHome, withMoves, mv1, Nat.add_assoc]
+  · intro i hne0 hne1 hi hi'
+    have hne0' : (0 : Nat) ≠ i := hne0.symm
+    have hne1' : (1 : Nat) ≠ i := hne1.symm
+    simp [bM, mirrorHome, Array.getElem_set_ne, hne1', bA, addBoard, withMoves,
+      Array.getElem_set_ne, hne0']
 
 end EcbsLink2.Link2

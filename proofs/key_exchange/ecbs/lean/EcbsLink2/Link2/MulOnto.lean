@@ -855,9 +855,109 @@ theorem mul_onto_up_eq (b : Ecbs.Board) (dst first second : Nat)
   erw [← hOff]
   rfl
 
+private theorem ix {α : Type} {a b : Array α} (h : a = b) (i : Nat) (ha : i < a.size) :
+    a[i] = b[i]'(h ▸ ha) := by
+  cases h
+  rfl
+
+/-- What the onto fold leaves besides the bench prefix. The destination and the
+    second factor are cleared. Every other home stays. The bench is on and aimed
+    at the destination. -/
+structure OntoLay (b' b : Ecbs.Board) (dst second slides peg mvF : Nat) : Prop where
+  on : b'.sudo_5Board_8bench_on = true
+  to_ : b'.sudo_5Board_8bench_to = ((dst : Nat) : Int)
+  szH : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size
+  szD : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size
+  heldD : ∀ h : dst < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[dst] = false
+  homeD : ∀ h : dst < b'.sudo_5Board_4home.size,
+    b'.sudo_5Board_4home[dst] = (#[] : Array Int)
+  heldS : ∀ h : second < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[second] = false
+  homeS : ∀ h : second < b'.sudo_5Board_4home.size,
+    b'.sudo_5Board_4home[second] = (#[] : Array Int)
+  heldK : ∀ i, i ≠ dst → i ≠ second →
+    ∀ hi : i < b.sudo_5Board_4held.size, ∀ hi' : i < b'.sudo_5Board_4held.size,
+      b'.sudo_5Board_4held[i] = b.sudo_5Board_4held[i]
+  homeK : ∀ i, i ≠ dst → i ≠ second →
+    ∀ hi : i < b.sudo_5Board_4home.size, ∀ hi' : i < b'.sudo_5Board_4home.size,
+      b'.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]
+  tier : b'.sudo_5Board_1t = b.sudo_5Board_1t
+  marker : b'.sudo_5Board_6marker = b.sudo_5Board_6marker
+  flag : b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on
+  ctrl : b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl
+  mx : b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+    b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max
+  slides : b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat (slides + 2 * peg)
+  moves : b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvF
+  peak : ∃ peak', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak'
+
+theorem onto_result_lay (b0 : Ecbs.Board) (dst second : Nat)
+    (pad : List Nat) (peakS moves slides peg mvN n k peak : Nat) (sch : List Nat)
+    (hD : dst < b0.sudo_5Board_4held.size) (hH : dst < b0.sudo_5Board_4home.size)
+    (hS : second < (ontoCharge b0 dst hD hH moves slides peg).sudo_5Board_4held.size)
+    (hHome : second < (ontoCharge b0 dst hD hH moves slides peg).sudo_5Board_4home.size)
+    (hne : dst ≠ second) :
+    let b' := ontoFoldBoard
+      (withMoves
+        (mulPrep (ontoCharge b0 dst hD hH moves slides peg)
+          ((dst : Nat) : Int) (embed pad) second peakS hS hHome)
+        (Int.ofNat mvN))
+      sch n k mvN peak
+    OntoLay b' b0 dst second slides peg (mvN + foldCharge n (n - k) sch) := by
+  intro b'
+  let bCh := ontoCharge b0 dst hD hH moves slides peg
+  have hframe :
+      b'.sudo_5Board_4home = bCh.sudo_5Board_4home.set ⟨second, hHome⟩ (#[] : Array Int) ∧
+      b'.sudo_5Board_4held = bCh.sudo_5Board_4held.set ⟨second, hS⟩ false ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = ((dst : Nat) : Int) ∧
+      b'.sudo_5Board_6marker = b0.sudo_5Board_6marker ∧
+      b'.sudo_5Board_9marker_on = b0.sudo_5Board_9marker_on ∧
+      b'.sudo_5Board_1t = b0.sudo_5Board_1t ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b0.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b0.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat (slides + 2 * peg) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (mvN + foldCharge n (n - k) sch) := by
+    unfold b' ontoFoldBoard peakBoard noteBench withMoves withHole mulPrep strictBoard mulAimed
+      bCh ontoCharge
+    split <;> exact ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  obtain ⟨hhome, hheld, hon, hto, hmark, hflag, htier, hctrl, hmx, hsl, hmv⟩ := hframe
+  have hszH : b'.sudo_5Board_4home.size = b0.sudo_5Board_4home.size := by
+    simp [hhome, bCh, ontoCharge, Array.size_set]
+  have hszD : b'.sudo_5Board_4held.size = b0.sudo_5Board_4held.size := by
+    simp [hheld, bCh, ontoCharge, Array.size_set]
+  have hpk : ∃ peak', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak' := by
+    unfold b' ontoFoldBoard peakBoard
+    exact ⟨_, rfl⟩
+  refine ⟨hon, hto, hszH, hszD, ?_, ?_, ?_, ?_, ?_, ?_, htier, hmark, hflag, hctrl, hmx, hsl, hmv, hpk⟩
+  · intro hlt
+    have hget := ix hheld dst hlt
+    rw [hget, Array.getElem_set_ne (h := hne.symm)]
+    simp [bCh, ontoCharge, Array.getElem_set_eq]
+  · intro hlt
+    have hget := ix hhome dst hlt
+    rw [hget, Array.getElem_set_ne (h := hne.symm)]
+    simp [bCh, ontoCharge, Array.getElem_set_eq]
+  · intro hlt
+    have hget := ix hheld second hlt
+    simpa [Array.getElem_set_eq] using hget
+  · intro hlt
+    have hget := ix hhome second hlt
+    simpa [Array.getElem_set_eq] using hget
+  · intro i hneD hneS hi hi'
+    have hget := ix hheld i hi'
+    rw [hget, Array.getElem_set_ne (h := hneS.symm)]
+    simp [bCh, ontoCharge, Array.getElem_set_ne, hneD.symm]
+  · intro i hneD hneS hi hi'
+    have hget := ix hhome i hi'
+    rw [hget, Array.getElem_set_ne (h := hneS.symm)]
+    simp [bCh, ontoCharge, Array.getElem_set_ne, hneD.symm]
+
 /-- Marker off. The onto multiply returns the lane fold of the schoolbook laid
     onto the destination. The length-`n` prefix is `fieldAdd` of that home and
-    `fieldMul` of the two factors. -/
+    `fieldMul` of the two factors. The destination and the second factor end
+    empty, and the bench is on, aimed at the destination. -/
 theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
     (home xs ys : List Nat)
     (w h r n k moves slides hole peak peakS bench cOps : Nat)
@@ -912,7 +1012,10 @@ theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
       b'.sudo_5Board_5bench =
         embed (laneFold n (n - k) (school n xs ys (pref home bench n) false)) ∧
       (laneFold n (n - k) (school n xs ys (pref home bench n) false)).take n =
-        fieldAdd n home (fieldMul n k bench xs ys) := by
+        fieldAdd n home (fieldMul n k bench xs ys) ∧
+      OntoLay b' (bumpOp b 0 cOps hops) dst second slides (pegCount home)
+        ((moves + 2 * pegCount home + schoolMoves xs ys n n) +
+          foldCharge n (n - k) (school n xs ys (pref home bench n) false)) := by
   have hOff := mul_onto_off b dst first second home xs ys n moves slides peakS bench cOps
     hmk hoff hops hop0 hfops hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs
     h7 hneD1 hneD2 hne hn0 hnb hn hlenH hlenx hleny hf hmoves hslides hpeakS hspan
@@ -980,9 +1083,16 @@ theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
     erw [hOff]
     change mulAfter (Int.ofNat 0, (bFold, embed sch)) = .ok (ontoFoldBoard bFold sch n k mvN peak)
     exact hOk
-  refine ⟨ontoFoldBoard bFold sch n k mvN peak, hmul, ?_, ?_⟩
+  have hlay := onto_result_lay b0 dst second pad peakS moves slides peg mvN n k peak sch
+    (by rw [bumpOp_held]; exact hD)
+    (by rw [bumpOp_home]; exact hHD)
+    (by rw [ontoCharge_held_size, bumpOp_held]; exact hS)
+    (by rw [ontoCharge_home_size, bumpOp_home]; exact hHomeS)
+    hneD2
+  refine ⟨ontoFoldBoard bFold sch n k mvN peak, hmul, ?_, ?_, ?_⟩
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
   · exact onto_add n k bench xs ys home hhomeT hlenH (Or.inl hspan) hnb
+  · exact hlay
 
 /-- Marker seated. The onto multiply is that fold with the flag put back. -/
 theorem mul_onto_up_prefix (b : Ecbs.Board) (dst first second : Nat)
@@ -1045,7 +1155,11 @@ theorem mul_onto_up_prefix (b : Ecbs.Board) (dst first second : Nat)
       b'.sudo_5Board_5bench =
         embed (laneFold n (n - k) (school n xs ys (pref home bench n) false)) ∧
       (laneFold n (n - k) (school n xs ys (pref home bench n) false)).take n =
-        fieldAdd n home (fieldMul n k bench xs ys) := by
+        fieldAdd n home (fieldMul n k bench xs ys) ∧
+      OntoLay b' (bumpOp (markerUpFeed b m ctrl mx) 0 cOps
+          (by simpa [markerUpFeed] using hops)) dst second slides (pegCount home)
+        ((moves + 2 * pegCount home + schoolMoves xs ys n n) +
+          foldCharge n (n - k) (school n xs ys (pref home bench n) false)) := by
   rw [mul_onto_up_eq b dst first second home xs ys w h r n k moves slides hole peak peakS bench
       cOps m ctrl mx script hmk hoff hm hc hx hscript hbound hfitMk hfitC hfit2 hops hop0 hfops
       hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs h7 hneD1 hneD2 hne hn0 hnb hn
@@ -1081,13 +1195,13 @@ theorem mul_onto_up_prefix (b : Ecbs.Board) (dst first second : Nat)
       (by simp [feed, markerUpFeed, hw]) (by simp [feed, markerUpFeed, hh])
       (by simp [feed, markerUpFeed, hr]) (by simp [feed, markerUpFeed, hk])
       hsm hnsm hfitB hfold
-  obtain ⟨b', hb, hbench, hpre⟩ := hFeed
+  obtain ⟨b', hb, hbench, hpre, hlay⟩ := hFeed
   have hflag : (do
       let r ← Ecbs.mul feed ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
         false true false
       pure { r with sudo_5Board_9marker_on := true }) = .ok (markerOn b') := by
     rw [hb, ok_bind, pure_eq_ok, markerOn_mk]
-  refine ⟨b', ?_, hbench, hpre⟩
+  refine ⟨b', ?_, hbench, hpre, hlay⟩
   simpa [feed] using hflag
 
 /-- SPEC.md §3 R7 line 156. The new up is the slope times `(first x − new x)`,

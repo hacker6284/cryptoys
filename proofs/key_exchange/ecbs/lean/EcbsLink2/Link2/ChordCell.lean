@@ -896,7 +896,28 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
       bX.sudo_5Board_4cost.sudo_5Costs_5moves =
         Int.ofNat (moves + pegCount accX + pegCount run + pegCount run + 2 * pegCount x3) ∧
       bX.sudo_5Board_4cost.sudo_5Costs_6slides =
-        Int.ofNat (slides + 2 * pegCount x3) := by
+        Int.ofNat (slides + 2 * pegCount x3) ∧
+      bX.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      bX.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      bX.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      (∀ h : 2 < bX.sudo_5Board_4held.size, bX.sudo_5Board_4held[2] = true) ∧
+      (∀ i, i ≠ 2 → ∀ hi : i < b.sudo_5Board_4home.size,
+        ∀ hi' : i < bX.sudo_5Board_4home.size,
+          bX.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]) ∧
+      (∀ i, i ≠ 2 → ∀ hi : i < b.sudo_5Board_4held.size,
+        ∀ hi' : i < bX.sudo_5Board_4held.size,
+          bX.sudo_5Board_4held[i] = b.sudo_5Board_4held[i]) ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      ∃ peakX, bX.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakX := by
   intro x3
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2H : 2 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -994,7 +1015,7 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
     rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, h2, ok_bind]
     rw [hclear, ok_bind]
     rw [hset]
-  refine ⟨bX, hdo, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bX, hdo, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · exact settle_bench_off bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
   · intro h2x
     have hh := settle_home_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
@@ -1008,5 +1029,79 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
     rw [hmv, hx3]
   · have hsl := settle_slides_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
     simpa [hx3] using hsl
+  · have hh := settle_home_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+    have hszX : bX.sudo_5Board_4home.size = bC.sudo_5Board_4home.size := by
+      rw [show bX.sudo_5Board_4home.size =
+          (settleBoard bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).sudo_5Board_4home.size
+          from rfl, hh, Array.size_set]
+    have hszC : bC.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
+      simp [bC, Array.size_set, b2, b1, benchAddBoard, withMoves]
+    exact hszX.trans hszC
+  · have hh := settle_held_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+    have hszX : bX.sudo_5Board_4held.size = bC.sudo_5Board_4held.size := by
+      rw [show bX.sudo_5Board_4held.size =
+          (settleBoard bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).sudo_5Board_4held.size
+          from rfl, hh, Array.size_set]
+    have hszC : bC.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+      simp [bC, Array.size_set, b2, b1, benchAddBoard, withMoves]
+    exact hszX.trans hszC
+  · have hflagC : bC.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+      simp [bC, b2, b1, benchAddBoard, withMoves]
+    exact (settle_marker_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).trans hflagC
+  · intro h2x
+    have hh := settle_held_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+    have hget := ix (by simpa [bX] using hh) 2 h2x
+    simpa [Array.getElem_set_eq] using hget
+  · intro i hne hi hi'
+    have hh := settle_home_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+    have hget := ix (by simpa [bX] using hh) i hi'
+    have hne2 : (2 : Nat) ≠ i := hne.symm
+    rw [Array.getElem_set_ne (h := hne2)] at hget
+    have hic : i < bC.sudo_5Board_4home.size := by
+      simpa [bX, hh, Array.size_set] using hi'
+    have hpre : bC.sudo_5Board_4home[i]'hic = b.sudo_5Board_4home[i] := by
+      have hhome2 : b2.sudo_5Board_4home = b.sudo_5Board_4home := by
+        rw [benchAddBoard_home, benchAddBoard_home]
+      simp [bC, hhome2, Array.getElem_set_ne, hne2]
+    exact hget.trans hpre
+  · intro i hne hi hi'
+    have hh := settle_held_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+    have hget := ix (by simpa [bX] using hh) i hi'
+    have hne2 : (2 : Nat) ≠ i := hne.symm
+    rw [Array.getElem_set_ne (h := hne2)] at hget
+    have hic : i < bC.sudo_5Board_4held.size := by
+      simpa [bX, hh, Array.size_set] using hi'
+    have hpre : bC.sudo_5Board_4held[i]'hic = b.sudo_5Board_4held[i] := by
+      have hheld2 : b2.sudo_5Board_4held = b.sudo_5Board_4held := by
+        rw [benchAdd_held, benchAdd_held]
+      simp [bC, hheld2, Array.getElem_set_ne, hne2]
+    exact hget.trans hpre
+  · have hcC : bC.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+      simp [bC, b2, b1, benchAddBoard, withMoves]
+    exact (settle_ctrl_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).trans hcC
+  · have hxC : bC.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+      simp [bC, b2, b1, benchAddBoard, withMoves]
+    exact ((settle_ix bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).2.2.1).trans hxC
+  · have hopC : bC.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+      simp [bC, b2, b1, benchAddBoard, withMoves]
+    exact ((settle_ix bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).2.2.2).trans hopC
+  · have hsC : bC.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+      simp [bC, b2, b1, benchAddBoard, withMoves]
+    exact (settle_strict_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).trans hsC
+  · have hoC : bC.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+      simp [bC, b2, b1, benchAddBoard, withMoves]
+    exact (settle_hole_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak).trans hoC
+  · let peakX := if peak < countHeld (bC.sudo_5Board_4held.set ⟨2, hDc⟩ true) 7
+      then countHeld (bC.sudo_5Board_4held.set ⟨2, hDc⟩ true) 7 else peak
+    refine ⟨peakX, ?_⟩
+    have hpkI : bC.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+      rw [hpkC, ofNat_eq_natCast]
+    simpa [bX, peakX] using
+      settle_peak_eq bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak hpkI
 
 end EcbsLink2.Link2

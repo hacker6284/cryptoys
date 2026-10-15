@@ -1,6 +1,6 @@
 # RESUME
 
-ECBS Link 2, branch `cursor/ecbs-link2-4113`. Pick up from this note.
+ECBS Link 2 part 2, branch `cursor/ecbs-link2-part2`. Part 1 is PR #201 on `cursor/ecbs-link2-4113`. Pick up from this note.
 
 ## Done on this branch, past `d49b865d`
 
@@ -172,9 +172,19 @@ The take, the mirror, the onto multiply, and `chord_up_slide` are not in that `o
 
 Compile peak (VmHWM) for a clean `lake build EcbsLink2` under `ulimit -v 7000000`: 978612 kB. 3540 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only.
 
+## Done in `ChordLay.lean`
+
+- `square_kept`: gap times spare, clear, settle, then the square and the white peg. The bench prefix is slope² + 1, with a zero tail. Homes other than the spare stay, and home 5 is the slope.
+- `bottom_lay`: that square, then the two bench adds, the clear, and the settle. The bottom is `chordX3` (slope² + 1 + across − run). Across stays the cubed across, the gap stays the slope, the bench ends off. SPEC.md §3 R7 line 156. The `FitsLen` charges of the settle stay hypotheses.
+- `point_from_bottom`: on that board, `add` of the bottom onto the across with the mirror on, `mirror` of the up, then the onto multiply of the gap by that difference. The bench prefix is `chordY3`. `card_y3` is the mirrored up plus the product. The clear, the settle into the up, and `move_band` of the bottom into the across are not in this `obtain` yet.
+
+`x3_settle_lay` now also says which homes stay, and `chord_take_mirror` says the same for the take. `mul_onto_up_prefix` returns `OntoLay`: the destination and the second factor are empty, the bench is on and aimed at the destination, and the other homes stay.
+
+Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 388052 kB. 3743 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under that ulimit succeeded.
+
 ## Next
 
-Finish the obtain chain: project the board after the two bench adds and the settle (no whole-record `simp`), then `chord_take_mirror`, `mul_onto_up_prefix` / `card_y3`, and `chord_up_slide`, and tie that to `chordStep` for a live white or red cell with a nonempty run. Discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+On the board `point_from_bottom` leaves (`markerOn` of the onto fold), call `chord_up_slide`. The up becomes `chordY3` and the across becomes `chordX3`. That is `chord_tail` for a nonempty run. Then `chordStep` for a live white or red cell, with `walkStep_live_chord`. Discharge the settle `FitsLen` hypotheses inside the cell invariant, discharge the inverse with `invert_checked`, and the full `walk_chord` induction over cells, for every key length and colour sequence, with the live/ok flag and the error branch, and no hypotheses beyond the stated domain. After that: `walk_fform`; the root-strip search (`base_point_of`, errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 ## Scope that stays in the PR body
 

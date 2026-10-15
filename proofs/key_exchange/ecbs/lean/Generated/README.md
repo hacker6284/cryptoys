@@ -12,9 +12,12 @@ emitted sudo tests (`ecbs_test`, TAP): the `ecbs` row of the `generated` matrix 
 (https://github.com/hacker6284/sudocode/pull/18) makes `Ecbs.lean` elaborate in a CI
 budget; it fixes https://github.com/hacker6284/sudocode/issues/17. Dated attempts
 that did not finish, at the previous pin, are in
-[`evidence/README.md`](../../evidence/README.md#lean). There is no Link 2 package for
-ECBS yet: nothing proves facts about these definitions (see
-[`proofs/key_exchange/ecbs/README.md`](../../README.md)). `lake-manifest.json` is
+[`evidence/README.md`](../../evidence/README.md#lean). Link 2 part 1 covers 11 exports
+(`tier`, `phase_names`, `op_names`, `new_board`, `coordinate`, `place`, `band`,
+`curve_test`, `invert_number`, `multiply`, `cube_number`) and does not cover 8
+(`call_in`, `roll_key`, `exchange`, `receive_check`, `make_certificate`,
+`base_point_of`, `walk_key`, `fold`); see the sibling package [`../`](../README.md).
+`lake-manifest.json` is
 committed so `lean-action` can `lake build`; do not gitignore it.
 
 See [`proofs/ANTI_DRIFT.md`](../../../../ANTI_DRIFT.md).

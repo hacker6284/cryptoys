@@ -445,3 +445,23 @@ jobs:
           lake-package-directory: proofs/key_exchange/bs/lean
       - name: Axiom audit of every BsLink2 theorem (only propext, Classical.choice, Quot.sound; shared gate)
         run: python3 proofs/doubledeal/check_axioms.py bs
+
+  ecbs-lean:
+    # ECBS Link 2 part 1. 11 exports covered: tier, phase_names, op_names,
+    # new_board, coordinate, place, band, curve_test, invert_number, multiply,
+    # cube_number. 8 not covered (part 2, cursor/ecbs-link2-part2): call_in,
+    # roll_key, exchange, receive_check, make_certificate, base_point_of,
+    # walk_key, fold. Scope: proofs/key_exchange/ecbs/lean/README.md.
+    # Largest file: EcbsLink2/Link2/ClimbEmit.lean, about 1.74 GB.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: No sorry / admit / native_decide (shared gate)
+        run: python3 proofs/doubledeal/security/checks/scan_sorry.py --root proofs/key_exchange/ecbs/lean --exclude Generated
+      - name: Axiom gate keying rules; ECBS_LINK2 equals the README-cited theorems; export table
+        run: python3 proofs/doubledeal/check_axioms.py --selftest
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: proofs/key_exchange/ecbs/lean
+      - name: Axiom audit of every EcbsLink2 theorem (only propext, Classical.choice, Quot.sound; shared gate)
+        run: python3 proofs/doubledeal/check_axioms.py ecbs

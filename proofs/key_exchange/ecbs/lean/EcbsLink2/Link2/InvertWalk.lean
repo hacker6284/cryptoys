@@ -814,4 +814,444 @@ theorem open_invGap (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       rw [hn, hk, hb, hgap1]
       exact (invGap_cube t xs).symm
 
+/-- The check multiply on the board `open_invert` leaves. Home 5 is `invGap`,
+    home 2 is still the input, and the bench prefix is their product. -/
+theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
+    (lay : OpenLay b t xs) (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t)
+    (hsh : TierShape t) (base : ClimbBudget) (hm : OpenMatch lay base) :
+    ∃ (bZ bM bR : Ecbs.Board) (v : Array Int) (h5 : 5 < bR.sudo_5Board_4home.size),
+      Ecbs.invert b ((2 : Nat) : Int) = .ok bZ ∧
+      Ecbs.mul bZ Ecbs.check_target Ecbs.gap ((2 : Nat) : Int) true false false = .ok bM ∧
+      Ecbs.bench_read_and_clear bM = .ok (v, bR) ∧
+      v = embed (fieldMul t.n t.k t.benchlen (invGap t.n t.k t.benchlen xs) xs) ∧
+      bR.sudo_5Board_4home[5]'h5 = embed (invGap t.n t.k t.benchlen xs) ∧
+      bR.sudo_5Board_8bench_on = false ∧
+      (∃ (h5D : 5 < bR.sudo_5Board_4held.size) (mv : Nat),
+        bR.sudo_5Board_4held[5]'h5D = true ∧
+        bR.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
+        FitsLen (mv + t.n) ∧
+        bR.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int)) := by
+  obtain ⟨bT, hem, hK⟩ := open_invert b t xs lay hOk sat hR hsh base hm
+  have hpark : (openModel t xs lay.ctrl).parkAt = base.ladder0 + base.R := by
+    simp [openModel, entryModel, hm.ladder0, hm.R]
+  have hm0 : 0 < (openModel t xs lay.ctrl).tally := by simp [openModel, entryModel]
+  have hcap : ∀ done rest, tierClimb t = done ++ rest →
+      climbTallyPrefix base.tally0 done rest ≤ base.mMax := by
+    intro done rest hsplit
+    simpa [hm.tally0, hm.mMax] using
+      tallyPrefixesLe_spec 1 (rowRoom t) done rest (by simpa [hsplit] using sat.prefixes)
+  have hxLen : base.x.length = base.n := by rw [hm.x, hm.n, lay.len]
+  have hxT : allTritList base.x := by simpa [hm.x] using lay.tri
+  obtain ⟨b', s', hrun, hs', hKpost, hgap, htmax⟩ := climb_refines_emit (tierClimb t)
+      bT (openModel t xs lay.ctrl) base hK hpark hm0 hcap hxLen hxT
+  have hpos : 0 < (tierClimb t).length := by
+    simpa [tierClimb, List.length_reverse, tierR] using hR
+  cases hLc : tierClimb t with
+  | nil => simp [hLc] at hpos
+  | cons r rs =>
+      let hole : ClimbModel → Nat → Bool → Nat := fun s _ _ =>
+        climbAt base.ladder0 base.R s.ridx
+      have hon : s'.onBench = true := by
+        rw [hs', hLc]
+        exact modelClimb_onBench (openModel t xs lay.ctrl) base.x hole r rs
+      have hge : 0 ≤ s'.fromHole := by
+        rw [hs', hLc]
+        exact modelClimb_fromHole (openModel t xs lay.ctrl) base.x hole r rs
+      have hmt : 0 < s'.tally := by
+        rw [hs', modelClimb_tally]
+        simp [openModel, entryModel]
+        exact Nat.lt_of_lt_of_le (by decide : (0 : Nat) < 1) (climbTally_ge 1 (tierClimb t))
+      obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread⟩ :=
+        final_cube_both hKpost hon hge htmax hmt
+      have hrun' : climbEmit (climbStepBoard ((2 : Nat) : Int)) bT (tierClimb t) =
+          .ok b' := by simpa [hm.xHome] using hrun
+      have hok : Ecbs.invert b ((2 : Nat) : Int) = .ok bZ := by
+        rw [hem, hrun', ok_bind]
+        simp [finalTail, hun, hc, hset, hz, ok_bind]
+      have hlayp := modelClimb_params (openModel t xs lay.ctrl) base.x hole (tierClimb t)
+      have hn : s'.n = t.n := by rw [hs']; simpa [openModel, entryModel] using hlayp.1
+      have hkS : s'.k = t.k := by rw [hs']; simpa [openModel, entryModel] using hlayp.2.1
+      have hbL : s'.benchlen = t.benchlen := by
+        rw [hs']; simpa [openModel, entryModel] using hlayp.2.2
+      have hpair : (s'.gap, s'.tally) =
+          invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t) := by
+        simpa [openModel, entryModel, hm.n, hm.bench, hm.x] using hgap
+      have hgap1 : s'.gap =
+          (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1 :=
+        congrArg Prod.fst hpair
+      have hcube : fieldCube s'.n s'.k s'.benchlen s'.gap =
+          invGap t.n t.k t.benchlen xs := by
+        rw [hn, hkS, hbL, hgap1]
+        exact (invGap_cube t xs).symm
+      have hArr : bZ.sudo_5Board_4home[5]'hsg.h5 = embed (invGap t.n t.k t.benchlen xs) :=
+        hsg.arr.trans (congrArg embed hcube)
+      let mv := hread.moves.choose
+      have hmv := hread.moves.choose_spec
+      let pk := hread.peak.choose
+      have hpk := hread.peak.choose_spec
+      let pS := hread.peakS.choose
+      have hpS := hread.peakS.choose_spec
+      let cOps := hread.ops0.choose
+      have hcOps := hread.ops0.choose_spec
+      let holeN := hread.hole.choose
+      have hholeN := hread.hole.choose_spec
+      let mvB := hread.fitMul.choose
+      have hB1 := hread.fitMul.choose_spec
+      let nB := hB1.choose
+      have hB2 := hB1.choose_spec
+      let benchB := hB2.choose
+      have hB3 := hB2.choose_spec
+      have hmvB : bZ.sudo_5Board_4cost.sudo_5Costs_5moves = (mvB : Int) := hB3.1
+      have hnB : bZ.sudo_5Board_1t.sudo_4Tier_1n = (nB : Int) := hB3.2.1
+      have hbB : bZ.sudo_5Board_1t.sudo_4Tier_8benchlen = (benchB : Int) := hB3.2.2.1
+      have hfitB : FitsLen (mvB + nB + nB * (nB + 1) + 3 * (benchB - nB) + 2 * nB) :=
+        hB3.2.2.2
+      have hmvEq : mv = mvB := by
+        apply Int.ofNat.inj
+        rw [ofNat_eq_natCast, ofNat_eq_natCast]
+        exact hmv.symm.trans hmvB
+      have hnEq : nB = t.n := by
+        apply Int.ofNat.inj
+        rw [ofNat_eq_natCast, ofNat_eq_natCast]
+        have htn : bZ.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) := by
+          rw [hread.tierEq, hKpost.shape.tierN, hn]
+        exact hnB.symm.trans htn
+      have hbEq : benchB = t.benchlen := by
+        apply Int.ofNat.inj
+        rw [ofNat_eq_natCast, ofNat_eq_natCast]
+        have htb : bZ.sudo_5Board_1t.sudo_4Tier_8benchlen = (t.benchlen : Int) := by
+          rw [hread.tierEq, hKpost.shape.tierB, hbL]
+        exact hbB.symm.trans htb
+      have hfitBig : FitsLen (mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) +
+          2 * t.n) := by
+        rw [← hmvEq, hnEq, hbEq] at hfitB
+        exact hfitB
+      have hmul := mul_refines bZ 7 5 2 (invGap t.n t.k t.benchlen xs) xs
+          t.w t.h t.r t.n t.k mv holeN t.benchlen pk pS cOps
+          hread.marker hread.benchOff hread.opsGt hcOps.1 hcOps.2
+          (by rw [hread.tierEq]; simpa [hbL] using hKpost.shape.tierB)
+          hread.h5D hsg.h5 hread.held5 hArr
+          hread.h2D hread.h2H
+          (by
+            have hheld : b'.sudo_5Board_4held[2]'hread.h2D0 = true := by
+              simpa [hm.xHome] using hKpost.shape.xHeld
+            exact hread.held2.trans hheld)
+          (by
+            have hhome : b'.sudo_5Board_4home[2]'hread.h2H0 = embed xs := by
+              simpa [hm.x, hm.xHome] using hKpost.shape.xArr
+            exact hread.home2.trans hhome)
+          hread.spareD hread.spareH hread.spareE hread.h7
+          (by decide) (by decide)
+          (by simpa [hn] using hKpost.shape.peg.n_pos)
+          (by rw [hread.tierEq]; simpa [hn] using hKpost.shape.tierN)
+          (by
+            rw [invGap_cube]
+            exact fieldCube_length t.n t.k t.benchlen
+              (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1
+              (by
+                have hs := sat.mul_span
+                omega))
+          lay.len
+          (by simpa [hn] using hKpost.shape.peg.fitN)
+          hmv hpk hpS
+          (by
+            have hpeg : pegCount xs ≤ t.n := by
+              rw [← lay.len]
+              exact pegCount_le xs
+            apply FitsLen.of_le hfitBig
+            calc
+              mv + pegCount xs ≤ mv + t.n := Nat.add_le_add_left hpeg mv
+              _ ≤ mv + t.n + t.n * (t.n + 1) := Nat.le_add_right _ _
+              _ ≤ mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) :=
+                Nat.le_add_right _ _
+              _ ≤ mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) + 2 * t.n :=
+                Nat.le_add_right _ _)
+          sat.mul_span
+          (by
+            have hsp : 3 * (s'.n - 1) < s'.benchlen := by
+              have hs := hKpost.shape.peg.span
+              omega
+            have htriG := fieldCube_trits s'.n s'.k s'.benchlen s'.gap
+              hKpost.shape.peg.trits hsp hKpost.shape.k_le
+            rw [hcube] at htriG
+            exact htriG)
+          (by
+            apply FitsLen.of_le (by simpa [hn] using hKpost.shape.peg.fit3)
+            have h23 : 2 * (t.n - 1) ≤ 3 * (t.n - 1) :=
+              Nat.mul_le_mul_right _ (by decide : (2 : Nat) ≤ 3)
+            simpa [hn] using h23)
+          (by
+            have hpeg : pegCount xs ≤ t.n := by
+              rw [← lay.len]
+              exact pegCount_le xs
+            apply FitsLen.of_le hfitBig
+            calc
+              mv + pegCount xs + t.n * (t.n + 1)
+                  ≤ mv + t.n + t.n * (t.n + 1) :=
+                Nat.add_le_add_right (Nat.add_le_add_left hpeg mv) _
+              _ ≤ mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) :=
+                Nat.le_add_right _ _
+              _ ≤ mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) + 2 * t.n :=
+                Nat.le_add_right _ _)
+          hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap
+          (by
+            have h1 : bZ.sudo_5Board_1t.sudo_4Tier_1w =
+                b'.sudo_5Board_1t.sudo_4Tier_1w := by rw [hread.tierEq]
+            exact h1.trans (hKpost.shape.tierW.trans
+              (congrArg (fun n : Nat => (n : Int)) hm.w)))
+          (by
+            have h1 : bZ.sudo_5Board_1t.sudo_4Tier_1h =
+                b'.sudo_5Board_1t.sudo_4Tier_1h := by rw [hread.tierEq]
+            exact h1.trans (hKpost.shape.tierH.trans
+              (congrArg (fun n : Nat => (n : Int)) hm.h)))
+          (by
+            have h1 : bZ.sudo_5Board_1t.sudo_4Tier_1r =
+                b'.sudo_5Board_1t.sudo_4Tier_1r := by rw [hread.tierEq]
+            exact h1.trans (hKpost.shape.tierR.trans
+              (congrArg (fun n : Nat => (n : Int)) hm.r)))
+          (by rw [hread.tierEq]; simpa [hkS] using hKpost.shape.tierK)
+          (by rw [hholeN, ofNat_eq_natCast])
+          (by simpa [hbL, hm.w, hm.h, hm.r] using hKpost.shape.peg.small)
+          (by simpa [hn] using hKpost.shape.peg.n_small)
+          (by simpa [hbL] using hKpost.shape.peg.fitBn)
+          (by
+            have hpeg : pegCount xs ≤ t.n := by
+              rw [← lay.len]
+              exact pegCount_le xs
+            apply FitsLen.of_le hfitBig
+            calc
+              mv + pegCount xs + t.n * (t.n + 1) + 3 * (t.benchlen - t.n)
+                  ≤ mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) :=
+                Nat.add_le_add_right
+                  (Nat.add_le_add_right (Nat.add_le_add_left hpeg mv) _) _
+              _ ≤ mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) + 2 * t.n :=
+                Nat.le_add_right _ _)
+      obtain ⟨bM, hmulOk, _hon, _, hbench, htake, hrest⟩ := hmul
+      obtain ⟨_, hmov, _, _, htM, hsz, hheld, h5keep, _hframe, _hmk, _hops, _hstrict, _hhole⟩ :=
+        hrest
+      have h5M : 5 < bM.sudo_5Board_4home.size := by rw [hsz]; exact hsg.h5
+      have hhomeM : bM.sudo_5Board_4home[5]'h5M = embed (invGap t.n t.k t.benchlen xs) :=
+        (h5keep hsg.h5 h5M).trans hArr
+      let gapL := invGap t.n t.k t.benchlen xs
+      let lane := laneFold t.n (t.n - t.k)
+        (school t.n gapL xs (List.replicate t.benchlen 0) false)
+      have htakeL : lane.take t.n = fieldMul t.n t.k t.benchlen gapL xs := by
+        simpa [lane, gapL, invGap] using htake
+      have hlenSch : (school t.n gapL xs (List.replicate t.benchlen 0) false).length =
+          t.benchlen := by rw [school_length, List.length_replicate]
+      have hlenL : lane.length = t.benchlen := by
+        rw [laneFold_length, hlenSch]
+        · rw [hlenSch]
+          have hs := sat.mul_span
+          omega
+      have hnle : t.n ≤ lane.length := by
+        rw [hlenL]
+        have hs := sat.mul_span
+        omega
+      have hpref := prefix_refines lane t.n hnle (by simpa [hn] using hKpost.shape.peg.fitN)
+      have hszV : (embed (lane.take t.n)).size = t.n := by
+        rw [size_embed, List.length_take, hlenL]
+        have hs := sat.mul_span
+        omega
+      have hnp := npeg_refines (embed (lane.take t.n)) (by
+        rw [hszV]
+        simpa [hn] using hKpost.shape.peg.fitN)
+      let mvM := mulMoves mv gapL xs t.n t.k t.benchlen
+      have hmvM : bM.sudo_5Board_4cost.sudo_5Costs_5moves = (mvM : Int) := by
+        simpa [mvM, gapL, ofNat_eq_natCast] using hmov
+      let nz := nnz (embed (lane.take t.n)).toList
+      have hnz : nz ≤ t.n := by
+        have hle := nnz_length_le (embed (lane.take t.n)).toList
+        rw [toList_embed, List.length_map] at hle
+        exact Nat.le_trans hle (List.length_take_le t.n lane)
+      have hschool : schoolMoves gapL xs t.n t.n ≤ t.n * (t.n + 1) :=
+        schoolMoves_bound gapL xs t.n
+      have hfoldC : foldCharge t.n (t.n - t.k)
+          (school t.n gapL xs (List.replicate t.benchlen 0) false) ≤
+          3 * (t.benchlen - t.n) := by
+        have hF := foldCharge_bound t.n (t.n - t.k)
+          (school t.n gapL xs (List.replicate t.benchlen 0) false)
+        rw [hlenSch] at hF
+        exact hF
+      have hmvLe : mvM + nz ≤ mv + t.n + t.n * (t.n + 1) + 3 * (t.benchlen - t.n) +
+          2 * t.n := by
+        have hdef : mvM = mv + pegCount xs + schoolMoves gapL xs t.n t.n +
+            foldCharge t.n (t.n - t.k)
+              (school t.n gapL xs (List.replicate t.benchlen 0) false) := rfl
+        have hpeg : pegCount xs ≤ t.n := by rw [← lay.len]; exact pegCount_le xs
+        omega
+      have hfitM : FitsLen (mvM + nz) := FitsLen.of_le hfitBig hmvLe
+      have hnT : bM.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) := by
+        rw [htM, hread.tierEq, hKpost.shape.tierN, hn]
+      let bR := { { bM with sudo_5Board_4cost :=
+        { bM.sudo_5Board_4cost with sudo_5Costs_5moves := Int.ofNat (mvM + nz) } }
+          with sudo_5Board_8bench_on := false }
+      have hreadM : Ecbs.bench_read_and_clear bM = .ok (embed (lane.take t.n), bR) := by
+        unfold Ecbs.bench_read_and_clear
+        rw [hbench, hnT, ← ofNat_eq_natCast t.n]
+        rw [hpref, ok_bind]
+        conv => zeta
+        rw [hnp, ok_bind]
+        conv => zeta
+        rw [hmvM, ← ofNat_eq_natCast mvM]
+        rw [show nnz (embed (lane.take t.n)).toList = nz from rfl,
+          addI_ofNat mvM nz hfitM, ok_bind]
+        simp only [pure_eq_ok, bR, hbench]
+      have h5R : 5 < bR.sudo_5Board_4home.size := by simpa [bR] using h5M
+      have hhomeR : bR.sudo_5Board_4home[5]'h5R = embed gapL := by
+        have hEq : bR.sudo_5Board_4home = bM.sudo_5Board_4home := by simp [bR]
+        exact cell_eq_of hEq hhomeM
+      let heldInner := bZ.sudo_5Board_4held.set ⟨6, hread.spareD⟩ true
+      let heldClear := heldInner.set ⟨6, by rw [Array.size_set]; exact hread.spareD⟩ false
+      have hheldDef : bM.sudo_5Board_4held = heldClear := by
+        simpa [heldClear, heldInner] using hheld
+      have h5DM : 5 < bM.sudo_5Board_4held.size := by
+        have hs := congrArg Array.size hheldDef
+        rw [Array.size_set, Array.size_set] at hs
+        exact hs.symm ▸ hread.h5D
+      have h5DR : 5 < bR.sudo_5Board_4held.size := by simpa [bR] using h5DM
+      have hheldR : bR.sudo_5Board_4held[5]'h5DR = true := by
+        have hEq : bR.sudo_5Board_4held = bM.sudo_5Board_4held := by simp [bR]
+        have hget : heldClear[5]'(by rw [Array.size_set, Array.size_set]; exact hread.h5D) =
+            bZ.sudo_5Board_4held[5]'hread.h5D := by
+          simp [heldClear, heldInner, Array.getElem_set, show (5 : Nat) ≠ 6 by decide]
+        have hM : bM.sudo_5Board_4held[5]'h5DM = true :=
+          (cell_eq_of hheldDef hget).trans hread.held5
+        exact cell_eq_of hEq hM
+      have hmvR : bR.sudo_5Board_4cost.sudo_5Costs_5moves = ((mvM + nz : Nat) : Int) := by
+        simp [bR, ofNat_eq_natCast]
+      have hfitR : FitsLen (mvM + nz + t.n) := by
+        apply FitsLen.of_le hfitBig
+        have hdef : mvM = mv + pegCount xs + schoolMoves gapL xs t.n t.n +
+            foldCharge t.n (t.n - t.k)
+              (school t.n gapL xs (List.replicate t.benchlen 0) false) := rfl
+        have hpeg : pegCount xs ≤ t.n := by rw [← lay.len]; exact pegCount_le xs
+        omega
+      have hnR : bR.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) := by simp [bR, hnT]
+      refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl,
+        ⟨h5DR, mvM + nz, hheldR, hmvR, hfitR, hnR⟩⟩
+      · simpa [Ecbs.check_target, Ecbs.gap] using hmulOk
+      · exact congrArg embed htakeL
+
+private theorem getD_eq_get (xs : List Nat) (j : Nat) (hj : j < xs.length) :
+    xs.getD j 0 = xs[j] := by
+  rw [List.getD_eq_getElem?_getD, List.getElem?_eq_getElem hj, Option.getD_some]
+
+private theorem head_of_peg (P : List Nat) (n c : Nat) (hP : 0 < P.length)
+    (hv : P = c :: List.replicate (n - 1) 0) : P[0] = c := by
+  subst hv
+  simp
+
+private theorem mirror_size (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (arr : Array Int) (mv : Nat) :
+    home < (mirrorHome b home hH arr mv).sudo_5Board_4home.size := by
+  simp [mirrorHome, withMoves, Array.size_set]
+  exact hH
+
+/-- Accepted check on an open walk board. Home 5 is the list `fieldInv` returns. -/
+theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
+    (lay : OpenLay b t xs) (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t)
+    (hsh : TierShape t) (base : ClimbBudget) (hm : OpenMatch lay base)
+    (hacc : fieldInv t.n t.k t.benchlen xs = some ans) :
+    ∃ (b' : Ecbs.Board) (h5 : 5 < b'.sudo_5Board_4home.size)
+      (h5D : 5 < b'.sudo_5Board_4held.size),
+      Ecbs.invert_checked b ((2 : Nat) : Int) = .ok b' ∧
+      b'.sudo_5Board_4home[5]'h5 = embed ans ∧
+      b'.sudo_5Board_4held[5]'h5D = true ∧
+      b'.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) ∧
+      ans.length = t.n := by
+  have hpos : 0 < t.n := hOk.n_pos
+  have hnbench := mul_span_n t.n t.benchlen hpos sat.mul_span
+  have hspan3 := cube_span_le t.n t.benchlen t.combgap sat.cube_span
+  let g := invGap t.n t.k t.benchlen xs
+  let P := fieldMul t.n t.k t.benchlen g xs
+  have hlenP : P.length = t.n := fieldMul_length _ _ _ _ _ hnbench
+  have hP0 : 0 < P.length := by rw [hlenP]; exact hpos
+  have hshape := fieldInv_some_shape t.n t.k t.benchlen xs ans hacc
+  have hpeg : P = 1 :: List.replicate (t.n - 1) 0 ∨
+      P = 2 :: List.replicate (t.n - 1) 0 := by
+    rcases hshape with ⟨hvP, _⟩ | ⟨hvP, _⟩
+    · exact Or.inl (by simpa [P, g] using hvP)
+    · exact Or.inr (by simpa [P, g] using hvP)
+  have htriG : allTritList g := invGap_trits t xs sat hsh hpos lay.len lay.tri
+  have hlenG : g.length = t.n := invGap_length t xs sat hpos
+  obtain ⟨_bZ, _bM, bR, _v, h5, hinv, hmul, hread, hv, hhome5, _hbench, hframe⟩ :=
+    open_check_mul b t xs lay hOk sat hR hsh base hm
+  obtain ⟨h5D, mv, hheld, hmv, hfit, hnT⟩ := hframe
+  have hfitn : FitsLen t.n := FitsLen.of_le hfit (Nat.le_add_left t.n mv)
+  unfold Ecbs.invert_checked
+  rw [hinv, ok_bind]
+  conv => zeta
+  rw [hmul, ok_bind]
+  conv => zeta
+  rw [hread, ok_bind]
+  dsimp
+  rw [hv, show (0 : Int) = Int.ofNat 0 from rfl, atL_embed P 0 hP0, ok_bind,
+    sEq_ofNat (P[0]'(hP0)) 0]
+  have hhead : (P[0]'(hP0)) ≠ 0 := by
+    rcases hpeg with hvP | hvP
+    · rw [head_of_peg P t.n 1 hP0 hvP]; decide
+    · rw [head_of_peg P t.n 2 hP0 hvP]; decide
+  rw [decide_eq_false hhead, Bool.not_false, sudoAssert_true, ok_bind]
+  rw [listLen_embed, hlenP, subI_ofNat_one t.n hpos hfitn, ok_bind]
+  conv => zeta
+  rw [show (1 : Int) = Int.ofNat 1 from rfl, fuelRange_eq, except_bind_pure]
+  rw [zeroScan_ok_of P t.n 1 hlenP ?hstep hP0 (Nat.le_refl _)
+      (by rw [hlenP]; exact Nat.succ_le_of_lt hpos) (by rwa [hlenP]) ?htail]
+  · have heq : fieldMul t.n t.k t.benchlen (invGap t.n t.k t.benchlen xs) xs = P := by
+      simp [P, g]
+    rcases hpeg with hvP | hvP
+    · have hc : (P[0]'(hP0)) = 1 := head_of_peg P t.n 1 hP0 hvP
+      simp only [heq, sEq_int, hc, pure_eq_ok,
+        show decide ((1 : Int) = (2 : Int)) = false by decide,
+        Bool.false_eq_true, if_false]
+      rcases hshape with ⟨_, hans⟩ | ⟨hv2, _⟩
+      · refine ⟨bR, h5, h5D, rfl, ?_, hheld, hnT, ?_⟩
+        · rw [hans]
+          simpa [g] using hhome5
+        · rw [hans]
+          exact hlenG
+      · have hv2' : P = 2 :: List.replicate (t.n - 1) 0 := by simpa [P, g] using hv2
+        have h2 : (P[0]'(hP0)) = 2 := head_of_peg P t.n 2 hP0 hv2'
+        rw [hc] at h2
+        cases h2
+    · have hc : (P[0]'(hP0)) = 2 := head_of_peg P t.n 2 hP0 hvP
+      simp only [heq, sEq_int, hc, ok_bind,
+        show decide (Int.ofNat 2 = 2) = true from rfl, if_true]
+      have harr : bR.sudo_5Board_4home[5]'h5 = embed g := by simpa [g] using hhome5
+      rw [show Ecbs.gap = ((5 : Nat) : Int) from rfl]
+      rw [mirror_refines bR 5 g t.n mv h5 h5D hheld harr hnT hlenG hpos htriG hmv hfit,
+        ok_bind, pure_eq_ok]
+      rcases hshape with ⟨hv1, _⟩ | ⟨_, hans⟩
+      · have hv1' : P = 1 :: List.replicate (t.n - 1) 0 := by simpa [P, g] using hv1
+        have h1 : (P[0]'(hP0)) = 1 := head_of_peg P t.n 1 hP0 hv1'
+        rw [hc] at h1
+        cases h1
+      · let bM := mirrorHome bR 5 h5 (embed (mirrorTrits g)) (mv + pegCount g)
+        have h5' : 5 < bM.sudo_5Board_4home.size := mirror_size _ _ _ _ _
+        have h5D' : 5 < bM.sudo_5Board_4held.size := by
+          rw [show bM.sudo_5Board_4held = bR.sudo_5Board_4held from
+            mirrorHome_held bR 5 h5 _ _]
+          exact h5D
+        refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_⟩
+        · rw [hans]
+          exact mirrorHome_at bR 5 h5 (embed (mirrorTrits g)) (mv + pegCount g) h5'
+        · exact hheld
+        · rw [show bM.sudo_5Board_1t = bR.sudo_5Board_1t from
+            mirrorHome_tier bR 5 h5 _ _]
+          exact hnT
+        · rw [hans, mirrorTrits_flip, List.length_map]
+          exact hlenG
+  · intro k
+    rfl
+  · intro j hj1 hj
+    rw [← getD_eq_get P j hj]
+    rcases hpeg with hvP | hvP
+    · rw [hvP, show j = j - 1 + 1 from (Nat.sub_add_cancel hj1).symm, List.getD_cons_succ,
+        List.getD_eq_getElem?_getD, List.getElem?_replicate,
+        if_pos (by omega : j - 1 < t.n - 1), Option.getD_some]
+    · rw [hvP, show j = j - 1 + 1 from (Nat.sub_add_cancel hj1).symm, List.getD_cons_succ,
+        List.getD_eq_getElem?_getD, List.getElem?_replicate,
+        if_pos (by omega : j - 1 < t.n - 1), Option.getD_some]
+
 end EcbsLink2.Link2

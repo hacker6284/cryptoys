@@ -197,7 +197,7 @@ Compile peak (VmHWM) for ChordLay under `ulimit -v 7000000`: 1579356 kB. Under 2
 - `chord_rise` / `chord_rise_white` / `chord_rise_red` keep across (home 0), bottom (home 2) and gap (home 5), and the fields the tail does not write. The peak is whatever `place` leaves, as a natural.
 - `chord_tail_after_inv` exports those kept homes. `chord_add_point` obtains that board and applies `chord_tail_point`. `chordAddTail` is `.ok (true, b')` with home 0 `chordX3` and home 1 `chordY3`. `invert_checked` is still a hypothesis.
 
-Compile peak (VmHWM) for a fresh elaboration of ChordOpen: 353308 kB. 3751 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeded.
+Compile peak (VmHWM) for a fresh elaboration of ChordOpen: 353308 kB. 3755 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeded.
 
 ## Next
 

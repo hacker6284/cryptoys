@@ -13,6 +13,33 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+/-- Moves the chord tail can add after the rise, when every home has length `n`.
+    Three schoolbooks, three folds, and the settles in between. -/
+def tailMoveCap (n bench : Nat) : Nat :=
+  3 * (n * (n + 1)) + 9 * (bench - n) + 24 * n + 1
+
+/-- Slides the chord tail can add: the gap settle, the bottom settle, and the
+    closing move of the bottom into the across. -/
+def tailSlideCap (n : Nat) : Nat :=
+  10 * n
+
+private theorem tail_pieces_le (moves n bench : Nat)
+    (sG fG sSq fSq sOn fOn : Nat)
+    (pInv pGap pSlope pAcc pRun pRun2 pX3 pX3b pAccY pY pSlope2 pTake pX3c : Nat)
+    (hsG : sG ≤ n * (n + 1)) (hfG : fG ≤ 3 * (bench - n))
+    (hsSq : sSq ≤ n * (n + 1)) (hfSq : fSq ≤ 3 * (bench - n))
+    (hsOn : sOn ≤ n * (n + 1)) (hfOn : fOn ≤ 3 * (bench - n))
+    (hInv : pInv ≤ n) (hGap : pGap ≤ n) (hSlope : pSlope ≤ n)
+    (hAcc : pAcc ≤ n) (hRun : pRun ≤ n) (hRun2 : pRun2 ≤ n)
+    (hX3 : pX3 ≤ n) (hX3b : pX3b ≤ n) (hAccY : pAccY ≤ n)
+    (hY : pY ≤ n) (hSlope2 : pSlope2 ≤ n) (hTake : pTake ≤ n) (hX3c : pX3c ≤ n) :
+    moves + sG + fG + pInv + 2 * pGap + pSlope + sSq + fSq + 1 + pAcc + pRun +
+        pRun2 + 2 * pX3 + pX3b + pAccY + 2 * pY + sOn + fOn + pSlope2 +
+        2 * pTake + 2 * pX3c ≤
+      moves + tailMoveCap n bench := by
+  unfold tailMoveCap
+  omega
+
 /-- The chord tail on the rise board. `bottom_lay`, then `point_from_bottom`,
     then `chord_do_join`. Home 0 is `chordX3` and home 1 is `chordY3`.
     The control row is the incoming row: settle, take, the onto multiply,
@@ -156,7 +183,8 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 6) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
         Int.ofNat (max (max (max mx (m + 2)) (m + 3)) (m + 4)) ∧
-      (∃ mv, b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv) ∧
+      (∃ mv, b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
+        mv ≤ moves + tailMoveCap n bench) ∧
       (∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl) ∧
       (∃ pk', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk') ∧
       (∃ st, b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st) ∧
@@ -269,10 +297,73 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hw0 hh0 hrR hrP hnE hkLe hgap hwX hhX hrX hkX
       hsm hnsm hfitB hfoldPx hbig hbigS
       (h6X (by rw [hszD8]; decide))
+  have hmvBound : ∃ mv, b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
+      mv ≤ moves + tailMoveCap n bench := by
+    let yMir := mirrorTrits accY
+    let dx := fieldSub n accX x3
+    let schG := school n inv rise (List.replicate bench 0) false
+    let schSq := school n slope slope (List.replicate bench 0) false
+    let schOn := school n slope dx (pref yMir bench n) false
+    let gapTake := (gapProduct n k bench inv rise).take n
+    let onTake := (laneFold n (n - k) schOn).take n
+    let mvOut := moves + schoolMoves inv rise n n +
+        foldCharge n (n - k) schG + pegCount inv + 2 * pegCount gapTake +
+        pegCount slope + schoolMoves slope slope n n + foldCharge n (n - k) schSq + 1 +
+        pegCount accX + pegCount run + pegCount run + 2 * pegCount x3 +
+        pegCount x3 + pegCount accY + 2 * pegCount yMir + schoolMoves slope dx n n +
+        foldCharge n (n - k) schOn + pegCount slope + 2 * pegCount onTake + 2 * pegCount x3
+    have hEq : b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvOut := by
+      simpa [mvOut, mvX, mvSq, mvGap, mulMoves, mulMovesNo, yMir, dx, schG, schSq, schOn,
+        gapTake, onTake, gapProduct, ofNat_eq_natCast] using hmvP
+    have hnB : n ≤ bench := by omega
+    have hpeg (xs : List Nat) (h : xs.length = n) : pegCount xs ≤ n := by
+      simpa [h] using pegCount_le xs
+    have htake (xs : List Nat) : pegCount (xs.take n) ≤ n := by
+      have hlen : (xs.take n).length ≤ n := by
+        simp [List.length_take]
+        exact Nat.min_le_left _ _
+      exact Nat.le_trans (pegCount_le (xs.take n)) hlen
+    have hfoldZ (xs ys : List Nat) :
+        foldCharge n (n - k) (school n xs ys (List.replicate bench 0) false) ≤
+          3 * (bench - n) := by
+      have hlen : (school n xs ys (List.replicate bench 0) false).length = bench := by
+        rw [school_length, List.length_replicate]
+      simpa [hlen] using
+        foldCharge_bound n (n - k) (school n xs ys (List.replicate bench 0) false)
+    have hpref : (pref yMir bench n).length = bench :=
+      pref_length (xs := yMir) (m := bench) (i := n) hnB
+        (by simp [yMir, mirrorTrits, List.length_map, hyA])
+    have hfoldOn : foldCharge n (n - k) schOn ≤ 3 * (bench - n) := by
+      have hlen : schOn.length = bench := by
+        simpa [schOn, hpref] using school_length slope dx (pref yMir bench n) false n
+      simpa [hlen] using foldCharge_bound n (n - k) schOn
+    have hle : mvOut ≤ moves + tailMoveCap n bench := by
+      simpa [mvOut, schG, schSq, schOn, gapTake, onTake] using
+        tail_pieces_le moves n bench
+          (schoolMoves inv rise n n) (foldCharge n (n - k) schG)
+          (schoolMoves slope slope n n) (foldCharge n (n - k) schSq)
+          (schoolMoves slope dx n n) (foldCharge n (n - k) schOn)
+          (pegCount inv) (pegCount gapTake) (pegCount slope) (pegCount accX)
+          (pegCount run) (pegCount run) (pegCount x3) (pegCount x3) (pegCount accY)
+          (pegCount yMir) (pegCount slope) (pegCount onTake) (pegCount x3)
+          (schoolMoves_bound inv rise n) (hfoldZ inv rise)
+          (schoolMoves_bound slope slope n) (hfoldZ slope slope)
+          (schoolMoves_bound slope dx n) hfoldOn
+          (hpeg inv hlenx) (htake (gapProduct n k bench inv rise))
+          (hpeg slope (by simpa [slope] using fieldMul_length n k bench rise inv hnB))
+          (hpeg accX hxLen) (hpeg run hrun) (hpeg run hrun)
+          (hpeg x3 (by simp [x3, chordX3, fieldAdd, List.length_map, List.length_range]))
+          (hpeg x3 (by simp [x3, chordX3, fieldAdd, List.length_map, List.length_range]))
+          (hpeg accY hyA)
+          (hpeg yMir (by simp [yMir, mirrorTrits, List.length_map, hyA]))
+          (hpeg slope (by simpa [slope] using fieldMul_length n k bench rise inv hnB))
+          (htake (laneFold n (n - k) schOn))
+          (hpeg x3 (by simp [x3, chordX3, fieldAdd, List.length_map, List.length_range]))
+    exact ⟨mvOut, hEq, hle⟩
   refine ⟨b', ?_, hAc, hUp, hhi.trans _hbottomHigh, hrow.trans hrowX,
     TailStay.trans hstayB hstay, h2e, h2f, h5e, h5f, h6f,
     hmarkP, hctrlP, hmxP,
-    ⟨_, hmvP⟩, ⟨_, hslP⟩, hpkP, hstP, hhoP, h0tP, h1tP, hszHP, hszDP⟩
+    hmvBound, ⟨_, hslP⟩, hpkP, hstP, hhoP, h0tP, h1tP, hszHP, hszDP⟩
   rw [chord_tail_across_up]
   exact chord_do_join b bX b' hpre hpost
 
@@ -662,16 +753,6 @@ structure TailRoom (n k bench script : Nat)
     let x3 := chordX3 n k bench slope accX run
     let slX := slGap slides inv rise n k bench + 2 * pegCount x3
     FitsLen (slX + 2 * n)
-
-/-- Moves the chord tail can add after the rise, when every home has length `n`.
-    Three schoolbooks, three folds, and the settles in between. -/
-def tailMoveCap (n bench : Nat) : Nat :=
-  3 * (n * (n + 1)) + 9 * (bench - n) + 24 * n + 1
-
-/-- Slides the chord tail can add: the gap settle, the bottom settle, and the
-    closing move of the bottom into the across. -/
-def tailSlideCap (n : Nat) : Nat :=
-  10 * n
 
 private theorem spend3 {a b c a' b' c' : Nat}
     (ha : a ≤ a') (hb : b ≤ b') (hc : c ≤ c') :

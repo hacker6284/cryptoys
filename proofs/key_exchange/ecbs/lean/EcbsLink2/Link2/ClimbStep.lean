@@ -1159,7 +1159,9 @@ theorem climb_step_bench_of
     ∃ b',
       climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' ∧
       ClimbInvK (done ++ [r]) rest b'
-        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base := by
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   let xs := s.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0
   obtain ⟨moves, slides, peak, hmv, hsl, hpk, hbench, hslide⟩ := slideGap_run h hon
   have h5H : 5 < b.sudo_5Board_4home.size :=
@@ -1227,7 +1229,7 @@ theorem climb_step_bench_of
   have hmod : modelRung sH base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty =
       modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty := by
     simp [sH, modelRung]
-  refine ⟨b', hprog, ?_⟩
+  refine ⟨b', hprog, ?_, hδL.opsSize⟩
   have hmoveCarry : ∃ (mv mv' : Nat),
       b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_5moves = (mv' : Int) ∧
@@ -1299,7 +1301,9 @@ theorem climb_step
     ∃ b',
       climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' ∧
       ClimbInvK (done ++ [r]) rest b'
-        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base := by
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   cases hon : s.onBench
   · obtain ⟨b', hprog, hinv, hδ, hshape, htmax⟩ :=
       climb_step_home h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
@@ -1307,7 +1311,7 @@ theorem climb_step
     refine ⟨b', hprog, climbInvK_succ h hinv hδ.delta
       (moveCarry_off hδ s.onBench hon) (slideCarry_off hδ s.onBench hon)
       (opsCarry_off hδ s.onBench hon)
-      hCap hshape h.holeBelow htmax rfl⟩
+      hCap hshape h.holeBelow htmax rfl, hδ.delta.opsSize⟩
   · exact climb_step_bench_of h hon hm hParkAt hCap hxLen hxT
       (fun _ hs => climbRung_slide h hon hm hs)
 
@@ -1334,7 +1338,9 @@ theorem climb_refines_emit
       ClimbInvK rs [] b' s' base ∧
       (s'.gap, s'.tally) =
         invClimb s0.n s0.k s0.benchlen base.x (s0.gap, s0.tally) rs ∧
-      s'.tally ≤ base.mMax := by
+      s'.tally ≤ base.mMax ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   let hole : ClimbModel → Nat → Bool → Nat :=
     fun s _ _ => climbAt base.ladder0 base.R s.ridx
   have hmain : ∀ (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel),
@@ -1345,19 +1351,21 @@ theorem climb_refines_emit
       ∃ b' s',
         climbEmit (climbStepBoard ((base.xHome : Nat) : Int)) b rest = .ok b' ∧
         s' = modelClimb s base.x hole rest ∧
-        ClimbInvK (done ++ rest) [] b' s' base := by
+        ClimbInvK (done ++ rest) [] b' s' base ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     intro done rest
     induction rest generalizing done with
     | nil =>
       intro b s _hrs h _hPark _hm
-      exact ⟨b, s, by simp [climbEmit], rfl, by simpa using h⟩
+      exact ⟨b, s, by simp [climbEmit], rfl, by simpa using h, rfl⟩
     | cons r rest ih =>
       intro b s hrs h hPark hm
       have hCap1 := hCap done (r :: rest) hrs
       have htall : b.sudo_5Board_9tally_len.toNat = s.tally := by
         rw [h.inv.len]
         exact Int.toNat_ofNat s.tally
-      obtain ⟨b1, hprog, hK⟩ := climb_step h hm hPark hCap1 hxLen hxT
+      obtain ⟨b1, hprog, hK, hsz1⟩ := climb_step h hm hPark hCap1 hxLen hxT
       have hprog' : climbStepBoard ((base.xHome : Nat) : Int) b r rest.isEmpty = .ok b1 := by
         simpa [climbStepBoard, htall] using hprog
       have hPark1 : (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx)
@@ -1369,16 +1377,16 @@ theorem climb_refines_emit
         exact Nat.lt_of_lt_of_le hm (tallyAfter_ge s.tally r rest.isEmpty)
       have hrs1 : rs = (done ++ [r]) ++ rest := by
         simp [hrs, List.append_assoc]
-      obtain ⟨b', s', hfold, hs', hK'⟩ := ih (done ++ [r]) b1
+      obtain ⟨b', s', hfold, hs', hK', hsz'⟩ := ih (done ++ [r]) b1
         (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty)
         hrs1 hK hPark1 hm1
-      refine ⟨b', s', ?_, ?_, ?_⟩
+      refine ⟨b', s', ?_, ?_, ?_, hsz'.trans hsz1⟩
       · rw [climbEmit, hprog', ok_bind]
         exact hfold
       · simp [modelClimb, hole, hs']
       · simpa [List.append_assoc] using hK'
-  obtain ⟨b', s', hfold, hs', hK⟩ := hmain [] rs b0 s0 (by simp) h0 hPark hm
-  refine ⟨b', s', hfold, hs', hK, ?_, hK.tally_le (hCap rs [] (by simp))⟩
+  obtain ⟨b', s', hfold, hs', hK, hsz⟩ := hmain [] rs b0 s0 (by simp) h0 hPark hm
+  refine ⟨b', s', hfold, hs', hK, ?_, hK.tally_le (hCap rs [] (by simp)), hsz⟩
   rw [hs']
   exact modelClimb_spec s0 base.x hole rs
 

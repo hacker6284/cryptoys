@@ -1212,7 +1212,7 @@ theorem invert_climbed (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
     simpa [entryBudget] using hx
   have hxT : allTritList (entryBudget t hOk xs hx sat hR lay).x := by
     simpa [entryBudget] using htri
-  obtain ⟨b', s', hrun, _, hK, hgap, _⟩ := climb_refines_emit (tierClimb t)
+  obtain ⟨b', s', hrun, _, hK, hgap, _, _hsz⟩ := climb_refines_emit (tierClimb t)
       (tallyBoard t xs sat hR) (entryModel t xs)
       (entryBudget t hOk xs hx sat hR lay)
       (entry_climbInv t hOk xs hx htri sat hR lay)
@@ -1289,7 +1289,7 @@ theorem invert_gap (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
     simpa [entryBudget] using hx
   have hxT : allTritList (entryBudget t hOk xs hx sat hR lay).x := by
     simpa [entryBudget] using htri
-  obtain ⟨b', s', hrun, hs', hK, hgap, htmax⟩ := climb_refines_emit (tierClimb t)
+  obtain ⟨b', s', hrun, hs', hK, hgap, htmax, _hsz⟩ := climb_refines_emit (tierClimb t)
       (tallyBoard t xs sat hR) (entryModel t xs)
       (entryBudget t hOk xs hx sat hR lay)
       (entry_climbInv t hOk xs hx htri sat hR lay)
@@ -1448,7 +1448,7 @@ theorem check_mul (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       (entryBudget t hOk xs hx sat hR lay).n := by simpa [entryBudget] using hx
   have hxT : allTritList (entryBudget t hOk xs hx sat hR lay).x := by
     simpa [entryBudget] using htri
-  obtain ⟨b', s', hrun, hs', hK, hgap, htmax⟩ := climb_refines_emit (tierClimb t)
+  obtain ⟨b', s', hrun, hs', hK, hgap, htmax, _hsz⟩ := climb_refines_emit (tierClimb t)
       (tallyBoard t xs sat hR) (entryModel t xs) (entryBudget t hOk xs hx sat hR lay)
       (entry_climbInv t hOk xs hx htri sat hR lay)
       (entry_park_top t hOk xs hx sat hR lay) (by simp [entryModel])

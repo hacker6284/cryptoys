@@ -227,7 +227,7 @@ theorem climbL_succ
   have hCap' : climbTallyPrefix base.tally0 h.done ((L[i]'hi) :: L.drop (i + 1)) ≤ base.mMax := by
     simpa [hcons] using hCap
   match climb_step hinv h.m_pos hPark hCap' hxLen hxT with
-  | ⟨b1, hrun, hK⟩ =>
+  | ⟨b1, hrun, hK, _hsz⟩ =>
     have hb : b1 = b' := by
       rw [hrun] at hprog
       exact Except.ok.inj hprog
@@ -533,7 +533,7 @@ theorem climb_then_tail
       climbTallyPrefix base.tally0 done rest ≤ base.mMax)
     (hxLen : base.x.length = base.n) (hxT : allTritList base.x) :
     ∃ bZ, climbEmit (climbStepBoard ((base.xHome : Nat) : Int)) b L >>= finalTail = .ok bZ := by
-  obtain ⟨b', s', hrun, hs', hK, _, htally⟩ :=
+  obtain ⟨b', s', hrun, hs', hK, _, htally, _hsz⟩ :=
     climb_refines_emit L b s base h hPark hm hCap hxLen hxT
   have hcons : ∃ r rs, L = r :: rs := by
     cases L with

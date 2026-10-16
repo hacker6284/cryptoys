@@ -47,6 +47,17 @@ theorem touchRow_frame (b : Ecbs.Board) (row : Array Int) (ctrl : Int) :
   unfold touchRow
   exact FrameScalar.of_eq rfl rfl rfl rfl rfl rfl rfl rfl rfl
 
+/-- `tally_clear` writes the row and the control counter. The ops array stays. -/
+theorem touchRow_ops (b : Ecbs.Board) (row : Array Int) (ctrl : Int) :
+    (touchRow b row ctrl).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
+
+private theorem ops_set_move {a b : Array Int} (h : a = b) (i : Nat)
+    (ha : i < a.size) (v : Int) :
+    a.set ⟨i, ha⟩ v = b.set ⟨i, h ▸ ha⟩ v := by
+  cases h
+  rfl
+
 /-- `unpark`, the final cube, the outer settle, and `tally_clear`. The five
     unpark equations survive, parked-from stays `-1`, and the rung index stays `0`. -/
 theorem settled_unpark_frame
@@ -70,7 +81,12 @@ theorem settled_unpark_frame
       bZ.sudo_5Board_11parked_from = -1 ∧
       bZ.sudo_5Board_8rung_idx = 0 ∧
       bZ.sudo_5Board_6tally0 = (s.t0 : Int) ∧
-      bZ.sudo_5Board_9tally_len = 0 := by
+      bZ.sudo_5Board_9tally_len = 0 ∧
+      ∃ cOps : Nat,
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(h.shape.peg.opsGt) = (cOps : Int) ∧
+        bZ.sudo_5Board_4cost.sudo_5Costs_3ops =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, h.shape.peg.opsGt⟩
+            (Int.ofNat (cOps + 1)) := by
   have hk : done.length ≤ base.R := by simpa using h.kLe
   obtain ⟨bU, hun, hfromU, hridxU, hhomeU, hheldU, hbonU, htoU, hbenchU, hmvU, hslU, hpkU,
       hctrlU, ht0U, htierU, hmkU, hopsU, hstrictU, hholeU, hlenU, hhighU,
@@ -221,7 +237,7 @@ theorem settled_unpark_frame
     rw [settle_held_eq bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk, Array.size_set]
     exact h7
   obtain ⟨bC, hc0, honC, htoC, hbenchC, _htakeC, hzeroC, hmvC, hpkC, hslC,
-      htC, hszC, _hhomeC, hheldC, _hmkC, hrowC, _hopsC, _ht0C, hhighC, hctrlC, hscC⟩ :=
+      htC, hszC, _hhomeC, hheldC, _hmkC, hrowC, hopsC, _ht0C, hhighC, hctrlC, hscC⟩ :=
     cube_refines bS 5 5 s.gap base.w base.h base.r s.n s.k mvS holeN s.benchlen pkS peakS cOps
       base.cg hmkS hoffS hopsS hopS hfops
       (by rw [htierS, h.shape.tierB, ofNat_eq_natCast])
@@ -369,11 +385,51 @@ theorem settled_unpark_frame
         nr := by simp [bZ, touchRow]
         park := by simp [bZ, touchRow]
         tmax := by simp [bZ, touchRow] }
+  have hopsSettle : ∃ cOps : Nat,
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(h.shape.peg.opsGt) = (cOps : Int) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, h.shape.peg.opsGt⟩
+          (Int.ofNat (cOps + 1)) := by
+    refine ⟨cOps, hcOps, ?_⟩
+    have hSops := settle_ops bU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk
+    have hOops := settle_ops bC 5 ⟨h5HC, h5DC⟩ fold s.n
+        (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
+        (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
+    have hZops : bZ.sudo_5Board_4cost.sudo_5Costs_3ops =
+        (touchRow bOut (embed (paintZero row s.t0 s.tally))
+          (Int.ofNat (s.ctrl + 2 + s.tally))).sudo_5Board_4cost.sudo_5Costs_3ops := by
+      simp [bZ]
+    have hstep := hZops.trans ((touchRow_ops bOut _ _).trans (hOops.trans hopsC))
+    have harr : bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops := hSops.trans hopsU
+    have hmove := ops_set_move harr 1 hopsS (Int.ofNat (cOps + 1))
+    rw [hstep, hmove]
   refine ⟨bU, bC, bOut, bZ, hun, hc, hsetC, hz,
     hfiveZ.ladder, hfiveZ.l0, hfiveZ.nr, hfiveZ.park, hfiveZ.tmax,
-    ?_, ?_, ?_, rfl⟩
+    ?_, ?_, ?_, rfl, hopsSettle⟩
   · simp [bZ, touchRow, hfromO]
   · simp [bZ, touchRow, hridxO]
   · simp [bZ, touchRow, ht0O]
+
+/-- The board `tally_clear` returns keeps the climb board's ops array, with
+    slot 1 replaced by one more than the value the cube read. The inner settle
+    and the outer settle leave the array (`settle_ops`). The cube writes slot 1
+    (`cube_off_ops`, through `cube_refines`). `tally_clear` is `touchRow`. -/
+theorem settled_ops
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [] b s base)
+    (hon : s.onBench = true)
+    (hge : 0 ≤ s.fromHole)
+    (ht : s.tally ≤ base.mMax)
+    (hm : 0 < s.tally) :
+    ∃ (bZ : Ecbs.Board) (cOps : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(h.shape.peg.opsGt) = (cOps : Int) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, h.shape.peg.opsGt⟩
+          (Int.ofNat (cOps + 1)) := by
+  obtain ⟨_, _, _, bZ, _, _, _, _, _, _, _, _, _, _, _, _, _, hops⟩ :=
+    settled_unpark_frame h hon hge ht hm
+  obtain ⟨cOps, hc, hset⟩ := hops
+  exact ⟨bZ, cOps, hc, hset⟩
 
 end EcbsLink2.Link2

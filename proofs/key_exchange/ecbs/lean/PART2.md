@@ -357,9 +357,9 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 `climbEmit_ladder` is the induction: one rung does not write the ladder array, so the board `climbEmit` returns has the ladder it was given. `open_invert` exports that the tally board's ladder is `embed (tierClimb t)`. `open_check_mul` obtains `settled_unpark_frame` and `FrameScalar` from the check multiply, so the board `bench_read_and_clear` returns has that same ladder. `open_checked` carries it through the white return and through `mirrorHome` of home 5. The board `invert_checked` returns has ladder `embed (tierClimb t)`.
 
-`TmaxGe` is `tally_max` equal to a natural at least 1. It is not a closed formula and not an export result. `tally_note_ge` is why a note of a length at least 1 keeps it. On an idle climb, the clear keeps the value (`climbClear_idle_tmax`), a final white rung is that clear (`idle_white_final_ge`), a non-final white rung then records `max` with `2 · tally` (`idle_white_open_ge`), and a non-final red rung records `max` with `2 · tally + 1` (`idle_red_open_ge`). The parked arms, the idle final red arm, and the bench-on arm are not in that induction yet, so `1 ≤ tally_max` is not yet on the board `open_checked` returns. Home 3 equal to the base is not proved.
+`TmaxGe` is `tally_max` equal to a natural at least 1. It is not a closed formula and not an export result. `tally_note_ge` is why a note of a length at least 1 keeps it. On an idle climb, the clear keeps the value (`climbClear_idle_tmax`), a final white rung is that clear (`idle_white_final_ge`), a non-final white rung then records `max` with `2 · tally` (`idle_white_open_ge`), and a non-final red rung records `max` with `2 · tally + 1` (`idle_red_open_ge`). A parked clear also keeps the value (`climbClear_park_tmax`). The parked nests, the idle final red rung, and the bench-on rung are not in that induction yet, so `1 ≤ tally_max` is not yet on the board `open_checked` returns. Home 3 equal to the base is not proved.
 
-4291 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1701104 kB VmHWM. Under 2 GB.
+4292 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1700712 kB VmHWM. Under 2 GB.
 
 ## Next
 

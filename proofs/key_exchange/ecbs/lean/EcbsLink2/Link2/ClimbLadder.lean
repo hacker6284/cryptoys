@@ -244,4 +244,28 @@ theorem idle_white_open_ge
     hF hwhite rfl]
   simp [progWhiteOpen, hclear, htallyW, ok_bind]
 
+/-- A parked clear does not write `tally_max`. The idle board's maximum is
+    copied through `withPark`. -/
+theorem climbClear_park_tmax
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvKCore done (r :: rest) b s base)
+    (hM : MoveHeadroom b base.n base.bench base.mMax)
+    (hS : SlideHeadroom b base.n base.mMax)
+    (hge0 : 0 ≤ s.fromHole) (hm : 0 < s.tally) (hT : s.tally ≤ base.mMax)
+    (hhome : s.onBench = false) (hge : TmaxGe b) :
+    ∃ b', climbClear b r s.tally = .ok b' ∧ TmaxGe b' := by
+  obtain ⟨bClear, bIdle, hpack⟩ := parked_clear_ge h hM hS hge0 hm hT hhome
+  have hrun := hpack.1
+  have hframe := hpack.2.1
+  have htmaxIdle :
+      bIdle.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+        b.sudo_5Board_4cost.sudo_5Costs_9tally_max :=
+    hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.1
+  have htm : bClear.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+      b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
+    rw [hframe]
+    exact (withPark_tmax bIdle _ _ _ _).trans htmaxIdle
+  refine ⟨bClear, ?_, TmaxGe.copy hge htm⟩
+  simpa [climbClear] using hrun
+
 end EcbsLink2.Link2

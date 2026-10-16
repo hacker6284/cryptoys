@@ -302,9 +302,18 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 4182 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1697560 kB VmHWM. Under 2 GB.
 
+## Done toward `walk_chord`
+
+`tally_max` and the climb high are not export results. `walk_key` returns a point. `receive_check` returns `Checked`; its peak, check-move delta, `tally_max`, and `control_highest` have to be named exactly, not as a natural. `call_in` returns the board, so its cost fields have to be named exactly too. The weakened `tmaxLt` and `openModelAt` stay inside the climb.
+
+- `walkRun_walkGo`. A successful `walkRun` is Spec `walkGo` of the same point. `walkGo` is the walk Spec `walk_chord` is measured against.
+- `chord_add_live` states the new point by the chord formulas, not by a `let` that hides them. The board high is still only a natural at least the origin, and that high is not an export result.
+
+The loop that feeds the next cell's `RunFrame` from this cell's board is not proved. Zeros, and zeros followed by one opening cell, are already `walk_chord_zeros`, `walk_chord_white_open`, and `walk_chord_red_open`. `chordStep_open` is the emitted step once `chord_add_demo` has returned; joining it to `chord_add_live` in one theorem elaborates past the heartbeat limit, so they stay separate.
+
 ## Next
 
-The full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. A later live cell can enter `chord_add_live` through `RunFrame.hStart`. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+The `walk_chord` induction over a whole cell list: the board after `chordStep_of_live` has to be the next cell's frame, then the walk is `.ok` of Spec `walkGo`. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

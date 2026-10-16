@@ -2177,8 +2177,9 @@ theorem rungCtrl_inc (ctrl tally colour : Nat) (last parked : Bool) :
     keeps the recorded high when that hole does not beat it, so the mark is the
     max of the previous high and the new hole.
     This counter is not a Spec result. `walkStep`, `chordAdd`, and the inverse
-    polynomial do not read it. It only feeds the cost field and the next rung's
-    `set_control` test. -/
+    polynomial do not read it. `walk_key` returns a point. `receive_check`
+    returns `Checked`, whose `control_highest` has to be named exactly.
+    The mark only feeds the cost field and the next rung's `set_control` test. -/
 def rungHigh (high t0 tally colour : Nat) (last : Bool) : Nat :=
   if last then high
   else if colour = 2 then max high (t0 + 2 * tally)

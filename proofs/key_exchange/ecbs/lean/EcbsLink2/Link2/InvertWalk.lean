@@ -126,7 +126,9 @@ def openModel (t : Spec.Tier) (xs : List Nat) (ctrl : Nat) : ClimbModel :=
   { entryModel t xs with ctrl := ctrl + 1 }
 
 /-- The same model when the entry high may already sit at or above the origin.
-    `tally_start` records `max` of that high and the origin. -/
+    `tally_start` records `max` of that high and the origin. The high is not
+    an export result. `walk_key` returns a point, and `receive_check`'s
+    `Checked.control_highest` is a different, exact field. -/
 def openModelAt (t : Spec.Tier) (xs : List Nat) (ctrl high : Nat) : ClimbModel :=
   { openModel t xs ctrl with high := max high (tallyOrigin t) }
 

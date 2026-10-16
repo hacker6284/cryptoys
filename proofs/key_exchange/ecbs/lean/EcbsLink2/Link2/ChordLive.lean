@@ -4,6 +4,8 @@
   the control frame is the fresh ladder. Five rooms — moves, slides, control,
   ops, and the script marker — cover the climb and the chord tail. The emitted
   add is `.ok`, and `walkStep` is Spec `chordAdd` of that cubed point.
+  The trailing `high` is the board's `control_highest`, a natural at least
+  the tally origin. It is not an export result. `walk_key` returns a point.
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.CopyLay
@@ -96,23 +98,54 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     (hCtrl : FitsLen (liveCtrlRoom t fr.ctrl))
     (hOps : FitsLen (liveOpsRoom t fr.opsCap))
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4)) :
-    let red := decide (c = 2)
-    let run := fieldSub t.n baseX accX
-    let y := if red then mirrorTrits baseY else baseY
-    let rise := fieldSub t.n y accY
-    let slope := fieldMul t.n t.k t.benchlen rise inv
-    let x3 := chordX3 t.n t.k t.benchlen slope accX run
-    let y3 := chordY3 t.n t.k t.benchlen slope (fieldSub t.n accX x3) accY
     ∃ b',
-      Ecbs.chord_add_demo b red = .ok (true, b') ∧
-      (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed x3) ∧
-      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed y3) ∧
+      Ecbs.chord_add_demo b (decide (c = 2)) = .ok (true, b') ∧
+      (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed
+        (chordX3 t.n t.k t.benchlen
+          (fieldMul t.n t.k t.benchlen
+            (fieldSub t.n (if decide (c = 2) then mirrorTrits baseY else baseY) accY)
+            inv)
+          accX (fieldSub t.n baseX accX))) ∧
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed
+        (chordY3 t.n t.k t.benchlen
+          (fieldMul t.n t.k t.benchlen
+            (fieldSub t.n (if decide (c = 2) then mirrorTrits baseY else baseY) accY)
+            inv)
+          (fieldSub t.n accX
+            (chordX3 t.n t.k t.benchlen
+              (fieldMul t.n t.k t.benchlen
+                (fieldSub t.n (if decide (c = 2) then mirrorTrits baseY else baseY) accY)
+                inv)
+              accX (fieldSub t.n baseX accX)))
+          accY)) ∧
       walkStep t.n t.k t.benchlen (baseX, baseY) true (preX, preY) c =
-        some (true, (x3, y3)) ∧
+        some (true,
+          (chordX3 t.n t.k t.benchlen
+            (fieldMul t.n t.k t.benchlen
+              (fieldSub t.n (if decide (c = 2) then mirrorTrits baseY else baseY) accY)
+              inv)
+            accX (fieldSub t.n baseX accX),
+          chordY3 t.n t.k t.benchlen
+            (fieldMul t.n t.k t.benchlen
+              (fieldSub t.n (if decide (c = 2) then mirrorTrits baseY else baseY) accY)
+              inv)
+            (fieldSub t.n accX
+              (chordX3 t.n t.k t.benchlen
+                (fieldMul t.n t.k t.benchlen
+                  (fieldSub t.n (if decide (c = 2) then mirrorTrits baseY else baseY) accY)
+                  inv)
+                accX (fieldSub t.n baseX accX)))
+            accY)) ∧
       ∃ high : Nat,
         b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
         tallyOrigin t ≤ high := by
-  intro red run y rise slope x3 y3
+  let red := decide (c = 2)
+  let run := fieldSub t.n baseX accX
+  let y := if red then mirrorTrits baseY else baseY
+  let rise := fieldSub t.n y accY
+  let slope := fieldMul t.n t.k t.benchlen rise inv
+  let x3 := chordX3 t.n t.k t.benchlen slope accX run
+  let y3 := chordY3 t.n t.k t.benchlen slope (fieldSub t.n accX x3) accY
   have hpos : 0 < t.n := hOk.n_pos
   have hnb : t.n ≤ t.benchlen := mul_span_n t.n t.benchlen hpos sat.mul_span
   have hfitN : FitsLen t.n := FitsLen.of_le hMove (by
@@ -247,5 +280,6 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     rcases hc with rfl | rfl
     · simpa [red, run, y, rise, slope, x3, y3, hpreX, hpreY] using hstep
     · simpa [red, run, y, rise, slope, x3, y3, hpreX, hpreY] using hstep
+
 
 end EcbsLink2.Link2

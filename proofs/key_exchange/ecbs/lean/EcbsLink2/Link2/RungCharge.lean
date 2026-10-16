@@ -1262,7 +1262,10 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
     ∀ (hix : s.t0 + s.tally + k < s.row.length),
       s.row[s.t0 + s.tally + k]'hix = 0
   /-- `tally_max` is some natural. A rung records `max` of that value and the
-      new length. The counter is not a Spec result. -/
+      new length. No export reads this field. `walk_key` returns a point.
+      `receive_check` returns `Checked`, and that refinement has to name
+      `tally_max` exactly rather than as a natural. This invariant is only
+      the climb's own note. -/
   tmaxLt : ∃ tmax : Nat,
     b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)
   /-- The control counter stays within `ctrl0` plus one `rungCtrl` step per

@@ -21,6 +21,26 @@ def walkRun (n k bench : Nat) (base : List Nat × List Nat) :
     | none => none
     | some (live', acc') => walkRun n k bench base live' acc' cs
 
+/-- `walkRun` keeps the live bit `walkGo` drops. A successful run is that point. -/
+theorem walkRun_walkGo (n k bench : Nat) (base : List Nat × List Nat)
+    (live : Bool) (acc : List Nat × List Nat) (cells : List Nat)
+    (live' : Bool) (acc' : List Nat × List Nat)
+    (h : walkRun n k bench base live acc cells = some (live', acc')) :
+    walkGo n k bench base live acc cells = some acc' := by
+  induction cells generalizing live acc with
+  | nil =>
+    simp only [walkRun] at h
+    cases h
+    rfl
+  | cons c cs ih =>
+    simp only [walkRun] at h
+    cases hstep : walkStep n k bench base live acc c with
+    | none => simp [hstep] at h
+    | some p =>
+      simp only [hstep] at h
+      have hgo := ih p.1 p.2 h
+      simp [walkGo, hstep, hgo]
+
 theorem walkRun_zeros (n k bench : Nat) (base acc : List Nat × List Nat)
     (cells : List Nat) (hz : ∀ c ∈ cells, c = 0) :
     walkRun n k bench base false acc cells = some (false, acc) := by

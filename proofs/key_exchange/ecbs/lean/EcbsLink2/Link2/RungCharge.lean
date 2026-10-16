@@ -4,6 +4,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.Invert
+import EcbsLink2.Link2.RowHome
 
 namespace EcbsLink2.Link2
 
@@ -735,6 +736,14 @@ structure ClimbBudget where
   tierSnap : Ecbs.Tier
   markSnap : Int
   mxSnap : Int
+  /-- The ladder as `new_board` painted it. A rung parks one colour out of it
+      and puts that colour back. `rowHome_clear` needs the blank tail. -/
+  baseRow : List Nat
+  baseLen : baseRow.length = control
+  /-- The park hole, the cell after the last rung, is empty. -/
+  basePark : baseRow.getD (ladder0 + R) 0 = 0
+  /-- Every hole at and after the tally origin is empty. -/
+  baseZero : ∀ j, ladder0 + R + 1 ≤ j → baseRow.getD j 0 = 0
 
 /-- One rung's counter growth: at most one `rungCharge` of the current tally,
     one slide charge, `mMax + 3` on every ops slot, and a peak that is
@@ -1276,6 +1285,14 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
       successor parks the hole it just read, and the ladder steps down. -/
   srcAbove : 0 ≤ s.fromHole →
     climbAt base.ladder0 base.R s.ridx < s.fromHole.toNat
+  /-- The park hole is the cell after the ladder, and the tally starts after that. -/
+  parkEq : s.parkAt = base.ladder0 + base.R
+  origin : s.t0 = base.ladder0 + base.R + 1
+  /-- A parked source is a climb hole, not the park hole. -/
+  fromNePark : 0 ≤ s.fromHole → s.fromHole.toNat ≠ s.parkAt
+  /-- Below the origin the row is `base.baseRow`, with at most one rung parked.
+      `rowHome_rung` is the step. -/
+  rowHome : RowHome s.row base.baseRow s.parkAt s.fromHole s.t0
 
 /-- `ClimbInvK` without the absolute move and slide bounds. A bench-start rung
     slides `2 · pegs` onto the counter before the home program, so those two
@@ -1313,6 +1330,10 @@ structure ClimbInvKCore (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   ctrlLe : s.ctrl ≤ base.ctrl0 + done.length * (3 * base.mMax + 5)
   srcAbove : 0 ≤ s.fromHole →
     climbAt base.ladder0 base.R s.ridx < s.fromHole.toNat
+  parkEq : s.parkAt = base.ladder0 + base.R
+  origin : s.t0 = base.ladder0 + base.R + 1
+  fromNePark : 0 ≤ s.fromHole → s.fromHole.toNat ≠ s.parkAt
+  rowHome : RowHome s.row base.baseRow s.parkAt s.fromHole s.t0
 
 theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
     {base : ClimbBudget} (h : ClimbInvK done rest b s base) :
@@ -1341,7 +1362,11 @@ theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel
     openZero := h.openZero
     tmaxLt := h.tmaxLt
     ctrlLe := h.ctrlLe
-    srcAbove := h.srcAbove }
+    srcAbove := h.srcAbove
+    parkEq := h.parkEq
+    origin := h.origin
+    fromNePark := h.fromNePark
+    rowHome := h.rowHome }
 
 theorem ClimbInvKCore.tally_le {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
     {base : ClimbBudget} (h : ClimbInvKCore done rest b s base)
@@ -1711,6 +1736,44 @@ theorem rungRow_red_below_ge
     simp [List.getElem_set, hne]
   exact hset.trans (hone.trans (hback.trans (hred.trans hAp)))
 
+/-- One rung keeps `RowHome`. The colour parked is the painted peg at that hole. -/
+theorem rowHome_carry
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget} {x : List Nat} {hole : Nat}
+    (h : ClimbInvKCore done (r :: rest) b s base)
+    (hAt : hole = climbAt base.ladder0 base.R s.ridx) :
+    RowHome (modelRung s x r hole rest.isEmpty).row base.baseRow
+      (modelRung s x r hole rest.isEmpty).parkAt
+      (modelRung s x r hole rest.isEmpty).fromHole
+      (modelRung s x r hole rest.isEmpty).t0 := by
+  have hhole : hole < s.t0 := by rw [hAt]; exact h.holeBelow
+  have hlen : hole < s.row.length := by
+    have hfit := h.tailFit
+    omega
+  have hpainted : hole < base.baseRow.length := by rw [← h.rowHome.len]; exact hlen
+  have hne : hole ≠ s.parkAt := by
+    have hpn := h.shape.park.parkNe
+    simpa [hAt] using hpn
+  have hfromNe : 0 ≤ s.fromHole → s.fromHole.toNat ≠ hole := by
+    intro hF
+    have hlt := h.srcAbove hF
+    rw [← hAt] at hlt
+    omega
+  have hpair := h.shape.park.nextRung r rest rfl
+  have hr : s.row[hole]'hlen = r := by simpa [hAt] using hpair.1
+  have hbelow := h.rowHome.below hole hhole hlen
+  have hread : s.row[hole]'hlen = base.baseRow[hole]'hpainted := by
+    by_cases hF : 0 ≤ s.fromHole
+    · have hneF : hole ≠ s.fromHole.toNat := fun h => hfromNe hF h.symm
+      simp [hF, hneF, hne] at hbelow
+      exact hbelow
+    · simp [hF] at hbelow
+      exact hbelow
+  have hcol : r = base.baseRow[hole]'hpainted := hr.symm.trans hread
+  have hhome := rowHome_rung s.row base.baseRow s.parkAt hole r s.fromHole s.t0 s.tally
+    rest.isEmpty h.rowHome h.parkBelow hne hfromNe h.fromNePark hpainted hcol
+  simpa [modelRung] using hhome
+
 /-- One rung preserves the non-cost fields of `ClimbInvKCore`. The absolute
     move and slide bounds are rebuilt by the caller from `RungDelta`. -/
 theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
@@ -1726,6 +1789,7 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     (hAt : hole = climbAt base.ladder0 base.R s.ridx) :
     ClimbInvKCore (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
   have hT := h.tally_le hCap
+  have hnePark : hole ≠ s.parkAt := by simpa [hAt] using h.shape.park.parkNe
   refine
     { inv := hinv
       idx := ?_
@@ -1752,7 +1816,13 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       openZero := ?_
       tmaxLt := htmax
       ctrlLe := ?_
-      srcAbove := ?_ }
+      srcAbove := ?_
+      parkEq := by simp [modelRung, h.parkEq]
+      origin := by simp [modelRung, h.origin]
+      fromNePark := by
+        intro _hF
+        simpa [modelRung] using hnePark
+      rowHome := rowHome_carry h hAt }
   · simp [modelRung, h.idx, List.length_append]
   · simp [modelRung, h.hn]
   · simp [modelRung, h.hbench]
@@ -2020,6 +2090,7 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     (hAt : hole = climbAt base.ladder0 base.R s.ridx) :
     ClimbInvK (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
   have hT := h.tally_le hCap
+  have hnePark : hole ≠ s.parkAt := by simpa [hAt] using h.shape.park.parkNe
   have hm : rungCharge base.n base.bench s.tally ≤
       rungCharge base.n base.bench base.mMax :=
     rungCharge_mono base.n base.bench s.tally base.mMax hT
@@ -2053,7 +2124,13 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       openZero := ?_
       tmaxLt := htmax
       ctrlLe := ?_
-      srcAbove := ?_ }
+      srcAbove := ?_
+      parkEq := by simp [modelRung, h.parkEq]
+      origin := by simp [modelRung, h.origin]
+      fromNePark := by
+        intro _hF
+        simpa [modelRung] using hnePark
+      rowHome := rowHome_carry h.toCore hAt }
   · simp [modelRung, h.idx, List.length_append]
   · simp [modelRung, h.hn]
   · simp [modelRung, h.hbench]

@@ -119,6 +119,7 @@ structure OpenMatch {b : Ecbs.Board} {t : Spec.Tier} {xs : List Nat}
   markSnap : base.markSnap = Int.ofNat lay.mark
   mxSnap : base.mxSnap = Int.ofNat lay.mx
   high0 : base.high0 = lay.high
+  baseRow : base.baseRow = paintedRow t
 
 /-- The model at the first tally peg. The control counter is whatever the walk
     has already charged, plus the peg `tally_start` writes. -/
@@ -788,7 +789,17 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         simp [openModelAt, openModel, entryModel, hm.ctrl0]
       srcAbove := by
         intro h
-        simp [openModelAt, openModel, entryModel] at h }
+        simp [openModelAt, openModel, entryModel] at h
+      parkEq := by simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R]
+      origin := by
+        simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R]
+        unfold tallyOrigin
+        omega
+      fromNePark := by
+        intro h
+        simp [openModelAt, openModel, entryModel] at h
+      rowHome := by
+        simpa [openModelAt, openModel, entryModel, hm.baseRow] using entry_row_home t sat }
 
 /-- `Ecbs.invert` on an open walk board is the climb of that tally board. -/
 theorem open_invert (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)

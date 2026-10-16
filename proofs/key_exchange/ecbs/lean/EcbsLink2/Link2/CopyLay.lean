@@ -522,10 +522,28 @@ private theorem finish_copy
       held4 := fr.flag4
       tierSnap := embTier t
       markSnap := Int.ofNat fr.mark
-      mxSnap := Int.ofNat fr.mx }
+      mxSnap := Int.ofNat fr.mx
+      baseRow := paintedRow t
+      baseLen := painted_len t
+      basePark := by
+        have hix : t.script + 2 + tierR t < (paintedRow t).length := by
+          rw [painted_len]
+          have h := origin_lt t sat
+          unfold tallyOrigin at h
+          omega
+        have hblank := painted_blank t (t.script + 2 + tierR t) (Nat.le_refl _) hix
+        simp [List.getElem?_eq_getElem, hix, hblank]
+      baseZero := by
+        intro j hj
+        by_cases hlt : j < (paintedRow t).length
+        · have hblank := painted_blank t j (by omega) hlt
+          simp [List.getElem?_eq_getElem, hlt, hblank]
+        · unfold List.getD
+          rw [List.get?_eq_none.mpr (by omega)]
+          rfl }
   have hmatch : OpenMatch lay baseB := by
     refine ⟨rfl, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl,
-      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
     apply congrArg (fun occ => raisedPeak lay.peak occ)
     apply countHeld_congr
     apply congrArg (fun i => bOff.sudo_5Board_4held.set i true)

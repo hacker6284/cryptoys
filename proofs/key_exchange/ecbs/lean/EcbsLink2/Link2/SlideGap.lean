@@ -1055,7 +1055,11 @@ theorem climbCore_slideGap {done rest : List Nat} {b : Ecbs.Board}
         refine ⟨tmax, ?_⟩
         rw [settle_tmax_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak, ht]
       ctrlLe := h.ctrlLe
-      srcAbove := h.srcAbove }
+      srcAbove := h.srcAbove
+      parkEq := h.parkEq
+      origin := h.origin
+      fromNePark := h.fromNePark
+      rowHome := h.rowHome }
 
 /-- The padded bench list has length `bench` once `n ≤ bench`. -/
 theorem bench_pad_len (gap : List Nat) (n bench : Nat)

@@ -345,6 +345,41 @@ def entryModel (t : Spec.Tier) (xs : List Nat) : ClimbModel where
   high := tallyOrigin t
   row := entryRow t
 
+/-- The painted row is empty from the park hole on. The paint stops at the
+    last rung. -/
+theorem painted_blank (t : Spec.Tier) (j : Nat)
+    (hj : t.script + 2 + tierR t ≤ j) (hix : j < (paintedRow t).length) :
+    (paintedRow t)[j]'hix = 0 := by
+  have hstart : t.script + 2 + (rungList (t.n - 1)).length ≤ j := by
+    simpa [tierR] using hj
+  have hrep : j < (List.replicate t.control 0).length := by
+    rw [List.length_replicate, ← painted_len]
+    exact hix
+  have hhi := paintRow_hi (List.replicate t.control 0) (t.script + 2)
+    (rungList (t.n - 1)) j hstart hrep
+  unfold paintedRow
+  rw [hhi]
+  simp [List.getElem_replicate]
+
+/-- At entry nothing is parked, so every hole below the origin is the painted row. -/
+theorem entry_row_home (t : Spec.Tier) (sat : TierSat t) :
+    RowHome (entryRow t) (paintedRow t) (t.script + 2 + tierR t) (-1) (tallyOrigin t) := by
+  refine
+    { len := by rw [entry_row_len, painted_len]
+      parkLt := by
+        rw [painted_len]
+        have h := origin_lt t sat
+        unfold tallyOrigin at h
+        omega
+      fromLt := fun h => by omega
+      below := ?_ }
+  intro j hj hr
+  have hne : tallyOrigin t ≠ j := by omega
+  unfold entryRow
+  rw [List.getElem_set, if_neg hne]
+  have hF : ¬ 0 ≤ (-1 : Int) := by decide
+  simp [hF]
+
 /-- Counters on the tally board, and the room cap as the tally bound. -/
 def entryBudget (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
     (hx : xs.length = t.n) (sat : TierSat t) (hR : 0 < tierR t)
@@ -391,6 +426,24 @@ def entryBudget (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
   tierSnap := embTier t
   markSnap := -1
   mxSnap := 0
+  baseRow := paintedRow t
+  baseLen := painted_len t
+  basePark := by
+    have hix : t.script + 2 + tierR t < (paintedRow t).length := by
+      rw [painted_len]
+      have h := origin_lt t sat
+      unfold tallyOrigin at h
+      omega
+    have hblank := painted_blank t (t.script + 2 + tierR t) (Nat.le_refl _) hix
+    simp [List.getElem?_eq_getElem, hix, hblank]
+  baseZero := by
+    intro j hj
+    by_cases hlt : j < (paintedRow t).length
+    · have hblank := painted_blank t j (by omega) hlt
+      simp [List.getElem?_eq_getElem, hlt, hblank]
+    · unfold List.getD
+      rw [List.get?_eq_none.mpr (by omega)]
+      rfl
 
 theorem tally_home (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
     (tallyBoard t xs sat hR).sudo_5Board_4home = (gapBoard t xs).sudo_5Board_4home := by
@@ -1022,7 +1075,16 @@ theorem entry_climbInv (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       ctrlLe := by simp [entryModel, entryBudget]
       srcAbove := by
         intro h
-        simp [entryModel] at h }
+        simp [entryModel] at h
+      parkEq := by simp [entryModel, entryBudget]
+      origin := by
+        simp [entryModel, entryBudget]
+        unfold tallyOrigin
+        omega
+      fromNePark := by
+        intro h
+        simp [entryModel] at h
+      rowHome := by simpa [entryModel, entryBudget] using entry_row_home t sat }
 
 /-- Park sits on the cell just after the ladder: `ladder0 + R`. -/
 theorem entry_park_top (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)

@@ -435,7 +435,8 @@ theorem final_cube_settle
       SideKeep bZ base ∧
       QuietKeep bZ base ∧
       PostCubeBound bZ base ∧
-      bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) := by
+      bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) ∧
+      bZ.sudo_5Board_3row = embed base.baseRow := by
   have hk : done.length ≤ base.R := by simpa using h.kLe
   obtain ⟨bU, hun, _, _, hhomeU, hheldU, hbonU, htoU, hbenchU, hmvU, hslU, hpkU,
       hctrlU, ht0U, htierU, hmkU, hopsU, hstrictU, hholeU, hlenU, hhighU,
@@ -648,7 +649,7 @@ theorem final_cube_settle
       hopsS hF hHome :=
     Except.ok.inj (hrunC.symm.trans hOff)
   have hplainO := settleBoard_plain bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
-  obtain ⟨bRow, row, hunR, hrowE, _hlist, hlenR⟩ := unpark_row_embed h hge
+  obtain ⟨bRow, row, hunR, hrowE, hlist, hlenR⟩ := unpark_row_embed h hge
   have hbU : bU = bRow := Except.ok.inj (hun.symm.trans hunR)
   have hrowOut : bOut.sudo_5Board_3row = embed row := by
     have hU : bU.sudo_5Board_3row = embed row := by rw [hbU]; exact hrowE
@@ -1087,6 +1088,12 @@ theorem final_cube_settle
       ops := ⟨hopsZ, c0, hopZ, hopsLe⟩ }
   have hhighZ : bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) := by
     simpa [bZ, touchRow] using hhighOut
+  have hpainted : bZ.sudo_5Board_3row = embed base.baseRow := by
+    have hZ : bZ.sudo_5Board_3row = embed (paintZero row s.t0 s.tally) := by
+      simp [bZ, touchRow]
+    have hclear : paintZero row s.t0 s.tally = base.baseRow := by
+      simpa [hlist] using climb_row_cleared h
+    simpa [hclear] using hZ
   refine ⟨bU, bC, bOut, bZ, mv, sl, row, hun, hprog, by simpa [bOut] using hsettle,
     hclearZ, hmvB, hslB, by simpa [bOut] using
       (settle_bench_off bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))),
@@ -1097,7 +1104,7 @@ theorem final_cube_settle
       h5DZ, hheld5Z,
       (by simpa [bZ, touchRow] using htierOut),
       ⟨mvZ, base.n, base.bench, hmvZ, hnZ, hbZlen, hfitZ⟩⟩,
-    htailM, htailS, tail_ctrl_fit h hk ht, hsideZ, hquietZ, hpost, hhighZ⟩
+      htailM, htailS, tail_ctrl_fit h hk ht, hsideZ, hquietZ, hpost, hhighZ, hpainted⟩
 
 /-- The final tail's boards and the settled gap. The i64 bounds stay inside
     `final_cube_settle` and are not opened here. -/

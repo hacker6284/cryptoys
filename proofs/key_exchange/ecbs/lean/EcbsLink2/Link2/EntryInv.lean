@@ -1409,7 +1409,7 @@ theorem final_cube_both
       hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
       hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
       hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1,
-      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2⟩
+      hpack.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.2.1⟩
 
 /-- The check multiply: home 5 holds `invGap`, home 2 still holds the input,
     and `Ecbs.mul` with the export flags is `fieldMul` of that pair. -/

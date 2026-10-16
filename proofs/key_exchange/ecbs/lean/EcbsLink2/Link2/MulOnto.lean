@@ -1022,7 +1022,10 @@ theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      TailStay b b' := by
+      TailStay b b' ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops = (bumpOp b 0 cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      (∃ st : Nat, b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st) ∧
+      (∃ ho : Nat, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) := by
   have hOff := mul_onto_off b dst first second home xs ys n moves slides peakS bench cOps
     hmk hoff hops hop0 hfops hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs
     h7 hneD1 hneD2 hne hn0 hnb hn hlenH hlenx hleny hf hmoves hslides hpeakS hspan
@@ -1096,7 +1099,28 @@ theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
     (by rw [ontoCharge_held_size, bumpOp_held]; exact hS)
     (by rw [ontoCharge_home_size, bumpOp_home]; exact hHomeS)
     hneD2
-  refine ⟨ontoFoldBoard bFold sch n k mvN peak, hmul, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  have hopsFold :
+      (ontoFoldBoard bFold sch n k mvN peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+        b0.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+    simp [bFold, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp]
+    split <;> rfl
+  have hstFold : ∃ st : Nat,
+      (ontoFoldBoard bFold sch n k mvN peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        Int.ofNat st := by
+    unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+    simp [bFold, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp]
+    split <;> exact ⟨_, rfl⟩
+  have hhoFold : ∃ ho : Nat,
+      (ontoFoldBoard bFold sch n k mvN peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        Int.ofNat ho := by
+    unfold ontoFoldBoard peakBoard noteBench withMoves withHole bFold mulPrep strictBoard
+      mulAimed ontoCharge b0 bumpOp
+    split
+    · exact ⟨topIdx sch, rfl⟩
+    · exact ⟨hole, by simpa [ofNat_eq_natCast] using hhole⟩
+  refine ⟨ontoFoldBoard bFold sch n k mvN peak, hmul, ?_, ?_, ?_, ?_, ?_, ?_, hopsFold, hstFold,
+      hhoFold⟩
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
   · exact onto_add n k bench xs ys home hhomeT hlenH (Or.inl hspan) hnb
   · exact hlay
@@ -1211,7 +1235,11 @@ theorem mul_onto_up_prefix (b : Ecbs.Board) (dst first second : Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      TailStay b b' := by
+      TailStay b b' ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) ∧
+      (∃ st : Nat, b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st) ∧
+      (∃ ho : Nat, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) := by
   rw [mul_onto_up_eq b dst first second home xs ys w h r n k moves slides hole peak peakS bench
       cOps m ctrl mx script hmk hoff hm hc hx hscript hbound hfitMk hfitC hfit2 hops hop0 hfops
       hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs h7 hneD1 hneD2 hne hn0 hnb hn
@@ -1247,13 +1275,13 @@ theorem mul_onto_up_prefix (b : Ecbs.Board) (dst first second : Nat)
       (by simp [feed, markerUpFeed, hw]) (by simp [feed, markerUpFeed, hh])
       (by simp [feed, markerUpFeed, hr]) (by simp [feed, markerUpFeed, hk])
       hsm hnsm hfitB hfold hs3 hs4
-  obtain ⟨b', hb, hbench, hpre, hlay, hhi, hrow, hstay⟩ := hFeed
+  obtain ⟨b', hb, hbench, hpre, hlay, hhi, hrow, hstay, hopsF, hstF, hhoF⟩ := hFeed
   have hflag : (do
       let r ← Ecbs.mul feed ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
         false true false
       pure { r with sudo_5Board_9marker_on := true }) = .ok (markerOn b') := by
     rw [hb, ok_bind, pure_eq_ok, markerOn_mk]
-  refine ⟨b', ?_, hbench, hpre, hlay, ?_, ?_, ?_⟩
+  refine ⟨b', ?_, hbench, hpre, hlay, ?_, ?_, ?_, ?_, hstF, hhoF⟩
   · simpa [feed] using hflag
   · have hfeed : feed.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
@@ -1271,6 +1299,15 @@ theorem mul_onto_up_prefix (b : Ecbs.Board) (dst first second : Nat)
         (by simp [homeD, feed, markerUpFeed]) (by simp [heldD, feed, markerUpFeed])
         (by simp [homeD, feed, markerUpFeed]) (by simp [heldD, feed, markerUpFeed])
     exact TailStay.trans hfeed hstay
+  · have hopsFeed : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      simpa [feed, markerUpFeed] using hops
+    have hEq : feed.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [feed, markerUpFeed]
+    have hbump := bumpOp_ops feed 0 cOps hopsFeed
+    rw [hopsF, hbump]
+    cases hEq
+    exact congrArg (fun i : Fin _ =>
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.set i (Int.ofNat (cOps + 1))) (Fin.ext rfl)
 
 /-- SPEC.md §3 R7 line 156. The new up is the slope times `(first x − new x)`,
     minus the first up. That is the mirrored first up plus the same product,

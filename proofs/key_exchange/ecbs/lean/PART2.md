@@ -369,9 +369,15 @@ The board `chord_tail_point` returns has the three scratch homes empty. Home 2 a
 
 4289 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 473232 kB VmHWM. Under 2 GB.
 
+The board `open_checked` returns now also states the control frame a later cell reads. Ladder origin is `t.script + 2`, the rung count is `tierR t`, the park hole is `t.script + 2 + tierR t`, parked-from is `-1`, the rung index is `0`, the tally length is `0`, the tally origin is `tallyOrigin t`, and `tally_max` is a natural. `1 ≤ tally_max` is still not part of that statement. `chord_rise` keeps `TailStay` from the restored checked board, and `chord_tail_after_inv` returns that fact.
+
+The closing slide does not write the marker, the script maximum, the control counter, the ops array, the strict peak, or the bench hole. It does return the move and slide counts, a natural peak, and held homes 0 and 1. The onto multiply sets ops slot 0 to one more than its input and leaves a natural strict peak and a natural bench hole. `chord_tail_point` returns marker `m + 3`, control `ctrl + 6`, script maximum `max (max (max mx (m + 2)) (m + 3)) (m + 4)`, and natural moves, slides, peak, strict peak, and bench hole. Homes 0 and 1 are held. Both arrays have size 8. Those counters are not yet the next `RunFrame`: the move bound for `cell_rooms_left`, and ops slots 2 and 3, are still open.
+
+4298 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 469604 kB VmHWM. Under 2 GB.
+
 ## Next
 
-`chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, `tallyOrigin ≤ high`, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+`chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, `tallyOrigin ≤ high`, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). The tail counters above are the marker, control, script maximum, and the natural cost fields. The move bound and ops slots 2 and 3 still have to land on that frame. Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

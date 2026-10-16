@@ -107,16 +107,17 @@ theorem chord_tail_after_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
         (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
       (∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
       bR.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+        (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      TailStay (restoreMarker bI b.sudo_5Board_9marker_on) bR := by
   let bR0 := restoreMarker bI b.sudo_5Board_9marker_on
   obtain ⟨bR, hrise, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, hflag,
       h0aR, h0tR, h2aR, h2tR, h5aR, h5tR, htR, hmR, hcR, hxR, hslR, hopR, honR, hbR, htoR,
-      hhoR, hstR, ⟨pk, hpk⟩, _hhiR⟩ :=
+      hhoR, hstR, ⟨pk, hpk⟩, _hhiR, _hstay⟩ :=
     chord_rise bR0 red baseY accY n moves peak hszH hszD hyB hyA hpos htriB htriA
       hn hmoves hpeak hfit h6e h4t h4a h1t h1a
   refine ⟨bR, ?_, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, ?_,
       h0aR, h0tR, h2aR, h2tR, h5aR, h5tR, htR, hmR, hcR, hxR, hslR, hopR, honR, hbR, htoR,
-      hhoR, hstR, ⟨pk, hpk⟩, _hhiR⟩
+      hhoR, hstR, ⟨pk, hpk⟩, _hhiR, _hstay⟩
   · unfold chordAddTail
     dsimp only
     rw [hinv, ok_bind]

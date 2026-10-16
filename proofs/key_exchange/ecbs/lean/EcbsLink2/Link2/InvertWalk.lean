@@ -1037,7 +1037,15 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       (∀ h3 : 3 < bR.sudo_5Board_4home.size,
         bR.sudo_5Board_4home[3] = embed lay.base3) ∧
       (∀ h3 : 3 < bR.sudo_5Board_4held.size,
-        bR.sudo_5Board_4held[3] = lay.flag3) := by
+        bR.sudo_5Board_4held[3] = lay.flag3) ∧
+      bR.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2) ∧
+      bR.sudo_5Board_6nrungs = Int.ofNat (tierR t) ∧
+      bR.sudo_5Board_9park_hole = Int.ofNat (t.script + 2 + tierR t) ∧
+      bR.sudo_5Board_11parked_from = -1 ∧
+      bR.sudo_5Board_8rung_idx = 0 ∧
+      bR.sudo_5Board_9tally_len = 0 ∧
+      bR.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t) ∧
+      (∃ tmax : Nat, bR.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) := by
   obtain ⟨bT, hem, hK, hladT⟩ := open_invert b t xs lay hOk sat hR hsh base hm
   have hpark : (openModelAt t xs lay.ctrl lay.high).parkAt = base.ladder0 + base.R := by
     simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R]
@@ -1603,8 +1611,8 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         simpa [hm.baseRow] using hBR.trans (_hrowM.trans _hrowZ)
       have hladClimb : b'.sudo_5Board_6ladder = embed (tierClimb t) :=
         (climbEmit_ladder ((2 : Nat) : Int) bT (tierClimb t) b' hrun').trans hladT
-      obtain ⟨_bU2, _bC2, _bOut2, bZ2, hun2, hc2, hset2, hz2, hladZ, _hl02, _hnr2,
-          _hpark2, _htmax2, _hfrom2, _hridx2, _ht02, _hlen2⟩ :=
+      obtain ⟨_bU2, _bC2, _bOut2, bZ2, hun2, hc2, hset2, hz2, hladZ, hl02, hnr2,
+          hpark2, htmax2, hfrom2, hridx2, ht02, hlen2⟩ :=
         settled_unpark_frame hKpost hon hge htmax hmt
       have hUeq : _bU2 = bU := by
         cases hun2.symm.trans hun
@@ -1624,10 +1632,53 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       have hladR : bR.sudo_5Board_6ladder = embed (tierClimb t) := by
         have hEq : bR.sudo_5Board_6ladder = bM.sudo_5Board_6ladder := by simp [bR]
         exact hEq.trans (hsc.ladder.trans ((hZeq ▸ hladZ).trans hladClimb))
+      have hl0R : bR.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2) := by
+        have hBR : bR.sudo_5Board_7ladder0 = bM.sudo_5Board_7ladder0 := by simp [bR]
+        have hClimb : b'.sudo_5Board_7ladder0 = (base.ladder0 : Int) :=
+          hKpost.shape.park.ladder0B
+        have hstep := hBR.trans (hsc.l0.trans ((hZeq ▸ hl02).trans hClimb))
+        simpa [hm.ladder0, ofNat_eq_natCast] using hstep
+      have hnrR : bR.sudo_5Board_6nrungs = Int.ofNat (tierR t) := by
+        have hBR : bR.sudo_5Board_6nrungs = bM.sudo_5Board_6nrungs := by simp [bR]
+        have hClimb : b'.sudo_5Board_6nrungs = (base.R : Int) :=
+          hKpost.shape.park.nrungsB
+        have hstep := hBR.trans (hsc.nr.trans ((hZeq ▸ hnr2).trans hClimb))
+        simpa [hm.R, ofNat_eq_natCast] using hstep
+      have hparkR : bR.sudo_5Board_9park_hole = Int.ofNat (t.script + 2 + tierR t) := by
+        have hBR : bR.sudo_5Board_9park_hole = bM.sudo_5Board_9park_hole := by simp [bR]
+        have hClimb : b'.sudo_5Board_9park_hole = (s'.parkAt : Int) := hKpost.inv.park
+        have hAt : s'.parkAt = base.ladder0 + base.R := hKpost.parkEq
+        have hstep := hBR.trans (hsc.park.trans ((hZeq ▸ hpark2).trans hClimb))
+        simpa [hAt, hm.ladder0, hm.R, ofNat_eq_natCast] using hstep
+      have hfromR : bR.sudo_5Board_11parked_from = -1 := by
+        have hBR : bR.sudo_5Board_11parked_from = bM.sudo_5Board_11parked_from := by simp [bR]
+        exact hBR.trans (hsc.fromH.trans (hZeq ▸ hfrom2))
+      have hridxR : bR.sudo_5Board_8rung_idx = 0 := by
+        have hBR : bR.sudo_5Board_8rung_idx = bM.sudo_5Board_8rung_idx := by simp [bR]
+        exact hBR.trans (hsc.ridx.trans (hZeq ▸ hridx2))
+      have htlenR : bR.sudo_5Board_9tally_len = 0 := by
+        have hBR : bR.sudo_5Board_9tally_len = bM.sudo_5Board_9tally_len := by simp [bR]
+        exact hBR.trans (hsc.tlen.trans (hZeq ▸ hlen2))
+      have ht0R : bR.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t) := by
+        have hBR : bR.sudo_5Board_6tally0 = bM.sudo_5Board_6tally0 := by simp [bR]
+        have ht0s : s'.t0 = tallyOrigin t := by
+          have hmodel : s' =
+              modelClimb (openModelAt t xs lay.ctrl lay.high) base.x hole (tierClimb t) := hs'
+          rw [hmodel, modelClimb_t0]
+          simp [openModelAt, openModel, entryModel]
+        have hstep := hBR.trans (hsc.t0.trans (hZeq ▸ ht02))
+        simpa [ht0s, ofNat_eq_natCast] using hstep
+      have htmaxR : ∃ tmax : Nat,
+          bR.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+        obtain ⟨tmax, htmaxB⟩ := hKpost.tmaxLt
+        have hBR : bR.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+            bM.sudo_5Board_4cost.sudo_5Costs_9tally_max := by simp [bR]
+        exact ⟨tmax, hBR.trans (hsc.tmax.trans ((hZeq ▸ htmax2).trans htmaxB))⟩
       refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl,
         ⟨h5DR, mvM + nz, hheldR, hmvR, hfitR, hnR⟩, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
         hcarryR, hbnd, ⟨mvM + nz, by simpa [bR, ofNat_eq_natCast] using hmvR, hwhiteSlack⟩,
-        hhighR, hwater, hrowR, hLc ▸ hladR, ?_, ?_⟩
+        hhighR, hwater, hrowR, hLc ▸ hladR, ?_, ?_, hl0R, hnrR, hparkR, hfromR, hridxR,
+        htlenR, ht0R, htmaxR⟩
       · simpa [Ecbs.check_target, Ecbs.gap] using hmulOk
       · exact congrArg embed htakeL
       · intro _
@@ -1686,7 +1737,15 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
       b'.sudo_5Board_3row = embed (paintedRow t) ∧
       b'.sudo_5Board_6ladder = embed (tierClimb t) ∧
       (∀ h3 : 3 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[3] = embed lay.base3) ∧
-      (∀ h3 : 3 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[3] = lay.flag3) := by
+      (∀ h3 : 3 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[3] = lay.flag3) ∧
+      b'.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2) ∧
+      b'.sudo_5Board_6nrungs = Int.ofNat (tierR t) ∧
+      b'.sudo_5Board_9park_hole = Int.ofNat (t.script + 2 + tierR t) ∧
+      b'.sudo_5Board_11parked_from = -1 ∧
+      b'.sudo_5Board_8rung_idx = 0 ∧
+      b'.sudo_5Board_9tally_len = 0 ∧
+      b'.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t) ∧
+      (∃ tmax : Nat, b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) := by
   have hpos : 0 < t.n := hOk.n_pos
   have hnbench := mul_span_n t.n t.benchlen hpos sat.mul_span
   have hspan3 := cube_span_le t.n t.benchlen t.combgap sat.cube_span
@@ -1704,7 +1763,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
   have hlenG : g.length = t.n := invGap_length t xs sat hpos
   obtain ⟨_bZ, _bM, bR, _v, h5, hinv, hmul, hread, hv, hhome5, _hbench, hframe, hhome2, hheld2,
       h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, hslack, hhighR, hwater, hrowR, hladR,
-      h3a, h3t⟩ :=
+      h3a, h3t, hl0R, hnrR, hparkF, hfromR, hridxR, htlenR, ht0R, htmaxR⟩ :=
     open_check_mul b t xs lay hOk sat hR hsh base hm
   obtain ⟨h5D, mv, hheld, hmv, hfit, hnT⟩ := hframe
   have hfitn : FitsLen t.n := FitsLen.of_le hfit (Nat.le_add_left t.n mv)
@@ -1736,7 +1795,8 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
         Bool.false_eq_true, if_false]
       rcases hshape with ⟨_, hans⟩ | ⟨hv2, _⟩
       · refine ⟨bR, h5, h5D, rfl, ?_, hheld, hnT, ?_, hhome2, hheld2,
-            h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, ?_, hrowR, hladR, h3a, h3t⟩
+            h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, ?_, hrowR, hladR, h3a, h3t,
+            hl0R, hnrR, hparkF, hfromR, hridxR, htlenR, ht0R, htmaxR⟩
         · rw [hans]
           simpa [g] using hhome5
         · rw [hans]
@@ -1766,7 +1826,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
             mirrorHome_held bR 5 h5 _ _]
           exact h5D
         refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-            ?_, ?_⟩
+            ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
         · rw [hans]
           exact mirrorHome_at bR 5 h5 (embed (mirrorTrits g)) (mv + pegCount g) h5'
         · exact hheld
@@ -1920,6 +1980,15 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
           exact cell_eq_of hEq (h3t (by
             have hs := congrArg Array.size hEq
             exact hs ▸ h3))
+        · simpa [bM, mirrorHome, withMoves] using hl0R
+        · simpa [bM, mirrorHome, withMoves] using hnrR
+        · simpa [bM, mirrorHome, withMoves] using hparkF
+        · simpa [bM, mirrorHome, withMoves] using hfromR
+        · simpa [bM, mirrorHome, withMoves] using hridxR
+        · simpa [bM, mirrorHome, withMoves] using htlenR
+        · simpa [bM, mirrorHome, withMoves] using ht0R
+        · obtain ⟨tmax, ht⟩ := htmaxR
+          exact ⟨tmax, by simpa [bM, mirrorHome, withMoves] using ht⟩
   · intro k
     rfl
   · intro j hj1 hj

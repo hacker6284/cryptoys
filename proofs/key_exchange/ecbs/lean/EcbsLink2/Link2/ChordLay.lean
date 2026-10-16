@@ -529,7 +529,25 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
       (∀ h : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2] = false) ∧
       (∀ h : 5 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[5] = (#[] : Array Int)) ∧
       (∀ h : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5] = false) ∧
-      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) := by
+      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
+      b'.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      (∃ pk', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk') ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + pegCount slope + 2 * pegCount (benchL.take n) + 2 * pegCount x3) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3) ∧
+      (∀ h : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
+      (∀ h : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1] = true) ∧
+      b'.sudo_5Board_4home.size = 8 ∧
+      b'.sudo_5Board_4held.size = 8 := by
   have hpegY : pegCount (benchL.take n) ≤ n := by
     have hlen : (benchL.take n).length = n := by
       simp [List.length_take, Nat.min_eq_left hnle]
@@ -552,8 +570,8 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
       2 * pegCount x3) := FitsLen.of_le hRoomM (by omega)
   have hfitMS : FitsLen (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3) :=
     FitsLen.of_le hRoomS (by omega)
-  obtain ⟨b', hdo, hUp, _, hAc, _, h2e, h2f, h5e, h5f, hoff, hflag, _, _, _, _, _, hhi,
-      hrow, hstay, h6f⟩ :=
+  obtain ⟨b', hdo, hUp, h1t, hAc, h0t, h2e, h2f, h5e, h5f, hoff, hflag, _, hszH', hszD',
+      hmv, hsl, hhi, hrow, hstay, h6f, hmark, hmx, hctrl, hops, hstrict, hhole, hpk⟩ :=
     chord_up_slide b 1 0 2 5 slope x3 benchL n moves slides peak
       (by rw [hszH]; decide) (by rw [hszD]; decide)
       (by rw [hszH]; decide) (by rw [hszD]; decide)
@@ -565,12 +583,15 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
       hf hfitL hmv hsl hpk hfitClear hpeg hfitSM hfitSS hfit2 hfitMM hfitMS
       (by decide) (by decide)
       (by rw [hszD]; decide) h6e (by decide)
-  refine ⟨b', ?_, ?_, ?_, hoff, hflag, hhi, hrow, hstay, h2e, h2f, h5e, h5f, h6f⟩
+  refine ⟨b', ?_, ?_, ?_, hoff, hflag, hhi, hrow, hstay, h2e, h2f, h5e, h5f, h6f,
+      hmark, hmx, hctrl, hops, hstrict, hhole, hpk, hmv, hsl, h0t, h1t, ?_, ?_⟩
   · exact hdo
   · intro h0
     exact hAc h0
   · intro h1
     exact hUp h1
+  · rw [hszH']; exact hszH
+  · rw [hszD']; exact hszD
 
 /-- Take the bottom from the across, mirror the up, lay the slope times that
     difference onto the up, and slide the new x across. SPEC.md §3 R7 line 156.
@@ -676,7 +697,27 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
       (∀ h : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2] = false) ∧
       (∀ h : 5 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[5] = (#[] : Array Int)) ∧
       (∀ h : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5] = false) ∧
-      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) := by
+      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
+      b'.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx (m + 2)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + pegCount x3 + pegCount accY + 2 * pegCount yMir +
+          schoolMoves slope dx n n +
+          foldCharge n (n - k) (school n slope dx (pref yMir bench n) false) +
+          pegCount slope + 2 * pegCount (benchL.take n) + 2 * pegCount x3) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount yMir + 2 * pegCount (benchL.take n) +
+          2 * pegCount x3) ∧
+      (∃ pk', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk') ∧
+      (∃ st, b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st) ∧
+      (∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) ∧
+      (∀ h : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
+      (∀ h : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1] = true) ∧
+      b'.sudo_5Board_4home.size = 8 ∧
+      b'.sudo_5Board_4held.size = 8 := by
   intro dx yMir y3 benchL
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -751,7 +792,7 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
   have hkT : bT.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
     conv => lhs; rw [htT]
     exact hk
-  obtain ⟨bM, hmul, hbenchM, hpreM, hlay, hhiM, hrowM, hstayM⟩ :=
+  obtain ⟨bM, hmul, hbenchM, hpreM, hlay, hhiM, hrowM, hstayM, hopsM, hstM', hhoM'⟩ :=
     mul_onto_up_prefix bT 1 5 0 yMir slope dx w h r n k
       (moves + pegCount x3 + pegCount accY) slides hole peak peakS bench cOps m ctrl mx script
       hflagM hoffM hmM hcM hxM hscriptT hbound hfitMk hfitC hfit2
@@ -876,14 +917,76 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
       (hlay.heldK 6 (by decide) (by decide) h6T h6M).trans h6eT
     have hEq : bU.sudo_5Board_4held = bM.sudo_5Board_4held := by simp [bU, markerOn_held]
     exact cell_eq_of hEq h6eM
-  obtain ⟨b', hslide, hAc, hUp, _, _, hhiS, hrowS, hstayS, h2e, h2f, h5e, h5f, h6f⟩ :=
+  obtain ⟨b', hslide, hAc, hUp, _, _, hhiS, hrowS, hstayS, h2e, h2f, h5e, h5f, h6f,
+      hmarkS, hmxS, hctrlS, hopsS, hstrictS, hholeS, hpkS, hmvS, hslS, h0tS, h1tS,
+      hszHS, hszDS⟩ :=
     slide_point bU slope x3 benchL n mvF slF pkU
       hszU.1 hszU.2 h5tU h5aU h1eU h0eU h2tU h2aU honU htoU hbenchU hnU
       hslope hx3 (by rw [hlenB]; omega) (by rw [hlenB]; exact hnb) hzero
       hf (by simpa [hlenB] using hfitB) hmvU hslU hpkB
       (FitsLen.of_le hTailM hmvLe) (FitsLen.of_le hTailS hslLe) h6eU
+  have hmarkOut : b'.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+    have hU : bU.sudo_5Board_6marker = bM.sudo_5Board_6marker := by simp [bU, markerOn]
+    have hM : bM.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+      simpa [bumpOp, markerUpFeed] using hlay.marker
+    exact hmarkS.trans (hU.trans hM)
+  have hctrlOut : b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    have hU : bU.sudo_5Board_4cost.sudo_5Costs_4ctrl = bM.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+      simp [bU, markerOn]
+    have hM : bM.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+      simpa [bumpOp, markerUpFeed] using hlay.ctrl
+    exact hctrlS.trans (hU.trans hM)
+  have hmxOut : b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx (m + 2)) := by
+    have hU : bU.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        bM.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by simp [bU, markerOn]
+    have hM : bM.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max mx (m + 2)) := by
+      simpa [bumpOp, markerUpFeed] using hlay.mx
+    exact hmxS.trans (hU.trans hM)
+  have hopsOut : b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) := by
+    have hU : bU.sudo_5Board_4cost.sudo_5Costs_3ops = bM.sudo_5Board_4cost.sudo_5Costs_3ops := by
+      simp [bU, markerOn]
+    have hstep := hopsS.trans (hU.trans hopsM)
+    rw [hstep]
+    apply Array.ext
+    · rw [Array.size_set, Array.size_set]
+      exact congrArg Array.size hopT
+    · intro i hi1 hi2
+      by_cases h0 : i = 0
+      · subst h0
+        simp [Array.getElem_set]
+      · have hne : ¬ (0 = i) := fun h => h0 h.symm
+        simp [Array.getElem_set, hne]
+        have hiT : i < bT.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rwa [Array.size_set] at hi1
+        exact ix hopT i hiT
+  have hmvOut : b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (moves + pegCount x3 + pegCount accY + 2 * pegCount yMir +
+        schoolMoves slope dx n n +
+        foldCharge n (n - k) (school n slope dx (pref yMir bench n) false) +
+        pegCount slope + 2 * pegCount (benchL.take n) + 2 * pegCount x3) := by
+    exact hmvS
+  have hslOut : b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (slides + 2 * pegCount yMir + 2 * pegCount (benchL.take n) +
+        2 * pegCount x3) := by
+    exact hslS
+  have hstOut : ∃ st, b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st := by
+    obtain ⟨st, hst⟩ := hstM'
+    refine ⟨st, ?_⟩
+    have hU : bU.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        bM.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by simp [bU, markerOn]
+    exact hstrictS.trans (hU.trans hst)
+  have hhoOut : ∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho := by
+    obtain ⟨ho, hho⟩ := hhoM'
+    refine ⟨ho, ?_⟩
+    have hU : bU.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        bM.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by simp [bU, markerOn]
+    exact hholeS.trans (hU.trans hho)
   refine ⟨bM, b', ?_, ?_, hpreY, hszU.1, hszU.2, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, honU, htoU,
-      ?_, hAc, ?_, ?_, ?_, ?_, h2e, h2f, h5e, h5f, h6f⟩
+      ?_, hAc, ?_, ?_, ?_, ?_, h2e, h2f, h5e, h5f, h6f, hmarkOut, hctrlOut, hmxOut, hopsOut,
+      hmvOut, hslOut, hpkS, hstOut, hhoOut, h0tS, h1tS, hszHS, hszDS⟩
   · have hassoc :
         (do
             let b ← Ecbs.add b Ecbs.across Ecbs.bottom true

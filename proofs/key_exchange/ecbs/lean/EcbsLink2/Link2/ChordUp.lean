@@ -285,6 +285,94 @@ theorem moveBand_slides (b : Ecbs.Board) (dst src : Nat)
   dsimp only
   split <;> rfl
 
+theorem moveBand_ix (b : Ecbs.Board) (dst src : Nat)
+    (hSrcH : src < b.sudo_5Board_4home.size)
+    (hSrcD : src < b.sudo_5Board_4held.size)
+    (hDstH : dst < b.sudo_5Board_4home.size)
+    (hDstD : dst < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves slides peak : Nat) :
+    (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak).sudo_5Board_6marker =
+      b.sudo_5Board_6marker := by
+  unfold moveBandBoard moveBandCore
+  dsimp only
+  split <;> rfl
+
+theorem moveBand_mx (b : Ecbs.Board) (dst src : Nat)
+    (hSrcH : src < b.sudo_5Board_4home.size)
+    (hSrcD : src < b.sudo_5Board_4held.size)
+    (hDstH : dst < b.sudo_5Board_4home.size)
+    (hDstD : dst < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves slides peak : Nat) :
+    (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+  unfold moveBandBoard moveBandCore
+  dsimp only
+  split <;> rfl
+
+theorem moveBand_ctrl (b : Ecbs.Board) (dst src : Nat)
+    (hSrcH : src < b.sudo_5Board_4home.size)
+    (hSrcD : src < b.sudo_5Board_4held.size)
+    (hDstH : dst < b.sudo_5Board_4home.size)
+    (hDstD : dst < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves slides peak : Nat) :
+    (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+  unfold moveBandBoard moveBandCore
+  dsimp only
+  split <;> rfl
+
+theorem moveBand_ops (b : Ecbs.Board) (dst src : Nat)
+    (hSrcH : src < b.sudo_5Board_4home.size)
+    (hSrcD : src < b.sudo_5Board_4held.size)
+    (hDstH : dst < b.sudo_5Board_4home.size)
+    (hDstD : dst < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves slides peak : Nat) :
+    (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+  unfold moveBandBoard moveBandCore
+  dsimp only
+  split <;> rfl
+
+theorem moveBand_strict (b : Ecbs.Board) (dst src : Nat)
+    (hSrcH : src < b.sudo_5Board_4home.size)
+    (hSrcD : src < b.sudo_5Board_4held.size)
+    (hDstH : dst < b.sudo_5Board_4home.size)
+    (hDstD : dst < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves slides peak : Nat) :
+    (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+  unfold moveBandBoard moveBandCore
+  dsimp only
+  split <;> rfl
+
+theorem moveBand_hole (b : Ecbs.Board) (dst src : Nat)
+    (hSrcH : src < b.sudo_5Board_4home.size)
+    (hSrcD : src < b.sudo_5Board_4held.size)
+    (hDstH : dst < b.sudo_5Board_4home.size)
+    (hDstD : dst < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves slides peak : Nat) :
+    (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+  unfold moveBandBoard moveBandCore
+  dsimp only
+  split <;> rfl
+
+theorem moveBand_peak_nat (b : Ecbs.Board) (dst src : Nat)
+    (hSrcH : src < b.sudo_5Board_4home.size)
+    (hSrcD : src < b.sudo_5Board_4held.size)
+    (hDstH : dst < b.sudo_5Board_4home.size)
+    (hDstD : dst < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves slides peak : Nat)
+    (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak) :
+    ∃ pk',
+      (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak).sudo_5Board_4cost.sudo_5Costs_4peak =
+        Int.ofNat pk' := by
+  unfold moveBandBoard moveBandCore
+  dsimp only
+  split
+  · exact ⟨_, rfl⟩
+  · exact ⟨peak, hpk⟩
+
 /-- Bench off, `dst` empty, `src` held. `move_band` settles as the identity,
     charges `2 * pegCount` moves and the same number of slides, and writes
     `src` into `dst`. -/
@@ -504,7 +592,19 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
       TailStay b b' ∧
-      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) := by
+      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
+      b'.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      ∃ pk', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk' := by
   have hfS : FitsLen slope.length := by rw [hlenS]; exact hf
   have hfX : FitsLen x3.length := by rw [hlenX]; exact hf
   have hclear := clear_held_refines b gap slope moves hGapH hGapD hGapT hGapA hmoves hfS hfitClear
@@ -591,7 +691,8 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
     (by simpa [slS, pegY] using hfitMS)
   rw [hmove]
   let b' := moveBandBoard bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
-  refine ⟨b', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro h
     have hh := moveBand_home bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
     have hget := idx_eq (by simpa [b'] using hh) up (by simpa [b', hh] using h)
@@ -726,5 +827,58 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
     have heq := settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
     have hpre := idx_eq (by simpa [bS] using heq) 6 h6S
     simpa [Array.getElem_set_ne, h6n.1, bC, Array.getElem_set_ne, h6n.2.2.2, h6e] using hpre
+  · have hC : bC.sudo_5Board_6marker = b.sudo_5Board_6marker := by simp [bC]
+    have hS : bS.sudo_5Board_6marker = bC.sudo_5Board_6marker := by
+      simpa [bS] using settle_ix_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
+    simpa [b'] using
+      (moveBand_ix bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk).trans
+        (hS.trans hC)
+  · have hC : bC.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by simp [bC]
+    have hS : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        bC.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+      simpa [bS] using settle_mx_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
+    simpa [b'] using
+      (moveBand_mx bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk).trans
+        (hS.trans hC)
+  · have hC : bC.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by simp [bC]
+    have hS : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        bC.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+      simpa [bS] using settle_ctrl_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
+    simpa [b'] using
+      (moveBand_ctrl bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk).trans
+        (hS.trans hC)
+  · have hC : bC.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [bC]
+    have hS : bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+        bC.sudo_5Board_4cost.sudo_5Costs_3ops := by
+      simpa [bS] using settle_ops bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
+    simpa [b'] using
+      (moveBand_ops bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk).trans
+        (hS.trans hC)
+  · have hC : bC.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by simp [bC]
+    have hS : bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        bC.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+      simpa [bS] using settle_strict_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
+    simpa [b'] using
+      (moveBand_strict bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk).trans
+        (hS.trans hC)
+  · have hC : bC.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by simp [bC]
+    have hS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        bC.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+      simpa [bS] using settle_hole_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
+    simpa [b'] using
+      (moveBand_hole bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk).trans
+        (hS.trans hC)
+  · have hpC : bC.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+      simpa [bC, ofNat_eq_natCast] using hpeak
+    have hpS : bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
+      simpa [bS, pk] using
+        settle_peak_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak hpC
+    simpa [b'] using
+      moveBand_peak_nat bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk hpS
 
 end EcbsLink2.Link2

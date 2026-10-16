@@ -7,6 +7,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.ChordNext
+import EcbsLink2.Link2.ClimbEmit
 
 namespace EcbsLink2.Link2
 
@@ -183,5 +184,88 @@ theorem suffix_ctrl_room (ctrl0 rem c : Nat)
       (by omega) (hstep k hlt) ih'
     have hsub : (rem - k) - 1 = rem - (k + 1) := by omega
     simpa [hsub] using hnext
+
+private theorem fits_le (n : Nat) (h : n ≤ 9223372036854775807) : FitsLen n := by
+  simpa [FitsLen, i64MaxNat] using h
+
+private theorem demo_tierR : tierR Spec.demo = 2 := by
+  simp [tierR, demo_rungs]
+
+private theorem toy_tierR : tierR Spec.toy = 4 := by
+  simp [tierR, toy_rungs]
+
+private theorem hobby_tierR : tierR Spec.hobby = 5 := by
+  simp [tierR, hobby_rungs]
+
+private theorem serious_tierR : tierR Spec.serious = 7 := by
+  simp [tierR, serious_rungs]
+
+private theorem demo_row : rowRoom Spec.demo = 6 := by
+  rw [rowRoom, tallyOrigin, demo_tierR]
+  simp [Spec.demo]
+
+private theorem toy_row : rowRoom Spec.toy = 18 := by
+  rw [rowRoom, tallyOrigin, toy_tierR]
+  simp [Spec.toy]
+
+private theorem hobby_row : rowRoom Spec.hobby = 57 := by
+  rw [rowRoom, tallyOrigin, hobby_tierR]
+  simp [Spec.hobby]
+
+private theorem serious_row : rowRoom Spec.serious = 175 := by
+  rw [rowRoom, tallyOrigin, serious_tierR]
+  simp [Spec.serious]
+
+/-- One cell past a Demo key still fits an i64. `cells + 1` is that extra cell. -/
+theorem demo_walk_room :
+    FitsLen ((Spec.demo.cells + 1) * walkCharge Spec.demo) ∧
+      FitsLen ((Spec.demo.cells + 1) * cellSlideCharge Spec.demo) ∧
+      FitsLen ((Spec.demo.cells + 1) * cellCtrlCharge Spec.demo) ∧
+      FitsLen ((Spec.demo.cells + 1) * cellOpsCharge Spec.demo) := by
+  unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  rw [demo_tierR, demo_row]
+  simp [Spec.demo]
+  refine ⟨fits_le _ (by decide), fits_le _ (by decide), fits_le _ (by decide),
+    fits_le _ (by decide)⟩
+
+/-- One cell past a Toy key still fits an i64. -/
+theorem toy_walk_room :
+    FitsLen ((Spec.toy.cells + 1) * walkCharge Spec.toy) ∧
+      FitsLen ((Spec.toy.cells + 1) * cellSlideCharge Spec.toy) ∧
+      FitsLen ((Spec.toy.cells + 1) * cellCtrlCharge Spec.toy) ∧
+      FitsLen ((Spec.toy.cells + 1) * cellOpsCharge Spec.toy) := by
+  unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  rw [toy_tierR, toy_row]
+  simp [Spec.toy]
+  refine ⟨fits_le _ (by decide), fits_le _ (by decide), fits_le _ (by decide),
+    fits_le _ (by decide)⟩
+
+/-- One cell past a Hobby key still fits an i64. -/
+theorem hobby_walk_room :
+    FitsLen ((Spec.hobby.cells + 1) * walkCharge Spec.hobby) ∧
+      FitsLen ((Spec.hobby.cells + 1) * cellSlideCharge Spec.hobby) ∧
+      FitsLen ((Spec.hobby.cells + 1) * cellCtrlCharge Spec.hobby) ∧
+      FitsLen ((Spec.hobby.cells + 1) * cellOpsCharge Spec.hobby) := by
+  unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  rw [hobby_tierR, hobby_row]
+  simp [Spec.hobby]
+  refine ⟨fits_le _ (by decide), fits_le _ (by decide), fits_le _ (by decide),
+    fits_le _ (by decide)⟩
+
+/-- One cell past a Serious key still fits an i64. -/
+theorem serious_walk_room :
+    FitsLen ((Spec.serious.cells + 1) * walkCharge Spec.serious) ∧
+      FitsLen ((Spec.serious.cells + 1) * cellSlideCharge Spec.serious) ∧
+      FitsLen ((Spec.serious.cells + 1) * cellCtrlCharge Spec.serious) ∧
+      FitsLen ((Spec.serious.cells + 1) * cellOpsCharge Spec.serious) := by
+  unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  rw [serious_tierR, serious_row]
+  simp [Spec.serious]
+  refine ⟨fits_le _ (by decide), fits_le _ (by decide), fits_le _ (by decide),
+    fits_le _ (by decide)⟩
 
 end EcbsLink2.Link2

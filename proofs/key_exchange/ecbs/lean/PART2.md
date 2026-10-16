@@ -403,7 +403,9 @@ The chord tail turns the bench off. It writes ops slot 0 and leaves every other 
 
 `walkCharge` is `cellMoveCharge` plus `2 · n`, the rise's two homes. `cellsLeft i toN` is the cells still to run, including `i`. A cell with `cellsLeft ≥ 2` gives the frame `fuel = cellsLeft - 1`, so the extra cell is the next index. The last index has `cellsLeft = 1` and is `chordStep_live_last`: `chord_add_live` and `chordStep_open`, one charge, no next frame. `chordStep_live_cell` is that branch. `suffix_move_room` and `suffix_ctrl_room` carry the envelope down the suffix when each cell spends at most one charge. The frame's `1 ≤ fuel` is not a hypothesis of these theorems.
 
-4434 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: WalkCharge 447556 kB, WalkLast 443048, WalkStep 447988, EcbsLink2 411776. All under about 1.8 GB and under 2097152 kB.
+`demo_walk_room`, `toy_walk_room`, `hobby_walk_room`, and `serious_walk_room` are the shipped-tier room lemmas. Each says one cell past that tier's key, `(cells + 1)` times the move, slide, control, and op charge, fits an i64. The rung list is `demo_rungs` (and the three siblings); the inequality is `decide` on the numeral. No `native_decide`.
+
+4451 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: WalkCharge 585124 kB, WalkLast 442456, WalkStep 447496, EcbsLink2 420840. All under about 1.8 GB and under 2097152 kB.
 
 The loop that carries the board from one live cell through `marker_lift` and `frobenius_affine` into the next `RunFrame`, then `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 

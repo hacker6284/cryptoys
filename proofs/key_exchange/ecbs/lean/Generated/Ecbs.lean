@@ -308,6 +308,268 @@ instance : SudoRt.SOrd Checked where
 instance : SudoRt.Canon Checked where
   canon r := SudoRt.canonRecord "Checked" [SudoRt.Canon.canon r.sudo_7Checked_7verdict, SudoRt.Canon.canon r.sudo_7Checked_7rebuilt, SudoRt.Canon.canon r.sudo_7Checked_4peak, SudoRt.Canon.canon r.sudo_7Checked_11check_moves, SudoRt.Canon.canon r.sudo_7Checked_9tally_max, SudoRt.Canon.canon r.sudo_7Checked_15control_highest]
 
+structure PegMove where
+  sudo_7PegMove_4band : Int
+  sudo_7PegMove_4hole : Int
+  sudo_7PegMove_4from : Int
+  sudo_7PegMove_4into : Int
+  sudo_7PegMove_3why : Int
+  deriving BEq
+
+instance : Inhabited PegMove where
+  default := { sudo_7PegMove_4band := default, sudo_7PegMove_4hole := default, sudo_7PegMove_4from := default, sudo_7PegMove_4into := default, sudo_7PegMove_3why := default }
+
+instance : SudoRt.SEq PegMove where
+  beq a b := SudoRt.SEq.beq a.sudo_7PegMove_4band b.sudo_7PegMove_4band && SudoRt.SEq.beq a.sudo_7PegMove_4hole b.sudo_7PegMove_4hole && SudoRt.SEq.beq a.sudo_7PegMove_4from b.sudo_7PegMove_4from && SudoRt.SEq.beq a.sudo_7PegMove_4into b.sudo_7PegMove_4into && SudoRt.SEq.beq a.sudo_7PegMove_3why b.sudo_7PegMove_3why
+
+instance : SudoRt.SOrd PegMove where
+  le a b :=
+    (if !(SudoRt.SEq.beq a.sudo_7PegMove_4band b.sudo_7PegMove_4band) then SudoRt.SOrd.le a.sudo_7PegMove_4band b.sudo_7PegMove_4band else (if !(SudoRt.SEq.beq a.sudo_7PegMove_4hole b.sudo_7PegMove_4hole) then SudoRt.SOrd.le a.sudo_7PegMove_4hole b.sudo_7PegMove_4hole else (if !(SudoRt.SEq.beq a.sudo_7PegMove_4from b.sudo_7PegMove_4from) then SudoRt.SOrd.le a.sudo_7PegMove_4from b.sudo_7PegMove_4from else (if !(SudoRt.SEq.beq a.sudo_7PegMove_4into b.sudo_7PegMove_4into) then SudoRt.SOrd.le a.sudo_7PegMove_4into b.sudo_7PegMove_4into else (if !(SudoRt.SEq.beq a.sudo_7PegMove_3why b.sudo_7PegMove_3why) then SudoRt.SOrd.le a.sudo_7PegMove_3why b.sudo_7PegMove_3why else true)))))
+
+instance : SudoRt.Canon PegMove where
+  canon r := SudoRt.canonRecord "PegMove" [SudoRt.Canon.canon r.sudo_7PegMove_4band, SudoRt.Canon.canon r.sudo_7PegMove_4hole, SudoRt.Canon.canon r.sudo_7PegMove_4from, SudoRt.Canon.canon r.sudo_7PegMove_4into, SudoRt.Canon.canon r.sudo_7PegMove_3why]
+
+inductive Op : Type where
+  | Sudo_2Op_3Put
+  | Sudo_2Op_6White0
+  | Sudo_2Op_4Copy
+  | Sudo_2Op_4Move
+  | Sudo_2Op_5Clear
+  | Sudo_2Op_6Mirror
+  | Sudo_2Op_3Add
+  | Sudo_2Op_3Mul
+  | Sudo_2Op_4Cube
+  | Sudo_2Op_6Settle
+  | Sudo_2Op_11BenchWhite0
+  | Sudo_2Op_8BenchAdd
+  | Sudo_2Op_9BenchRead
+  | Sudo_2Op_10TallyStart
+  | Sudo_2Op_9TallyFlip
+  | Sudo_2Op_11TallyDouble
+  | Sudo_2Op_8TallyAdd
+  | Sudo_2Op_10TallyClear
+  | Sudo_2Op_4Park
+  | Sudo_2Op_6Unpark
+  | Sudo_2Op_10MarkerLift
+  | Sudo_2Op_9PhaseDrop
+  | Sudo_2Op_12StartCalling
+  | Sudo_2Op_8CallHole
+  | Sudo_2Op_10CallingOff
+  | Sudo_2Op_4Fold
+  deriving BEq
+
+instance : Inhabited Op where
+  default := Op.Sudo_2Op_3Put
+
+instance : SudoRt.SEq Op where
+  beq
+    | .Sudo_2Op_3Put, .Sudo_2Op_3Put => true
+    | .Sudo_2Op_6White0, .Sudo_2Op_6White0 => true
+    | .Sudo_2Op_4Copy, .Sudo_2Op_4Copy => true
+    | .Sudo_2Op_4Move, .Sudo_2Op_4Move => true
+    | .Sudo_2Op_5Clear, .Sudo_2Op_5Clear => true
+    | .Sudo_2Op_6Mirror, .Sudo_2Op_6Mirror => true
+    | .Sudo_2Op_3Add, .Sudo_2Op_3Add => true
+    | .Sudo_2Op_3Mul, .Sudo_2Op_3Mul => true
+    | .Sudo_2Op_4Cube, .Sudo_2Op_4Cube => true
+    | .Sudo_2Op_6Settle, .Sudo_2Op_6Settle => true
+    | .Sudo_2Op_11BenchWhite0, .Sudo_2Op_11BenchWhite0 => true
+    | .Sudo_2Op_8BenchAdd, .Sudo_2Op_8BenchAdd => true
+    | .Sudo_2Op_9BenchRead, .Sudo_2Op_9BenchRead => true
+    | .Sudo_2Op_10TallyStart, .Sudo_2Op_10TallyStart => true
+    | .Sudo_2Op_9TallyFlip, .Sudo_2Op_9TallyFlip => true
+    | .Sudo_2Op_11TallyDouble, .Sudo_2Op_11TallyDouble => true
+    | .Sudo_2Op_8TallyAdd, .Sudo_2Op_8TallyAdd => true
+    | .Sudo_2Op_10TallyClear, .Sudo_2Op_10TallyClear => true
+    | .Sudo_2Op_4Park, .Sudo_2Op_4Park => true
+    | .Sudo_2Op_6Unpark, .Sudo_2Op_6Unpark => true
+    | .Sudo_2Op_10MarkerLift, .Sudo_2Op_10MarkerLift => true
+    | .Sudo_2Op_9PhaseDrop, .Sudo_2Op_9PhaseDrop => true
+    | .Sudo_2Op_12StartCalling, .Sudo_2Op_12StartCalling => true
+    | .Sudo_2Op_8CallHole, .Sudo_2Op_8CallHole => true
+    | .Sudo_2Op_10CallingOff, .Sudo_2Op_10CallingOff => true
+    | .Sudo_2Op_4Fold, .Sudo_2Op_4Fold => true
+    | _, _ => false
+
+instance : SudoRt.SOrd Op where
+  le a b :=
+    let idx : Op → Nat := fun
+      | .Sudo_2Op_3Put .. => 0
+      | .Sudo_2Op_6White0 .. => 1
+      | .Sudo_2Op_4Copy .. => 2
+      | .Sudo_2Op_4Move .. => 3
+      | .Sudo_2Op_5Clear .. => 4
+      | .Sudo_2Op_6Mirror .. => 5
+      | .Sudo_2Op_3Add .. => 6
+      | .Sudo_2Op_3Mul .. => 7
+      | .Sudo_2Op_4Cube .. => 8
+      | .Sudo_2Op_6Settle .. => 9
+      | .Sudo_2Op_11BenchWhite0 .. => 10
+      | .Sudo_2Op_8BenchAdd .. => 11
+      | .Sudo_2Op_9BenchRead .. => 12
+      | .Sudo_2Op_10TallyStart .. => 13
+      | .Sudo_2Op_9TallyFlip .. => 14
+      | .Sudo_2Op_11TallyDouble .. => 15
+      | .Sudo_2Op_8TallyAdd .. => 16
+      | .Sudo_2Op_10TallyClear .. => 17
+      | .Sudo_2Op_4Park .. => 18
+      | .Sudo_2Op_6Unpark .. => 19
+      | .Sudo_2Op_10MarkerLift .. => 20
+      | .Sudo_2Op_9PhaseDrop .. => 21
+      | .Sudo_2Op_12StartCalling .. => 22
+      | .Sudo_2Op_8CallHole .. => 23
+      | .Sudo_2Op_10CallingOff .. => 24
+      | .Sudo_2Op_4Fold .. => 25
+    let ia := idx a; let ib := idx b
+    if ia != ib then decide (ia ≤ ib) else
+    match a, b with
+    | .Sudo_2Op_3Put, .Sudo_2Op_3Put => true
+    | .Sudo_2Op_6White0, .Sudo_2Op_6White0 => true
+    | .Sudo_2Op_4Copy, .Sudo_2Op_4Copy => true
+    | .Sudo_2Op_4Move, .Sudo_2Op_4Move => true
+    | .Sudo_2Op_5Clear, .Sudo_2Op_5Clear => true
+    | .Sudo_2Op_6Mirror, .Sudo_2Op_6Mirror => true
+    | .Sudo_2Op_3Add, .Sudo_2Op_3Add => true
+    | .Sudo_2Op_3Mul, .Sudo_2Op_3Mul => true
+    | .Sudo_2Op_4Cube, .Sudo_2Op_4Cube => true
+    | .Sudo_2Op_6Settle, .Sudo_2Op_6Settle => true
+    | .Sudo_2Op_11BenchWhite0, .Sudo_2Op_11BenchWhite0 => true
+    | .Sudo_2Op_8BenchAdd, .Sudo_2Op_8BenchAdd => true
+    | .Sudo_2Op_9BenchRead, .Sudo_2Op_9BenchRead => true
+    | .Sudo_2Op_10TallyStart, .Sudo_2Op_10TallyStart => true
+    | .Sudo_2Op_9TallyFlip, .Sudo_2Op_9TallyFlip => true
+    | .Sudo_2Op_11TallyDouble, .Sudo_2Op_11TallyDouble => true
+    | .Sudo_2Op_8TallyAdd, .Sudo_2Op_8TallyAdd => true
+    | .Sudo_2Op_10TallyClear, .Sudo_2Op_10TallyClear => true
+    | .Sudo_2Op_4Park, .Sudo_2Op_4Park => true
+    | .Sudo_2Op_6Unpark, .Sudo_2Op_6Unpark => true
+    | .Sudo_2Op_10MarkerLift, .Sudo_2Op_10MarkerLift => true
+    | .Sudo_2Op_9PhaseDrop, .Sudo_2Op_9PhaseDrop => true
+    | .Sudo_2Op_12StartCalling, .Sudo_2Op_12StartCalling => true
+    | .Sudo_2Op_8CallHole, .Sudo_2Op_8CallHole => true
+    | .Sudo_2Op_10CallingOff, .Sudo_2Op_10CallingOff => true
+    | .Sudo_2Op_4Fold, .Sudo_2Op_4Fold => true
+    | _, _ => true
+
+instance : SudoRt.Canon Op where
+  canon
+    | .Sudo_2Op_3Put => SudoRt.canonEnum "Op" "Put" []
+    | .Sudo_2Op_6White0 => SudoRt.canonEnum "Op" "White0" []
+    | .Sudo_2Op_4Copy => SudoRt.canonEnum "Op" "Copy" []
+    | .Sudo_2Op_4Move => SudoRt.canonEnum "Op" "Move" []
+    | .Sudo_2Op_5Clear => SudoRt.canonEnum "Op" "Clear" []
+    | .Sudo_2Op_6Mirror => SudoRt.canonEnum "Op" "Mirror" []
+    | .Sudo_2Op_3Add => SudoRt.canonEnum "Op" "Add" []
+    | .Sudo_2Op_3Mul => SudoRt.canonEnum "Op" "Mul" []
+    | .Sudo_2Op_4Cube => SudoRt.canonEnum "Op" "Cube" []
+    | .Sudo_2Op_6Settle => SudoRt.canonEnum "Op" "Settle" []
+    | .Sudo_2Op_11BenchWhite0 => SudoRt.canonEnum "Op" "BenchWhite0" []
+    | .Sudo_2Op_8BenchAdd => SudoRt.canonEnum "Op" "BenchAdd" []
+    | .Sudo_2Op_9BenchRead => SudoRt.canonEnum "Op" "BenchRead" []
+    | .Sudo_2Op_10TallyStart => SudoRt.canonEnum "Op" "TallyStart" []
+    | .Sudo_2Op_9TallyFlip => SudoRt.canonEnum "Op" "TallyFlip" []
+    | .Sudo_2Op_11TallyDouble => SudoRt.canonEnum "Op" "TallyDouble" []
+    | .Sudo_2Op_8TallyAdd => SudoRt.canonEnum "Op" "TallyAdd" []
+    | .Sudo_2Op_10TallyClear => SudoRt.canonEnum "Op" "TallyClear" []
+    | .Sudo_2Op_4Park => SudoRt.canonEnum "Op" "Park" []
+    | .Sudo_2Op_6Unpark => SudoRt.canonEnum "Op" "Unpark" []
+    | .Sudo_2Op_10MarkerLift => SudoRt.canonEnum "Op" "MarkerLift" []
+    | .Sudo_2Op_9PhaseDrop => SudoRt.canonEnum "Op" "PhaseDrop" []
+    | .Sudo_2Op_12StartCalling => SudoRt.canonEnum "Op" "StartCalling" []
+    | .Sudo_2Op_8CallHole => SudoRt.canonEnum "Op" "CallHole" []
+    | .Sudo_2Op_10CallingOff => SudoRt.canonEnum "Op" "CallingOff" []
+    | .Sudo_2Op_4Fold => SudoRt.canonEnum "Op" "Fold" []
+
+structure TraceStep where
+  sudo_9TraceStep_6player : Int
+  sudo_9TraceStep_5phase : Int
+  sudo_9TraceStep_2op : Op
+  sudo_9TraceStep_4args : Array (Int)
+  sudo_9TraceStep_6before : Board
+  sudo_9TraceStep_5after : Board
+  deriving BEq
+
+instance : Inhabited TraceStep where
+  default := { sudo_9TraceStep_6player := default, sudo_9TraceStep_5phase := default, sudo_9TraceStep_2op := default, sudo_9TraceStep_4args := default, sudo_9TraceStep_6before := default, sudo_9TraceStep_5after := default }
+
+instance : SudoRt.SEq TraceStep where
+  beq a b := SudoRt.SEq.beq a.sudo_9TraceStep_6player b.sudo_9TraceStep_6player && SudoRt.SEq.beq a.sudo_9TraceStep_5phase b.sudo_9TraceStep_5phase && SudoRt.SEq.beq a.sudo_9TraceStep_2op b.sudo_9TraceStep_2op && SudoRt.SEq.beq a.sudo_9TraceStep_4args b.sudo_9TraceStep_4args && SudoRt.SEq.beq a.sudo_9TraceStep_6before b.sudo_9TraceStep_6before && SudoRt.SEq.beq a.sudo_9TraceStep_5after b.sudo_9TraceStep_5after
+
+instance : SudoRt.SOrd TraceStep where
+  le a b :=
+    (if !(SudoRt.SEq.beq a.sudo_9TraceStep_6player b.sudo_9TraceStep_6player) then SudoRt.SOrd.le a.sudo_9TraceStep_6player b.sudo_9TraceStep_6player else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_5phase b.sudo_9TraceStep_5phase) then SudoRt.SOrd.le a.sudo_9TraceStep_5phase b.sudo_9TraceStep_5phase else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_2op b.sudo_9TraceStep_2op) then SudoRt.SOrd.le a.sudo_9TraceStep_2op b.sudo_9TraceStep_2op else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_4args b.sudo_9TraceStep_4args) then SudoRt.SOrd.le a.sudo_9TraceStep_4args b.sudo_9TraceStep_4args else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_6before b.sudo_9TraceStep_6before) then SudoRt.SOrd.le a.sudo_9TraceStep_6before b.sudo_9TraceStep_6before else (if !(SudoRt.SEq.beq a.sudo_9TraceStep_5after b.sudo_9TraceStep_5after) then SudoRt.SOrd.le a.sudo_9TraceStep_5after b.sudo_9TraceStep_5after else true))))))
+
+instance : SudoRt.Canon TraceStep where
+  canon r := SudoRt.canonRecord "TraceStep" [SudoRt.Canon.canon r.sudo_9TraceStep_6player, SudoRt.Canon.canon r.sudo_9TraceStep_5phase, SudoRt.Canon.canon r.sudo_9TraceStep_2op, SudoRt.Canon.canon r.sudo_9TraceStep_4args, SudoRt.Canon.canon r.sudo_9TraceStep_6before, SudoRt.Canon.canon r.sudo_9TraceStep_5after]
+
+structure Tracer where
+  sudo_6Tracer_6player : Int
+  sudo_6Tracer_5steps : Array (TraceStep)
+  deriving BEq
+
+instance : Inhabited Tracer where
+  default := { sudo_6Tracer_6player := default, sudo_6Tracer_5steps := default }
+
+instance : SudoRt.SEq Tracer where
+  beq a b := SudoRt.SEq.beq a.sudo_6Tracer_6player b.sudo_6Tracer_6player && SudoRt.SEq.beq a.sudo_6Tracer_5steps b.sudo_6Tracer_5steps
+
+instance : SudoRt.SOrd Tracer where
+  le a b :=
+    (if !(SudoRt.SEq.beq a.sudo_6Tracer_6player b.sudo_6Tracer_6player) then SudoRt.SOrd.le a.sudo_6Tracer_6player b.sudo_6Tracer_6player else (if !(SudoRt.SEq.beq a.sudo_6Tracer_5steps b.sudo_6Tracer_5steps) then SudoRt.SOrd.le a.sudo_6Tracer_5steps b.sudo_6Tracer_5steps else true))
+
+instance : SudoRt.Canon Tracer where
+  canon r := SudoRt.canonRecord "Tracer" [SudoRt.Canon.canon r.sudo_6Tracer_6player, SudoRt.Canon.canon r.sudo_6Tracer_5steps]
+
+structure Throw where
+  sudo_5Throw_5index : Int
+  sudo_5Throw_4face : Int
+  sudo_5Throw_7attempt : Int
+  sudo_5Throw_4pair : Int
+  sudo_5Throw_4kept : Bool
+  deriving BEq
+
+instance : Inhabited Throw where
+  default := { sudo_5Throw_5index := default, sudo_5Throw_4face := default, sudo_5Throw_7attempt := default, sudo_5Throw_4pair := default, sudo_5Throw_4kept := default }
+
+instance : SudoRt.SEq Throw where
+  beq a b := SudoRt.SEq.beq a.sudo_5Throw_5index b.sudo_5Throw_5index && SudoRt.SEq.beq a.sudo_5Throw_4face b.sudo_5Throw_4face && SudoRt.SEq.beq a.sudo_5Throw_7attempt b.sudo_5Throw_7attempt && SudoRt.SEq.beq a.sudo_5Throw_4pair b.sudo_5Throw_4pair && SudoRt.SEq.beq a.sudo_5Throw_4kept b.sudo_5Throw_4kept
+
+instance : SudoRt.SOrd Throw where
+  le a b :=
+    (if !(SudoRt.SEq.beq a.sudo_5Throw_5index b.sudo_5Throw_5index) then SudoRt.SOrd.le a.sudo_5Throw_5index b.sudo_5Throw_5index else (if !(SudoRt.SEq.beq a.sudo_5Throw_4face b.sudo_5Throw_4face) then SudoRt.SOrd.le a.sudo_5Throw_4face b.sudo_5Throw_4face else (if !(SudoRt.SEq.beq a.sudo_5Throw_7attempt b.sudo_5Throw_7attempt) then SudoRt.SOrd.le a.sudo_5Throw_7attempt b.sudo_5Throw_7attempt else (if !(SudoRt.SEq.beq a.sudo_5Throw_4pair b.sudo_5Throw_4pair) then SudoRt.SOrd.le a.sudo_5Throw_4pair b.sudo_5Throw_4pair else (if !(SudoRt.SEq.beq a.sudo_5Throw_4kept b.sudo_5Throw_4kept) then SudoRt.SOrd.le a.sudo_5Throw_4kept b.sudo_5Throw_4kept else true)))))
+
+instance : SudoRt.Canon Throw where
+  canon r := SudoRt.canonRecord "Throw" [SudoRt.Canon.canon r.sudo_5Throw_5index, SudoRt.Canon.canon r.sudo_5Throw_4face, SudoRt.Canon.canon r.sudo_5Throw_7attempt, SudoRt.Canon.canon r.sudo_5Throw_4pair, SudoRt.Canon.canon r.sudo_5Throw_4kept]
+
+structure Trace where
+  sudo_5Trace_8throws_a : Array (Throw)
+  sudo_5Trace_8throws_b : Array (Throw)
+  sudo_5Trace_8rolled_a : Bool
+  sudo_5Trace_8rolled_b : Bool
+  sudo_5Trace_7cells_a : Array (Int)
+  sudo_5Trace_7cells_b : Array (Int)
+  sudo_5Trace_7start_a : Board
+  sudo_5Trace_7start_b : Board
+  sudo_5Trace_5steps : Array (TraceStep)
+  sudo_5Trace_2ok : Bool
+  sudo_5Trace_5error : Array (Int)
+  sudo_5Trace_1a : Player
+  sudo_5Trace_1b : Player
+  deriving BEq
+
+instance : Inhabited Trace where
+  default := { sudo_5Trace_8throws_a := default, sudo_5Trace_8throws_b := default, sudo_5Trace_8rolled_a := default, sudo_5Trace_8rolled_b := default, sudo_5Trace_7cells_a := default, sudo_5Trace_7cells_b := default, sudo_5Trace_7start_a := default, sudo_5Trace_7start_b := default, sudo_5Trace_5steps := default, sudo_5Trace_2ok := default, sudo_5Trace_5error := default, sudo_5Trace_1a := default, sudo_5Trace_1b := default }
+
+instance : SudoRt.SEq Trace where
+  beq a b := SudoRt.SEq.beq a.sudo_5Trace_8throws_a b.sudo_5Trace_8throws_a && SudoRt.SEq.beq a.sudo_5Trace_8throws_b b.sudo_5Trace_8throws_b && SudoRt.SEq.beq a.sudo_5Trace_8rolled_a b.sudo_5Trace_8rolled_a && SudoRt.SEq.beq a.sudo_5Trace_8rolled_b b.sudo_5Trace_8rolled_b && SudoRt.SEq.beq a.sudo_5Trace_7cells_a b.sudo_5Trace_7cells_a && SudoRt.SEq.beq a.sudo_5Trace_7cells_b b.sudo_5Trace_7cells_b && SudoRt.SEq.beq a.sudo_5Trace_7start_a b.sudo_5Trace_7start_a && SudoRt.SEq.beq a.sudo_5Trace_7start_b b.sudo_5Trace_7start_b && SudoRt.SEq.beq a.sudo_5Trace_5steps b.sudo_5Trace_5steps && SudoRt.SEq.beq a.sudo_5Trace_2ok b.sudo_5Trace_2ok && SudoRt.SEq.beq a.sudo_5Trace_5error b.sudo_5Trace_5error && SudoRt.SEq.beq a.sudo_5Trace_1a b.sudo_5Trace_1a && SudoRt.SEq.beq a.sudo_5Trace_1b b.sudo_5Trace_1b
+
+instance : SudoRt.SOrd Trace where
+  le a b :=
+    (if !(SudoRt.SEq.beq a.sudo_5Trace_8throws_a b.sudo_5Trace_8throws_a) then SudoRt.SOrd.le a.sudo_5Trace_8throws_a b.sudo_5Trace_8throws_a else (if !(SudoRt.SEq.beq a.sudo_5Trace_8throws_b b.sudo_5Trace_8throws_b) then SudoRt.SOrd.le a.sudo_5Trace_8throws_b b.sudo_5Trace_8throws_b else (if !(SudoRt.SEq.beq a.sudo_5Trace_8rolled_a b.sudo_5Trace_8rolled_a) then SudoRt.SOrd.le a.sudo_5Trace_8rolled_a b.sudo_5Trace_8rolled_a else (if !(SudoRt.SEq.beq a.sudo_5Trace_8rolled_b b.sudo_5Trace_8rolled_b) then SudoRt.SOrd.le a.sudo_5Trace_8rolled_b b.sudo_5Trace_8rolled_b else (if !(SudoRt.SEq.beq a.sudo_5Trace_7cells_a b.sudo_5Trace_7cells_a) then SudoRt.SOrd.le a.sudo_5Trace_7cells_a b.sudo_5Trace_7cells_a else (if !(SudoRt.SEq.beq a.sudo_5Trace_7cells_b b.sudo_5Trace_7cells_b) then SudoRt.SOrd.le a.sudo_5Trace_7cells_b b.sudo_5Trace_7cells_b else (if !(SudoRt.SEq.beq a.sudo_5Trace_7start_a b.sudo_5Trace_7start_a) then SudoRt.SOrd.le a.sudo_5Trace_7start_a b.sudo_5Trace_7start_a else (if !(SudoRt.SEq.beq a.sudo_5Trace_7start_b b.sudo_5Trace_7start_b) then SudoRt.SOrd.le a.sudo_5Trace_7start_b b.sudo_5Trace_7start_b else (if !(SudoRt.SEq.beq a.sudo_5Trace_5steps b.sudo_5Trace_5steps) then SudoRt.SOrd.le a.sudo_5Trace_5steps b.sudo_5Trace_5steps else (if !(SudoRt.SEq.beq a.sudo_5Trace_2ok b.sudo_5Trace_2ok) then SudoRt.SOrd.le a.sudo_5Trace_2ok b.sudo_5Trace_2ok else (if !(SudoRt.SEq.beq a.sudo_5Trace_5error b.sudo_5Trace_5error) then SudoRt.SOrd.le a.sudo_5Trace_5error b.sudo_5Trace_5error else (if !(SudoRt.SEq.beq a.sudo_5Trace_1a b.sudo_5Trace_1a) then SudoRt.SOrd.le a.sudo_5Trace_1a b.sudo_5Trace_1a else (if !(SudoRt.SEq.beq a.sudo_5Trace_1b b.sudo_5Trace_1b) then SudoRt.SOrd.le a.sudo_5Trace_1b b.sudo_5Trace_1b else true)))))))))))))
+
+instance : SudoRt.Canon Trace where
+  canon r := SudoRt.canonRecord "Trace" [SudoRt.Canon.canon r.sudo_5Trace_8throws_a, SudoRt.Canon.canon r.sudo_5Trace_8throws_b, SudoRt.Canon.canon r.sudo_5Trace_8rolled_a, SudoRt.Canon.canon r.sudo_5Trace_8rolled_b, SudoRt.Canon.canon r.sudo_5Trace_7cells_a, SudoRt.Canon.canon r.sudo_5Trace_7cells_b, SudoRt.Canon.canon r.sudo_5Trace_7start_a, SudoRt.Canon.canon r.sudo_5Trace_7start_b, SudoRt.Canon.canon r.sudo_5Trace_5steps, SudoRt.Canon.canon r.sudo_5Trace_2ok, SudoRt.Canon.canon r.sudo_5Trace_5error, SudoRt.Canon.canon r.sudo_5Trace_1a, SudoRt.Canon.canon r.sudo_5Trace_1b]
+
 def demo_tier : Tier := ({ sudo_4Tier_4name := (#[68, 101, 109, 111] : Array Int), sudo_4Tier_1n := (7 : Int), sudo_4Tier_1k := (5 : Int), sudo_4Tier_1w := (2 : Int), sudo_4Tier_1h := (4 : Int), sudo_4Tier_1r := (1 : Int), sudo_4Tier_8benchlen := (20 : Int), sudo_4Tier_7combgap := (0 : Int), sudo_4Tier_7control := (16 : Int), sudo_4Tier_6script := (5 : Int), sudo_4Tier_4demo := true, sudo_4Tier_5cells := (2 : Int), sudo_4Tier_7foldsrc := (#[(2 : Int), (3 : Int)] : Array (Int)), sudo_4Tier_7folddst := (#[(0 : Int), (1 : Int)] : Array (Int)), sudo_4Tier_8keeprows := (2 : Int), sudo_4Tier_7georows := (4 : Int), sudo_4Tier_6geoper := (1 : Int), sudo_4Tier_8geofirst := (1 : Int), sudo_4Tier_9geodouble := false, sudo_4Tier_7geowork := (1 : Int), sudo_4Tier_6geokey := (#[(2 : Int)] : Array (Int)) } : Tier)
 
 def toy_tier : Tier := ({ sudo_4Tier_4name := (#[84, 111, 121] : Array Int), sudo_4Tier_1n := (23 : Int), sudo_4Tier_1k := (15 : Int), sudo_4Tier_1w := (8 : Int), sudo_4Tier_1h := (3 : Int), sudo_4Tier_1r := (1 : Int), sudo_4Tier_8benchlen := (72 : Int), sudo_4Tier_7combgap := (2 : Int), sudo_4Tier_7control := (40 : Int), sudo_4Tier_6script := (15 : Int), sudo_4Tier_4demo := false, sudo_4Tier_5cells := (16 : Int), sudo_4Tier_7foldsrc := (#[(2 : Int)] : Array (Int)), sudo_4Tier_7folddst := (#[(0 : Int)] : Array (Int)), sudo_4Tier_8keeprows := (2 : Int), sudo_4Tier_7georows := (3 : Int), sudo_4Tier_6geoper := (3 : Int), sudo_4Tier_8geofirst := (2 : Int), sudo_4Tier_9geodouble := false, sudo_4Tier_7geowork := (4 : Int), sudo_4Tier_6geokey := (#[(5 : Int)] : Array (Int)) } : Tier)
@@ -365,6 +627,34 @@ def op_chord : Int := (3 : Int)
 def op_fadd : Int := (4 : Int)
 
 def op_count : Int := (5 : Int)
+
+def pv_bench : Int := (8 : Int)
+
+def pv_control : Int := (9 : Int)
+
+def why_step : Int := (0 : Int)
+
+def why_marker : Int := (1 : Int)
+
+def why_settle : Int := (2 : Int)
+
+def why_slide : Int := (3 : Int)
+
+def why_copy : Int := (4 : Int)
+
+def why_lift : Int := (5 : Int)
+
+def why_lay : Int := (6 : Int)
+
+def why_fold_lift : Int := (7 : Int)
+
+def why_fold_drop : Int := (8 : Int)
+
+def why_comb_lift : Int := (9 : Int)
+
+def why_comb_drop : Int := (10 : Int)
+
+def why_key_fold : Int := (11 : Int)
 
 def tier (name : Array (Int)) : Except SudoRt.Trap (Tier) :=
   do
@@ -5822,6 +6112,5222 @@ def fold (t : Tier) (x : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
     let b := _iw02227
     let _sudo_h0 := _ret2226
     pure _sudo_h0
+
+def pegs_of (b : Board) : Except SudoRt.Trap (Array (Array (Int))) :=
+  do
+    let out := (#[] : Array (Array (Int)))
+    let _t2242 ← SudoRt.subI home_count (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t2242
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init2275 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init2275 fuel (fun σ =>
+    let h := σ.1
+    let out := σ.2
+    do
+      if h > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (h, out))
+      else
+        match ← ((do
+  let _t2233 ← SudoRt.atL (b).sudo_5Board_4held h
+  if _t2233 then
+    do
+      let _t2234 ← SudoRt.atL (b).sudo_5Board_4home h
+      let _mb2235 := SudoRt.appendL out _t2234
+      let ⟨_nr2236, _⟩ := _mb2235
+      let out := _nr2236
+      let _hm2228 := ()
+      let _u2237 := _hm2228
+      pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) out)
+  else
+    do
+      let _t2238 ← SudoRt.filledL ((b).sudo_5Board_1t).sudo_4Tier_1n (0 : Int)
+      let _mb2239 := SudoRt.appendL out _t2238
+      let ⟨_nr2240, _⟩ := _mb2239
+      let out := _nr2240
+      let _hm2229 := ()
+      let _u2241 := _hm2229
+      pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (h, _fs))
+        | .cont _fs => do
+            if h == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (h, _fs))
+            else do
+              let i' ← SudoRt.addI h (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) (i', _fs))) (fun σ =>
+    let out := σ.2
+    do
+      let _t2243 ← SudoRt.filledL ((b).sudo_5Board_1t).sudo_4Tier_8benchlen (0 : Int)
+      let strip := _t2243
+      if (b).sudo_5Board_8bench_on then
+        do
+          let _t2249 ← SudoRt.subI (SudoRt.listLen (b).sudo_5Board_5bench) (1 : Int)
+          let _fromV := (0 : Int)
+          let _toV := _t2249
+          let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+          let _init2262 := (_fromV, strip)
+          let _out ← (SudoRt.runLoopOn (ρ := Array (Array (Int))) _init2262 fuel (fun σ =>
+    let i := σ.1
+    let strip := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, strip))
+      else
+        match ← ((do
+  let _ix2245 := i
+  let _t2246 ← SudoRt.atL (b).sudo_5Board_5bench i
+  let _t2247 ← SudoRt.putL strip _ix2245 _t2246
+  let strip := _t2247
+  pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) strip)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Array (Int))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Array (Int))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Array (Int))) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Array (Int))) (i', _fs))) (fun σ =>
+    let strip := σ.2
+    do
+      let _mb2250 := SudoRt.appendL out strip
+      let ⟨_nr2251, _⟩ := _mb2250
+      let out := _nr2251
+      let _hm2230 := ()
+      let _u2252 := _hm2230
+      let row := (b).sudo_5Board_3row
+      if (decide ((b).sudo_5Board_6marker ≥ (0 : Int))) then
+        do
+          let _ix2254 := (b).sudo_5Board_6marker
+          let _t2255 ← SudoRt.putL row _ix2254 (1 : Int)
+          let row := _t2255
+          let _mb2256 := SudoRt.appendL out row
+          let ⟨_nr2257, _⟩ := _mb2256
+          let out := _nr2257
+          let _hm2231 := ()
+          let _u2258 := _hm2231
+          pure out
+      else
+        do
+          let _mb2259 := SudoRt.appendL out row
+          let ⟨_nr2260, _⟩ := _mb2259
+          let out := _nr2260
+          let _hm2231 := ()
+          let _u2261 := _hm2231
+          pure out) (fun r => pure r))
+          pure _out
+      else
+        do
+          let _mb2263 := SudoRt.appendL out strip
+          let ⟨_nr2264, _⟩ := _mb2263
+          let out := _nr2264
+          let _hm2230 := ()
+          let _u2265 := _hm2230
+          let row := (b).sudo_5Board_3row
+          if (decide ((b).sudo_5Board_6marker ≥ (0 : Int))) then
+            do
+              let _ix2267 := (b).sudo_5Board_6marker
+              let _t2268 ← SudoRt.putL row _ix2267 (1 : Int)
+              let row := _t2268
+              let _mb2269 := SudoRt.appendL out row
+              let ⟨_nr2270, _⟩ := _mb2269
+              let out := _nr2270
+              let _hm2231 := ()
+              let _u2271 := _hm2231
+              pure out
+          else
+            do
+              let _mb2272 := SudoRt.appendL out row
+              let ⟨_nr2273, _⟩ := _mb2272
+              let out := _nr2273
+              let _hm2231 := ()
+              let _u2274 := _hm2231
+              pure out) (fun r => pure r))
+    pure _out
+
+def why_names : Except SudoRt.Trap (Array (Array (Int))) :=
+  do
+    pure (#[(#[115, 116, 101, 112] : Array Int), (#[109, 97, 114, 107, 101, 114] : Array Int), (#[115, 101, 116, 116, 108, 101] : Array Int), (#[115, 108, 105, 100, 101] : Array Int), (#[99, 111, 112, 121] : Array Int), (#[108, 105, 102, 116] : Array Int), (#[108, 97, 121] : Array Int), (#[102, 111, 108, 100, 32, 108, 105, 102, 116] : Array Int), (#[102, 111, 108, 100, 32, 100, 114, 111, 112] : Array Int), (#[99, 111, 109, 98, 32, 108, 105, 102, 116] : Array Int), (#[99, 111, 109, 98, 32, 100, 114, 111, 112] : Array Int), (#[107, 101, 121, 32, 102, 111, 108, 100] : Array Int)] : Array (Array (Int)))
+
+def diff_moves (before : Array (Array (Int))) (after : Array (Array (Int))) (why : Int) (moves : Array (PegMove)) : Except SudoRt.Trap (Array (PegMove)) :=
+  do
+    let _t2296 ← SudoRt.subI (SudoRt.listLen before) (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t2296
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init2297 := (_fromV, moves)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (PegMove)) _init2297 fuel (fun σ =>
+    let k := σ.1
+    let moves := σ.2
+    do
+      if k > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (PegMove)) (k, moves))
+      else
+        match ← ((do
+  let _t2291 ← SudoRt.atL before k
+  let _t2293 ← SudoRt.subI (SudoRt.listLen _t2291) (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t2293
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init2294 := (_fromV, moves)
+  let _out ← (SudoRt.runLoopOn (ρ := Array (PegMove)) _init2294 fuel (fun σ =>
+    let i := σ.1
+    let moves := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (PegMove)) (i, moves))
+      else
+        match ← ((do
+  let _t2279 ← SudoRt.atL before k
+  let _t2280 ← SudoRt.atL _t2279 i
+  let _t2281 ← SudoRt.atL after k
+  let _t2282 ← SudoRt.atL _t2281 i
+  if (!(SudoRt.SEq.beq _t2280 _t2282)) then
+    do
+      let _t2284 ← SudoRt.atL before k
+      let _t2285 ← SudoRt.atL _t2284 i
+      let _t2286 ← SudoRt.atL after k
+      let _t2287 ← SudoRt.atL _t2286 i
+      let _mb2288 := SudoRt.appendL moves ({ sudo_7PegMove_4band := k, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := _t2285, sudo_7PegMove_4into := _t2287, sudo_7PegMove_3why := why } : PegMove)
+      let ⟨_nr2289, _⟩ := _mb2288
+      let moves := _nr2289
+      let _hm2276 := ()
+      let _u2290 := _hm2276
+      pure (SudoRt.Flow.cont (ρ := Array (PegMove)) moves)
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := Array (PegMove)) moves)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (PegMove)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (PegMove)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (PegMove)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (PegMove)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (PegMove)) (i', _fs))) (fun σ =>
+    let moves := σ.2
+    do
+      pure (SudoRt.Flow.cont (ρ := Array (PegMove)) moves)) (fun r => pure (SudoRt.Flow.ret (ρ := Array (PegMove)) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (PegMove)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (PegMove)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (PegMove)) (k, _fs))
+        | .cont _fs => do
+            if k == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (PegMove)) (k, _fs))
+            else do
+              let i' ← SudoRt.addI k (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (PegMove)) (i', _fs))) (fun σ =>
+    let moves := σ.2
+    do
+      pure moves) (fun r => pure r))
+    pure _out
+
+def «apply_move» (p : Array (Array (Int))) (m : PegMove) : Except SudoRt.Trap (Array (Array (Int))) :=
+  do
+    let _t2298 ← SudoRt.atL p (m).sudo_7PegMove_4band
+    let r := _t2298
+    let _t2299 ← SudoRt.atL r (m).sudo_7PegMove_4hole
+    let _as2300 ← SudoRt.sudoAssertEq _t2299 (m).sudo_7PegMove_4from 1642
+    let _ix2301 := (m).sudo_7PegMove_4hole
+    let _t2302 ← SudoRt.putL r _ix2301 (m).sudo_7PegMove_4into
+    let r := _t2302
+    let _ix2303 := (m).sudo_7PegMove_4band
+    let _t2304 ← SudoRt.putL p _ix2303 r
+    let p := _t2304
+    pure p
+
+def trace_bit (x : Bool) : Except SudoRt.Trap (Int) :=
+  do
+    if x then
+      do
+        pure (1 : Int)
+    else
+      do
+        pure (0 : Int)
+
+def trace_cat (x : Array (Int)) (y : Array (Int)) : Except SudoRt.Trap (Array (Int)) :=
+  do
+    let out := x
+    let _t2312 ← SudoRt.subI (SudoRt.listLen y) (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t2312
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init2313 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init2313 fuel (fun σ =>
+    let i := σ.1
+    let out := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
+      else
+        match ← ((do
+  let _t2307 ← SudoRt.atL y i
+  let _mb2308 := SudoRt.appendL out _t2307
+  let ⟨_nr2309, _⟩ := _mb2308
+  let out := _nr2309
+  let _hm2305 := ()
+  let _u2310 := _hm2305
+  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let out := σ.2
+    do
+      pure out) (fun r => pure r))
+    pure _out
+
+def trace_suffix (xs : Array (Int)) (m : Int) : Except SudoRt.Trap (Array (Int)) :=
+  do
+    let out := (#[] : Array (Int))
+    let _t2321 ← SudoRt.subI (SudoRt.listLen xs) (1 : Int)
+    let _fromV := m
+    let _toV := _t2321
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init2322 := (_fromV, out)
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init2322 fuel (fun σ =>
+    let i := σ.1
+    let out := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, out))
+      else
+        match ← ((do
+  let _t2316 ← SudoRt.atL xs i
+  let _mb2317 := SudoRt.appendL out _t2316
+  let ⟨_nr2318, _⟩ := _mb2317
+  let out := _nr2318
+  let _hm2314 := ()
+  let _u2319 := _hm2314
+  pure (SudoRt.Flow.cont (ρ := Array (Int)) out)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let out := σ.2
+    do
+      pure out) (fun r => pure r))
+    pure _out
+
+def trace_tally_flip (b : Board) (j : Int) : Except SudoRt.Trap (Board) :=
+  do
+    let _io2323 ← tally_put b j (2 : Int)
+    let b := _io2323
+    let _t2324 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
+    let _t2325 := ({ (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t2324 } : Costs)
+    let _t2326 := ({ b with sudo_5Board_4cost := _t2325 } : Board)
+    let b := _t2326
+    pure b
+
+def run_op (b : Board) (op : Op) (a : Array (Int)) : Except SudoRt.Trap (Board) :=
+  do
+    if (SudoRt.SEq.beq op Op.Sudo_2Op_3Put) then
+      do
+        let _t2328 ← SudoRt.atL a (0 : Int)
+        let _t2329 ← trace_suffix a (1 : Int)
+        let _io2330 ← put b _t2328 _t2329
+        let b := _io2330
+        pure b
+    else
+      do
+        if (SudoRt.SEq.beq op Op.Sudo_2Op_6White0) then
+          do
+            let _t2332 ← SudoRt.atL a (0 : Int)
+            let _io2333 ← white0 b _t2332
+            let b := _io2333
+            pure b
+        else
+          do
+            if (SudoRt.SEq.beq op Op.Sudo_2Op_4Copy) then
+              do
+                let _t2335 ← SudoRt.atL a (0 : Int)
+                let _t2336 ← SudoRt.atL a (1 : Int)
+                let _t2337 ← SudoRt.atL a (2 : Int)
+                let _io2339 ← copy_band b _t2335 _t2336 (SudoRt.SEq.beq _t2337 (1 : Int))
+                let b := _io2339
+                pure b
+            else
+              do
+                if (SudoRt.SEq.beq op Op.Sudo_2Op_4Move) then
+                  do
+                    let _t2341 ← SudoRt.atL a (0 : Int)
+                    let _t2342 ← SudoRt.atL a (1 : Int)
+                    let _io2343 ← move_band b _t2341 _t2342
+                    let b := _io2343
+                    pure b
+                else
+                  do
+                    if (SudoRt.SEq.beq op Op.Sudo_2Op_5Clear) then
+                      do
+                        let _t2345 ← SudoRt.atL a (0 : Int)
+                        let _io2346 ← clear b _t2345
+                        let b := _io2346
+                        pure b
+                    else
+                      do
+                        if (SudoRt.SEq.beq op Op.Sudo_2Op_6Mirror) then
+                          do
+                            let _t2348 ← SudoRt.atL a (0 : Int)
+                            let _io2349 ← mirror b _t2348
+                            let b := _io2349
+                            pure b
+                        else
+                          do
+                            if (SudoRt.SEq.beq op Op.Sudo_2Op_3Add) then
+                              do
+                                let _t2351 ← SudoRt.atL a (0 : Int)
+                                let _t2352 ← SudoRt.atL a (1 : Int)
+                                let _t2353 ← SudoRt.atL a (2 : Int)
+                                let _io2355 ← add b _t2351 _t2352 (SudoRt.SEq.beq _t2353 (1 : Int))
+                                let b := _io2355
+                                pure b
+                            else
+                              do
+                                if (SudoRt.SEq.beq op Op.Sudo_2Op_3Mul) then
+                                  do
+                                    let _t2357 ← SudoRt.atL a (0 : Int)
+                                    let _t2358 ← SudoRt.atL a (1 : Int)
+                                    let _t2359 ← SudoRt.atL a (2 : Int)
+                                    let _t2360 ← SudoRt.atL a (3 : Int)
+                                    let _t2362 ← SudoRt.atL a (4 : Int)
+                                    let _t2364 ← SudoRt.atL a (5 : Int)
+                                    let _io2366 ← mul b _t2357 _t2358 _t2359 (SudoRt.SEq.beq _t2360 (1 : Int)) (SudoRt.SEq.beq _t2362 (1 : Int)) (SudoRt.SEq.beq _t2364 (1 : Int))
+                                    let b := _io2366
+                                    pure b
+                                else
+                                  do
+                                    if (SudoRt.SEq.beq op Op.Sudo_2Op_4Cube) then
+                                      do
+                                        let _t2368 ← SudoRt.atL a (0 : Int)
+                                        let _t2369 ← SudoRt.atL a (1 : Int)
+                                        let _io2370 ← cube b _t2368 _t2369
+                                        let b := _io2370
+                                        pure b
+                                    else
+                                      do
+                                        if (SudoRt.SEq.beq op Op.Sudo_2Op_6Settle) then
+                                          do
+                                            let _io2372 ← settle b
+                                            let b := _io2372
+                                            pure b
+                                        else
+                                          do
+                                            if (SudoRt.SEq.beq op Op.Sudo_2Op_11BenchWhite0) then
+                                              do
+                                                let _io2374 ← bench_white0 b
+                                                let b := _io2374
+                                                pure b
+                                            else
+                                              do
+                                                if (SudoRt.SEq.beq op Op.Sudo_2Op_8BenchAdd) then
+                                                  do
+                                                    let _t2376 ← SudoRt.atL a (0 : Int)
+                                                    let _t2377 ← SudoRt.atL a (1 : Int)
+                                                    let _io2379 ← bench_add b _t2376 (SudoRt.SEq.beq _t2377 (1 : Int))
+                                                    let b := _io2379
+                                                    pure b
+                                                else
+                                                  do
+                                                    if (SudoRt.SEq.beq op Op.Sudo_2Op_9BenchRead) then
+                                                      do
+                                                        let _io2381 ← bench_read_and_clear b
+                                                        let ⟨_ret2382, _iw02383⟩ := _io2381
+                                                        let b := _iw02383
+                                                        pure b
+                                                    else
+                                                      do
+                                                        if (SudoRt.SEq.beq op Op.Sudo_2Op_10TallyStart) then
+                                                          do
+                                                            let _io2385 ← tally_start b
+                                                            let b := _io2385
+                                                            pure b
+                                                        else
+                                                          do
+                                                            if (SudoRt.SEq.beq op Op.Sudo_2Op_9TallyFlip) then
+                                                              do
+                                                                let _t2387 ← SudoRt.atL a (0 : Int)
+                                                                let _io2388 ← trace_tally_flip b _t2387
+                                                                let b := _io2388
+                                                                pure b
+                                                            else
+                                                              do
+                                                                if (SudoRt.SEq.beq op Op.Sudo_2Op_11TallyDouble) then
+                                                                  do
+                                                                    let _io2390 ← tally_double b
+                                                                    let b := _io2390
+                                                                    pure b
+                                                                else
+                                                                  do
+                                                                    if (SudoRt.SEq.beq op Op.Sudo_2Op_8TallyAdd) then
+                                                                      do
+                                                                        let _io2392 ← tally_add_one b
+                                                                        let b := _io2392
+                                                                        pure b
+                                                                    else
+                                                                      do
+                                                                        if (SudoRt.SEq.beq op Op.Sudo_2Op_10TallyClear) then
+                                                                          do
+                                                                            let _io2394 ← tally_clear b
+                                                                            let b := _io2394
+                                                                            pure b
+                                                                        else
+                                                                          do
+                                                                            if (SudoRt.SEq.beq op Op.Sudo_2Op_4Park) then
+                                                                              do
+                                                                                let _t2396 ← SudoRt.atL a (0 : Int)
+                                                                                let _io2397 ← park_rung b _t2396
+                                                                                let b := _io2397
+                                                                                pure b
+                                                                            else
+                                                                              do
+                                                                                if (SudoRt.SEq.beq op Op.Sudo_2Op_6Unpark) then
+                                                                                  do
+                                                                                    let _io2399 ← unpark_rung b
+                                                                                    let b := _io2399
+                                                                                    pure b
+                                                                                else
+                                                                                  do
+                                                                                    if (SudoRt.SEq.beq op Op.Sudo_2Op_10MarkerLift) then
+                                                                                      do
+                                                                                        let _io2401 ← marker_lift b
+                                                                                        let b := _io2401
+                                                                                        pure b
+                                                                                    else
+                                                                                      do
+                                                                                        if (SudoRt.SEq.beq op Op.Sudo_2Op_9PhaseDrop) then
+                                                                                          do
+                                                                                            let _io2403 ← phase_drop b
+                                                                                            let b := _io2403
+                                                                                            pure b
+                                                                                        else
+                                                                                          do
+                                                                                            if (SudoRt.SEq.beq op Op.Sudo_2Op_12StartCalling) then
+                                                                                              do
+                                                                                                let _io2405 ← start_calling b
+                                                                                                let b := _io2405
+                                                                                                pure b
+                                                                                            else
+                                                                                              do
+                                                                                                if (SudoRt.SEq.beq op Op.Sudo_2Op_8CallHole) then
+                                                                                                  do
+                                                                                                    let _t2407 ← new_board (b).sudo_5Board_1t
+                                                                                                    let sender := _t2407
+                                                                                                    let _t2408 ← SudoRt.atL a (0 : Int)
+                                                                                                    let _t2409 ← plan_src _t2408
+                                                                                                    let _t2410 ← trace_suffix a (2 : Int)
+                                                                                                    let _io2411 ← put sender _t2409 _t2410
+                                                                                                    let sender := _io2411
+                                                                                                    let _t2412 ← SudoRt.atL a (0 : Int)
+                                                                                                    let _t2413 ← SudoRt.atL a (1 : Int)
+                                                                                                    let _io2414 ← call_hole b sender _t2412 _t2413
+                                                                                                    let b := _io2414
+                                                                                                    pure b
+                                                                                                else
+                                                                                                  do
+                                                                                                    if (SudoRt.SEq.beq op Op.Sudo_2Op_10CallingOff) then
+                                                                                                      do
+                                                                                                        let _io2416 ← set_control b (b).sudo_5Board_12calling_hole (0 : Int)
+                                                                                                        let b := _io2416
+                                                                                                        let _t2417 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_4ctrl (1 : Int)
+                                                                                                        let _t2418 := ({ (b).sudo_5Board_4cost with sudo_5Costs_4ctrl := _t2417 } : Costs)
+                                                                                                        let _t2419 := ({ b with sudo_5Board_4cost := _t2418 } : Board)
+                                                                                                        let b := _t2419
+                                                                                                        pure b
+                                                                                                    else
+                                                                                                      do
+                                                                                                        let _as2420 ← SudoRt.sudoAssert false 1753
+                                                                                                        pure b
+
+def record_step (b : Board) (tr : Tracer) (op : Op) (a : Array (Int)) : Except SudoRt.Trap ((Board) × (Tracer)) :=
+  do
+    let before := b
+    let _io2422 ← run_op b op a
+    let b := _io2422
+    let _t2423 ← pegs_of before
+    let _t2424 ← pegs_of b
+    if (!(SudoRt.SEq.beq _t2423 _t2424)) then
+      do
+        let _mb2426 := SudoRt.appendL (tr).sudo_6Tracer_5steps ({ sudo_9TraceStep_6player := (tr).sudo_6Tracer_6player, sudo_9TraceStep_5phase := (b).sudo_5Board_5phase, sudo_9TraceStep_2op := op, sudo_9TraceStep_4args := a, sudo_9TraceStep_6before := before, sudo_9TraceStep_5after := b } : TraceStep)
+        let ⟨_nr2427, _⟩ := _mb2426
+        let _t2428 := ({ tr with sudo_6Tracer_5steps := _nr2427 } : Tracer)
+        let tr := _t2428
+        let _hm2421 := ()
+        let _u2429 := _hm2421
+        pure (b, tr)
+    else
+      do
+        pure (b, tr)
+
+def trace_lane_fold (b : Board) (strip : Array (Int)) (moves : Array (PegMove)) : Except SudoRt.Trap ((Board) × (Array (Int)) × (Array (PegMove))) :=
+  do
+    let t := (b).sudo_5Board_1t
+    let top := (0 : Int)
+    let _t2437 ← SudoRt.subI (SudoRt.listLen strip) (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t2437
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init2657 := (_fromV, top)
+    let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (Int)) × (Array (PegMove))) _init2657 fuel (fun σ =>
+    let i := σ.1
+    let top := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (i, top))
+      else
+        match ← ((do
+  let _t2434 ← SudoRt.atL strip i
+  if (!(SudoRt.SEq.beq _t2434 (0 : Int))) then
+    do
+      let top := i
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) top)
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) top)) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (Int)) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (Int)) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let top := σ.2
+    do
+      if (decide (top > ((b).sudo_5Board_4cost).sudo_5Costs_14max_bench_hole)) then
+        do
+          let _t2439 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14max_bench_hole := top } : Costs)
+          let _t2440 := ({ b with sudo_5Board_4cost := _t2439 } : Board)
+          let b := _t2440
+          let _as2442 ← SudoRt.sudoAssert (decide (top < (t).sudo_4Tier_8benchlen)) 1791
+          let _t2543 ← SudoRt.subI (SudoRt.listLen strip) (1 : Int)
+          let _fromV := _t2543
+          let _toV := (t).sudo_4Tier_1n
+          let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
+          let _init2548 := (_fromV, (strip, moves, b))
+          let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (Int)) × (Array (PegMove))) _init2548 fuel (fun σ =>
+    let e := σ.1
+    let strip := σ.2.1
+    let _sp2544 := σ.2.2
+    let moves := _sp2544.1
+    let _sp2545 := _sp2544.2
+    let b := _sp2545
+    do
+      if e < _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (e, (strip, moves, b)))
+      else
+        match ← ((do
+  let _t2444 ← SudoRt.atL strip e
+  let c := _t2444
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _ix2446 := e
+      let _t2447 ← SudoRt.putL strip _ix2446 (0 : Int)
+      let strip := _t2447
+      let _mb2448 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := e, sudo_7PegMove_4from := c, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_fold_lift } : PegMove)
+      let ⟨_nr2449, _⟩ := _mb2448
+      let moves := _nr2449
+      let _hm2430 := ()
+      let _u2450 := _hm2430
+      let _t2451 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t2452 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2451 } : Costs)
+      let _t2453 := ({ b with sudo_5Board_4cost := _t2452 } : Board)
+      let b := _t2453
+      let _t2454 ← SudoRt.divI e (t).sudo_4Tier_1w
+      let row := _t2454
+      let _t2455 ← SudoRt.modI e (t).sudo_4Tier_1w
+      let col := _t2455
+      let _t2456 ← SudoRt.subI row (t).sudo_4Tier_1h
+      let r1 := _t2456
+      let _t2457 ← SudoRt.addI col (1 : Int)
+      let c1 := _t2457
+      if (SudoRt.SEq.beq c1 (t).sudo_4Tier_1w) then
+        do
+          let _t2459 ← SudoRt.addI r1 (1 : Int)
+          let r1 := _t2459
+          let c1 := (0 : Int)
+          let _t2460 ← SudoRt.mulI r1 (t).sudo_4Tier_1w
+          let _t2461 ← SudoRt.addI _t2460 c1
+          let d1 := _t2461
+          let _t2462 ← SudoRt.subI row (t).sudo_4Tier_1r
+          let _t2463 ← SudoRt.mulI _t2462 (t).sudo_4Tier_1w
+          let _t2464 ← SudoRt.addI _t2463 col
+          let d2 := _t2464
+          let _t2465 ← SudoRt.subI e (t).sudo_4Tier_1n
+          let _t2467 ← (if (SudoRt.SEq.beq d1 _t2465) then (do
+  let _t2468 ← SudoRt.subI (t).sudo_4Tier_1n (t).sudo_4Tier_1k
+  let _t2469 ← SudoRt.subI e _t2468
+  pure (SudoRt.SEq.beq d2 _t2469)) else pure false)
+          let _as2471 ← SudoRt.sudoAssert _t2467 1807
+          let _t2473 ← (if (decide (d1 ≥ (0 : Int))) then (do
+  pure (decide (d1 < e))) else pure false)
+          let _t2475 ← (if _t2473 then (do
+  pure (decide (d2 ≥ (0 : Int)))) else pure false)
+          let _t2477 ← (if _t2475 then (do
+  pure (decide (d2 < e))) else pure false)
+          let _as2479 ← SudoRt.sudoAssert _t2477 1808
+          let _t2480 ← SudoRt.atL strip d1
+          let o1 := _t2480
+          let _ix2481 := d1
+          let _t2482 ← SudoRt.addI o1 c
+          let _t2483 ← SudoRt.modI _t2482 (3 : Int)
+          let _t2484 ← SudoRt.putL strip _ix2481 _t2483
+          let strip := _t2484
+          let _t2485 ← SudoRt.atL strip d1
+          let _mb2486 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := d1, sudo_7PegMove_4from := o1, sudo_7PegMove_4into := _t2485, sudo_7PegMove_3why := why_fold_drop } : PegMove)
+          let ⟨_nr2487, _⟩ := _mb2486
+          let moves := _nr2487
+          let _hm2431 := ()
+          let _u2488 := _hm2431
+          let _t2489 ← SudoRt.atL strip d2
+          let o2 := _t2489
+          let _ix2490 := d2
+          let _t2491 ← SudoRt.addI o2 c
+          let _t2492 ← SudoRt.modI _t2491 (3 : Int)
+          let _t2493 ← SudoRt.putL strip _ix2490 _t2492
+          let strip := _t2493
+          let _t2494 ← SudoRt.atL strip d2
+          let _mb2495 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := d2, sudo_7PegMove_4from := o2, sudo_7PegMove_4into := _t2494, sudo_7PegMove_3why := why_fold_drop } : PegMove)
+          let ⟨_nr2496, _⟩ := _mb2495
+          let moves := _nr2496
+          let _hm2432 := ()
+          let _u2497 := _hm2432
+          let _t2498 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (2 : Int)
+          let _t2499 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2498 } : Costs)
+          let _t2500 := ({ b with sudo_5Board_4cost := _t2499 } : Board)
+          let b := _t2500
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (strip, moves, b))
+      else
+        do
+          let _t2501 ← SudoRt.mulI r1 (t).sudo_4Tier_1w
+          let _t2502 ← SudoRt.addI _t2501 c1
+          let d1 := _t2502
+          let _t2503 ← SudoRt.subI row (t).sudo_4Tier_1r
+          let _t2504 ← SudoRt.mulI _t2503 (t).sudo_4Tier_1w
+          let _t2505 ← SudoRt.addI _t2504 col
+          let d2 := _t2505
+          let _t2506 ← SudoRt.subI e (t).sudo_4Tier_1n
+          let _t2508 ← (if (SudoRt.SEq.beq d1 _t2506) then (do
+  let _t2509 ← SudoRt.subI (t).sudo_4Tier_1n (t).sudo_4Tier_1k
+  let _t2510 ← SudoRt.subI e _t2509
+  pure (SudoRt.SEq.beq d2 _t2510)) else pure false)
+          let _as2512 ← SudoRt.sudoAssert _t2508 1807
+          let _t2514 ← (if (decide (d1 ≥ (0 : Int))) then (do
+  pure (decide (d1 < e))) else pure false)
+          let _t2516 ← (if _t2514 then (do
+  pure (decide (d2 ≥ (0 : Int)))) else pure false)
+          let _t2518 ← (if _t2516 then (do
+  pure (decide (d2 < e))) else pure false)
+          let _as2520 ← SudoRt.sudoAssert _t2518 1808
+          let _t2521 ← SudoRt.atL strip d1
+          let o1 := _t2521
+          let _ix2522 := d1
+          let _t2523 ← SudoRt.addI o1 c
+          let _t2524 ← SudoRt.modI _t2523 (3 : Int)
+          let _t2525 ← SudoRt.putL strip _ix2522 _t2524
+          let strip := _t2525
+          let _t2526 ← SudoRt.atL strip d1
+          let _mb2527 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := d1, sudo_7PegMove_4from := o1, sudo_7PegMove_4into := _t2526, sudo_7PegMove_3why := why_fold_drop } : PegMove)
+          let ⟨_nr2528, _⟩ := _mb2527
+          let moves := _nr2528
+          let _hm2431 := ()
+          let _u2529 := _hm2431
+          let _t2530 ← SudoRt.atL strip d2
+          let o2 := _t2530
+          let _ix2531 := d2
+          let _t2532 ← SudoRt.addI o2 c
+          let _t2533 ← SudoRt.modI _t2532 (3 : Int)
+          let _t2534 ← SudoRt.putL strip _ix2531 _t2533
+          let strip := _t2534
+          let _t2535 ← SudoRt.atL strip d2
+          let _mb2536 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := d2, sudo_7PegMove_4from := o2, sudo_7PegMove_4into := _t2535, sudo_7PegMove_3why := why_fold_drop } : PegMove)
+          let ⟨_nr2537, _⟩ := _mb2536
+          let moves := _nr2537
+          let _hm2432 := ()
+          let _u2538 := _hm2432
+          let _t2539 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (2 : Int)
+          let _t2540 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2539 } : Costs)
+          let _t2541 := ({ b with sudo_5Board_4cost := _t2540 } : Board)
+          let b := _t2541
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (strip, moves, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (strip, moves, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (Int)) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (Int)) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (e, _fs))
+        | .cont _fs => do
+            if e == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (e, _fs))
+            else do
+              let i' ← SudoRt.subI e (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp2546 := σ.2.2
+    let moves := _sp2546.1
+    let _sp2547 := _sp2546.2
+    let b := _sp2547
+    do
+      pure (b, strip, moves)) (fun r => pure r))
+          pure _out
+      else
+        do
+          let _as2550 ← SudoRt.sudoAssert (decide (top < (t).sudo_4Tier_8benchlen)) 1791
+          let _t2651 ← SudoRt.subI (SudoRt.listLen strip) (1 : Int)
+          let _fromV := _t2651
+          let _toV := (t).sudo_4Tier_1n
+          let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
+          let _init2656 := (_fromV, (strip, moves, b))
+          let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (Int)) × (Array (PegMove))) _init2656 fuel (fun σ =>
+    let e := σ.1
+    let strip := σ.2.1
+    let _sp2652 := σ.2.2
+    let moves := _sp2652.1
+    let _sp2653 := _sp2652.2
+    let b := _sp2653
+    do
+      if e < _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (e, (strip, moves, b)))
+      else
+        match ← ((do
+  let _t2552 ← SudoRt.atL strip e
+  let c := _t2552
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _ix2554 := e
+      let _t2555 ← SudoRt.putL strip _ix2554 (0 : Int)
+      let strip := _t2555
+      let _mb2556 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := e, sudo_7PegMove_4from := c, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_fold_lift } : PegMove)
+      let ⟨_nr2557, _⟩ := _mb2556
+      let moves := _nr2557
+      let _hm2430 := ()
+      let _u2558 := _hm2430
+      let _t2559 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t2560 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2559 } : Costs)
+      let _t2561 := ({ b with sudo_5Board_4cost := _t2560 } : Board)
+      let b := _t2561
+      let _t2562 ← SudoRt.divI e (t).sudo_4Tier_1w
+      let row := _t2562
+      let _t2563 ← SudoRt.modI e (t).sudo_4Tier_1w
+      let col := _t2563
+      let _t2564 ← SudoRt.subI row (t).sudo_4Tier_1h
+      let r1 := _t2564
+      let _t2565 ← SudoRt.addI col (1 : Int)
+      let c1 := _t2565
+      if (SudoRt.SEq.beq c1 (t).sudo_4Tier_1w) then
+        do
+          let _t2567 ← SudoRt.addI r1 (1 : Int)
+          let r1 := _t2567
+          let c1 := (0 : Int)
+          let _t2568 ← SudoRt.mulI r1 (t).sudo_4Tier_1w
+          let _t2569 ← SudoRt.addI _t2568 c1
+          let d1 := _t2569
+          let _t2570 ← SudoRt.subI row (t).sudo_4Tier_1r
+          let _t2571 ← SudoRt.mulI _t2570 (t).sudo_4Tier_1w
+          let _t2572 ← SudoRt.addI _t2571 col
+          let d2 := _t2572
+          let _t2573 ← SudoRt.subI e (t).sudo_4Tier_1n
+          let _t2575 ← (if (SudoRt.SEq.beq d1 _t2573) then (do
+  let _t2576 ← SudoRt.subI (t).sudo_4Tier_1n (t).sudo_4Tier_1k
+  let _t2577 ← SudoRt.subI e _t2576
+  pure (SudoRt.SEq.beq d2 _t2577)) else pure false)
+          let _as2579 ← SudoRt.sudoAssert _t2575 1807
+          let _t2581 ← (if (decide (d1 ≥ (0 : Int))) then (do
+  pure (decide (d1 < e))) else pure false)
+          let _t2583 ← (if _t2581 then (do
+  pure (decide (d2 ≥ (0 : Int)))) else pure false)
+          let _t2585 ← (if _t2583 then (do
+  pure (decide (d2 < e))) else pure false)
+          let _as2587 ← SudoRt.sudoAssert _t2585 1808
+          let _t2588 ← SudoRt.atL strip d1
+          let o1 := _t2588
+          let _ix2589 := d1
+          let _t2590 ← SudoRt.addI o1 c
+          let _t2591 ← SudoRt.modI _t2590 (3 : Int)
+          let _t2592 ← SudoRt.putL strip _ix2589 _t2591
+          let strip := _t2592
+          let _t2593 ← SudoRt.atL strip d1
+          let _mb2594 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := d1, sudo_7PegMove_4from := o1, sudo_7PegMove_4into := _t2593, sudo_7PegMove_3why := why_fold_drop } : PegMove)
+          let ⟨_nr2595, _⟩ := _mb2594
+          let moves := _nr2595
+          let _hm2431 := ()
+          let _u2596 := _hm2431
+          let _t2597 ← SudoRt.atL strip d2
+          let o2 := _t2597
+          let _ix2598 := d2
+          let _t2599 ← SudoRt.addI o2 c
+          let _t2600 ← SudoRt.modI _t2599 (3 : Int)
+          let _t2601 ← SudoRt.putL strip _ix2598 _t2600
+          let strip := _t2601
+          let _t2602 ← SudoRt.atL strip d2
+          let _mb2603 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := d2, sudo_7PegMove_4from := o2, sudo_7PegMove_4into := _t2602, sudo_7PegMove_3why := why_fold_drop } : PegMove)
+          let ⟨_nr2604, _⟩ := _mb2603
+          let moves := _nr2604
+          let _hm2432 := ()
+          let _u2605 := _hm2432
+          let _t2606 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (2 : Int)
+          let _t2607 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2606 } : Costs)
+          let _t2608 := ({ b with sudo_5Board_4cost := _t2607 } : Board)
+          let b := _t2608
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (strip, moves, b))
+      else
+        do
+          let _t2609 ← SudoRt.mulI r1 (t).sudo_4Tier_1w
+          let _t2610 ← SudoRt.addI _t2609 c1
+          let d1 := _t2610
+          let _t2611 ← SudoRt.subI row (t).sudo_4Tier_1r
+          let _t2612 ← SudoRt.mulI _t2611 (t).sudo_4Tier_1w
+          let _t2613 ← SudoRt.addI _t2612 col
+          let d2 := _t2613
+          let _t2614 ← SudoRt.subI e (t).sudo_4Tier_1n
+          let _t2616 ← (if (SudoRt.SEq.beq d1 _t2614) then (do
+  let _t2617 ← SudoRt.subI (t).sudo_4Tier_1n (t).sudo_4Tier_1k
+  let _t2618 ← SudoRt.subI e _t2617
+  pure (SudoRt.SEq.beq d2 _t2618)) else pure false)
+          let _as2620 ← SudoRt.sudoAssert _t2616 1807
+          let _t2622 ← (if (decide (d1 ≥ (0 : Int))) then (do
+  pure (decide (d1 < e))) else pure false)
+          let _t2624 ← (if _t2622 then (do
+  pure (decide (d2 ≥ (0 : Int)))) else pure false)
+          let _t2626 ← (if _t2624 then (do
+  pure (decide (d2 < e))) else pure false)
+          let _as2628 ← SudoRt.sudoAssert _t2626 1808
+          let _t2629 ← SudoRt.atL strip d1
+          let o1 := _t2629
+          let _ix2630 := d1
+          let _t2631 ← SudoRt.addI o1 c
+          let _t2632 ← SudoRt.modI _t2631 (3 : Int)
+          let _t2633 ← SudoRt.putL strip _ix2630 _t2632
+          let strip := _t2633
+          let _t2634 ← SudoRt.atL strip d1
+          let _mb2635 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := d1, sudo_7PegMove_4from := o1, sudo_7PegMove_4into := _t2634, sudo_7PegMove_3why := why_fold_drop } : PegMove)
+          let ⟨_nr2636, _⟩ := _mb2635
+          let moves := _nr2636
+          let _hm2431 := ()
+          let _u2637 := _hm2431
+          let _t2638 ← SudoRt.atL strip d2
+          let o2 := _t2638
+          let _ix2639 := d2
+          let _t2640 ← SudoRt.addI o2 c
+          let _t2641 ← SudoRt.modI _t2640 (3 : Int)
+          let _t2642 ← SudoRt.putL strip _ix2639 _t2641
+          let strip := _t2642
+          let _t2643 ← SudoRt.atL strip d2
+          let _mb2644 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := d2, sudo_7PegMove_4from := o2, sudo_7PegMove_4into := _t2643, sudo_7PegMove_3why := why_fold_drop } : PegMove)
+          let ⟨_nr2645, _⟩ := _mb2644
+          let moves := _nr2645
+          let _hm2432 := ()
+          let _u2646 := _hm2432
+          let _t2647 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (2 : Int)
+          let _t2648 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2647 } : Costs)
+          let _t2649 := ({ b with sudo_5Board_4cost := _t2648 } : Board)
+          let b := _t2649
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (strip, moves, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (strip, moves, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (Int)) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (Int)) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (e, _fs))
+        | .cont _fs => do
+            if e == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (e, _fs))
+            else do
+              let i' ← SudoRt.subI e (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (Int)) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp2654 := σ.2.2
+    let moves := _sp2654.1
+    let _sp2655 := _sp2654.2
+    let b := _sp2655
+    do
+      pure (b, strip, moves)) (fun r => pure r))
+          pure _out) (fun r => pure r))
+    pure _out
+
+def trace_mul (b : Board) (dst : Int) («first» : Int) (second : Int) (copy_second : Bool) (onto : Bool) (mirror : Bool) (moves : Array (PegMove)) : Except SudoRt.Trap ((Board) × (Array (PegMove))) :=
+  do
+    let _ix2662 := op_mul
+    let _t2663 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_mul
+    let _t2664 ← SudoRt.addI _t2663 (1 : Int)
+    let _t2665 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix2662 _t2664
+    let _t2666 := ({ (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t2665 } : Costs)
+    let _t2667 := ({ b with sudo_5Board_4cost := _t2666 } : Board)
+    let b := _t2667
+    let _t2668 ← pegs_of b
+    let p := _t2668
+    let _io2669 ← log_op b
+    let b := _io2669
+    let _t2670 ← pegs_of b
+    let _io2671 ← diff_moves p _t2670 why_marker moves
+    let moves := _io2671
+    let n := ((b).sudo_5Board_1t).sudo_4Tier_1n
+    let strip := (#[] : Array (Int))
+    let _t2672 ← (if onto then (do
+  pure (b).sudo_5Board_8bench_on) else pure false)
+    let _t2673 ← (if _t2672 then (do
+  pure (SudoRt.SEq.beq (b).sudo_5Board_8bench_to dst)) else pure false)
+    let _t2675 ← (if _t2673 then (do
+  let _t2676 ← SudoRt.atL (b).sudo_5Board_4held dst
+  pure (!( _t2676 ))) else pure false)
+    if _t2675 then
+      do
+        let strip := (b).sudo_5Board_5bench
+        let _t2677 ← SudoRt.atL (b).sudo_5Board_4held «first»
+        let _as2678 ← SudoRt.sudoAssert _t2677 1850
+        let _t2679 ← SudoRt.atL (b).sudo_5Board_4home «first»
+        let a := _t2679
+        let src := second
+        if copy_second then
+          do
+            let _as2681 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq second spare)) 1854
+            let _t2682 ← pegs_of b
+            let p := _t2682
+            let _io2683 ← copy_band b spare second false
+            let b := _io2683
+            let _t2684 ← pegs_of b
+            let _io2685 ← diff_moves p _t2684 why_copy moves
+            let moves := _io2685
+            let src := spare
+            let _as2687 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 1859
+            let _io2688 ← note_strict b
+            let b := _io2688
+            let _t2689 ← SudoRt.atL (b).sudo_5Board_4held src
+            let _as2690 ← SudoRt.sudoAssert _t2689 1861
+            let _t2691 ← SudoRt.atL (b).sudo_5Board_4home src
+            let s := _t2691
+            let _ix2692 := src
+            let _t2693 ← SudoRt.putL (b).sudo_5Board_4held _ix2692 false
+            let _t2694 := ({ b with sudo_5Board_4held := _t2693 } : Board)
+            let b := _t2694
+            let _ix2695 := src
+            let _t2696 ← SudoRt.putL (b).sudo_5Board_4home _ix2695 (#[] : Array (Int))
+            let _t2697 := ({ b with sudo_5Board_4home := _t2696 } : Board)
+            let b := _t2697
+            let _t2751 ← SudoRt.subI n (1 : Int)
+            let _fromV := _t2751
+            let _toV := (0 : Int)
+            let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
+            let _init2762 := (_fromV, (b, moves, strip))
+            let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init2762 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2.1
+    let _sp2758 := σ.2.2
+    let moves := _sp2758.1
+    let _sp2759 := _sp2758.2
+    let strip := _sp2759
+    do
+      if i < _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, (b, moves, strip)))
+      else
+        match ← ((do
+  let _t2699 ← SudoRt.atL s i
+  let c := _t2699
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _t2701 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t2702 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2701 } : Costs)
+      let _t2703 := ({ b with sudo_5Board_4cost := _t2702 } : Board)
+      let b := _t2703
+      let _mb2704 := SudoRt.appendL moves ({ sudo_7PegMove_4band := src, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := c, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_lift } : PegMove)
+      let ⟨_nr2705, _⟩ := _mb2704
+      let moves := _nr2705
+      let _hm2660 := ()
+      let _u2706 := _hm2660
+      let mir := (!(SudoRt.SEq.beq (SudoRt.SEq.beq c (2 : Int)) mirror))
+      let _t2745 ← SudoRt.subI n (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t2745
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init2750 := (_fromV, (strip, moves, b))
+      let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init2750 fuel (fun σ =>
+    let j := σ.1
+    let strip := σ.2.1
+    let _sp2746 := σ.2.2
+    let moves := _sp2746.1
+    let _sp2747 := _sp2746.2
+    let b := _sp2747
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, (strip, moves, b)))
+      else
+        match ← ((do
+  let _t2710 ← SudoRt.atL a j
+  let d := _t2710
+  if (!(SudoRt.SEq.beq d (0 : Int))) then
+    do
+      if mir then
+        do
+          let _t2712 ← flip d
+          let d := _t2712
+          let _t2713 ← SudoRt.addI i j
+          let _t2714 ← SudoRt.atL strip _t2713
+          let o := _t2714
+          let _t2715 ← SudoRt.addI i j
+          let _ix2716 := _t2715
+          let _t2717 ← SudoRt.addI o d
+          let _t2718 ← SudoRt.modI _t2717 (3 : Int)
+          let _t2719 ← SudoRt.putL strip _ix2716 _t2718
+          let strip := _t2719
+          let _t2720 ← SudoRt.addI i j
+          let _t2721 ← SudoRt.addI i j
+          let _t2722 ← SudoRt.atL strip _t2721
+          let _mb2723 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t2720, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t2722, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr2724, _⟩ := _mb2723
+          let moves := _nr2724
+          let _hm2661 := ()
+          let _u2725 := _hm2661
+          let _t2726 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t2727 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2726 } : Costs)
+          let _t2728 := ({ b with sudo_5Board_4cost := _t2727 } : Board)
+          let b := _t2728
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+      else
+        do
+          let _t2729 ← SudoRt.addI i j
+          let _t2730 ← SudoRt.atL strip _t2729
+          let o := _t2730
+          let _t2731 ← SudoRt.addI i j
+          let _ix2732 := _t2731
+          let _t2733 ← SudoRt.addI o d
+          let _t2734 ← SudoRt.modI _t2733 (3 : Int)
+          let _t2735 ← SudoRt.putL strip _ix2732 _t2734
+          let strip := _t2735
+          let _t2736 ← SudoRt.addI i j
+          let _t2737 ← SudoRt.addI i j
+          let _t2738 ← SudoRt.atL strip _t2737
+          let _mb2739 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t2736, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t2738, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr2740, _⟩ := _mb2739
+          let moves := _nr2740
+          let _hm2661 := ()
+          let _u2741 := _hm2661
+          let _t2742 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t2743 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2742 } : Costs)
+          let _t2744 := ({ b with sudo_5Board_4cost := _t2743 } : Board)
+          let b := _t2744
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp2748 := σ.2.2
+    let moves := _sp2748.1
+    let _sp2749 := _sp2748.2
+    let b := _sp2749
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) (fun r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)))
+      pure _out
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+            else do
+              let i' ← SudoRt.subI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp2760 := σ.2.2
+    let moves := _sp2760.1
+    let _sp2761 := _sp2760.2
+    let strip := _sp2761
+    do
+      let _io2752 ← trace_lane_fold b strip moves
+      let ⟨_iw02753, _iw12754, _iw22755⟩ := _io2752
+      let b := _iw02753
+      let strip := _iw12754
+      let moves := _iw22755
+      let _t2756 := ({ b with sudo_5Board_5bench := strip } : Board)
+      let b := _t2756
+      let _io2757 ← note_peak b
+      let b := _io2757
+      pure (b, moves)) (fun r => pure r))
+            pure _out
+        else
+          do
+            let _as2764 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 1859
+            let _io2765 ← note_strict b
+            let b := _io2765
+            let _t2766 ← SudoRt.atL (b).sudo_5Board_4held src
+            let _as2767 ← SudoRt.sudoAssert _t2766 1861
+            let _t2768 ← SudoRt.atL (b).sudo_5Board_4home src
+            let s := _t2768
+            let _ix2769 := src
+            let _t2770 ← SudoRt.putL (b).sudo_5Board_4held _ix2769 false
+            let _t2771 := ({ b with sudo_5Board_4held := _t2770 } : Board)
+            let b := _t2771
+            let _ix2772 := src
+            let _t2773 ← SudoRt.putL (b).sudo_5Board_4home _ix2772 (#[] : Array (Int))
+            let _t2774 := ({ b with sudo_5Board_4home := _t2773 } : Board)
+            let b := _t2774
+            let _t2828 ← SudoRt.subI n (1 : Int)
+            let _fromV := _t2828
+            let _toV := (0 : Int)
+            let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
+            let _init2839 := (_fromV, (b, moves, strip))
+            let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init2839 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2.1
+    let _sp2835 := σ.2.2
+    let moves := _sp2835.1
+    let _sp2836 := _sp2835.2
+    let strip := _sp2836
+    do
+      if i < _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, (b, moves, strip)))
+      else
+        match ← ((do
+  let _t2776 ← SudoRt.atL s i
+  let c := _t2776
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _t2778 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t2779 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2778 } : Costs)
+      let _t2780 := ({ b with sudo_5Board_4cost := _t2779 } : Board)
+      let b := _t2780
+      let _mb2781 := SudoRt.appendL moves ({ sudo_7PegMove_4band := src, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := c, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_lift } : PegMove)
+      let ⟨_nr2782, _⟩ := _mb2781
+      let moves := _nr2782
+      let _hm2660 := ()
+      let _u2783 := _hm2660
+      let mir := (!(SudoRt.SEq.beq (SudoRt.SEq.beq c (2 : Int)) mirror))
+      let _t2822 ← SudoRt.subI n (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t2822
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init2827 := (_fromV, (strip, moves, b))
+      let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init2827 fuel (fun σ =>
+    let j := σ.1
+    let strip := σ.2.1
+    let _sp2823 := σ.2.2
+    let moves := _sp2823.1
+    let _sp2824 := _sp2823.2
+    let b := _sp2824
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, (strip, moves, b)))
+      else
+        match ← ((do
+  let _t2787 ← SudoRt.atL a j
+  let d := _t2787
+  if (!(SudoRt.SEq.beq d (0 : Int))) then
+    do
+      if mir then
+        do
+          let _t2789 ← flip d
+          let d := _t2789
+          let _t2790 ← SudoRt.addI i j
+          let _t2791 ← SudoRt.atL strip _t2790
+          let o := _t2791
+          let _t2792 ← SudoRt.addI i j
+          let _ix2793 := _t2792
+          let _t2794 ← SudoRt.addI o d
+          let _t2795 ← SudoRt.modI _t2794 (3 : Int)
+          let _t2796 ← SudoRt.putL strip _ix2793 _t2795
+          let strip := _t2796
+          let _t2797 ← SudoRt.addI i j
+          let _t2798 ← SudoRt.addI i j
+          let _t2799 ← SudoRt.atL strip _t2798
+          let _mb2800 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t2797, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t2799, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr2801, _⟩ := _mb2800
+          let moves := _nr2801
+          let _hm2661 := ()
+          let _u2802 := _hm2661
+          let _t2803 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t2804 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2803 } : Costs)
+          let _t2805 := ({ b with sudo_5Board_4cost := _t2804 } : Board)
+          let b := _t2805
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+      else
+        do
+          let _t2806 ← SudoRt.addI i j
+          let _t2807 ← SudoRt.atL strip _t2806
+          let o := _t2807
+          let _t2808 ← SudoRt.addI i j
+          let _ix2809 := _t2808
+          let _t2810 ← SudoRt.addI o d
+          let _t2811 ← SudoRt.modI _t2810 (3 : Int)
+          let _t2812 ← SudoRt.putL strip _ix2809 _t2811
+          let strip := _t2812
+          let _t2813 ← SudoRt.addI i j
+          let _t2814 ← SudoRt.addI i j
+          let _t2815 ← SudoRt.atL strip _t2814
+          let _mb2816 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t2813, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t2815, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr2817, _⟩ := _mb2816
+          let moves := _nr2817
+          let _hm2661 := ()
+          let _u2818 := _hm2661
+          let _t2819 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t2820 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2819 } : Costs)
+          let _t2821 := ({ b with sudo_5Board_4cost := _t2820 } : Board)
+          let b := _t2821
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp2825 := σ.2.2
+    let moves := _sp2825.1
+    let _sp2826 := _sp2825.2
+    let b := _sp2826
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) (fun r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)))
+      pure _out
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+            else do
+              let i' ← SudoRt.subI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp2837 := σ.2.2
+    let moves := _sp2837.1
+    let _sp2838 := _sp2837.2
+    let strip := _sp2838
+    do
+      let _io2829 ← trace_lane_fold b strip moves
+      let ⟨_iw02830, _iw12831, _iw22832⟩ := _io2829
+      let b := _iw02830
+      let strip := _iw12831
+      let moves := _iw22832
+      let _t2833 := ({ b with sudo_5Board_5bench := strip } : Board)
+      let b := _t2833
+      let _io2834 ← note_peak b
+      let b := _io2834
+      pure (b, moves)) (fun r => pure r))
+            pure _out
+    else
+      do
+        let _t2840 ← pegs_of b
+        let p := _t2840
+        let _io2841 ← settle b
+        let b := _io2841
+        let _t2842 ← pegs_of b
+        let _io2843 ← diff_moves p _t2842 why_settle moves
+        let moves := _io2843
+        let _t2844 ← SudoRt.filledL ((b).sudo_5Board_1t).sudo_4Tier_8benchlen (0 : Int)
+        let strip := _t2844
+        if onto then
+          do
+            let _t2845 ← SudoRt.atL (b).sudo_5Board_4held dst
+            let _as2846 ← SudoRt.sudoAssert _t2845 1835
+            let _t2847 ← SudoRt.atL (b).sudo_5Board_4home dst
+            let r := _t2847
+            let _ix2848 := dst
+            let _t2849 ← SudoRt.putL (b).sudo_5Board_4held _ix2848 false
+            let _t2850 := ({ b with sudo_5Board_4held := _t2849 } : Board)
+            let b := _t2850
+            let _ix2851 := dst
+            let _t2852 ← SudoRt.putL (b).sudo_5Board_4home _ix2851 (#[] : Array (Int))
+            let _t2853 := ({ b with sudo_5Board_4home := _t2852 } : Board)
+            let b := _t2853
+            let _t2854 ← npeg r
+            let _t2855 ← SudoRt.mulI (2 : Int) _t2854
+            let m := _t2855
+            let _t2856 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves m
+            let _t2857 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2856 } : Costs)
+            let _t2858 := ({ b with sudo_5Board_4cost := _t2857 } : Board)
+            let b := _t2858
+            let _t2859 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_6slides m
+            let _t2860 := ({ (b).sudo_5Board_4cost with sudo_5Costs_6slides := _t2859 } : Costs)
+            let _t2861 := ({ b with sudo_5Board_4cost := _t2860 } : Board)
+            let b := _t2861
+            let _t2876 ← SudoRt.subI n (1 : Int)
+            let _fromV := (0 : Int)
+            let _toV := _t2876
+            let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+            let _init3045 := (_fromV, (strip, moves))
+            let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init3045 fuel (fun σ =>
+    let i := σ.1
+    let strip := σ.2.1
+    let _sp3043 := σ.2.2
+    let moves := _sp3043
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, (strip, moves)))
+      else
+        match ← ((do
+  let _ix2863 := i
+  let _t2864 ← SudoRt.atL r i
+  let _t2865 ← SudoRt.putL strip _ix2863 _t2864
+  let strip := _t2865
+  let _t2866 ← SudoRt.atL r i
+  if (!(SudoRt.SEq.beq _t2866 (0 : Int))) then
+    do
+      let _t2868 ← SudoRt.atL r i
+      let _mb2869 := SudoRt.appendL moves ({ sudo_7PegMove_4band := dst, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := _t2868, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_slide } : PegMove)
+      let ⟨_nr2870, _⟩ := _mb2869
+      let moves := _nr2870
+      let _hm2658 := ()
+      let _u2871 := _hm2658
+      let _t2872 ← SudoRt.atL r i
+      let _mb2873 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := (0 : Int), sudo_7PegMove_4into := _t2872, sudo_7PegMove_3why := why_slide } : PegMove)
+      let ⟨_nr2874, _⟩ := _mb2873
+      let moves := _nr2874
+      let _hm2659 := ()
+      let _u2875 := _hm2659
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp3044 := σ.2.2
+    let moves := _sp3044
+    do
+      let _t2877 := ({ b with sudo_5Board_8bench_on := true } : Board)
+      let b := _t2877
+      let _t2878 := ({ b with sudo_5Board_8bench_to := dst } : Board)
+      let b := _t2878
+      let _t2879 := ({ b with sudo_5Board_5bench := strip } : Board)
+      let b := _t2879
+      let _t2880 ← SudoRt.atL (b).sudo_5Board_4held «first»
+      let _as2881 ← SudoRt.sudoAssert _t2880 1850
+      let _t2882 ← SudoRt.atL (b).sudo_5Board_4home «first»
+      let a := _t2882
+      let src := second
+      if copy_second then
+        do
+          let _as2884 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq second spare)) 1854
+          let _t2885 ← pegs_of b
+          let p := _t2885
+          let _io2886 ← copy_band b spare second false
+          let b := _io2886
+          let _t2887 ← pegs_of b
+          let _io2888 ← diff_moves p _t2887 why_copy moves
+          let moves := _io2888
+          let src := spare
+          let _as2890 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 1859
+          let _io2891 ← note_strict b
+          let b := _io2891
+          let _t2892 ← SudoRt.atL (b).sudo_5Board_4held src
+          let _as2893 ← SudoRt.sudoAssert _t2892 1861
+          let _t2894 ← SudoRt.atL (b).sudo_5Board_4home src
+          let s := _t2894
+          let _ix2895 := src
+          let _t2896 ← SudoRt.putL (b).sudo_5Board_4held _ix2895 false
+          let _t2897 := ({ b with sudo_5Board_4held := _t2896 } : Board)
+          let b := _t2897
+          let _ix2898 := src
+          let _t2899 ← SudoRt.putL (b).sudo_5Board_4home _ix2898 (#[] : Array (Int))
+          let _t2900 := ({ b with sudo_5Board_4home := _t2899 } : Board)
+          let b := _t2900
+          let _t2954 ← SudoRt.subI n (1 : Int)
+          let _fromV := _t2954
+          let _toV := (0 : Int)
+          let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
+          let _init2965 := (_fromV, (b, moves, strip))
+          let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init2965 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2.1
+    let _sp2961 := σ.2.2
+    let moves := _sp2961.1
+    let _sp2962 := _sp2961.2
+    let strip := _sp2962
+    do
+      if i < _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, (b, moves, strip)))
+      else
+        match ← ((do
+  let _t2902 ← SudoRt.atL s i
+  let c := _t2902
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _t2904 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t2905 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2904 } : Costs)
+      let _t2906 := ({ b with sudo_5Board_4cost := _t2905 } : Board)
+      let b := _t2906
+      let _mb2907 := SudoRt.appendL moves ({ sudo_7PegMove_4band := src, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := c, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_lift } : PegMove)
+      let ⟨_nr2908, _⟩ := _mb2907
+      let moves := _nr2908
+      let _hm2660 := ()
+      let _u2909 := _hm2660
+      let mir := (!(SudoRt.SEq.beq (SudoRt.SEq.beq c (2 : Int)) mirror))
+      let _t2948 ← SudoRt.subI n (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t2948
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init2953 := (_fromV, (strip, moves, b))
+      let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init2953 fuel (fun σ =>
+    let j := σ.1
+    let strip := σ.2.1
+    let _sp2949 := σ.2.2
+    let moves := _sp2949.1
+    let _sp2950 := _sp2949.2
+    let b := _sp2950
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, (strip, moves, b)))
+      else
+        match ← ((do
+  let _t2913 ← SudoRt.atL a j
+  let d := _t2913
+  if (!(SudoRt.SEq.beq d (0 : Int))) then
+    do
+      if mir then
+        do
+          let _t2915 ← flip d
+          let d := _t2915
+          let _t2916 ← SudoRt.addI i j
+          let _t2917 ← SudoRt.atL strip _t2916
+          let o := _t2917
+          let _t2918 ← SudoRt.addI i j
+          let _ix2919 := _t2918
+          let _t2920 ← SudoRt.addI o d
+          let _t2921 ← SudoRt.modI _t2920 (3 : Int)
+          let _t2922 ← SudoRt.putL strip _ix2919 _t2921
+          let strip := _t2922
+          let _t2923 ← SudoRt.addI i j
+          let _t2924 ← SudoRt.addI i j
+          let _t2925 ← SudoRt.atL strip _t2924
+          let _mb2926 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t2923, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t2925, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr2927, _⟩ := _mb2926
+          let moves := _nr2927
+          let _hm2661 := ()
+          let _u2928 := _hm2661
+          let _t2929 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t2930 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2929 } : Costs)
+          let _t2931 := ({ b with sudo_5Board_4cost := _t2930 } : Board)
+          let b := _t2931
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+      else
+        do
+          let _t2932 ← SudoRt.addI i j
+          let _t2933 ← SudoRt.atL strip _t2932
+          let o := _t2933
+          let _t2934 ← SudoRt.addI i j
+          let _ix2935 := _t2934
+          let _t2936 ← SudoRt.addI o d
+          let _t2937 ← SudoRt.modI _t2936 (3 : Int)
+          let _t2938 ← SudoRt.putL strip _ix2935 _t2937
+          let strip := _t2938
+          let _t2939 ← SudoRt.addI i j
+          let _t2940 ← SudoRt.addI i j
+          let _t2941 ← SudoRt.atL strip _t2940
+          let _mb2942 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t2939, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t2941, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr2943, _⟩ := _mb2942
+          let moves := _nr2943
+          let _hm2661 := ()
+          let _u2944 := _hm2661
+          let _t2945 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t2946 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2945 } : Costs)
+          let _t2947 := ({ b with sudo_5Board_4cost := _t2946 } : Board)
+          let b := _t2947
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp2951 := σ.2.2
+    let moves := _sp2951.1
+    let _sp2952 := _sp2951.2
+    let b := _sp2952
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) (fun r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)))
+      pure _out
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+            else do
+              let i' ← SudoRt.subI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp2963 := σ.2.2
+    let moves := _sp2963.1
+    let _sp2964 := _sp2963.2
+    let strip := _sp2964
+    do
+      let _io2955 ← trace_lane_fold b strip moves
+      let ⟨_iw02956, _iw12957, _iw22958⟩ := _io2955
+      let b := _iw02956
+      let strip := _iw12957
+      let moves := _iw22958
+      let _t2959 := ({ b with sudo_5Board_5bench := strip } : Board)
+      let b := _t2959
+      let _io2960 ← note_peak b
+      let b := _io2960
+      pure (b, moves)) (fun r => pure r))
+          pure _out
+      else
+        do
+          let _as2967 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 1859
+          let _io2968 ← note_strict b
+          let b := _io2968
+          let _t2969 ← SudoRt.atL (b).sudo_5Board_4held src
+          let _as2970 ← SudoRt.sudoAssert _t2969 1861
+          let _t2971 ← SudoRt.atL (b).sudo_5Board_4home src
+          let s := _t2971
+          let _ix2972 := src
+          let _t2973 ← SudoRt.putL (b).sudo_5Board_4held _ix2972 false
+          let _t2974 := ({ b with sudo_5Board_4held := _t2973 } : Board)
+          let b := _t2974
+          let _ix2975 := src
+          let _t2976 ← SudoRt.putL (b).sudo_5Board_4home _ix2975 (#[] : Array (Int))
+          let _t2977 := ({ b with sudo_5Board_4home := _t2976 } : Board)
+          let b := _t2977
+          let _t3031 ← SudoRt.subI n (1 : Int)
+          let _fromV := _t3031
+          let _toV := (0 : Int)
+          let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
+          let _init3042 := (_fromV, (b, moves, strip))
+          let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init3042 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2.1
+    let _sp3038 := σ.2.2
+    let moves := _sp3038.1
+    let _sp3039 := _sp3038.2
+    let strip := _sp3039
+    do
+      if i < _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, (b, moves, strip)))
+      else
+        match ← ((do
+  let _t2979 ← SudoRt.atL s i
+  let c := _t2979
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _t2981 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t2982 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t2981 } : Costs)
+      let _t2983 := ({ b with sudo_5Board_4cost := _t2982 } : Board)
+      let b := _t2983
+      let _mb2984 := SudoRt.appendL moves ({ sudo_7PegMove_4band := src, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := c, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_lift } : PegMove)
+      let ⟨_nr2985, _⟩ := _mb2984
+      let moves := _nr2985
+      let _hm2660 := ()
+      let _u2986 := _hm2660
+      let mir := (!(SudoRt.SEq.beq (SudoRt.SEq.beq c (2 : Int)) mirror))
+      let _t3025 ← SudoRt.subI n (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t3025
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init3030 := (_fromV, (strip, moves, b))
+      let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init3030 fuel (fun σ =>
+    let j := σ.1
+    let strip := σ.2.1
+    let _sp3026 := σ.2.2
+    let moves := _sp3026.1
+    let _sp3027 := _sp3026.2
+    let b := _sp3027
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, (strip, moves, b)))
+      else
+        match ← ((do
+  let _t2990 ← SudoRt.atL a j
+  let d := _t2990
+  if (!(SudoRt.SEq.beq d (0 : Int))) then
+    do
+      if mir then
+        do
+          let _t2992 ← flip d
+          let d := _t2992
+          let _t2993 ← SudoRt.addI i j
+          let _t2994 ← SudoRt.atL strip _t2993
+          let o := _t2994
+          let _t2995 ← SudoRt.addI i j
+          let _ix2996 := _t2995
+          let _t2997 ← SudoRt.addI o d
+          let _t2998 ← SudoRt.modI _t2997 (3 : Int)
+          let _t2999 ← SudoRt.putL strip _ix2996 _t2998
+          let strip := _t2999
+          let _t3000 ← SudoRt.addI i j
+          let _t3001 ← SudoRt.addI i j
+          let _t3002 ← SudoRt.atL strip _t3001
+          let _mb3003 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t3000, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t3002, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr3004, _⟩ := _mb3003
+          let moves := _nr3004
+          let _hm2661 := ()
+          let _u3005 := _hm2661
+          let _t3006 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t3007 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3006 } : Costs)
+          let _t3008 := ({ b with sudo_5Board_4cost := _t3007 } : Board)
+          let b := _t3008
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+      else
+        do
+          let _t3009 ← SudoRt.addI i j
+          let _t3010 ← SudoRt.atL strip _t3009
+          let o := _t3010
+          let _t3011 ← SudoRt.addI i j
+          let _ix3012 := _t3011
+          let _t3013 ← SudoRt.addI o d
+          let _t3014 ← SudoRt.modI _t3013 (3 : Int)
+          let _t3015 ← SudoRt.putL strip _ix3012 _t3014
+          let strip := _t3015
+          let _t3016 ← SudoRt.addI i j
+          let _t3017 ← SudoRt.addI i j
+          let _t3018 ← SudoRt.atL strip _t3017
+          let _mb3019 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t3016, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t3018, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr3020, _⟩ := _mb3019
+          let moves := _nr3020
+          let _hm2661 := ()
+          let _u3021 := _hm2661
+          let _t3022 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t3023 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3022 } : Costs)
+          let _t3024 := ({ b with sudo_5Board_4cost := _t3023 } : Board)
+          let b := _t3024
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp3028 := σ.2.2
+    let moves := _sp3028.1
+    let _sp3029 := _sp3028.2
+    let b := _sp3029
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) (fun r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)))
+      pure _out
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+            else do
+              let i' ← SudoRt.subI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3040 := σ.2.2
+    let moves := _sp3040.1
+    let _sp3041 := _sp3040.2
+    let strip := _sp3041
+    do
+      let _io3032 ← trace_lane_fold b strip moves
+      let ⟨_iw03033, _iw13034, _iw23035⟩ := _io3032
+      let b := _iw03033
+      let strip := _iw13034
+      let moves := _iw23035
+      let _t3036 := ({ b with sudo_5Board_5bench := strip } : Board)
+      let b := _t3036
+      let _io3037 ← note_peak b
+      let b := _io3037
+      pure (b, moves)) (fun r => pure r))
+          pure _out) (fun r => pure r))
+            pure _out
+        else
+          do
+            let _t3046 := ({ b with sudo_5Board_8bench_on := true } : Board)
+            let b := _t3046
+            let _t3047 := ({ b with sudo_5Board_8bench_to := dst } : Board)
+            let b := _t3047
+            let _t3048 := ({ b with sudo_5Board_5bench := strip } : Board)
+            let b := _t3048
+            let _t3049 ← SudoRt.atL (b).sudo_5Board_4held «first»
+            let _as3050 ← SudoRt.sudoAssert _t3049 1850
+            let _t3051 ← SudoRt.atL (b).sudo_5Board_4home «first»
+            let a := _t3051
+            let src := second
+            if copy_second then
+              do
+                let _as3053 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq second spare)) 1854
+                let _t3054 ← pegs_of b
+                let p := _t3054
+                let _io3055 ← copy_band b spare second false
+                let b := _io3055
+                let _t3056 ← pegs_of b
+                let _io3057 ← diff_moves p _t3056 why_copy moves
+                let moves := _io3057
+                let src := spare
+                let _as3059 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 1859
+                let _io3060 ← note_strict b
+                let b := _io3060
+                let _t3061 ← SudoRt.atL (b).sudo_5Board_4held src
+                let _as3062 ← SudoRt.sudoAssert _t3061 1861
+                let _t3063 ← SudoRt.atL (b).sudo_5Board_4home src
+                let s := _t3063
+                let _ix3064 := src
+                let _t3065 ← SudoRt.putL (b).sudo_5Board_4held _ix3064 false
+                let _t3066 := ({ b with sudo_5Board_4held := _t3065 } : Board)
+                let b := _t3066
+                let _ix3067 := src
+                let _t3068 ← SudoRt.putL (b).sudo_5Board_4home _ix3067 (#[] : Array (Int))
+                let _t3069 := ({ b with sudo_5Board_4home := _t3068 } : Board)
+                let b := _t3069
+                let _t3123 ← SudoRt.subI n (1 : Int)
+                let _fromV := _t3123
+                let _toV := (0 : Int)
+                let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
+                let _init3134 := (_fromV, (b, moves, strip))
+                let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init3134 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2.1
+    let _sp3130 := σ.2.2
+    let moves := _sp3130.1
+    let _sp3131 := _sp3130.2
+    let strip := _sp3131
+    do
+      if i < _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, (b, moves, strip)))
+      else
+        match ← ((do
+  let _t3071 ← SudoRt.atL s i
+  let c := _t3071
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _t3073 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t3074 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3073 } : Costs)
+      let _t3075 := ({ b with sudo_5Board_4cost := _t3074 } : Board)
+      let b := _t3075
+      let _mb3076 := SudoRt.appendL moves ({ sudo_7PegMove_4band := src, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := c, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_lift } : PegMove)
+      let ⟨_nr3077, _⟩ := _mb3076
+      let moves := _nr3077
+      let _hm2660 := ()
+      let _u3078 := _hm2660
+      let mir := (!(SudoRt.SEq.beq (SudoRt.SEq.beq c (2 : Int)) mirror))
+      let _t3117 ← SudoRt.subI n (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t3117
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init3122 := (_fromV, (strip, moves, b))
+      let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init3122 fuel (fun σ =>
+    let j := σ.1
+    let strip := σ.2.1
+    let _sp3118 := σ.2.2
+    let moves := _sp3118.1
+    let _sp3119 := _sp3118.2
+    let b := _sp3119
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, (strip, moves, b)))
+      else
+        match ← ((do
+  let _t3082 ← SudoRt.atL a j
+  let d := _t3082
+  if (!(SudoRt.SEq.beq d (0 : Int))) then
+    do
+      if mir then
+        do
+          let _t3084 ← flip d
+          let d := _t3084
+          let _t3085 ← SudoRt.addI i j
+          let _t3086 ← SudoRt.atL strip _t3085
+          let o := _t3086
+          let _t3087 ← SudoRt.addI i j
+          let _ix3088 := _t3087
+          let _t3089 ← SudoRt.addI o d
+          let _t3090 ← SudoRt.modI _t3089 (3 : Int)
+          let _t3091 ← SudoRt.putL strip _ix3088 _t3090
+          let strip := _t3091
+          let _t3092 ← SudoRt.addI i j
+          let _t3093 ← SudoRt.addI i j
+          let _t3094 ← SudoRt.atL strip _t3093
+          let _mb3095 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t3092, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t3094, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr3096, _⟩ := _mb3095
+          let moves := _nr3096
+          let _hm2661 := ()
+          let _u3097 := _hm2661
+          let _t3098 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t3099 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3098 } : Costs)
+          let _t3100 := ({ b with sudo_5Board_4cost := _t3099 } : Board)
+          let b := _t3100
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+      else
+        do
+          let _t3101 ← SudoRt.addI i j
+          let _t3102 ← SudoRt.atL strip _t3101
+          let o := _t3102
+          let _t3103 ← SudoRt.addI i j
+          let _ix3104 := _t3103
+          let _t3105 ← SudoRt.addI o d
+          let _t3106 ← SudoRt.modI _t3105 (3 : Int)
+          let _t3107 ← SudoRt.putL strip _ix3104 _t3106
+          let strip := _t3107
+          let _t3108 ← SudoRt.addI i j
+          let _t3109 ← SudoRt.addI i j
+          let _t3110 ← SudoRt.atL strip _t3109
+          let _mb3111 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t3108, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t3110, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr3112, _⟩ := _mb3111
+          let moves := _nr3112
+          let _hm2661 := ()
+          let _u3113 := _hm2661
+          let _t3114 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t3115 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3114 } : Costs)
+          let _t3116 := ({ b with sudo_5Board_4cost := _t3115 } : Board)
+          let b := _t3116
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp3120 := σ.2.2
+    let moves := _sp3120.1
+    let _sp3121 := _sp3120.2
+    let b := _sp3121
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) (fun r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)))
+      pure _out
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+            else do
+              let i' ← SudoRt.subI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3132 := σ.2.2
+    let moves := _sp3132.1
+    let _sp3133 := _sp3132.2
+    let strip := _sp3133
+    do
+      let _io3124 ← trace_lane_fold b strip moves
+      let ⟨_iw03125, _iw13126, _iw23127⟩ := _io3124
+      let b := _iw03125
+      let strip := _iw13126
+      let moves := _iw23127
+      let _t3128 := ({ b with sudo_5Board_5bench := strip } : Board)
+      let b := _t3128
+      let _io3129 ← note_peak b
+      let b := _io3129
+      pure (b, moves)) (fun r => pure r))
+                pure _out
+            else
+              do
+                let _as3136 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq src «first»)) 1859
+                let _io3137 ← note_strict b
+                let b := _io3137
+                let _t3138 ← SudoRt.atL (b).sudo_5Board_4held src
+                let _as3139 ← SudoRt.sudoAssert _t3138 1861
+                let _t3140 ← SudoRt.atL (b).sudo_5Board_4home src
+                let s := _t3140
+                let _ix3141 := src
+                let _t3142 ← SudoRt.putL (b).sudo_5Board_4held _ix3141 false
+                let _t3143 := ({ b with sudo_5Board_4held := _t3142 } : Board)
+                let b := _t3143
+                let _ix3144 := src
+                let _t3145 ← SudoRt.putL (b).sudo_5Board_4home _ix3144 (#[] : Array (Int))
+                let _t3146 := ({ b with sudo_5Board_4home := _t3145 } : Board)
+                let b := _t3146
+                let _t3200 ← SudoRt.subI n (1 : Int)
+                let _fromV := _t3200
+                let _toV := (0 : Int)
+                let fuel : Nat := if _fromV < _toV then 1 else (_fromV - _toV).natAbs + 1
+                let _init3211 := (_fromV, (b, moves, strip))
+                let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init3211 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2.1
+    let _sp3207 := σ.2.2
+    let moves := _sp3207.1
+    let _sp3208 := _sp3207.2
+    let strip := _sp3208
+    do
+      if i < _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, (b, moves, strip)))
+      else
+        match ← ((do
+  let _t3148 ← SudoRt.atL s i
+  let c := _t3148
+  if (!(SudoRt.SEq.beq c (0 : Int))) then
+    do
+      let _t3150 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t3151 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3150 } : Costs)
+      let _t3152 := ({ b with sudo_5Board_4cost := _t3151 } : Board)
+      let b := _t3152
+      let _mb3153 := SudoRt.appendL moves ({ sudo_7PegMove_4band := src, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := c, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_lift } : PegMove)
+      let ⟨_nr3154, _⟩ := _mb3153
+      let moves := _nr3154
+      let _hm2660 := ()
+      let _u3155 := _hm2660
+      let mir := (!(SudoRt.SEq.beq (SudoRt.SEq.beq c (2 : Int)) mirror))
+      let _t3194 ← SudoRt.subI n (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t3194
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init3199 := (_fromV, (strip, moves, b))
+      let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init3199 fuel (fun σ =>
+    let j := σ.1
+    let strip := σ.2.1
+    let _sp3195 := σ.2.2
+    let moves := _sp3195.1
+    let _sp3196 := _sp3195.2
+    let b := _sp3196
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, (strip, moves, b)))
+      else
+        match ← ((do
+  let _t3159 ← SudoRt.atL a j
+  let d := _t3159
+  if (!(SudoRt.SEq.beq d (0 : Int))) then
+    do
+      if mir then
+        do
+          let _t3161 ← flip d
+          let d := _t3161
+          let _t3162 ← SudoRt.addI i j
+          let _t3163 ← SudoRt.atL strip _t3162
+          let o := _t3163
+          let _t3164 ← SudoRt.addI i j
+          let _ix3165 := _t3164
+          let _t3166 ← SudoRt.addI o d
+          let _t3167 ← SudoRt.modI _t3166 (3 : Int)
+          let _t3168 ← SudoRt.putL strip _ix3165 _t3167
+          let strip := _t3168
+          let _t3169 ← SudoRt.addI i j
+          let _t3170 ← SudoRt.addI i j
+          let _t3171 ← SudoRt.atL strip _t3170
+          let _mb3172 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t3169, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t3171, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr3173, _⟩ := _mb3172
+          let moves := _nr3173
+          let _hm2661 := ()
+          let _u3174 := _hm2661
+          let _t3175 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t3176 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3175 } : Costs)
+          let _t3177 := ({ b with sudo_5Board_4cost := _t3176 } : Board)
+          let b := _t3177
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+      else
+        do
+          let _t3178 ← SudoRt.addI i j
+          let _t3179 ← SudoRt.atL strip _t3178
+          let o := _t3179
+          let _t3180 ← SudoRt.addI i j
+          let _ix3181 := _t3180
+          let _t3182 ← SudoRt.addI o d
+          let _t3183 ← SudoRt.modI _t3182 (3 : Int)
+          let _t3184 ← SudoRt.putL strip _ix3181 _t3183
+          let strip := _t3184
+          let _t3185 ← SudoRt.addI i j
+          let _t3186 ← SudoRt.addI i j
+          let _t3187 ← SudoRt.atL strip _t3186
+          let _mb3188 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t3185, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t3187, sudo_7PegMove_3why := why_lay } : PegMove)
+          let ⟨_nr3189, _⟩ := _mb3188
+          let moves := _nr3189
+          let _hm2661 := ()
+          let _u3190 := _hm2661
+          let _t3191 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+          let _t3192 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3191 } : Costs)
+          let _t3193 := ({ b with sudo_5Board_4cost := _t3192 } : Board)
+          let b := _t3193
+          pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp3197 := σ.2.2
+    let moves := _sp3197.1
+    let _sp3198 := _sp3197.2
+    let b := _sp3198
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) (fun r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)))
+      pure _out
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (b, moves, strip))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+            else do
+              let i' ← SudoRt.subI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3209 := σ.2.2
+    let moves := _sp3209.1
+    let _sp3210 := _sp3209.2
+    let strip := _sp3210
+    do
+      let _io3201 ← trace_lane_fold b strip moves
+      let ⟨_iw03202, _iw13203, _iw23204⟩ := _io3201
+      let b := _iw03202
+      let strip := _iw13203
+      let moves := _iw23204
+      let _t3205 := ({ b with sudo_5Board_5bench := strip } : Board)
+      let b := _t3205
+      let _io3206 ← note_peak b
+      let b := _io3206
+      pure (b, moves)) (fun r => pure r))
+                pure _out
+
+def trace_cube (b : Board) (dst : Int) (src : Int) (moves : Array (PegMove)) : Except SudoRt.Trap ((Board) × (Array (PegMove))) :=
+  do
+    let _ix3214 := op_cube
+    let _t3215 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_cube
+    let _t3216 ← SudoRt.addI _t3215 (1 : Int)
+    let _t3217 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix3214 _t3216
+    let _t3218 := ({ (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t3217 } : Costs)
+    let _t3219 := ({ b with sudo_5Board_4cost := _t3218 } : Board)
+    let b := _t3219
+    let _t3220 ← pegs_of b
+    let p := _t3220
+    let _io3221 ← log_op b
+    let b := _io3221
+    let _t3222 ← pegs_of b
+    let _io3223 ← diff_moves p _t3222 why_marker moves
+    let moves := _io3223
+    let _t3224 ← pegs_of b
+    let p := _t3224
+    let _io3225 ← settle b
+    let b := _io3225
+    let _t3226 ← pegs_of b
+    let _io3227 ← diff_moves p _t3226 why_settle moves
+    let moves := _io3227
+    let _io3228 ← note_strict b
+    let b := _io3228
+    let _t3229 ← SudoRt.atL (b).sudo_5Board_4held src
+    let _as3230 ← SudoRt.sudoAssert _t3229 1894
+    let _t3231 ← SudoRt.atL (b).sudo_5Board_4home src
+    let v := _t3231
+    let _ix3232 := src
+    let _t3233 ← SudoRt.putL (b).sudo_5Board_4held _ix3232 false
+    let _t3234 := ({ b with sudo_5Board_4held := _t3233 } : Board)
+    let b := _t3234
+    let _ix3235 := src
+    let _t3236 ← SudoRt.putL (b).sudo_5Board_4home _ix3235 (#[] : Array (Int))
+    let _t3237 := ({ b with sudo_5Board_4home := _t3236 } : Board)
+    let b := _t3237
+    let _t3238 ← SudoRt.filledL ((b).sudo_5Board_1t).sudo_4Tier_8benchlen (0 : Int)
+    let strip := _t3238
+    let _t3258 ← SudoRt.subI ((b).sudo_5Board_1t).sudo_4Tier_1n (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t3258
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init3276 := (_fromV, (strip, moves, b))
+    let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Array (PegMove))) _init3276 fuel (fun σ =>
+    let i := σ.1
+    let strip := σ.2.1
+    let _sp3272 := σ.2.2
+    let moves := _sp3272.1
+    let _sp3273 := _sp3272.2
+    let b := _sp3273
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, (strip, moves, b)))
+      else
+        match ← ((do
+  let _t3240 ← SudoRt.atL v i
+  if (!(SudoRt.SEq.beq _t3240 (0 : Int))) then
+    do
+      let _t3242 ← SudoRt.mulI (3 : Int) i
+      let _ix3243 := _t3242
+      let _t3244 ← SudoRt.atL v i
+      let _t3245 ← SudoRt.putL strip _ix3243 _t3244
+      let strip := _t3245
+      let _t3246 ← SudoRt.atL v i
+      let _mb3247 := SudoRt.appendL moves ({ sudo_7PegMove_4band := src, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := _t3246, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_comb_lift } : PegMove)
+      let ⟨_nr3248, _⟩ := _mb3247
+      let moves := _nr3248
+      let _hm3212 := ()
+      let _u3249 := _hm3212
+      let _t3250 ← SudoRt.mulI (3 : Int) i
+      let _t3251 ← SudoRt.atL v i
+      let _mb3252 := SudoRt.appendL moves ({ sudo_7PegMove_4band := pv_bench, sudo_7PegMove_4hole := _t3250, sudo_7PegMove_4from := (0 : Int), sudo_7PegMove_4into := _t3251, sudo_7PegMove_3why := why_comb_drop } : PegMove)
+      let ⟨_nr3253, _⟩ := _mb3252
+      let moves := _nr3253
+      let _hm3213 := ()
+      let _u3254 := _hm3213
+      let _t3255 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (2 : Int)
+      let _t3256 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3255 } : Costs)
+      let _t3257 := ({ b with sudo_5Board_4cost := _t3256 } : Board)
+      let b := _t3257
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (strip, moves, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Array (PegMove))) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let strip := σ.2.1
+    let _sp3274 := σ.2.2
+    let moves := _sp3274.1
+    let _sp3275 := _sp3274.2
+    let b := _sp3275
+    do
+      let _t3259 ← SudoRt.subI ((b).sudo_5Board_1t).sudo_4Tier_1n (1 : Int)
+      let _t3260 ← SudoRt.mulI (3 : Int) _t3259
+      let _t3261 ← SudoRt.addI _t3260 ((b).sudo_5Board_1t).sudo_4Tier_7combgap
+      let _as3263 ← SudoRt.sudoAssert (decide (_t3261 < ((b).sudo_5Board_1t).sudo_4Tier_8benchlen)) 1905
+      let _t3264 := ({ b with sudo_5Board_8bench_on := true } : Board)
+      let b := _t3264
+      let _t3265 := ({ b with sudo_5Board_8bench_to := dst } : Board)
+      let b := _t3265
+      let _io3266 ← trace_lane_fold b strip moves
+      let ⟨_iw03267, _iw13268, _iw23269⟩ := _io3266
+      let b := _iw03267
+      let strip := _iw13268
+      let moves := _iw23269
+      let _t3270 := ({ b with sudo_5Board_5bench := strip } : Board)
+      let b := _t3270
+      let _io3271 ← note_peak b
+      let b := _io3271
+      pure (b, moves)) (fun r => pure r))
+    pure _out
+
+def trace_fold_key (b : Board) (moves : Array (PegMove)) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Array (PegMove))) :=
+  do
+    let t := (b).sudo_5Board_1t
+    let _t3279 ← value b across
+    let x := _t3279
+    let out := x
+    let _t3316 ← SudoRt.subI (SudoRt.listLen (t).sudo_4Tier_7foldsrc) (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t3316
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init3323 := (_fromV, (moves, out, b))
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Board) × (Array (PegMove))) _init3323 fuel (fun σ =>
+    let p := σ.1
+    let moves := σ.2.1
+    let _sp3319 := σ.2.2
+    let out := _sp3319.1
+    let _sp3320 := _sp3319.2
+    let b := _sp3320
+    do
+      if p > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (p, (moves, out, b)))
+      else
+        match ← ((do
+  let _t3309 ← SudoRt.subI (t).sudo_4Tier_1w (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t3309
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init3314 := (_fromV, (moves, out, b))
+  let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Board) × (Array (PegMove))) _init3314 fuel (fun σ =>
+    let c := σ.1
+    let moves := σ.2.1
+    let _sp3310 := σ.2.2
+    let out := _sp3310.1
+    let _sp3311 := _sp3310.2
+    let b := _sp3311
+    do
+      if c > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (c, (moves, out, b)))
+      else
+        match ← ((do
+  let _t3282 ← SudoRt.atL (t).sudo_4Tier_7foldsrc p
+  let _t3283 ← SudoRt.mulI _t3282 (t).sudo_4Tier_1w
+  let _t3284 ← SudoRt.addI _t3283 c
+  let i := _t3284
+  let _t3285 ← SudoRt.atL (t).sudo_4Tier_7folddst p
+  let _t3286 ← SudoRt.mulI _t3285 (t).sudo_4Tier_1w
+  let _t3287 ← SudoRt.addI _t3286 c
+  let j := _t3287
+  let _t3289 ← (if (decide (i < (t).sudo_4Tier_1n)) then (do
+  let _t3290 ← SudoRt.atL x i
+  pure (!(SudoRt.SEq.beq _t3290 (0 : Int)))) else pure false)
+  if _t3289 then
+    do
+      let _t3292 ← SudoRt.atL x i
+      let _mb3293 := SudoRt.appendL moves ({ sudo_7PegMove_4band := across, sudo_7PegMove_4hole := i, sudo_7PegMove_4from := _t3292, sudo_7PegMove_4into := (0 : Int), sudo_7PegMove_3why := why_key_fold } : PegMove)
+      let ⟨_nr3294, _⟩ := _mb3293
+      let moves := _nr3294
+      let _hm3277 := ()
+      let _u3295 := _hm3277
+      let _t3296 ← SudoRt.atL out j
+      let o := _t3296
+      let _ix3297 := j
+      let _t3298 ← SudoRt.atL x i
+      let _t3299 ← SudoRt.addI o _t3298
+      let _t3300 ← SudoRt.modI _t3299 (3 : Int)
+      let _t3301 ← SudoRt.putL out _ix3297 _t3300
+      let out := _t3301
+      let _t3302 ← SudoRt.atL out j
+      let _mb3303 := SudoRt.appendL moves ({ sudo_7PegMove_4band := across, sudo_7PegMove_4hole := j, sudo_7PegMove_4from := o, sudo_7PegMove_4into := _t3302, sudo_7PegMove_3why := why_key_fold } : PegMove)
+      let ⟨_nr3304, _⟩ := _mb3303
+      let moves := _nr3304
+      let _hm3278 := ()
+      let _u3305 := _hm3278
+      let _t3306 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_5moves (1 : Int)
+      let _t3307 := ({ (b).sudo_5Board_4cost with sudo_5Costs_5moves := _t3306 } : Costs)
+      let _t3308 := ({ b with sudo_5Board_4cost := _t3307 } : Board)
+      let b := _t3308
+      pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (moves, out, b))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (moves, out, b))) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (c, _fs))
+        | .cont _fs => do
+            if c == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (c, _fs))
+            else do
+              let i' ← SudoRt.addI c (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let moves := σ.2.1
+    let _sp3312 := σ.2.2
+    let out := _sp3312.1
+    let _sp3313 := _sp3312.2
+    let b := _sp3313
+    do
+      pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (moves, out, b))) (fun r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Board) × (Array (PegMove))) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Board) × (Array (PegMove))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Board) × (Array (PegMove))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (p, _fs))
+        | .cont _fs => do
+            if p == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (p, _fs))
+            else do
+              let i' ← SudoRt.addI p (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board) × (Array (PegMove))) (i', _fs))) (fun σ =>
+    let moves := σ.2.1
+    let _sp3321 := σ.2.2
+    let out := _sp3321.1
+    let _sp3322 := _sp3321.2
+    let b := _sp3322
+    do
+      let _t3317 ← SudoRt.mulI (t).sudo_4Tier_8keeprows (t).sudo_4Tier_1w
+      let _t3318 ← «prefix» out _t3317
+      pure (_t3318, b, moves)) (fun r => pure r))
+    pure _out
+
+def trace_park_rung (b : Board) (rung : Int) (moves : Array (PegMove)) : Except SudoRt.Trap ((Board) × (Array (PegMove))) :=
+  do
+    let _t3324 ← climb_holes b
+    let holes := _t3324
+    let _t3325 ← pegs_of b
+    let p := _t3325
+    let _io3326 ← unpark b
+    let b := _io3326
+    let _t3327 ← pegs_of b
+    let _io3328 ← diff_moves p _t3327 why_step moves
+    let moves := _io3328
+    let _t3329 ← pegs_of b
+    let p := _t3329
+    let _t3330 ← SudoRt.atL holes (b).sudo_5Board_8rung_idx
+    let _io3331 ← park b _t3330
+    let ⟨_ret3332, _iw03333⟩ := _io3331
+    let b := _iw03333
+    let got := _ret3332
+    let _t3334 ← pegs_of b
+    let _io3335 ← diff_moves p _t3334 why_step moves
+    let moves := _io3335
+    let _as3336 ← SudoRt.sudoAssertEq got rung 1939
+    let _t3337 ← SudoRt.addI (b).sudo_5Board_8rung_idx (1 : Int)
+    let _t3338 := ({ b with sudo_5Board_8rung_idx := _t3337 } : Board)
+    let b := _t3338
+    pure (b, moves)
+
+def step_moves (st : TraceStep) : Except SudoRt.Trap (Array (PegMove)) :=
+  do
+    let moves := (#[] : Array (PegMove))
+    let b := (st).sudo_9TraceStep_6before
+    let a := (st).sudo_9TraceStep_4args
+    if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_3Mul) then
+      do
+        let _t3340 ← SudoRt.atL a (0 : Int)
+        let _t3341 ← SudoRt.atL a (1 : Int)
+        let _t3342 ← SudoRt.atL a (2 : Int)
+        let _t3343 ← SudoRt.atL a (3 : Int)
+        let _t3345 ← SudoRt.atL a (4 : Int)
+        let _t3347 ← SudoRt.atL a (5 : Int)
+        let _io3349 ← trace_mul b _t3340 _t3341 _t3342 (SudoRt.SEq.beq _t3343 (1 : Int)) (SudoRt.SEq.beq _t3345 (1 : Int)) (SudoRt.SEq.beq _t3347 (1 : Int)) moves
+        let ⟨_iw03350, _iw13351⟩ := _io3349
+        let b := _iw03350
+        let moves := _iw13351
+        pure moves
+    else
+      do
+        if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Cube) then
+          do
+            let _t3353 ← SudoRt.atL a (0 : Int)
+            let _t3354 ← SudoRt.atL a (1 : Int)
+            let _io3355 ← trace_cube b _t3353 _t3354 moves
+            let ⟨_iw03356, _iw13357⟩ := _io3355
+            let b := _iw03356
+            let moves := _iw13357
+            pure moves
+        else
+          do
+            if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Fold) then
+              do
+                let _io3359 ← trace_fold_key b moves
+                let ⟨_ret3360, _iw03361, _iw13362⟩ := _io3359
+                let b := _iw03361
+                let moves := _iw13362
+                pure moves
+            else
+              do
+                if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Park) then
+                  do
+                    let _t3364 ← SudoRt.atL a (0 : Int)
+                    let _io3365 ← trace_park_rung b _t3364 moves
+                    let ⟨_iw03366, _iw13367⟩ := _io3365
+                    let b := _iw03366
+                    let moves := _iw13367
+                    pure moves
+                else
+                  do
+                    let _t3368 ← pegs_of b
+                    let p := _t3368
+                    let _io3369 ← run_op b (st).sudo_9TraceStep_2op a
+                    let b := _io3369
+                    let _t3370 ← pegs_of b
+                    let _io3371 ← diff_moves p _t3370 why_step moves
+                    let moves := _io3371
+                    pure moves
+
+def trace_invert (b : Board) (tr : Tracer) (x : Int) : Except SudoRt.Trap ((Board) × (Tracer)) :=
+  do
+    let _ix3372 := op_inv
+    let _t3373 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_inv
+    let _t3374 ← SudoRt.addI _t3373 (1 : Int)
+    let _t3375 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix3372 _t3374
+    let _t3376 := ({ (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t3375 } : Costs)
+    let _t3377 := ({ b with sudo_5Board_4cost := _t3376 } : Board)
+    let b := _t3377
+    let _io3378 ← record_step b tr Op.Sudo_2Op_4Copy (#[gap, x, (0 : Int)] : Array (Int))
+    let ⟨_iw03379, _iw13380⟩ := _io3378
+    let b := _iw03379
+    let tr := _iw13380
+    let _io3381 ← record_step b tr Op.Sudo_2Op_10TallyStart (#[] : Array (Int))
+    let ⟨_iw03382, _iw13383⟩ := _io3381
+    let b := _iw03382
+    let tr := _iw13383
+    let nr := (SudoRt.listLen (b).sudo_5Board_6ladder)
+    let _t3441 ← SudoRt.subI nr (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t3441
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init3456 := (_fromV, (b, tr))
+    let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Tracer)) _init3456 fuel (fun σ =>
+    let idx := σ.1
+    let b := σ.2.1
+    let _sp3454 := σ.2.2
+    let tr := _sp3454
+    do
+      if idx > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (idx, (b, tr)))
+      else
+        match ← ((do
+  let _t3386 ← SudoRt.subI nr (1 : Int)
+  let last := (SudoRt.SEq.beq idx _t3386)
+  let _t3388 ← SudoRt.atL (b).sudo_5Board_6ladder idx
+  let rung := _t3388
+  let _io3389 ← record_step b tr Op.Sudo_2Op_4Park (#[rung] : Array (Int))
+  let ⟨_iw03390, _iw13391⟩ := _io3389
+  let b := _iw03390
+  let tr := _iw13391
+  let _io3392 ← record_step b tr Op.Sudo_2Op_4Copy (#[spare, gap, (0 : Int)] : Array (Int))
+  let ⟨_iw03393, _iw13394⟩ := _io3392
+  let b := _iw03393
+  let tr := _iw13394
+  let m := (b).sudo_5Board_9tally_len
+  let _t3399 ← SudoRt.subI m (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t3399
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init3440 := _fromV
+  let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Tracer)) _init3440 fuel (fun σ =>
+    let j := σ
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) j)
+      else
+        match ← ((do
+  let _t3396 ← SudoRt.addI (b).sudo_5Board_6tally0 j
+  let _t3397 ← SudoRt.atL (b).sudo_5Board_3row _t3396
+  let _as3398 ← SudoRt.sudoAssertEq _t3397 (1 : Int) 1978
+  pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) ())) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) j)
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) j)
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) i')) (fun σ =>
+    do
+      let _t3407 ← SudoRt.subI m (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t3407
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init3439 := (_fromV, (b, tr))
+      let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Tracer)) _init3439 fuel (fun σ =>
+    let j := σ.1
+    let b := σ.2.1
+    let _sp3437 := σ.2.2
+    let tr := _sp3437
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (j, (b, tr)))
+      else
+        match ← ((do
+  let _io3401 ← record_step b tr Op.Sudo_2Op_4Cube (#[spare, spare] : Array (Int))
+  let ⟨_iw03402, _iw13403⟩ := _io3401
+  let b := _iw03402
+  let tr := _iw13403
+  let _io3404 ← record_step b tr Op.Sudo_2Op_9TallyFlip (#[j] : Array (Int))
+  let ⟨_iw03405, _iw13406⟩ := _io3404
+  let b := _iw03405
+  let tr := _iw13406
+  pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (b, tr))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3438 := σ.2.2
+    let tr := _sp3438
+    do
+      let _io3408 ← record_step b tr Op.Sudo_2Op_3Mul (#[gap, gap, spare, (0 : Int), (0 : Int), (0 : Int)] : Array (Int))
+      let ⟨_iw03409, _iw13410⟩ := _io3408
+      let b := _iw03409
+      let tr := _iw13410
+      let _io3411 ← record_step b tr Op.Sudo_2Op_5Clear (#[gap] : Array (Int))
+      let ⟨_iw03412, _iw13413⟩ := _io3411
+      let b := _iw03412
+      let tr := _iw13413
+      if (!( last )) then
+        do
+          let _io3414 ← record_step b tr Op.Sudo_2Op_11TallyDouble (#[] : Array (Int))
+          let ⟨_iw03415, _iw13416⟩ := _io3414
+          let b := _iw03415
+          let tr := _iw13416
+          if (SudoRt.SEq.beq rung (2 : Int)) then
+            do
+              let _io3418 ← record_step b tr Op.Sudo_2Op_4Cube (#[spare, gap] : Array (Int))
+              let ⟨_iw03419, _iw13420⟩ := _io3418
+              let b := _iw03419
+              let tr := _iw13420
+              let _io3421 ← record_step b tr Op.Sudo_2Op_3Mul (#[gap, x, spare, (0 : Int), (0 : Int), (0 : Int)] : Array (Int))
+              let ⟨_iw03422, _iw13423⟩ := _io3421
+              let b := _iw03422
+              let tr := _iw13423
+              if (!( last )) then
+                do
+                  let _io3424 ← record_step b tr Op.Sudo_2Op_8TallyAdd (#[] : Array (Int))
+                  let ⟨_iw03425, _iw13426⟩ := _io3424
+                  let b := _iw03425
+                  let tr := _iw13426
+                  pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (b, tr))
+              else
+                do
+                  pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (b, tr))
+          else
+            do
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (b, tr))
+      else
+        do
+          if (SudoRt.SEq.beq rung (2 : Int)) then
+            do
+              let _io3428 ← record_step b tr Op.Sudo_2Op_4Cube (#[spare, gap] : Array (Int))
+              let ⟨_iw03429, _iw13430⟩ := _io3428
+              let b := _iw03429
+              let tr := _iw13430
+              let _io3431 ← record_step b tr Op.Sudo_2Op_3Mul (#[gap, x, spare, (0 : Int), (0 : Int), (0 : Int)] : Array (Int))
+              let ⟨_iw03432, _iw13433⟩ := _io3431
+              let b := _iw03432
+              let tr := _iw13433
+              if (!( last )) then
+                do
+                  let _io3434 ← record_step b tr Op.Sudo_2Op_8TallyAdd (#[] : Array (Int))
+                  let ⟨_iw03435, _iw13436⟩ := _io3434
+                  let b := _iw03435
+                  let tr := _iw13436
+                  pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (b, tr))
+              else
+                do
+                  pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (b, tr))
+          else
+            do
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (b, tr))) (fun r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)))
+      pure _out) (fun r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (idx, _fs))
+        | .cont _fs => do
+            if idx == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (idx, _fs))
+            else do
+              let i' ← SudoRt.addI idx (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3455 := σ.2.2
+    let tr := _sp3455
+    do
+      let _io3442 ← record_step b tr Op.Sudo_2Op_6Unpark (#[] : Array (Int))
+      let ⟨_iw03443, _iw13444⟩ := _io3442
+      let b := _iw03443
+      let tr := _iw13444
+      let _io3445 ← record_step b tr Op.Sudo_2Op_4Cube (#[gap, gap] : Array (Int))
+      let ⟨_iw03446, _iw13447⟩ := _io3445
+      let b := _iw03446
+      let tr := _iw13447
+      let _io3448 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+      let ⟨_iw03449, _iw13450⟩ := _io3448
+      let b := _iw03449
+      let tr := _iw13450
+      let _io3451 ← record_step b tr Op.Sudo_2Op_10TallyClear (#[] : Array (Int))
+      let ⟨_iw03452, _iw13453⟩ := _io3451
+      let b := _iw03452
+      let tr := _iw13453
+      pure (b, tr)) (fun r => pure r))
+    pure _out
+
+def trace_invert_checked (b : Board) (tr : Tracer) (x : Int) : Except SudoRt.Trap ((Board) × (Tracer)) :=
+  do
+    let _io3457 ← trace_invert b tr x
+    let ⟨_iw03458, _iw13459⟩ := _io3457
+    let b := _iw03458
+    let tr := _iw13459
+    let _io3460 ← record_step b tr Op.Sudo_2Op_3Mul (#[check_target, gap, x, (1 : Int), (0 : Int), (0 : Int)] : Array (Int))
+    let ⟨_iw03461, _iw13462⟩ := _io3460
+    let b := _iw03461
+    let tr := _iw13462
+    let _t3463 ← «prefix» (b).sudo_5Board_5bench ((b).sudo_5Board_1t).sudo_4Tier_1n
+    let v := _t3463
+    let _io3464 ← record_step b tr Op.Sudo_2Op_9BenchRead (#[] : Array (Int))
+    let ⟨_iw03465, _iw13466⟩ := _io3464
+    let b := _iw03465
+    let tr := _iw13466
+    let _t3467 ← SudoRt.atL v (0 : Int)
+    let _as3469 ← SudoRt.sudoAssert (!(SudoRt.SEq.beq _t3467 (0 : Int))) 2001
+    let _t3474 ← SudoRt.subI (SudoRt.listLen v) (1 : Int)
+    let _fromV := (1 : Int)
+    let _toV := _t3474
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init3480 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Tracer)) _init3480 fuel (fun σ =>
+    let i := σ
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) i)
+      else
+        match ← ((do
+  let _t3471 ← SudoRt.atL v i
+  let _as3472 ← SudoRt.sudoAssertEq _t3471 (0 : Int) 2003
+  pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) ())) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) i)
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) i)
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) i')) (fun σ =>
+    do
+      let _t3475 ← SudoRt.atL v (0 : Int)
+      if (SudoRt.SEq.beq _t3475 (2 : Int)) then
+        do
+          let _io3477 ← record_step b tr Op.Sudo_2Op_6Mirror (#[gap] : Array (Int))
+          let ⟨_iw03478, _iw13479⟩ := _io3477
+          let b := _iw03478
+          let tr := _iw13479
+          pure (b, tr)
+      else
+        do
+          pure (b, tr)) (fun r => pure r))
+    pure _out
+
+def trace_frobenius_affine (b : Board) (tr : Tracer) : Except SudoRt.Trap ((Board) × (Tracer)) :=
+  do
+    let _io3481 ← record_step b tr Op.Sudo_2Op_4Cube (#[across, across] : Array (Int))
+    let ⟨_iw03482, _iw13483⟩ := _io3481
+    let b := _iw03482
+    let tr := _iw13483
+    let _io3484 ← record_step b tr Op.Sudo_2Op_4Cube (#[up, up] : Array (Int))
+    let ⟨_iw03485, _iw13486⟩ := _io3484
+    let b := _iw03485
+    let tr := _iw13486
+    let _io3487 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+    let ⟨_iw03488, _iw13489⟩ := _io3487
+    let b := _iw03488
+    let tr := _iw13489
+    pure (b, tr)
+
+def trace_chord_tail (b : Board) (tr : Tracer) (xh : Int) (yh : Int) : Except SudoRt.Trap ((Board) × (Tracer)) :=
+  do
+    let _io3490 ← record_step b tr Op.Sudo_2Op_3Mul (#[gap, gap, spare, (0 : Int), (0 : Int), (0 : Int)] : Array (Int))
+    let ⟨_iw03491, _iw13492⟩ := _io3490
+    let b := _iw03491
+    let tr := _iw13492
+    let _io3493 ← record_step b tr Op.Sudo_2Op_5Clear (#[gap] : Array (Int))
+    let ⟨_iw03494, _iw13495⟩ := _io3493
+    let b := _iw03494
+    let tr := _iw13495
+    let _io3496 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+    let ⟨_iw03497, _iw13498⟩ := _io3496
+    let b := _iw03497
+    let tr := _iw13498
+    let _io3499 ← record_step b tr Op.Sudo_2Op_3Mul (#[bottom, gap, gap, (1 : Int), (0 : Int), (0 : Int)] : Array (Int))
+    let ⟨_iw03500, _iw13501⟩ := _io3499
+    let b := _iw03500
+    let tr := _iw13501
+    let _io3502 ← record_step b tr Op.Sudo_2Op_11BenchWhite0 (#[] : Array (Int))
+    let ⟨_iw03503, _iw13504⟩ := _io3502
+    let b := _iw03503
+    let tr := _iw13504
+    let _io3505 ← record_step b tr Op.Sudo_2Op_8BenchAdd (#[xh, (0 : Int)] : Array (Int))
+    let ⟨_iw03506, _iw13507⟩ := _io3505
+    let b := _iw03506
+    let tr := _iw13507
+    let _io3508 ← record_step b tr Op.Sudo_2Op_8BenchAdd (#[bottom, (1 : Int)] : Array (Int))
+    let ⟨_iw03509, _iw13510⟩ := _io3508
+    let b := _iw03509
+    let tr := _iw13510
+    let _io3511 ← record_step b tr Op.Sudo_2Op_5Clear (#[bottom] : Array (Int))
+    let ⟨_iw03512, _iw13513⟩ := _io3511
+    let b := _iw03512
+    let tr := _iw13513
+    let _io3514 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+    let ⟨_iw03515, _iw13516⟩ := _io3514
+    let b := _iw03515
+    let tr := _iw13516
+    let _io3517 ← record_step b tr Op.Sudo_2Op_3Add (#[xh, bottom, (1 : Int)] : Array (Int))
+    let ⟨_iw03518, _iw13519⟩ := _io3517
+    let b := _iw03518
+    let tr := _iw13519
+    let _io3520 ← record_step b tr Op.Sudo_2Op_6Mirror (#[yh] : Array (Int))
+    let ⟨_iw03521, _iw13522⟩ := _io3520
+    let b := _iw03521
+    let tr := _iw13522
+    let _io3523 ← record_step b tr Op.Sudo_2Op_3Mul (#[yh, gap, xh, (0 : Int), (1 : Int), (0 : Int)] : Array (Int))
+    let ⟨_iw03524, _iw13525⟩ := _io3523
+    let b := _iw03524
+    let tr := _iw13525
+    let _io3526 ← record_step b tr Op.Sudo_2Op_5Clear (#[gap] : Array (Int))
+    let ⟨_iw03527, _iw13528⟩ := _io3526
+    let b := _iw03527
+    let tr := _iw13528
+    let _io3529 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+    let ⟨_iw03530, _iw13531⟩ := _io3529
+    let b := _iw03530
+    let tr := _iw13531
+    let _io3532 ← record_step b tr Op.Sudo_2Op_4Move (#[xh, bottom] : Array (Int))
+    let ⟨_iw03533, _iw13534⟩ := _io3532
+    let b := _iw03533
+    let tr := _iw13534
+    pure (b, tr)
+
+def trace_chord_add_demo (b : Board) (tr : Tracer) (red : Bool) : Except SudoRt.Trap ((Bool) × (Board) × (Tracer)) :=
+  do
+    let _ix3535 := op_chord
+    let _t3536 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_chord
+    let _t3537 ← SudoRt.addI _t3536 (1 : Int)
+    let _t3538 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix3535 _t3537
+    let _t3539 := ({ (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t3538 } : Costs)
+    let _t3540 := ({ b with sudo_5Board_4cost := _t3539 } : Board)
+    let b := _t3540
+    let _io3541 ← record_step b tr Op.Sudo_2Op_4Copy (#[bottom, base_across, (0 : Int)] : Array (Int))
+    let ⟨_iw03542, _iw13543⟩ := _io3541
+    let b := _iw03542
+    let tr := _iw13543
+    let _io3544 ← record_step b tr Op.Sudo_2Op_3Add (#[bottom, across, (1 : Int)] : Array (Int))
+    let ⟨_iw03545, _iw13546⟩ := _io3544
+    let b := _iw03545
+    let tr := _iw13546
+    let _t3547 ← is_zero b bottom
+    if _t3547 then
+      do
+        pure (false, b, tr)
+    else
+      do
+        let on := (b).sudo_5Board_9marker_on
+        let _t3548 := ({ b with sudo_5Board_9marker_on := false } : Board)
+        let b := _t3548
+        let _io3549 ← trace_invert_checked b tr bottom
+        let ⟨_iw03550, _iw13551⟩ := _io3549
+        let b := _iw03550
+        let tr := _iw13551
+        let _t3552 := ({ b with sudo_5Board_9marker_on := on } : Board)
+        let b := _t3552
+        let _t3553 ← trace_bit red
+        let _io3554 ← record_step b tr Op.Sudo_2Op_4Copy (#[spare, base_up, _t3553] : Array (Int))
+        let ⟨_iw03555, _iw13556⟩ := _io3554
+        let b := _iw03555
+        let tr := _iw13556
+        let _io3557 ← record_step b tr Op.Sudo_2Op_3Add (#[spare, up, (1 : Int)] : Array (Int))
+        let ⟨_iw03558, _iw13559⟩ := _io3557
+        let b := _iw03558
+        let tr := _iw13559
+        let _io3560 ← trace_chord_tail b tr across up
+        let ⟨_iw03561, _iw13562⟩ := _io3560
+        let b := _iw03561
+        let tr := _iw13562
+        pure (true, b, tr)
+
+def trace_walk_chord (b : Board) (tr : Tracer) (cells : Array (Int)) : Except SudoRt.Trap (((Bool) × (Bool)) × (Board) × (Tracer)) :=
+  do
+    let live := false
+    let _t3563 := ({ b with sudo_5Board_9marker_on := true } : Board)
+    let b := _t3563
+    let _t3607 ← SudoRt.subI (SudoRt.listLen cells) (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t3607
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init3616 := (_fromV, (b, tr, live))
+    let _out ← (SudoRt.runLoopOn (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) _init3616 fuel (fun σ =>
+    let j := σ.1
+    let b := σ.2.1
+    let _sp3612 := σ.2.2
+    let tr := _sp3612.1
+    let _sp3613 := _sp3612.2
+    let live := _sp3613
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (j, (b, tr, live)))
+      else
+        match ← ((do
+  let _t3565 ← SudoRt.atL cells j
+  let c := _t3565
+  let _t3567 ← (if (decide (c ≥ (0 : Int))) then (do
+  pure (decide (c ≤ (2 : Int)))) else pure false)
+  let _as3569 ← SudoRt.sudoAssert _t3567 2049
+  let _io3570 ← record_step b tr Op.Sudo_2Op_10MarkerLift (#[] : Array (Int))
+  let ⟨_iw03571, _iw13572⟩ := _io3570
+  let b := _iw03571
+  let tr := _iw13572
+  if live then
+    do
+      let _io3573 ← trace_frobenius_affine b tr
+      let ⟨_iw03574, _iw13575⟩ := _io3573
+      let b := _iw03574
+      let tr := _iw13575
+      if (!(SudoRt.SEq.beq c (0 : Int))) then
+        do
+          if (!( live )) then
+            do
+              let _io3577 ← record_step b tr Op.Sudo_2Op_4Copy (#[across, base_across, (0 : Int)] : Array (Int))
+              let ⟨_iw03578, _iw13579⟩ := _io3577
+              let b := _iw03578
+              let tr := _iw13579
+              let _t3581 ← trace_bit (SudoRt.SEq.beq c (2 : Int))
+              let _io3582 ← record_step b tr Op.Sudo_2Op_4Copy (#[up, base_up, _t3581] : Array (Int))
+              let ⟨_iw03583, _iw13584⟩ := _io3582
+              let b := _iw03583
+              let tr := _iw13584
+              let live := true
+              pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (b, tr, live))
+          else
+            do
+              let _io3586 ← trace_chord_add_demo b tr (SudoRt.SEq.beq c (2 : Int))
+              let ⟨_ret3587, _iw03588, _iw13589⟩ := _io3586
+              let b := _iw03588
+              let tr := _iw13589
+              let _sudo_h0 := _ret3587
+              if (!( _sudo_h0 )) then
+                do
+                  let _t3590 := ({ b with sudo_5Board_9marker_on := false } : Board)
+                  let b := _t3590
+                  pure (SudoRt.Flow.ret (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) ((live, false), b, tr))
+              else
+                do
+                  pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (b, tr, live))
+      else
+        do
+          pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (b, tr, live))
+  else
+    do
+      if (!(SudoRt.SEq.beq c (0 : Int))) then
+        do
+          if (!( live )) then
+            do
+              let _io3592 ← record_step b tr Op.Sudo_2Op_4Copy (#[across, base_across, (0 : Int)] : Array (Int))
+              let ⟨_iw03593, _iw13594⟩ := _io3592
+              let b := _iw03593
+              let tr := _iw13594
+              let _t3596 ← trace_bit (SudoRt.SEq.beq c (2 : Int))
+              let _io3597 ← record_step b tr Op.Sudo_2Op_4Copy (#[up, base_up, _t3596] : Array (Int))
+              let ⟨_iw03598, _iw13599⟩ := _io3597
+              let b := _iw03598
+              let tr := _iw13599
+              let live := true
+              pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (b, tr, live))
+          else
+            do
+              let _io3601 ← trace_chord_add_demo b tr (SudoRt.SEq.beq c (2 : Int))
+              let ⟨_ret3602, _iw03603, _iw13604⟩ := _io3601
+              let b := _iw03603
+              let tr := _iw13604
+              let _sudo_h0 := _ret3602
+              if (!( _sudo_h0 )) then
+                do
+                  let _t3605 := ({ b with sudo_5Board_9marker_on := false } : Board)
+                  let b := _t3605
+                  pure (SudoRt.Flow.ret (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) ((live, false), b, tr))
+              else
+                do
+                  pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (b, tr, live))
+      else
+        do
+          pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (b, tr, live))) : Except SudoRt.Trap (SudoRt.Flow _ (((Bool) × (Bool)) × (Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := ((Bool) × (Bool)) × (Board) × (Tracer)) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3614 := σ.2.2
+    let tr := _sp3614.1
+    let _sp3615 := _sp3614.2
+    let live := _sp3615
+    do
+      let _io3608 ← record_step b tr Op.Sudo_2Op_10MarkerLift (#[] : Array (Int))
+      let ⟨_iw03609, _iw13610⟩ := _io3608
+      let b := _iw03609
+      let tr := _iw13610
+      let _t3611 := ({ b with sudo_5Board_9marker_on := false } : Board)
+      let b := _t3611
+      pure ((live, true), b, tr)) (fun r => pure r))
+    pure _out
+
+def trace_curve_side (b : Board) (tr : Tracer) (src : Int) (dst : Int) : Except SudoRt.Trap ((Board) × (Tracer)) :=
+  do
+    let _io3617 ← record_step b tr Op.Sudo_2Op_4Copy (#[dst, src, (0 : Int)] : Array (Int))
+    let ⟨_iw03618, _iw13619⟩ := _io3617
+    let b := _iw03618
+    let tr := _iw13619
+    let _io3620 ← record_step b tr Op.Sudo_2Op_4Cube (#[dst, dst] : Array (Int))
+    let ⟨_iw03621, _iw13622⟩ := _io3620
+    let b := _iw03621
+    let tr := _iw13622
+    let _io3623 ← record_step b tr Op.Sudo_2Op_3Mul (#[spare, src, src, (1 : Int), (0 : Int), (0 : Int)] : Array (Int))
+    let ⟨_iw03624, _iw13625⟩ := _io3623
+    let b := _iw03624
+    let tr := _iw13625
+    let _io3626 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+    let ⟨_iw03627, _iw13628⟩ := _io3626
+    let b := _iw03627
+    let tr := _iw13628
+    let _io3629 ← record_step b tr Op.Sudo_2Op_3Add (#[dst, spare, (1 : Int)] : Array (Int))
+    let ⟨_iw03630, _iw13631⟩ := _io3629
+    let b := _iw03630
+    let tr := _iw13631
+    let _io3632 ← record_step b tr Op.Sudo_2Op_5Clear (#[spare] : Array (Int))
+    let ⟨_iw03633, _iw13634⟩ := _io3632
+    let b := _iw03633
+    let tr := _iw13634
+    let _io3635 ← record_step b tr Op.Sudo_2Op_6White0 (#[dst] : Array (Int))
+    let ⟨_iw03636, _iw13637⟩ := _io3635
+    let b := _iw03636
+    let tr := _iw13637
+    pure (b, tr)
+
+def trace_base_point (b : Board) (tr : Tracer) : Except SudoRt.Trap ((Int) × (Board) × (Tracer)) :=
+  do
+    let _as3638 ← SudoRt.sudoAssert ((b).sudo_5Board_1t).sudo_4Tier_4demo 2075
+    let n := ((b).sudo_5Board_1t).sudo_4Tier_1n
+    let found := (0 : Int)
+    let _t3747 ← SudoRt.subI n (1 : Int)
+    let _fromV := (1 : Int)
+    let _toV := _t3747
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init3790 := (_fromV, (b, tr, found))
+    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board) × (Tracer)) _init3790 fuel (fun σ =>
+    let j := σ.1
+    let b := σ.2.1
+    let _sp3786 := σ.2.2
+    let tr := _sp3786.1
+    let _sp3787 := _sp3786.2
+    let found := _sp3787
+    do
+      if j > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (j, (b, tr, found)))
+      else
+        match ← ((do
+  let _t3640 ← SudoRt.filledL n (0 : Int)
+  let x := _t3640
+  let _ix3641 := j
+  let _t3642 ← SudoRt.putL x _ix3641 (1 : Int)
+  let x := _t3642
+  let _t3643 ← trace_cat (#[base_across] : Array (Int)) x
+  let _io3644 ← record_step b tr Op.Sudo_2Op_3Put _t3643
+  let ⟨_iw03645, _iw13646⟩ := _io3644
+  let b := _iw03645
+  let tr := _iw13646
+  let _io3647 ← trace_curve_side b tr base_across bottom
+  let ⟨_iw03648, _iw13649⟩ := _io3647
+  let b := _iw03648
+  let tr := _iw13649
+  let _io3650 ← record_step b tr Op.Sudo_2Op_3Mul (#[gap, bottom, bottom, (1 : Int), (0 : Int), (0 : Int)] : Array (Int))
+  let ⟨_iw03651, _iw13652⟩ := _io3650
+  let b := _iw03651
+  let tr := _iw13652
+  let _io3653 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+  let ⟨_iw03654, _iw13655⟩ := _io3653
+  let b := _iw03654
+  let tr := _iw13655
+  let _io3656 ← record_step b tr Op.Sudo_2Op_6White0 (#[up] : Array (Int))
+  let ⟨_iw03657, _iw13658⟩ := _io3656
+  let b := _iw03657
+  let tr := _iw13658
+  let _t3659 ← SudoRt.filledL n (0 : Int)
+  let strip := _t3659
+  let _t3665 ← SudoRt.subI n (2 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t3665
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init3746 := (_fromV, strip)
+  let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board) × (Tracer)) _init3746 fuel (fun σ =>
+    let i := σ.1
+    let strip := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (i, strip))
+      else
+        match ← ((do
+  let _t3661 ← SudoRt.modI i (2 : Int)
+  if (SudoRt.SEq.beq _t3661 (0 : Int)) then
+    do
+      let _ix3663 := i
+      let _t3664 ← SudoRt.putL strip _ix3663 (2 : Int)
+      let strip := _t3664
+      pure (SudoRt.Flow.cont (ρ := (Int) × (Board) × (Tracer)) strip)
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Int) × (Board) × (Tracer)) strip)) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Int) × (Board) × (Tracer)) (i', _fs))) (fun σ =>
+    let strip := σ.2
+    do
+      let _t3666 ← SudoRt.subI n (2 : Int)
+      let _ix3667 := _t3666
+      let _t3668 ← SudoRt.putL strip _ix3667 (1 : Int)
+      let strip := _t3668
+      let _t3669 ← trace_cat (#[across] : Array (Int)) strip
+      let _io3670 ← record_step b tr Op.Sudo_2Op_3Put _t3669
+      let ⟨_iw03671, _iw13672⟩ := _io3670
+      let b := _iw03671
+      let tr := _iw13672
+      let _t3673 := ({ b with sudo_5Board_9marker_on := true } : Board)
+      let b := _t3673
+      let _t3711 ← SudoRt.subI n (2 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t3711
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init3745 := (_fromV, (b, tr))
+      let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board) × (Tracer)) _init3745 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2.1
+    let _sp3743 := σ.2.2
+    let tr := _sp3743
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (i, (b, tr)))
+      else
+        match ← ((do
+  let _t3675 ← SudoRt.atL strip i
+  let d := _t3675
+  let _io3676 ← record_step b tr Op.Sudo_2Op_10MarkerLift (#[] : Array (Int))
+  let ⟨_iw03677, _iw13678⟩ := _io3676
+  let b := _iw03677
+  let tr := _iw13678
+  let _io3679 ← record_step b tr Op.Sudo_2Op_4Cube (#[up, up] : Array (Int))
+  let ⟨_iw03680, _iw13681⟩ := _io3679
+  let b := _iw03680
+  let tr := _iw13681
+  if (!(SudoRt.SEq.beq d (0 : Int))) then
+    do
+      if (SudoRt.SEq.beq d (2 : Int)) then
+        do
+          let _io3684 ← record_step b tr Op.Sudo_2Op_4Copy (#[spare, gap, (0 : Int)] : Array (Int))
+          let ⟨_iw03685, _iw13686⟩ := _io3684
+          let b := _iw03685
+          let tr := _iw13686
+          let _io3687 ← record_step b tr Op.Sudo_2Op_3Mul (#[up, up, spare, (0 : Int), (0 : Int), (0 : Int)] : Array (Int))
+          let ⟨_iw03688, _iw13689⟩ := _io3687
+          let b := _iw03688
+          let tr := _iw13689
+          let _io3690 ← record_step b tr Op.Sudo_2Op_5Clear (#[up] : Array (Int))
+          let ⟨_iw03691, _iw13692⟩ := _io3690
+          let b := _iw03691
+          let tr := _iw13692
+          let _io3693 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+          let ⟨_iw03694, _iw13695⟩ := _io3693
+          let b := _iw03694
+          let tr := _iw13695
+          pure (SudoRt.Flow.cont (ρ := (Int) × (Board) × (Tracer)) (b, tr))
+      else
+        do
+          let _io3696 ← record_step b tr Op.Sudo_2Op_4Copy (#[spare, bottom, (0 : Int)] : Array (Int))
+          let ⟨_iw03697, _iw13698⟩ := _io3696
+          let b := _iw03697
+          let tr := _iw13698
+          let _io3699 ← record_step b tr Op.Sudo_2Op_3Mul (#[up, up, spare, (0 : Int), (0 : Int), (0 : Int)] : Array (Int))
+          let ⟨_iw03700, _iw13701⟩ := _io3699
+          let b := _iw03700
+          let tr := _iw13701
+          let _io3702 ← record_step b tr Op.Sudo_2Op_5Clear (#[up] : Array (Int))
+          let ⟨_iw03703, _iw13704⟩ := _io3702
+          let b := _iw03703
+          let tr := _iw13704
+          let _io3705 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+          let ⟨_iw03706, _iw13707⟩ := _io3705
+          let b := _iw03706
+          let tr := _iw13707
+          pure (SudoRt.Flow.cont (ρ := (Int) × (Board) × (Tracer)) (b, tr))
+  else
+    do
+      let _io3708 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+      let ⟨_iw03709, _iw13710⟩ := _io3708
+      let b := _iw03709
+      let tr := _iw13710
+      pure (SudoRt.Flow.cont (ρ := (Int) × (Board) × (Tracer)) (b, tr))) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Int) × (Board) × (Tracer)) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3744 := σ.2.2
+    let tr := _sp3744
+    do
+      let _io3712 ← record_step b tr Op.Sudo_2Op_10MarkerLift (#[] : Array (Int))
+      let ⟨_iw03713, _iw13714⟩ := _io3712
+      let b := _iw03713
+      let tr := _iw13714
+      let _t3715 := ({ b with sudo_5Board_9marker_on := false } : Board)
+      let b := _t3715
+      let _io3716 ← record_step b tr Op.Sudo_2Op_5Clear (#[gap] : Array (Int))
+      let ⟨_iw03717, _iw13718⟩ := _io3716
+      let b := _iw03717
+      let tr := _iw13718
+      let _io3719 ← record_step b tr Op.Sudo_2Op_3Mul (#[gap, up, up, (1 : Int), (0 : Int), (0 : Int)] : Array (Int))
+      let ⟨_iw03720, _iw13721⟩ := _io3719
+      let b := _iw03720
+      let tr := _iw13721
+      let _io3722 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+      let ⟨_iw03723, _iw13724⟩ := _io3722
+      let b := _iw03723
+      let tr := _iw13724
+      let _t3725 ← value b gap
+      let _t3726 ← value b bottom
+      if (SudoRt.SEq.beq _t3725 _t3726) then
+        do
+          let found := j
+          pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (b, tr, found))
+      else
+        do
+          let _io3728 ← record_step b tr Op.Sudo_2Op_5Clear (#[gap] : Array (Int))
+          let ⟨_iw03729, _iw13730⟩ := _io3728
+          let b := _iw03729
+          let tr := _iw13730
+          let _io3731 ← record_step b tr Op.Sudo_2Op_5Clear (#[bottom] : Array (Int))
+          let ⟨_iw03732, _iw13733⟩ := _io3731
+          let b := _iw03732
+          let tr := _iw13733
+          let _io3734 ← record_step b tr Op.Sudo_2Op_5Clear (#[up] : Array (Int))
+          let ⟨_iw03735, _iw13736⟩ := _io3734
+          let b := _iw03735
+          let tr := _iw13736
+          let _io3737 ← record_step b tr Op.Sudo_2Op_5Clear (#[across] : Array (Int))
+          let ⟨_iw03738, _iw13739⟩ := _io3737
+          let b := _iw03738
+          let tr := _iw13739
+          let _io3740 ← record_step b tr Op.Sudo_2Op_5Clear (#[base_across] : Array (Int))
+          let ⟨_iw03741, _iw13742⟩ := _io3740
+          let b := _iw03741
+          let tr := _iw13742
+          pure (SudoRt.Flow.cont (ρ := (Int) × (Board) × (Tracer)) (b, tr, found))) (fun r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board) × (Tracer)) r)))
+      pure _out) (fun r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board) × (Tracer)) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (j, _fs))
+        | .cont _fs => do
+            if j == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Int) × (Board) × (Tracer)) (j, _fs))
+            else do
+              let i' ← SudoRt.addI j (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Int) × (Board) × (Tracer)) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3788 := σ.2.2
+    let tr := _sp3788.1
+    let _sp3789 := _sp3788.2
+    let found := _sp3789
+    do
+      let _as3749 ← SudoRt.sudoAssert (decide (found > (0 : Int))) 2118
+      let _io3750 ← record_step b tr Op.Sudo_2Op_5Clear (#[gap] : Array (Int))
+      let ⟨_iw03751, _iw13752⟩ := _io3750
+      let b := _iw03751
+      let tr := _iw13752
+      let _io3753 ← record_step b tr Op.Sudo_2Op_5Clear (#[bottom] : Array (Int))
+      let ⟨_iw03754, _iw13755⟩ := _io3753
+      let b := _iw03754
+      let tr := _iw13755
+      let _io3756 ← record_step b tr Op.Sudo_2Op_5Clear (#[across] : Array (Int))
+      let ⟨_iw03757, _iw13758⟩ := _io3756
+      let b := _iw03757
+      let tr := _iw13758
+      let _io3759 ← record_step b tr Op.Sudo_2Op_4Move (#[base_up, up] : Array (Int))
+      let ⟨_iw03760, _iw13761⟩ := _io3759
+      let b := _iw03760
+      let tr := _iw13761
+      let _t3762 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
+      let _t3763 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t3762 } : Costs)
+      let _t3764 := ({ b with sudo_5Board_4cost := _t3763 } : Board)
+      let b := _t3764
+      let wrwr := (#[(1 : Int), (2 : Int), (1 : Int), (2 : Int)] : Array (Int))
+      let _io3765 ← trace_walk_chord b tr wrwr
+      let ⟨_ret3766, _iw03767, _iw13768⟩ := _io3765
+      let b := _iw03767
+      let tr := _iw13768
+      let _sudo_h0 := _ret3766
+      let ⟨live, ok⟩ := _sudo_h0
+      let _t3769 ← (if live then (do
+  pure ok) else pure false)
+      let _as3770 ← SudoRt.sudoAssert _t3769 2126
+      let _t3771 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
+      let _t3772 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t3771 } : Costs)
+      let _t3773 := ({ b with sudo_5Board_4cost := _t3772 } : Board)
+      let b := _t3773
+      let _io3774 ← record_step b tr Op.Sudo_2Op_5Clear (#[base_across] : Array (Int))
+      let ⟨_iw03775, _iw13776⟩ := _io3774
+      let b := _iw03775
+      let tr := _iw13776
+      let _io3777 ← record_step b tr Op.Sudo_2Op_5Clear (#[base_up] : Array (Int))
+      let ⟨_iw03778, _iw13779⟩ := _io3777
+      let b := _iw03778
+      let tr := _iw13779
+      let _io3780 ← record_step b tr Op.Sudo_2Op_4Move (#[base_across, across] : Array (Int))
+      let ⟨_iw03781, _iw13782⟩ := _io3780
+      let b := _iw03781
+      let tr := _iw13782
+      let _io3783 ← record_step b tr Op.Sudo_2Op_4Move (#[base_up, up] : Array (Int))
+      let ⟨_iw03784, _iw13785⟩ := _io3783
+      let b := _iw03784
+      let tr := _iw13785
+      pure (found, b, tr)) (fun r => pure r))
+    pure _out
+
+def trace_on_curve (b : Board) (tr : Tracer) : Except SudoRt.Trap ((Bool) × (Board) × (Tracer)) :=
+  do
+    let _io3791 ← record_step b tr Op.Sudo_2Op_3Mul (#[gap, base_up, base_up, (1 : Int), (0 : Int), (0 : Int)] : Array (Int))
+    let ⟨_iw03792, _iw13793⟩ := _io3791
+    let b := _iw03792
+    let tr := _iw13793
+    let _io3794 ← record_step b tr Op.Sudo_2Op_4Copy (#[bottom, base_across, (0 : Int)] : Array (Int))
+    let ⟨_iw03795, _iw13796⟩ := _io3794
+    let b := _iw03795
+    let tr := _iw13796
+    let _io3797 ← record_step b tr Op.Sudo_2Op_4Cube (#[bottom, bottom] : Array (Int))
+    let ⟨_iw03798, _iw13799⟩ := _io3797
+    let b := _iw03798
+    let tr := _iw13799
+    let _io3800 ← record_step b tr Op.Sudo_2Op_3Mul (#[spare, base_across, base_across, (1 : Int), (0 : Int), (0 : Int)] : Array (Int))
+    let ⟨_iw03801, _iw13802⟩ := _io3800
+    let b := _iw03801
+    let tr := _iw13802
+    let _io3803 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+    let ⟨_iw03804, _iw13805⟩ := _io3803
+    let b := _iw03804
+    let tr := _iw13805
+    let _io3806 ← record_step b tr Op.Sudo_2Op_3Add (#[bottom, spare, (1 : Int)] : Array (Int))
+    let ⟨_iw03807, _iw13808⟩ := _io3806
+    let b := _iw03807
+    let tr := _iw13808
+    let _io3809 ← record_step b tr Op.Sudo_2Op_5Clear (#[spare] : Array (Int))
+    let ⟨_iw03810, _iw13811⟩ := _io3809
+    let b := _iw03810
+    let tr := _iw13811
+    let _io3812 ← record_step b tr Op.Sudo_2Op_6White0 (#[bottom] : Array (Int))
+    let ⟨_iw03813, _iw13814⟩ := _io3812
+    let b := _iw03813
+    let tr := _iw13814
+    let _t3815 ← value b gap
+    let _t3816 ← value b bottom
+    let ok := (SudoRt.SEq.beq _t3815 _t3816)
+    let _io3818 ← record_step b tr Op.Sudo_2Op_5Clear (#[gap] : Array (Int))
+    let ⟨_iw03819, _iw13820⟩ := _io3818
+    let b := _iw03819
+    let tr := _iw13820
+    let _io3821 ← record_step b tr Op.Sudo_2Op_5Clear (#[bottom] : Array (Int))
+    let ⟨_iw03822, _iw13823⟩ := _io3821
+    let b := _iw03822
+    let tr := _iw13823
+    pure (ok, b, tr)
+
+def trace_certificate (b : Board) (tr : Tracer) (xh : Int) (yh : Int) : Except SudoRt.Trap ((Bool) × (Board) × (Tracer)) :=
+  do
+    let _ix3824 := op_chord
+    let _t3825 ← SudoRt.atL ((b).sudo_5Board_4cost).sudo_5Costs_3ops op_chord
+    let _t3826 ← SudoRt.addI _t3825 (1 : Int)
+    let _t3827 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_3ops _ix3824 _t3826
+    let _t3828 := ({ (b).sudo_5Board_4cost with sudo_5Costs_3ops := _t3827 } : Costs)
+    let _t3829 := ({ b with sudo_5Board_4cost := _t3828 } : Board)
+    let b := _t3829
+    let _io3830 ← record_step b tr Op.Sudo_2Op_4Copy (#[bottom, xh, (0 : Int)] : Array (Int))
+    let ⟨_iw03831, _iw13832⟩ := _io3830
+    let b := _iw03831
+    let tr := _iw13832
+    let _io3833 ← record_step b tr Op.Sudo_2Op_4Cube (#[bottom, bottom] : Array (Int))
+    let ⟨_iw03834, _iw13835⟩ := _io3833
+    let b := _iw03834
+    let tr := _iw13835
+    let _io3836 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+    let ⟨_iw03837, _iw13838⟩ := _io3836
+    let b := _iw03837
+    let tr := _iw13838
+    let _io3839 ← record_step b tr Op.Sudo_2Op_6Mirror (#[bottom] : Array (Int))
+    let ⟨_iw03840, _iw13841⟩ := _io3839
+    let b := _iw03840
+    let tr := _iw13841
+    let _io3842 ← record_step b tr Op.Sudo_2Op_3Add (#[bottom, xh, (0 : Int)] : Array (Int))
+    let ⟨_iw03843, _iw13844⟩ := _io3842
+    let b := _iw03843
+    let tr := _iw13844
+    let _t3845 ← is_zero b bottom
+    if _t3845 then
+      do
+        let _io3846 ← record_step b tr Op.Sudo_2Op_5Clear (#[bottom] : Array (Int))
+        let ⟨_iw03847, _iw13848⟩ := _io3846
+        let b := _iw03847
+        let tr := _iw13848
+        pure (false, b, tr)
+    else
+      do
+        let _io3849 ← trace_invert_checked b tr bottom
+        let ⟨_iw03850, _iw13851⟩ := _io3849
+        let b := _iw03850
+        let tr := _iw13851
+        let _io3852 ← record_step b tr Op.Sudo_2Op_4Copy (#[spare, yh, (0 : Int)] : Array (Int))
+        let ⟨_iw03853, _iw13854⟩ := _io3852
+        let b := _iw03853
+        let tr := _iw13854
+        let _io3855 ← record_step b tr Op.Sudo_2Op_4Cube (#[spare, spare] : Array (Int))
+        let ⟨_iw03856, _iw13857⟩ := _io3855
+        let b := _iw03856
+        let tr := _iw13857
+        let _io3858 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+        let ⟨_iw03859, _iw13860⟩ := _io3858
+        let b := _iw03859
+        let tr := _iw13860
+        let _io3861 ← record_step b tr Op.Sudo_2Op_3Add (#[spare, yh, (0 : Int)] : Array (Int))
+        let ⟨_iw03862, _iw13863⟩ := _io3861
+        let b := _iw03862
+        let tr := _iw13863
+        let _io3864 ← record_step b tr Op.Sudo_2Op_6Mirror (#[spare] : Array (Int))
+        let ⟨_iw03865, _iw13866⟩ := _io3864
+        let b := _iw03865
+        let tr := _iw13866
+        let _io3867 ← record_step b tr Op.Sudo_2Op_3Mul (#[gap, gap, spare, (0 : Int), (0 : Int), (0 : Int)] : Array (Int))
+        let ⟨_iw03868, _iw13869⟩ := _io3867
+        let b := _iw03868
+        let tr := _iw13869
+        let _io3870 ← record_step b tr Op.Sudo_2Op_5Clear (#[gap] : Array (Int))
+        let ⟨_iw03871, _iw13872⟩ := _io3870
+        let b := _iw03871
+        let tr := _iw13872
+        let _io3873 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+        let ⟨_iw03874, _iw13875⟩ := _io3873
+        let b := _iw03874
+        let tr := _iw13875
+        let _io3876 ← record_step b tr Op.Sudo_2Op_4Cube (#[xh, xh] : Array (Int))
+        let ⟨_iw03877, _iw13878⟩ := _io3876
+        let b := _iw03877
+        let tr := _iw13878
+        let _io3879 ← record_step b tr Op.Sudo_2Op_4Cube (#[yh, yh] : Array (Int))
+        let ⟨_iw03880, _iw13881⟩ := _io3879
+        let b := _iw03880
+        let tr := _iw13881
+        let _io3882 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+        let ⟨_iw03883, _iw13884⟩ := _io3882
+        let b := _iw03883
+        let tr := _iw13884
+        let _io3885 ← record_step b tr Op.Sudo_2Op_3Mul (#[bottom, gap, gap, (1 : Int), (0 : Int), (0 : Int)] : Array (Int))
+        let ⟨_iw03886, _iw13887⟩ := _io3885
+        let b := _iw03886
+        let tr := _iw13887
+        let _io3888 ← record_step b tr Op.Sudo_2Op_11BenchWhite0 (#[] : Array (Int))
+        let ⟨_iw03889, _iw13890⟩ := _io3888
+        let b := _iw03889
+        let tr := _iw13890
+        let _io3891 ← record_step b tr Op.Sudo_2Op_8BenchAdd (#[xh, (0 : Int)] : Array (Int))
+        let ⟨_iw03892, _iw13893⟩ := _io3891
+        let b := _iw03892
+        let tr := _iw13893
+        let _io3894 ← record_step b tr Op.Sudo_2Op_8BenchAdd (#[bottom, (1 : Int)] : Array (Int))
+        let ⟨_iw03895, _iw13896⟩ := _io3894
+        let b := _iw03895
+        let tr := _iw13896
+        let _io3897 ← record_step b tr Op.Sudo_2Op_5Clear (#[bottom] : Array (Int))
+        let ⟨_iw03898, _iw13899⟩ := _io3897
+        let b := _iw03898
+        let tr := _iw13899
+        let _io3900 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+        let ⟨_iw03901, _iw13902⟩ := _io3900
+        let b := _iw03901
+        let tr := _iw13902
+        let _io3903 ← record_step b tr Op.Sudo_2Op_3Add (#[xh, bottom, (1 : Int)] : Array (Int))
+        let ⟨_iw03904, _iw13905⟩ := _io3903
+        let b := _iw03904
+        let tr := _iw13905
+        let _io3906 ← record_step b tr Op.Sudo_2Op_6Mirror (#[yh] : Array (Int))
+        let ⟨_iw03907, _iw13908⟩ := _io3906
+        let b := _iw03907
+        let tr := _iw13908
+        let _io3909 ← record_step b tr Op.Sudo_2Op_3Mul (#[yh, gap, xh, (0 : Int), (1 : Int), (0 : Int)] : Array (Int))
+        let ⟨_iw03910, _iw13911⟩ := _io3909
+        let b := _iw03910
+        let tr := _iw13911
+        let _io3912 ← record_step b tr Op.Sudo_2Op_5Clear (#[gap] : Array (Int))
+        let ⟨_iw03913, _iw13914⟩ := _io3912
+        let b := _iw03913
+        let tr := _iw13914
+        let _io3915 ← record_step b tr Op.Sudo_2Op_6Settle (#[] : Array (Int))
+        let ⟨_iw03916, _iw13917⟩ := _io3915
+        let b := _iw03916
+        let tr := _iw13917
+        let _io3918 ← record_step b tr Op.Sudo_2Op_4Move (#[xh, bottom] : Array (Int))
+        let ⟨_iw03919, _iw13920⟩ := _io3918
+        let b := _iw03919
+        let tr := _iw13920
+        pure (true, b, tr)
+
+def trace_call_in («rec» : Board) (sender : Board) (tr : Tracer) : Except SudoRt.Trap ((Board) × (Tracer)) :=
+  do
+    let b := «rec»
+    let _io3921 ← record_step b tr Op.Sudo_2Op_12StartCalling (#[] : Array (Int))
+    let ⟨_iw03922, _iw13923⟩ := _io3921
+    let b := _iw03922
+    let tr := _iw13923
+    let _t3924 ← plan_dst b
+    let dsts := _t3924
+    let _fromV := (0 : Int)
+    let _toV := (1 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init3944 := (_fromV, (b, tr))
+    let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Tracer)) _init3944 fuel (fun σ =>
+    let d := σ.1
+    let b := σ.2.1
+    let _sp3942 := σ.2.2
+    let tr := _sp3942
+    do
+      if d > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (d, (b, tr)))
+      else
+        match ← ((do
+  let _t3935 ← SudoRt.subI ((b).sudo_5Board_1t).sudo_4Tier_1n (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t3935
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init3938 := (_fromV, (b, tr))
+  let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Tracer)) _init3938 fuel (fun σ =>
+    let i := σ.1
+    let b := σ.2.1
+    let _sp3936 := σ.2.2
+    let tr := _sp3936
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (i, (b, tr)))
+      else
+        match ← ((do
+  let _t3927 ← SudoRt.atL dsts d
+  let _t3928 ← SudoRt.atL dsts d
+  let _t3929 ← plan_src _t3928
+  let _t3930 ← value sender _t3929
+  let _t3931 ← trace_cat (#[_t3927, i] : Array (Int)) _t3930
+  let _io3932 ← record_step b tr Op.Sudo_2Op_8CallHole _t3931
+  let ⟨_iw03933, _iw13934⟩ := _io3932
+  let b := _iw03933
+  let tr := _iw13934
+  pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (b, tr))) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3937 := σ.2.2
+    let tr := _sp3937
+    do
+      pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (b, tr))) (fun r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (d, _fs))
+        | .cont _fs => do
+            if d == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) (d, _fs))
+            else do
+              let i' ← SudoRt.addI d (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) (i', _fs))) (fun σ =>
+    let b := σ.2.1
+    let _sp3943 := σ.2.2
+    let tr := _sp3943
+    do
+      let _io3939 ← record_step b tr Op.Sudo_2Op_10CallingOff (#[] : Array (Int))
+      let ⟨_iw03940, _iw13941⟩ := _io3939
+      let b := _iw03940
+      let tr := _iw13941
+      pure (b, tr)) (fun r => pure r))
+    pure _out
+
+def trace_call_session (b : Board) (sender : Board) (tr : Tracer) : Except SudoRt.Trap ((Board) × (Tracer)) :=
+  do
+    let _io3945 ← trace_call_in b sender tr
+    let ⟨_ret3946, _iw03947⟩ := _io3945
+    let tr := _iw03947
+    let b := _ret3946
+    let _t3948 ← plan_dst b
+    let dsts := _t3948
+    let _fromV := (0 : Int)
+    let _toV := (1 : Int)
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init3956 := _fromV
+    let _out ← (SudoRt.runLoopOn (ρ := (Board) × (Tracer)) _init3956 fuel (fun σ =>
+    let d := σ
+    do
+      if d > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) d)
+      else
+        match ← ((do
+  let _t3950 ← SudoRt.atL dsts d
+  let _t3951 ← SudoRt.atL (b).sudo_5Board_4home _t3950
+  let _t3952 ← SudoRt.atL dsts d
+  let _t3953 ← plan_src _t3952
+  let _t3954 ← SudoRt.atL (sender).sudo_5Board_4home _t3953
+  let _as3955 ← SudoRt.sudoAssertEq _t3951 _t3954 2198
+  pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) ())) : Except SudoRt.Trap (SudoRt.Flow _ ((Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) d)
+        | .cont _fs => do
+            if d == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Board) × (Tracer)) d)
+            else do
+              let i' ← SudoRt.addI d (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Board) × (Tracer)) i')) (fun σ =>
+    do
+      pure (b, tr)) (fun r => pure r))
+    pure _out
+
+def trace_publish (b : Board) (tr : Tracer) (cells : Array (Int)) (p : Player) : Except SudoRt.Trap ((Bool) × (Board) × (Tracer) × (Player)) :=
+  do
+    let _io3957 ← begin_phase b ph_base_point
+    let b := _io3957
+    let _io3958 ← trace_base_point b tr
+    let ⟨_ret3959, _iw03960, _iw13961⟩ := _io3958
+    let b := _iw03960
+    let tr := _iw13961
+    let _t3962 := ({ p with sudo_6Player_9base_hole := _ret3959 } : Player)
+    let p := _t3962
+    let _io3963 ← «end_phase» b
+    let b := _io3963
+    let _t3964 ← point_of b base_across base_up
+    let _t3965 := ({ p with sudo_6Player_4base := _t3964 } : Player)
+    let p := _t3965
+    let _t3966 ← npeg cells
+    let _t3967 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves _t3966
+    let _t3968 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t3967 } : Costs)
+    let _t3969 := ({ b with sudo_5Board_4cost := _t3968 } : Board)
+    let b := _t3969
+    let _io3970 ← begin_phase b ph_own_walk
+    let b := _io3970
+    let _io3971 ← trace_walk_chord b tr cells
+    let ⟨_ret3972, _iw03973, _iw13974⟩ := _io3971
+    let b := _iw03973
+    let tr := _iw13974
+    let _sudo_h0 := _ret3972
+    let ⟨live, ok⟩ := _sudo_h0
+    let _t3975 ← (if live then (do
+  pure ok) else pure false)
+    let ok := _t3975
+    if ok then
+      do
+        let _io3976 ← record_step b tr Op.Sudo_2Op_5Clear (#[base_across] : Array (Int))
+        let ⟨_iw03977, _iw13978⟩ := _io3976
+        let b := _iw03977
+        let tr := _iw13978
+        let _io3979 ← record_step b tr Op.Sudo_2Op_5Clear (#[base_up] : Array (Int))
+        let ⟨_iw03980, _iw13981⟩ := _io3979
+        let b := _iw03980
+        let tr := _iw13981
+        let _io3982 ← «end_phase» b
+        let b := _io3982
+        if ok then
+          do
+            let _t3983 ← point_of b across up
+            let _t3984 := ({ p with sudo_6Player_6sent_c := _t3983 } : Player)
+            let p := _t3984
+            pure (ok, b, tr, p)
+        else
+          do
+            pure (ok, b, tr, p)
+    else
+      do
+        let _io3985 ← «end_phase» b
+        let b := _io3985
+        if ok then
+          do
+            let _t3986 ← point_of b across up
+            let _t3987 := ({ p with sudo_6Player_6sent_c := _t3986 } : Player)
+            let p := _t3987
+            pure (ok, b, tr, p)
+        else
+          do
+            pure (ok, b, tr, p)
+
+def trace_swap_both (ba : Board) (bb : Board) (tr : Tracer) : Except SudoRt.Trap ((Board) × (Board) × (Tracer)) :=
+  do
+    let _t3988 := ({ tr with sudo_6Tracer_6player := (0 : Int) } : Tracer)
+    let tr := _t3988
+    let _io3989 ← begin_phase ba ph_swap
+    let ba := _io3989
+    let _io3990 ← trace_call_session ba bb tr
+    let ⟨_iw03991, _iw13992⟩ := _io3990
+    let ba := _iw03991
+    let tr := _iw13992
+    let _io3993 ← «end_phase» ba
+    let ba := _io3993
+    let _t3994 := ({ tr with sudo_6Tracer_6player := (1 : Int) } : Tracer)
+    let tr := _t3994
+    let _io3995 ← begin_phase bb ph_swap
+    let bb := _io3995
+    let _io3996 ← trace_call_session bb ba tr
+    let ⟨_iw03997, _iw13998⟩ := _io3996
+    let bb := _iw03997
+    let tr := _iw13998
+    let _io3999 ← «end_phase» bb
+    let bb := _io3999
+    pure (ba, bb, tr)
+
+def trace_curve_tests (ba : Board) (bb : Board) (pa : Player) (pb : Player) (tr : Tracer) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player) × (Tracer)) :=
+  do
+    let _t4000 := ({ tr with sudo_6Tracer_6player := (0 : Int) } : Tracer)
+    let tr := _t4000
+    let _io4001 ← begin_phase ba ph_curve_test
+    let ba := _io4001
+    let _io4002 ← trace_on_curve ba tr
+    let ⟨_ret4003, _iw04004, _iw14005⟩ := _io4002
+    let ba := _iw04004
+    let tr := _iw14005
+    let on_a := _ret4003
+    let _t4006 := ({ pa with sudo_6Player_8on_curve := on_a } : Player)
+    let pa := _t4006
+    let _io4007 ← «end_phase» ba
+    let ba := _io4007
+    let _t4008 := ({ tr with sudo_6Tracer_6player := (1 : Int) } : Tracer)
+    let tr := _t4008
+    let _io4009 ← begin_phase bb ph_curve_test
+    let bb := _io4009
+    let _io4010 ← trace_on_curve bb tr
+    let ⟨_ret4011, _iw04012, _iw14013⟩ := _io4010
+    let bb := _iw04012
+    let tr := _iw14013
+    let on_b := _ret4011
+    let _t4014 := ({ pb with sudo_6Player_8on_curve := on_b } : Player)
+    let pb := _t4014
+    let _io4015 ← «end_phase» bb
+    let bb := _io4015
+    if (!( (pa).sudo_6Player_8on_curve )) then
+      do
+        pure ((#[65, 58, 32, 66, 39, 115, 32, 67, 32, 102, 97, 105, 108, 115, 32, 116, 104, 101, 32, 99, 117, 114, 118, 101, 32, 116, 101, 115, 116] : Array Int), ba, bb, pa, pb, tr)
+    else
+      do
+        if (!( (pb).sudo_6Player_8on_curve )) then
+          do
+            pure ((#[66, 58, 32, 65, 39, 115, 32, 67, 32, 102, 97, 105, 108, 115, 32, 116, 104, 101, 32, 99, 117, 114, 118, 101, 32, 116, 101, 115, 116] : Array Int), ba, bb, pa, pb, tr)
+        else
+          do
+            pure ((#[] : Array Int), ba, bb, pa, pb, tr)
+
+def trace_certify_own (ba : Board) (bb : Board) (pa : Player) (pb : Player) (tr : Tracer) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player) × (Tracer)) :=
+  do
+    let _t4016 := ({ tr with sudo_6Tracer_6player := (0 : Int) } : Tracer)
+    let tr := _t4016
+    let _io4017 ← begin_phase ba ph_make
+    let ba := _io4017
+    let _io4018 ← trace_certificate ba tr across up
+    let ⟨_ret4019, _iw04020, _iw14021⟩ := _io4018
+    let ba := _iw04020
+    let tr := _iw14021
+    let ok_a := _ret4019
+    let _io4022 ← «end_phase» ba
+    let ba := _io4022
+    let _io4023 ← record_step ba tr Op.Sudo_2Op_9PhaseDrop (#[] : Array (Int))
+    let ⟨_iw04024, _iw14025⟩ := _io4023
+    let ba := _iw04024
+    let tr := _iw14025
+    let _t4026 := ({ tr with sudo_6Tracer_6player := (1 : Int) } : Tracer)
+    let tr := _t4026
+    let _io4027 ← begin_phase bb ph_make
+    let bb := _io4027
+    let _io4028 ← trace_certificate bb tr across up
+    let ⟨_ret4029, _iw04030, _iw14031⟩ := _io4028
+    let bb := _iw04030
+    let tr := _iw14031
+    let ok_b := _ret4029
+    let _io4032 ← «end_phase» bb
+    let bb := _io4032
+    let _io4033 ← record_step bb tr Op.Sudo_2Op_9PhaseDrop (#[] : Array (Int))
+    let ⟨_iw04034, _iw14035⟩ := _io4033
+    let bb := _iw04034
+    let tr := _iw14035
+    let _t4036 ← (if ok_a then (do
+  pure ok_b) else pure false)
+    if (!( _t4036 )) then
+      do
+        pure ((#[101, 109, 112, 116, 121, 32, 99, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101] : Array Int), ba, bb, pa, pb, tr)
+    else
+      do
+        let _t4037 ← point_of ba across up
+        let _t4038 := ({ pa with sudo_6Player_6sent_a := _t4037 } : Player)
+        let pa := _t4038
+        let _t4039 ← point_of bb across up
+        let _t4040 := ({ pb with sudo_6Player_6sent_a := _t4039 } : Player)
+        let pb := _t4040
+        pure ((#[] : Array Int), ba, bb, pa, pb, tr)
+
+def trace_rebuild_theirs (ba : Board) (bb : Board) (pa : Player) (pb : Player) (tr : Tracer) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player) × (Tracer)) :=
+  do
+    let _t4041 := ({ tr with sudo_6Tracer_6player := (0 : Int) } : Tracer)
+    let tr := _t4041
+    let _io4042 ← begin_phase ba ph_rebuild
+    let ba := _io4042
+    let _io4043 ← trace_certificate ba tr base_across base_up
+    let ⟨_ret4044, _iw04045, _iw14046⟩ := _io4043
+    let ba := _iw04045
+    let tr := _iw14046
+    let ok_a := _ret4044
+    let _io4047 ← «end_phase» ba
+    let ba := _io4047
+    let _io4048 ← record_step ba tr Op.Sudo_2Op_9PhaseDrop (#[] : Array (Int))
+    let ⟨_iw04049, _iw14050⟩ := _io4048
+    let ba := _iw04049
+    let tr := _iw14050
+    let _t4051 := ({ tr with sudo_6Tracer_6player := (1 : Int) } : Tracer)
+    let tr := _t4051
+    let _io4052 ← begin_phase bb ph_rebuild
+    let bb := _io4052
+    let _io4053 ← trace_certificate bb tr base_across base_up
+    let ⟨_ret4054, _iw04055, _iw14056⟩ := _io4053
+    let bb := _iw04055
+    let tr := _iw14056
+    let ok_b := _ret4054
+    let _io4057 ← «end_phase» bb
+    let bb := _io4057
+    let _io4058 ← record_step bb tr Op.Sudo_2Op_9PhaseDrop (#[] : Array (Int))
+    let ⟨_iw04059, _iw14060⟩ := _io4058
+    let bb := _iw04059
+    let tr := _iw14060
+    if (!( ok_a )) then
+      do
+        pure ((#[65, 58, 32, 66, 39, 115, 32, 99, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101, 32, 105, 115, 32, 101, 109, 112, 116, 121] : Array Int), ba, bb, pa, pb, tr)
+    else
+      do
+        if (!( ok_b )) then
+          do
+            pure ((#[66, 58, 32, 65, 39, 115, 32, 99, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101, 32, 105, 115, 32, 101, 109, 112, 116, 121] : Array Int), ba, bb, pa, pb, tr)
+        else
+          do
+            let _t4061 ← point_of ba base_across base_up
+            let _t4062 := ({ pa with sudo_6Player_7rebuilt := _t4061 } : Player)
+            let pa := _t4062
+            let _t4063 ← point_of bb base_across base_up
+            let _t4064 := ({ pb with sudo_6Player_7rebuilt := _t4063 } : Player)
+            let pb := _t4064
+            pure ((#[] : Array Int), ba, bb, pa, pb, tr)
+
+def trace_clear_two (b : Board) (tr : Tracer) (h1 : Int) (h2 : Int) : Except SudoRt.Trap ((Board) × (Tracer)) :=
+  do
+    let _io4065 ← begin_phase b ph_rebuild
+    let b := _io4065
+    let _io4066 ← record_step b tr Op.Sudo_2Op_5Clear (#[h1] : Array (Int))
+    let ⟨_iw04067, _iw14068⟩ := _io4066
+    let b := _iw04067
+    let tr := _iw14068
+    let _io4069 ← record_step b tr Op.Sudo_2Op_5Clear (#[h2] : Array (Int))
+    let ⟨_iw04070, _iw14071⟩ := _io4069
+    let b := _iw04070
+    let tr := _iw14071
+    let _io4072 ← «end_phase» b
+    let b := _io4072
+    pure (b, tr)
+
+def trace_compare_both (ba : Board) (bb : Board) (pa : Player) (pb : Player) (tr : Tracer) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player) × (Tracer)) :=
+  do
+    let _t4073 ← certificate_matches ba
+    let _t4074 := ({ pa with sudo_6Player_7matched := _t4073 } : Player)
+    let pa := _t4074
+    let _t4075 := ({ tr with sudo_6Tracer_6player := (0 : Int) } : Tracer)
+    let tr := _t4075
+    let _io4076 ← trace_clear_two ba tr bottom gap
+    let ⟨_iw04077, _iw14078⟩ := _io4076
+    let ba := _iw04077
+    let tr := _iw14078
+    let _t4079 ← certificate_matches bb
+    let _t4080 := ({ pb with sudo_6Player_7matched := _t4079 } : Player)
+    let pb := _t4080
+    let _t4081 := ({ tr with sudo_6Tracer_6player := (1 : Int) } : Tracer)
+    let tr := _t4081
+    let _io4082 ← trace_clear_two bb tr bottom gap
+    let ⟨_iw04083, _iw14084⟩ := _io4082
+    let bb := _iw04083
+    let tr := _iw14084
+    let _t4085 := ({ tr with sudo_6Tracer_6player := (0 : Int) } : Tracer)
+    let tr := _t4085
+    let _io4086 ← trace_clear_two ba tr across up
+    let ⟨_iw04087, _iw14088⟩ := _io4086
+    let ba := _iw04087
+    let tr := _iw14088
+    let _t4089 := ({ tr with sudo_6Tracer_6player := (1 : Int) } : Tracer)
+    let tr := _t4089
+    let _io4090 ← trace_clear_two bb tr across up
+    let ⟨_iw04091, _iw14092⟩ := _io4090
+    let bb := _iw04091
+    let tr := _iw14092
+    if (!( (pa).sudo_6Player_7matched )) then
+      do
+        pure ((#[65, 58, 32, 66, 39, 115, 32, 99, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101, 32, 100, 111, 101, 115, 32, 110, 111, 116, 32, 109, 97, 116, 99, 104] : Array Int), ba, bb, pa, pb, tr)
+    else
+      do
+        if (!( (pb).sudo_6Player_7matched )) then
+          do
+            pure ((#[66, 58, 32, 65, 39, 115, 32, 99, 101, 114, 116, 105, 102, 105, 99, 97, 116, 101, 32, 100, 111, 101, 115, 32, 110, 111, 116, 32, 109, 97, 116, 99, 104] : Array Int), ba, bb, pa, pb, tr)
+        else
+          do
+            pure ((#[] : Array Int), ba, bb, pa, pb, tr)
+
+def trace_shared_walk (b : Board) (tr : Tracer) (cells : Array (Int)) : Except SudoRt.Trap ((Bool) × (Board) × (Tracer)) :=
+  do
+    let _io4093 ← begin_phase b ph_shared_walk
+    let b := _io4093
+    let _io4094 ← trace_walk_chord b tr cells
+    let ⟨_ret4095, _iw04096, _iw14097⟩ := _io4094
+    let b := _iw04096
+    let tr := _iw14097
+    let _sudo_h0 := _ret4095
+    let ⟨live, ok⟩ := _sudo_h0
+    let _t4098 ← (if live then (do
+  pure ok) else pure false)
+    let ok := _t4098
+    if ok then
+      do
+        let _io4099 ← record_step b tr Op.Sudo_2Op_5Clear (#[base_across] : Array (Int))
+        let ⟨_iw04100, _iw14101⟩ := _io4099
+        let b := _iw04100
+        let tr := _iw14101
+        let _io4102 ← record_step b tr Op.Sudo_2Op_5Clear (#[base_up] : Array (Int))
+        let ⟨_iw04103, _iw14104⟩ := _io4102
+        let b := _iw04103
+        let tr := _iw14104
+        let _io4105 ← «end_phase» b
+        let b := _io4105
+        pure (ok, b, tr)
+    else
+      do
+        let _io4106 ← «end_phase» b
+        let b := _io4106
+        pure (ok, b, tr)
+
+def trace_fold_phase (b : Board) (tr : Tracer) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Tracer)) :=
+  do
+    let m0 := ((b).sudo_5Board_4cost).sudo_5Costs_5moves
+    let before := b
+    let _t4108 := ({ before with sudo_5Board_5phase := ph_fold } : Board)
+    let before := _t4108
+    let moves := (#[] : Array (PegMove))
+    let _io4109 ← trace_fold_key b moves
+    let ⟨_ret4110, _iw04111, _iw14112⟩ := _io4109
+    let b := _iw04111
+    let moves := _iw14112
+    let folded := _ret4110
+    let _ix4113 := ph_fold
+    let _t4114 ← SudoRt.subI ((b).sudo_5Board_4cost).sudo_5Costs_5moves m0
+    let _t4115 ← SudoRt.putL ((b).sudo_5Board_4cost).sudo_5Costs_14moves_by_phase _ix4113 _t4114
+    let _t4116 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14moves_by_phase := _t4115 } : Costs)
+    let _t4117 := ({ b with sudo_5Board_4cost := _t4116 } : Board)
+    let b := _t4117
+    let _t4118 ← pegs_of before
+    let p := _t4118
+    let _t4123 ← SudoRt.subI (SudoRt.listLen moves) (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t4123
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init4133 := (_fromV, p)
+    let _out ← (SudoRt.runLoopOn (ρ := (Array (Int)) × (Board) × (Tracer)) _init4133 fuel (fun σ =>
+    let i := σ.1
+    let p := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board) × (Tracer)) (i, p))
+      else
+        match ← ((do
+  let _t4120 ← SudoRt.atL moves i
+  let _io4121 ← «apply_move» p _t4120
+  let p := _io4121
+  pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board) × (Tracer)) p)) : Except SudoRt.Trap (SudoRt.Flow _ ((Array (Int)) × (Board) × (Tracer)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Array (Int)) × (Board) × (Tracer)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board) × (Tracer)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Array (Int)) × (Board) × (Tracer)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Array (Int)) × (Board) × (Tracer)) (i', _fs))) (fun σ =>
+    let p := σ.2
+    do
+      let after := b
+      let _t4124 := ({ after with sudo_5Board_5phase := ph_fold } : Board)
+      let after := _t4124
+      let _ix4125 := across
+      let _t4126 ← SudoRt.atL p across
+      let _t4127 ← SudoRt.putL (after).sudo_5Board_4home _ix4125 _t4126
+      let _t4128 := ({ after with sudo_5Board_4home := _t4127 } : Board)
+      let after := _t4128
+      let _mb4129 := SudoRt.appendL (tr).sudo_6Tracer_5steps ({ sudo_9TraceStep_6player := (tr).sudo_6Tracer_6player, sudo_9TraceStep_5phase := ph_fold, sudo_9TraceStep_2op := Op.Sudo_2Op_4Fold, sudo_9TraceStep_4args := (#[] : Array (Int)), sudo_9TraceStep_6before := before, sudo_9TraceStep_5after := after } : TraceStep)
+      let ⟨_nr4130, _⟩ := _mb4129
+      let _t4131 := ({ tr with sudo_6Tracer_5steps := _nr4130 } : Tracer)
+      let tr := _t4131
+      let _hm4107 := ()
+      let _u4132 := _hm4107
+      pure (folded, b, tr)) (fun r => pure r))
+    pure _out
+
+def trace_walk_and_fold (ba : Board) (bb : Board) (pa : Player) (pb : Player) (cells_a : Array (Int)) (cells_b : Array (Int)) (tr : Tracer) : Except SudoRt.Trap ((Array (Int)) × (Board) × (Board) × (Player) × (Player) × (Tracer)) :=
+  do
+    let _t4134 := ({ tr with sudo_6Tracer_6player := (0 : Int) } : Tracer)
+    let tr := _t4134
+    let _io4135 ← trace_shared_walk ba tr cells_a
+    let ⟨_ret4136, _iw04137, _iw14138⟩ := _io4135
+    let ba := _iw04137
+    let tr := _iw14138
+    let ok_a := _ret4136
+    let _t4139 := ({ tr with sudo_6Tracer_6player := (1 : Int) } : Tracer)
+    let tr := _t4139
+    let _io4140 ← trace_shared_walk bb tr cells_b
+    let ⟨_ret4141, _iw04142, _iw14143⟩ := _io4140
+    let bb := _iw04142
+    let tr := _iw14143
+    let ok_b := _ret4141
+    let _t4144 ← (if ok_a then (do
+  pure ok_b) else pure false)
+    if (!( _t4144 )) then
+      do
+        pure ((#[101, 120, 99, 101, 112, 116, 105, 111, 110, 97, 108, 32, 99, 97, 115, 101, 32, 105, 110, 32, 116, 104, 101, 32, 115, 104, 97, 114, 101, 100, 32, 119, 97, 108, 107] : Array Int), ba, bb, pa, pb, tr)
+    else
+      do
+        let _t4145 ← point_of ba across up
+        let _t4146 := ({ pa with sudo_6Player_6shared := _t4145 } : Player)
+        let pa := _t4146
+        let _t4147 ← point_of bb across up
+        let _t4148 := ({ pb with sudo_6Player_6shared := _t4147 } : Player)
+        let pb := _t4148
+        let _t4149 := ({ tr with sudo_6Tracer_6player := (0 : Int) } : Tracer)
+        let tr := _t4149
+        let _io4150 ← trace_fold_phase ba tr
+        let ⟨_ret4151, _iw04152, _iw14153⟩ := _io4150
+        let ba := _iw04152
+        let tr := _iw14153
+        let folded_a := _ret4151
+        let _t4154 := ({ pa with sudo_6Player_6folded := folded_a } : Player)
+        let pa := _t4154
+        let _t4155 := ({ tr with sudo_6Tracer_6player := (1 : Int) } : Tracer)
+        let tr := _t4155
+        let _io4156 ← trace_fold_phase bb tr
+        let ⟨_ret4157, _iw04158, _iw14159⟩ := _io4156
+        let bb := _iw04158
+        let tr := _iw14159
+        let folded_b := _ret4157
+        let _t4160 := ({ pb with sudo_6Player_6folded := folded_b } : Player)
+        let pb := _t4160
+        pure ((#[] : Array Int), ba, bb, pa, pb, tr)
+
+def trace_steps_exchange (t : Tier) (cells_a : Array (Int)) (cells_b : Array (Int)) (tr : Tracer) : Except SudoRt.Trap ((SudoRt.SResult (Array (Int)) (Exchange)) × (Tracer)) :=
+  do
+    let _as4161 ← SudoRt.sudoAssert (t).sudo_4Tier_4demo 2351
+    let _t4164 ← (if (SudoRt.SEq.beq (SudoRt.listLen cells_a) (t).sudo_4Tier_5cells) then (do
+  pure (SudoRt.SEq.beq (SudoRt.listLen cells_b) (t).sudo_4Tier_5cells)) else pure false)
+    let _as4167 ← SudoRt.sudoAssert _t4164 2352
+    let _t4168 ← is_trits cells_a
+    let _t4169 ← (if _t4168 then (do
+  let _t4170 ← is_trits cells_b
+  pure _t4170) else pure false)
+    let _as4171 ← SudoRt.sudoAssert _t4169 2353
+    let _t4172 ← new_board t
+    let ba := _t4172
+    let _t4173 ← new_board t
+    let bb := _t4173
+    let _t4174 ← blank_player ba
+    let pa := _t4174
+    let _t4175 ← blank_player bb
+    let pb := _t4175
+    let _t4176 := ({ tr with sudo_6Tracer_6player := (0 : Int) } : Tracer)
+    let tr := _t4176
+    let _io4177 ← trace_publish ba tr cells_a pa
+    let ⟨_ret4178, _iw04179, _iw14180, _iw24181⟩ := _io4177
+    let ba := _iw04179
+    let tr := _iw14180
+    let pa := _iw24181
+    let _sudo_h0 := _ret4178
+    if (!( _sudo_h0 )) then
+      do
+        pure ((SudoRt.SResult.err (#[65, 58, 32, 114, 101, 114, 111, 108, 108, 32, 40, 101, 109, 112, 116, 121, 32, 107, 101, 121, 32, 111, 114, 32, 101, 120, 99, 101, 112, 116, 105, 111, 110, 97, 108, 32, 99, 97, 115, 101, 41] : Array Int)), tr)
+    else
+      do
+        let _t4182 := ({ tr with sudo_6Tracer_6player := (1 : Int) } : Tracer)
+        let tr := _t4182
+        let _io4183 ← trace_publish bb tr cells_b pb
+        let ⟨_ret4184, _iw04185, _iw14186, _iw24187⟩ := _io4183
+        let bb := _iw04185
+        let tr := _iw14186
+        let pb := _iw24187
+        let _sudo_h1 := _ret4184
+        if (!( _sudo_h1 )) then
+          do
+            pure ((SudoRt.SResult.err (#[66, 58, 32, 114, 101, 114, 111, 108, 108, 32, 40, 101, 109, 112, 116, 121, 32, 107, 101, 121, 32, 111, 114, 32, 101, 120, 99, 101, 112, 116, 105, 111, 110, 97, 108, 32, 99, 97, 115, 101, 41] : Array Int)), tr)
+        else
+          do
+            let _io4188 ← trace_swap_both ba bb tr
+            let ⟨_iw04189, _iw14190, _iw24191⟩ := _io4188
+            let ba := _iw04189
+            let bb := _iw14190
+            let tr := _iw24191
+            let _io4192 ← trace_curve_tests ba bb pa pb tr
+            let ⟨_ret4193, _iw04194, _iw14195, _iw24196, _iw34197, _iw44198⟩ := _io4192
+            let ba := _iw04194
+            let bb := _iw14195
+            let pa := _iw24196
+            let pb := _iw34197
+            let tr := _iw44198
+            let fail := _ret4193
+            if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+              do
+                let _io4200 ← trace_certify_own ba bb pa pb tr
+                let ⟨_ret4201, _iw04202, _iw14203, _iw24204, _iw34205, _iw44206⟩ := _io4200
+                let ba := _iw04202
+                let bb := _iw14203
+                let pa := _iw24204
+                let pb := _iw34205
+                let tr := _iw44206
+                let fail := _ret4201
+                if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                  do
+                    let _io4208 ← trace_rebuild_theirs ba bb pa pb tr
+                    let ⟨_ret4209, _iw04210, _iw14211, _iw24212, _iw34213, _iw44214⟩ := _io4208
+                    let ba := _iw04210
+                    let bb := _iw14211
+                    let pa := _iw24212
+                    let pb := _iw34213
+                    let tr := _iw44214
+                    let fail := _ret4209
+                    if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                      do
+                        let _io4216 ← trace_swap_both ba bb tr
+                        let ⟨_iw04217, _iw14218, _iw24219⟩ := _io4216
+                        let ba := _iw04217
+                        let bb := _iw14218
+                        let tr := _iw24219
+                        let _io4220 ← trace_compare_both ba bb pa pb tr
+                        let ⟨_ret4221, _iw04222, _iw14223, _iw24224, _iw34225, _iw44226⟩ := _io4220
+                        let ba := _iw04222
+                        let bb := _iw14223
+                        let pa := _iw24224
+                        let pb := _iw34225
+                        let tr := _iw44226
+                        let fail := _ret4221
+                        if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                          do
+                            let _io4228 ← trace_walk_and_fold ba bb pa pb cells_a cells_b tr
+                            let ⟨_ret4229, _iw04230, _iw14231, _iw24232, _iw34233, _iw44234⟩ := _io4228
+                            let ba := _iw04230
+                            let bb := _iw14231
+                            let pa := _iw24232
+                            let pb := _iw34233
+                            let tr := _iw44234
+                            let fail := _ret4229
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4236 ← report ba pa
+                                let pa := _io4236
+                                let _io4237 ← report bb pb
+                                let pb := _io4237
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                        else
+                          do
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4239 ← report ba pa
+                                let pa := _io4239
+                                let _io4240 ← report bb pb
+                                let pb := _io4240
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                    else
+                      do
+                        if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                          do
+                            let _io4242 ← trace_walk_and_fold ba bb pa pb cells_a cells_b tr
+                            let ⟨_ret4243, _iw04244, _iw14245, _iw24246, _iw34247, _iw44248⟩ := _io4242
+                            let ba := _iw04244
+                            let bb := _iw14245
+                            let pa := _iw24246
+                            let pb := _iw34247
+                            let tr := _iw44248
+                            let fail := _ret4243
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4250 ← report ba pa
+                                let pa := _io4250
+                                let _io4251 ← report bb pb
+                                let pb := _io4251
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                        else
+                          do
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4253 ← report ba pa
+                                let pa := _io4253
+                                let _io4254 ← report bb pb
+                                let pb := _io4254
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                else
+                  do
+                    if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                      do
+                        let _io4256 ← trace_swap_both ba bb tr
+                        let ⟨_iw04257, _iw14258, _iw24259⟩ := _io4256
+                        let ba := _iw04257
+                        let bb := _iw14258
+                        let tr := _iw24259
+                        let _io4260 ← trace_compare_both ba bb pa pb tr
+                        let ⟨_ret4261, _iw04262, _iw14263, _iw24264, _iw34265, _iw44266⟩ := _io4260
+                        let ba := _iw04262
+                        let bb := _iw14263
+                        let pa := _iw24264
+                        let pb := _iw34265
+                        let tr := _iw44266
+                        let fail := _ret4261
+                        if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                          do
+                            let _io4268 ← trace_walk_and_fold ba bb pa pb cells_a cells_b tr
+                            let ⟨_ret4269, _iw04270, _iw14271, _iw24272, _iw34273, _iw44274⟩ := _io4268
+                            let ba := _iw04270
+                            let bb := _iw14271
+                            let pa := _iw24272
+                            let pb := _iw34273
+                            let tr := _iw44274
+                            let fail := _ret4269
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4276 ← report ba pa
+                                let pa := _io4276
+                                let _io4277 ← report bb pb
+                                let pb := _io4277
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                        else
+                          do
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4279 ← report ba pa
+                                let pa := _io4279
+                                let _io4280 ← report bb pb
+                                let pb := _io4280
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                    else
+                      do
+                        if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                          do
+                            let _io4282 ← trace_walk_and_fold ba bb pa pb cells_a cells_b tr
+                            let ⟨_ret4283, _iw04284, _iw14285, _iw24286, _iw34287, _iw44288⟩ := _io4282
+                            let ba := _iw04284
+                            let bb := _iw14285
+                            let pa := _iw24286
+                            let pb := _iw34287
+                            let tr := _iw44288
+                            let fail := _ret4283
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4290 ← report ba pa
+                                let pa := _io4290
+                                let _io4291 ← report bb pb
+                                let pb := _io4291
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                        else
+                          do
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4293 ← report ba pa
+                                let pa := _io4293
+                                let _io4294 ← report bb pb
+                                let pb := _io4294
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+            else
+              do
+                if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                  do
+                    let _io4296 ← trace_rebuild_theirs ba bb pa pb tr
+                    let ⟨_ret4297, _iw04298, _iw14299, _iw24300, _iw34301, _iw44302⟩ := _io4296
+                    let ba := _iw04298
+                    let bb := _iw14299
+                    let pa := _iw24300
+                    let pb := _iw34301
+                    let tr := _iw44302
+                    let fail := _ret4297
+                    if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                      do
+                        let _io4304 ← trace_swap_both ba bb tr
+                        let ⟨_iw04305, _iw14306, _iw24307⟩ := _io4304
+                        let ba := _iw04305
+                        let bb := _iw14306
+                        let tr := _iw24307
+                        let _io4308 ← trace_compare_both ba bb pa pb tr
+                        let ⟨_ret4309, _iw04310, _iw14311, _iw24312, _iw34313, _iw44314⟩ := _io4308
+                        let ba := _iw04310
+                        let bb := _iw14311
+                        let pa := _iw24312
+                        let pb := _iw34313
+                        let tr := _iw44314
+                        let fail := _ret4309
+                        if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                          do
+                            let _io4316 ← trace_walk_and_fold ba bb pa pb cells_a cells_b tr
+                            let ⟨_ret4317, _iw04318, _iw14319, _iw24320, _iw34321, _iw44322⟩ := _io4316
+                            let ba := _iw04318
+                            let bb := _iw14319
+                            let pa := _iw24320
+                            let pb := _iw34321
+                            let tr := _iw44322
+                            let fail := _ret4317
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4324 ← report ba pa
+                                let pa := _io4324
+                                let _io4325 ← report bb pb
+                                let pb := _io4325
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                        else
+                          do
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4327 ← report ba pa
+                                let pa := _io4327
+                                let _io4328 ← report bb pb
+                                let pb := _io4328
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                    else
+                      do
+                        if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                          do
+                            let _io4330 ← trace_walk_and_fold ba bb pa pb cells_a cells_b tr
+                            let ⟨_ret4331, _iw04332, _iw14333, _iw24334, _iw34335, _iw44336⟩ := _io4330
+                            let ba := _iw04332
+                            let bb := _iw14333
+                            let pa := _iw24334
+                            let pb := _iw34335
+                            let tr := _iw44336
+                            let fail := _ret4331
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4338 ← report ba pa
+                                let pa := _io4338
+                                let _io4339 ← report bb pb
+                                let pb := _io4339
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                        else
+                          do
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4341 ← report ba pa
+                                let pa := _io4341
+                                let _io4342 ← report bb pb
+                                let pb := _io4342
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                else
+                  do
+                    if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                      do
+                        let _io4344 ← trace_swap_both ba bb tr
+                        let ⟨_iw04345, _iw14346, _iw24347⟩ := _io4344
+                        let ba := _iw04345
+                        let bb := _iw14346
+                        let tr := _iw24347
+                        let _io4348 ← trace_compare_both ba bb pa pb tr
+                        let ⟨_ret4349, _iw04350, _iw14351, _iw24352, _iw34353, _iw44354⟩ := _io4348
+                        let ba := _iw04350
+                        let bb := _iw14351
+                        let pa := _iw24352
+                        let pb := _iw34353
+                        let tr := _iw44354
+                        let fail := _ret4349
+                        if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                          do
+                            let _io4356 ← trace_walk_and_fold ba bb pa pb cells_a cells_b tr
+                            let ⟨_ret4357, _iw04358, _iw14359, _iw24360, _iw34361, _iw44362⟩ := _io4356
+                            let ba := _iw04358
+                            let bb := _iw14359
+                            let pa := _iw24360
+                            let pb := _iw34361
+                            let tr := _iw44362
+                            let fail := _ret4357
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4364 ← report ba pa
+                                let pa := _io4364
+                                let _io4365 ← report bb pb
+                                let pb := _io4365
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                        else
+                          do
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4367 ← report ba pa
+                                let pa := _io4367
+                                let _io4368 ← report bb pb
+                                let pb := _io4368
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                    else
+                      do
+                        if (SudoRt.SEq.beq fail (#[] : Array Int)) then
+                          do
+                            let _io4370 ← trace_walk_and_fold ba bb pa pb cells_a cells_b tr
+                            let ⟨_ret4371, _iw04372, _iw14373, _iw24374, _iw34375, _iw44376⟩ := _io4370
+                            let ba := _iw04372
+                            let bb := _iw14373
+                            let pa := _iw24374
+                            let pb := _iw34375
+                            let tr := _iw44376
+                            let fail := _ret4371
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4378 ← report ba pa
+                                let pa := _io4378
+                                let _io4379 ← report bb pb
+                                let pb := _io4379
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+                        else
+                          do
+                            if (!(SudoRt.SEq.beq fail (#[] : Array Int))) then
+                              do
+                                pure ((SudoRt.SResult.err fail), tr)
+                            else
+                              do
+                                let _io4381 ← report ba pa
+                                let pa := _io4381
+                                let _io4382 ← report bb pb
+                                let pb := _io4382
+                                pure ((SudoRt.SResult.ok ({ sudo_8Exchange_1a := pa, sudo_8Exchange_1b := pb } : Exchange)), tr)
+
+def trace_roll_key (t : Tier) (faces : Array (Int)) (throws : Array (Throw)) : Except SudoRt.Trap ((Option (Rolled)) × (Array (Throw))) :=
+  do
+    let next := (0 : Int)
+    let _t4429 ← SudoRt.addI (SudoRt.listLen faces) (1 : Int)
+    let _fromV := (1 : Int)
+    let _toV := _t4429
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init4432 := (_fromV, (next, throws))
+    let _out ← (SudoRt.runLoopOn (ρ := (Option (Rolled)) × (Array (Throw))) _init4432 fuel (fun σ =>
+    let attempt := σ.1
+    let next := σ.2.1
+    let _sp4430 := σ.2.2
+    let throws := _sp4430
+    do
+      if attempt > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (attempt, (next, throws)))
+      else
+        match ← ((do
+  let _t4385 ← SudoRt.filledL (t).sudo_4Tier_5cells (0 : Int)
+  let cells := _t4385
+  let _t4419 ← SudoRt.addI (t).sudo_4Tier_5cells (1 : Int)
+  let _t4420 ← SudoRt.divI _t4419 (2 : Int)
+  let _t4421 ← SudoRt.subI _t4420 (1 : Int)
+  let _fromV := (0 : Int)
+  let _toV := _t4421
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init4427 := (_fromV, (next, throws, cells))
+  let _out ← (SudoRt.runLoopOn (ρ := (Option (Rolled)) × (Array (Throw))) _init4427 fuel (fun σ =>
+    let pair := σ.1
+    let next := σ.2.1
+    let _sp4423 := σ.2.2
+    let throws := _sp4423.1
+    let _sp4424 := _sp4423.2
+    let cells := _sp4424
+    do
+      if pair > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (pair, (next, throws, cells)))
+      else
+        match ← ((do
+  let face := (0 : Int)
+  let _t4400 ← SudoRt.subI (SudoRt.listLen faces) (1 : Int)
+  let _fromV := next
+  let _toV := _t4400
+  let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+  let _init4418 := (_fromV, (face, next, throws))
+  let _out ← (SudoRt.runLoopOn (ρ := (Option (Rolled)) × (Array (Throw))) _init4418 fuel (fun σ =>
+    let f := σ.1
+    let face := σ.2.1
+    let _sp4414 := σ.2.2
+    let next := _sp4414.1
+    let _sp4415 := _sp4414.2
+    let throws := _sp4415
+    do
+      if f > _toV then
+        pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (f, (face, next, throws)))
+      else
+        match ← ((do
+  let _t4388 ← SudoRt.atL faces f
+  let face := _t4388
+  let _t4389 ← SudoRt.addI f (1 : Int)
+  let next := _t4389
+  let _t4391 ← (if (decide (face ≥ (0 : Int))) then (do
+  pure (decide (face ≤ (9 : Int)))) else pure false)
+  let _as4393 ← SudoRt.sudoAssert _t4391 2401
+  let _mb4395 := SudoRt.appendL throws ({ sudo_5Throw_5index := f, sudo_5Throw_4face := face, sudo_5Throw_7attempt := attempt, sudo_5Throw_4pair := pair, sudo_5Throw_4kept := (!(SudoRt.SEq.beq face (0 : Int))) } : Throw)
+  let ⟨_nr4396, _⟩ := _mb4395
+  let throws := _nr4396
+  let _hm4383 := ()
+  let _u4397 := _hm4383
+  if (!(SudoRt.SEq.beq face (0 : Int))) then
+    do
+      pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (face, next, throws))
+  else
+    do
+      pure (SudoRt.Flow.cont (ρ := (Option (Rolled)) × (Array (Throw))) (face, next, throws))) : Except SudoRt.Trap (SudoRt.Flow _ ((Option (Rolled)) × (Array (Throw))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Option (Rolled)) × (Array (Throw))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (f, _fs))
+        | .cont _fs => do
+            if f == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (f, _fs))
+            else do
+              let i' ← SudoRt.addI f (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Option (Rolled)) × (Array (Throw))) (i', _fs))) (fun σ =>
+    let face := σ.2.1
+    let _sp4416 := σ.2.2
+    let next := _sp4416.1
+    let _sp4417 := _sp4416.2
+    let throws := _sp4417
+    do
+      if (SudoRt.SEq.beq face (0 : Int)) then
+        do
+          pure (SudoRt.Flow.ret (ρ := (Option (Rolled)) × (Array (Throw))) ((none : Option (Rolled)), throws))
+      else
+        do
+          let _t4402 ← SudoRt.mulI (2 : Int) pair
+          let _ix4403 := _t4402
+          let _t4404 ← keypad_first face
+          let _t4405 ← SudoRt.putL cells _ix4403 _t4404
+          let cells := _t4405
+          let _t4406 ← SudoRt.mulI (2 : Int) pair
+          let _t4407 ← SudoRt.addI _t4406 (1 : Int)
+          if (decide (_t4407 < (t).sudo_4Tier_5cells)) then
+            do
+              let _t4409 ← SudoRt.mulI (2 : Int) pair
+              let _t4410 ← SudoRt.addI _t4409 (1 : Int)
+              let _ix4411 := _t4410
+              let _t4412 ← keypad_second face
+              let _t4413 ← SudoRt.putL cells _ix4411 _t4412
+              let cells := _t4413
+              pure (SudoRt.Flow.cont (ρ := (Option (Rolled)) × (Array (Throw))) (next, throws, cells))
+          else
+            do
+              pure (SudoRt.Flow.cont (ρ := (Option (Rolled)) × (Array (Throw))) (next, throws, cells))) (fun r => pure (SudoRt.Flow.ret (ρ := (Option (Rolled)) × (Array (Throw))) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Option (Rolled)) × (Array (Throw))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Option (Rolled)) × (Array (Throw))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (pair, _fs))
+        | .cont _fs => do
+            if pair == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (pair, _fs))
+            else do
+              let i' ← SudoRt.addI pair (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Option (Rolled)) × (Array (Throw))) (i', _fs))) (fun σ =>
+    let next := σ.2.1
+    let _sp4425 := σ.2.2
+    let throws := _sp4425.1
+    let _sp4426 := _sp4425.2
+    let cells := _sp4426
+    do
+      let _t4422 ← is_empty cells
+      if (!( _t4422 )) then
+        do
+          pure (SudoRt.Flow.ret (ρ := (Option (Rolled)) × (Array (Throw))) ((some ({ sudo_6Rolled_5cells := cells, sudo_6Rolled_4used := next, sudo_6Rolled_5rolls := attempt } : Rolled)), throws))
+      else
+        do
+          pure (SudoRt.Flow.cont (ρ := (Option (Rolled)) × (Array (Throw))) (next, throws))) (fun r => pure (SudoRt.Flow.ret (ρ := (Option (Rolled)) × (Array (Throw))) r)))
+  pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Option (Rolled)) × (Array (Throw))))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := (Option (Rolled)) × (Array (Throw))) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (attempt, _fs))
+        | .cont _fs => do
+            if attempt == _toV then
+              pure (SudoRt.Flow.brk (ρ := (Option (Rolled)) × (Array (Throw))) (attempt, _fs))
+            else do
+              let i' ← SudoRt.addI attempt (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := (Option (Rolled)) × (Array (Throw))) (i', _fs))) (fun σ =>
+    let next := σ.2.1
+    let _sp4431 := σ.2.2
+    let throws := _sp4431
+    do
+      pure ((none : Option (Rolled)), throws)) (fun r => pure r))
+    pure _out
+
+def trace_exchange (t : Tier) (faces_a : Array (Int)) (faces_b : Array (Int)) : Except SudoRt.Trap (Trace) :=
+  do
+    let _as4433 ← SudoRt.sudoAssert (t).sudo_4Tier_4demo 2434
+    let ta := (#[] : Array (Throw))
+    let tb := (#[] : Array (Throw))
+    let _io4434 ← trace_roll_key t faces_a ta
+    let ⟨_ret4435, _iw04436⟩ := _io4434
+    let ta := _iw04436
+    let ra := _ret4435
+    let _io4437 ← trace_roll_key t faces_b tb
+    let ⟨_ret4438, _iw04439⟩ := _io4437
+    let tb := _iw04439
+    let rb := _ret4438
+    let _t4440 ← new_board t
+    let start := _t4440
+    let no_steps := (#[] : Array (TraceStep))
+    let _t4441 ← SudoRt.filledL (t).sudo_4Tier_5cells (0 : Int)
+    let _t4442 ← SudoRt.filledL (t).sudo_4Tier_5cells (0 : Int)
+    let _t4443 ← blank_player start
+    let _t4444 ← blank_player start
+    let out := ({ sudo_5Trace_8throws_a := ta, sudo_5Trace_8throws_b := tb, sudo_5Trace_8rolled_a := false, sudo_5Trace_8rolled_b := false, sudo_5Trace_7cells_a := _t4441, sudo_5Trace_7cells_b := _t4442, sudo_5Trace_7start_a := start, sudo_5Trace_7start_b := start, sudo_5Trace_5steps := no_steps, sudo_5Trace_2ok := false, sudo_5Trace_5error := (#[] : Array Int), sudo_5Trace_1a := _t4443, sudo_5Trace_1b := _t4444 } : Trace)
+    match (ra : Option (Rolled)) with
+    | some r =>
+      do
+        let _t4445 := ({ out with sudo_5Trace_8rolled_a := true } : Trace)
+        let out := _t4445
+        let _t4446 := ({ out with sudo_5Trace_7cells_a := (r).sudo_6Rolled_5cells } : Trace)
+        let out := _t4446
+        match (rb : Option (Rolled)) with
+        | some r =>
+          do
+            let _t4447 := ({ out with sudo_5Trace_8rolled_b := true } : Trace)
+            let out := _t4447
+            let _t4448 := ({ out with sudo_5Trace_7cells_b := (r).sudo_6Rolled_5cells } : Trace)
+            let out := _t4448
+            let _t4449 ← (if (out).sudo_5Trace_8rolled_a then (do
+  pure (out).sudo_5Trace_8rolled_b) else pure false)
+            if (!( _t4449 )) then
+              do
+                pure out
+            else
+              do
+                let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
+                let _io4450 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
+                let ⟨_ret4451, _iw04452⟩ := _io4450
+                let tr := _iw04452
+                let _sudo_h0 := _ret4451
+                match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                | SudoRt.SResult.ok e =>
+                  do
+                    let _t4453 := ({ out with sudo_5Trace_2ok := true } : Trace)
+                    let out := _t4453
+                    let _t4454 := ({ out with sudo_5Trace_1a := (e).sudo_8Exchange_1a } : Trace)
+                    let out := _t4454
+                    let _t4455 := ({ out with sudo_5Trace_1b := (e).sudo_8Exchange_1b } : Trace)
+                    let out := _t4455
+                    let _t4456 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                    let out := _t4456
+                    pure out
+                | _ =>
+                  do
+                    match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                    | SudoRt.SResult.err why =>
+                      do
+                        let _t4457 := ({ out with sudo_5Trace_5error := why } : Trace)
+                        let out := _t4457
+                        let _t4458 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                        let out := _t4458
+                        pure out
+                    | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+        | _ =>
+          do
+            match (rb : Option (Rolled)) with
+            | none =>
+              do
+                if (SudoRt.SEq.beq (out).sudo_5Trace_5error (#[] : Array Int)) then
+                  do
+                    let _t4460 := ({ out with sudo_5Trace_5error := (#[66, 58, 32, 116, 104, 101, 32, 102, 97, 99, 101, 115, 32, 114, 97, 110, 32, 111, 117, 116] : Array Int) } : Trace)
+                    let out := _t4460
+                    let _t4461 ← (if (out).sudo_5Trace_8rolled_a then (do
+  pure (out).sudo_5Trace_8rolled_b) else pure false)
+                    if (!( _t4461 )) then
+                      do
+                        pure out
+                    else
+                      do
+                        let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
+                        let _io4462 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
+                        let ⟨_ret4463, _iw04464⟩ := _io4462
+                        let tr := _iw04464
+                        let _sudo_h0 := _ret4463
+                        match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                        | SudoRt.SResult.ok e =>
+                          do
+                            let _t4465 := ({ out with sudo_5Trace_2ok := true } : Trace)
+                            let out := _t4465
+                            let _t4466 := ({ out with sudo_5Trace_1a := (e).sudo_8Exchange_1a } : Trace)
+                            let out := _t4466
+                            let _t4467 := ({ out with sudo_5Trace_1b := (e).sudo_8Exchange_1b } : Trace)
+                            let out := _t4467
+                            let _t4468 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                            let out := _t4468
+                            pure out
+                        | _ =>
+                          do
+                            match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                            | SudoRt.SResult.err why =>
+                              do
+                                let _t4469 := ({ out with sudo_5Trace_5error := why } : Trace)
+                                let out := _t4469
+                                let _t4470 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                                let out := _t4470
+                                pure out
+                            | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+                else
+                  do
+                    let _t4471 ← (if (out).sudo_5Trace_8rolled_a then (do
+  pure (out).sudo_5Trace_8rolled_b) else pure false)
+                    if (!( _t4471 )) then
+                      do
+                        pure out
+                    else
+                      do
+                        let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
+                        let _io4472 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
+                        let ⟨_ret4473, _iw04474⟩ := _io4472
+                        let tr := _iw04474
+                        let _sudo_h0 := _ret4473
+                        match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                        | SudoRt.SResult.ok e =>
+                          do
+                            let _t4475 := ({ out with sudo_5Trace_2ok := true } : Trace)
+                            let out := _t4475
+                            let _t4476 := ({ out with sudo_5Trace_1a := (e).sudo_8Exchange_1a } : Trace)
+                            let out := _t4476
+                            let _t4477 := ({ out with sudo_5Trace_1b := (e).sudo_8Exchange_1b } : Trace)
+                            let out := _t4477
+                            let _t4478 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                            let out := _t4478
+                            pure out
+                        | _ =>
+                          do
+                            match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                            | SudoRt.SResult.err why =>
+                              do
+                                let _t4479 := ({ out with sudo_5Trace_5error := why } : Trace)
+                                let out := _t4479
+                                let _t4480 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                                let out := _t4480
+                                pure out
+                            | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+            | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+    | _ =>
+      do
+        match (ra : Option (Rolled)) with
+        | none =>
+          do
+            let _t4481 := ({ out with sudo_5Trace_5error := (#[65, 58, 32, 116, 104, 101, 32, 102, 97, 99, 101, 115, 32, 114, 97, 110, 32, 111, 117, 116] : Array Int) } : Trace)
+            let out := _t4481
+            match (rb : Option (Rolled)) with
+            | some r =>
+              do
+                let _t4482 := ({ out with sudo_5Trace_8rolled_b := true } : Trace)
+                let out := _t4482
+                let _t4483 := ({ out with sudo_5Trace_7cells_b := (r).sudo_6Rolled_5cells } : Trace)
+                let out := _t4483
+                let _t4484 ← (if (out).sudo_5Trace_8rolled_a then (do
+  pure (out).sudo_5Trace_8rolled_b) else pure false)
+                if (!( _t4484 )) then
+                  do
+                    pure out
+                else
+                  do
+                    let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
+                    let _io4485 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
+                    let ⟨_ret4486, _iw04487⟩ := _io4485
+                    let tr := _iw04487
+                    let _sudo_h0 := _ret4486
+                    match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                    | SudoRt.SResult.ok e =>
+                      do
+                        let _t4488 := ({ out with sudo_5Trace_2ok := true } : Trace)
+                        let out := _t4488
+                        let _t4489 := ({ out with sudo_5Trace_1a := (e).sudo_8Exchange_1a } : Trace)
+                        let out := _t4489
+                        let _t4490 := ({ out with sudo_5Trace_1b := (e).sudo_8Exchange_1b } : Trace)
+                        let out := _t4490
+                        let _t4491 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                        let out := _t4491
+                        pure out
+                    | _ =>
+                      do
+                        match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                        | SudoRt.SResult.err why =>
+                          do
+                            let _t4492 := ({ out with sudo_5Trace_5error := why } : Trace)
+                            let out := _t4492
+                            let _t4493 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                            let out := _t4493
+                            pure out
+                        | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+            | _ =>
+              do
+                match (rb : Option (Rolled)) with
+                | none =>
+                  do
+                    if (SudoRt.SEq.beq (out).sudo_5Trace_5error (#[] : Array Int)) then
+                      do
+                        let _t4495 := ({ out with sudo_5Trace_5error := (#[66, 58, 32, 116, 104, 101, 32, 102, 97, 99, 101, 115, 32, 114, 97, 110, 32, 111, 117, 116] : Array Int) } : Trace)
+                        let out := _t4495
+                        let _t4496 ← (if (out).sudo_5Trace_8rolled_a then (do
+  pure (out).sudo_5Trace_8rolled_b) else pure false)
+                        if (!( _t4496 )) then
+                          do
+                            pure out
+                        else
+                          do
+                            let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
+                            let _io4497 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
+                            let ⟨_ret4498, _iw04499⟩ := _io4497
+                            let tr := _iw04499
+                            let _sudo_h0 := _ret4498
+                            match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                            | SudoRt.SResult.ok e =>
+                              do
+                                let _t4500 := ({ out with sudo_5Trace_2ok := true } : Trace)
+                                let out := _t4500
+                                let _t4501 := ({ out with sudo_5Trace_1a := (e).sudo_8Exchange_1a } : Trace)
+                                let out := _t4501
+                                let _t4502 := ({ out with sudo_5Trace_1b := (e).sudo_8Exchange_1b } : Trace)
+                                let out := _t4502
+                                let _t4503 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                                let out := _t4503
+                                pure out
+                            | _ =>
+                              do
+                                match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                                | SudoRt.SResult.err why =>
+                                  do
+                                    let _t4504 := ({ out with sudo_5Trace_5error := why } : Trace)
+                                    let out := _t4504
+                                    let _t4505 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                                    let out := _t4505
+                                    pure out
+                                | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+                    else
+                      do
+                        let _t4506 ← (if (out).sudo_5Trace_8rolled_a then (do
+  pure (out).sudo_5Trace_8rolled_b) else pure false)
+                        if (!( _t4506 )) then
+                          do
+                            pure out
+                        else
+                          do
+                            let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
+                            let _io4507 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
+                            let ⟨_ret4508, _iw04509⟩ := _io4507
+                            let tr := _iw04509
+                            let _sudo_h0 := _ret4508
+                            match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                            | SudoRt.SResult.ok e =>
+                              do
+                                let _t4510 := ({ out with sudo_5Trace_2ok := true } : Trace)
+                                let out := _t4510
+                                let _t4511 := ({ out with sudo_5Trace_1a := (e).sudo_8Exchange_1a } : Trace)
+                                let out := _t4511
+                                let _t4512 := ({ out with sudo_5Trace_1b := (e).sudo_8Exchange_1b } : Trace)
+                                let out := _t4512
+                                let _t4513 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                                let out := _t4513
+                                pure out
+                            | _ =>
+                              do
+                                match (_sudo_h0 : SudoRt.SResult (Array (Int)) (Exchange)) with
+                                | SudoRt.SResult.err why =>
+                                  do
+                                    let _t4514 := ({ out with sudo_5Trace_5error := why } : Trace)
+                                    let out := _t4514
+                                    let _t4515 := ({ out with sudo_5Trace_5steps := (tr).sudo_6Tracer_5steps } : Trace)
+                                    let out := _t4515
+                                    pure out
+                                | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+                | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+        | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+
+def trace_twin (st : TraceStep) : Except SudoRt.Trap (Board) :=
+  do
+    let c := (st).sudo_9TraceStep_6before
+    let m := (#[] : Array (PegMove))
+    let a := (st).sudo_9TraceStep_4args
+    if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_3Mul) then
+      do
+        let _t4517 ← SudoRt.atL a (0 : Int)
+        let _t4518 ← SudoRt.atL a (1 : Int)
+        let _t4519 ← SudoRt.atL a (2 : Int)
+        let _t4520 ← SudoRt.atL a (3 : Int)
+        let _t4522 ← SudoRt.atL a (4 : Int)
+        let _t4524 ← SudoRt.atL a (5 : Int)
+        let _io4526 ← trace_mul c _t4517 _t4518 _t4519 (SudoRt.SEq.beq _t4520 (1 : Int)) (SudoRt.SEq.beq _t4522 (1 : Int)) (SudoRt.SEq.beq _t4524 (1 : Int)) m
+        let ⟨_iw04527, _iw14528⟩ := _io4526
+        let c := _iw04527
+        let m := _iw14528
+        pure c
+    else
+      do
+        if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Cube) then
+          do
+            let _t4530 ← SudoRt.atL a (0 : Int)
+            let _t4531 ← SudoRt.atL a (1 : Int)
+            let _io4532 ← trace_cube c _t4530 _t4531 m
+            let ⟨_iw04533, _iw14534⟩ := _io4532
+            let c := _iw04533
+            let m := _iw14534
+            pure c
+        else
+          do
+            let _as4535 ← SudoRt.sudoAssertEq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Park 2479
+            let _t4536 ← SudoRt.atL a (0 : Int)
+            let _io4537 ← trace_park_rung c _t4536 m
+            let ⟨_iw04538, _iw14539⟩ := _io4537
+            let c := _iw04538
+            let m := _iw14539
+            pure c
+
+def check_trace_steps (start_a : Board) (start_b : Board) (steps : Array (TraceStep)) : Except SudoRt.Trap (Array (Int)) :=
+  do
+    let _t4540 ← pegs_of start_a
+    let last_a := _t4540
+    let _t4541 ← pegs_of start_b
+    let last_b := _t4541
+    let total := (#[(0 : Int), (0 : Int)] : Array (Int))
+    let _t4625 ← SudoRt.subI (SudoRt.listLen steps) (1 : Int)
+    let _fromV := (0 : Int)
+    let _toV := _t4625
+    let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+    let _init4630 := (_fromV, (total, last_a, last_b))
+    let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init4630 fuel (fun σ =>
+    let k := σ.1
+    let total := σ.2.1
+    let _sp4626 := σ.2.2
+    let last_a := _sp4626.1
+    let _sp4627 := _sp4626.2
+    let last_b := _sp4627
+    do
+      if k > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (k, (total, last_a, last_b)))
+      else
+        match ← ((do
+  let _t4543 ← SudoRt.atL steps k
+  let st := _t4543
+  let _t4544 ← pegs_of (st).sudo_9TraceStep_6before
+  let p := _t4544
+  if (SudoRt.SEq.beq (st).sudo_9TraceStep_6player (0 : Int)) then
+    do
+      let _as4546 ← SudoRt.sudoAssertEq p last_a 2496
+      let _t4547 ← step_moves st
+      let moves := _t4547
+      let _as4550 ← SudoRt.sudoAssert (decide ((SudoRt.listLen moves) > (0 : Int))) 2500
+      let _ix4551 := (st).sudo_9TraceStep_6player
+      let _t4552 ← SudoRt.atL total (st).sudo_9TraceStep_6player
+      let _t4554 ← SudoRt.addI _t4552 (SudoRt.listLen moves)
+      let _t4555 ← SudoRt.putL total _ix4551 _t4554
+      let total := _t4555
+      let _t4560 ← SudoRt.subI (SudoRt.listLen moves) (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t4560
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init4584 := (_fromV, p)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init4584 fuel (fun σ =>
+    let i := σ.1
+    let p := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, p))
+      else
+        match ← ((do
+  let _t4557 ← SudoRt.atL moves i
+  let _io4558 ← «apply_move» p _t4557
+  let p := _io4558
+  pure (SudoRt.Flow.cont (ρ := Array (Int)) p)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let p := σ.2
+    do
+      let _t4561 ← pegs_of (st).sudo_9TraceStep_5after
+      let _as4562 ← SudoRt.sudoAssertEq p _t4561 2504
+      if (!(SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Fold)) then
+        do
+          let b := (st).sudo_9TraceStep_6before
+          let _io4564 ← run_op b (st).sudo_9TraceStep_2op (st).sudo_9TraceStep_4args
+          let b := _io4564
+          let _as4565 ← SudoRt.sudoAssertEq b (st).sudo_9TraceStep_5after 2508
+          let _t4567 ← (if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_3Mul) then pure true else (do
+  pure (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Cube)))
+          let _t4569 ← (if _t4567 then pure true else (do
+  pure (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Park)))
+          if _t4569 then
+            do
+              let _t4571 ← trace_twin st
+              let _as4572 ← SudoRt.sudoAssertEq _t4571 (st).sudo_9TraceStep_5after 2510
+              if (SudoRt.SEq.beq (st).sudo_9TraceStep_6player (0 : Int)) then
+                do
+                  let last_a := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+              else
+                do
+                  let last_b := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+          else
+            do
+              if (SudoRt.SEq.beq (st).sudo_9TraceStep_6player (0 : Int)) then
+                do
+                  let last_a := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+              else
+                do
+                  let last_b := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+      else
+        do
+          let _t4576 ← (if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_3Mul) then pure true else (do
+  pure (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Cube)))
+          let _t4578 ← (if _t4576 then pure true else (do
+  pure (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Park)))
+          if _t4578 then
+            do
+              let _t4580 ← trace_twin st
+              let _as4581 ← SudoRt.sudoAssertEq _t4580 (st).sudo_9TraceStep_5after 2510
+              if (SudoRt.SEq.beq (st).sudo_9TraceStep_6player (0 : Int)) then
+                do
+                  let last_a := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+              else
+                do
+                  let last_b := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+          else
+            do
+              if (SudoRt.SEq.beq (st).sudo_9TraceStep_6player (0 : Int)) then
+                do
+                  let last_a := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+              else
+                do
+                  let last_b := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
+      pure _out
+  else
+    do
+      let _as4585 ← SudoRt.sudoAssertEq p last_b 2498
+      let _t4586 ← step_moves st
+      let moves := _t4586
+      let _as4589 ← SudoRt.sudoAssert (decide ((SudoRt.listLen moves) > (0 : Int))) 2500
+      let _ix4590 := (st).sudo_9TraceStep_6player
+      let _t4591 ← SudoRt.atL total (st).sudo_9TraceStep_6player
+      let _t4593 ← SudoRt.addI _t4591 (SudoRt.listLen moves)
+      let _t4594 ← SudoRt.putL total _ix4590 _t4593
+      let total := _t4594
+      let _t4599 ← SudoRt.subI (SudoRt.listLen moves) (1 : Int)
+      let _fromV := (0 : Int)
+      let _toV := _t4599
+      let fuel : Nat := if _fromV > _toV then 1 else (_toV - _fromV).natAbs + 1
+      let _init4623 := (_fromV, p)
+      let _out ← (SudoRt.runLoopOn (ρ := Array (Int)) _init4623 fuel (fun σ =>
+    let i := σ.1
+    let p := σ.2
+    do
+      if i > _toV then
+        pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, p))
+      else
+        match ← ((do
+  let _t4596 ← SudoRt.atL moves i
+  let _io4597 ← «apply_move» p _t4596
+  let p := _io4597
+  pure (SudoRt.Flow.cont (ρ := Array (Int)) p)) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+        | .cont _fs => do
+            if i == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (i, _fs))
+            else do
+              let i' ← SudoRt.addI i (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let p := σ.2
+    do
+      let _t4600 ← pegs_of (st).sudo_9TraceStep_5after
+      let _as4601 ← SudoRt.sudoAssertEq p _t4600 2504
+      if (!(SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Fold)) then
+        do
+          let b := (st).sudo_9TraceStep_6before
+          let _io4603 ← run_op b (st).sudo_9TraceStep_2op (st).sudo_9TraceStep_4args
+          let b := _io4603
+          let _as4604 ← SudoRt.sudoAssertEq b (st).sudo_9TraceStep_5after 2508
+          let _t4606 ← (if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_3Mul) then pure true else (do
+  pure (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Cube)))
+          let _t4608 ← (if _t4606 then pure true else (do
+  pure (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Park)))
+          if _t4608 then
+            do
+              let _t4610 ← trace_twin st
+              let _as4611 ← SudoRt.sudoAssertEq _t4610 (st).sudo_9TraceStep_5after 2510
+              if (SudoRt.SEq.beq (st).sudo_9TraceStep_6player (0 : Int)) then
+                do
+                  let last_a := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+              else
+                do
+                  let last_b := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+          else
+            do
+              if (SudoRt.SEq.beq (st).sudo_9TraceStep_6player (0 : Int)) then
+                do
+                  let last_a := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+              else
+                do
+                  let last_b := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+      else
+        do
+          let _t4615 ← (if (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_3Mul) then pure true else (do
+  pure (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Cube)))
+          let _t4617 ← (if _t4615 then pure true else (do
+  pure (SudoRt.SEq.beq (st).sudo_9TraceStep_2op Op.Sudo_2Op_4Park)))
+          if _t4617 then
+            do
+              let _t4619 ← trace_twin st
+              let _as4620 ← SudoRt.sudoAssertEq _t4619 (st).sudo_9TraceStep_5after 2510
+              if (SudoRt.SEq.beq (st).sudo_9TraceStep_6player (0 : Int)) then
+                do
+                  let last_a := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+              else
+                do
+                  let last_b := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+          else
+            do
+              if (SudoRt.SEq.beq (st).sudo_9TraceStep_6player (0 : Int)) then
+                do
+                  let last_a := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))
+              else
+                do
+                  let last_b := p
+                  pure (SudoRt.Flow.cont (ρ := Array (Int)) (total, last_a, last_b))) (fun r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)))
+      pure _out) : Except SudoRt.Trap (SudoRt.Flow _ (Array (Int)))) with
+        | .ret r => pure (SudoRt.Flow.ret (ρ := Array (Int)) r)
+        | .brk _fs => pure (SudoRt.Flow.brk (ρ := Array (Int)) (k, _fs))
+        | .cont _fs => do
+            if k == _toV then
+              pure (SudoRt.Flow.brk (ρ := Array (Int)) (k, _fs))
+            else do
+              let i' ← SudoRt.addI k (1 : Int)
+              pure (SudoRt.Flow.cont (ρ := Array (Int)) (i', _fs))) (fun σ =>
+    let total := σ.2.1
+    let _sp4628 := σ.2.2
+    let last_a := _sp4628.1
+    let _sp4629 := _sp4628.2
+    let last_b := _sp4629
+    do
+      pure total) (fun r => pure r))
+    pure _out
+
+def moves_animated (p : Player) (start : Board) : Except SudoRt.Trap (Int) :=
+  do
+    let _t4631 ← SudoRt.atL ((p).sudo_6Player_4cost).sudo_5Costs_14moves_by_phase ph_fold
+    let _t4632 ← SudoRt.addI ((p).sudo_6Player_4cost).sudo_5Costs_5moves _t4631
+    let _t4633 ← SudoRt.addI _t4632 ((p).sudo_6Player_4cost).sudo_5Costs_4ctrl
+    let _t4634 ← SudoRt.subI _t4633 ((start).sudo_5Board_4cost).sudo_5Costs_4ctrl
+    pure _t4634
+
+def check_trace_exchange (t : Tier) (faces_a : Array (Int)) (faces_b : Array (Int)) : Except SudoRt.Trap (Trace) :=
+  do
+    let _t4635 ← trace_exchange t faces_a faces_b
+    let tr := _t4635
+    let _t4636 ← roll_key t faces_a
+    let _t4638 ← SudoRt.subI (SudoRt.listLen (tr).sudo_5Trace_8throws_a) (1 : Int)
+    let _t4639 ← SudoRt.atL (tr).sudo_5Trace_8throws_a _t4638
+    let _t4640 ← SudoRt.addI (_t4639).sudo_5Throw_5index (1 : Int)
+    let _t4642 ← SudoRt.subI (SudoRt.listLen (tr).sudo_5Trace_8throws_a) (1 : Int)
+    let _t4643 ← SudoRt.atL (tr).sudo_5Trace_8throws_a _t4642
+    let _as4644 ← SudoRt.sudoAssertEq _t4636 (some ({ sudo_6Rolled_5cells := (tr).sudo_5Trace_7cells_a, sudo_6Rolled_4used := _t4640, sudo_6Rolled_5rolls := (_t4643).sudo_5Throw_7attempt } : Rolled)) 2520
+    let _t4645 ← roll_key t faces_b
+    let _t4647 ← SudoRt.subI (SudoRt.listLen (tr).sudo_5Trace_8throws_b) (1 : Int)
+    let _t4648 ← SudoRt.atL (tr).sudo_5Trace_8throws_b _t4647
+    let _t4649 ← SudoRt.addI (_t4648).sudo_5Throw_5index (1 : Int)
+    let _t4651 ← SudoRt.subI (SudoRt.listLen (tr).sudo_5Trace_8throws_b) (1 : Int)
+    let _t4652 ← SudoRt.atL (tr).sudo_5Trace_8throws_b _t4651
+    let _as4653 ← SudoRt.sudoAssertEq _t4645 (some ({ sudo_6Rolled_5cells := (tr).sudo_5Trace_7cells_b, sudo_6Rolled_4used := _t4649, sudo_6Rolled_5rolls := (_t4652).sudo_5Throw_7attempt } : Rolled)) 2521
+    let _as4654 ← SudoRt.sudoAssert (tr).sudo_5Trace_2ok 2522
+    let _t4655 ← exchange t (tr).sudo_5Trace_7cells_a (tr).sudo_5Trace_7cells_b
+    match (_t4655 : SudoRt.SResult (Array (Int)) (Exchange)) with
+    | SudoRt.SResult.ok e =>
+      do
+        let _as4656 ← SudoRt.sudoAssertEq (tr).sudo_5Trace_1a (e).sudo_8Exchange_1a 2525
+        let _as4657 ← SudoRt.sudoAssertEq (tr).sudo_5Trace_1b (e).sudo_8Exchange_1b 2526
+        let _t4658 ← check_trace_steps (tr).sudo_5Trace_7start_a (tr).sudo_5Trace_7start_b (tr).sudo_5Trace_5steps
+        let n := _t4658
+        let _t4659 ← SudoRt.atL n (0 : Int)
+        let _t4660 ← moves_animated (tr).sudo_5Trace_1a (tr).sudo_5Trace_7start_a
+        let _as4661 ← SudoRt.sudoAssertEq _t4659 _t4660 2533
+        let _t4662 ← SudoRt.atL n (1 : Int)
+        let _t4663 ← moves_animated (tr).sudo_5Trace_1b (tr).sudo_5Trace_7start_b
+        let _as4664 ← SudoRt.sudoAssertEq _t4662 _t4663 2534
+        pure tr
+    | _ =>
+      do
+        match (_t4655 : SudoRt.SResult (Array (Int)) (Exchange)) with
+        | SudoRt.SResult.err m =>
+          do
+            let _as4665 ← SudoRt.sudoAssert false 2528
+            let _t4666 ← check_trace_steps (tr).sudo_5Trace_7start_a (tr).sudo_5Trace_7start_b (tr).sudo_5Trace_5steps
+            let n := _t4666
+            let _t4667 ← SudoRt.atL n (0 : Int)
+            let _t4668 ← moves_animated (tr).sudo_5Trace_1a (tr).sudo_5Trace_7start_a
+            let _as4669 ← SudoRt.sudoAssertEq _t4667 _t4668 2533
+            let _t4670 ← SudoRt.atL n (1 : Int)
+            let _t4671 ← moves_animated (tr).sudo_5Trace_1b (tr).sudo_5Trace_7start_b
+            let _as4672 ← SudoRt.sudoAssertEq _t4670 _t4671 2534
+            pure tr
+        | _ => SudoRt.fail "AssertFailed" "non-exhaustive match"
+
+def faces_exchange_demo_run0_a : Except SudoRt.Trap (Array (Int)) :=
+  do
+    pure (#[(6 : Int), (3 : Int), (4 : Int), (2 : Int), (3 : Int)] : Array (Int))
+
+def faces_exchange_demo_run0_b : Except SudoRt.Trap (Array (Int)) :=
+  do
+    pure (#[(2 : Int), (0 : Int), (7 : Int), (6 : Int), (1 : Int)] : Array (Int))
+
+def faces_exchange_demo_run1_a : Except SudoRt.Trap (Array (Int)) :=
+  do
+    pure (#[(7 : Int), (1 : Int), (4 : Int), (3 : Int), (6 : Int)] : Array (Int))
+
+def faces_exchange_demo_run1_b : Except SudoRt.Trap (Array (Int)) :=
+  do
+    pure (#[(0 : Int), (1 : Int), (1 : Int), (7 : Int), (8 : Int)] : Array (Int))
 
 def pt (x : Array (Int)) (y : Array (Int)) : Except SudoRt.Trap (Point) :=
   do

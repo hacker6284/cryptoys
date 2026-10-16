@@ -311,6 +311,8 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 The loop that feeds the next cell's `RunFrame` from this cell's board is not proved. Zeros, and zeros followed by one opening cell, are already `walk_chord_zeros`, `walk_chord_white_open`, and `walk_chord_red_open`. `chordStep_open` is the emitted step once `chord_add_demo` has returned; joining it to `chord_add_live` in one theorem elaborates past the heartbeat limit, so they stay separate.
 
+4185 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. The sampled peak while this group's climb files were elaborated was 1702276 kB VmHWM. Under 2 GB.
+
 ## Next
 
 The `walk_chord` induction over a whole cell list: the board after `chordStep_of_live` has to be the next cell's frame, then the walk is `.ok` of Spec `walkGo`. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.

@@ -471,10 +471,12 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
         (fieldMul n k bench rise inv) accX run)) ∧
       (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed (chordY3 n k bench
         (fieldMul n k bench rise inv) (fieldSub n accX (chordX3 n k bench
-          (fieldMul n k bench rise inv) accX run)) accY)) := by
+          (fieldMul n k bench rise inv) accX run)) accY)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        bI.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   obtain ⟨bR, hadd, h6a, h6t, h1aR, h1tR, _h4a, _h4t, hszDR, hszHR, _hnR, hmv, hflag,
       h0aK, h0tK, h2aK, h2tK, h5aK, h5tK, htR, hmR, hcR, hxR, hslR, hopR, honR, _hb, _hto,
-      hhoR, hstR, pk, hpk⟩ :=
+      hhoR, hstR, ⟨pk, hpk⟩, hhiRise⟩ :=
     chord_tail_after_inv b red bI baseY accY n moves0 peak0 hinv hszH hszD hyB hyA hpos
       htriB htriA hn0b hmoves0 hpeak0 hfit0 h6e h4t h4a h1t0 h1a0
   have h0a : bR.sudo_5Board_4home[0]'(by rw [hszHR]; decide) = embed accX :=
@@ -534,7 +536,7 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
     simpa [hopR] using hops0
   have hop0R : bR.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsR = (cOps : Int) := by
     simpa [hopR] using hop00
-  obtain ⟨b', hct, hAc, hUp, _⟩ :=
+  obtain ⟨b', hct, hAc, hUp, hhiTail⟩ :=
     chord_tail_point bR inv rise accX accY run w h r n k moves hole bench slides pk peakS
       cOps m ctrl mx script
       hflagT hoffR hmN hcN hxN hscriptR hbound hbound3 hfitM hfitC hfit2 hfitC4 hfit3
@@ -544,12 +546,16 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
       hspan htriI htriRise hfi hfm hhoN hw0 hh0 hrR hrP hnE hkLe hgap hwR hhR hrR' hkR
       hsm hnsm hfitB hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW hfit1 hfitA
       hfitRun hpegX hfitMX hfitSX hTailM hTailS hfitP hfitMo hfmP hfoldP hfitSo
-  refine ⟨b', ?_, ?_, ?_⟩
+  refine ⟨b', ?_, ?_, ?_, ?_⟩
   · rw [hadd, hct, ok_bind, pure_eq_ok]
   · intro h
     simpa [chordX3, fieldMul] using hAc h
   · intro h
     simpa [chordY3, chordX3, fieldMul, fieldSub] using hUp h
+  · have hI : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        bI.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+      simp [restoreMarker]
+    exact hhiTail.trans (hhiRise.trans hI)
 
 /-- Rooms `chord_tail_point` still asks for, once the counters are the naturals
     on the board `invert_checked` returned. -/
@@ -1032,7 +1038,10 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
         (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed
           (chordY3 t.n t.k t.benchlen (fieldMul t.n t.k t.benchlen rise inv)
             (fieldSub t.n accX (chordX3 t.n t.k t.benchlen
-              (fieldMul t.n t.k t.benchlen rise inv) accX run)) accY)) := by
+              (fieldMul t.n t.k t.benchlen rise inv) accX run)) accY)) ∧
+        ∃ high : Nat,
+          b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
+          tallyOrigin t ≤ high := by
   obtain ⟨bI, _h5, _h5D, hinv0, h5aI, h5tI, hnT, _hlenA, h2aI, h2tI, h0aI, h0tI,
       h1aI, h1tI, h4aI, h4tI, hcarry, hbnd, hwater⟩ :=
     open_checked { b with sudo_5Board_9marker_on := false } t run inv lay hOk sat hR hsh
@@ -1168,8 +1177,8 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
     tailRoom_of t.n t.k t.benchlen t.script moves0 moves hole slides peakS cOps
       lay.mark ctrl inv rise accX accY run hmovRise hinvL hxLen hyLen hrunL hnb
       hmoveFit hslideFit hMark hMarkF hctrlFit hopsFit
-  refine ⟨bI, moves0, peak0, slides, peakS, hole, ctrl, cOps, hr, ?_⟩
-  exact chord_add_point_of_inv b red bI baseY accY accX run inv rise
+  obtain ⟨b', hct, hx, hy, hhi⟩ :=
+    chord_add_point_of_inv b red bI baseY accY accX run inv rise
     t.w t.h t.r t.n t.k moves0 moves hole t.benchlen slides peak0 peakS cOps
     lay.mark ctrl lay.mx t.script
     hinv hszH hszD hyB hyA hpos htriB htriA hr.hn hr.hmoves hr.hpeak room.fit0
@@ -1187,6 +1196,9 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
     room.fmS room.foldS room.fitW room.fit1 room.fitA room.fitRun room.pegX
     room.fitMX room.fitSX room.tailM room.tailS room.fitP room.fitMo room.fmP
     room.foldP room.fitSo
+  obtain ⟨high, hh, hge⟩ := _hwater
+  refine ⟨bI, moves0, peak0, slides, peakS, hole, ctrl, cOps, hr,
+    b', hct, hx, hy, high, hhi.trans hh, hge⟩
 
 
 /-- `chordAddTail` after the inverse is `chord_tail` on the rise board.

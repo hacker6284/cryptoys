@@ -108,7 +108,10 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed x3) ∧
       (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed y3) ∧
       walkStep t.n t.k t.benchlen (baseX, baseY) true (preX, preY) c =
-        some (true, (x3, y3)) := by
+        some (true, (x3, y3)) ∧
+      ∃ high : Nat,
+        b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
+        tallyOrigin t ≤ high := by
   intro red run y rise slope x3 y3
   have hpos : 0 < t.n := hOk.n_pos
   have hnb : t.n ≤ t.benchlen := mul_span_n t.n t.benchlen hpos sat.mul_span
@@ -194,7 +197,7 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
       htriX htriUp htriR htriI htriRise hfitN sat.mul_span
       hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsh.small hsh.n_small
       hChord hChordS hMarkL hMarkL' hCtrlP hOpsP
-  obtain ⟨_, b', htail, hx0, hy1⟩ := hand
+  obtain ⟨_, b', htail, hx0, hy1, hwater⟩ := hand
   have h2H : 2 < bA.sudo_5Board_4home.size := by
     have hsz : ({ bA with sudo_5Board_9marker_on := false } : Ecbs.Board).sudo_5Board_4home.size =
         bA.sudo_5Board_4home.size := rfl
@@ -233,7 +236,8 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     is_zero_embed bA 2 t.n run h2D h2H hheld2 hhome2 hnA hrunL hfitN, ok_bind]
   rw [decide_eq_false hne]
   simp only [Bool.false_eq_true, if_false]
-  refine ⟨b', ?_, hx0, hy1, ?_⟩
+  obtain ⟨high, hhi, hge⟩ := hwater
+  refine ⟨b', ?_, hx0, hy1, ?_, ⟨high, hhi, hge⟩⟩
   · rw [htail]
   · have hspec : specInv t.n t.k t.benchlen
         (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen preX)) = some inv := by

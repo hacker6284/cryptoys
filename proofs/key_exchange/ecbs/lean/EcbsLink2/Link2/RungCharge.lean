@@ -737,6 +737,10 @@ structure ClimbBudget where
   held0 : Bool
   held1 : Bool
   held4 : Bool
+  /-- Home 3. The walk puts the base there and holds it. A fresh board leaves
+      it empty. A rung does not write index 3. -/
+  base3 : List Nat
+  held3 : Bool
   /-- The tier record, the script-marker index, and its maximum at the start
       of the climb. A rung does not write them. -/
   tierSnap : Ecbs.Tier
@@ -898,7 +902,7 @@ structure PegRead (b : Ecbs.Board) (s : ClimbModel) (base : ClimbBudget) : Prop 
   fitBn : FitsLen s.benchlen
   fit3 : FitsLen (3 * (s.n - 1))
 
-/-- Homes 0, 1, and 4, which a climb does not write. -/
+/-- Homes 0, 1, 3, and 4, which a climb does not write. Home 3 is the base. -/
 structure SideKeep (b : Ecbs.Board) (base : ClimbBudget) : Prop where
   h0H : 0 < b.sudo_5Board_4home.size
   h0D : 0 < b.sudo_5Board_4held.size
@@ -906,12 +910,16 @@ structure SideKeep (b : Ecbs.Board) (base : ClimbBudget) : Prop where
   h1D : 1 < b.sudo_5Board_4held.size
   h4H : 4 < b.sudo_5Board_4home.size
   h4D : 4 < b.sudo_5Board_4held.size
+  h3H : 3 < b.sudo_5Board_4home.size
+  h3D : 3 < b.sudo_5Board_4held.size
   home0 : b.sudo_5Board_4home[0]'h0H = embed base.side0
   held0 : b.sudo_5Board_4held[0]'h0D = base.held0
   home1 : b.sudo_5Board_4home[1]'h1H = embed base.side1
   held1 : b.sudo_5Board_4held[1]'h1D = base.held1
   home4 : b.sudo_5Board_4home[4]'h4H = embed base.side4
   held4 : b.sudo_5Board_4held[4]'h4D = base.held4
+  home3 : b.sudo_5Board_4home[3]'h3H = embed base.base3
+  held3 : b.sudo_5Board_4held[3]'h3D = base.held3
 
 private theorem side_cell {α : Type} {a b : Array α} (h : a = b) {i : Nat}
     {ha : i < a.size} {hb : i < b.size} {v : α}
@@ -920,7 +928,7 @@ private theorem side_cell {α : Type} {a b : Array α} (h : a = b) {i : Nat}
   have : (⟨i, ha⟩ : Fin a.size) = ⟨i, hb⟩ := Fin.ext rfl
   simpa [this] using hv
 
-/-- Same home array and held array, so homes 0, 1, and 4 stay. -/
+/-- Same home array and held array, so homes 0, 1, 3, and 4 stay. -/
 theorem side_arrays {b b' : Ecbs.Board} {base : ClimbBudget}
     (h : SideKeep b base)
     (hH : b'.sudo_5Board_4home = b.sudo_5Board_4home)
@@ -933,14 +941,18 @@ theorem side_arrays {b b' : Ecbs.Board} {base : ClimbBudget}
       h1D := by rw [hD]; exact h.h1D
       h4H := by rw [hH]; exact h.h4H
       h4D := by rw [hD]; exact h.h4D
+      h3H := by rw [hH]; exact h.h3H
+      h3D := by rw [hD]; exact h.h3D
       home0 := side_cell hH h.home0
       held0 := side_cell hD h.held0
       home1 := side_cell hH h.home1
       held1 := side_cell hD h.held1
       home4 := side_cell hH h.home4
-      held4 := side_cell hD h.held4 }
+      held4 := side_cell hD h.held4
+      home3 := side_cell hH h.home3
+      held3 := side_cell hD h.held3 }
 
-/-- The three side cells of `b'` are the three side cells of `b`. -/
+/-- The side cells of `b'`, including home 3, are the side cells of `b`. -/
 theorem side_copy {b b' : Ecbs.Board} {base : ClimbBudget}
     (h : SideKeep b base)
     (h0H : 0 < b'.sudo_5Board_4home.size)
@@ -949,12 +961,16 @@ theorem side_copy {b b' : Ecbs.Board} {base : ClimbBudget}
     (h1D : 1 < b'.sudo_5Board_4held.size)
     (h4H : 4 < b'.sudo_5Board_4home.size)
     (h4D : 4 < b'.sudo_5Board_4held.size)
+    (h3H : 3 < b'.sudo_5Board_4home.size)
+    (h3D : 3 < b'.sudo_5Board_4held.size)
     (e0 : b'.sudo_5Board_4home[0]'h0H = b.sudo_5Board_4home[0]'h.h0H)
     (d0 : b'.sudo_5Board_4held[0]'h0D = b.sudo_5Board_4held[0]'h.h0D)
     (e1 : b'.sudo_5Board_4home[1]'h1H = b.sudo_5Board_4home[1]'h.h1H)
     (d1 : b'.sudo_5Board_4held[1]'h1D = b.sudo_5Board_4held[1]'h.h1D)
     (e4 : b'.sudo_5Board_4home[4]'h4H = b.sudo_5Board_4home[4]'h.h4H)
-    (d4 : b'.sudo_5Board_4held[4]'h4D = b.sudo_5Board_4held[4]'h.h4D) :
+    (d4 : b'.sudo_5Board_4held[4]'h4D = b.sudo_5Board_4held[4]'h.h4D)
+    (e3 : b'.sudo_5Board_4home[3]'h3H = b.sudo_5Board_4home[3]'h.h3H)
+    (d3 : b'.sudo_5Board_4held[3]'h3D = b.sudo_5Board_4held[3]'h.h3D) :
     SideKeep b' base :=
   { h0H := h0H
     h0D := h0D
@@ -962,18 +978,22 @@ theorem side_copy {b b' : Ecbs.Board} {base : ClimbBudget}
     h1D := h1D
     h4H := h4H
     h4D := h4D
+    h3H := h3H
+    h3D := h3D
     home0 := e0.trans h.home0
     held0 := d0.trans h.held0
     home1 := e1.trans h.home1
     held1 := d1.trans h.held1
     home4 := e4.trans h.home4
-    held4 := d4.trans h.held4 }
+    held4 := d4.trans h.held4
+    home3 := e3.trans h.home3
+    held3 := d3.trans h.held3 }
 
-/-- Writing one home other than 0, 1, or 4 leaves those three cells. -/
+/-- Writing one home other than 0, 1, 3, or 4 leaves those cells. -/
 theorem side_set {b : Ecbs.Board} {base : ClimbBudget}
     (h : SideKeep b base) (i : Nat)
     (hiH : i < b.sudo_5Board_4home.size) (hiD : i < b.sudo_5Board_4held.size)
-    (hne0 : i ≠ 0) (hne1 : i ≠ 1) (hne4 : i ≠ 4)
+    (hne0 : i ≠ 0) (hne1 : i ≠ 1) (hne4 : i ≠ 4) (hne3 : i ≠ 3)
     (arr : Array Int) (flag : Bool) :
     SideKeep
       { b with
@@ -995,6 +1015,10 @@ theorem side_set {b : Ecbs.Board} {base : ClimbBudget}
     simp [b', Array.size_set]; exact h.h4H
   have h4D : 4 < b'.sudo_5Board_4held.size := by
     simp [b', Array.size_set]; exact h.h4D
+  have h3H : 3 < b'.sudo_5Board_4home.size := by
+    simp [b', Array.size_set]; exact h.h3H
+  have h3D : 3 < b'.sudo_5Board_4held.size := by
+    simp [b', Array.size_set]; exact h.h3D
   refine
     { h0H := h0H
       h0D := h0D
@@ -1002,6 +1026,8 @@ theorem side_set {b : Ecbs.Board} {base : ClimbBudget}
       h1D := h1D
       h4H := h4H
       h4D := h4D
+      h3H := h3H
+      h3D := h3D
       home0 := by
         have hne : (⟨i, hiH⟩ : Fin _).1 ≠ 0 := hne0
         have hget := Array.getElem_set_ne b.sudo_5Board_4home ⟨i, hiH⟩ arr
@@ -1031,7 +1057,17 @@ theorem side_set {b : Ecbs.Board} {base : ClimbBudget}
         have hne : (⟨i, hiD⟩ : Fin _).1 ≠ 4 := hne4
         have hget := Array.getElem_set_ne b.sudo_5Board_4held ⟨i, hiD⟩ flag
           (by simp [b', Array.size_set]; exact h.h4D) hne
-        simpa [b'] using hget.trans h.held4 }
+        simpa [b'] using hget.trans h.held4
+      home3 := by
+        have hne : (⟨i, hiH⟩ : Fin _).1 ≠ 3 := hne3
+        have hget := Array.getElem_set_ne b.sudo_5Board_4home ⟨i, hiH⟩ arr
+          (by simp [b', Array.size_set]; exact h.h3H) hne
+        simpa [b'] using hget.trans h.home3
+      held3 := by
+        have hne : (⟨i, hiD⟩ : Fin _).1 ≠ 3 := hne3
+        have hget := Array.getElem_set_ne b.sudo_5Board_4held ⟨i, hiD⟩ flag
+          (by simp [b', Array.size_set]; exact h.h3D) hne
+        simpa [b'] using hget.trans h.held3 }
 
 theorem side_withTally {b : Ecbs.Board} {base : ClimbBudget}
     (h : SideKeep b base) (row : Array Int) (len ctrl high tmax : Int) :
@@ -1048,7 +1084,7 @@ theorem side_withPark {b : Ecbs.Board} {base : ClimbBudget}
 theorem side_clear {b : Ecbs.Board} {base : ClimbBudget}
     (h : SideKeep b base) (home : Nat) (xs : List Nat) (moves : Nat)
     (hin : HomeIn b home)
-    (hne0 : home ≠ 0) (hne1 : home ≠ 1) (hne4 : home ≠ 4) :
+    (hne0 : home ≠ 0) (hne1 : home ≠ 1) (hne4 : home ≠ 4) (hne3 : home ≠ 3) :
     SideKeep (clearHeldBoard b home xs moves hin.hH hin.hD) base := by
   have hH : (clearHeldBoard b home xs moves hin.hH hin.hD).sudo_5Board_4home =
       b.sudo_5Board_4home.set ⟨home, hin.hH⟩ #[] := by
@@ -1056,12 +1092,12 @@ theorem side_clear {b : Ecbs.Board} {base : ClimbBudget}
   have hD : (clearHeldBoard b home xs moves hin.hH hin.hD).sudo_5Board_4held =
       b.sudo_5Board_4held.set ⟨home, hin.hD⟩ false := by
     simp [clearHeldBoard]
-  exact side_arrays (side_set h home hin.hH hin.hD hne0 hne1 hne4 #[] false) hH hD
+  exact side_arrays (side_set h home hin.hH hin.hD hne0 hne1 hne4 hne3 #[] false) hH hD
 
 theorem side_place {b : Ecbs.Board} {base : ClimbBudget}
     (h : SideKeep b base) (home : Nat)
     (hin : HomeIn b home) (xs : List Nat) (moves peak : Nat)
-    (hne0 : home ≠ 0) (hne1 : home ≠ 1) (hne4 : home ≠ 4) :
+    (hne0 : home ≠ 0) (hne1 : home ≠ 1) (hne4 : home ≠ 4) (hne3 : home ≠ 3) :
     SideKeep (placeBoard b home hin.hH hin.hD xs moves peak) base := by
   have hH : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4home =
       b.sudo_5Board_4home.set ⟨home, hin.hH⟩ (embed xs) := by
@@ -1073,17 +1109,17 @@ theorem side_place {b : Ecbs.Board} {base : ClimbBudget}
     unfold placeBoard
     dsimp only
     split <;> rfl
-  exact side_arrays (side_set h home hin.hH hin.hD hne0 hne1 hne4 (embed xs) true) hH hD
+  exact side_arrays (side_set h home hin.hH hin.hD hne0 hne1 hne4 hne3 (embed xs) true) hH hD
 
 theorem side_settle {b : Ecbs.Board} {base : ClimbBudget}
     (h : SideKeep b base) (home : Nat)
     (hin : HomeIn b home) (xs : List Nat) (n moves slides peak : Nat)
-    (hne0 : home ≠ 0) (hne1 : home ≠ 1) (hne4 : home ≠ 4) :
+    (hne0 : home ≠ 0) (hne1 : home ≠ 1) (hne4 : home ≠ 4) (hne3 : home ≠ 3) :
     SideKeep (settleBoard b home hin.hH hin.hD xs n moves slides peak) base := by
   have hH := settle_home_eq b home hin xs n moves slides peak
   have hD := settle_held_eq b home hin xs n moves slides peak
   exact side_arrays
-    (side_set h home hin.hH hin.hD hne0 hne1 hne4 (embed (xs.take n)) true) hH hD
+    (side_set h home hin.hH hin.hD hne0 hne1 hne4 hne3 (embed (xs.take n)) true) hH hD
 
 /-- Size 8, the tier record, the script-marker index, and its maximum.
     The climb writes homes and counters. These four stay the entry values. -/

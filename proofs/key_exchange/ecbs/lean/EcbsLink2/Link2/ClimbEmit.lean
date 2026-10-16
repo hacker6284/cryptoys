@@ -1806,10 +1806,10 @@ theorem quiet_pegBoard (c : PegCtx) {base : ClimbBudget}
     (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_6marker) hboard.symm)
     (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) hboard.symm)
 
-/-- The bench-off peg writes home `src`. Homes 0, 1, and 4 stay. -/
+/-- The bench-off peg writes home `src`. Homes 0, 1, 3, and 4 stay. -/
 theorem side_offPeg (c : PegCtx) {base : ClimbBudget}
     (h : SideKeep c.b0 base)
-    (hne0 : c.src ≠ 0) (hne1 : c.src ≠ 1) (hne4 : c.src ≠ 4) :
+    (hne0 : c.src ≠ 0) (hne1 : c.src ≠ 1) (hne4 : c.src ≠ 4) (hne3 : c.src ≠ 3) :
     SideKeep (offPeg c) base := by
   have hHeldEq : (offPeg c).sudo_5Board_4held =
       c.b0.sudo_5Board_4held.set ⟨c.src, c.hF⟩ false := by
@@ -1819,13 +1819,13 @@ theorem side_offPeg (c : PegCtx) {base : ClimbBudget}
       c.b0.sudo_5Board_4home.set ⟨c.src, c.hHome⟩ #[] := by
     unfold offPeg pegStep
     rw [cube_off_home]
-  exact side_arrays (side_set h c.src c.hHome c.hF hne0 hne1 hne4 #[] false)
+  exact side_arrays (side_set h c.src c.hHome c.hF hne0 hne1 hne4 hne3 #[] false)
     hHomeEq hHeldEq
 
-/-- One live peg settles into `src` and then cubes it. Homes 0, 1, and 4 stay. -/
+/-- One live peg settles into `src` and then cubes it. Homes 0, 1, 3, and 4 stay. -/
 theorem side_livePeg (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m)
     {base : ClimbBudget} (h : SideKeep d.b base)
-    (hne0 : c.src ≠ 0) (hne1 : c.src ≠ 1) (hne4 : c.src ≠ 4) :
+    (hne0 : c.src ≠ 0) (hne1 : c.src ≠ 1) (hne4 : c.src ≠ 4) (hne3 : c.src ≠ 3) :
     SideKeep (livePegBoard c d hi) base := by
   let bC := cubeLiveBoard d.b c.src c.src d.xs
     ⟨c.n, c.k, d.moves, d.slides, d.hole, c.bench, d.peak, d.peakS, d.cOps, d.hops⟩
@@ -1859,6 +1859,10 @@ theorem side_livePeg (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m)
     rw [hLiveHome, hszH]; exact h.h4H
   have h4D : 4 < (livePegBoard c d hi).sudo_5Board_4held.size := by
     rw [hLiveH, hszD]; exact h.h4D
+  have h3H : 3 < (livePegBoard c d hi).sudo_5Board_4home.size := by
+    rw [hLiveHome, hszH]; exact h.h3H
+  have h3D : 3 < (livePegBoard c d hi).sudo_5Board_4held.size := by
+    rw [hLiveH, hszD]; exact h.h3D
   have homeAt (k : Nat) (hk : k < d.b.sudo_5Board_4home.size) (hne : c.src ≠ k)
       (hk' : k < (livePegBoard c d hi).sudo_5Board_4home.size) :
       (livePegBoard c d hi).sudo_5Board_4home[k]'hk' =
@@ -1882,16 +1886,17 @@ theorem side_livePeg (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m)
       rw [hS, Array.size_set]; exact hk
     have h3 := idx_get hS k hszS
     rw [h3, Array.getElem_set, if_neg hne]
-  exact side_copy h h0H h0D h1H h1D h4H h4D
+  exact side_copy h h0H h0D h1H h1D h4H h4D h3H h3D
     (homeAt 0 h.h0H hne0 h0H) (heldAt 0 h.h0D hne0 h0D)
     (homeAt 1 h.h1H hne1 h1H) (heldAt 1 h.h1D hne1 h1D)
     (homeAt 4 h.h4H hne4 h4H) (heldAt 4 h.h4D hne4 h4D)
+    (homeAt 3 h.h3H hne3 h3H) (heldAt 3 h.h3D hne3 h3D)
 
-/-- A live cube writes `src` only. Homes 0, 1, and 4 stay. -/
+/-- A live cube writes `src` only. Homes 0, 1, 3, and 4 stay. -/
 theorem side_cubeLive {b : Ecbs.Board} {base : ClimbBudget}
     (h : SideKeep b base) (dst src : Nat) (xs : List Nat)
     (bud : Budget b 1) (hin : HomeIn b src)
-    (hne0 : src ≠ 0) (hne1 : src ≠ 1) (hne4 : src ≠ 4) :
+    (hne0 : src ≠ 0) (hne1 : src ≠ 1) (hne4 : src ≠ 4) (hne3 : src ≠ 3) :
     SideKeep (cubeLiveBoard b dst src xs bud hin) base := by
   have hHomeEq : (cubeLiveBoard b dst src xs bud hin).sudo_5Board_4home =
       b.sudo_5Board_4home.set ⟨src, hin.hH⟩ #[] :=
@@ -1909,6 +1914,8 @@ theorem side_cubeLive {b : Ecbs.Board} {base : ClimbBudget}
   have h1D : 1 < b'.sudo_5Board_4held.size := by rw [hszD]; exact h.h1D
   have h4H : 4 < b'.sudo_5Board_4home.size := by rw [hszH]; exact h.h4H
   have h4D : 4 < b'.sudo_5Board_4held.size := by rw [hszD]; exact h.h4D
+  have h3H : 3 < b'.sudo_5Board_4home.size := by rw [hszH]; exact h.h3H
+  have h3D : 3 < b'.sudo_5Board_4held.size := by rw [hszD]; exact h.h3D
   have homeAt (k : Nat) (hk : k < b.sudo_5Board_4home.size) (hne : src ≠ k)
       (hk' : k < b'.sudo_5Board_4home.size) :
       b'.sudo_5Board_4home[k]'hk' = b.sudo_5Board_4home[k]'hk := by
@@ -1924,16 +1931,17 @@ theorem side_cubeLive {b : Ecbs.Board} {base : ClimbBudget}
       rw [hS, Array.size_set]; exact hk
     have h3 := idx_get hS k hszS
     rw [h3, Array.getElem_set, if_neg hne]
-  exact side_copy h h0H h0D h1H h1D h4H h4D
+  exact side_copy h h0H h0D h1H h1D h4H h4D h3H h3D
     (homeAt 0 h.h0H hne0 h0H) (heldAt 0 h.h0D hne0 h0D)
     (homeAt 1 h.h1H hne1 h1H) (heldAt 1 h.h1D hne1 h1D)
     (homeAt 4 h.h4H hne4 h4H) (heldAt 4 h.h4D hne4 h4D)
+    (homeAt 3 h.h3H hne3 h3H) (heldAt 3 h.h3D hne3 h3D)
 
-/-- A live nocopy mul writes the spare. Homes 0, 1, and 4 stay. -/
+/-- A live nocopy mul writes the spare. Homes 0, 1, 3, and 4 stay. -/
 theorem side_mulLive {b : Ecbs.Board} {base : ClimbBudget}
     (h : SideKeep b base) (dst second : Nat) (xs ys : List Nat)
     (bud : Budget b 0) (hin : HomeIn b second)
-    (hne0 : second ≠ 0) (hne1 : second ≠ 1) (hne4 : second ≠ 4) :
+    (hne0 : second ≠ 0) (hne1 : second ≠ 1) (hne4 : second ≠ 4) (hne3 : second ≠ 3) :
     SideKeep (mulNoLiveBoard b dst second xs ys bud hin) base := by
   have hHomeEq : (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4home =
       b.sudo_5Board_4home.set ⟨second, hin.hH⟩ #[] :=
@@ -1951,6 +1959,8 @@ theorem side_mulLive {b : Ecbs.Board} {base : ClimbBudget}
   have h1D : 1 < b'.sudo_5Board_4held.size := by rw [hszD]; exact h.h1D
   have h4H : 4 < b'.sudo_5Board_4home.size := by rw [hszH]; exact h.h4H
   have h4D : 4 < b'.sudo_5Board_4held.size := by rw [hszD]; exact h.h4D
+  have h3H : 3 < b'.sudo_5Board_4home.size := by rw [hszH]; exact h.h3H
+  have h3D : 3 < b'.sudo_5Board_4held.size := by rw [hszD]; exact h.h3D
   have homeAt (k : Nat) (hk : k < b.sudo_5Board_4home.size) (hne : second ≠ k)
       (hk' : k < b'.sudo_5Board_4home.size) :
       b'.sudo_5Board_4home[k]'hk' = b.sudo_5Board_4home[k]'hk := by
@@ -1966,34 +1976,35 @@ theorem side_mulLive {b : Ecbs.Board} {base : ClimbBudget}
       rw [hS, Array.size_set]; exact hk
     have h3 := idx_get hS k hszS
     rw [h3, Array.getElem_set, if_neg hne]
-  exact side_copy h h0H h0D h1H h1D h4H h4D
+  exact side_copy h h0H h0D h1H h1D h4H h4D h3H h3D
     (homeAt 0 h.h0H hne0 h0H) (heldAt 0 h.h0D hne0 h0D)
     (homeAt 1 h.h1H hne1 h1H) (heldAt 1 h.h1D hne1 h1D)
     (homeAt 4 h.h4H hne4 h4H) (heldAt 4 h.h4D hne4 h4D)
+    (homeAt 3 h.h3H hne3 h3H) (heldAt 3 h.h3D hne3 h3D)
 
-/-- Every positive prefix of the cube-peg loop keeps homes 0, 1, and 4. -/
+/-- Every positive prefix of the cube-peg loop keeps homes 0, 1, 3, and 4. -/
 theorem side_pegPack (c : PegCtx) {base : ClimbBudget}
     (h : SideKeep c.b0 base)
     (i : Nat) (h0 : 0 < i) (hle : i ≤ c.m)
-    (hne0 : c.src ≠ 0) (hne1 : c.src ≠ 1) (hne4 : c.src ≠ 4) :
+    (hne0 : c.src ≠ 0) (hne1 : c.src ≠ 1) (hne4 : c.src ≠ 4) (hne3 : c.src ≠ 3) :
     SideKeep (pegPack c i h0 hle).b base := by
   match i with
   | 0 => exact absurd h0 (Nat.not_lt_zero 0)
   | 1 =>
-    simpa [pegPack, pegFromOff] using side_offPeg c h hne0 hne1 hne4
+    simpa [pegPack, pegFromOff] using side_offPeg c h hne0 hne1 hne4 hne3
   | n + 2 =>
     have hle1 : n + 1 ≤ c.m := Nat.le_of_succ_le hle
-    have ih := side_pegPack c h (n + 1) (Nat.succ_pos n) hle1 hne0 hne1 hne4
+    have ih := side_pegPack c h (n + 1) (Nat.succ_pos n) hle1 hne0 hne1 hne4 hne3
     simpa [pegPack, pegNext] using
       side_livePeg c (pegPack c (n + 1) (Nat.succ_pos n) hle1)
-        (Nat.lt_of_succ_le hle) ih hne0 hne1 hne4
+        (Nat.lt_of_succ_le hle) ih hne0 hne1 hne4 hne3
 
-/-- The peg board at the end of the loop is that pack. Homes 0, 1, and 4 stay. -/
+/-- The peg board at the end of the loop is that pack. Homes 0, 1, 3, and 4 stay. -/
 theorem side_pegBoard (c : PegCtx) {base : ClimbBudget}
     (h : SideKeep c.b0 base)
-    (hne0 : c.src ≠ 0) (hne1 : c.src ≠ 1) (hne4 : c.src ≠ 4) :
+    (hne0 : c.src ≠ 0) (hne1 : c.src ≠ 1) (hne4 : c.src ≠ 4) (hne3 : c.src ≠ 3) :
     SideKeep (pegBoard c c.m) base := by
-  have hpack := side_pegPack c h c.m c.hm (Nat.le_refl _) hne0 hne1 hne4
+  have hpack := side_pegPack c h c.m c.hm (Nat.le_refl _) hne0 hne1 hne4 hne3
   have hboard := (pegPack_board c c.m c.hm (Nat.le_refl _)).1
   exact side_arrays hpack
     (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hboard.symm)

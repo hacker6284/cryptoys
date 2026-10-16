@@ -357,13 +357,17 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 `climbEmit_ladder` is the induction: one rung does not write the ladder array, so the board `climbEmit` returns has the ladder it was given. `open_invert` exports that the tally board's ladder is `embed (tierClimb t)`. `open_check_mul` obtains `settled_unpark_frame` and `FrameScalar` from the check multiply, so the board `bench_read_and_clear` returns has that same ladder. `open_checked` carries it through the white return and through `mirrorHome` of home 5. The board `invert_checked` returns has ladder `embed (tierClimb t)`.
 
-`1 ≤ tally_max` is not read by `open_climb` or `chord_add_live`. The only use was the later arm of `tally_start_mark`, which called `tally_start_again`. `later_climb_entry` has no callers. The later branch of `OpenLay.hStart` and `RunFrame.hStart` is now `tallyOrigin ≤ high` alone. `tally_start_high` is that arm: the high stays, and `tally_max` becomes `max` of the old value and `1` without a positivity hypothesis. The partial `TmaxGe` induction is deleted. Home 3 equal to the base is not proved.
+`1 ≤ tally_max` is not read by `open_climb` or `chord_add_live`. The only use was the later arm of `tally_start_mark`, which called `tally_start_again`. `later_climb_entry` has no callers. The later branch of `OpenLay.hStart` and `RunFrame.hStart` is now `tallyOrigin ≤ high` alone. `tally_start_high` is that arm: the high stays, and `tally_max` becomes `max` of the old value and `1` without a positivity hypothesis. The partial `TmaxGe` induction is deleted.
 
 4281 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1700440 kB VmHWM. Under 2 GB.
 
+Home 3 is the base. `ClimbBudget` stores that list and its held flag. `SideKeep` keeps the cell with homes 0, 1, and 4: a rung writes the gap and the spare, not index 3. `OpenLay` reads the cell off the board that enters `invert`. `open_tally` leaves it. `open_climb` puts it on the climb invariant. `open_check_mul` carries it through the check multiply and `bench_read_and_clear`. `open_checked` returns it, and the red branch keeps it through `mirrorHome` of home 5. The walk's copy sets that lay cell to the `RunFrame` base, held. A fresh board's home 3 stays empty.
+
+4289 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 978160 kB VmHWM. Under 2 GB.
+
 ## Next
 
-Home 3 equal to the base on the board `open_checked` returns. Then scratch homes 2, 5, and 6 empty. Then `chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, `tallyOrigin ≤ high`, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+Scratch homes 2, 5, and 6 empty. Then `chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, `tallyOrigin ≤ high`, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

@@ -390,7 +390,9 @@ private theorem finish_copy
         lay.side4 = fr.y4 ∧
         lay.flag4 = fr.flag4 ∧
         lay.side0 = accX ∧
-        lay.flag0 = true := by
+        lay.flag0 = true ∧
+        lay.base3 = baseX ∧
+        lay.flag3 = true := by
   have h0HOff : 0 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
   have h0DOff : 0 < bOff.sudo_5Board_4held.size := by rw [hszDOff]; decide
   have h1HOff : 1 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
@@ -415,6 +417,14 @@ private theorem finish_copy
   have hflag4 : bOff.sudo_5Board_4held[4]'h4DOff = fr.flag4 :=
     copy_side_held b bB b1 bOff hinB hheldB hszDB hszD1 hplaceD hheldBA
       4 (by decide) fr.held4 h4DOff
+  have h3HOff : 3 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
+  have h3DOff : 3 < bOff.sudo_5Board_4held.size := by rw [hszDOff]; decide
+  have hbase3 : bOff.sudo_5Board_4home[3]'h3HOff = embed baseX :=
+    copy_side_home b bB b1 bOff baseX arr hinB h2H1 hhomeB hszHB hszH1 hplaceH
+      hhomeOff 3 (by decide) fr.home3 h3HOff
+  have hflag3 : bOff.sudo_5Board_4held[3]'h3DOff = true :=
+    copy_side_held b bB b1 bOff hinB hheldB hszDB hszD1 hplaceD hheldBA
+      3 (by decide) fr.held3 h3DOff
   let lay : OpenLay bOff t xs :=
     { szH := hszHOff
       szD := hszDOff
@@ -436,6 +446,10 @@ private theorem finish_copy
       held1 := idx_irrel.trans hflag1
       home4 := idx_irrel.trans hside4
       held4 := idx_irrel.trans hflag4
+      base3 := baseX
+      flag3 := true
+      home3 := idx_irrel.trans hbase3
+      held3 := idx_irrel.trans hflag3
       mark := fr.mark
       mx := fr.mx
       hmark := hmarkOff
@@ -521,6 +535,8 @@ private theorem finish_copy
       held0 := true
       held1 := fr.flag1
       held4 := fr.flag4
+      base3 := baseX
+      held3 := true
       tierSnap := embTier t
       markSnap := Int.ofNat fr.mark
       mxSnap := Int.ofNat fr.mx
@@ -544,14 +560,14 @@ private theorem finish_copy
           rfl }
   have hmatch : OpenMatch lay baseB := by
     refine ⟨rfl, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl,
-      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
     apply congrArg (fun occ => raisedPeak lay.peak occ)
     apply countHeld_congr
     apply congrArg (fun i => bOff.sudo_5Board_4held.set i true)
     exact Fin.ext rfl
   cases hbOff
   exact ⟨bA, hdo, hflag, lay, baseB, hmatch, hmvEq, rfl, rfl, rfl, rfl,
-    rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+    rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     (fr : RunFrame b t baseX accX) (hOk : BoardOk t) (sat : TierSat t)
@@ -591,7 +607,9 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
         lay.side4 = fr.y4 ∧
         lay.flag4 = fr.flag4 ∧
         lay.side0 = accX ∧
-        lay.flag0 = true := by
+        lay.flag0 = true ∧
+        lay.base3 = baseX ∧
+        lay.flag3 = true := by
   let xs := fieldSub t.n baseX accX
   have hpos : 0 < t.n := hOk.n_pos
   have hpegB : pegCount baseX ≤ t.n := by rw [← fr.lenX]; exact pegCount_le baseX

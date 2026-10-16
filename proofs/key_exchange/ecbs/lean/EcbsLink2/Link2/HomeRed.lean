@@ -932,14 +932,14 @@ theorem red_unparked_delta
     exact side_arrays hsideC hH hD
   have hsideCube0 := side_cubeLive hsideU 6 5 xs
     ⟨s.n, s.k, mvC, slC, holeN, s.benchlen, pkC, pkS, c1, hops1U⟩ ⟨h5HU, h5DU⟩
-    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide)
   have hsideCube : SideKeep bCube0 base :=
     side_arrays hsideCube0
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hEq)
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hEq)
   have hsideMul0 := side_mulLive hsideCube 5 6 base.x ys
     ⟨s.n, s.k, mvCube, slCube, holeC, s.benchlen, pkU, peakSC, cC0, h0cubeSz⟩
-    ⟨h6HC, h6DC⟩ (by decide) (by decide) (by decide)
+    ⟨h6HC, h6DC⟩ (by decide) (by decide) (by decide) (by decide)
   have hsideR : SideKeep bRed0 base :=
     side_arrays hsideMul0
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hRedEq)

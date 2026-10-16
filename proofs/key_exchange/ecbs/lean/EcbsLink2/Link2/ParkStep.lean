@@ -871,14 +871,14 @@ theorem parked_clear_ge
       (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) base :=
     side_arrays h.shape.side (by unfold parkKeepBoard; rfl) (by unfold parkKeepBoard; rfl)
   have hsidePlace := side_place hsidePark 6 ⟨h.shape.spareH, h.shape.spareD⟩ s.gap mv pk
-    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide)
   have hsideB0 : SideKeep cIdle.b0 base :=
     side_arrays hsidePlace
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hplace)
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hplace)
   have hsidePeg : SideKeep (pegBoard cIdle cIdle.m) base :=
     side_pegBoard cIdle hsideB0 (by rw [hsrcI]; decide) (by rw [hsrcI]; decide)
-      (by rw [hsrcI]; decide)
+      (by rw [hsrcI]; decide) (by rw [hsrcI]; decide)
   have hboard := (pegPack_board cIdle cIdle.m cIdle.hm (Nat.le_refl _)).1
   have hsideD : SideKeep d.b base :=
     side_arrays hsidePeg
@@ -886,9 +886,10 @@ theorem parked_clear_ge
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hboard)
   have hsideU := side_mulLive hsideD 5 6 cIdle.g d.xs
     ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩
-    ⟨hH6, hD6⟩ (by decide) (by decide) (by decide)
+    ⟨hH6, hD6⟩ (by decide) (by decide) (by decide) (by decide)
   have hsideIdle : SideKeep bIdle0 base :=
     side_clear hsideU 5 cIdle.g mvM ⟨h5HU, h5DU⟩ (by decide) (by decide) (by decide)
+      (by decide)
   have hquietPark : QuietKeep
       (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH) base := by
     refine quiet_of h.shape.quiet ?_ ?_ ?_ ?_ ?_

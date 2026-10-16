@@ -990,15 +990,17 @@ theorem final_cube_settle
     side_arrays h.shape.side hhomeU hheldU
   have hsideS : SideKeep bS base :=
     side_settle hsideU 5 ⟨h5H, h5D⟩ xs s.n mv sl pk (by decide) (by decide) (by decide)
+      (by decide)
   have hsideC : SideKeep bC base := by
     have hset := side_set hsideS 5 hHome hF (by decide) (by decide) (by decide)
+      (by decide)
       (#[] : Array Int) false
     exact side_arrays hset _hhomeC _hheldC
   have hsideOut : SideKeep bOut base :=
     side_settle hsideC 5 ⟨h5HC, h5DC⟩ fold s.n
       (cubeMoves mvS s.gap s.n s.k s.benchlen) slS
       (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
-      (by decide) (by decide) (by decide)
+      (by decide) (by decide) (by decide) (by decide)
   have hsideZ : SideKeep bZ base := by
     have hH : bZ.sudo_5Board_4home = bOut.sudo_5Board_4home := by simp [bZ, touchRow]
     have hD : bZ.sudo_5Board_4held = bOut.sudo_5Board_4held := by simp [bZ, touchRow]

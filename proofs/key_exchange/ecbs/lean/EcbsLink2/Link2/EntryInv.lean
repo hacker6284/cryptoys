@@ -423,6 +423,8 @@ def entryBudget (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
   held0 := false
   held1 := false
   held4 := false
+  base3 := []
+  held3 := false
   tierSnap := embTier t
   markSnap := -1
   mxSnap := 0
@@ -949,7 +951,15 @@ theorem entry_shape (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
               tally_side_home t xs sat hR 4 (by decide) (by decide) (by decide)
           held4 := by
             simpa [entryBudget] using
-              tally_side_held t xs sat hR 4 (by decide) (by decide) (by decide) }
+              tally_side_held t xs sat hR 4 (by decide) (by decide) (by decide)
+          h3H := by rw [hsizeH]; decide
+          h3D := by rw [hsizeD]; decide
+          home3 := by
+            simpa [entryBudget] using
+              tally_side_home t xs sat hR 3 (by decide) (by decide) (by decide)
+          held3 := by
+            simpa [entryBudget] using
+              tally_side_held t xs sat hR 3 (by decide) (by decide) (by decide) }
       quiet :=
         { szH := hsizeH
           szD := hsizeD

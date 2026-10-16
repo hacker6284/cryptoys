@@ -41,6 +41,11 @@ structure OpenLay (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat) where
   held1 : b.sudo_5Board_4held[1]'(by rw [szD]; decide) = flag1
   home4 : b.sudo_5Board_4home[4]'(by rw [szH]; decide) = embed side4
   held4 : b.sudo_5Board_4held[4]'(by rw [szD]; decide) = flag4
+  /-- Home 3 is the base. The climb does not write it. -/
+  base3 : List Nat
+  flag3 : Bool
+  home3 : b.sudo_5Board_4home[3]'(by rw [szH]; decide) = embed base3
+  held3 : b.sudo_5Board_4held[3]'(by rw [szD]; decide) = flag3
   /-- Script marker index and its maximum. The climb does not write them. -/
   mark : Nat
   mx : Nat
@@ -125,6 +130,8 @@ structure OpenMatch {b : Ecbs.Board} {t : Spec.Tier} {xs : List Nat}
   mxSnap : base.mxSnap = Int.ofNat lay.mx
   high0 : base.high0 = lay.high
   baseRow : base.baseRow = paintedRow t
+  base3 : base.base3 = lay.base3
+  held3 : base.held3 = lay.flag3
 
 /-- The model at the first tally peg. The control counter is whatever the walk
     has already charged, plus the peg `tally_start` writes. -/
@@ -194,6 +201,8 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       (∀ h : 1 < bT.sudo_5Board_4held.size, bT.sudo_5Board_4held[1] = lay.flag1) ∧
       (∀ h : 4 < bT.sudo_5Board_4home.size, bT.sudo_5Board_4home[4] = embed lay.side4) ∧
       (∀ h : 4 < bT.sudo_5Board_4held.size, bT.sudo_5Board_4held[4] = lay.flag4) ∧
+      (∀ h : 3 < bT.sudo_5Board_4home.size, bT.sudo_5Board_4home[3] = embed lay.base3) ∧
+      (∀ h : 3 < bT.sudo_5Board_4held.size, bT.sudo_5Board_4held[3] = lay.flag3) ∧
       bT.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
       bT.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
         b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
@@ -364,7 +373,7 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
     exact cell_eq_of (show bT.sudo_5Board_4held = bG.sudo_5Board_4held from rfl) hG
   refine ⟨bT, ?_, ?_, ?_, rfl, rfl, rfl, ?_, hrowSet, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
       ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_⟩
+      ?_, ?_, ?_, ?_⟩
   · rw [hbump, ok_bind]
     rw [show Ecbs.gap = ((5 : Nat) : Int) from rfl, hcopy, ok_bind]
     simpa [bT, ofNat_eq_natCast] using htallyRun
@@ -422,6 +431,8 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
   · intro h; exact heldKeep 1 (by decide) (by decide) lay.held1 h
   · intro h; exact homeKeep 4 (by decide) (by decide) lay.home4 h
   · intro h; exact heldKeep 4 (by decide) (by decide) lay.held4 h
+  · intro h; exact homeKeep 3 (by decide) (by decide) lay.home3 h
+  · intro h; exact heldKeep 3 (by decide) (by decide) lay.held3 h
   · rw [show bT.sudo_5Board_6marker = bG.sudo_5Board_6marker from rfl, hmarkIxG]
     rfl
   · rw [show bT.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
@@ -448,7 +459,8 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       ClimbInvK [] (tierClimb t) bT (openModelAt t xs lay.ctrl lay.high) base := by
   obtain ⟨bT, hdo, hmark, hbench, hlen, hctrl, hhigh, ht0, hrow, hpark, hfrom, hridx,
       hlad, hl0, hnr, htier, hszH, hszD, h5t, h5a, h6e, h2t, h2a, hmv, hsl, hpk,
-      htmax, hstrict, hhole, hops, h0a, h0t, h1a, h1t, h4a, h4t, hmarkIx, hmxT⟩ :=
+      htmax, hstrict, hhole, hops, h0a, h0t, h1a, h1t, h4a, h4t, h3a, h3t,
+      hmarkIx, hmxT⟩ :=
     open_tally b t xs lay hOk sat
   have hsz5 : 5 < bT.sudo_5Board_4home.size := by rw [hszH]; decide
   have hsz5D : 5 < bT.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -718,7 +730,11 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
               home1 := by simpa [hm.side1] using h1a (by rw [hszH]; decide)
               held1 := by simpa [hm.held1] using h1t (by rw [hszD]; decide)
               home4 := by simpa [hm.side4] using h4a (by rw [hszH]; decide)
-              held4 := by simpa [hm.held4] using h4t (by rw [hszD]; decide) }
+              held4 := by simpa [hm.held4] using h4t (by rw [hszD]; decide)
+              h3H := by rw [hszH]; decide
+              h3D := by rw [hszD]; decide
+              home3 := by simpa [hm.base3] using h3a (by rw [hszH]; decide)
+              held3 := by simpa [hm.held3] using h3t (by rw [hszD]; decide) }
           quiet :=
             { szH := hszH
               szD := hszD
@@ -1017,7 +1033,11 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
         tallyOrigin t ≤ high) ∧
       bR.sudo_5Board_3row = embed (paintedRow t) ∧
-      bR.sudo_5Board_6ladder = embed (tierClimb t) := by
+      bR.sudo_5Board_6ladder = embed (tierClimb t) ∧
+      (∀ h3 : 3 < bR.sudo_5Board_4home.size,
+        bR.sudo_5Board_4home[3] = embed lay.base3) ∧
+      (∀ h3 : 3 < bR.sudo_5Board_4held.size,
+        bR.sudo_5Board_4held[3] = lay.flag3) := by
   obtain ⟨bT, hem, hK, hladT⟩ := open_invert b t xs lay hOk sat hR hsh base hm
   have hpark : (openModelAt t xs lay.ctrl lay.high).parkAt = base.ladder0 + base.R := by
     simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R]
@@ -1402,6 +1422,21 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       have hheld4R : bR.sudo_5Board_4held[4]'(by simpa [bR] using h4DM) = lay.flag4 := by
         have hEq : bR.sudo_5Board_4held = bM.sudo_5Board_4held := by simp [bR]
         simpa [hm.held4] using cell_eq_of hEq hheld4M
+      have h3M : 3 < bM.sudo_5Board_4home.size := by rw [hsz]; exact hsideZ.h3H
+      have h3DM : 3 < bM.sudo_5Board_4held.size := by
+        have hs := congrArg Array.size hheld
+        rw [Array.size_set, Array.size_set] at hs
+        exact hs.symm ▸ hsideZ.h3D
+      have hhome3M : bM.sudo_5Board_4home[3]'h3M = embed base.base3 :=
+        (hkeep 3 hsideZ.h3H h3M (by decide)).trans hsideZ.home3
+      have hheld3M : bM.sudo_5Board_4held[3]'h3DM = base.held3 :=
+        heldSide 3 hsideZ.h3D h3DM (by decide) hsideZ.held3
+      have hhome3R : bR.sudo_5Board_4home[3]'(by simpa [bR] using h3M) = embed lay.base3 := by
+        have hEq : bR.sudo_5Board_4home = bM.sudo_5Board_4home := by simp [bR]
+        simpa [hm.base3] using cell_eq_of hEq hhome3M
+      have hheld3R : bR.sudo_5Board_4held[3]'(by simpa [bR] using h3DM) = lay.flag3 := by
+        have hEq : bR.sudo_5Board_4held = bM.sudo_5Board_4held := by simp [bR]
+        simpa [hm.held3] using cell_eq_of hEq hheld3M
       have hszHR : bR.sudo_5Board_4home.size = 8 := by
         have hM : bM.sudo_5Board_4home.size = bZ.sudo_5Board_4home.size := hsz
         have hRsz : bR.sudo_5Board_4home.size = bM.sudo_5Board_4home.size := by simp [bR]
@@ -1592,7 +1627,7 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl,
         ⟨h5DR, mvM + nz, hheldR, hmvR, hfitR, hnR⟩, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
         hcarryR, hbnd, ⟨mvM + nz, by simpa [bR, ofNat_eq_natCast] using hmvR, hwhiteSlack⟩,
-        hhighR, hwater, hrowR, hLc ▸ hladR⟩
+        hhighR, hwater, hrowR, hLc ▸ hladR, ?_, ?_⟩
       · simpa [Ecbs.check_target, Ecbs.gap] using hmulOk
       · exact congrArg embed htakeL
       · intro _
@@ -1605,6 +1640,8 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       · intro _; exact idx_irrel.trans hheld1R
       · intro _; exact idx_irrel.trans hhome4R
       · intro _; exact idx_irrel.trans hheld4R
+      · intro _; exact idx_irrel.trans hhome3R
+      · intro _; exact idx_irrel.trans hheld3R
 
 private theorem getD_eq_get (xs : List Nat) (j : Nat) (hj : j < xs.length) :
     xs.getD j 0 = xs[j] := by
@@ -1647,7 +1684,9 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
         b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
         tallyOrigin t ≤ high) ∧
       b'.sudo_5Board_3row = embed (paintedRow t) ∧
-      b'.sudo_5Board_6ladder = embed (tierClimb t) := by
+      b'.sudo_5Board_6ladder = embed (tierClimb t) ∧
+      (∀ h3 : 3 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[3] = embed lay.base3) ∧
+      (∀ h3 : 3 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[3] = lay.flag3) := by
   have hpos : 0 < t.n := hOk.n_pos
   have hnbench := mul_span_n t.n t.benchlen hpos sat.mul_span
   have hspan3 := cube_span_le t.n t.benchlen t.combgap sat.cube_span
@@ -1664,7 +1703,8 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
   have htriG : allTritList g := invGap_trits t xs sat hsh hpos lay.len lay.tri
   have hlenG : g.length = t.n := invGap_length t xs sat hpos
   obtain ⟨_bZ, _bM, bR, _v, h5, hinv, hmul, hread, hv, hhome5, _hbench, hframe, hhome2, hheld2,
-      h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, hslack, hhighR, hwater, hrowR, hladR⟩ :=
+      h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, hslack, hhighR, hwater, hrowR, hladR,
+      h3a, h3t⟩ :=
     open_check_mul b t xs lay hOk sat hR hsh base hm
   obtain ⟨h5D, mv, hheld, hmv, hfit, hnT⟩ := hframe
   have hfitn : FitsLen t.n := FitsLen.of_le hfit (Nat.le_add_left t.n mv)
@@ -1696,7 +1736,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
         Bool.false_eq_true, if_false]
       rcases hshape with ⟨_, hans⟩ | ⟨hv2, _⟩
       · refine ⟨bR, h5, h5D, rfl, ?_, hheld, hnT, ?_, hhome2, hheld2,
-            h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, ?_, hrowR, hladR⟩
+            h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, ?_, hrowR, hladR, h3a, h3t⟩
         · rw [hans]
           simpa [g] using hhome5
         · rw [hans]
@@ -1725,7 +1765,8 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
           rw [show bM.sudo_5Board_4held = bR.sudo_5Board_4held from
             mirrorHome_held bR 5 h5 _ _]
           exact h5D
-        refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+        refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+            ?_, ?_⟩
         · rw [hans]
           exact mirrorHome_at bR 5 h5 (embed (mirrorTrits g)) (mv + pegCount g) h5'
         · exact hheld
@@ -1866,6 +1907,19 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
           exact ⟨high, hhiM.trans (hhighR.trans hZ), hgeW⟩
         · simpa [bM, mirrorHome_row] using hrowR
         · exact (mirrorHome_ladder bR 5 h5 (embed (mirrorTrits g)) (mv + pegCount g)).trans hladR
+        · intro h3
+          have h3R : 3 < bR.sudo_5Board_4home.size := by
+            have hs : bM.sudo_5Board_4home.size = bR.sudo_5Board_4home.size := by
+              simp [bM, mirrorHome, withMoves, Array.size_set]
+            exact hs ▸ h3
+          exact (mirrorHome_other bR 5 3 h5 (embed (mirrorTrits g)) (mv + pegCount g)
+            (by decide) h3R h3).trans (h3a h3R)
+        · intro h3
+          have hEq : bM.sudo_5Board_4held = bR.sudo_5Board_4held :=
+            mirrorHome_held bR 5 h5 _ _
+          exact cell_eq_of hEq (h3t (by
+            have hs := congrArg Array.size hEq
+            exact hs ▸ h3))
   · intro k
     rfl
   · intro j hj1 hj

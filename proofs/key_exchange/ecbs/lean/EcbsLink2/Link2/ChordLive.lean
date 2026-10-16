@@ -176,7 +176,7 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
   have hCtrlC : FitsLen ((fr.ctrl + 1) + (tierR t + 1) * (3 * rowRoom t + 5)) :=
     FitsLen.of_le hCtrl (by unfold liveCtrlRoom; omega)
   obtain ⟨bA, hcopy, hflag, lay, bud, hmatch, hmov, hslay, hctrl, hcops, hops,
-      hmark, hmx, hside1, hflag1, hside4, hflag4, hside0, hflag0⟩ :=
+      hmark, hmx, hside1, hflag1, hside4, hflag4, hside0, hflag0, _hbase, _hflag3⟩ :=
     copy_add_open b t baseX accX fr hOk sat hM hS hO hTailM hTailS hCheck hCtrlC
   have hmkA : bA.sudo_5Board_9marker_on = true := hflag.trans hmk
   have hrunL : run.length = t.n := fieldSub_length t.n baseX accX

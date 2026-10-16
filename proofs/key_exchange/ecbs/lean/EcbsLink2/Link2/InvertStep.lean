@@ -1247,23 +1247,24 @@ theorem gap_clear_emit
   have hsidePark : SideKeep bPark0 base :=
     side_arrays h.shape.side hhomeEq hheldEq
   have hsidePlace := side_place hsidePark 6 ⟨h6H, h6D⟩ s.gap mv pk
-    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide)
   have hsideB0 : SideKeep c.b0 base :=
     side_arrays hsidePlace
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hplace)
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hplace)
   have hsidePeg : SideKeep (pegBoard c c.m) base :=
     side_pegBoard c hsideB0 (by rw [hsrc]; decide) (by rw [hsrc]; decide)
-      (by rw [hsrc]; decide)
+      (by rw [hsrc]; decide) (by rw [hsrc]; decide)
   have hsideMul0 := side_mulLive hsidePeg 5 6 c.g ys
     ⟨c.n, c.k, moves, slides, holeM, c.bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩
-    (by decide) (by decide) (by decide)
+    (by decide) (by decide) (by decide) (by decide)
   have hsideMul : SideKeep bMul base :=
     side_arrays hsideMul0
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hnamed)
       (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hnamed)
   have hsideClear : SideKeep bClear base :=
     side_clear hsideMul 5 c.g mvM ⟨h5H, h5D⟩ (by decide) (by decide) (by decide)
+      (by decide)
   have hquietPark : QuietKeep bPark0 base := by
     refine quiet_of h.shape.quiet ?_ ?_ ?_ ?_ ?_
     · rw [hPK]; simp [parkKeepBoard]

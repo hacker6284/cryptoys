@@ -150,7 +150,7 @@ theorem checked_high_mark (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
       Ecbs.invert_checked b ((2 : Nat) : Int) = .ok b' ∧
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
       tallyOrigin t ≤ high := by
-  obtain ⟨b', _, _, hinv, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hwater⟩ :=
+  obtain ⟨b', _, _, hinv, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hwater, _hrow⟩ :=
     open_checked b t xs ans lay hOk sat hR hsh base hm hacc
   obtain ⟨high, hh, hge⟩ := hwater
   exact ⟨b', high, hinv, hh, hge⟩

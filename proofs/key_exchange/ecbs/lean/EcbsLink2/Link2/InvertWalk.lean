@@ -1007,9 +1007,10 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         mv + t.n ≤ checkMoveCap base) ∧
       bR.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-      ∃ high : Nat,
+      (∃ high : Nat,
         bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
-        tallyOrigin t ≤ high := by
+        tallyOrigin t ≤ high) ∧
+      bR.sudo_5Board_3row = embed (paintedRow t) := by
   obtain ⟨bT, hem, hK⟩ := open_invert b t xs lay hOk sat hR hsh base hm
   have hpark : (openModelAt t xs lay.ctrl lay.high).parkAt = base.ladder0 + base.R := by
     simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R]
@@ -1555,10 +1556,13 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           rw [hmodel, modelClimb_t0]
           simp [openModelAt, openModel, entryModel]
         omega
+      have hrowR : bR.sudo_5Board_3row = embed (paintedRow t) := by
+        have hBR : bR.sudo_5Board_3row = bM.sudo_5Board_3row := by simp [bR]
+        simpa [hm.baseRow] using hBR.trans (_hrowM.trans _hrowZ)
       refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl,
         ⟨h5DR, mvM + nz, hheldR, hmvR, hfitR, hnR⟩, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
         hcarryR, hbnd, ⟨mvM + nz, by simpa [bR, ofNat_eq_natCast] using hmvR, hwhiteSlack⟩,
-        hhighR, hwater⟩
+        hhighR, hwater, hrowR⟩
       · simpa [Ecbs.check_target, Ecbs.gap] using hmulOk
       · exact congrArg embed htakeL
       · intro _
@@ -1609,9 +1613,10 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
       (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4] = lay.flag4) ∧
       RiseCarry b' t lay.mark lay.mx ∧
       CheckBound b' base ∧
-      ∃ high : Nat,
+      (∃ high : Nat,
         b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
-        tallyOrigin t ≤ high := by
+        tallyOrigin t ≤ high) ∧
+      b'.sudo_5Board_3row = embed (paintedRow t) := by
   have hpos : 0 < t.n := hOk.n_pos
   have hnbench := mul_span_n t.n t.benchlen hpos sat.mul_span
   have hspan3 := cube_span_le t.n t.benchlen t.combgap sat.cube_span
@@ -1628,7 +1633,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
   have htriG : allTritList g := invGap_trits t xs sat hsh hpos lay.len lay.tri
   have hlenG : g.length = t.n := invGap_length t xs sat hpos
   obtain ⟨_bZ, _bM, bR, _v, h5, hinv, hmul, hread, hv, hhome5, _hbench, hframe, hhome2, hheld2,
-      h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, hslack, hhighR, hwater⟩ :=
+      h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, hslack, hhighR, hwater, hrowR⟩ :=
     open_check_mul b t xs lay hOk sat hR hsh base hm
   obtain ⟨h5D, mv, hheld, hmv, hfit, hnT⟩ := hframe
   have hfitn : FitsLen t.n := FitsLen.of_le hfit (Nat.le_add_left t.n mv)
@@ -1660,7 +1665,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
         Bool.false_eq_true, if_false]
       rcases hshape with ⟨_, hans⟩ | ⟨hv2, _⟩
       · refine ⟨bR, h5, h5D, rfl, ?_, hheld, hnT, ?_, hhome2, hheld2,
-            h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, ?_⟩
+            h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, ?_, hrowR⟩
         · rw [hans]
           simpa [g] using hhome5
         · rw [hans]
@@ -1689,7 +1694,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
           rw [show bM.sudo_5Board_4held = bR.sudo_5Board_4held from
             mirrorHome_held bR 5 h5 _ _]
           exact h5D
-        refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+        refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
         · rw [hans]
           exact mirrorHome_at bR 5 h5 (embed (mirrorTrits g)) (mv + pegCount g) h5'
         · exact hheld
@@ -1828,6 +1833,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
               bR.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
             simp [bM, mirrorHome, withMoves]
           exact ⟨high, hhiM.trans (hhighR.trans hZ), hgeW⟩
+        · simpa [bM, mirrorHome_row] using hrowR
   · intro k
     rfl
   · intro j hj1 hj

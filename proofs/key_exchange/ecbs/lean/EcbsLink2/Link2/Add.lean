@@ -297,6 +297,11 @@ def addBoard (b : Ecbs.Board) (home : Nat)
   { withMoves b (Int.ofNat mv) with
       sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ arr }
 
+theorem addBoard_row (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (arr : Array Int) (mv : Nat) :
+    (addBoard b home hH arr mv).sudo_5Board_3row = b.sudo_5Board_3row := by
+  simp [addBoard, withMoves]
+
 /-- `mirror = true`: destination becomes `fieldAdd dst (mirrorTrits src)`, which is
     `zipWith tritAdd` on equal lengths. Moves grow by `pegCount src`. -/
 theorem add_refines (b : Ecbs.Board) (dst src : Nat) (ys xs : List Nat) (n moves : Nat)

@@ -383,7 +383,8 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
         b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      b'.sudo_5Board_3row = b.sudo_5Board_3row := by
   unfold Ecbs.mul Ecbs.log_op
   simp only [hmk, hoff, Bool.false_eq_true, if_false, pure_eq_ok, toPure_eq_ok, ok_bind]
   rw [show Ecbs.op_mul = Int.ofNat 0 from rfl, atL_ofNat _ 0 hops, hop0, ok_bind,
@@ -804,10 +805,21 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
   rw [occupied_refines bN h7N, ok_bind, hpeakN]
   conv => zeta
   rw [ofNat_eq_natCast copied, decide_gt_nat]
+  have hrowN : bN.sudo_5Board_3row = b.sudo_5Board_3row := by
+    have hcopy : bCopy.sudo_5Board_3row = b.sudo_5Board_3row := by simp [bCopy]
+    have hplace : bP.sudo_5Board_3row = bCopy.sudo_5Board_3row := by
+      rw [← hPB]; unfold placeBoard; dsimp only; split <;> rfl
+    have hlay : bL.sudo_5Board_3row = bS.sudo_5Board_3row := by simp [bL]
+    have hfold : bF.sudo_5Board_3row = bL.sudo_5Board_3row := by simp [bF, withMoves]
+    have hnote : bN.sudo_5Board_3row = bF.sudo_5Board_3row := by
+      dsimp [bN, nb]
+      unfold noteBench withMoves withHole
+      split <;> rfl
+    exact hnote.trans (hfold.trans (hlay.trans (_hrowS.trans (hplace.trans hcopy))))
   by_cases hlt : copied < countHeld bN.sudo_5Board_4held 7
   · rw [decide_eq_true hlt, if_pos rfl, pure_eq_ok, ok_bind]
     refine ⟨_, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_⟩
     · unfold fieldMul; rfl
     · intro i hlo hi
       have hgap0 : 0 < n - k := by rw [shape.hgap]; exact Nat.mul_pos shape.hw0 shape.hrP
@@ -863,10 +875,11 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     · change bN.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest
       exact hhighN
+    · simpa using hrowN
   · rw [(decide_eq_false_iff_not).mpr hlt]
     simp only [Bool.false_eq_true, if_false, pure_eq_ok, ok_bind]
     refine ⟨bN, rfl, honN, htoN, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_⟩
     · unfold fieldMul; rfl
     · intro i hlo hi
       have hgap0 : 0 < n - k := by rw [shape.hgap]; exact Nat.mul_pos shape.hw0 shape.hrP
@@ -901,6 +914,7 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
     · exact hctrlN
     · exact hmxN
     · exact hhighN
+    · exact hrowN
 
 /-- Bench off, `copy_second = false`. The board `Ecbs.mul` returns: ops slot 0 bumped,
     the second home cleared, the bench on and aimed at `dst` holding the folded product. -/

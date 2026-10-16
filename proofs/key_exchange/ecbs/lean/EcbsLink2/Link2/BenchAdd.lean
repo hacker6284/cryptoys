@@ -208,6 +208,10 @@ def withBenchMoves (b : Ecbs.Board) (arr : Array Int) (mv : Nat) : Ecbs.Board :=
 def benchAddBoard (b : Ecbs.Board) (arr : Array Int) (mv : Nat) : Ecbs.Board :=
   { withMoves b (Int.ofNat mv) with sudo_5Board_5bench := arr }
 
+theorem benchAddBoard_row (b : Ecbs.Board) (arr : Array Int) (mv : Nat) :
+    (benchAddBoard b arr mv).sudo_5Board_3row = b.sudo_5Board_3row := by
+  simp [benchAddBoard, withMoves]
+
 theorem benchAddBoard_bench (b : Ecbs.Board) (arr : Array Int) (mv : Nat) :
     (benchAddBoard b arr mv).sudo_5Board_5bench = arr := rfl
 

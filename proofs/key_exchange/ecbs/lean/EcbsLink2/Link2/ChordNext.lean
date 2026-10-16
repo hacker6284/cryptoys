@@ -212,7 +212,7 @@ theorem gap_settle_high (b : Ecbs.Board) (inv rise : List Nat)
           Ecbs.settle b) = .ok bS ∧
       bS.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
-  obtain ⟨bS, hdo, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hhi⟩ :=
+  obtain ⟨bS, hdo, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hhi, _hrow⟩ :=
     gap_settle_lay b inv rise w h r n k moves hole bench slides peak peakS cOps m ctrl mx
       script hmk hoff hm hc hx hscript hbound hfitM hfitC hfit2 hops hop0 hfops hbl
       hF hHome hHF hArr hS hHomeS hHS hYs h7 hn0 hn hlenx hleny hf hmoves hslides hpeak

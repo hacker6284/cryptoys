@@ -300,7 +300,8 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
         bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictG ∧
         bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG) ∧
       bS.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      bS.sudo_5Board_3row = b.sudo_5Board_3row := by
   intro slope
   have hmul := chord_gap_mul b inv rise w h r n k moves hole bench peak peakS cOps m ctrl mx
     script hmk hoff hm hc hx hscript hbound hfitM hfitC hfit2 hops hop0 hfops hbl hF hHome hHF
@@ -411,7 +412,7 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
     simpa [slope] using (slope_mul_swap n k bench rise inv hrT hxsT).symm
   have hmix := gapMul_ix b inv rise n k moves hole bench peak peakS cOps m ctrl mx hops hS hHomeS
   have hsix := settle_ix bC 5 hH hD xs n mv slides peakC
-  refine ⟨bS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hmulEq, ok_bind, hclearEq, ok_bind]
     simpa [bS, show Ecbs.gap = ((5 : Nat) : Int) from rfl] using hset
   · have hflag : bC.sudo_5Board_9marker_on = true := by
@@ -508,6 +509,13 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
         bM.sudo_5Board_4cost.sudo_5Costs_15control_highest := by simp [bC]
     simpa [bS] using
       (settle_high_eq bC 5 ⟨hH, hD⟩ xs n mv slides peakC).trans (hC.trans hM)
+  · have hrowC : bC.sudo_5Board_3row = bM.sudo_5Board_3row := by simp [bC]
+    have hrowM :=
+      gapMul_row b inv rise n k moves hole bench peak peakS cOps m ctrl mx hops hS hHomeS
+    have hrowS : bS.sudo_5Board_3row = bC.sudo_5Board_3row := by
+      unfold bS settleBoard
+      split <;> rfl
+    exact hrowS.trans (hrowC.trans hrowM)
 
 /-- The square and the white peg. Homes other than the spare stay.
     The bench prefix is slope² + 1. -/
@@ -587,7 +595,8 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
         bW.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictG ∧
         bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG) ∧
       bW.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      bW.sudo_5Board_3row = b.sudo_5Board_3row := by
   let feed := markerUpFeed b m ctrl mx
   have hup := mul_copy_up_eq b 2 5 5 slope slope w h r n k moves hole bench peak peakS cOps
     m ctrl mx script hmk hoff hm hc hx hscript hbound hfitM hfitCtrl hfit2 hops hop0 hfops
@@ -612,7 +621,7 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
     (by simp [feed, markerUpFeed, hr]) (by simp [feed, markerUpFeed, hk])
     (by simp [feed, markerUpFeed, hhole]) hsm hnsm hfitB hfold
   rcases href with ⟨b0, hb, hon, hto, hbench, htake, hhigh, hmv, hpk, hsl, ht, hsz, hheld,
-      _h5, hkeep, _hmk, hopsR, hstrict, hholeR, hmark, hctrl, hmxR, hhi0⟩
+      _h5, hkeep, _hmk, hopsR, hstrict, hholeR, hmark, hctrl, hmxR, hhi0, hrow0⟩
   let bF := { b0 with sudo_5Board_9marker_on := true }
   have hmulF : Ecbs.mul b Ecbs.bottom Ecbs.gap Ecbs.gap true false false = .ok bF := by
     rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, show Ecbs.gap = ((5 : Nat) : Int) from rfl,
@@ -665,7 +674,7 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
       unfold coeff
       simp [hpos]
     simpa [benchL, hc0, htakeL] using hset
-  refine ⟨bW, benchL, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bW, benchL, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hmulF, ok_bind, hwhite]
   · simp [bW, bF]
   · simpa [bW, bF] using hon
@@ -733,6 +742,9 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
       simp [feed, markerUpFeed]
     simpa [bW, bF] using hhi0.trans hfeed
+  · have hfeed : feed.sudo_5Board_3row = b.sudo_5Board_3row := by
+      simp [feed, markerUpFeed]
+    simpa [bW, bF] using hrow0.trans hfeed
 
 /-- Gap settle, then the square, obtained from the settled board. -/
 theorem gap_square_obtain (b : Ecbs.Board) (inv rise : List Nat)
@@ -943,7 +955,8 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
         b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
       (∃ peakX, bX.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakX) ∧
       bX.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      bX.sudo_5Board_3row = b.sudo_5Board_3row := by
   intro x3
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2H : 2 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -1041,7 +1054,7 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
     rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, h2, ok_bind]
     rw [hclear, ok_bind]
     rw [hset]
-  refine ⟨bX, hdo, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bX, hdo, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · exact settle_bench_off bC 2 ⟨hHc, hDc⟩ L2 n (mv2 + pegCount run) slides peak
   · intro h2x
     have hh := settle_home_eq bC 2 ⟨hHc, hDc⟩ L2 n (mv2 + pegCount run) slides peak
@@ -1134,5 +1147,11 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
       simp [bC, b2, b1, benchAddBoard, withMoves]
     simpa [bX] using
       (settle_high_eq bC 2 ⟨hHc, hDc⟩ L2 n (mv2 + pegCount run) slides peak).trans hC
+  · have hrowC : bC.sudo_5Board_3row = b.sudo_5Board_3row := by
+      simp [bC, b2, b1, benchAddBoard_row, withMoves]
+    have hrowX : bX.sudo_5Board_3row = bC.sudo_5Board_3row := by
+      unfold bX settleBoard
+      split <;> rfl
+    exact hrowX.trans hrowC
 
 end EcbsLink2.Link2

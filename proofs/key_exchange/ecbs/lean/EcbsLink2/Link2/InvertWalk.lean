@@ -1215,7 +1215,7 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
                 Nat.le_add_right _ _)
       obtain ⟨bM, hmulOk, _hon, _, hbench, htake, hrest⟩ := hmul
       obtain ⟨_, hmov, hpkM, hslM, htM, hsz, hheld, h5keep, hkeep, _hmk, hopsM, hstrictM,
-          hholeM, hixM, hcM, hmxM, hhighM⟩ :=
+          hholeM, hixM, hcM, hmxM, hhighM, _hrowM⟩ :=
         hrest
       have h5M : 5 < bM.sudo_5Board_4home.size := by rw [hsz]; exact hsg.h5
       have hhomeM : bM.sudo_5Board_4home[5]'h5M = embed (invGap t.n t.k t.benchlen xs) :=

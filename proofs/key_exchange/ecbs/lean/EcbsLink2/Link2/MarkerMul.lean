@@ -27,6 +27,9 @@ def markerOn (b : Ecbs.Board) : Ecbs.Board :=
 @[simp] theorem markerOn_home (b : Ecbs.Board) :
     (markerOn b).sudo_5Board_4home = b.sudo_5Board_4home := rfl
 
+@[simp] theorem markerOn_row (b : Ecbs.Board) :
+    (markerOn b).sudo_5Board_3row = b.sudo_5Board_3row := rfl
+
 @[simp] theorem markerOn_moves (b : Ecbs.Board) :
     (markerOn b).sudo_5Board_4cost.sudo_5Costs_5moves =
       b.sudo_5Board_4cost.sudo_5Costs_5moves := rfl
@@ -399,6 +402,11 @@ theorem ontoFoldBoard_bench (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat
 theorem ontoFoldBoard_high (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
     (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_15control_highest =
       b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+theorem ontoFoldBoard_row (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_3row = b.sudo_5Board_3row := by
   unfold ontoFoldBoard peakBoard noteBench withMoves withHole
   split <;> rfl
 

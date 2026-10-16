@@ -14,7 +14,9 @@ open MegaDreifach.Link2
 open EcbsLink2.Spec
 
 /-- The chord tail on the rise board. `bottom_lay`, then `point_from_bottom`,
-    then `chord_do_join`. Home 0 is `chordX3` and home 1 is `chordY3`. -/
+    then `chord_do_join`. Home 0 is `chordX3` and home 1 is `chordY3`.
+    The control row is the incoming row: settle, take, the onto multiply,
+    the slide, and `move_band` each leave it. -/
 theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
     (w h r n k moves hole bench slides peak peakS cOps m ctrl mx script : Nat)
     (hmk : b.sudo_5Board_9marker_on = true)
@@ -142,7 +144,8 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed x3) ∧
       (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed y3) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      b'.sudo_5Board_3row = b.sudo_5Board_3row := by
   intro slope x3 y3
   obtain ⟨bX, hpre, hoffX, h2x, h0aF, h0tF, h5aF, h5tF, hflagN, hszH8, hszD8,
       hmN, hcN, hxN, htAll, hmvRaw, hslRaw, h2tF, h1home, h1held, opsSz, hop0F,
@@ -155,7 +158,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
       hsm hnsm hfitB hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW
       hfit1 hfitA hfitRun hpegX hfitMX hfitSX
-  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX⟩, hhiX⟩ := htail
+  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX⟩, hhiX, hrowX⟩ := htail
   have _hbottomHigh := hhiX
   let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
     pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
@@ -231,7 +234,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   have hfoldPx : FitsLen (mvX + pegCount x3 + pegCount accY + 2 * n + n * (n + 1) +
       3 * (bench - n)) := hfoldP
   have hfitSox : FitsLen (slX + 2 * n) := hfitSo
-  obtain ⟨_, b', _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hpost, hAc, hUp, hhi⟩ :=
+  obtain ⟨_, b', _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hpost, hAc, hUp, hhi, hrow⟩ :=
     point_from_bottom bX accX accY x3 slope w h r n k bench mvX slX peakXN strictW holeW
       cOpsX mX ctrlX mxX script
       hszH8 hszD8 hflagN hoffX hmN hcN hxN hscriptX
@@ -244,7 +247,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hfitPx hf hspan hfi hfitMox hfitSox hfmPx
       hw0 hh0 hrR hrP hnE hkLe hgap hwX hhX hrX hkX
       hsm hnsm hfitB hfoldPx hbig hbigS
-  refine ⟨b', ?_, hAc, hUp, hhi.trans _hbottomHigh⟩
+  refine ⟨b', ?_, hAc, hUp, hhi.trans _hbottomHigh, hrow.trans hrowX⟩
   rw [chord_tail_across_up]
   exact chord_do_join b bX b' hpre hpost
 
@@ -536,7 +539,7 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
     simpa [hopR] using hops0
   have hop0R : bR.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsR = (cOps : Int) := by
     simpa [hopR] using hop00
-  obtain ⟨b', hct, hAc, hUp, hhiTail⟩ :=
+  obtain ⟨b', hct, hAc, hUp, hhiTail, _hrowTail⟩ :=
     chord_tail_point bR inv rise accX accY run w h r n k moves hole bench slides pk peakS
       cOps m ctrl mx script
       hflagT hoffR hmN hcN hxN hscriptR hbound hbound3 hfitM hfitC hfit2 hfitC4 hfit3

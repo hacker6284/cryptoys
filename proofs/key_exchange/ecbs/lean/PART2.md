@@ -321,7 +321,9 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 `ClimbInvK.blankTail`: every hole at and after `t0 + tally` is empty. `rungRow_past` keeps it, because a rung writes only inside the length it leaves. At entry the tally is one peg, so the tail is `entry_past`. `climb_row_cleared` is `rowHome_clear` on that invariant: unpark and empty the current tally, and the row is `base.baseRow`. At the end of the ladder the current tally is the final one.
 
-`unpark_painted`. `unpark_rung` leaves `unparkList`, and `rowHome_clear` of that list is `base.baseRow`. In `final_cube_settle` the final cube and the outer settle copy that row (`cubeOffBoard` and `settleBoard_plain`); `tally_clear` then writes `paintZero` of it. `cube_refines` and `mul_refines` already conclude `row =` the incoming row. The chord tail is not yet one projection of that fact. The board after `chord_add_live` is not yet the next `RunFrame`.
+`unpark_painted`. `unpark_rung` leaves `unparkList`, and `rowHome_clear` of that list is `base.baseRow`. In `final_cube_settle` the final cube and the outer settle copy that row (`cubeOffBoard` and `settleBoard_plain`); `tally_clear` then writes `paintZero` of it.
+
+`chord_tail_point` says the control row on the board `chord_tail` returns is the incoming row. The proof is the per-step row projections composed along the emitted tail. `gapMul_row` (`mulNoOffBoard`) and `settleBoard` cover the gap settle. `mul_refines` covers the square; its conclusion now includes the row. `benchAddBoard_row` and `settleBoard` cover the bottom settle. `addBoard_row` and `mirrorHome_row` cover the take. `ontoFoldBoard_row` covers the onto multiply. `moveBandBoard_row` and `settleBoard` cover the slide. `chord_add_live` still has to be the next cell's `RunFrame`.
 
 4202 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Only `RowHome` was elaborated; its sampled peak was 416080 kB VmHWM. Under 2 GB.
 
@@ -331,9 +333,11 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 4225 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1698104 kB VmHWM. Under 2 GB.
 
+4231 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1704148 kB VmHWM. Under 2 GB.
+
 ## Next
 
-Show the final cube, the check multiply, and the chord tail leave the restored row (projection lemmas). The board `chord_add_live` returns is then the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base). Chain that lemma to `chordStep_open` by `obtain` in the induction step. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+Show the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, the control row the painted row). Chain that lemma to `chordStep_open` by `obtain` in the induction step. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

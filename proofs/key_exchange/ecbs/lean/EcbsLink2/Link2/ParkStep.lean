@@ -1723,14 +1723,9 @@ theorem white_final_ge
           (by rw [hframe, withPark_ix])
           (by rw [hframe, withPark_mx]))
   have htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    obtain ⟨tmax, htm, hnote⟩ := h.tmaxLt
-    refine ⟨tmax, by rw [htmaxB, htm], ?_⟩
-    intro hpos
-    have hlt := hnote (by rw [← htall]; exact hpos)
-    rw [htall]
-    exact hlt
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    obtain ⟨tmax, htm⟩ := h.tmaxLt
+    exact ⟨tmax, by rw [htmaxB, htm]⟩
   have hK := climbInvKCore_succ h hinv hδ hCap hshape h.holeBelow htmax rfl
   exact ⟨b', hrun, hK, rungTight_of_clear hδ hpieceM hpieceS
     (opsTight_of_clear hδ hT hslots)⟩
@@ -1808,8 +1803,7 @@ theorem white_open_ge
   have hHighEq : s.t0 + s.tally - 1 ≤ s.high := by
     rw [h.highTop]
     exact Nat.le_max_right _ _
-  obtain ⟨tmax0, hMax, hNote0⟩ := h.tmaxLt
-  have hNote : tmax0 < 2 * s.tally := hNote0 hm
+  obtain ⟨tmax0, hMax⟩ := h.tmaxLt
   have hdone2 : done.length + 2 ≤ base.R := by
     have hk := h.kLe
     simp [h.idx, List.length_append, List.length_cons] at hk
@@ -1883,7 +1877,7 @@ theorem white_open_ge
     hhighE hHighEq hctrlIdle hRoom hFitI
     (FitsLen.of_le hfits.1 (by omega))
     (FitsLen.of_le hfits.2.1 (by omega))
-    hFitM (htmaxE.trans hMax) hNote
+    hFitM (htmaxE.trans hMax)
   have hctr : ((c0 + 2 : Nat) : Int) = ((s.ctrl + 4 + s.tally : Nat) : Int) := by
     unfold c0
     exact congrArg (fun n : Nat => (n : Int)) (by omega)
@@ -1899,7 +1893,7 @@ theorem white_open_ge
           sudo_5Costs_4ctrl := Int.ofNat (c0 + 2 * s.tally)
           sudo_5Costs_15control_highest :=
             ((max s.high (s.t0 + 2 * s.tally - 1) : Nat) : Int)
-          sudo_5Costs_9tally_max := Int.ofNat (2 * s.tally) } }
+          sudo_5Costs_9tally_max := ((max tmax0 (2 * s.tally) : Nat) : Int) } }
   have hmvIn : bIn.sudo_5Board_4cost.sudo_5Costs_5moves =
       bIdle.sudo_5Board_4cost.sudo_5Costs_5moves := rfl
   have hslIn : bIn.sudo_5Board_4cost.sudo_5Costs_6slides =
@@ -2301,14 +2295,9 @@ theorem white_open_ge
           (Int.ofNat (c0 + 2 + 2 * s.tally)) ((hole : Nat) : Int)
           (Int.ofNat (s.ridx + 1)))
   have htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    refine ⟨2 * s.tally, ?_, ?_⟩
-    · unfold b'; rw [withPark_tmax]
-      simp
-    · intro hpos
-      rw [htall]
-      omega
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    refine ⟨max tmax0 (2 * s.tally), ?_⟩
+    unfold b'; rw [withPark_tmax]
   have hK := climbInvKCore_succ h (by simpa [hempty] using hinv) hδ' hCap
     (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
   exact ⟨b', hprog, by simpa [hempty] using hK, by simpa [hempty] using hTight⟩

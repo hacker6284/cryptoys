@@ -1051,8 +1051,8 @@ theorem climbCore_slideGap {done rest : List Nat} {b : Ecbs.Board}
       openRoom := h.openRoom
       openZero := h.openZero
       tmaxLt := by
-        obtain ⟨tmax, ht, hnote⟩ := h.tmaxLt
-        refine ⟨tmax, ?_, hnote⟩
+        obtain ⟨tmax, ht⟩ := h.tmaxLt
+        refine ⟨tmax, ?_⟩
         rw [settle_tmax_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak, ht]
       ctrlLe := h.ctrlLe
       srcAbove := h.srcAbove }

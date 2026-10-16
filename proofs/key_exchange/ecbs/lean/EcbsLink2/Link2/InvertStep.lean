@@ -1948,14 +1948,9 @@ theorem white_final_k
       (by rw [hlenRow]; exact h.shape.rowLen)
       hpark' hpeg' hside hquiet
   have htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    obtain ⟨tmax, htm, hnote⟩ := h.tmaxLt
-    refine ⟨tmax, by rw [htmaxE, htm], ?_⟩
-    intro hpos
-    have hlt := hnote (by rw [← htall]; exact hpos)
-    rw [htall]
-    exact hlt
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    obtain ⟨tmax, htm⟩ := h.tmaxLt
+    exact ⟨tmax, by rw [htmaxE, htm]⟩
   have hK := climbInvKCore_succ h hinv hδ hCap hshape hh htmax rfl
   exact ⟨b', hrun, hK, rungTight_of_clear hδ hpieceM hpieceS
     (opsTight_of_clear hδ hT hslots)⟩
@@ -2022,8 +2017,7 @@ theorem white_open_k
   have hHighEq : s.t0 + s.tally - 1 ≤ s.high := by
     rw [h.highTop]
     exact Nat.le_max_right _ _
-  obtain ⟨tmax0, hMax, hNote0⟩ := h.tmaxLt
-  have hNote : tmax0 < 2 * s.tally := hNote0 hm
+  obtain ⟨tmax0, hMax⟩ := h.tmaxLt
   have hdone2 : done.length + 2 ≤ base.R := by
     have hk := h.kLe
     simp [h.idx, List.length_append, List.length_cons] at hk
@@ -2090,7 +2084,7 @@ theorem white_open_k
     (by
       simp [xs, parked, paintRed_length, afterPark_length, h.shape.rowLen]
       exact hRoom)
-    hRed hZero hctrlN hhighC hHighEq hctrlE hRoom hFitI hfitC hFitM hmaxC hNote
+    hRed hZero hctrlN hhighC hHighEq hctrlE hRoom hFitI hfitC hFitM hmaxC
   let wide := paintOnes (paintOnes xs s.t0 s.tally) (s.t0 + s.tally) s.tally
   let b' :=
     { bClear with
@@ -2100,7 +2094,7 @@ theorem white_open_k
         sudo_5Costs_4ctrl := Int.ofNat (s.ctrl + 2 + s.tally + 2 * s.tally)
         sudo_5Costs_15control_highest :=
           ((max s.high (s.t0 + 2 * s.tally - 1) : Nat) : Int)
-        sudo_5Costs_9tally_max := Int.ofNat (2 * s.tally) } }
+        sudo_5Costs_9tally_max := ((max tmax0 (2 * s.tally) : Nat) : Int) } }
   have htallyW : Ecbs.tally_double bClear = .ok b' := by
     simpa [b', wide, xs] using htally
   have hprog :
@@ -2478,12 +2472,8 @@ theorem white_open_k
       refine ⟨c, c', hc, ?_, hle⟩
       simpa [b'] using hc'
   have htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    refine ⟨2 * s.tally, by simp [b'], ?_⟩
-    intro hpos
-    rw [htall]
-    omega
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    refine ⟨max tmax0 (2 * s.tally), by simp [b']⟩
   have hK := climbInvKCore_succ h (by simpa [hempty] using hinv) hδ' hCap
     (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
   exact ⟨b', hprog, by simpa [hempty] using hK, by simpa [hempty] using hTight⟩

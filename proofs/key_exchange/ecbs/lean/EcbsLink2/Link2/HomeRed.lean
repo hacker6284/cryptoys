@@ -1061,7 +1061,7 @@ theorem red_open_emit
       bAdd.sudo_5Board_3row =
         embed (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) false).row ∧
       bAdd.sudo_5Board_4cost.sudo_5Costs_9tally_max =
-        ((2 * s.tally + 1 : Nat) : Int) ∧
+        ((max h.tmaxLt.choose (2 * s.tally + 1) : Nat) : Int) ∧
       RungDelta b bAdd base s.tally ∧
       ∃ (bClearP bClearU _bCube bR : Ecbs.Board),
         bAdd.sudo_5Board_4cost.sudo_5Costs_5moves =
@@ -1142,8 +1142,8 @@ theorem red_open_emit
   have hHighEq : s.t0 + s.tally - 1 ≤ s.high := by
     rw [h.highTop]
     exact Nat.le_max_right _ _
-  obtain ⟨tmax0, hMax, hNote0⟩ := h.tmaxLt
-  have hNote : tmax0 < 2 * s.tally := hNote0 hm
+  let tmax0 := h.tmaxLt.choose
+  have hMax := h.tmaxLt.choose_spec
   have hdone2 : done.length + 2 ≤ base.R := by
     have hk := h.kLe
     simp [h.idx, List.length_append, List.length_cons] at hk
@@ -1246,7 +1246,7 @@ theorem red_open_emit
     (by dsimp only [xs]; rw [paintRed_length, h.shape.rowLen]; exact hRoom)
     (by dsimp only [xsP]; rw [paintRed_length, afterPark_length, h.shape.rowLen]; exact hRoom)
     hRed hRedP hZero hZeroP _hctrlN _hhighC hHighEq
-    _hctrlC hRoom hFitI hfitCU hfitCP hFitM (by rw [_hmaxC]; exact hMax) hNote
+    _hctrlC hRoom hFitI hfitCU hfitCP hFitM (by rw [_hmaxC]; exact hMax)
   have hClear0 := hClearEq
   rw [hctrlPark] at hClearEq
   rw [← hClearEq] at hdouble
@@ -1255,7 +1255,7 @@ theorem red_open_emit
   let lenD := Int.ofNat (2 * s.tally)
   let ctrlD := Int.ofNat (s.ctrl + s.tally + 2 * s.tally)
   let highD := ((max s.high (s.t0 + 2 * s.tally - 1) : Nat) : Int)
-  let maxD := Int.ofNat (2 * s.tally)
+  let maxD := ((max tmax0 (2 * s.tally) : Nat) : Int)
   let ctrlP := Int.ofNat (s.ctrl + s.tally + 2 + 2 * s.tally)
   have hcube := hcubeBoth rowD rowP lenD highD maxD ctrlD ctrlP fromH ridxH
   have hmul := hmulBoth rowD rowP lenD highD maxD ctrlD ctrlP fromH ridxH
@@ -1329,7 +1329,7 @@ theorem red_open_emit
   have hAdd := tally_add_one_withPark
       (withTally bRed0 rowD lenD ctrlD highD maxD) s.t0 (2 * s.tally)
       (max s.high (s.t0 + 2 * s.tally - 1)) base.control
-      (s.ctrl + s.tally + 2 * s.tally) (2 * s.tally)
+      (s.ctrl + s.tally + 2 * s.tally) (max tmax0 (2 * s.tally))
       rowP fromH ridxH
       (by simp [withTally, lenD]) (by simp [withTally, ht0Red])
       (by
@@ -1350,7 +1350,7 @@ theorem red_open_emit
         have hsame : s.ctrl + s.tally + 2 * s.tally + 2 + 1 =
             s.ctrl + 2 + 3 * s.tally + 1 := by omega
         exact hsame.symm ▸ h1)
-      hFitL1 (by simp [withTally, maxD]) (by omega)
+      hFitL1 (by simp [withTally, maxD])
   have hctrlOut : ((s.ctrl + s.tally + 2 * s.tally + 2 : Nat) : Int) = ctrlP := by
     apply congrArg (fun n : Nat => (n : Int))
     omega
@@ -1360,6 +1360,11 @@ theorem red_open_emit
     rw [Nat.max_assoc]
     exact congrArg (max s.high) (Nat.max_eq_right (Nat.sub_le _ _))
   rw [hflat] at hAdd
+  have hflatM : max (max tmax0 (2 * s.tally)) (2 * s.tally + 1) =
+      max tmax0 (2 * s.tally + 1) := by
+    rw [Nat.max_assoc]
+    exact congrArg (max tmax0) (Nat.max_eq_right (Nat.le_succ _))
+  rw [hflatM] at hAdd
   have hprog :
       (do
           let b ← (do
@@ -1399,7 +1404,8 @@ theorem red_open_emit
                     sudo_5Costs_15control_highest :=
                       ((max s.high (s.t0 + 2 * s.tally) : Nat) : Int)
                     sudo_5Costs_4ctrl := Int.ofNat (s.ctrl + s.tally + 2 * s.tally + 1)
-                    sudo_5Costs_9tally_max := Int.ofNat (2 * s.tally + 1) } }
+                    sudo_5Costs_9tally_max :=
+                      ((max tmax0 (2 * s.tally + 1) : Nat) : Int) } }
           (rowP.set ⟨s.t0 + 2 * s.tally, hixP⟩ (1 : Int))
           (Int.ofNat (s.ctrl + s.tally + 2 * s.tally + 2 + 1))
           fromH ridxH) := by
@@ -1447,7 +1453,6 @@ theorem red_open_emit
     rw [array_set_idx (h1 := hrowP ▸ hixP) (h2 := hixL)]
     rw [embed_set xsL (s.t0 + 2 * s.tally) 1 hlenL, hlist]
   · rw [withPark_tmax]
-    rfl
   · exact rungDelta_cost hδRed
       (by rw [withPark_moves, withTally_moves])
       (by rw [withPark_slides, withTally_slides])
@@ -1873,12 +1878,8 @@ theorem red_open_k
         (congrArg Array.size hhomeA) (congrArg Array.size hheldA)
         htierA hixA hmxA)
   have htmax : ∃ tmax : Nat,
-      bAdd.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    refine ⟨2 * s.tally + 1, htmaxA, ?_⟩
-    intro _
-    rw [htall]
-    exact open_red_tmax_lt s.tally
+      bAdd.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    exact ⟨max h.tmaxLt.choose (2 * s.tally + 1), htmaxA⟩
   have hTight : RungDeltaTight b bAdd base s.tally :=
     rungTight_cost (rungTight_of_rel hcarry.delta hrel hcarry.opsTight) hmvA hslA hopsA hpkA
   have hK := climbInvKCore_succ h (by simpa [hempty] using hinv) hδA hCap
@@ -3047,17 +3048,12 @@ theorem red_final_k
         (congrArg Array.size hhomeB) (congrArg Array.size hheldB)
         rfl rfl rfl)
   have htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    obtain ⟨tmax, htm, hnote⟩ := h.tmaxLt
-    refine ⟨tmax, ?_, ?_⟩
-    · rw [withPark_tmax, withTally_max]
-      unfold maxU
-      rw [hmaxC, htm]
-    · intro hpos
-      have hlt := hnote (by rw [← htall]; exact hpos)
-      rw [htall]
-      exact hlt
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    obtain ⟨tmax, htm⟩ := h.tmaxLt
+    refine ⟨tmax, ?_⟩
+    rw [withPark_tmax, withTally_max]
+    unfold maxU
+    rw [hmaxC, htm]
   have hK := climbInvKCore_succ h hinv hδR hCap hshape h.holeBelow htmax rfl
   exact ⟨b', hprog, hK, hTight⟩
 

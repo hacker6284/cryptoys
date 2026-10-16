@@ -286,9 +286,18 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 4177 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1702088 kB VmHWM. Under 2 GB.
 
+## Done in the tally maximum
+
+- `tally_note_mark`. The note records `max` of the old maximum and the new length.
+- `tally_double_refines`, `tally_double_withPark`, and `rung_double_refines` no longer require `tmax < 2 · m`. The result maximum is `max tmax (2 · m)`.
+- `tally_add_one_raise_stay`, `tally_add_one_keep_stay`, and `tally_add_one_mark`. The extra peg records `max` of the old maximum and the new length. The high is still `max` of the old high and the new hole. `tally_max` is not a Spec result.
+- `ClimbInvK.tmaxLt` and `ClimbInvKCore.tmaxLt` are `∃ tmax, tally_max = tmax`. The old bound `tmax < 2 · tally` held on the first cell, where the maximum grows with the tally. A later cell keeps the previous maximum, and that bound fails when the next tally starts at length `1`.
+
+4180 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1702512 kB VmHWM. Under 2 GB.
+
 ## Next
 
-Re-prove `open_climb` and `chord_add_live` from an entry high `h0`. The first cell (`RunFrame.highLt`, so `h0 < t0`, and the max is `t0 + tally - 1`) and `later_climb_entry` (`t0 ≤ h0`) are both instances. Keep the old statements as corollaries where something still calls them. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Re-prove `open_climb` and `chord_add_live` from an entry high `h0`. The first cell (`RunFrame.highLt`, so `h0 < t0`, and the max is `t0 + tally - 1`) and `later_climb_entry` (`t0 ≤ h0`) are both instances. `tmaxLt` no longer asks for `tmax < 2 · tally`. `open_climb` still enters through `tally_start_raise`, which needs `high < tallyOrigin` and `tally_max = 0`. Keep the old statements as corollaries where something still calls them. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

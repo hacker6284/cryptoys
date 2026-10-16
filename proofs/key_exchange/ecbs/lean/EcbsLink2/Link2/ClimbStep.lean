@@ -339,10 +339,7 @@ theorem climb_step_home
       ClimbShape b' (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty)
         rest base ∧
       (∃ tmax : Nat,
-        b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-          (0 < (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty).tally →
-            tmax < 2 * (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx)
-              rest.isEmpty).tally)) := by
+        b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) := by
   have hT : s.tally ≤ base.mMax := h.tally_le hCap
   rcases Classical.em (s.fromHole < 0) with hF | hnge
   · rcases Classical.em (r = 2) with hr | hwhite

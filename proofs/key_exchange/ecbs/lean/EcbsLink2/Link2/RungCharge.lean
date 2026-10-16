@@ -1261,10 +1261,10 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   openZero : 2 ≤ rest.length → ∀ k, k < s.tally →
     ∀ (hix : s.t0 + s.tally + k < s.row.length),
       s.row[s.t0 + s.tally + k]'hix = 0
-  /-- `tally_max` is a natural below twice the current length. -/
+  /-- `tally_max` is some natural. A rung records `max` of that value and the
+      new length. The counter is not a Spec result. -/
   tmaxLt : ∃ tmax : Nat,
-    b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-      (0 < s.tally → tmax < 2 * s.tally)
+    b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)
   /-- The control counter stays within `ctrl0` plus one `rungCtrl` step per
       finished rung. -/
   ctrlLe : s.ctrl ≤ base.ctrl0 + done.length * (3 * base.mMax + 5)
@@ -1306,8 +1306,7 @@ structure ClimbInvKCore (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
     ∀ (hix : s.t0 + s.tally + k < s.row.length),
       s.row[s.t0 + s.tally + k]'hix = 0
   tmaxLt : ∃ tmax : Nat,
-    b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-      (0 < s.tally → tmax < 2 * s.tally)
+    b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)
   ctrlLe : s.ctrl ≤ base.ctrl0 + done.length * (3 * base.mMax + 5)
   srcAbove : 0 ≤ s.fromHole →
     climbAt base.ladder0 base.R s.ridx < s.fromHole.toNat
@@ -1720,9 +1719,7 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     (hshape : ClimbShape b' (modelRung s x r hole rest.isEmpty) rest base)
     (hhole : hole < s.t0)
     (htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < (modelRung s x r hole rest.isEmpty).tally →
-          tmax < 2 * (modelRung s x r hole rest.isEmpty).tally))
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
     (hAt : hole = climbAt base.ladder0 base.R s.ridx) :
     ClimbInvKCore (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
   have hT := h.tally_le hCap
@@ -2016,9 +2013,7 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     (hshape : ClimbShape b' (modelRung s x r hole rest.isEmpty) rest base)
     (hhole : hole < s.t0)
     (htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < (modelRung s x r hole rest.isEmpty).tally →
-          tmax < 2 * (modelRung s x r hole rest.isEmpty).tally))
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
     (hAt : hole = climbAt base.ladder0 base.R s.ridx) :
     ClimbInvK (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
   have hT := h.tally_le hCap

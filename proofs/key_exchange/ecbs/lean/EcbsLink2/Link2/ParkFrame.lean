@@ -594,15 +594,10 @@ theorem red_final_ge
         (congrArg Array.size hhomeB) (congrArg Array.size hheldB)
         rfl rfl rfl)
   have htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    obtain ⟨tmax, htm, hnote⟩ := h.tmaxLt
-    refine ⟨tmax, ?_, ?_⟩
-    · rw [withPark_tmax, htmaxR, htm]
-    · intro hpos
-      have hlt := hnote (by rw [← htall]; exact hpos)
-      rw [htall]
-      exact hlt
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    obtain ⟨tmax, htm⟩ := h.tmaxLt
+    refine ⟨tmax, ?_⟩
+    rw [withPark_tmax, htmaxR, htm]
   have hK := climbInvKCore_succ h hinv hδR hCap hshape h.holeBelow htmax rfl
   exact ⟨b', hprog, hK, hTight⟩
 

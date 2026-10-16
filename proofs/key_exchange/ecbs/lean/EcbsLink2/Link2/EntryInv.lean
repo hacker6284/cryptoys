@@ -1017,10 +1017,8 @@ theorem entry_climbInv (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
         have hpast := entry_past t (tallyOrigin t + 1) (by omega) hix'
         simpa [entryModel] using hpast
       tmaxLt := by
-        refine ⟨1, ?_, ?_⟩
-        · simp [tallyBoard]
-        · intro _
-          simp [entryModel]
+        refine ⟨1, ?_⟩
+        simp [tallyBoard]
       ctrlLe := by simp [entryModel, entryBudget]
       srcAbove := by
         intro h

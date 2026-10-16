@@ -772,9 +772,7 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           simpa [openModel, entryModel] using hix
         have hpast := entry_past t (tallyOrigin t + 1) (by omega) hix'
         simpa [openModel, entryModel] using hpast
-      tmaxLt := ⟨1, by simpa [ofNat_eq_natCast] using htmax, by
-        intro _
-        simp [openModel, entryModel]⟩
+      tmaxLt := ⟨1, by simpa [ofNat_eq_natCast] using htmax⟩
       ctrlLe := by
         simp [openModel, entryModel, hm.ctrl0]
       srcAbove := by

@@ -3887,8 +3887,7 @@ theorem red_open_double {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   have hHighEq : s.t0 + s.tally - 1 ≤ s.high := by
     rw [h.highTop]
     exact Nat.le_max_right _ _
-  obtain ⟨tmax, hMax, hNote0⟩ := h.tmaxLt
-  have hNote : tmax < 2 * s.tally := hNote0 hm
+  obtain ⟨tmax, hMax⟩ := h.tmaxLt
   have hRpos : 0 < base.R := by
     have hk := h.kLe
     rw [List.length_append, List.length_cons] at hk
@@ -4063,7 +4062,7 @@ theorem red_open_double {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       rw [paintRed_length, h.shape.rowLen]
       exact hRoom)
     hRed hZero hctrlN hhighC hHighEq hctrlC hRoom hFitI
-    hfitC0 hFitM hmaxC hNote
+    hfitC0 hFitM hmaxC
   exact ⟨bLoop, bMul, bClear, _, hmul, hclearEq, htally⟩
 
 /-- Non-final rung. `tally_double` changes only the row, the tally length, the
@@ -4096,8 +4095,7 @@ theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   have hHighEq : s.t0 + s.tally - 1 ≤ s.high := by
     rw [h.highTop]
     exact Nat.le_max_right _ _
-  obtain ⟨tmax, hMax, hNote0⟩ := h.tmaxLt
-  have hNote : tmax < 2 * s.tally := hNote0 hm
+  obtain ⟨tmax, hMax⟩ := h.tmaxLt
   have hRpos : 0 < base.R := by
     have hk := h.kLe
     rw [List.length_append, List.length_cons] at hk
@@ -4157,12 +4155,12 @@ theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       rw [paintRed_length, h.shape.rowLen]
       exact hRoom)
     hRed hZero hctrlN hhighTop hHighEq hctrlC hRoom hFitI
-    hfitC0 hFitM hmaxNat hNote
+    hfitC0 hFitM hmaxNat
   let rowD := embed (paintOnes (paintOnes xs s.t0 s.tally) (s.t0 + s.tally) s.tally)
   let lenD : Int := Int.ofNat (2 * s.tally)
   let ctrlD : Int := Int.ofNat (s.ctrl + s.tally + 2 * s.tally)
   let highD : Int := ((max s.high (s.t0 + 2 * s.tally - 1) : Nat) : Int)
-  let maxD : Int := Int.ofNat (2 * s.tally)
+  let maxD : Int := ((max tmax (2 * s.tally) : Nat) : Int)
   have htallyW : Ecbs.tally_double bClear =
       .ok (withTally bClear rowD lenD ctrlD highD maxD) := by
     simpa [rowD, lenD, ctrlD, highD, maxD, withTally] using htally
@@ -4240,18 +4238,23 @@ theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       ((s.ctrl + s.tally + 2 * s.tally : Nat) : Int) := by
     simp [bRed, withTally, ctrlD]
   have hmaxR : bRed.sudo_5Board_4cost.sudo_5Costs_9tally_max =
-      ((2 * s.tally : Nat) : Int) := by
+      ((max tmax (2 * s.tally) : Nat) : Int) := by
     simp [bRed, withTally, maxD]
   have hadd := tally_add_one_mark bRed s.t0 (2 * s.tally)
       (max s.high (s.t0 + 2 * s.tally - 1)) base.control
-      (s.ctrl + s.tally + 2 * s.tally) (2 * s.tally)
+      (s.ctrl + s.tally + 2 * s.tally) (max tmax (2 * s.tally))
       hlenR ht0R hixR hzeroR hctrlR hPast hhighR hFitI
-      hctrlNum hFitC1 hFitL1 hmaxR (by omega)
+      hctrlNum hFitC1 hFitL1 hmaxR
   have hflat : max (max s.high (s.t0 + 2 * s.tally - 1)) (s.t0 + 2 * s.tally) =
       max s.high (s.t0 + 2 * s.tally) := by
     rw [Nat.max_assoc]
     exact congrArg (max s.high) (Nat.max_eq_right (Nat.sub_le _ _))
   rw [hflat] at hadd
+  have hflatM : max (max tmax (2 * s.tally)) (2 * s.tally + 1) =
+      max tmax (2 * s.tally + 1) := by
+    rw [Nat.max_assoc]
+    exact congrArg (max tmax) (Nat.max_eq_right (Nat.le_succ _))
+  rw [hflatM] at hadd
   let bAdd := { bRed with
     sudo_5Board_3row := bRed.sudo_5Board_3row.set ⟨s.t0 + 2 * s.tally, hixR⟩ (1 : Int)
     sudo_5Board_9tally_len := Int.ofNat (2 * s.tally + 1)
@@ -4259,7 +4262,7 @@ theorem red_doubled_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
       sudo_5Costs_15control_highest :=
         ((max s.high (s.t0 + 2 * s.tally) : Nat) : Int)
       sudo_5Costs_4ctrl := Int.ofNat (s.ctrl + s.tally + 2 * s.tally + 1)
-      sudo_5Costs_9tally_max := Int.ofNat (2 * s.tally + 1) } }
+      sudo_5Costs_9tally_max := ((max tmax (2 * s.tally + 1) : Nat) : Int) } }
   refine ⟨bClear, bD, bCube, bRed, bAdd, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · simpa [bD] using htallyW
   · simpa [bD, bCube] using hcubeF rowD lenD ctrlD highD maxD

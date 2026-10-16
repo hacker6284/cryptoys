@@ -355,9 +355,15 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 4278 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1668584 kB VmHWM. Under 2 GB.
 
+`climbEmit_ladder` is the induction: one rung does not write the ladder array, so the board `climbEmit` returns has the ladder it was given. `open_invert` exports that the tally board's ladder is `embed (tierClimb t)`. `open_check_mul` obtains `settled_unpark_frame` and `FrameScalar` from the check multiply, so the board `bench_read_and_clear` returns has that same ladder. `open_checked` carries it through the white return and through `mirrorHome` of home 5. The board `invert_checked` returns has ladder `embed (tierClimb t)`.
+
+`TmaxGe` is `tally_max` equal to a natural at least 1. It is not a closed formula and not an export result. `tally_note_ge` is why a note of a length at least 1 keeps it. On an idle climb, the clear keeps the value (`climbClear_idle_tmax`), a final white rung is that clear (`idle_white_final_ge`), a non-final white rung then records `max` with `2 · tally` (`idle_white_open_ge`), and a non-final red rung records `max` with `2 · tally + 1` (`idle_red_open_ge`). The parked arms, the idle final red arm, and the bench-on arm are not in that induction yet, so `1 ≤ tally_max` is not yet on the board `open_checked` returns. Home 3 equal to the base is not proved.
+
+4291 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1701104 kB VmHWM. Under 2 GB.
+
 ## Next
 
-Name the rise board's absolute frame: ladder `tierClimb`, `1 ≤ tally_max`, home 3 equal to the base. Then scratch homes 2, 5, and 6 empty. Then the later `hStart` branch. Then `chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+Finish the rise board's absolute frame: `1 ≤ tally_max` on the board `open_checked` returns, including the parked rungs, the idle final red rung, and a bench-on rung, then home 3 equal to the base. Then scratch homes 2, 5, and 6 empty. Then the later `hStart` branch. Then `chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

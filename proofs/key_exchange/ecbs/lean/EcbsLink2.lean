@@ -47,6 +47,7 @@ import EcbsLink2.Link2.EntryInv
 import EcbsLink2.Link2.Mirror
 import EcbsLink2.Link2.Add
 import EcbsLink2.Link2.CheckTail
+import EcbsLink2.Link2.ClimbLadder
 import EcbsLink2.Link2.InvertWalk
 import EcbsLink2.SpecCurve
 import EcbsLink2.SpecDigits

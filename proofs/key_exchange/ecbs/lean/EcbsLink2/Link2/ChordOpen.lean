@@ -91,6 +91,47 @@ structure RiseRead (b bI : Ecbs.Board) (baseY accY accX run inv : List Nat)
   hr : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r
   hk : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k
 
+/-- What the chord tail leaves, stated on the board `invert_checked` returned.
+    The rise keeps the control row, and the tail keeps that row. Slot 0 grows
+    by three from the value on that board. Every other ops slot stays.
+    `movesIn` is the move counter on the rise board. Proof-only. Not a security claim. -/
+structure TailPack (n bench movesIn : Nat) (b0 b : Ecbs.Board) : Prop where
+  benchOff : b.sudo_5Board_8bench_on = false
+  stay : TailStay b0 b
+  row : b.sudo_5Board_3row = b0.sudo_5Board_3row
+  szH : b.sudo_5Board_4home.size = 8
+  szD : b.sudo_5Board_4held.size = 8
+  held0 : ∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0]'h = true
+  held1 : ∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1]'h = true
+  empty2 : ∀ h : 2 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[2]'h = (#[] : Array Int)
+  off2 : ∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2]'h = false
+  empty5 : ∀ h : 5 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[5]'h = (#[] : Array Int)
+  off5 : ∀ h : 5 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[5]'h = false
+  off6 : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6]'h = false
+  mark : ∃ m : Nat, b0.sudo_5Board_6marker = Int.ofNat m ∧
+    b.sudo_5Board_6marker = Int.ofNat (m + 3)
+  ctrl : ∃ c : Nat, b0.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+    b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c + 6)
+  mx : ∃ (m x : Nat), b0.sudo_5Board_6marker = Int.ofNat m ∧
+    b0.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat x ∧
+    b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max (max (max x (m + 2)) (m + 3)) (m + 4))
+  moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
+    mv ≤ movesIn + tailMoveCap n bench
+  slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl
+  peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
+  strict : ∃ st, b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st
+  hole : ∃ ho, b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho
+  ops0 : ∃ (h0 : 0 < b0.sudo_5Board_4cost.sudo_5Costs_3ops.size) (c : Nat),
+    b0.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = (c : Int) ∧
+    ∀ h0' : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0' = Int.ofNat (c + 3)
+  opsKeep : ∀ j, j ≠ 0 →
+    ∀ (hj : j < b0.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+      (hj' : j < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj' =
+        b0.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj
+
 /-- The nonempty chord add, once `invert_checked` has returned. Across, bottom,
     and gap are the homes the rise keeps. `chord_tail_point` runs on that board.
     `chord_add_point` obtains the return from `open_checked`. -/
@@ -237,10 +278,11 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
         (fieldMul n k bench rise inv) (fieldSub n accX (chordX3 n k bench
           (fieldMul n k bench rise inv) accX run)) accY)) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        bI.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+        bI.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      TailPack n bench moves bI b' := by
   obtain ⟨bR, hadd, h6a, h6t, h1aR, h1tR, _h4a, _h4t, hszDR, hszHR, _hnR, hmv, hflag,
       h0aK, h0tK, h2aK, h2tK, h5aK, h5tK, htR, hmR, hcR, hxR, hslR, hopR, honR, _hb, _hto,
-      hhoR, hstR, ⟨pk, hpk⟩, hhiRise, _hstayR⟩ :=
+      hhoR, hstR, ⟨pk, hpk⟩, hhiRise, _hstayR, hrowR⟩ :=
     chord_tail_after_inv b red bI baseY accY n moves0 peak0 hinv hszH hszD hyB hyA hpos
       htriB htriA hn0b hmoves0 hpeak0 hfit0 h6e h4t h4a h1t0 h1a0
   have h0a : bR.sudo_5Board_4home[0]'(by rw [hszHR]; decide) = embed accX :=
@@ -300,7 +342,9 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
     simpa [hopR] using hops0
   have hop0R : bR.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsR = (cOps : Int) := by
     simpa [hopR] using hop00
-  obtain ⟨b', hct, hAc, hUp, hhiTail, _hrowTail⟩ :=
+  obtain ⟨b', hct, hAc, hUp, hhiTail, hrowT, hstayT, h2e, h2f, h5e, h5f, h6f,
+      hmarkT, hctrlT, hmxT, hmvT, hslT, hpkT, hstT, hhoT, h0tT, h1tT, hszHT, hszDT,
+      hoffT, hopSkip, hop0T⟩ :=
     chord_tail_point bR inv rise accX accY run w h r n k moves hole bench slides pk peakS
       cOps m ctrl mx script
       hflagT hoffR hmN hcN hxN hscriptR hbound hbound3 hfitM hfitC hfit2 hfitC4 hfit3
@@ -310,7 +354,51 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
       hspan htriI htriRise hfi hfm hhoN hw0 hh0 hrR hrP hnE hkLe hgap hwR hhR hrR' hkR
       hsm hnsm hfitB hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW hfit1 hfitA
       hfitRun hpegX hfitMX hfitSX hTailM hTailS hfitP hfitMo hfmP hfoldP hfitSo
-  refine ⟨b', ?_, ?_, ?_, ?_⟩
+  have hrest : TailStay bI (restoreMarker bI b.sudo_5Board_9marker_on) := by
+    exact TailStay.of_eq (by simp [restoreMarker]) (by simp [restoreMarker])
+      (by simp [restoreMarker]) (by simp [restoreMarker]) (by simp [restoreMarker])
+      (by simp [restoreMarker]) (by simp [restoreMarker]) (by simp [restoreMarker])
+      (by simp [restoreMarker]) (by simp [restoreMarker])
+      (by simp [homeD, restoreMarker]) (by simp [heldD, restoreMarker])
+      (by simp [homeD, restoreMarker]) (by simp [heldD, restoreMarker])
+  have hstayI : TailStay bI b' :=
+    TailStay.trans hrest (TailStay.trans _hstayR hstayT)
+  have hrowI : b'.sudo_5Board_3row = bI.sudo_5Board_3row := by
+    have hrI : (restoreMarker bI b.sudo_5Board_9marker_on).sudo_5Board_3row =
+        bI.sudo_5Board_3row := by simp [restoreMarker]
+    exact hrowT.trans (hrowR.trans hrI)
+  have hopsI : bR.sudo_5Board_4cost.sudo_5Costs_3ops =
+      bI.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    simpa [restoreMarker] using hopR
+  have hpack : TailPack n bench moves bI b' :=
+    { benchOff := hoffT
+      stay := hstayI
+      row := hrowI
+      szH := hszHT
+      szD := hszDT
+      held0 := h0tT
+      held1 := h1tT
+      empty2 := h2e
+      off2 := h2f
+      empty5 := h5e
+      off5 := h5f
+      off6 := h6f
+      mark := ⟨m, by simpa [restoreMarker] using hm0, hmarkT⟩
+      ctrl := ⟨ctrl, by simpa [restoreMarker] using hc0, hctrlT⟩
+      mx := ⟨m, mx, by simpa [restoreMarker] using hm0, by simpa [restoreMarker] using hx0, hmxT⟩
+      moves := hmvT
+      slides := hslT
+      peak := hpkT
+      strict := hstT
+      hole := hhoT
+      ops0 := ⟨by simpa [restoreMarker] using hops0, cOps,
+        by simpa [restoreMarker] using hop00, hop0T⟩
+      opsKeep := by
+        intro j hne hj hj'
+        have hjR : j < bR.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [hopsI]; exact hj
+        exact (hopSkip j hne hjR hj').trans (cell_eq_of hopsI rfl) }
+  refine ⟨b', ?_, ?_, ?_, ?_, hpack⟩
   · rw [hadd, hct, ok_bind, pure_eq_ok]
   · intro h
     simpa [chordX3, fieldMul] using hAc h
@@ -364,9 +452,10 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
           (chordY3 t.n t.k t.benchlen (fieldMul t.n t.k t.benchlen rise inv)
             (fieldSub t.n accX (chordX3 t.n t.k t.benchlen
               (fieldMul t.n t.k t.benchlen rise inv) accX run)) accY)) ∧
-        ∃ high : Nat,
+        (∃ high : Nat,
           b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
-          tallyOrigin t ≤ high := by
+          tallyOrigin t ≤ high) ∧
+        TailPack t.n t.benchlen (moves0 + pegCount baseY + pegCount accY) bI b' := by
   obtain ⟨bI, _h5, _h5D, hinv0, h5aI, h5tI, hnT, _hlenA, h2aI, h2tI, h0aI, h0tI,
       h1aI, h1tI, h4aI, h4tI, hcarry, hbnd, hwater, _hrowI⟩ :=
     open_checked { b with sudo_5Board_9marker_on := false } t run inv lay hOk sat hR hsh
@@ -502,7 +591,7 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
     tailRoom_of t.n t.k t.benchlen t.script moves0 moves hole slides peakS cOps
       lay.mark ctrl inv rise accX accY run hmovRise hinvL hxLen hyLen hrunL hnb
       hmoveFit hslideFit hMark hMarkF hctrlFit hopsFit
-  obtain ⟨b', hct, hx, hy, hhi⟩ :=
+  obtain ⟨b', hct, hx, hy, hhi, hpack⟩ :=
     chord_add_point_of_inv b red bI baseY accY accX run inv rise
     t.w t.h t.r t.n t.k moves0 moves hole t.benchlen slides peak0 peakS cOps
     lay.mark ctrl lay.mx t.script
@@ -523,7 +612,7 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
     room.foldP room.fitSo
   obtain ⟨high, hh, hge⟩ := _hwater
   refine ⟨bI, moves0, peak0, slides, peakS, hole, ctrl, cOps, hr,
-    b', hct, hx, hy, high, hhi.trans hh, hge⟩
+    b', hct, hx, hy, ⟨high, hhi.trans hh, hge⟩, hpack⟩
 
 
 /-- `chordAddTail` after the inverse is `chord_tail` on the rise board.

@@ -230,7 +230,7 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
       htriX htriUp htriR htriI htriRise hfitN sat.mul_span
       hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsh.small hsh.n_small
       hChord hChordS hMarkL hMarkL' hCtrlP hOpsP
-  obtain ⟨_, b', htail, hx0, hy1, hwater⟩ := hand
+  obtain ⟨_, b', htail, hx0, hy1, hwater, _hpack⟩ := hand
   have h2H : 2 < bA.sudo_5Board_4home.size := by
     have hsz : ({ bA with sudo_5Board_9marker_on := false } : Ecbs.Board).sudo_5Board_4home.size =
         bA.sudo_5Board_4home.size := rfl

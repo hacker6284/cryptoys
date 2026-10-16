@@ -387,7 +387,11 @@ The chord tail turns the bench off. It writes ops slot 0 and leaves every other 
 
 ## Next
 
-`chord_add_point` returns the tail pack. Then `chord_add_live_frame`, chained to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+`chord_add_point` returns `TailPack`. It is the tail on the board `invert_checked` returned: the bench is off, `TailStay` and the control row survive the rise, slot 0 is three above the checked value, and every other ops slot stays. The move bound uses the rise board's move counter, `moves0 + pegCount baseY + pegCount accY`.
+
+4327 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Rebuilt peaks: ChordOpen 1163016 kB, ChordLive 494812, ChordNext 461632, EcbsLink2 439892. All under 2097152 kB.
+
+`chord_add_live_frame`, chained to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

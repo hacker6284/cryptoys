@@ -144,7 +144,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   intro slope x3 y3
   obtain ⟨bX, hpre, hoffX, h2x, h0aF, h0tF, h5aF, h5tF, hflagN, hszH8, hszD8,
       hmN, hcN, hxN, htAll, hmvRaw, hslRaw, h2tF, h1home, h1held, opsSz, hop0F,
-      peakXN, strictW, holeW, hpkX, hstX, hhoX⟩ :=
+      htail⟩ :=
     bottom_lay b inv rise accX run w h r n k moves hole bench slides peak peakS
       cOps m ctrl mx script
       hmk hoff hm hc hx hscript hbound hfitM hfitC hfit2 hfitC4 hfit3
@@ -153,6 +153,8 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
       hsm hnsm hfitB hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW
       hfit1 hfitA hfitRun hpegX hfitMX hfitSX
+  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX⟩, hhiX⟩ := htail
+  have _hbottomHigh := hhiX
   let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
     pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
   let slX := slGap slides inv rise n k bench + 2 * pegCount x3

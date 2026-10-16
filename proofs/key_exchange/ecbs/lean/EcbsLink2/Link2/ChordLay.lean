@@ -347,10 +347,12 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
       bX.sudo_5Board_4cost.sudo_5Costs_3ops.size = b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
       (∀ h : 0 < bX.sudo_5Board_4cost.sudo_5Costs_3ops.size,
         bX.sudo_5Board_4cost.sudo_5Costs_3ops[0] = Int.ofNat (cOps + 2)) ∧
-      ∃ peakX strictX holeX,
+      (∃ peakX strictX holeX,
         bX.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakX ∧
         bX.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictX ∧
-        bX.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeX := by
+        bX.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeX) ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   intro slope x3
   have h7 : 7 ≤ b.sudo_5Board_4held.size := by rw [hszD]; decide
   have hF : 5 < b.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -389,7 +391,7 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
   have h2aW : bW.sudo_5Board_4home[2]'h2H = embed run :=
     (hkeep 2 (by decide) (by decide) (by rw [hszH]; decide) h2H).trans h2a
   obtain ⟨bX, hx3do, hoffX, h2x, hmX, htX, hmvX, hslX, hszX, hszDX, hflagX, h2tX, hkeepX,
-      hheldX, hcX, hxX, hopX, hstX, hhoX, peakXN, hpkX⟩ :=
+      hheldX, hcX, hxX, hopX, hstX, hhoX, hpkRest⟩ :=
     x3_settle_lay bW accX run benchL n k bench
       (mvSq (mvGap moves inv rise n k bench) slope n k bench)
       (slGap slides inv rise n k bench) peakW slope
@@ -397,10 +399,11 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
       h0aW h2tW h2aW
       (by rw [htW]; exact hn) hxLen hrun hn0 hlen hnb htriX htriR htriB hzero hpre hf hfitB
       hmvI hslI hpkI hfit1 hfitA hfitRun hpegX hfitMX hfitSX
+  obtain ⟨⟨peakXN, hpkX⟩, hhiX⟩ := hpkRest
   refine ⟨bX, ?_, hoffX, h2x, ?_, ?_, ?_, ?_, hflagX.trans hmkW,
       hszX.trans (hszHW.trans hszH), hszDX.trans (hszDW.trans hszD),
       hmX.trans hmW, hcX.trans hcW, hxX.trans hxW, htX.trans htW,
-      hmvX, hslX, h2tX, ?_, ?_, ?_, ?_, ?_⟩
+      hmvX, hslX, h2tX, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · have hassoc :
         (do
             let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
@@ -453,6 +456,7 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
     have hget := ix hopX 0 h0
     exact hget.trans (hop0W (hopX ▸ h0))
   · exact ⟨peakXN, strictW, holeW, hpkX, hstX.trans hstW, hhoX.trans hhoW⟩
+  · exact hhiX.trans _hhiW
 
 /-- The lane fold's holes from `n` up are empty. One fact for the settle's tail. -/
 theorem fold_tail (n gap : Nat) (strip : List Nat)

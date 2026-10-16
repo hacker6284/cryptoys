@@ -77,6 +77,12 @@ theorem benchAdd_tier (b : Ecbs.Board) (arr : Array Int) (mv : Nat) :
   unfold benchAddBoard withMoves
   rfl
 
+theorem benchAdd_high (b : Ecbs.Board) (arr : Array Int) (mv : Nat) :
+    (benchAddBoard b arr mv).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+  unfold benchAddBoard withMoves
+  rfl
+
 theorem benchAdd_slides (b : Ecbs.Board) (arr : Array Int) (mv : Nat) :
     (benchAddBoard b arr mv).sudo_5Board_4cost.sudo_5Costs_6slides =
       b.sudo_5Board_4cost.sudo_5Costs_6slides := by
@@ -935,7 +941,9 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
         b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
       bX.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
         b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
-      ∃ peakX, bX.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakX := by
+      (∃ peakX, bX.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakX) ∧
+      bX.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   intro x3
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2H : 2 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -1033,7 +1041,7 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
     rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, h2, ok_bind]
     rw [hclear, ok_bind]
     rw [hset]
-  refine ⟨bX, hdo, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bX, hdo, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · exact settle_bench_off bC 2 ⟨hHc, hDc⟩ L2 n (mv2 + pegCount run) slides peak
   · intro h2x
     have hh := settle_home_eq bC 2 ⟨hHc, hDc⟩ L2 n (mv2 + pegCount run) slides peak
@@ -1121,5 +1129,10 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
       rw [hpkC, ofNat_eq_natCast]
     simpa [bX, peakX] using
       settle_peak_eq bC 2 ⟨hHc, hDc⟩ L2 n (mv2 + pegCount run) slides peak hpkI
+  · have hC : bC.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+      simp [bC, b2, b1, benchAddBoard, withMoves]
+    simpa [bX] using
+      (settle_high_eq bC 2 ⟨hHc, hDc⟩ L2 n (mv2 + pegCount run) slides peak).trans hC
 
 end EcbsLink2.Link2

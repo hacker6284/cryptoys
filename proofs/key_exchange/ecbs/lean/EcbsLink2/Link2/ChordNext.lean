@@ -3,8 +3,8 @@
   each; a fuel of further cells keeps what this cell does not spend. The
   climb's recorded high is a high-water mark: `tally_clear` does not lower it.
   `OpenLay.hStart` is the first cell (`high < origin` and `tally_max = 0`) or a
-  later cell (`origin ≤ high` and `1 ≤ tally_max`). `tally_start_again` is the
-  later restart: the peg is written and the high stays.
+  later cell (`origin ≤ high`). The later branch does not carry `1 ≤ tally_max`.
+  `tally_start_again` is the special case where that maximum is already positive.
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.ChordLive
@@ -140,8 +140,9 @@ theorem settle_high_mark
   exact climb_high_ge h hm
 
 /-- `invert_checked` leaves the climb's high-water mark. It is at least the
-    tally origin, so the next cell's tally start is `tally_start_again`.
-    `RunFrame.highLt` is the first cell, where the mark still sits under the origin. -/
+    tally origin, so the next cell's tally start keeps the high
+    (`tally_start_high`). `RunFrame.highLt` is the first cell, where the mark
+    still sits under the origin. -/
 theorem checked_high_mark (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
     (lay : OpenLay b t xs) (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t)
     (hsh : TierShape t) (base : ClimbBudget) (hm : OpenMatch lay base)

@@ -532,8 +532,51 @@ theorem tally_start_again (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
   rw [tally_note_keep _ 1 tmax hlen1 (by simpa using hMax) hNote, ok_bind, pure_eq_ok]
   simp [hrow]
 
+/-- `tally_start` when the recorded high is already at or above the origin.
+    The white peg is written and the high stays. `tally_max` becomes `max` of
+    the old maximum and `1`, whether or not that maximum was already positive.
+    Nothing downstream of a finished cell reads `1 ≤ tally_max`. -/
+theorem tally_start_high (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
+    (hLen0 : b.sudo_5Board_9tally_len = 0)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 < b.sudo_5Board_3row.size)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 ≤ high)
+    (hFitT : FitsLen t0)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitC : FitsLen (ctrl + 1))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) :
+    Ecbs.tally_start b =
+      .ok { b with
+        sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0, hrow⟩ (1 : Int)
+        sudo_5Board_9tally_len := 1
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_15control_highest := (high : Int)
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1)
+          sudo_5Costs_9tally_max := ((max tmax 1 : Nat) : Int) } } := by
+  unfold Ecbs.tally_start
+  rw [hLen0, sudoAssertEq_int rfl 344, ok_bind]
+  have hrow0 : t0 + 0 < b.sudo_5Board_3row.size := by simpa using hrow
+  conv =>
+    pattern (Ecbs.tally_put b (0 : Int) (1 : Int))
+    rw [show (0 : Int) = ((0 : Nat) : Int) from rfl, show (1 : Int) = ((1 : Nat) : Int) from rfl]
+  rw [tally_put_keep b t0 0 1 high control hT0 hrow0 hCtrlN (by simpa using hic)
+      hHigh (by simpa using hle) (by simpa using hFitT), ok_bind]
+  conv => zeta
+  dsimp only
+  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hFitC, ok_bind]
+  have hlen1 : (1 : Int) = ((1 : Nat) : Int) := rfl
+  rw [tally_note_mark _ 1 tmax hlen1 (by simpa using hMax), ok_bind, pure_eq_ok]
+  apply congrArg Except.ok
+  apply board_ext <;> try rfl
+  apply cost_ext <;> try rfl
+  · exact hHigh
+
 /-- `tally_start` records `max` of the entry high and the origin, and `max` of
-    the old `tally_max` and `1`. The first cell raises both. A later cell keeps both. -/
+    the old `tally_max` and `1`. The first cell raises both. A later cell keeps
+    the high. The maximum moves to `max` of the old value and `1`. -/
 theorem tally_start_mark (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
     (hLen0 : b.sudo_5Board_9tally_len = 0)
     (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
@@ -545,7 +588,7 @@ theorem tally_start_mark (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
     (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
     (hFitC : FitsLen (ctrl + 1))
     (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
-    (hCase : (high < t0 ∧ tmax = 0) ∨ (t0 ≤ high ∧ 1 ≤ tmax)) :
+    (hCase : (high < t0 ∧ tmax = 0) ∨ t0 ≤ high) :
     Ecbs.tally_start b =
       .ok { b with
         sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0, hrow⟩ (1 : Int)
@@ -554,23 +597,16 @@ theorem tally_start_mark (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
           sudo_5Costs_15control_highest := ((max high t0 : Nat) : Int)
           sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1)
           sudo_5Costs_9tally_max := ((max tmax 1 : Nat) : Int) } } := by
-  rcases hCase with ⟨hgt, hzero⟩ | ⟨hle, hkeep⟩
+  rcases hCase with ⟨hgt, hzero⟩ | hle
   · have hnote : tmax < 1 := by omega
     have hrun := tally_start_raise b t0 high control ctrl tmax
       hLen0 hT0 hrow hCtrlN hic hHigh hgt hFitT hCtrl hFitC hMax hnote
     rw [hrun]
     simp [Nat.max_eq_right (Nat.le_of_lt hgt), Nat.max_eq_right (Nat.le_of_lt hnote),
       ofNat_eq_natCast]
-  · have hrun := tally_start_again b t0 high control ctrl tmax
-      hLen0 hT0 hrow hCtrlN hic hHigh hle hFitT hCtrl hFitC hMax hkeep
-    rw [hrun]
-    apply congrArg Except.ok
-    apply board_ext <;> try rfl
-    apply cost_ext <;> try rfl
-    · rw [Nat.max_eq_left hle]
-      exact hHigh
-    · rw [Nat.max_eq_left hkeep]
-      exact hMax
+  · rw [tally_start_high b t0 high control ctrl tmax
+      hLen0 hT0 hrow hCtrlN hic hHigh hle hFitT hCtrl hFitC hMax]
+    simp [Nat.max_eq_left hle]
 
 /-- `tally_add_one` lays one more white peg just past the tally. That hole is above
     the recorded high, and the new length beats `tally_max`. -/

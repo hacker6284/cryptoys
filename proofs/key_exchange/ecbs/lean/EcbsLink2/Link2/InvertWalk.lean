@@ -68,8 +68,11 @@ structure OpenLay (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat) where
   ht0 : b.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t)
   hrow : b.sudo_5Board_3row = embed (paintedRow t)
   htmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)
-  /-- The first cell raises the high and `tally_max`. A later cell keeps both. -/
-  hStart : (high < tallyOrigin t ∧ tmax = 0) ∨ (tallyOrigin t ≤ high ∧ 1 ≤ tmax)
+  /-- The first cell raises the high. A later cell already has the high at or
+      above the origin. `1 ≤ tally_max` is not part of this branch: `open_climb`
+      and `chord_add_live` do not read it. `tally_start_high` records `max` of
+      the old maximum and `1` either way. -/
+  hStart : (high < tallyOrigin t ∧ tmax = 0) ∨ tallyOrigin t ≤ high
   hlad : b.sudo_5Board_6ladder = embed (tierClimb t)
   hl0 : b.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2)
   hnr : b.sudo_5Board_6nrungs = Int.ofNat (tierR t)

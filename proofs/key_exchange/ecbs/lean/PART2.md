@@ -317,6 +317,8 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 `RowHome` is the control row below the tally origin: the painted ladder, except the parked hole is empty and the park hole holds that hole's painted colour. `rowHome_rung` is one park-and-tally step. `rowHome_clear` is unpark then `tally_clear`: if holes at and after the origin are blank on the painted row, and holes at and after the final tally are already blank, the row is the painted row again. That is `RunFrame.hrow` for the next cell. It is not yet a field of `ClimbInvK`, so the board after `chord_add_live` is not yet that `RunFrame`.
 
+4202 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Only `RowHome` was elaborated; its sampled peak was 416080 kB VmHWM. Under 2 GB.
+
 ## Next
 
 Carry `RowHome` through the climb, then the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base). Chain that lemma to `chordStep_open` by `obtain` in the induction step. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).

@@ -242,6 +242,7 @@ theorem unpark_row_embed
     ∃ (bU : Ecbs.Board) (row : List Nat),
       Ecbs.unpark_rung b = .ok bU ∧
       bU.sudo_5Board_3row = embed row ∧
+      row = unparkList s.row s.fromHole s.parkAt ∧
       row.length = s.row.length := by
   obtain ⟨colour, hcell⟩ := h.shape.park.parkHeld hge
   have hsrc := h.shape.park.srcOk hge
@@ -285,9 +286,29 @@ theorem unpark_row_embed
         ⟨s.parkAt, by rw [size_embed]; exact hparkLen⟩ := Fin.ext rfl
     rw [hfin]
     exact hset
-  refine ⟨_, row, hback, ?_, ?_⟩
+  have hopt : (s.row[s.parkAt]?).getD 0 = colour := by
+    rw [List.getElem?_eq_getElem h.shape.park.parkLt]
+    simpa using hcell
+  have hlist : row = unparkList s.row s.fromHole s.parkAt := by
+    have hge' : ¬ s.fromHole < 0 := by omega
+    unfold unparkList
+    simp [hge', src, hopt, row, row1]
+  refine ⟨_, row, hback, ?_, hlist, ?_⟩
   · exact h2.trans h2e
   · simp [row, row1, List.length_set]
+
+/-- Unpark leaves the list `rowHome_clear` empties. That clear is the painted row. -/
+theorem unpark_painted
+    {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done [] b s base) (hge : 0 ≤ s.fromHole) :
+    ∃ bU,
+      Ecbs.unpark_rung b = .ok bU ∧
+      bU.sudo_5Board_3row = embed (unparkList s.row s.fromHole s.parkAt) ∧
+      paintZero (unparkList s.row s.fromHole s.parkAt) s.t0 s.tally = base.baseRow := by
+  obtain ⟨bU, _, hun, hrow, hlist, _⟩ := unpark_row_embed h hge
+  refine ⟨bU, hun, ?_, ?_⟩
+  · rw [hrow, hlist]
+  · simpa [hlist] using climb_row_cleared h
 
 /-- Home 5 holds `xs` after the final settle and the tally clear. The index
     proof stays inside the structure so a later `obtain` does not case on it. -/
@@ -627,7 +648,7 @@ theorem final_cube_settle
       hopsS hF hHome :=
     Except.ok.inj (hrunC.symm.trans hOff)
   have hplainO := settleBoard_plain bC 5 ⟨h5HC, h5DC⟩ fold s.n (cubeMoves mvS s.gap s.n s.k s.benchlen) slS (raisedPeak pkS (countHeld (bS.sudo_5Board_4held.set ⟨5, hF⟩ false) 7))
-  obtain ⟨bRow, row, hunR, hrowE, hlenR⟩ := unpark_row_embed h hge
+  obtain ⟨bRow, row, hunR, hrowE, _hlist, hlenR⟩ := unpark_row_embed h hge
   have hbU : bU = bRow := Except.ok.inj (hun.symm.trans hunR)
   have hrowOut : bOut.sudo_5Board_3row = embed row := by
     have hU : bU.sudo_5Board_3row = embed row := by rw [hbU]; exact hrowE

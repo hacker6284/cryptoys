@@ -321,13 +321,15 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 `ClimbInvK.blankTail`: every hole at and after `t0 + tally` is empty. `rungRow_past` keeps it, because a rung writes only inside the length it leaves. At entry the tally is one peg, so the tail is `entry_past`. `climb_row_cleared` is `rowHome_clear` on that invariant: unpark and empty the current tally, and the row is `base.baseRow`. At the end of the ladder the current tally is the final one.
 
-The cube, the check multiply, and the chord tail are not yet shown to leave that row on the board. The board after `chord_add_live` is not yet the next `RunFrame`.
+`unpark_painted`. `unpark_rung` leaves `unparkList`, and `rowHome_clear` of that list is `base.baseRow`. In `final_cube_settle` the final cube and the outer settle copy that row (`cubeOffBoard` and `settleBoard_plain`); `tally_clear` then writes `paintZero` of it. `cube_refines` and `mul_refines` already conclude `row =` the incoming row. The chord tail is not yet one projection of that fact. The board after `chord_add_live` is not yet the next `RunFrame`.
 
 4202 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Only `RowHome` was elaborated; its sampled peak was 416080 kB VmHWM. Under 2 GB.
 
 4219 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded after `RowHome` was added to the climb invariant. Under 2 GB.
 
 4224 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1698208 kB VmHWM. Under 2 GB.
+
+4225 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1698104 kB VmHWM. Under 2 GB.
 
 ## Next
 

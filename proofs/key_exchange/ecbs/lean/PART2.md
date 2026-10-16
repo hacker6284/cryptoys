@@ -313,9 +313,13 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 4185 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. The sampled peak while this group's climb files were elaborated was 1702276 kB VmHWM. Under 2 GB.
 
+## Done toward the next cell's row
+
+`RowHome` is the control row below the tally origin: the painted ladder, except the parked hole is empty and the park hole holds that hole's painted colour. `rowHome_rung` is one park-and-tally step. `rowHome_clear` is unpark then `tally_clear`: if holes at and after the origin are blank on the painted row, and holes at and after the final tally are already blank, the row is the painted row again. That is `RunFrame.hrow` for the next cell. It is not yet a field of `ClimbInvK`, so the board after `chord_add_live` is not yet that `RunFrame`.
+
 ## Next
 
-The `walk_chord` induction over a whole cell list: the board after a live `chord_add_live` has to be the next cell's `RunFrame`, then the walk is `.ok` of Spec `walkGo`. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Carry `RowHome` through the climb, then the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base). Chain that lemma to `chordStep_open` by `obtain` in the induction step. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

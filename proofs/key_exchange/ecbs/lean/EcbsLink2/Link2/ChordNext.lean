@@ -135,7 +135,7 @@ theorem settle_high_mark
       s.t0 ≤ s.high ∧ ¬ s.high < s.t0 := by
   obtain ⟨_, _, _, bZ, hpack⟩ := final_cube_both h hon hge ht hm
   have hhigh : bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) :=
-    hpack.2.2.2.2.2.2.2.2.2
+    hpack.2.2.2.2.2.2.2.2.2.1
   refine ⟨bZ, hhigh, ?_⟩
   exact climb_high_ge h hm
 

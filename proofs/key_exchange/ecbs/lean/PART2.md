@@ -325,7 +325,7 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 `chord_tail_point` says the control row on the board `chord_tail` returns is the incoming row. The proof is the per-step row projections composed along the emitted tail. `gapMul_row` (`mulNoOffBoard`) and `settleBoard` cover the gap settle. `mul_refines` covers the square; its conclusion now includes the row. `benchAddBoard_row` and `settleBoard` cover the bottom settle. `addBoard_row` and `mirrorHome_row` cover the take. `ontoFoldBoard_row` covers the onto multiply. `moveBandBoard_row` and `settleBoard` cover the slide.
 
-`final_cube_settle` says the board `tally_clear` returns has `base.baseRow`. That is `paintZero` of the list `unpark_rung` left, which `climb_row_cleared` names. On the open walk `OpenMatch.baseRow` is `paintedRow`. The check multiply and `chord_add_live` do not yet carry that row out to a `RunFrame`.
+`final_cube_settle` says the board `tally_clear` returns has `base.baseRow`. That is `paintZero` of the list `unpark_rung` left, which `climb_row_cleared` names. `final_cube_both` exports the same row. On the open walk `OpenMatch.baseRow` is `paintedRow`. The check multiply and `chord_add_live` do not yet carry that row out to a `RunFrame`.
 
 4202 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Only `RowHome` was elaborated; its sampled peak was 416080 kB VmHWM. Under 2 GB.
 
@@ -338,6 +338,8 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 4231 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1704148 kB VmHWM. Under 2 GB.
 
 4231 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1694052 kB VmHWM. Under 2 GB.
+
+4231 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1699444 kB VmHWM. Under 2 GB.
 
 ## Next
 

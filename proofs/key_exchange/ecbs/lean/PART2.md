@@ -315,7 +315,7 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 ## Next
 
-The `walk_chord` induction over a whole cell list: the board after `chordStep_of_live` has to be the next cell's frame, then the walk is `.ok` of Spec `walkGo`. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+The `walk_chord` induction over a whole cell list: the board after a live `chord_add_live` has to be the next cell's `RunFrame`, then the walk is `.ok` of Spec `walkGo`. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

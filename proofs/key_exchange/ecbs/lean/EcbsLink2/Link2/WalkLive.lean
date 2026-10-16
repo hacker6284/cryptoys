@@ -118,6 +118,46 @@ theorem chordStep_live_zero
   refine ⟨bF, ?_, hflag, hbench, hx0, hy1, walkStep_live_zero n k bench x y⟩
   exact chordStep_cube cells i toN b0 b bF hi hlen hz hml hfrob hfiti
 
+/-- A live zero cell whose move and slide rooms are one cube charge, not the
+    first cell's small envelope. `frobenius_affine_room` is that affine. -/
+theorem chordStep_live_zero_room
+    {b b0 : Ecbs.Board} {x y : List Nat}
+    {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
+    (cells : List Nat) (i toN : Nat)
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (hml : Ecbs.marker_lift b0 = .ok b)
+    (hyt : allTritList y) (hy : y.length = n) (hn0 : 0 < n)
+    (hs1 : 1 < script) (hfitU : FitsLen ((ctrl + 1) + 2)) (hfitC : FitsLen (cOps + 2))
+    (hspan : 3 * (n - 1) + cg < bench)
+    (h3 : FitsLen (3 * (n - 1))) (hnFit : FitsLen n) (hbenchFit : FitsLen bench)
+    (hnbL : n ≤ a.laneX.length) (hnb : n ≤ bench)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hMv : FitsLen (moves + cubeCharge n bench))
+    (hSl : FitsLen (slides + slideCharge n))
+    (hi : i ≤ toN) (hlen : cells.length = toN + 1)
+    (hz : cells[i]'(by omega) = 0)
+    (hfiti : FitsLen (i + 1)) :
+    ∃ bF,
+      chordStep (embed cells) (Int.ofNat toN) (Int.ofNat i, (b0, true)) =
+        (if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, (bF, true)))
+          else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), (bF, true)))) ∧
+      bF.sudo_5Board_9marker_on = true ∧
+      bF.sudo_5Board_8bench_on = false ∧
+      (∀ h0 : 0 < bF.sudo_5Board_4home.size,
+        bF.sudo_5Board_4home[0] = embed (fieldCube n k bench x)) ∧
+      (∀ h1 : 1 < bF.sudo_5Board_4home.size,
+        bF.sudo_5Board_4home[1] = embed (fieldCube n k bench y)) ∧
+      walkStep n k bench (x, y) true (x, y) 0 =
+        some (true, (fieldCube n k bench x, fieldCube n k bench y)) := by
+  obtain ⟨bF, hfrob, hflag, hbench, hx0, hy1⟩ :=
+    frobenius_affine_room a hyt hy hn0 hs1 hfitU hfitC hspan h3 hnFit hbenchFit
+      hnbL hnb hw0 hh0 hrR hrP hnE hkLe hgap hsm hnsm hMv hSl
+  refine ⟨bF, ?_, hflag, hbench, hx0, hy1, walkStep_live_zero n k bench x y⟩
+  exact chordStep_cube cells i toN b0 b bF hi hlen hz hml hfrob hfiti
+
 /-- A live white or red cell whose chord add returns the reroll flag.
     The emitted step returns `(live, false)` and turns the marker off.
     It does not advance to the next cell. -/

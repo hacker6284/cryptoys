@@ -730,6 +730,34 @@ theorem frobenius_affine_len
   exact frobenius_affine_marker a hyt hy hn0 hs1 hfitU hfitC hspan h3 hnFit hbenchFit
     hnbL hnb hw0 hh0 hrR hrP hnE hkLe hgap hsm hnsm hfit.1 hfit.2.1 hfit.2.2
 
+/-- The same affine once the cell already carries `FitsLen` of one cube charge
+    and one slide charge. The small envelope `moves ≤ n * (n + 1) + …` is the
+    first cell. A later cell passes the room it has left. -/
+theorem frobenius_affine_room
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (hyt : allTritList y) (hy : y.length = n) (hn0 : 0 < n)
+    (hs1 : 1 < script) (hfitU : FitsLen ((ctrl + 1) + 2)) (hfitC : FitsLen (cOps + 2))
+    (hspan : 3 * (n - 1) + cg < bench)
+    (h3 : FitsLen (3 * (n - 1))) (hnFit : FitsLen n) (hbenchFit : FitsLen bench)
+    (hnbL : n ≤ a.laneX.length) (hnb : n ≤ bench)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hMv : FitsLen (moves + cubeCharge n bench))
+    (hSl : FitsLen (slides + slideCharge n)) :
+    ∃ bF,
+      Ecbs.frobenius_affine b = .ok bF ∧
+      bF.sudo_5Board_9marker_on = true ∧
+      bF.sudo_5Board_8bench_on = false ∧
+      (∀ h0 : 0 < bF.sudo_5Board_4home.size,
+        bF.sudo_5Board_4home[0] = embed (fieldCube n k bench x)) ∧
+      (∀ h1 : 1 < bF.sudo_5Board_4home.size,
+        bF.sudo_5Board_4home[1] = embed (fieldCube n k bench y)) := by
+  have hfit := up_settle_fit a hMv hSl
+  exact frobenius_affine_marker a hyt hy hn0 hs1 hfitU hfitC hspan h3 hnFit hbenchFit
+    hnbL hnb hw0 hh0 hrR hrP hnE hkLe hgap hsm hnsm hfit.1 hfit.2.1 hfit.2.2
+
 end
 
 end EcbsLink2.Link2

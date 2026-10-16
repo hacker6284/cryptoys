@@ -1054,7 +1054,7 @@ theorem red_open_emit
         ((s.ctrl + 2 + 3 * s.tally + 1 : Nat) : Int) ∧
       bAdd.sudo_5Board_9tally_len = ((2 * s.tally + 1 : Nat) : Int) ∧
       bAdd.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        ((s.t0 + 2 * s.tally : Nat) : Int) ∧
+        ((max s.high (s.t0 + 2 * s.tally) : Nat) : Int) ∧
       bAdd.sudo_5Board_11parked_from =
         ((climbAt base.ladder0 base.R s.ridx : Nat) : Int) ∧
       bAdd.sudo_5Board_8rung_idx = ((s.ridx + 1 : Nat) : Int) ∧
@@ -1139,7 +1139,9 @@ theorem red_open_emit
     | nil => exact absurd rfl hrest
     | cons _ _ => simp
   have hRoom : s.t0 + 2 * s.tally ≤ base.control := h.openRoom hge
-  have hHighEq : s.high = s.t0 + s.tally - 1 := h.highTop hm
+  have hHighEq : s.t0 + s.tally - 1 ≤ s.high := by
+    rw [h.highTop]
+    exact Nat.le_max_right _ _
   obtain ⟨tmax0, hMax, hNote0⟩ := h.tmaxLt
   have hNote : tmax0 < 2 * s.tally := hNote0 hm
   have hdone2 : done.length + 2 ≤ base.R := by
@@ -1239,11 +1241,11 @@ theorem red_open_emit
     apply congrArg Int.ofNat
     omega
   have hdouble := tally_double_withPark bClearU xs xsP s.t0 s.tally (s.ctrl + s.tally)
-    (s.t0 + s.tally - 1) base.control tmax0 fromH ridxH
+    s.high base.control tmax0 fromH ridxH
     hm _hlenC _ht0C
     (by dsimp only [xs]; rw [paintRed_length, h.shape.rowLen]; exact hRoom)
     (by dsimp only [xsP]; rw [paintRed_length, afterPark_length, h.shape.rowLen]; exact hRoom)
-    hRed hRedP hZero hZeroP _hctrlN (by rw [_hhighC, hHighEq]) rfl
+    hRed hRedP hZero hZeroP _hctrlN _hhighC hHighEq
     _hctrlC hRoom hFitI hfitCU hfitCP hFitM (by rw [_hmaxC]; exact hMax) hNote
   have hClear0 := hClearEq
   rw [hctrlPark] at hClearEq
@@ -1252,7 +1254,7 @@ theorem red_open_emit
   let rowP := embed (paintOnes (paintOnes xsP s.t0 s.tally) (s.t0 + s.tally) s.tally)
   let lenD := Int.ofNat (2 * s.tally)
   let ctrlD := Int.ofNat (s.ctrl + s.tally + 2 * s.tally)
-  let highD := ((s.t0 + 2 * s.tally - 1 : Nat) : Int)
+  let highD := ((max s.high (s.t0 + 2 * s.tally - 1) : Nat) : Int)
   let maxD := Int.ofNat (2 * s.tally)
   let ctrlP := Int.ofNat (s.ctrl + s.tally + 2 + 2 * s.tally)
   have hcube := hcubeBoth rowD rowP lenD highD maxD ctrlD ctrlP fromH ridxH
@@ -1326,7 +1328,8 @@ theorem red_open_emit
     rfl
   have hAdd := tally_add_one_withPark
       (withTally bRed0 rowD lenD ctrlD highD maxD) s.t0 (2 * s.tally)
-      (s.t0 + 2 * s.tally - 1) base.control (s.ctrl + s.tally + 2 * s.tally) (2 * s.tally)
+      (max s.high (s.t0 + 2 * s.tally - 1)) base.control
+      (s.ctrl + s.tally + 2 * s.tally) (2 * s.tally)
       rowP fromH ridxH
       (by simp [withTally, lenD]) (by simp [withTally, ht0Red])
       (by
@@ -1337,7 +1340,7 @@ theorem red_open_emit
       hixP
       hzeroCell
       (by simp [withTally, _htierRed, _hctrlN]) hPast
-      (by simp [withTally, highD]) (by omega) hFitI
+      (by simp [withTally, highD]) hFitI
       (by
         have h1 : FitsLen (s.ctrl + 2 + 3 * s.tally + 1) := by
           have hpos : 1 ≤ 2 * s.tally :=
@@ -1352,6 +1355,11 @@ theorem red_open_emit
     apply congrArg (fun n : Nat => (n : Int))
     omega
   rw [hctrlOut] at hAdd
+  have hflat : max (max s.high (s.t0 + 2 * s.tally - 1)) (s.t0 + 2 * s.tally) =
+      max s.high (s.t0 + 2 * s.tally) := by
+    rw [Nat.max_assoc]
+    exact congrArg (max s.high) (Nat.max_eq_right (Nat.sub_le _ _))
+  rw [hflat] at hAdd
   have hprog :
       (do
           let b ← (do
@@ -1388,7 +1396,8 @@ theorem red_open_emit
               sudo_5Board_9tally_len := Int.ofNat (2 * s.tally + 1)
               sudo_5Board_4cost :=
                 { (withTally bRed0 rowD lenD ctrlD highD maxD).sudo_5Board_4cost with
-                    sudo_5Costs_15control_highest := ((s.t0 + 2 * s.tally : Nat) : Int)
+                    sudo_5Costs_15control_highest :=
+                      ((max s.high (s.t0 + 2 * s.tally) : Nat) : Int)
                     sudo_5Costs_4ctrl := Int.ofNat (s.ctrl + s.tally + 2 * s.tally + 1)
                     sudo_5Costs_9tally_max := Int.ofNat (2 * s.tally + 1) } }
           (rowP.set ⟨s.t0 + 2 * s.tally, hixP⟩ (1 : Int))
@@ -1640,7 +1649,9 @@ theorem red_open_k
       rw [← hridxM, ← hparkM] at hne
       exact hne
     · rw [hparkM, hhighM]
-      exact Nat.le_trans (Nat.le_of_lt h.parkBelow) (Nat.le_add_right s.t0 (2 * s.tally))
+      exact Nat.le_trans
+        (Nat.le_trans (Nat.le_of_lt h.parkBelow) (Nat.le_add_right s.t0 (2 * s.tally)))
+        (Nat.le_max_right _ _)
     · rw [hparkM]
       exact h.shape.park.parkIn
     · intro hneg
@@ -1667,7 +1678,9 @@ theorem red_open_k
         simpa [Int.toNat_ofNat] using hlt
       · rw [hhighM]
         simpa [Int.toNat_ofNat] using
-          Nat.le_trans (Nat.le_of_lt h.holeBelow) (Nat.le_add_right s.t0 (2 * s.tally))
+          Nat.le_trans
+            (Nat.le_trans (Nat.le_of_lt h.holeBelow) (Nat.le_add_right s.t0 (2 * s.tally)))
+            (Nat.le_max_right _ _)
       · have hne : hole ≠ climbAt base.ladder0 base.R (s.ridx + 1) := hStep.2.2
         rw [← hridxM] at hne
         simpa [Int.toNat_ofNat] using hne
@@ -1814,7 +1827,7 @@ theorem red_open_k
             (cubeTimes s.n s.k s.benchlen s.gap s.tally))) h3 hnleG
     · intro _
       rw [ht0M, htall, hhighM]
-      exact open_red_high s.t0 s.tally
+      exact Nat.le_trans (open_red_high s.t0 s.tally) (Nat.le_max_right _ _)
     · rw [ht0M, htall]
       exact open_red_row_fit s.t0 s.tally base.control (h.openRoom hge) base.fitControl
     · rw [htall]
@@ -2887,7 +2900,9 @@ theorem red_final_k
         simpa [Int.toNat_ofNat] using hlt
       · have hle : hole ≤ s.high := by
           have hhi : hole < s.t0 := h.holeBelow
-          have htop : s.high = s.t0 + s.tally - 1 := h.highTop hm
+          have htop : s.t0 + s.tally - 1 ≤ s.high := by
+            rw [h.highTop]
+            exact Nat.le_max_right _ _
           omega
         rw [hhighM]
         simpa [Int.toNat_ofNat] using hle
@@ -2971,7 +2986,8 @@ theorem red_final_k
       simpa [hgap, fieldCube, List.take_take] using htri
     · intro hpos
       rw [_ht0M, htall, hhighM]
-      exact Nat.le_of_eq (h.highTop (htall.symm ▸ hpos)).symm
+      rw [h.highTop]
+      exact Nat.le_max_right _ _
     · rw [htall]
       exact h.shape.peg.fitRow
     · rw [htall]

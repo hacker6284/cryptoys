@@ -128,7 +128,7 @@ theorem tally_double_len (b : Ecbs.Board) (xs : List Nat)
     (b' : Ecbs.Board) (h : Ecbs.tally_double b = .ok b') :
     b'.sudo_5Board_9tally_len = Int.ofNat (2 * m) := by
   have href := tally_double_refines b xs t0 m c0 high control tmax hm hLen hT0 hRow hRoom
-    hRed hZero hCtrlN hHigh hTop hCtrl hIn hfit hfitC hfitM hMax hNote
+    hRed hZero hCtrlN hHigh (Nat.le_of_eq hTop.symm) hCtrl hIn hfit hfitC hfitM hMax hNote
   rw [href] at h
   cases h
   rfl

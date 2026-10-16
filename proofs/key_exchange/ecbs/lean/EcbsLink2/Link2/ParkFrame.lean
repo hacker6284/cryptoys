@@ -464,7 +464,9 @@ theorem red_final_ge
         simpa [Int.toNat_ofNat] using hlt
       · have hle : hole ≤ s.high := by
           have hhi : hole < s.t0 := h.holeBelow
-          have htop : s.high = s.t0 + s.tally - 1 := h.highTop hm
+          have htop : s.t0 + s.tally - 1 ≤ s.high := by
+            rw [h.highTop]
+            exact Nat.le_max_right _ _
           omega
         rw [hhighM]
         simpa [Int.toNat_ofNat] using hle
@@ -543,7 +545,8 @@ theorem red_final_ge
       simpa [hgap, fieldCube, List.take_take] using htri
     · intro hpos
       rw [ht0M, htall, hhighM]
-      exact Nat.le_of_eq (h.highTop (htall.symm ▸ hpos)).symm
+      rw [h.highTop]
+      exact Nat.le_max_right _ _
     · rw [htall]
       exact h.shape.peg.fitRow
     · rw [htall]

@@ -489,6 +489,8 @@ private theorem finish_copy
       peak0 := raisedPeak pk
         (countHeld (bOff.sudo_5Board_4held.set ⟨5, by rw [lay.szD]; decide⟩ true) 7)
       tally0 := 1
+      tallyPos := by decide
+      high0 := fr.high
       R := tierR t
       mMax := rowRoom t
       mMax_le := by simpa [geomCap] using sat.room_le_geom
@@ -520,7 +522,7 @@ private theorem finish_copy
       mxSnap := Int.ofNat fr.mx }
   have hmatch : OpenMatch lay baseB := by
     refine ⟨rfl, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl,
-      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
     apply congrArg (fun occ => raisedPeak lay.peak occ)
     apply countHeld_congr
     apply congrArg (fun i => bOff.sudo_5Board_4held.set i true)

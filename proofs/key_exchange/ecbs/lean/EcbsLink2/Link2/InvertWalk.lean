@@ -116,6 +116,7 @@ structure OpenMatch {b : Ecbs.Board} {t : Spec.Tier} {xs : List Nat}
   tierSnap : base.tierSnap = embTier t
   markSnap : base.markSnap = Int.ofNat lay.mark
   mxSnap : base.mxSnap = Int.ofNat lay.mx
+  high0 : base.high0 = lay.high
 
 /-- The model at the first tally peg. The control counter is whatever the walk
     has already charged, plus the peg `tally_start` writes. -/
@@ -721,8 +722,10 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       peak := ⟨base.peak0, by rw [hpk, ← hm.peak0, ofNat_eq_natCast],
         Nat.le_max_left _ _⟩
       highTop := by
-        intro _
-        simp [openModel, entryModel]
+        have hle : base.high0 ≤ tallyOrigin t := by
+          rw [hm.high0]
+          exact Nat.le_of_lt lay.highLt
+        simp [openModel, entryModel, Nat.max_eq_right hle]
       parkBelow := by
         simp [openModel, entryModel]
         unfold tallyOrigin
@@ -1516,7 +1519,9 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
           tallyOrigin t ≤ high := by
         refine ⟨s'.high, hhighZ, ?_⟩
-        have hEq : s'.high = s'.t0 + s'.tally - 1 := hKpost.highTop hmt
+        have hEq : s'.t0 + s'.tally - 1 ≤ s'.high := by
+          rw [hKpost.highTop]
+          exact Nat.le_max_right _ _
         have ht0 : s'.t0 = tallyOrigin t := by
           have hmodel : s' = modelClimb (openModel t xs lay.ctrl) base.x hole (tierClimb t) := hs'
           rw [hmodel, modelClimb_t0]

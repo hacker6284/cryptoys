@@ -546,6 +546,14 @@ def climbTallyPrefix (tally : Nat) : List Nat → List Nat → Nat
 theorem climbTallyPrefix_nil (tally : Nat) (rest : List Nat) :
     climbTallyPrefix tally [] rest = tally := rfl
 
+theorem climbTallyPrefix_ge (tally : Nat) (done rest : List Nat) :
+    tally ≤ climbTallyPrefix tally done rest := by
+  induction done generalizing tally with
+  | nil => exact Nat.le_refl _
+  | cons r done ih =>
+    simp only [climbTallyPrefix]
+    exact Nat.le_trans (tallyAfter_ge tally r ((done ++ rest).isEmpty)) (ih _)
+
 theorem climbTallyPrefix_snoc (tally : Nat) (done rest : List Nat) (r : Nat) :
     climbTallyPrefix tally (done ++ [r]) rest =
       tallyAfter (climbTallyPrefix tally done (r :: rest)) r rest.isEmpty := by
@@ -680,6 +688,10 @@ structure ClimbBudget where
   ops0 : Nat
   peak0 : Nat
   tally0 : Nat
+  /-- The climb starts on a positive tally. Entry writes one white peg first. -/
+  tallyPos : 0 < tally0
+  /-- `control_highest` at that entry, before the tally pegs raise it. -/
+  high0 : Nat
   R : Nat
   mMax : Nat
   mMax_le : mMax ≤ (tally0 + 1) * 2 ^ R
@@ -1226,8 +1238,10 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   peak : ∃ (pk : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     pk ≤ max base.peak0 7
-  /-- The recorded high is the last peg of the current tally. -/
-  highTop : 0 < s.tally → s.high = s.t0 + s.tally - 1
+  /-- The recorded high is the entry mark until the tally grows past it,
+      then the last peg of the current tally. `0 < base.tally0` keeps the
+      tally positive, so the zero branch of `highMark` is not this state. -/
+  highTop : s.high = max base.high0 (s.t0 + s.tally - 1)
   /-- Park and the climb hole sit strictly before the tally. A rung's writes
       there do not reach the empty tail. -/
   parkBelow : s.parkAt < s.t0
@@ -1279,7 +1293,7 @@ structure ClimbInvKCore (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   peak : ∃ (pk : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     pk ≤ max base.peak0 7
-  highTop : 0 < s.tally → s.high = s.t0 + s.tally - 1
+  highTop : s.high = max base.high0 (s.t0 + s.tally - 1)
   parkBelow : s.parkAt < s.t0
   holeBelow : climbAt base.ladder0 base.R s.ridx < s.t0
   fromBelow : 0 ≤ s.fromHole → s.fromHole.toNat < s.t0
@@ -1457,44 +1471,53 @@ theorem ClimbInvK.moves_fit {done rest : List Nat} {b : Ecbs.Board} {s : ClimbMo
   exact ⟨mv, heq, rung_budget_fit base.moves0 done.length base.R
     (rungCharge base.n base.bench base.mMax) mv hk hle base.fitM⟩
 
-/-- `rungHigh` keeps "high = last peg of the tally" as the length grows. -/
-private theorem modelRung_highTop (s : ClimbModel) (x : List Nat) (rung hole : Nat)
-    (last : Bool) (hTop : 0 < s.tally → s.high = s.t0 + s.tally - 1) :
-    0 < (modelRung s x rung hole last).tally →
-      (modelRung s x rung hole last).high =
-        (modelRung s x rung hole last).t0 +
-          (modelRung s x rung hole last).tally - 1 := by
-  intro hpos
+/-- A rung keeps `high = max high0 (last tally peg)`. The tally is already
+    positive, so doubling it stays positive and the new hole is past the old end. -/
+private theorem modelRung_highTop (s : ClimbModel) (x : List Nat) (rung hole h0 : Nat)
+    (last : Bool) (hm : 0 < s.tally)
+    (hTop : s.high = max h0 (s.t0 + s.tally - 1)) :
+    (modelRung s x rung hole last).high =
+      max h0 ((modelRung s x rung hole last).t0 +
+        (modelRung s x rung hole last).tally - 1) := by
   have ht : (modelRung s x rung hole last).tally = tallyAfter s.tally rung last :=
     modelRung_tally s x rung hole last
   have hh : (modelRung s x rung hole last).high =
       rungHigh s.high s.t0 s.tally rung last := by
     simp [modelRung]
-  have h0 : (modelRung s x rung hole last).t0 = s.t0 := by
+  have h0t : (modelRung s x rung hole last).t0 = s.t0 := by
     simp [modelRung]
-  rw [ht] at hpos
-  rw [hh, h0, ht]
+  rw [hh, h0t, ht, hTop]
   by_cases hL : last
   · have hta : tallyAfter s.tally rung last = s.tally := by
       simp [tallyAfter, hL]
-    have hhi : rungHigh s.high s.t0 s.tally rung last = s.high := by
+    have hhi : rungHigh (max h0 (s.t0 + s.tally - 1)) s.t0 s.tally rung last =
+        max h0 (s.t0 + s.tally - 1) := by
       simp [rungHigh, hL]
-    rw [hta] at hpos
     rw [hhi, hta]
-    exact hTop hpos
   · by_cases hR : rung = 2
     · have hta : tallyAfter s.tally rung last = 2 * s.tally + 1 := by
         simp [tallyAfter, hL, hR]
-      have hhi : rungHigh s.high s.t0 s.tally rung last = s.t0 + 2 * s.tally := by
+      have hhi : rungHigh (max h0 (s.t0 + s.tally - 1)) s.t0 s.tally rung last =
+          max (max h0 (s.t0 + s.tally - 1)) (s.t0 + 2 * s.tally) := by
         simp [rungHigh, hL, hR]
-      rw [hhi, hta]
-      omega
+      have hle : s.t0 + s.tally - 1 ≤ s.t0 + 2 * s.tally := by omega
+      have hmax : max (max h0 (s.t0 + s.tally - 1)) (s.t0 + 2 * s.tally) =
+          max h0 (s.t0 + 2 * s.tally) := by
+        rw [Nat.max_assoc]
+        exact congrArg (max h0) (Nat.max_eq_right hle)
+      have hend : s.t0 + (2 * s.tally + 1) - 1 = s.t0 + 2 * s.tally := by omega
+      rw [hhi, hta, hmax, hend]
     · have hta : tallyAfter s.tally rung last = 2 * s.tally := by
         simp [tallyAfter, hL, hR]
-      have hhi : rungHigh s.high s.t0 s.tally rung last =
-          s.t0 + 2 * s.tally - 1 := by
+      have hhi : rungHigh (max h0 (s.t0 + s.tally - 1)) s.t0 s.tally rung last =
+          max (max h0 (s.t0 + s.tally - 1)) (s.t0 + 2 * s.tally - 1) := by
         simp [rungHigh, hL, hR]
-      rw [hhi, hta]
+      have hle : s.t0 + s.tally - 1 ≤ s.t0 + 2 * s.tally - 1 := by omega
+      have hmax : max (max h0 (s.t0 + s.tally - 1)) (s.t0 + 2 * s.tally - 1) =
+          max h0 (s.t0 + 2 * s.tally - 1) := by
+        rw [Nat.max_assoc]
+        exact congrArg (max h0) (Nat.max_eq_right hle)
+      rw [hhi, hta, hmax]
 
 /-- Holes at or past the new tally are not written by the rung. Park, the climb
     hole, and an unpark source all sit before `t0`. -/
@@ -1713,7 +1736,12 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       shape := hshape
       ops := ?_
       peak := ?_
-      highTop := modelRung_highTop s x r hole rest.isEmpty h.highTop
+      highTop := by
+        have hmt : 0 < s.tally :=
+          Nat.lt_of_lt_of_le base.tallyPos (by
+            rw [h.htally0]
+            exact climbTallyPrefix_ge base.tally0 done (r :: rest))
+        exact modelRung_highTop s x r hole base.high0 rest.isEmpty hmt h.highTop
       parkBelow := ?_
       holeBelow := ?_
       fromBelow := ?_
@@ -2011,7 +2039,12 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       slides := ?_
       ops := ?_
       peak := ?_
-      highTop := modelRung_highTop s x r hole rest.isEmpty h.highTop
+      highTop := by
+        have hmt : 0 < s.tally :=
+          Nat.lt_of_lt_of_le base.tallyPos (by
+            rw [h.htally0]
+            exact climbTallyPrefix_ge base.tally0 done (r :: rest))
+        exact modelRung_highTop s x r hole base.high0 rest.isEmpty hmt h.highTop
       parkBelow := ?_
       holeBelow := ?_
       fromBelow := ?_

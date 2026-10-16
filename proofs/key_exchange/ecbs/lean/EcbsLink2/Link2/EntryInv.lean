@@ -356,6 +356,8 @@ def entryBudget (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
   ops0 := 1
   peak0 := 2
   tally0 := 1
+  tallyPos := by decide
+  high0 := 0
   R := tierR t
   mMax := rowRoom t
   mMax_le := by simpa [geomCap] using sat.room_le_geom
@@ -967,8 +969,10 @@ theorem entry_climbInv (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
         · simp [entryBudget]
           omega
       highTop := by
-        intro _
-        simp [entryModel]
+        show (entryModel t xs).high =
+          max (entryBudget t hOk xs hx sat hR lay).high0
+            ((entryModel t xs).t0 + (entryModel t xs).tally - 1)
+        simp [entryModel, entryBudget, Nat.max_eq_right (Nat.zero_le _)]
       parkBelow := by
         simp [entryModel]
         unfold tallyOrigin

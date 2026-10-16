@@ -226,8 +226,9 @@ theorem red_open_finish
       rw [← hridxM, ← hparkM] at hne
       exact hne
     · rw [hparkM, hhighM]
-      have hhi : s.parkAt < s.t0 := h.parkBelow
-      omega
+      exact Nat.le_trans
+        (Nat.le_trans (Nat.le_of_lt h.parkBelow) (Nat.le_add_right s.t0 (2 * s.tally)))
+        (Nat.le_max_right _ _)
     · rw [hparkM]
       exact h.shape.park.parkIn
     · intro hneg
@@ -251,8 +252,9 @@ theorem red_open_finish
       · rw [Int.toNat_ofNat, ← h.shape.rowLen]
         exact h.shape.park.holeLt
       · rw [hhighM, Int.toNat_ofNat]
-        have hhi : hole < s.t0 := h.holeBelow
-        omega
+        exact Nat.le_trans
+          (Nat.le_trans (Nat.le_of_lt h.holeBelow) (Nat.le_add_right s.t0 (2 * s.tally)))
+          (Nat.le_max_right _ _)
       · rw [Int.toNat_ofNat, hridxM]
         exact hStep.2.2
     · intro _
@@ -398,9 +400,9 @@ theorem red_open_finish
           (fieldMul s.n s.k s.benchlen s.gap
             (cubeTimes s.n s.k s.benchlen s.gap s.tally))) hspan3 hnleB
       simpa [fieldCube, List.take_take] using htri
-    · intro hpos
+    · intro _
       rw [ht0M, htall, hhighM]
-      omega
+      exact Nat.le_trans (open_red_high s.t0 s.tally) (Nat.le_max_right _ _)
     · rw [ht0M, htall]
       exact FitsLen.of_le base.fitControl (by omega)
     · rw [htall]
@@ -506,7 +508,7 @@ theorem red_open_ge
   let rowOut := embed (paintOnes (paintOnes xsP s.t0 s.tally) (s.t0 + s.tally) s.tally)
   let lenD := Int.ofNat (2 * s.tally)
   let ctrlIn := Int.ofNat (c0 + 2 * s.tally)
-  let highD := ((s.t0 + 2 * s.tally - 1 : Nat) : Int)
+  let highD := ((max s.high (s.t0 + 2 * s.tally - 1) : Nat) : Int)
   let maxD := Int.ofNat (2 * s.tally)
   let ctrlOut := Int.ofNat (c0 + 2 + 2 * s.tally)
   let V := Classical.choice (red_open_idents h hM hS hge hm hT hhome hxLen hxT)
@@ -550,7 +552,9 @@ theorem red_open_ge
     | nil => exact absurd rfl hrest
     | cons _ _ => simp
   have hRoom : s.t0 + 2 * s.tally ≤ base.control := h.openRoom hgeLen
-  have hHighEq : s.high = s.t0 + s.tally - 1 := h.highTop hm
+  have hHighEq : s.t0 + s.tally - 1 ≤ s.high := by
+    rw [h.highTop]
+    exact Nat.le_max_right _ _
   obtain ⟨tmax0, hMax0, hNote0⟩ := h.tmaxLt
   have hNote : tmax0 < 2 * s.tally := hNote0 hm
   have hdone2 : done.length + 2 ≤ base.R := by
@@ -626,12 +630,12 @@ theorem red_open_ge
   have hctrlB : bIdle.sudo_5Board_1t.sudo_4Tier_7control = (base.control : Int) := by
     rw [htierE, h.shape.tierC]
   have htallD := tally_double_withPark bIdle xs xsP s.t0 s.tally c0
-    (s.t0 + s.tally - 1) base.control tmax0 fromH ridxH
+    s.high base.control tmax0 fromH ridxH
     hm hlenE ht0E
     (by simp [xs, paintRed_length, afterPark_length]; exact hRowLen)
     (by simp [xsP, paintRed_length, afterPark_length]; exact hRowLen)
     hRedIdle hRedPark hZeroIdle hZeroPark hctrlB
-    (by rw [hhighE, hHighEq]) rfl hctrlIdle hRoom
+    hhighE hHighEq hctrlIdle hRoom
     (double_index_fit_le hRoom base.fitControl).1
     (FitsLen.of_le hfits.1 (by omega))
     (FitsLen.of_le hfits.2.1 (by omega))
@@ -692,7 +696,8 @@ theorem red_open_ge
     simp only [ctrlOut, Int.ofNat_eq_coe]
     exact congrArg (fun n : Nat => (n : Int)) (by omega)
   have hadd := tally_add_one_withPark bTall s.t0 (2 * s.tally)
-    (s.t0 + 2 * s.tally - 1) base.control (c0 + 2 * s.tally) (2 * s.tally)
+    (max s.high (s.t0 + 2 * s.tally - 1)) base.control
+    (c0 + 2 * s.tally) (2 * s.tally)
     rowOut fromH ridxH
     (by
       unfold bTall lenD
@@ -709,7 +714,6 @@ theorem red_open_ge
     (by
       unfold bTall highD
       rw [withTally_high])
-    (by omega)
     (double_index_fit hPastC base.fitControl).1
     (by
       have hEq : (c0 + 2 * s.tally) + 2 + 1 = s.ctrl + 4 + 3 * s.tally + 1 := by
@@ -723,12 +727,18 @@ theorem red_open_ge
       simp only [Int.ofNat_eq_coe])
     (by omega)
   rw [← hframeAdd] at hadd
+  have hflat : max (max s.high (s.t0 + 2 * s.tally - 1)) (s.t0 + 2 * s.tally) =
+      max s.high (s.t0 + 2 * s.tally) := by
+    rw [Nat.max_assoc]
+    exact congrArg (max s.high) (Nat.max_eq_right (Nat.sub_le _ _))
+  rw [hflat] at hadd
   let bRec :=
     { bTall with
         sudo_5Board_3row := bTall.sudo_5Board_3row.set ⟨s.t0 + 2 * s.tally, hixTall⟩ (1 : Int)
         sudo_5Board_9tally_len := Int.ofNat (2 * s.tally + 1)
         sudo_5Board_4cost := { bTall.sudo_5Board_4cost with
-          sudo_5Costs_15control_highest := ((s.t0 + 2 * s.tally : Nat) : Int)
+          sudo_5Costs_15control_highest :=
+            ((max s.high (s.t0 + 2 * s.tally) : Nat) : Int)
           sudo_5Costs_4ctrl := Int.ofNat (c0 + 2 * s.tally + 1)
           sudo_5Costs_9tally_max := Int.ofNat (2 * s.tally + 1) } }
   let rowF := rowOut.set ⟨s.t0 + 2 * s.tally, hixOut⟩ (1 : Int)
@@ -1030,7 +1040,7 @@ theorem red_open_ge
     unfold bRec
     rfl
   have hhiRec : bRec.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-      ((s.t0 + 2 * s.tally : Nat) : Int) := by
+      ((max s.high (s.t0 + 2 * s.tally) : Nat) : Int) := by
     unfold bRec
     rfl
   have ht0Rec : bRec.sudo_5Board_6tally0 = bRedC.sudo_5Board_6tally0 := by

@@ -111,13 +111,15 @@ theorem marker_room_left (mark script step fuel : Nat)
   have hsplit : step * (fuel + 1) = step * fuel + step := by rw [Nat.mul_succ]
   omega
 
-/-- At the end of the ladder the recorded high is the last tally peg, so it
-    is not below the tally origin. -/
+/-- At the end of the ladder the recorded high is at least the last tally peg,
+    so it is not below the tally origin. -/
 theorem climb_high_ge
     {done : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
     (h : ClimbInvK done [] b s base) (hm : 0 < s.tally) :
     s.t0 ≤ s.high ∧ ¬ s.high < s.t0 := by
-  have hEq : s.high = s.t0 + s.tally - 1 := h.highTop hm
+  have hge : s.t0 + s.tally - 1 ≤ s.high := by
+    rw [h.highTop]
+    exact Nat.le_max_right _ _
   omega
 
 /-- The board `tally_clear` leaves still holds that high. `RunFrame.highLt`
@@ -256,9 +258,9 @@ theorem tally_start_again (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
 
 /-- A later cell does not enter under `RunFrame.highLt`. Once the mark is at or
     above the origin and `tally_max` is already positive, `tally_start` writes
-    the white peg and leaves `control_highest`. `ClimbInvK.highTop` still asks
-    for `high = t0 + tally - 1` on every later rung, and this start does not
-    give that equality. -/
+    the white peg and leaves `control_highest`. `ClimbInvK.highTop` is
+    `high = max h0 (t0 + tally - 1)`. After this start the tally is `1` and
+    the high is still `h0`, and `t0 ≤ h0` makes that max `h0`. -/
 theorem later_climb_entry (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
     (hLen0 : b.sudo_5Board_9tally_len = 0)
     (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))

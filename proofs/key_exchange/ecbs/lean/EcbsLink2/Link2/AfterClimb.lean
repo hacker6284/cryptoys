@@ -686,8 +686,8 @@ theorem final_cube_settle
     rw [hlenRow] at hroom
     exact hroom
   have hTop : s.t0 + s.tally - 1 ≤ s.high := by
-    rw [h.highTop hm]
-    exact Nat.le_refl _
+    rw [h.highTop]
+    exact Nat.le_max_right _ _
   have hclear := tally_clear_refines bOut row s.t0 s.tally (s.ctrl + 2) s.high base.control
     hm hlenOut ht0Out hrowOut hroom
     (by rw [htierOut]; exact h.shape.tierC)

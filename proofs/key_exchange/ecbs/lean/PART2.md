@@ -277,9 +277,18 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 4158 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 991828 kB VmHWM. The rebuild that re-elaborated ChordLay after the high conjunct peaked at 1594024 kB. Both are under 2 GB.
 
+## Done in the climb high
+
+- `ClimbBudget` carries `high0` and `tallyPos` (`0 < tally0`). `ClimbInvK.highTop` and `ClimbInvKCore.highTop` are `s.high = max base.high0 (s.t0 + s.tally - 1)`. `PegRead.top` is the lower bound the reads use, `t0 + tally - 1 ≤ high`.
+- `rungHigh` is the max of the previous high and the new hole. A final rung keeps the high. A non-final white hole is `t0 + 2 * tally - 1`. A non-final red hole is `t0 + 2 * tally`. `set_control` keeps the recorded high when that hole does not beat it. This counter is not a Spec result. `walkStep`, `chordAdd`, and the inverse polynomial do not read it. It feeds the cost field and the next rung's `set_control` test.
+- `tally_lay_keep`, `tally_add_one_keep`, `tally_add_one_mark`. Whitening needs only `t0 + m - 1 ≤ high`. The double and the extra peg return `max` of the current high and the new hole. `modelRung_highTop` and `climbTallyPrefix_ge` carry that max through a successor.
+- The first cell is the case `high0 ≤ t0`: `entryBudget.high0 = 0`, and the walk copy uses `lay.high` under `RunFrame.highLt`. `open_climb` and `chord_add_live` still enter through `tally_start_raise`, which sets the high to `tallyOrigin`. `later_climb_entry` (`t0 ≤ h0`, `tally_start_again` leaves the high) is not yet an instance of those two theorems.
+
+4177 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1702088 kB VmHWM. Under 2 GB.
+
 ## Next
 
-The climb body after `later_climb_entry` is still the equality `highTop`. `set_control` keeps the recorded high when the new hole does not beat it, and `rungHigh` replaces that high with `t0 + 2 * tally` on a non-final rung. A second live white or red cell cannot call `chord_add_live` or `open_climb` unchanged. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Re-prove `open_climb` and `chord_add_live` from an entry high `h0`. The first cell (`RunFrame.highLt`, so `h0 < t0`, and the max is `t0 + tally - 1`) and `later_climb_entry` (`t0 ≤ h0`) are both instances. Keep the old statements as corollaries where something still calls them. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

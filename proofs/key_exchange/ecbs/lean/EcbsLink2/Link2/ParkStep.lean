@@ -1571,7 +1571,9 @@ theorem white_final_ge
         simpa [Int.toNat_ofNat] using hlt
       · have hle : hole ≤ s.high := by
           have hhi : hole < s.t0 := h.holeBelow
-          have htop : s.high = s.t0 + s.tally - 1 := h.highTop hm
+          have htop : s.t0 + s.tally - 1 ≤ s.high := by
+            rw [h.highTop]
+            exact Nat.le_max_right _ _
           omega
         rw [hhighM]
         simpa [Int.toNat_ofNat] using hle
@@ -1669,7 +1671,8 @@ theorem white_final_ge
       exact htri
     · intro hpos
       rw [ht0M, htall, hhighM]
-      exact Nat.le_of_eq (h.highTop (htall.symm ▸ hpos)).symm
+      rw [h.highTop]
+      exact Nat.le_max_right _ _
     · rw [ht0M, htall]; exact h.shape.peg.fitRow
     · rw [htall]; exact h.shape.peg.fitTall
     · rw [hctrlM, htall]; exact hfits.2.2
@@ -1802,7 +1805,9 @@ theorem white_open_ge
     | nil => exact absurd rfl hrest
     | cons _ _ => simp
   have hRoom : s.t0 + 2 * s.tally ≤ base.control := h.openRoom hgeLen
-  have hHighEq : s.high = s.t0 + s.tally - 1 := h.highTop hm
+  have hHighEq : s.t0 + s.tally - 1 ≤ s.high := by
+    rw [h.highTop]
+    exact Nat.le_max_right _ _
   obtain ⟨tmax0, hMax, hNote0⟩ := h.tmaxLt
   have hNote : tmax0 < 2 * s.tally := hNote0 hm
   have hdone2 : done.length + 2 ≤ base.R := by
@@ -1870,12 +1875,12 @@ theorem white_open_ge
   have hctrlN : bIdle.sudo_5Board_1t.sudo_4Tier_7control = (base.control : Int) := by
     rw [htierE, h.shape.tierC]
   have htallD := tally_double_withPark bIdle xs xsP s.t0 s.tally c0
-    (s.t0 + s.tally - 1) base.control tmax0 ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1))
+    s.high base.control tmax0 ((hole : Nat) : Int) (Int.ofNat (s.ridx + 1))
     hm hlenE ht0E
     (by simp [xs, paintRed_length, afterPark_length]; exact hRowLen)
     (by simp [xsP, paintRed_length, afterPark_length]; exact hRowLen)
     hRedIdle hRedPark hZeroIdle hZeroPark hctrlN
-    (by rw [hhighE, hHighEq]) rfl hctrlIdle hRoom hFitI
+    hhighE hHighEq hctrlIdle hRoom hFitI
     (FitsLen.of_le hfits.1 (by omega))
     (FitsLen.of_le hfits.2.1 (by omega))
     hFitM (htmaxE.trans hMax) hNote
@@ -1892,7 +1897,8 @@ theorem white_open_ge
         sudo_5Board_9tally_len := Int.ofNat (2 * s.tally)
         sudo_5Board_4cost := { bIdle.sudo_5Board_4cost with
           sudo_5Costs_4ctrl := Int.ofNat (c0 + 2 * s.tally)
-          sudo_5Costs_15control_highest := ((s.t0 + 2 * s.tally - 1 : Nat) : Int)
+          sudo_5Costs_15control_highest :=
+            ((max s.high (s.t0 + 2 * s.tally - 1) : Nat) : Int)
           sudo_5Costs_9tally_max := Int.ofNat (2 * s.tally) } }
   have hmvIn : bIn.sudo_5Board_4cost.sudo_5Costs_5moves =
       bIdle.sudo_5Board_4cost.sudo_5Costs_5moves := rfl
@@ -2073,7 +2079,8 @@ theorem white_open_ge
         simpa [Int.toNat_ofNat] using hlt
       · rw [hhighM]
         have hhi : hole < s.t0 := h.holeBelow
-        simpa [Int.toNat_ofNat] using (by omega : hole ≤ s.t0 + 2 * s.tally - 1)
+        have hle : hole ≤ s.t0 + 2 * s.tally - 1 := by omega
+        simpa [Int.toNat_ofNat] using Nat.le_trans hle (Nat.le_max_right _ _)
       · have hne : hole ≠ climbAt base.ladder0 base.R (s.ridx + 1) := hStep.2.2
         rw [← hridxM] at hne
         simpa [Int.toNat_ofNat] using hne
@@ -2219,9 +2226,9 @@ theorem white_open_ge
         fitN := ?_
         fitBn := ?_
         fit3 := ?_ }
-    · intro hpos
+    · intro _
       rw [ht0M, htall, hhighM]
-      omega
+      exact Nat.le_max_right _ _
     · rw [ht0M, htall]; exact hFitI
     · rw [htall]; exact hFitM
     · rw [hctrlM, htall]; exact hfits.2.2.2

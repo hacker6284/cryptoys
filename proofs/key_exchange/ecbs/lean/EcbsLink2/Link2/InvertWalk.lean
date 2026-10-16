@@ -799,7 +799,14 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         intro h
         simp [openModelAt, openModel, entryModel] at h
       rowHome := by
-        simpa [openModelAt, openModel, entryModel, hm.baseRow] using entry_row_home t sat }
+        simpa [openModelAt, openModel, entryModel, hm.baseRow] using entry_row_home t sat
+      blankTail := by
+        intro j hj hix
+        have hgt : tallyOrigin t < j := by
+          simpa [openModelAt, openModel, entryModel] using hj
+        have hpast := entry_past t j hgt
+          (by simpa [openModelAt, openModel, entryModel] using hix)
+        simpa [openModelAt, openModel, entryModel] using hpast }
 
 /-- `Ecbs.invert` on an open walk board is the climb of that tally board. -/
 theorem open_invert (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)

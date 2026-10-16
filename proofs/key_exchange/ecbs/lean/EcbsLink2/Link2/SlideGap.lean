@@ -1059,7 +1059,8 @@ theorem climbCore_slideGap {done rest : List Nat} {b : Ecbs.Board}
       parkEq := h.parkEq
       origin := h.origin
       fromNePark := h.fromNePark
-      rowHome := h.rowHome }
+      rowHome := h.rowHome
+      blankTail := h.blankTail }
 
 /-- The padded bench list has length `bench` once `n ≤ bench`. -/
 theorem bench_pad_len (gap : List Nat) (n bench : Nat)

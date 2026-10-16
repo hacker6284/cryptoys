@@ -1084,7 +1084,12 @@ theorem entry_climbInv (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
       fromNePark := by
         intro h
         simp [entryModel] at h
-      rowHome := by simpa [entryModel, entryBudget] using entry_row_home t sat }
+      rowHome := by simpa [entryModel, entryBudget] using entry_row_home t sat
+      blankTail := by
+        intro j hj hix
+        have hgt : tallyOrigin t < j := by simpa [entryModel] using hj
+        have hpast := entry_past t j hgt (by simpa [entryModel] using hix)
+        simpa [entryModel] using hpast }
 
 /-- Park sits on the cell just after the ladder: `ladder0 + R`. -/
 theorem entry_park_top (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)

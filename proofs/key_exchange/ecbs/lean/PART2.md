@@ -319,15 +319,19 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 `ClimbBudget.baseRow` is that painted row. `basePark` and `baseZero` say the park hole and every hole from the origin on are empty. `ClimbInvK.rowHome` is the agreement, carried by `rowHome_carry` (`rowHome_rung`) at each rung. `parkEq` and `origin` name the park hole and the tally origin. `fromNePark` says a parked source is not the park hole. Entry and the open walk both start from `entry_row_home`.
 
-The blank tail past the final tally, and the cube, check multiply, and chord tail leaving that restored row, are not proved. The board after `chord_add_live` is not yet the next `RunFrame`.
+`ClimbInvK.blankTail`: every hole at and after `t0 + tally` is empty. `rungRow_past` keeps it, because a rung writes only inside the length it leaves. At entry the tally is one peg, so the tail is `entry_past`. `climb_row_cleared` is `rowHome_clear` on that invariant: unpark and empty the current tally, and the row is `base.baseRow`. At the end of the ladder the current tally is the final one.
+
+The cube, the check multiply, and the chord tail are not yet shown to leave that row on the board. The board after `chord_add_live` is not yet the next `RunFrame`.
 
 4202 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Only `RowHome` was elaborated; its sampled peak was 416080 kB VmHWM. Under 2 GB.
 
 4219 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded after `RowHome` was added to the climb invariant. Under 2 GB.
 
+4224 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1698208 kB VmHWM. Under 2 GB.
+
 ## Next
 
-Discharge `rowHome_clear`'s blank tail, then show the final cube, the check multiply, and the chord tail leave that restored row. The board `chord_add_live` returns is then the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base). Chain that lemma to `chordStep_open` by `obtain` in the induction step. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+Show the final cube, the check multiply, and the chord tail leave the restored row (projection lemmas). The board `chord_add_live` returns is then the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base). Chain that lemma to `chordStep_open` by `obtain` in the induction step. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

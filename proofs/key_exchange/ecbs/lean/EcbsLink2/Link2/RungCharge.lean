@@ -353,6 +353,12 @@ theorem tallyAfter_ge (tally rung : Nat) (last : Bool) :
   unfold tallyAfter
   by_cases hL : last <;> by_cases hR : rung = 2 <;> simp [hL, hR] <;> omega
 
+theorem tallyAfter_steps (tally colour : Nat) (last : Bool) :
+    tallyAfter tally colour last =
+      if last then tally else if colour = 2 then 2 * tally + 1 else 2 * tally := by
+  unfold tallyAfter
+  by_cases hL : last <;> by_cases hR : colour = 2 <;> simp [hL, hR]
+
 theorem paintOnes_get_before (xs : List Nat) (start k j : Nat)
     (hj : j < start) (hlen : j < xs.length) :
     (paintOnes xs start k)[j]'(by rw [paintOnes_length]; exact hlen) = xs[j] := by
@@ -1293,6 +1299,9 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   /-- Below the origin the row is `base.baseRow`, with at most one rung parked.
       `rowHome_rung` is the step. -/
   rowHome : RowHome s.row base.baseRow s.parkAt s.fromHole s.t0
+  /-- Holes at and after the current tally are empty. A rung writes only inside
+      the length it leaves, so this tail stays empty. -/
+  blankTail : ∀ j, s.t0 + s.tally ≤ j → ∀ hj : j < s.row.length, s.row[j]'hj = 0
 
 /-- `ClimbInvK` without the absolute move and slide bounds. A bench-start rung
     slides `2 · pegs` onto the counter before the home program, so those two
@@ -1334,6 +1343,7 @@ structure ClimbInvKCore (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   origin : s.t0 = base.ladder0 + base.R + 1
   fromNePark : 0 ≤ s.fromHole → s.fromHole.toNat ≠ s.parkAt
   rowHome : RowHome s.row base.baseRow s.parkAt s.fromHole s.t0
+  blankTail : ∀ j, s.t0 + s.tally ≤ j → ∀ hj : j < s.row.length, s.row[j]'hj = 0
 
 theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
     {base : ClimbBudget} (h : ClimbInvK done rest b s base) :
@@ -1366,7 +1376,8 @@ theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel
     parkEq := h.parkEq
     origin := h.origin
     fromNePark := h.fromNePark
-    rowHome := h.rowHome }
+    rowHome := h.rowHome
+    blankTail := h.blankTail }
 
 theorem ClimbInvKCore.tally_le {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
     {base : ClimbBudget} (h : ClimbInvKCore done rest b s base)
@@ -1822,7 +1833,22 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       fromNePark := by
         intro _hF
         simpa [modelRung] using hnePark
-      rowHome := rowHome_carry h hAt }
+      rowHome := rowHome_carry h hAt
+      blankTail := by
+        intro j hj hix
+        have hnew : s.t0 + tallyAfter s.tally r rest.isEmpty ≤ j := by
+          simpa [modelRung, invRung_tally] using hj
+        have hold : s.t0 + s.tally ≤ j :=
+          Nat.le_trans (Nat.add_le_add_left (tallyAfter_ge s.tally r rest.isEmpty) s.t0) hnew
+        have hlen0 : j < s.row.length := by simpa [modelRung, rungRow_length] using hix
+        have hzero := h.blankTail j hold hlen0
+        have hfrom : s.fromHole < 0 ∨ s.fromHole.toNat < s.t0 := by
+          by_cases hF : 0 ≤ s.fromHole
+          · exact Or.inr (h.fromBelow hF)
+          · exact Or.inl (by omega)
+        have hrow := rungRow_past s.row s.fromHole s.parkAt hole s.t0 s.tally r j
+          rest.isEmpty h.parkBelow (by rw [hAt]; exact h.holeBelow) hfrom hnew hlen0
+        simpa [modelRung] using hrow.trans hzero }
   · simp [modelRung, h.idx, List.length_append]
   · simp [modelRung, h.hn]
   · simp [modelRung, h.hbench]
@@ -2130,7 +2156,22 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       fromNePark := by
         intro _hF
         simpa [modelRung] using hnePark
-      rowHome := rowHome_carry h.toCore hAt }
+      rowHome := rowHome_carry h.toCore hAt
+      blankTail := by
+        intro j hj hix
+        have hnew : s.t0 + tallyAfter s.tally r rest.isEmpty ≤ j := by
+          simpa [modelRung, invRung_tally] using hj
+        have hold : s.t0 + s.tally ≤ j :=
+          Nat.le_trans (Nat.add_le_add_left (tallyAfter_ge s.tally r rest.isEmpty) s.t0) hnew
+        have hlen0 : j < s.row.length := by simpa [modelRung, rungRow_length] using hix
+        have hzero := h.blankTail j hold hlen0
+        have hfrom : s.fromHole < 0 ∨ s.fromHole.toNat < s.t0 := by
+          by_cases hF : 0 ≤ s.fromHole
+          · exact Or.inr (h.fromBelow hF)
+          · exact Or.inl (by omega)
+        have hrow := rungRow_past s.row s.fromHole s.parkAt hole s.t0 s.tally r j
+          rest.isEmpty h.parkBelow (by rw [hAt]; exact h.holeBelow) hfrom hnew hlen0
+        simpa [modelRung] using hrow.trans hzero }
   · simp [modelRung, h.idx, List.length_append]
   · simp [modelRung, h.hn]
   · simp [modelRung, h.hbench]
@@ -2456,5 +2497,30 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
         omega
     simpa [Int.toNat_ofNat] using hdec
 
+/-- Unpark, then empty the current tally. The row is the painted ladder.
+    At the end of the ladder the current tally is the final one, so this is
+    `rowHome_clear` on that board. -/
+theorem climb_row_cleared
+    {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done rest b s base) :
+    paintZero (unparkList s.row s.fromHole s.parkAt) s.t0 s.tally = base.baseRow := by
+  have hroom : s.t0 + s.tally ≤ s.row.length :=
+    Nat.le_trans (Nat.add_le_add_left h.finalLe s.t0) h.tailFit
+  have hzero : ∀ j (hj : s.t0 ≤ j) (hp : j < base.baseRow.length),
+      base.baseRow[j]'hp = 0 := by
+    intro j hj hp
+    have hge : base.ladder0 + base.R + 1 ≤ j := by rw [← h.origin]; exact hj
+    have hd := base.baseZero j hge
+    unfold List.getD at hd
+    rw [List.get?_eq_getElem?, List.getElem?_eq_getElem hp] at hd
+    simpa using hd
+  have hpark0 : base.baseRow[s.parkAt]'h.rowHome.parkLt = 0 := by
+    have hd := base.basePark
+    rw [← h.parkEq] at hd
+    unfold List.getD at hd
+    rw [List.get?_eq_getElem?, List.getElem?_eq_getElem h.rowHome.parkLt] at hd
+    simpa using hd
+  exact rowHome_clear s.row base.baseRow s.parkAt s.fromHole s.t0 s.tally
+    h.rowHome h.parkBelow h.fromBelow h.fromNePark hpark0 hzero h.blankTail hroom
 
 end EcbsLink2.Link2

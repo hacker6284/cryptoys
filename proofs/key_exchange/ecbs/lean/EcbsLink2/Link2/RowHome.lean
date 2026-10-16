@@ -328,4 +328,48 @@ theorem rowHome_clear (row painted : List Nat) (parkAt : Nat) (fromHole : Int)
           have hneP : parkAt ≠ j := by omega
           simp [hneg, List.getElem_set, hneS, hneP, hz]
 
+/-- `afterTally` writes strictly before the length it leaves. Past that length
+    the row is unchanged. -/
+theorem afterTally_hi (row : List Nat) (t0 tally colour j : Nat) (last : Bool)
+    (hj : t0 + (if last then tally else if colour = 2 then 2 * tally + 1 else 2 * tally) ≤ j)
+    (hlen : j < row.length) :
+    (afterTally row t0 tally colour last)[j]'(by rw [afterTally_length]; exact hlen) =
+      row[j] := by
+  unfold afterTally
+  cases last
+  · -- not the final rung
+    by_cases hR : colour = 2
+    · have hle : t0 + (2 * tally + 1) ≤ j := by simpa [hR] using hj
+      have hne : t0 + 2 * tally ≠ j := by omega
+      simp only [Bool.false_eq_true, if_false, hR, ite_true]
+      have hset : ((paintOnes (paintOnes (paintRed row t0 tally) t0 tally)
+            (t0 + tally) tally).set (t0 + 2 * tally) 1)[j]'(by
+            simp [List.length_set, paintOnes_length, paintRed_length, hlen]) =
+          (paintOnes (paintOnes (paintRed row t0 tally) t0 tally)
+            (t0 + tally) tally)[j]'(by
+            simp [paintOnes_length, paintRed_length, hlen]) := by
+        simp [List.getElem_set, hne]
+      rw [hset]
+      have hwide := paintOnes_get_hi
+        (paintOnes (paintRed row t0 tally) t0 tally) (t0 + tally) tally j
+        (by omega) (by simp [paintOnes_length, paintRed_length, hlen])
+      rw [hwide]
+      have hback := paintOnes_get_hi (paintRed row t0 tally) t0 tally j
+        (by omega) (by rw [paintRed_length]; exact hlen)
+      rw [hback]
+      exact paintRed_get_hi row t0 tally j (by omega) hlen
+    · have hle : t0 + 2 * tally ≤ j := by simpa [hR] using hj
+      simp only [Bool.false_eq_true, if_false, hR, ite_false]
+      have hwide := paintOnes_get_hi
+        (paintOnes (paintRed row t0 tally) t0 tally) (t0 + tally) tally j
+        (by omega) (by simp [paintOnes_length, paintRed_length, hlen])
+      rw [hwide]
+      have hback := paintOnes_get_hi (paintRed row t0 tally) t0 tally j
+        (by omega) (by rw [paintRed_length]; exact hlen)
+      rw [hback]
+      exact paintRed_get_hi row t0 tally j (by omega) hlen
+  · have hle : t0 + tally ≤ j := by simpa using hj
+    simp only [ite_true]
+    exact paintRed_get_hi row t0 tally j hle hlen
+
 end EcbsLink2.Link2

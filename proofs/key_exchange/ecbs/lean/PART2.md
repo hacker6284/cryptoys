@@ -391,6 +391,10 @@ The chord tail turns the bench off. It writes ops slot 0 and leaves every other 
 
 4327 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Rebuilt peaks: ChordOpen 1163016 kB, ChordLive 494812, ChordNext 461632, EcbsLink2 439892. All under 2097152 kB.
 
+`chord_tail_point` was one `by` that obtained `bottom_lay` and then `point_from_bottom`. That file peaked at 2020864 kB, about 75 MB under the 2 GB gate. `ChordTailLay` is now `TailBottom` and `tail_bottom`: the bottom board, the counters `point_from_bottom` reads, and the equations that put those counters back on the move, slide, marker, control, script-max, ops, slope, and `chordX3` formulas. A projection out of the structure is not that formula. `chord_tail_point` obtains the witness and continues with `point_from_bottom`. No `set_option`.
+
+4379 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks of the files this split elaborated: ChordTailLay 864124 kB, ChordTailPoint 1542680, ChordRoom 1004668, ChordOpen 1163476, ChordLive 492040, ChordNext 450404, EcbsLink2 432940. ChordTailPoint is under about 1.8 GB. All are under 2097152 kB.
+
 `chord_add_live_frame`, chained to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.

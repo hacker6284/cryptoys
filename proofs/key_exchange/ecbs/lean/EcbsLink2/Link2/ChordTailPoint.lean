@@ -4,7 +4,7 @@
   Slot 0 grows by three. Every other ops slot stays. The bench ends off.
   Proof-only. Not a security claim.
 -/
-import EcbsLink2.Link2.ChordLay
+import EcbsLink2.Link2.ChordTailLay
 
 namespace EcbsLink2.Link2
 
@@ -199,19 +199,19 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       (∀ h0 : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = Int.ofNat (cOps + 3)) := by
   intro slope x3 y3
-  obtain ⟨bX, hpre, hoffX, h2x, h0aF, h0tF, h5aF, h5tF, hflagN, hszH8, hszD8,
-      hmN, hcN, hxN, htAll, hmvRaw, hslRaw, h2tF, h1home, h1held, opsSz, hop0F,
-      htail⟩ :=
-    bottom_lay b inv rise accX run w h r n k moves hole bench slides peak peakS
+  obtain ⟨tb⟩ :=
+    tail_bottom b inv rise accX accY run w h r n k moves hole bench slides peak peakS
       cOps m ctrl mx script
       hmk hoff hm hc hx hscript hbound hfitM hfitC hfit2 hfitC4 hfit3
-      hops hop0 hfops hfops2 hbl hszH hszD hHF hArr hHS hYs h0a h0t h2t h2a
+      hops hop0 hfops hfops2 hbl hszH hszD hHF hArr hHS hYs h0a h0t h1a h1t h2t h2a
       hn0 hn hlenx hleny hxLen hrun htriX htriR hf hmoves hslides hpeak hpeakS
       hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
       hsm hnsm hfitB hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW
       hfit1 hfitA hfitRun hpegX hfitMX hfitSX
-  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX⟩, hhiX, hrowX, hstayB, h6X, hopX⟩ := htail
-  have _hbottomHigh := hhiX
+  -- `tail_bottom` stores the counters. They are the same formulas as the lets
+  -- below; the equations put the proofs back on those formulas.
+  have hslopeV : tb.slope = slope := tb.slopeEq
+  have hx3V : tb.x3 = x3 := by rw [tb.x3Eq, hslopeV]
   let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
     pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
   let slX := slGap slides inv rise n k bench + 2 * pegCount x3
@@ -219,64 +219,54 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   let ctrlX := ctrl + 4
   let mxX := max (max mx (m + 2)) (m + 3)
   let cOpsX := cOps + 2
-  have hmvN : bX.sudo_5Board_4cost.sudo_5Costs_5moves = (mvX : Int) := by
-    rw [hmvRaw, ofNat_eq_natCast]
-  have hslN : bX.sudo_5Board_4cost.sudo_5Costs_6slides = (slX : Int) := by
-    rw [hslRaw, ofNat_eq_natCast]
-  have hpkN : bX.sudo_5Board_4cost.sudo_5Costs_4peak = (peakXN : Int) := by
-    rw [hpkX, ofNat_eq_natCast]
-  have hstN : bX.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (strictW : Int) := by
-    rw [hstX, ofNat_eq_natCast]
-  have hnX : bX.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
-    conv => lhs; rw [htAll]
-    exact hn
-  have hscriptX : bX.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script := by
-    conv => lhs; rw [htAll]
-    exact hscript
-  have hblX : bX.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by
-    conv => lhs; rw [htAll]
-    exact hbl
-  have hwX : bX.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by
-    conv => lhs; rw [htAll]
-    exact hw
-  have hhX : bX.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h := by
-    conv => lhs; rw [htAll]
-    exact hh
-  have hrX : bX.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by
-    conv => lhs; rw [htAll]
-    exact hr
-  have hkX : bX.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
-    conv => lhs; rw [htAll]
-    exact hk
-  have hopsX : 0 < bX.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-    rw [opsSz]; exact hops
-  have hop0X : bX.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsX = ((cOpsX : Nat) : Int) :=
-    (hop0F hopsX).trans (ofNat_eq_natCast (cOps + 2))
-  have h0HX : 0 < bX.sudo_5Board_4home.size := by rw [hszH8]; decide
-  have h1HX : 1 < bX.sudo_5Board_4home.size := by rw [hszH8]; decide
-  have h2HX : 2 < bX.sudo_5Board_4home.size := by rw [hszH8]; decide
-  have h5HX : 5 < bX.sudo_5Board_4home.size := by rw [hszH8]; decide
-  have h0DX : 0 < bX.sudo_5Board_4held.size := by rw [hszD8]; decide
-  have h1DX : 1 < bX.sudo_5Board_4held.size := by rw [hszD8]; decide
-  have h2DX : 2 < bX.sudo_5Board_4held.size := by rw [hszD8]; decide
-  have h5DX : 5 < bX.sudo_5Board_4held.size := by rw [hszD8]; decide
-  have h0aX : bX.sudo_5Board_4home[0]'h0HX = embed accX := h0aF h0HX
-  have h0tX : bX.sudo_5Board_4held[0]'h0DX = true := h0tF h0DX
-  have h1aX : bX.sudo_5Board_4home[1]'h1HX = embed accY := (h1home h1HX).trans h1a
-  have h1tX : bX.sudo_5Board_4held[1]'h1DX = true := (h1held h1DX).trans h1t
-  have h2aX : bX.sudo_5Board_4home[2]'h2HX = embed x3 := h2x h2HX
-  have h2tX : bX.sudo_5Board_4held[2]'h2DX = true := h2tF h2DX
-  have h5aX : bX.sudo_5Board_4home[5]'h5HX = embed slope := h5aF h5HX
-  have h5tX : bX.sudo_5Board_4held[5]'h5DX = true := h5tF h5DX
-  have hnb : n ≤ bench := by omega
-  have htriS : allTritList slope := fieldMul_span_trits n k bench rise inv hspan hnb
-  have htri3 : allTritList x3 := by
-    simp only [x3, chordX3]
-    exact fieldAdd_span_trits _ _ _
-  have hslope : slope.length = n := by
-    simpa [slope] using fieldMul_length n k bench rise inv hnb
-  have hx3len : x3.length = n := by
-    simp [x3, chordX3, fieldAdd, List.length_map, List.length_range]
+  have hmvV : tb.mvX = mvX := by rw [tb.mvEq, hslopeV, hx3V]
+  have hslV : tb.slX = slX := by rw [tb.slEq, hx3V]
+  have hmV : tb.mX = mX := tb.mEq
+  have hctrlV : tb.ctrlX = ctrlX := tb.ctrlEq
+  have hmxV : tb.mxX = mxX := tb.mxEq
+  have hcOpsV : tb.cOpsX = cOpsX := tb.cOpsEq
+  let bX := tb.bX
+  let peakXN := tb.peakXN
+  let strictW := tb.strictW
+  let holeW := tb.holeW
+  have hpre := tb.hpre
+  have hoffX := tb.hoffX
+  have hflagN := tb.hflagN
+  have hmN : bX.sudo_5Board_6marker = Int.ofNat mX := hmV ▸ tb.hmN
+  have hcN : bX.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrlX := hctrlV ▸ tb.hcN
+  have hxN : bX.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mxX :=
+    hmxV ▸ tb.hxN
+  have hscriptX := tb.hscriptX
+  have hmvN : bX.sudo_5Board_4cost.sudo_5Costs_5moves = (mvX : Int) := hmvV ▸ tb.hmvN
+  have hslN : bX.sudo_5Board_4cost.sudo_5Costs_6slides = (slX : Int) := hslV ▸ tb.hslN
+  have hpkN := tb.hpkN
+  have hstN := tb.hstN
+  have hhoX := tb.hhoX
+  have hop0X := hcOpsV ▸ tb.hop0X
+  have hblX := tb.hblX
+  have hnX := tb.hnX
+  have hwX := tb.hwX
+  have hhX := tb.hhX
+  have hrX := tb.hrX
+  have hkX := tb.hkX
+  have h0aX := tb.h0aX
+  have h0tX := tb.h0tX
+  have h1aX := tb.h1aX
+  have h1tX := tb.h1tX
+  have h2aX := hx3V ▸ tb.h2aX
+  have h2tX := tb.h2tX
+  have h5aX := hslopeV ▸ tb.h5aX
+  have h5tX := tb.h5tX
+  have hnb := tb.hnb
+  have htriS : allTritList slope := hslopeV ▸ tb.htriS
+  have htri3 : allTritList x3 := hx3V ▸ tb.htri3
+  have hslope : slope.length = n := hslopeV ▸ tb.hslope
+  have hx3len : x3.length = n := hx3V ▸ tb.hx3len
+  have hhiX := tb.hhiX
+  have hrowX := tb.hrowX
+  have hstayB := tb.hstayB
+  have hopX := tb.hopX
+  have _hbottomHigh := hhiX
   have hbig : FitsLen (mvX + pegCount x3 + pegCount accY + 2 * n + n * (n + 1) +
       3 * (bench - n) + 5 * n) := hTailM
   have hbigS : FitsLen (slX + 6 * n) := hTailS
@@ -291,9 +281,9 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       h0tP, h1tP, hszHP, hszDP, hoffP, hopP⟩ :=
     point_from_bottom bX accX accY x3 slope w h r n k bench mvX slX peakXN strictW holeW
       cOpsX mX ctrlX mxX script
-      hszH8 hszD8 hflagN hoffX hmN hcN hxN hscriptX
+      tb.hszH8 tb.hszD8 hflagN hoffX hmN hcN hxN hscriptX
       hbound3 hfit3 hfitC6 hfit4
-      hopsX hop0X hfops3 hblX
+      tb.hopsX hop0X hfops3 hblX
       h0tX h0aX h1tX h1aX h2tX h2aX h5tX h5aX
       hnX hxLen hyA hx3len hslope hn0 hnb
       htriX htriY htri3 htriS
@@ -301,7 +291,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hfitPx hf hspan hfi hfitMox hfitSox hfmPx
       hw0 hh0 hrR hrP hnE hkLe hgap hwX hhX hrX hkX
       hsm hnsm hfitB hfoldPx hbig hbigS
-      (h6X (by rw [hszD8]; decide))
+      (tb.h6X (by rw [tb.hszD8]; decide))
   have hmvBound : ∃ mv, b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
       mv ≤ moves + tailMoveCap n bench := by
     let yMir := mirrorTrits accY
@@ -380,7 +370,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
     exact (hopP j hne hjX hj').trans (hopX j hne hj hjX)
   · intro h0
     have hv := Array.getElem_set_eq bX.sudo_5Board_4cost.sudo_5Costs_3ops
-      ⟨0, hopsX⟩ (Int.ofNat (cOpsX + 1)) rfl (by rw [← _hopsP]; exact h0)
+      ⟨0, tb.hopsX⟩ (Int.ofNat (cOpsX + 1)) rfl (by rw [← _hopsP]; exact h0)
     simpa [cOpsX, ofNat_eq_natCast] using cell_eq_of _hopsP hv
 
 end EcbsLink2.Link2

@@ -45,10 +45,8 @@ private theorem offMax (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
     (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
       b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := rfl
 
-private theorem two_cube_budget (moves n bench : Nat)
-    (hm : moves ≤ n * (n + 1) + 3 * (bench - n) + 6 * n) :
-    moves + 8 * n + 6 * (bench - n) ≤
-      2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 ∧
+/-- The counters that do not include `moves`. They fit the i64 cap on every cell. -/
+private theorem small_cube_cap (n bench : Nat) :
     6 * n ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 ∧
     bench ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 ∧
     3 * (n - 1) ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 := by
@@ -157,8 +155,8 @@ noncomputable def down_across (b : Ecbs.Board) (x y : List Nat)
     (hspan : 3 * (n - 1) + cg < bench)
     (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
     (hnsm : n ≤ 1000000)
-    (hmv : moves ≤ n * (n + 1) + 3 * (bench - n) + 6 * n)
-    (hsl : slides ≤ 2 * n) :
+    (hMv : FitsLen (moves + 8 * n + 6 * (bench - n)))
+    (hSl : FitsLen (slides + 4 * n)) :
     DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script := by
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -166,21 +164,22 @@ noncomputable def down_across (b : Ecbs.Board) (x y : List Nat)
   have h1H : 1 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h7 : 7 ≤ b.sudo_5Board_4held.size := by rw [hszD]; decide
   have hbnd : bench ≤ 1000001 := hsm.2.2.2
-  have hbud := two_cube_budget moves n bench hmv
+  have hbud := small_cube_cap n bench
   have fit (m : Nat) (hm : m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8) : FitsLen m :=
     frobFit n bench m hnsm hbnd hm
-  have leMove (m : Nat) (hm : m ≤ moves + 8 * n + 6 * (bench - n)) :
-      m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 :=
-    Nat.le_trans hm hbud.1
+  have fitMove (m : Nat) (hm : m ≤ moves + 8 * n + 6 * (bench - n)) : FitsLen m :=
+    FitsLen.of_le hMv hm
+  have fitSlide (m : Nat) (hm : m ≤ slides + 4 * n) : FitsLen m :=
+    FitsLen.of_le hSl hm
   have leSmall (m : Nat) (hm : m ≤ 6 * n) :
       m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 :=
-    Nat.le_trans hm hbud.2.1
+    Nat.le_trans hm hbud.1
   have leBench (m : Nat) (hm : m ≤ bench) :
       m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 :=
-    Nat.le_trans hm hbud.2.2.1
+    Nat.le_trans hm hbud.2.1
   have leCube (m : Nat) (hm : m ≤ 3 * (n - 1)) :
       m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 :=
-    Nat.le_trans hm hbud.2.2.2
+    Nat.le_trans hm hbud.2.2
   have hfit1 : FitsLen (cOps + 1) := FitsLen.of_le hfitC (Nat.le_succ (cOps + 1))
   have hposS : 0 < script := Nat.lt_trans (by decide) hs1
   have hnb : n ≤ bench := by omega
@@ -200,10 +199,10 @@ noncomputable def down_across (b : Ecbs.Board) (x y : List Nat)
         hstrictCast hpeakCast hn0 hn hx (fit n (leSmall n (by omega)))
         hmovCast hbl hcg hspan
         (fit (3 * (n - 1)) (leCube _ (Nat.le_refl _)))
-        (fit (moves + 2 * n) (leMove _ (by omega)))
+        (fitMove (moves + 2 * n) (by omega))
         hhole hxt hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm hnsm
         (fit bench (leBench _ (Nat.le_refl _)))
-        (fit (moves + 2 * n + 3 * (bench - n)) (leMove _ (by omega)))
+        (fitMove (moves + 2 * n + 3 * (bench - n)) (by omega))
   let laneX := laneFold n (n - k) (combStrip n bench x)
   have hlaneX : b1.sudo_5Board_5bench = embed laneX := by
     simpa [b1, laneX] using
@@ -379,11 +378,16 @@ noncomputable def down_across (b : Ecbs.Board) (x y : List Nat)
   have hszHOn : b1On.sudo_5Board_4home.size = 8 := by simpa [b1On] using hszH1
   have hfitLX : FitsLen laneX.length := fit _ (leBench _ (by rw [hlenX]; exact Nat.le_refl _))
   have hpegFit : FitsLen (2 * pegX) := fit _ (leSmall _ (by omega))
-  have hfitMvX : FitsLen (mv1 + 2 * pegX) := fit _ (leMove _ (by omega))
-  have hfitSlX : FitsLen (slides + 2 * pegX) := fit _ (leSmall _ (by omega))
-  have hfm2 : FitsLen (mv1 + 2 * pegX + 2 * n) := fit _ (leMove _ (by omega))
+  have hfitMvX : FitsLen (mv1 + 2 * pegX) := fitMove _ (by omega)
+  have hfitSlX : FitsLen (slides + 2 * pegX) :=
+    fitSlide _ (by
+      have h2 : 2 * pegX ≤ 4 * n := by
+        have hle : pegX ≤ n := hpegX
+        omega
+      omega)
+  have hfm2 : FitsLen (mv1 + 2 * pegX + 2 * n) := fitMove _ (by omega)
   have hfold2 : FitsLen (mv1 + 2 * pegX + 2 * n + 3 * (bench - n)) :=
-    fit _ (leMove _ (by omega))
+    fitMove _ (by omega)
   exact
     { b1, b1On, feed, laneX, mv1, pk1, peakS1, hole1, pegX,
       hcube := hcube1, htakeX, hlenX, hzeroX, hposX, hpegX, hpegDef, hmv1le,

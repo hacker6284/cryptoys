@@ -268,15 +268,18 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 4167 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1703276 kB VmHWM. Under 2 GB.
 
-- `frobenius_affine_room` / `chordStep_live_zero_room`. A live zero cell whose rooms are `FitsLen (moves + cubeCharge)` and `FitsLen (slides + slideCharge)` is the emitted step, and `walkStep` on colour 0 is the two field cubes. `frobenius_affine_len` still asks for the first cell's envelope `moves ≤ n * (n + 1) + 3 * (bench - n) + 6 * n` and `slides ≤ 2 * n`. `down_across` still builds `DownAcross` only under that envelope, so a later cell cannot yet construct the bundle these theorems take.
+- `frobenius_affine_room` / `chordStep_live_zero_room`. A live zero cell whose rooms are `FitsLen (moves + cubeCharge)` and `FitsLen (slides + slideCharge)` is the emitted step, and `walkStep` on colour 0 is the two field cubes. `frobenius_affine_len` still asks for the first cell's envelope `moves ≤ n * (n + 1) + 3 * (bench - n) + 6 * n` and `slides ≤ 2 * n`.
+- `down_across`. The bundle it builds now takes `FitsLen (moves + 8 * n + 6 * (bench - n))` and `FitsLen (slides + 4 * n)`, which are `cubeCharge` and `slideCharge`. The counters that do not include `moves` still use `small_cube_cap`. A later cell can construct `DownAcross` from the room it has left.
 
 4169 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1702184 kB VmHWM. Under 2 GB.
+
+4170 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1702116 kB VmHWM. Under 2 GB.
 
 4158 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 991828 kB VmHWM. The rebuild that re-elaborated ChordLay after the high conjunct peaked at 1594024 kB. Both are under 2 GB.
 
 ## Next
 
-`down_across` still requires the first cell's move envelope, so a later cell cannot yet build the `DownAcross` that `frobenius_affine_room` takes. The climb body after `later_climb_entry` is still the equality `highTop`. A second live white or red cell cannot call `chord_add_live` or `open_climb` unchanged. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+The climb body after `later_climb_entry` is still the equality `highTop`. `set_control` keeps the recorded high when the new hole does not beat it, and `rungHigh` replaces that high with `t0 + 2 * tally` on a non-final rung. A second live white or red cell cannot call `chord_add_live` or `open_climb` unchanged. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

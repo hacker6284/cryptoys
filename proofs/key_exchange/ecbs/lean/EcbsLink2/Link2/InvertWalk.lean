@@ -1012,6 +1012,13 @@ private theorem ops_get_set2 (a : Array Int) (j : Nat) (hj : j < a.size)
       rw [Array.size_set, Array.size_set]; exact hj) = a[j] := by
   rw [Array.getElem_set_ne (h := hne0), Array.getElem_set_ne (h := hne1)]
 
+/-- Every ops slot on the checked board is a natural. Slots 2 and 3 keep a
+    spare step under `cap`; every other slot is at most `cap`. -/
+def CheckedOps (b : Ecbs.Board) (cap : Nat) : Prop :=
+  ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+    ∃ c, b.sudo_5Board_4cost.sudo_5Costs_3ops[i]'hi = Int.ofNat c ∧
+      (if i = 2 then c + 1 else if i = 3 then c + 1 else c) ≤ cap
+
 /-- The check multiply on the board `open_invert` leaves. Home 5 is `invGap`,
     home 2 is still the input, and the bench prefix is their product. -/
 theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
@@ -1074,7 +1081,8 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       (3 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size →
         ∃ (h3 : 3 < bR.sudo_5Board_4cost.sudo_5Costs_3ops.size) (c3 : Nat),
           bR.sudo_5Board_4cost.sudo_5Costs_3ops[3]'h3 = (c3 : Int) ∧
-          c3 + 1 ≤ checkOpsCap base + 3) := by
+          c3 + 1 ≤ checkOpsCap base + 3) ∧
+      CheckedOps bR (checkOpsCap base + 3) := by
   obtain ⟨bT, hem, hK, hladT, h2T, hszT⟩ := open_invert b t xs lay hOk sat hR hsh base hm
   have hpark : (openModelAt t xs lay.ctrl lay.high).parkAt = base.ladder0 + base.R := by
     simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R]
@@ -1755,11 +1763,108 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           exact hroom 2 h2b (by decide) (by decide)
         · intro h3
           exact hroom 3 h3 (by decide) (by decide)
+      have hopsAll : CheckedOps bR (checkOpsCap base + 3) := by
+        intro j hj
+        by_cases h0 : j = 0
+        · subst h0
+          obtain ⟨_, c0, hc0, hle0⟩ := hbnd.ops
+          refine ⟨c0, idx_irrel.trans hc0, ?_⟩
+          simp only [if_neg (by decide : (0 : Nat) ≠ 2), if_neg (by decide : (0 : Nat) ≠ 3)]
+          exact Nat.le_trans hle0 (Nat.le_add_right _ 3)
+        · by_cases h1 : j = 1
+          · subst h1
+            obtain ⟨c1, hc1, hset1⟩ := hopsSettle
+            have hsetZ : bZ.sudo_5Board_4cost.sudo_5Costs_3ops =
+                b'.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hKpost.shape.peg.opsGt⟩
+                  (Int.ofNat (c1 + 1)) := by simpa [hZeq] using hset1
+            have hopsR : bR.sudo_5Board_4cost.sudo_5Costs_3ops =
+                bM.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [bR]
+            have hmove := arr_set_congr hsetZ 0 hread.opsGt (Int.ofNat (cOps + 1))
+            have harr : bR.sudo_5Board_4cost.sudo_5Costs_3ops =
+                (b'.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hKpost.shape.peg.opsGt⟩
+                    (Int.ofNat (c1 + 1))).set
+                  ⟨0, hsetZ ▸ hread.opsGt⟩ (Int.ofNat (cOps + 1)) :=
+              hopsR.trans (hopsM.trans hmove)
+            obtain ⟨cPre, hcPre, hlePre⟩ := hKpost.ops 1 hKpost.shape.peg.opsGt
+            have hc1eq : c1 = cPre := by
+              apply Int.ofNat.inj
+              rw [ofNat_eq_natCast, ofNat_eq_natCast]
+              exact hc1.symm.trans hcPre
+            refine ⟨c1 + 1, ?_, ?_⟩
+            · have hsz1 : 1 <
+                  (b'.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hKpost.shape.peg.opsGt⟩
+                    (Int.ofNat (c1 + 1))).size := by
+                rw [Array.size_set]; exact hKpost.shape.peg.opsGt
+              have hne : (0 : Nat) ≠ 1 := by decide
+              have hget0 := Array.getElem_set_ne
+                (b'.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hKpost.shape.peg.opsGt⟩
+                  (Int.ofNat (c1 + 1)))
+                ⟨0, hsetZ ▸ hread.opsGt⟩ (Int.ofNat (cOps + 1))
+                (by rw [Array.size_set]; exact hsz1) hne
+              have hget1 := Array.getElem_set_eq b'.sudo_5Board_4cost.sudo_5Costs_3ops
+                ⟨1, hKpost.shape.peg.opsGt⟩ (Int.ofNat (c1 + 1)) rfl hsz1
+              exact cell_eq_of harr (hget0.trans hget1)
+            · simp only [if_neg (by decide : (1 : Nat) ≠ 2), if_neg (by decide : (1 : Nat) ≠ 3)]
+              have hres : cPre + 1 ≤ base.ops0 + (tierClimb t).length * (base.mMax + 3) := by
+                simpa [hon] using hlePre
+              have hlen : (tierClimb t).length = tierR t := by
+                simp [tierClimb, tierR, List.length_reverse]
+              rw [hc1eq]
+              rw [hm.ops0, hm.mMax, hlen] at hres
+              unfold checkOpsCap
+              rw [hm.ops0, hm.mMax, hm.R]
+              exact Nat.le_trans hres (Nat.le_add_right _ 3)
+          · obtain ⟨_c1, _hc1, hset1⟩ := hopsSettle
+            have hsetZ : bZ.sudo_5Board_4cost.sudo_5Costs_3ops =
+                b'.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hKpost.shape.peg.opsGt⟩
+                  (Int.ofNat (_c1 + 1)) := by simpa [hZeq] using hset1
+            have hopsR : bR.sudo_5Board_4cost.sudo_5Costs_3ops =
+                bM.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [bR]
+            have hmove := arr_set_congr hsetZ 0 hread.opsGt (Int.ofNat (cOps + 1))
+            have harr : bR.sudo_5Board_4cost.sudo_5Costs_3ops =
+                (b'.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hKpost.shape.peg.opsGt⟩
+                    (Int.ofNat (_c1 + 1))).set
+                  ⟨0, hsetZ ▸ hread.opsGt⟩ (Int.ofNat (cOps + 1)) :=
+              hopsR.trans (hopsM.trans hmove)
+            have hszR : bR.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+                b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+              rw [harr, Array.size_set, Array.size_set, hszClimb, hszT]
+            have hjB : j < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+              rw [← hszR]; exact hj
+            have hne0 : (0 : Nat) ≠ j := fun h => h0 h.symm
+            have hne1 : (1 : Nat) ≠ j := fun h => h1 h.symm
+            have hj' : j < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+              rw [hszClimb, hszT]; exact hjB
+            obtain ⟨c, hc, hle⟩ := hKpost.ops j hj'
+            have hjR : j < bR.sudo_5Board_4cost.sudo_5Costs_3ops.size := hj
+            have hget : bR.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hjR = (c : Int) := by
+              have hvia := ops_get_set2 b'.sudo_5Board_4cost.sudo_5Costs_3ops j hj'
+                1 hKpost.shape.peg.opsGt (Int.ofNat (_c1 + 1))
+                0 (hsetZ ▸ hread.opsGt) (Int.ofNat (cOps + 1)) hne0 hne1
+              exact cell_eq_of (ha := hjR) harr (hvia.trans hc)
+            refine ⟨c, hget, ?_⟩
+            have hres : c + 1 ≤ base.ops0 + (tierClimb t).length * (base.mMax + 3) := by
+              simpa [hon] using hle
+            have hlen : (tierClimb t).length = tierR t := by
+              simp [tierClimb, tierR, List.length_reverse]
+            have hcap : c + 1 ≤ checkOpsCap base + 3 := by
+              rw [hm.ops0, hm.mMax, hlen] at hres
+              unfold checkOpsCap
+              rw [hm.ops0, hm.mMax, hm.R]
+              exact Nat.le_trans hres (Nat.le_add_right _ 3)
+            by_cases h2 : j = 2
+            · simp only [h2]
+              exact hcap
+            · by_cases h3 : j = 3
+              · simp only [h2, h3]
+                exact hcap
+              · simp only [h2, h3]
+                exact Nat.le_trans (Nat.le_succ c) hcap
       refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl,
         ⟨h5DR, mvM + nz, hheldR, hmvR, hfitR, hnR⟩, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
         hcarryR, hbnd, ⟨mvM + nz, by simpa [bR, ofNat_eq_natCast] using hmvR, hwhiteSlack⟩,
         hhighR, hwater, hrowR, hLc ▸ hladR, ?_, ?_, hl0R, hnrR, hparkR, hfromR, hridxR,
-        htlenR, ht0R, htmaxR, hopSlots.1, hopSlots.2⟩
+        htlenR, ht0R, htmaxR, hopSlots.1, hopSlots.2, hopsAll⟩
       · simpa [Ecbs.check_target, Ecbs.gap] using hmulOk
       · exact congrArg embed htakeL
       · intro _
@@ -1833,7 +1938,8 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
       (3 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size →
         ∃ (h3 : 3 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size) (c3 : Nat),
           b'.sudo_5Board_4cost.sudo_5Costs_3ops[3]'h3 = (c3 : Int) ∧
-          c3 + 1 ≤ checkOpsCap base + 3) := by
+          c3 + 1 ≤ checkOpsCap base + 3) ∧
+      CheckedOps b' (checkOpsCap base + 3) := by
   have hpos : 0 < t.n := hOk.n_pos
   have hnbench := mul_span_n t.n t.benchlen hpos sat.mul_span
   have hspan3 := cube_span_le t.n t.benchlen t.combgap sat.cube_span
@@ -1851,7 +1957,8 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
   have hlenG : g.length = t.n := invGap_length t xs sat hpos
   obtain ⟨_bZ, _bM, bR, _v, h5, hinv, hmul, hread, hv, hhome5, _hbench, hframe, hhome2, hheld2,
       h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, hslack, hhighR, hwater, hrowR, hladR,
-      h3a, h3t, hl0R, hnrR, hparkF, hfromR, hridxR, htlenR, ht0R, htmaxR, hop2R, hop3R⟩ :=
+      h3a, h3t, hl0R, hnrR, hparkF, hfromR, hridxR, htlenR, ht0R, htmaxR, hop2R, hop3R,
+      hopsAll⟩ :=
     open_check_mul b t xs lay hOk sat hR hsh base hm
   obtain ⟨h5D, mv, hheld, hmv, hfit, hnT⟩ := hframe
   have hfitn : FitsLen t.n := FitsLen.of_le hfit (Nat.le_add_left t.n mv)
@@ -1884,7 +1991,8 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
       rcases hshape with ⟨_, hans⟩ | ⟨hv2, _⟩
       · refine ⟨bR, h5, h5D, rfl, ?_, hheld, hnT, ?_, hhome2, hheld2,
             h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, ?_, hrowR, hladR, h3a, h3t,
-            hl0R, hnrR, hparkF, hfromR, hridxR, htlenR, ht0R, htmaxR, hop2R, hop3R⟩
+            hl0R, hnrR, hparkF, hfromR, hridxR, htlenR, ht0R, htmaxR, hop2R, hop3R,
+            hopsAll⟩
         · rw [hans]
           simpa [g] using hhome5
         · rw [hans]
@@ -1914,7 +2022,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
             mirrorHome_held bR 5 h5 _ _]
           exact h5D
         refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-            ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+            ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
         · rw [hans]
           exact mirrorHome_at bR 5 h5 (embed (mirrorTrits g)) (mv + pegCount g) h5'
         · exact hheld
@@ -2090,6 +2198,13 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
             simp [bM, mirrorHome, withMoves]
           refine ⟨hsz ▸ h3R, c3, ?_, hle3⟩
           simpa [bM, mirrorHome, withMoves] using hc3
+        · intro j hj
+          have hsz : bM.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+              bR.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+            simp [bM, mirrorHome, withMoves]
+          obtain ⟨c, hc, hle⟩ := hopsAll j (hsz ▸ hj)
+          refine ⟨c, ?_, hle⟩
+          simpa [bM, mirrorHome, withMoves] using hc
   · intro k
     rfl
   · intro j hj1 hj

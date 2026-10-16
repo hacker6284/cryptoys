@@ -395,7 +395,13 @@ The chord tail turns the bench off. It writes ops slot 0 and leaves every other 
 
 4379 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks of the files this split elaborated: ChordTailLay 864124 kB, ChordTailPoint 1542680, ChordRoom 1004668, ChordOpen 1163476, ChordLive 492040, ChordNext 450404, EcbsLink2 432940. ChordTailPoint is under about 1.8 GB. All are under 2097152 kB.
 
-`chord_add_live_frame`, chained to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+`chord_add_live` now returns `LiveLeft` and `TailPack`. `LiveLeft` is the control frame on the output board: tier, ladder, park, tally origin, homes 3 and 4, and `CheckedOps` at `checkOpsCap + 3`. The move bound is `checkMoveCap + 2 · n + tailMoveCap` because the rise's two homes sit on top of the check cap. Control is at most `checkCtrlCap + 6`, which is at most `liveCtrlRoom`. Ops slot 0 on the tail is three above the checked slot, and the ops array keeps its length. `copy_add_open` returns that length.
+
+`chord_add_live_frame` needs one cell of fuel after this one. `fitRoom` and `fitCtrl` do not fit in a single `liveMoveRoom` or `liveCtrlRoom`. The output is a `RunFrame`: homes 0 and 1 are the new point, homes 3 and 4 are still the base, scratch 2, 5, and 6 are empty, and `hStart` is the later branch `tallyOrigin ≤ high`. `chordStep_from_live` obtains that frame and passes the demo equation to `chordStep_open`. The two proofs are separate. No `set_option`. The 200000 heartbeat limit stays.
+
+4409 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: ChordTailLay 867952 kB, ChordTailPoint 1547700, ChordRoom 1006512, CopyLay 367640, ChordOpen 1327712, ChordFrame 493408, EcbsLink2 416208. ChordLive's successful elaboration of the `LiveLeft` return peaked at 481592 kB. All are under about 1.8 GB and under 2097152 kB.
+
+The general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

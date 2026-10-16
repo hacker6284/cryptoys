@@ -197,7 +197,9 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
           b'.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj' =
             b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj) ∧
       (∀ h0 : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
-        b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = Int.ofNat (cOps + 3)) := by
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = Int.ofNat (cOps + 3)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   intro slope x3 y3
   obtain ⟨tb⟩ :=
     tail_bottom b inv rise accX accY run w h r n k moves hole bench slides peak peakS
@@ -358,7 +360,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   refine ⟨b', ?_, hAc, hUp, hhi.trans _hbottomHigh, hrow.trans hrowX,
     TailStay.trans hstayB hstay, h2e, h2f, h5e, h5f, h6f,
     hmarkP, hctrlP, hmxP,
-    hmvBound, ⟨_, hslP⟩, hpkP, hstP, hhoP, h0tP, h1tP, hszHP, hszDP, hoffP, ?_, ?_⟩
+    hmvBound, ⟨_, hslP⟩, hpkP, hstP, hhoP, h0tP, h1tP, hszHP, hszDP, hoffP, ?_, ?_, ?_⟩
   rw [chord_tail_across_up]
   exact chord_do_join b bX b' hpre hpost
   · intro j hne hj hj'
@@ -372,5 +374,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
     have hv := Array.getElem_set_eq bX.sudo_5Board_4cost.sudo_5Costs_3ops
       ⟨0, tb.hopsX⟩ (Int.ofNat (cOpsX + 1)) rfl (by rw [← _hopsP]; exact h0)
     simpa [cOpsX, ofNat_eq_natCast] using cell_eq_of _hopsP hv
+  · rw [_hopsP, Array.size_set]
+    exact tb.opsSzX
 
 end EcbsLink2.Link2

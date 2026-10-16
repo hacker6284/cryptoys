@@ -136,9 +136,16 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
                   inv)
                 accX (fieldSub t.n baseX accX)))
             accY)) ∧
-      ∃ high : Nat,
+      (∃ high : Nat,
         b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
-        tallyOrigin t ≤ high := by
+        tallyOrigin t ≤ high) ∧
+      (∃ bud, LiveLeft b' t bud baseX baseY true ∧
+        checkCtrlCap bud + 6 ≤ liveCtrlRoom t fr.ctrl ∧
+        checkMoveCap bud + tailMoveCap t.n t.benchlen =
+          liveMoveRoom t fr.moves baseX accX ∧
+        checkOpsCap bud + 3 = liveOpsRoom t fr.opsCap) ∧
+      ∃ bI moves0,
+        TailPack t.n t.benchlen (moves0 + pegCount baseY + pegCount accY) bI b' := by
   let red := decide (c = 2)
   let run := fieldSub t.n baseX accX
   let y := if red then mirrorTrits baseY else baseY
@@ -176,7 +183,8 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
   have hCtrlC : FitsLen ((fr.ctrl + 1) + (tierR t + 1) * (3 * rowRoom t + 5)) :=
     FitsLen.of_le hCtrl (by unfold liveCtrlRoom; omega)
   obtain ⟨bA, hcopy, hflag, lay, bud, hmatch, hmov, hslay, hctrl, hcops, hops,
-      hmark, hmx, hside1, hflag1, hside4, hflag4, hside0, hflag0, _hbase, _hflag3⟩ :=
+      hmark, hmx, hside1, hflag1, hside4, hflag4, hside0, hflag0, _hbase, _hflag3,
+      hszOps⟩ :=
     copy_add_open b t baseX accX fr hOk sat hM hS hO hTailM hTailS hCheck hCtrlC
   have hmkA : bA.sudo_5Board_9marker_on = true := hflag.trans hmk
   have hrunL : run.length = t.n := fieldSub_length t.n baseX accX
@@ -188,12 +196,23 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
   have hriseN : rise.length = t.n := fieldSub_length t.n _ accY
   have htriRise : allTritList rise := fieldSub_trits t.n _ accY
   have htriX : allTritList accX := fr.triA
+  have hmoveEq : checkMoveCap bud + tailMoveCap t.n t.benchlen =
+      liveMoveRoom t fr.moves baseX accX := by
+    unfold checkMoveCap liveMoveRoom
+    rw [hmatch.moves0, hmov, hmatch.n, hmatch.bench, hmatch.R, hmatch.mMax]
+  have hctrlEq : checkCtrlCap bud + 6 ≤ liveCtrlRoom t fr.ctrl := by
+    unfold checkCtrlCap liveCtrlRoom
+    rw [hmatch.ctrl0, hctrl, hmatch.R, hmatch.mMax]
+    have hsplit : (tierR t + 1) * (3 * rowRoom t + 5) =
+        tierR t * (3 * rowRoom t + 5) + (3 * rowRoom t + 5) := by
+      rw [Nat.succ_mul]
+    rw [hsplit]
+    omega
+  have hopsEq : checkOpsCap bud + 3 = liveOpsRoom t fr.opsCap := by
+    unfold checkOpsCap liveOpsRoom
+    rw [hmatch.ops0, hops, hmatch.R, hmatch.mMax]
   have hChord : FitsLen (checkMoveCap bud + tailMoveCap bud.n bud.bench) := by
-    have hEq : checkMoveCap bud + tailMoveCap bud.n bud.bench =
-        liveMoveRoom t fr.moves baseX accX := by
-      unfold checkMoveCap liveMoveRoom
-      rw [hmatch.moves0, hmov, hmatch.n, hmatch.bench, hmatch.R, hmatch.mMax]
-    rw [hEq]
+    rw [hmatch.n, hmatch.bench, hmoveEq]
     exact hMove
   have hChordS : FitsLen (checkSlideCap bud + tailSlideCap bud.n) := by
     have hEq : checkSlideCap bud + tailSlideCap bud.n = liveSlideRoom t fr.slides := by
@@ -223,14 +242,14 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
   have hside4' : baseY = lay.side4 := hY.symm.trans hside4.symm
   have hside1' : accY = lay.side1 := hA.symm.trans hside1.symm
   have hside0' : accX = lay.side0 := hside0.symm
-  obtain ⟨_, _, _, _, _, _, _, _, hand⟩ :=
+  obtain ⟨bI, moves0, _, _, _, _, _, _, hand⟩ :=
     chord_add_point bA red t baseY accY accX run inv rise lay bud hmatch
       hOk sat hR hsh hacc hside4' hside1' hside0' hf4' hf1' hflag0
       hyB hyA hpos htriY htriUp hmkA hriseL fr.lenA hyA hrunL hinvL hriseN
       htriX htriUp htriR htriI htriRise hfitN sat.mul_span
       hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsh.small hsh.n_small
-      hChord hChordS hMarkL hMarkL' hCtrlP hOpsP
-  obtain ⟨_, b', htail, hx0, hy1, hwater, _hpack⟩ := hand
+      hChord hChordS hMarkL hMarkL' hCtrlP hOpsP (hszOps ▸ fr.ops3)
+  obtain ⟨_, b', htail, hx0, hy1, hwater, _hpack, hleft⟩ := hand
   have h2H : 2 < bA.sudo_5Board_4home.size := by
     have hsz : ({ bA with sudo_5Board_9marker_on := false } : Ecbs.Board).sudo_5Board_4home.size =
         bA.sudo_5Board_4home.size := rfl
@@ -270,7 +289,9 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
   rw [decide_eq_false hne]
   simp only [Bool.false_eq_true, if_false]
   obtain ⟨high, hhi, hge⟩ := hwater
-  refine ⟨b', ?_, hx0, hy1, ?_, ⟨high, hhi, hge⟩⟩
+  refine ⟨b', ?_, hx0, hy1, ?_, ⟨high, hhi, hge⟩,
+    ⟨bud, LiveLeft.rew _hbase rfl _hflag3 hleft, hctrlEq, hmoveEq, hopsEq⟩,
+    ⟨bI, moves0, _hpack⟩⟩
   · rw [htail]
   · have hspec : specInv t.n t.k t.benchlen
         (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen preX)) = some inv := by

@@ -51,6 +51,8 @@ structure TailBottom (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   hhoX : bX.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeW
   hopsX : 0 < bX.sudo_5Board_4cost.sudo_5Costs_3ops.size
   hop0X : bX.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsX = ((cOpsX : Nat) : Int)
+  opsSzX : bX.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+    b.sudo_5Board_4cost.sudo_5Costs_3ops.size
   hblX : bX.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench
   hnX : bX.sudo_5Board_1t.sudo_4Tier_1n = (n : Int)
   hwX : bX.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w
@@ -290,6 +292,7 @@ theorem tail_bottom (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hhoX := hhoX
       hopsX := hopsX
       hop0X := hop0X
+      opsSzX := opsSz
       hblX := hblX
       hnX := hnX
       hwX := hwX

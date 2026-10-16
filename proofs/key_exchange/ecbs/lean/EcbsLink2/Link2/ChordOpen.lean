@@ -126,11 +126,63 @@ structure TailPack (n bench movesIn : Nat) (b0 b : Ecbs.Board) : Prop where
     b0.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = (c : Int) ∧
     ∀ h0' : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
       b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0' = Int.ofNat (c + 3)
+  opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+    b0.sudo_5Board_4cost.sudo_5Costs_3ops.size
   opsKeep : ∀ j, j ≠ 0 →
     ∀ (hj : j < b0.sudo_5Board_4cost.sudo_5Costs_3ops.size)
       (hj' : j < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
       b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj' =
         b0.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj
+
+private theorem home_at (b : Ecbs.Board) (i : Nat) (hi : i < b.sudo_5Board_4home.size) :
+    homeD b i = b.sudo_5Board_4home[i]'hi := by
+  simp [homeD, Array.getElem?_eq_getElem, hi, Option.getD_some]
+
+private theorem held_at (b : Ecbs.Board) (i : Nat) (hi : i < b.sudo_5Board_4held.size) :
+    heldD b i = b.sudo_5Board_4held[i]'hi := by
+  simp [heldD, Array.getElem?_eq_getElem, hi, Option.getD_some]
+
+/-- The control frame and the base homes on the board a live cell leaves,
+    plus every ops slot as a natural under the checked cap. -/
+structure LiveLeft (b : Ecbs.Board) (t : Spec.Tier) (bud : ClimbBudget)
+    (base3 baseY : List Nat) (flag3 : Bool) : Prop where
+  tier : b.sudo_5Board_1t = embTier t
+  home3 : ∀ h : 3 < b.sudo_5Board_4home.size,
+    b.sudo_5Board_4home[3]'h = embed base3
+  held3 : ∀ h : 3 < b.sudo_5Board_4held.size,
+    b.sudo_5Board_4held[3]'h = flag3
+  home4 : ∀ h : 4 < b.sudo_5Board_4home.size,
+    b.sudo_5Board_4home[4]'h = embed baseY
+  held4 : ∀ h : 4 < b.sudo_5Board_4held.size,
+    b.sudo_5Board_4held[4]'h = true
+  ladder : b.sudo_5Board_6ladder = embed (tierClimb t)
+  l0 : b.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2)
+  nr : b.sudo_5Board_6nrungs = Int.ofNat (tierR t)
+  park : b.sudo_5Board_9park_hole = Int.ofNat (t.script + 2 + tierR t)
+  fromH : b.sudo_5Board_11parked_from = -1
+  ridx : b.sudo_5Board_8rung_idx = 0
+  tlen : b.sudo_5Board_9tally_len = 0
+  t0 : b.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t)
+  row : b.sudo_5Board_3row = embed (paintedRow t)
+  tmax : ∃ n : Nat, b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (n : Int)
+  ops : CheckedOps b (checkOpsCap bud + 3)
+  /-- The tail's move count, including the rise's two homes, under the check cap. -/
+  movesLe : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
+    mv ≤ checkMoveCap bud + 2 * t.n + tailMoveCap t.n t.benchlen
+  ctrlLe : ∃ c, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+    c ≤ checkCtrlCap bud + 6
+  ops2lt : 2 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+  ops3lt : 3 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+
+theorem LiveLeft.rew {b : Ecbs.Board} {t : Spec.Tier} {bud : ClimbBudget}
+    {base3 base3' baseY baseY' : List Nat} {flag3 flag3' : Bool}
+    (h3 : base3 = base3') (hY : baseY = baseY') (hf : flag3 = flag3')
+    (h : LiveLeft b t bud base3 baseY flag3) :
+    LiveLeft b t bud base3' baseY' flag3' := by
+  cases h3
+  cases hY
+  cases hf
+  exact h
 
 /-- The nonempty chord add, once `invert_checked` has returned. Across, bottom,
     and gap are the homes the rise keeps. `chord_tail_point` runs on that board.
@@ -344,7 +396,7 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
     simpa [hopR] using hop00
   obtain ⟨b', hct, hAc, hUp, hhiTail, hrowT, hstayT, h2e, h2f, h5e, h5f, h6f,
       hmarkT, hctrlT, hmxT, hmvT, hslT, hpkT, hstT, hhoT, h0tT, h1tT, hszHT, hszDT,
-      hoffT, hopSkip, hop0T⟩ :=
+      hoffT, hopSkip, hop0T, hszOps⟩ :=
     chord_tail_point bR inv rise accX accY run w h r n k moves hole bench slides pk peakS
       cOps m ctrl mx script
       hflagT hoffR hmN hcN hxN hscriptR hbound hbound3 hfitM hfitC hfit2 hfitC4 hfit3
@@ -393,6 +445,7 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
       hole := hhoT
       ops0 := ⟨by simpa [restoreMarker] using hops0, cOps,
         by simpa [restoreMarker] using hop00, hop0T⟩
+      opsSz := hszOps.trans (congrArg Array.size hopsI)
       opsKeep := by
         intro j hne hj hj'
         have hjR : j < bR.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -440,7 +493,8 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
     (hChordS : FitsLen (checkSlideCap bud + tailSlideCap bud.n))
     (hMark : lay.mark + 3 < t.script) (hMarkF : FitsLen (lay.mark + 4))
     (hCtrl : FitsLen (checkCtrlCap bud + 6))
-    (hOps : FitsLen (checkOpsCap bud + 3)) :
+    (hOps : FitsLen (checkOpsCap bud + 3))
+    (hSlot3 : 3 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
     ∃ (bI : Ecbs.Board) (moves0 peak0 slides peakS hole ctrl cOps : Nat),
       RiseRead b bI baseY accY accX run inv t.n moves0 peak0 slides peakS hole
         lay.mark ctrl lay.mx t.script t.benchlen cOps t.w t.h t.r t.k ∧
@@ -455,9 +509,12 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
         (∃ high : Nat,
           b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
           tallyOrigin t ≤ high) ∧
-        TailPack t.n t.benchlen (moves0 + pegCount baseY + pegCount accY) bI b' := by
+        TailPack t.n t.benchlen (moves0 + pegCount baseY + pegCount accY) bI b' ∧
+        LiveLeft b' t bud lay.base3 baseY lay.flag3 := by
   obtain ⟨bI, _h5, _h5D, hinv0, h5aI, h5tI, hnT, _hlenA, h2aI, h2tI, h0aI, h0tI,
-      h1aI, h1tI, h4aI, h4tI, hcarry, hbnd, hwater, _hrowI⟩ :=
+      h1aI, h1tI, h4aI, h4tI, hcarry, hbnd, hwater, hrowI, hladI, h3aI, h3tI,
+      hl0I, hnrI, hparkI, hfromI, hridxI, htlenI, ht0I, htmaxI, _hop2I, _hop3I,
+      hopsAllI⟩ :=
     open_checked { b with sudo_5Board_9marker_on := false } t run inv lay hOk sat hR hsh
       bud hmatch hacc
   have _hwater := hwater
@@ -611,8 +668,101 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
     room.fitMX room.fitSX room.tailM room.tailS room.fitP room.fitMo room.fmP
     room.foldP room.fitSo
   obtain ⟨high, hh, hge⟩ := _hwater
+  have hleft : LiveLeft b' t bud lay.base3 baseY lay.flag3 := by
+    have h3Ib : 3 < bI.sudo_5Board_4home.size := by rw [hcarry.szH]; decide
+    have h3Id : 3 < bI.sudo_5Board_4held.size := by rw [hcarry.szD]; decide
+    have h4Ib : 4 < bI.sudo_5Board_4home.size := by rw [hcarry.szH]; decide
+    have h4Id : 4 < bI.sudo_5Board_4held.size := by rw [hcarry.szD]; decide
+    refine
+      { tier := hpack.stay.tier.trans hcarry.tier
+        home3 := by
+          intro h
+          have hEq : b'.sudo_5Board_4home[3]'h = bI.sudo_5Board_4home[3]'h3Ib :=
+            (home_at b' 3 h).symm.trans (hpack.stay.home3.trans (home_at bI 3 h3Ib))
+          exact hEq.trans (h3aI h3Ib)
+        held3 := by
+          intro h
+          have hEq : b'.sudo_5Board_4held[3]'h = bI.sudo_5Board_4held[3]'h3Id :=
+            (held_at b' 3 h).symm.trans (hpack.stay.held3.trans (held_at bI 3 h3Id))
+          exact hEq.trans (h3tI h3Id)
+        home4 := by
+          intro h
+          have hEq : b'.sudo_5Board_4home[4]'h = bI.sudo_5Board_4home[4]'h4Ib :=
+            (home_at b' 4 h).symm.trans (hpack.stay.home4.trans (home_at bI 4 h4Ib))
+          exact hEq.trans ((h4aI h4Ib).trans (congrArg embed hside4.symm))
+        held4 := by
+          intro h
+          have hEq : b'.sudo_5Board_4held[4]'h = bI.sudo_5Board_4held[4]'h4Id :=
+            (held_at b' 4 h).symm.trans (hpack.stay.held4.trans (held_at bI 4 h4Id))
+          exact hEq.trans ((h4tI h4Id).trans hf4)
+        ladder := hpack.stay.ladder.trans hladI
+        l0 := hpack.stay.l0.trans hl0I
+        nr := hpack.stay.nr.trans hnrI
+        park := hpack.stay.park.trans hparkI
+        fromH := hpack.stay.fromH.trans hfromI
+        ridx := hpack.stay.ridx.trans hridxI
+        tlen := hpack.stay.tlen.trans htlenI
+        t0 := hpack.stay.t0.trans ht0I
+        row := hpack.row.trans hrowI
+        tmax := by
+          obtain ⟨n, hn⟩ := htmaxI
+          exact ⟨n, hpack.stay.tmax.trans hn⟩
+        ops := by
+          intro j hj
+          by_cases h0 : j = 0
+          · subst h0
+            obtain ⟨h0I, c0, hc0, h0'⟩ := hpack.ops0
+            obtain ⟨_, cB, hcB, hleB⟩ := hbnd.ops
+            have hcEq : c0 = cB := by
+              apply Int.ofNat.inj
+              rw [ofNat_eq_natCast, ofNat_eq_natCast]
+              exact hc0.symm.trans (idx_irrel.trans hcB)
+            refine ⟨c0 + 3, h0' hj, ?_⟩
+            simp only [if_neg (by decide : (0 : Nat) ≠ 2), if_neg (by decide : (0 : Nat) ≠ 3)]
+            rw [hcEq]
+            exact Nat.add_le_add_right hleB 3
+          · have hjI : j < bI.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+              rw [← hpack.opsSz]; exact hj
+            obtain ⟨c, hc, hle⟩ := hopsAllI j hjI
+            have hkeep := hpack.opsKeep j h0 hjI hj
+            exact ⟨c, hkeep.trans (idx_irrel.trans hc), hle⟩
+        movesLe := by
+          obtain ⟨mv, hmv, hle⟩ := hpack.moves
+          obtain ⟨mv0, hmv0, hle0⟩ := hbnd.move
+          have hpegB : pegCount baseY ≤ t.n := by rw [← hyB]; exact pegCount_le baseY
+          have hpegA : pegCount accY ≤ t.n := by rw [← hyA]; exact pegCount_le accY
+          have hmvIn : moves0 ≤ checkMoveCap bud := by
+            have hEq : moves0 = mv0 := by
+              apply Int.ofNat.inj
+              rw [ofNat_eq_natCast, ofNat_eq_natCast]
+              exact hmoves.symm.trans hmv0
+            rw [hEq]
+            exact hle0
+          refine ⟨mv, hmv, ?_⟩
+          have hsum : moves = moves0 + pegCount baseY + pegCount accY := rfl
+          have hstep : mv ≤ moves0 + pegCount baseY + pegCount accY +
+              tailMoveCap t.n t.benchlen := by
+            rw [← hsum]
+            exact hle
+          omega
+        ctrlLe := by
+          obtain ⟨c0, hc0, hcOut⟩ := hpack.ctrl
+          obtain ⟨cB, hcB, hleB⟩ := hbnd.ctrl
+          have hcEq : c0 = cB := by
+            apply Int.ofNat.inj
+            rw [ofNat_eq_natCast, ofNat_eq_natCast]
+            exact hc0.symm.trans hcB
+          refine ⟨c0 + 6, hcOut, ?_⟩
+          rw [hcEq]
+          omega
+        ops2lt := by
+          obtain ⟨h2, _, _, _⟩ := _hop2I
+          exact hpack.opsSz ▸ h2
+        ops3lt := by
+          obtain ⟨h3, _, _, _⟩ := _hop3I hSlot3
+          exact hpack.opsSz ▸ h3 }
   refine ⟨bI, moves0, peak0, slides, peakS, hole, ctrl, cOps, hr,
-    b', hct, hx, hy, ⟨high, hhi.trans hh, hge⟩, hpack⟩
+    b', hct, hx, hy, ⟨high, hhi.trans hh, hge⟩, hpack, hleft⟩
 
 
 /-- `chordAddTail` after the inverse is `chord_tail` on the rise board.

@@ -92,6 +92,7 @@ import EcbsLink2.Link2.ChordTailPoint
 import EcbsLink2.Link2.ChordRoom
 import EcbsLink2.Link2.ChordOpen
 import EcbsLink2.Link2.ChordLive
+import EcbsLink2.Link2.ChordFrame
 import EcbsLink2.Link2.ChordNext
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn

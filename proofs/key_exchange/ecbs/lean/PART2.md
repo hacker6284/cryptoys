@@ -365,9 +365,13 @@ Home 3 is the base. `ClimbBudget` stores that list and its held flag. `SideKeep`
 
 4289 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 978160 kB VmHWM. Under 2 GB.
 
+The board `chord_tail_point` returns has the three scratch homes empty. Home 2 and home 5 are the empty array and are not held: `chord_up_slide` clears the bottom and the gap, and `slide_point` now returns those four facts. Home 6 is not held. The square leaves it that way (`square_kept`, then `bottom_lay`), the take and the onto multiply do not write it, and the slide keeps it. `point_from_bottom` carries all three through to the tail.
+
+4289 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 473232 kB VmHWM. Under 2 GB.
+
 ## Next
 
-Scratch homes 2, 5, and 6 empty. Then `chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, `tallyOrigin ≤ high`, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+`chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, `tallyOrigin ≤ high`, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

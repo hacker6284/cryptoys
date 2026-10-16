@@ -470,7 +470,10 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
         2 * pegCount x3))
     (hfitMS : FitsLen (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3))
     (h3 : up ≠ 3 ∧ across ≠ 3 ∧ bottom ≠ 3 ∧ gap ≠ 3)
-    (h4 : up ≠ 4 ∧ across ≠ 4 ∧ bottom ≠ 4 ∧ gap ≠ 4) :
+    (h4 : up ≠ 4 ∧ across ≠ 4 ∧ bottom ≠ 4 ∧ gap ≠ 4)
+    (h6D : 6 < b.sudo_5Board_4held.size)
+    (h6e : b.sudo_5Board_4held[6] = false)
+    (h6n : up ≠ 6 ∧ across ≠ 6 ∧ bottom ≠ 6 ∧ gap ≠ 6) :
     ∃ b',
       (do
           let b ← Ecbs.clear b (gap : Int)
@@ -500,7 +503,8 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      TailStay b b' := by
+      TailStay b b' ∧
+      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) := by
   have hfS : FitsLen slope.length := by rw [hlenS]; exact hf
   have hfX : FitsLen x3.length := by rw [hlenX]; exact hf
   have hclear := clear_held_refines b gap slope moves hGapH hGapD hGapT hGapA hmoves hfS hfitClear
@@ -587,7 +591,7 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
     (by simpa [slS, pegY] using hfitMS)
   rw [hmove]
   let b' := moveBandBoard bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
-  refine ⟨b', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro h
     have hh := moveBand_home bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
     have hget := idx_eq (by simpa [b'] using hh) up (by simpa [b', hh] using h)
@@ -710,5 +714,17 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
         moveBandBoard_stay bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
           h3.2.2.1 h3.2.1 h4.2.2.1 h4.2.1
     exact TailStay.trans (TailStay.trans hstayC hstayS) hstayM
+  · intro h
+    have hh := moveBand_held bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
+    have hget := idx_eq (by simpa [b'] using hh) 6 h
+    rw [Array.getElem_set_ne (h := h6n.2.1), Array.getElem_set_ne (h := h6n.2.2.1)] at hget
+    rw [hget]
+    have h6S : 6 < bS.sudo_5Board_4held.size := by
+      unfold bS
+      rw [settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak, Array.size_set]
+      simpa [bC, Array.size_set] using h6D
+    have heq := settle_held_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
+    have hpre := idx_eq (by simpa [bS] using heq) 6 h6S
+    simpa [Array.getElem_set_ne, h6n.1, bC, Array.getElem_set_ne, h6n.2.2.2, h6e] using hpre
 
 end EcbsLink2.Link2

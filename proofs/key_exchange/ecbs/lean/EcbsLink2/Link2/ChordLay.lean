@@ -120,7 +120,8 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
       bW.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       bW.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      TailStay b bW := by
+      TailStay b bW ∧
+      (∀ h : 6 < bW.sudo_5Board_4held.size, bW.sudo_5Board_4held[6] = false) := by
   intro slope
   obtain ⟨bS, hdo, _hmkS, hoffS, hmS, hcS, hxS, htS, hmvS, hslS, hszHs, hszDs, h5a, h5t,
       h6e, hhome, hheld, hopsEq, hpeak⟩ :=
@@ -179,7 +180,7 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
   obtain ⟨hp, _hhiW, hrowW, hstayW⟩ := hrest
   obtain ⟨pk, st, ho, hpkW, hstW, hhoW⟩ := hp
   refine ⟨bW, benchL, ?_, hbenchW, hpreW, hlenW, hzeroW, honW, htoW, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · have hassoc :
         (do
             let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
@@ -238,6 +239,7 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
   · exact _hhiW.trans hhiS
   · exact hrowW.trans hrowS
   · exact TailStay.trans hstayS hstayW
+  · exact _h6W
 
 /-- The square, then the two bench adds and the settle. The bottom is
     slope² + 1 + across − run. Across, up, and the gap stay. -/
@@ -358,7 +360,8 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
       bX.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       bX.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      TailStay b bX := by
+      TailStay b bX ∧
+      (∀ h : 6 < bX.sudo_5Board_4held.size, bX.sudo_5Board_4held[6] = false) := by
   intro slope x3
   have h7 : 7 ≤ b.sudo_5Board_4held.size := by rw [hszD]; decide
   have hF : 5 < b.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -372,7 +375,7 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
       hF hHome hHF hArr hS hHomeS hHS hYs h7 hn0 hn hlenx hleny hf hmoves hslides hpeak hpeakS
       hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm hnsm hfitB
       hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW
-  obtain ⟨hpW, _hhiW, hrowW, hstaySq⟩ := htail
+  obtain ⟨hpW, _hhiW, hrowW, hstaySq, h6W⟩ := htail
   obtain ⟨peakW, strictW, holeW, hpkW, hstW, hhoW, opsSz, hop0W⟩ := hpW
   have hnb : n ≤ bench := by omega
   have htriB : allTritList (benchL.take n) := by
@@ -409,7 +412,7 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
   refine ⟨bX, ?_, hoffX, h2x, ?_, ?_, ?_, ?_, hflagX.trans hmkW,
       hszX.trans (hszHW.trans hszH), hszDX.trans (hszDW.trans hszD),
       hmX.trans hmW, hcX.trans hcW, hxX.trans hxW, htX.trans htW,
-      hmvX, hslX, h2tX, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      hmvX, hslX, h2tX, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · have hassoc :
         (do
             let b ← Ecbs.mul b Ecbs.gap Ecbs.gap Ecbs.spare false false false
@@ -465,6 +468,11 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
   · exact hhiX.trans _hhiW
   · exact hrowX.trans hrowW
   · exact TailStay.trans hstaySq hstayX
+  · intro h
+    have hW : 6 < bW.sudo_5Board_4held.size := by
+      rw [hszDX] at h
+      exact h
+    exact (hheldX 6 (by decide) hW h).trans (h6W hW)
 
 /-- The lane fold's holes from `n` up are empty. One fact for the settle's tail. -/
 theorem fold_tail (n gap : Nat) (strip : List Nat)
@@ -501,7 +509,8 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
     (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
     (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
     (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
-    (hRoomM : FitsLen (moves + 5 * n)) (hRoomS : FitsLen (slides + 4 * n)) :
+    (hRoomM : FitsLen (moves + 5 * n)) (hRoomS : FitsLen (slides + 4 * n))
+    (h6e : b.sudo_5Board_4held[6]'(by rw [hszD]; decide) = false) :
     ∃ b',
       (do
           let b ← Ecbs.clear b Ecbs.gap
@@ -515,7 +524,12 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      TailStay b b' := by
+      TailStay b b' ∧
+      (∀ h : 2 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[2] = (#[] : Array Int)) ∧
+      (∀ h : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2] = false) ∧
+      (∀ h : 5 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[5] = (#[] : Array Int)) ∧
+      (∀ h : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5] = false) ∧
+      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) := by
   have hpegY : pegCount (benchL.take n) ≤ n := by
     have hlen : (benchL.take n).length = n := by
       simp [List.length_take, Nat.min_eq_left hnle]
@@ -538,7 +552,8 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
       2 * pegCount x3) := FitsLen.of_le hRoomM (by omega)
   have hfitMS : FitsLen (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3) :=
     FitsLen.of_le hRoomS (by omega)
-  obtain ⟨b', hdo, hUp, _, hAc, _, _, _, _, _, hoff, hflag, _, _, _, _, _, hhi, hrow, hstay⟩ :=
+  obtain ⟨b', hdo, hUp, _, hAc, _, h2e, h2f, h5e, h5f, hoff, hflag, _, _, _, _, _, hhi,
+      hrow, hstay, h6f⟩ :=
     chord_up_slide b 1 0 2 5 slope x3 benchL n moves slides peak
       (by rw [hszH]; decide) (by rw [hszD]; decide)
       (by rw [hszH]; decide) (by rw [hszD]; decide)
@@ -549,7 +564,8 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
       h5t h5a h1e h0e h2t h2a hon hto hbench hn hlenS hlenX hpos hnle hzero
       hf hfitL hmv hsl hpk hfitClear hpeg hfitSM hfitSS hfit2 hfitMM hfitMS
       (by decide) (by decide)
-  refine ⟨b', ?_, ?_, ?_, hoff, hflag, hhi, hrow, hstay⟩
+      (by rw [hszD]; decide) h6e (by decide)
+  refine ⟨b', ?_, ?_, ?_, hoff, hflag, hhi, hrow, hstay, h2e, h2f, h5e, h5f, h6f⟩
   · exact hdo
   · intro h0
     exact hAc h0
@@ -609,7 +625,8 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
         3 * (bench - n)))
     (hTailM : FitsLen (moves + pegCount x3 + pegCount accY + 2 * n + n * (n + 1) +
         3 * (bench - n) + 5 * n))
-    (hTailS : FitsLen (slides + 6 * n)) :
+    (hTailS : FitsLen (slides + 6 * n))
+    (h6e : b.sudo_5Board_4held[6]'(by rw [hszD]; decide) = false) :
     let dx := fieldSub n accX x3
     let yMir := mirrorTrits accY
     let y3 := chordY3 n k bench slope dx accY
@@ -654,7 +671,12 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      TailStay b b' := by
+      TailStay b b' ∧
+      (∀ h : 2 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[2] = (#[] : Array Int)) ∧
+      (∀ h : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2] = false) ∧
+      (∀ h : 5 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[5] = (#[] : Array Int)) ∧
+      (∀ h : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5] = false) ∧
+      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) := by
   intro dx yMir y3 benchL
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -843,13 +865,25 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
   have hslLe : slF + 4 * n ≤ slides + 6 * n := by
     dsimp [slF]
     omega
-  obtain ⟨b', hslide, hAc, hUp, _, _, hhiS, hrowS, hstayS⟩ :=
+  have h6eU : bU.sudo_5Board_4held[6]'(by rw [hszU.2]; decide) = false := by
+    have h6T : 6 < bT.sudo_5Board_4held.size := by rw [hheldT]; rw [hszD]; decide
+    have h6eT : bT.sudo_5Board_4held[6]'h6T = false := by
+      have hEq : bT.sudo_5Board_4held = b.sudo_5Board_4held := hheldT
+      exact cell_eq_of hEq h6e
+    have h6M : 6 < bM.sudo_5Board_4held.size := by
+      rw [hszMD]; decide
+    have h6eM : bM.sudo_5Board_4held[6]'h6M = false :=
+      (hlay.heldK 6 (by decide) (by decide) h6T h6M).trans h6eT
+    have hEq : bU.sudo_5Board_4held = bM.sudo_5Board_4held := by simp [bU, markerOn_held]
+    exact cell_eq_of hEq h6eM
+  obtain ⟨b', hslide, hAc, hUp, _, _, hhiS, hrowS, hstayS, h2e, h2f, h5e, h5f, h6f⟩ :=
     slide_point bU slope x3 benchL n mvF slF pkU
       hszU.1 hszU.2 h5tU h5aU h1eU h0eU h2tU h2aU honU htoU hbenchU hnU
       hslope hx3 (by rw [hlenB]; omega) (by rw [hlenB]; exact hnb) hzero
       hf (by simpa [hlenB] using hfitB) hmvU hslU hpkB
-      (FitsLen.of_le hTailM hmvLe) (FitsLen.of_le hTailS hslLe)
-  refine ⟨bM, b', ?_, ?_, hpreY, hszU.1, hszU.2, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, honU, htoU, ?_, hAc, ?_, ?_, ?_, ?_⟩
+      (FitsLen.of_le hTailM hmvLe) (FitsLen.of_le hTailS hslLe) h6eU
+  refine ⟨bM, b', ?_, ?_, hpreY, hszU.1, hszU.2, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, honU, htoU,
+      ?_, hAc, ?_, ?_, ?_, ?_, h2e, h2f, h5e, h5f, h6f⟩
   · have hassoc :
         (do
             let b ← Ecbs.add b Ecbs.across Ecbs.bottom true

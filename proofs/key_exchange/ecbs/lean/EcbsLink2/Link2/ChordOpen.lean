@@ -146,7 +146,12 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
-      TailStay b b' := by
+      TailStay b b' ∧
+      (∀ h : 2 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[2] = (#[] : Array Int)) ∧
+      (∀ h : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2] = false) ∧
+      (∀ h : 5 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[5] = (#[] : Array Int)) ∧
+      (∀ h : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5] = false) ∧
+      (∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) := by
   intro slope x3 y3
   obtain ⟨bX, hpre, hoffX, h2x, h0aF, h0tF, h5aF, h5tF, hflagN, hszH8, hszD8,
       hmN, hcN, hxN, htAll, hmvRaw, hslRaw, h2tF, h1home, h1held, opsSz, hop0F,
@@ -159,7 +164,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
       hsm hnsm hfitB hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW
       hfit1 hfitA hfitRun hpegX hfitMX hfitSX
-  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX⟩, hhiX, hrowX, hstayB⟩ := htail
+  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX⟩, hhiX, hrowX, hstayB, h6X⟩ := htail
   have _hbottomHigh := hhiX
   let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
     pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
@@ -235,7 +240,8 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   have hfoldPx : FitsLen (mvX + pegCount x3 + pegCount accY + 2 * n + n * (n + 1) +
       3 * (bench - n)) := hfoldP
   have hfitSox : FitsLen (slX + 2 * n) := hfitSo
-  obtain ⟨_, b', _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hpost, hAc, hUp, hhi, hrow, hstay⟩ :=
+  obtain ⟨_, b', _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hpost, hAc, hUp, hhi, hrow, hstay,
+      h2e, h2f, h5e, h5f, h6f⟩ :=
     point_from_bottom bX accX accY x3 slope w h r n k bench mvX slX peakXN strictW holeW
       cOpsX mX ctrlX mxX script
       hszH8 hszD8 hflagN hoffX hmN hcN hxN hscriptX
@@ -248,8 +254,9 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hfitPx hf hspan hfi hfitMox hfitSox hfmPx
       hw0 hh0 hrR hrP hnE hkLe hgap hwX hhX hrX hkX
       hsm hnsm hfitB hfoldPx hbig hbigS
+      (h6X (by rw [hszD8]; decide))
   refine ⟨b', ?_, hAc, hUp, hhi.trans _hbottomHigh, hrow.trans hrowX,
-    TailStay.trans hstayB hstay⟩
+    TailStay.trans hstayB hstay, h2e, h2f, h5e, h5f, h6f⟩
   rw [chord_tail_across_up]
   exact chord_do_join b bX b' hpre hpost
 

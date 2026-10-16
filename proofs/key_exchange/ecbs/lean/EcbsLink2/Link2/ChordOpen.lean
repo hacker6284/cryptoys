@@ -192,7 +192,14 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       (∀ h : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
       (∀ h : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1] = true) ∧
       b'.sudo_5Board_4home.size = 8 ∧
-      b'.sudo_5Board_4held.size = 8 := by
+      b'.sudo_5Board_4held.size = 8 ∧
+      b'.sudo_5Board_8bench_on = false ∧
+      (∀ j, j ≠ 0 → ∀ (hj : j < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+        (hj' : j < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+          b'.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj' =
+            b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj) ∧
+      (∀ h0 : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = Int.ofNat (cOps + 3)) := by
   intro slope x3 y3
   obtain ⟨bX, hpre, hoffX, h2x, h0aF, h0tF, h5aF, h5tF, hflagN, hszH8, hszD8,
       hmN, hcN, hxN, htAll, hmvRaw, hslRaw, h2tF, h1home, h1held, opsSz, hop0F,
@@ -205,7 +212,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
       hsm hnsm hfitB hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW
       hfit1 hfitA hfitRun hpegX hfitMX hfitSX
-  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX⟩, hhiX, hrowX, hstayB, h6X⟩ := htail
+  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX⟩, hhiX, hrowX, hstayB, h6X, hopX⟩ := htail
   have _hbottomHigh := hhiX
   let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
     pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
@@ -283,7 +290,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   have hfitSox : FitsLen (slX + 2 * n) := hfitSo
   obtain ⟨_, b', _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hpost, hAc, hUp, hhi, hrow, hstay,
       h2e, h2f, h5e, h5f, h6f, hmarkP, hctrlP, hmxP, _hopsP, hmvP, hslP, hpkP, hstP, hhoP,
-      h0tP, h1tP, hszHP, hszDP⟩ :=
+      h0tP, h1tP, hszHP, hszDP, hoffP, hopP⟩ :=
     point_from_bottom bX accX accY x3 slope w h r n k bench mvX slX peakXN strictW holeW
       cOpsX mX ctrlX mxX script
       hszH8 hszD8 hflagN hoffX hmN hcN hxN hscriptX
@@ -363,9 +370,20 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   refine ⟨b', ?_, hAc, hUp, hhi.trans _hbottomHigh, hrow.trans hrowX,
     TailStay.trans hstayB hstay, h2e, h2f, h5e, h5f, h6f,
     hmarkP, hctrlP, hmxP,
-    hmvBound, ⟨_, hslP⟩, hpkP, hstP, hhoP, h0tP, h1tP, hszHP, hszDP⟩
+    hmvBound, ⟨_, hslP⟩, hpkP, hstP, hhoP, h0tP, h1tP, hszHP, hszDP, hoffP, ?_, ?_⟩
   rw [chord_tail_across_up]
   exact chord_do_join b bX b' hpre hpost
+  · intro j hne hj hj'
+    have hjX : j < bX.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      have hsz : b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+          bX.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        rw [_hopsP, Array.size_set]
+      exact hsz ▸ hj'
+    exact (hopP j hne hjX hj').trans (hopX j hne hj hjX)
+  · intro h0
+    have hv := Array.getElem_set_eq bX.sudo_5Board_4cost.sudo_5Costs_3ops
+      ⟨0, hopsX⟩ (Int.ofNat (cOpsX + 1)) rfl (by rw [← _hopsP]; exact h0)
+    simpa [cOpsX, ofNat_eq_natCast] using cell_eq_of _hopsP hv
 
 /-- The live cell step, once the chord add has returned the new point.
     `walkStep` is that same point. -/

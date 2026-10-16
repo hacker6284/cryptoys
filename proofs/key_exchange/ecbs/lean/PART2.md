@@ -379,7 +379,11 @@ The closing slide does not write the marker, the script maximum, the control cou
 
 ## Next
 
-`chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, `tallyOrigin ≤ high`, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). The tail counters above are the marker, control, script maximum, and the natural cost fields. The move bound is `tailMoveCap`. Ops slots 2 and 3 are the naturals `open_checked` returns, with room `checkOpsCap + 3`. Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+The chord tail turns the bench off. It writes ops slot 0 and leaves every other slot. Slot 0 becomes the value it was given plus 3. Slots 2 and 3 on that board are the slots `open_checked` returned, each a natural `c` with `c + 1 ≤ checkOpsCap base + 3`.
+
+4304 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. ChordLay peaked at 1703484 kB and ChordOpen at 2716136 kB. ChordOpen is above 2 GB. The virtual limit held.
+
+`chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, `tallyOrigin ≤ high`, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). The tail counters above are the marker, control, script maximum, and the natural cost fields. The move bound is `tailMoveCap`. The rise does not yet export the control row, so that equality is not on the board `chord_add_live` returns. Chain the frame to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

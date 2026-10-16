@@ -580,7 +580,7 @@ theorem final_cube_settle
     exact h7
   have hcube := cube_refines bS 5 5 s.gap base.w base.h base.r s.n s.k mvS holeN s.benchlen pkS peakS cOps base.cg hmkS hoffS hopsS hopS hfops (by rw [htierS, h.shape.tierB, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierCg, ofNat_eq_natCast]) h.shape.peg.span hF hHome hHF hArr h7S h.shape.peg.n_pos (by rw [htierS]; exact h.shape.tierN) h.shape.gapLen h.shape.peg.fitN hmvS hpkS hpeakS h.shape.peg.trits h.shape.peg.fit3 hfm ⟨h.shape.w0, h.shape.h0, h.shape.rlt, h.shape.r0, h.shape.n_eq, h.shape.k_le, h.shape.gap_eq⟩ (by rw [htierS, h.shape.tierW, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierH, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierR, ofNat_eq_natCast]) (by rw [htierS, h.shape.tierK, ofNat_eq_natCast]) (by rw [hhole, ofNat_eq_natCast]) h.shape.peg.small h.shape.peg.n_small h.shape.peg.fitBn hfold
   obtain ⟨bC, hrunC, honC, htoC, hbenchC, htakeC, hzeroC, hmvC, _hpkC, hslC,
-      _htierC, _hszH, _hhomeC, _hheldC, _hmkC, _hrowC, _hopsC, _ht0C, _hhighC, _hctrlC⟩ :=
+      _htierC, _hszH, _hhomeC, _hheldC, _hmkC, _hrowC, _hopsC, _ht0C, _hhighC, _hctrlC, _hsc⟩ :=
     hcube
   have hprog : Ecbs.cube bU Ecbs.gap Ecbs.gap = .ok bC := hcubeEq.trans hrunC
   let fold := laneFold s.n (s.n - s.k) (combStrip s.n s.benchlen s.gap)

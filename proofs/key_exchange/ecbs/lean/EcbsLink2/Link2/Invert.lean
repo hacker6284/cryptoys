@@ -1825,7 +1825,7 @@ theorem cube_tally_peg (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) := by
   obtain ⟨b1, hb, hon, hto, hbench, hpre, hhi, hmov, hpeakR, hslides, ht, _hsz, hhome, hheld,
-      hmk, hrowEq, hop, htally, hhigh, hctrlB⟩ :=
+      hmk, hrowEq, hop, htally, hhigh, hctrlB, _hsc⟩ :=
     cube_refines b dst src xs w h r n k moves hole bench peak peakS cOps cg hmk hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf hmoves hpeak hpeakS hxsT h3 hfm ⟨shape.hw0, shape.hh0, shape.hrR, shape.hrP, shape.hnE, shape.hkLe, shape.hgap⟩ hwF hhF hrF hkF hHole hsm hnsm hfitB hfold
   rw [hb, ok_bind]
   have hT0' : b1.sudo_5Board_6tally0 = (t0 : Int) := by rw [htally]; exact hT0

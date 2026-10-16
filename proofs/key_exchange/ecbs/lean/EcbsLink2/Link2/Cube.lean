@@ -1095,13 +1095,15 @@ theorem cube_refines (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       b'.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 ∧
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      FrameScalar b b' := by
   rw [cube_off_eq b dst src xs w h r n k moves hole bench peak peakS cOps cg hmk hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf hmoves hpeak hpeakS hxsT h3 hfm ⟨shape.hw0, shape.hh0, shape.hrR, shape.hrP, shape.hnE, shape.hkLe, shape.hgap⟩ hwF hhF hrF hkF hHole hsm hnsm hfitB hfold]
-  refine ⟨_, rfl, rfl, rfl, rfl, ?_, ?_, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  refine ⟨_, rfl, rfl, rfl, rfl, ?_, ?_, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, ?_⟩
   · unfold fieldCube laneFold
     rfl
   · exact cube_off_high xs n k bench hn0 (by rw [shape.hgap]; exact Nat.mul_pos shape.hw0 shape.hrP)
   · simp [cubeOffBoard, Array.size_set]
+  · exact FrameScalar.of_eq rfl rfl rfl rfl rfl rfl rfl rfl rfl
 
 /-- `settle` then `value` on a bench whose tail is empty. `settle_refines` writes the
     length-`n` prefix and sets the home held; `value_after_set` reads it back. -/

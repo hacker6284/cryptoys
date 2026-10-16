@@ -37,6 +37,7 @@ import EcbsLink2.Link2.RungBody
 import EcbsLink2.Link2.GenRung
 import EcbsLink2.Link2.SetCongr
 import EcbsLink2.Link2.AfterClimb
+import EcbsLink2.Link2.SettleFrame
 import EcbsLink2.Link2.InvertTie
 import EcbsLink2.Link2.EntryRung
 import EcbsLink2.Link2.InvertOpen

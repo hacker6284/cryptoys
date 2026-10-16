@@ -1567,6 +1567,991 @@ export func fold(t: Tier, x: List<int>) -> List<int>
     return fold_key(b)
 
 // ---------------------------------------------------------------------------
+// Animation trace (demo only; approved by Zachary, 2026-10-16: "Yes, add the trace").
+// Not exported, not part of the API, Demo tier only. trace_exchange rolls both keys
+// (every d10 face read, a 0 thrown again, a whole reroll) and runs the exchange with
+// one summary per step that changes a board: the step (an op of the rules above and its
+// arguments) and the player's board before and after it. step_moves expands one
+// summary into its peg moves, every hole each move clicks, from the twins below; the
+// tests replay every step's moves onto the board to land exactly on the next summary,
+// and check that the trace's outcome is exchange's.
+//
+// The twins are copies of the rules above with the steps recorded; nothing here
+// changes a peg the rules would not. A step's board is the rules' own Board, so the
+// summaries carry the costs, the control row and the call log as they stand.
+
+// The pegs a player can see, as bands: 0 to 7 the homes (7, the check target, is
+// never held: its number lives on the workbench), 8 the workbench strip (lane 1),
+// 9 the control row with the script marker as a white peg in its script hole.
+pv_bench = 8
+pv_control = 9
+
+func pegs_of(b: Board) -> List<List<int>>
+    out: List<List<int>> = []
+    for h = 0 to home_count - 1
+        if b.held[h]
+            out.append(b.home[h])
+        else
+            out.append(filled(b.t.n, 0))
+    strip = filled(b.t.benchlen, 0)
+    if b.bench_on
+        for i = 0 to b.bench.length - 1
+            strip[i] = b.bench[i]
+    out.append(strip)
+    row = b.row
+    if b.marker >= 0
+        row[b.marker] = 1
+    out.append(row)
+    return out
+
+// Why a peg moved: the step's own pegs (a step that is not a multiply, a cube or the
+// fold), or a part of a multiply, a cube or the fold.
+why_step = 0
+why_marker = 1
+why_settle = 2
+why_slide = 3
+why_copy = 4
+why_lift = 5
+why_lay = 6
+why_fold_lift = 7
+why_fold_drop = 8
+why_comb_lift = 9
+why_comb_drop = 10
+why_key_fold = 11
+
+func why_names() -> List<text>
+    return ["step", "marker", "settle", "slide", "copy", "lift", "lay", "fold lift",
+            "fold drop", "comb lift", "comb drop", "key fold"]
+
+// One peg move: hole `hole` of band `band` (pegs_of) goes from trit `from` to `into`.
+record PegMove
+    band: int
+    hole: int
+    from: int
+    into: int
+    why: int
+
+func diff_moves(before: List<List<int>>, after: List<List<int>>, why: int, moves: inout List<PegMove>)
+    for k = 0 to before.length - 1
+        for i = 0 to before[k].length - 1
+            if before[k][i] != after[k][i]
+                moves.append(PegMove(k, i, before[k][i], after[k][i], why))
+
+func apply_move(p: inout List<List<int>>, m: PegMove)
+    r = p[m.band]
+    assert r[m.hole] == m.from
+    r[m.hole] = m.into
+    p[m.band] = r
+
+// The steps (TraceStep.op) and their arguments (TraceStep.args).
+k_put = 0
+k_white0 = 1
+k_copy = 2
+k_move = 3
+k_clear = 4
+k_mirror = 5
+k_add = 6
+k_mul = 7
+k_cube = 8
+k_settle = 9
+k_bench_white0 = 10
+k_bench_add = 11
+k_bench_read = 12
+k_tally_start = 13
+k_tally_flip = 14
+k_tally_double = 15
+k_tally_add = 16
+k_tally_clear = 17
+k_park = 18
+k_unpark = 19
+k_marker_lift = 20
+k_phase_drop = 21
+k_start_calling = 22
+k_call = 23
+k_calling_off = 24
+k_fold = 25
+
+func trace_op_names() -> List<text>
+    return ["put", "white0", "copy", "move", "clear", "mirror", "add", "mul", "cube",
+            "settle", "bench white0", "bench add", "bench read", "tally start",
+            "tally flip", "tally double", "tally add", "tally clear", "park", "unpark",
+            "marker lift", "phase drop", "start calling", "call", "calling off", "fold"]
+
+func bit(x: bool) -> int
+    if x
+        return 1
+    return 0
+
+func cat(x: List<int>, y: List<int>) -> List<int>
+    out = x
+    for i = 0 to y.length - 1
+        out.append(y[i])
+    return out
+
+func suffix(xs: List<int>, m: int) -> List<int>
+    out: List<int> = []
+    for i = m to xs.length - 1
+        out.append(xs[i])
+    return out
+
+// One step of the rules on a board, by op and arguments. put: [home] + the number;
+// copy, add: [dst, src, mirror]; move: [dst, src]; mul: [dst, first, second,
+// copy_second, onto, mirror]; cube: [dst, src]; bench add: [src, mirror]; tally flip:
+// [j] (a white tally peg turned red); park: [rung]; call: [dst, hole] + the sender's
+// band (the answer is its peg at hole). The fold is not a step of this (fold_key moves
+// no peg on the model's board): see trace_fold_phase.
+func run_op(b: inout Board, op: int, a: List<int>)
+    if op == k_put
+        put(b, a[0], suffix(a, 1))
+    else if op == k_white0
+        white0(b, a[0])
+    else if op == k_copy
+        copy_band(b, a[0], a[1], a[2] == 1)
+    else if op == k_move
+        move_band(b, a[0], a[1])
+    else if op == k_clear
+        clear(b, a[0])
+    else if op == k_mirror
+        mirror(b, a[0])
+    else if op == k_add
+        add(b, a[0], a[1], a[2] == 1)
+    else if op == k_mul
+        mul(b, a[0], a[1], a[2], a[3] == 1, a[4] == 1, a[5] == 1)
+    else if op == k_cube
+        cube(b, a[0], a[1])
+    else if op == k_settle
+        settle(b)
+    else if op == k_bench_white0
+        bench_white0(b)
+    else if op == k_bench_add
+        bench_add(b, a[0], a[1] == 1)
+    else if op == k_bench_read
+        v = bench_read_and_clear(b)
+    else if op == k_tally_start
+        tally_start(b)
+    else if op == k_tally_flip
+        tally_put(b, a[0], 2)
+        b.cost.ctrl = b.cost.ctrl + 1
+    else if op == k_tally_double
+        tally_double(b)
+    else if op == k_tally_add
+        tally_add_one(b)
+    else if op == k_tally_clear
+        tally_clear(b)
+    else if op == k_park
+        park_rung(b, a[0])
+    else if op == k_unpark
+        unpark_rung(b)
+    else if op == k_marker_lift
+        marker_lift(b)
+    else if op == k_phase_drop
+        phase_drop(b)
+    else if op == k_start_calling
+        start_calling(b)
+    else if op == k_call
+        sender = new_board(b.t)
+        put(sender, plan_src(a[0]), suffix(a, 2))
+        call_hole(b, sender, a[0], a[1])
+    else if op == k_calling_off
+        set_control(b, b.calling_hole, 0)
+        b.cost.ctrl = b.cost.ctrl + 1
+    else
+        assert false
+
+// One summary: step `op` (args) on player `player`'s board (0 A, 1 B) in phase
+// `phase` (ph_*), and the board before and after it.
+record TraceStep
+    player: int
+    phase: int
+    op: int
+    args: List<int>
+    before: Board
+    after: Board
+
+record Tracer
+    player: int
+    steps: List<TraceStep>
+
+// Run one step and record it if it changed a peg.
+func tstep(b: inout Board, tr: inout Tracer, op: int, a: List<int>)
+    before = b
+    run_op(b, op, a)
+    if pegs_of(before) != pegs_of(b)
+        tr.steps.append(TraceStep(tr.player, b.phase, op, a, before, b))
+
+// lane_fold, recording each lift and drop.
+func trace_lane_fold(b: inout Board, strip: inout List<int>, moves: inout List<PegMove>)
+    t = b.t
+    top = 0
+    for i = 0 to strip.length - 1
+        if strip[i] != 0
+            top = i
+    if top > b.cost.max_bench_hole
+        b.cost.max_bench_hole = top
+    assert top < t.benchlen
+    for e = strip.length - 1 downto t.n
+        c = strip[e]
+        if c != 0
+            strip[e] = 0
+            moves.append(PegMove(pv_bench, e, c, 0, why_fold_lift))
+            b.cost.moves = b.cost.moves + 1
+            row = e / t.w
+            col = e mod t.w
+            r1 = row - t.h
+            c1 = col + 1
+            if c1 == t.w
+                r1 = r1 + 1
+                c1 = 0
+            d1 = r1 * t.w + c1
+            d2 = (row - t.r) * t.w + col
+            assert (d1 == e - t.n) and (d2 == e - (t.n - t.k))
+            assert (d1 >= 0) and (d1 < e) and (d2 >= 0) and (d2 < e)
+            o1 = strip[d1]
+            strip[d1] = (o1 + c) mod 3
+            moves.append(PegMove(pv_bench, d1, o1, strip[d1], why_fold_drop))
+            o2 = strip[d2]
+            strip[d2] = (o2 + c) mod 3
+            moves.append(PegMove(pv_bench, d2, o2, strip[d2], why_fold_drop))
+            b.cost.moves = b.cost.moves + 2
+
+// mul, recording every peg it moves: the script marker, the settle, the slide onto
+// the workbench, the copy into the spare, each lifted peg of the second number, each
+// peg of the first laid from it, then the lane fold.
+func trace_mul(b: inout Board, dst: int, first: int, second: int, copy_second: bool, onto: bool, mirror: bool, moves: inout List<PegMove>)
+    b.cost.ops[op_mul] = b.cost.ops[op_mul] + 1
+    p = pegs_of(b)
+    log_op(b)
+    diff_moves(p, pegs_of(b), why_marker, moves)
+    n = b.t.n
+    strip: List<int> = []
+    if onto and b.bench_on and (b.bench_to == dst) and (not b.held[dst])
+        strip = b.bench
+    else
+        p = pegs_of(b)
+        settle(b)
+        diff_moves(p, pegs_of(b), why_settle, moves)
+        strip = filled(b.t.benchlen, 0)
+        if onto
+            assert b.held[dst]
+            r = b.home[dst]
+            b.held[dst] = false
+            b.home[dst] = []
+            m = 2 * npeg(r)
+            b.cost.moves = b.cost.moves + m
+            b.cost.slides = b.cost.slides + m
+            for i = 0 to n - 1
+                strip[i] = r[i]
+                if r[i] != 0
+                    moves.append(PegMove(dst, i, r[i], 0, why_slide))
+                    moves.append(PegMove(pv_bench, i, 0, r[i], why_slide))
+        b.bench_on = true
+        b.bench_to = dst
+        b.bench = strip
+    assert b.held[first]
+    a = b.home[first]
+    src = second
+    if copy_second
+        assert second != spare
+        p = pegs_of(b)
+        copy_band(b, spare, second, false)
+        diff_moves(p, pegs_of(b), why_copy, moves)
+        src = spare
+    assert src != first
+    note_strict(b)
+    assert b.held[src]
+    s = b.home[src]
+    b.held[src] = false
+    b.home[src] = []
+    for i = n - 1 downto 0
+        c = s[i]
+        if c != 0
+            b.cost.moves = b.cost.moves + 1
+            moves.append(PegMove(src, i, c, 0, why_lift))
+            mir = (c == 2) != mirror
+            for j = 0 to n - 1
+                d = a[j]
+                if d != 0
+                    if mir
+                        d = flip(d)
+                    o = strip[i + j]
+                    strip[i + j] = (o + d) mod 3
+                    moves.append(PegMove(pv_bench, i + j, o, strip[i + j], why_lay))
+                    b.cost.moves = b.cost.moves + 1
+    trace_lane_fold(b, strip, moves)
+    b.bench = strip
+    note_peak(b)
+
+// cube, recording the marker, the settle, each comb jump (lift and drop), the fold.
+func trace_cube(b: inout Board, dst: int, src: int, moves: inout List<PegMove>)
+    b.cost.ops[op_cube] = b.cost.ops[op_cube] + 1
+    p = pegs_of(b)
+    log_op(b)
+    diff_moves(p, pegs_of(b), why_marker, moves)
+    p = pegs_of(b)
+    settle(b)
+    diff_moves(p, pegs_of(b), why_settle, moves)
+    note_strict(b)
+    assert b.held[src]
+    v = b.home[src]
+    b.held[src] = false
+    b.home[src] = []
+    strip = filled(b.t.benchlen, 0)
+    for i = 0 to b.t.n - 1
+        if v[i] != 0
+            strip[3 * i] = v[i]
+            moves.append(PegMove(src, i, v[i], 0, why_comb_lift))
+            moves.append(PegMove(pv_bench, 3 * i, 0, v[i], why_comb_drop))
+            b.cost.moves = b.cost.moves + 2
+    assert 3 * (b.t.n - 1) + b.t.combgap < b.t.benchlen
+    b.bench_on = true
+    b.bench_to = dst
+    trace_lane_fold(b, strip, moves)
+    b.bench = strip
+    note_peak(b)
+
+// fold_key, recording each lift from rows C and D and its drop on rows A and B.
+func trace_fold_key(b: inout Board, moves: inout List<PegMove>) -> List<int>
+    t = b.t
+    x = value(b, across)
+    out = x
+    for p = 0 to t.foldsrc.length - 1
+        for c = 0 to t.w - 1
+            i = t.foldsrc[p] * t.w + c
+            j = t.folddst[p] * t.w + c
+            if (i < t.n) and (x[i] != 0)
+                moves.append(PegMove(across, i, x[i], 0, why_key_fold))
+                o = out[j]
+                out[j] = (o + x[i]) mod 3
+                moves.append(PegMove(across, j, o, out[j], why_key_fold))
+                b.cost.moves = b.cost.moves + 1
+    return prefix(out, t.keeprows * t.w)
+
+// park_rung, recording the previous rung going back to its hole and the next one
+// lifted into the parking hole (the parking hole changes twice).
+func trace_park_rung(b: inout Board, rung: int, moves: inout List<PegMove>)
+    holes = climb_holes(b)
+    p = pegs_of(b)
+    unpark(b)
+    diff_moves(p, pegs_of(b), why_step, moves)
+    p = pegs_of(b)
+    got = park(b, holes[b.rung_idx])
+    diff_moves(p, pegs_of(b), why_step, moves)
+    assert got == rung
+    b.rung_idx = b.rung_idx + 1
+
+// One summary's peg moves, from its board before: the twins above for a multiply, a
+// cube, a park and the fold; every other step clicks each changed hole once.
+func step_moves(st: TraceStep) -> List<PegMove>
+    moves: List<PegMove> = []
+    b = st.before
+    a = st.args
+    if st.op == k_mul
+        trace_mul(b, a[0], a[1], a[2], a[3] == 1, a[4] == 1, a[5] == 1, moves)
+    else if st.op == k_cube
+        trace_cube(b, a[0], a[1], moves)
+    else if st.op == k_fold
+        folded = trace_fold_key(b, moves)
+    else if st.op == k_park
+        trace_park_rung(b, a[0], moves)
+    else
+        p = pegs_of(b)
+        run_op(b, st.op, a)
+        diff_moves(p, pegs_of(b), why_step, moves)
+    return moves
+
+// The Demo rules above with every step recorded (twins of invert, invert_checked,
+// frobenius_affine, chord_add_demo, chord_tail, walk_chord, curve_side, base_point,
+// on_curve, certificate, start_calling's session call_in and the exchange's steps).
+
+func trace_invert(b: inout Board, tr: inout Tracer, x: int)
+    b.cost.ops[op_inv] = b.cost.ops[op_inv] + 1
+    tstep(b, tr, k_copy, [gap, x, 0])
+    tstep(b, tr, k_tally_start, [])
+    nr = b.ladder.length
+    for idx = 0 to nr - 1
+        last = idx == nr - 1
+        rung = b.ladder[idx]
+        tstep(b, tr, k_park, [rung])
+        tstep(b, tr, k_copy, [spare, gap, 0])
+        m = b.tally_len
+        for j = 0 to m - 1
+            assert b.row[b.tally0 + j] == 1
+        for j = 0 to m - 1
+            tstep(b, tr, k_cube, [spare, spare])
+            tstep(b, tr, k_tally_flip, [j])
+        tstep(b, tr, k_mul, [gap, gap, spare, 0, 0, 0])
+        tstep(b, tr, k_clear, [gap])
+        if not last
+            tstep(b, tr, k_tally_double, [])
+        if rung == 2
+            tstep(b, tr, k_cube, [spare, gap])
+            tstep(b, tr, k_mul, [gap, x, spare, 0, 0, 0])
+            if not last
+                tstep(b, tr, k_tally_add, [])
+    tstep(b, tr, k_unpark, [])
+    tstep(b, tr, k_cube, [gap, gap])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_tally_clear, [])
+
+func trace_invert_checked(b: inout Board, tr: inout Tracer, x: int)
+    trace_invert(b, tr, x)
+    tstep(b, tr, k_mul, [check_target, gap, x, 1, 0, 0])
+    v = prefix(b.bench, b.t.n)
+    tstep(b, tr, k_bench_read, [])
+    assert v[0] != 0
+    for i = 1 to v.length - 1
+        assert v[i] == 0
+    if v[0] == 2
+        tstep(b, tr, k_mirror, [gap])
+
+func trace_frobenius_affine(b: inout Board, tr: inout Tracer)
+    tstep(b, tr, k_cube, [across, across])
+    tstep(b, tr, k_cube, [up, up])
+    tstep(b, tr, k_settle, [])
+
+func trace_chord_tail(b: inout Board, tr: inout Tracer, xh: int, yh: int)
+    tstep(b, tr, k_mul, [gap, gap, spare, 0, 0, 0])
+    tstep(b, tr, k_clear, [gap])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_mul, [bottom, gap, gap, 1, 0, 0])
+    tstep(b, tr, k_bench_white0, [])
+    tstep(b, tr, k_bench_add, [xh, 0])
+    tstep(b, tr, k_bench_add, [bottom, 1])
+    tstep(b, tr, k_clear, [bottom])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_add, [xh, bottom, 1])
+    tstep(b, tr, k_mirror, [yh])
+    tstep(b, tr, k_mul, [yh, gap, xh, 0, 1, 0])
+    tstep(b, tr, k_clear, [gap])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_move, [xh, bottom])
+
+func trace_chord_add_demo(b: inout Board, tr: inout Tracer, red: bool) -> bool
+    b.cost.ops[op_chord] = b.cost.ops[op_chord] + 1
+    tstep(b, tr, k_copy, [bottom, base_across, 0])
+    tstep(b, tr, k_add, [bottom, across, 1])
+    if is_zero(b, bottom)
+        return false
+    on = b.marker_on
+    b.marker_on = false
+    trace_invert_checked(b, tr, bottom)
+    b.marker_on = on
+    tstep(b, tr, k_copy, [spare, base_up, bit(red)])
+    tstep(b, tr, k_add, [spare, up, 1])
+    trace_chord_tail(b, tr, across, up)
+    return true
+
+func trace_walk_chord(b: inout Board, tr: inout Tracer, cells: List<int>) -> (bool, bool)
+    live = false
+    b.marker_on = true
+    for j = 0 to cells.length - 1
+        c = cells[j]
+        assert (c >= 0) and (c <= 2)
+        tstep(b, tr, k_marker_lift, [])
+        if live
+            trace_frobenius_affine(b, tr)
+        if c != 0
+            if not live
+                tstep(b, tr, k_copy, [across, base_across, 0])
+                tstep(b, tr, k_copy, [up, base_up, bit(c == 2)])
+                live = true
+            else if not trace_chord_add_demo(b, tr, c == 2)
+                b.marker_on = false
+                return (live, false)
+    tstep(b, tr, k_marker_lift, [])
+    b.marker_on = false
+    return (live, true)
+
+func trace_curve_side(b: inout Board, tr: inout Tracer, src: int, dst: int)
+    tstep(b, tr, k_copy, [dst, src, 0])
+    tstep(b, tr, k_cube, [dst, dst])
+    tstep(b, tr, k_mul, [spare, src, src, 1, 0, 0])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_add, [dst, spare, 1])
+    tstep(b, tr, k_clear, [spare])
+    tstep(b, tr, k_white0, [dst])
+
+func trace_base_point(b: inout Board, tr: inout Tracer) -> int
+    assert b.t.demo
+    n = b.t.n
+    found = 0
+    for j = 1 to n - 1
+        x = filled(n, 0)
+        x[j] = 1
+        tstep(b, tr, k_put, cat([base_across], x))
+        trace_curve_side(b, tr, base_across, bottom)
+        tstep(b, tr, k_mul, [gap, bottom, bottom, 1, 0, 0])
+        tstep(b, tr, k_settle, [])
+        tstep(b, tr, k_white0, [up])
+        strip = filled(n, 0)
+        for i = 0 to n - 2
+            if i mod 2 == 0
+                strip[i] = 2
+        strip[n - 2] = 1
+        tstep(b, tr, k_put, cat([across], strip))
+        b.marker_on = true
+        for i = 0 to n - 2
+            d = strip[i]
+            tstep(b, tr, k_marker_lift, [])
+            tstep(b, tr, k_cube, [up, up])
+            if d != 0
+                if d == 2
+                    tstep(b, tr, k_copy, [spare, gap, 0])
+                else
+                    tstep(b, tr, k_copy, [spare, bottom, 0])
+                tstep(b, tr, k_mul, [up, up, spare, 0, 0, 0])
+                tstep(b, tr, k_clear, [up])
+            tstep(b, tr, k_settle, [])
+        tstep(b, tr, k_marker_lift, [])
+        b.marker_on = false
+        tstep(b, tr, k_clear, [gap])
+        tstep(b, tr, k_mul, [gap, up, up, 1, 0, 0])
+        tstep(b, tr, k_settle, [])
+        if value(b, gap) == value(b, bottom)
+            found = j
+            break
+        tstep(b, tr, k_clear, [gap])
+        tstep(b, tr, k_clear, [bottom])
+        tstep(b, tr, k_clear, [up])
+        tstep(b, tr, k_clear, [across])
+        tstep(b, tr, k_clear, [base_across])
+    assert found > 0
+    tstep(b, tr, k_clear, [gap])
+    tstep(b, tr, k_clear, [bottom])
+    tstep(b, tr, k_clear, [across])
+    tstep(b, tr, k_move, [base_up, up])
+    b.cost.key_grid_moves = b.cost.key_grid_moves + 4
+    wrwr = [1, 2, 1, 2]
+    live, ok = trace_walk_chord(b, tr, wrwr)
+    assert live and ok
+    b.cost.key_grid_moves = b.cost.key_grid_moves + 4
+    tstep(b, tr, k_clear, [base_across])
+    tstep(b, tr, k_clear, [base_up])
+    tstep(b, tr, k_move, [base_across, across])
+    tstep(b, tr, k_move, [base_up, up])
+    return found
+
+func trace_on_curve(b: inout Board, tr: inout Tracer) -> bool
+    tstep(b, tr, k_mul, [gap, base_up, base_up, 1, 0, 0])
+    tstep(b, tr, k_copy, [bottom, base_across, 0])
+    tstep(b, tr, k_cube, [bottom, bottom])
+    tstep(b, tr, k_mul, [spare, base_across, base_across, 1, 0, 0])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_add, [bottom, spare, 1])
+    tstep(b, tr, k_clear, [spare])
+    tstep(b, tr, k_white0, [bottom])
+    ok = value(b, gap) == value(b, bottom)
+    tstep(b, tr, k_clear, [gap])
+    tstep(b, tr, k_clear, [bottom])
+    return ok
+
+func trace_certificate(b: inout Board, tr: inout Tracer, xh: int, yh: int) -> bool
+    b.cost.ops[op_chord] = b.cost.ops[op_chord] + 1
+    tstep(b, tr, k_copy, [bottom, xh, 0])
+    tstep(b, tr, k_cube, [bottom, bottom])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_mirror, [bottom])
+    tstep(b, tr, k_add, [bottom, xh, 0])
+    if is_zero(b, bottom)
+        tstep(b, tr, k_clear, [bottom])
+        return false
+    trace_invert_checked(b, tr, bottom)
+    tstep(b, tr, k_copy, [spare, yh, 0])
+    tstep(b, tr, k_cube, [spare, spare])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_add, [spare, yh, 0])
+    tstep(b, tr, k_mirror, [spare])
+    tstep(b, tr, k_mul, [gap, gap, spare, 0, 0, 0])
+    tstep(b, tr, k_clear, [gap])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_cube, [xh, xh])
+    tstep(b, tr, k_cube, [yh, yh])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_mul, [bottom, gap, gap, 1, 0, 0])
+    tstep(b, tr, k_bench_white0, [])
+    tstep(b, tr, k_bench_add, [xh, 0])
+    tstep(b, tr, k_bench_add, [bottom, 1])
+    tstep(b, tr, k_clear, [bottom])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_add, [xh, bottom, 1])
+    tstep(b, tr, k_mirror, [yh])
+    tstep(b, tr, k_mul, [yh, gap, xh, 0, 1, 0])
+    tstep(b, tr, k_clear, [gap])
+    tstep(b, tr, k_settle, [])
+    tstep(b, tr, k_move, [xh, bottom])
+    return true
+
+func trace_call_in(rec: Board, sender: Board, tr: inout Tracer) -> Board
+    b = rec
+    tstep(b, tr, k_start_calling, [])
+    dsts = plan_dst(b)
+    for d = 0 to 1
+        for i = 0 to b.t.n - 1
+            tstep(b, tr, k_call, cat([dsts[d], i], value(sender, plan_src(dsts[d]))))
+    tstep(b, tr, k_calling_off, [])
+    return b
+
+func trace_call_session(b: inout Board, sender: Board, tr: inout Tracer)
+    b = trace_call_in(b, sender, tr)
+    dsts = plan_dst(b)
+    for d = 0 to 1
+        assert b.home[dsts[d]] == sender.home[plan_src(dsts[d])]
+
+func trace_publish(b: inout Board, tr: inout Tracer, cells: List<int>, p: inout Player) -> bool
+    begin_phase(b, ph_base_point)
+    p.base_hole = trace_base_point(b, tr)
+    end_phase(b)
+    p.base = point_of(b, base_across, base_up)
+    b.cost.key_grid_moves = b.cost.key_grid_moves + npeg(cells)
+    begin_phase(b, ph_own_walk)
+    live, ok = trace_walk_chord(b, tr, cells)
+    ok = live and ok
+    if ok
+        tstep(b, tr, k_clear, [base_across])
+        tstep(b, tr, k_clear, [base_up])
+    end_phase(b)
+    if ok
+        p.sent_c = point_of(b, across, up)
+    return ok
+
+func trace_swap_both(ba: inout Board, bb: inout Board, tr: inout Tracer)
+    tr.player = 0
+    begin_phase(ba, ph_swap)
+    trace_call_session(ba, bb, tr)
+    end_phase(ba)
+    tr.player = 1
+    begin_phase(bb, ph_swap)
+    trace_call_session(bb, ba, tr)
+    end_phase(bb)
+
+func trace_curve_tests(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player, tr: inout Tracer) -> text
+    tr.player = 0
+    begin_phase(ba, ph_curve_test)
+    on_a = trace_on_curve(ba, tr)
+    pa.on_curve = on_a
+    end_phase(ba)
+    tr.player = 1
+    begin_phase(bb, ph_curve_test)
+    on_b = trace_on_curve(bb, tr)
+    pb.on_curve = on_b
+    end_phase(bb)
+    if not pa.on_curve
+        return "A: B's C fails the curve test"
+    if not pb.on_curve
+        return "B: A's C fails the curve test"
+    return ""
+
+func trace_certify_own(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player, tr: inout Tracer) -> text
+    tr.player = 0
+    begin_phase(ba, ph_make)
+    ok_a = trace_certificate(ba, tr, across, up)
+    end_phase(ba)
+    tstep(ba, tr, k_phase_drop, [])
+    tr.player = 1
+    begin_phase(bb, ph_make)
+    ok_b = trace_certificate(bb, tr, across, up)
+    end_phase(bb)
+    tstep(bb, tr, k_phase_drop, [])
+    if not (ok_a and ok_b)
+        return "empty certificate"
+    pa.sent_a = point_of(ba, across, up)
+    pb.sent_a = point_of(bb, across, up)
+    return ""
+
+func trace_rebuild_theirs(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player, tr: inout Tracer) -> text
+    tr.player = 0
+    begin_phase(ba, ph_rebuild)
+    ok_a = trace_certificate(ba, tr, base_across, base_up)
+    end_phase(ba)
+    tstep(ba, tr, k_phase_drop, [])
+    tr.player = 1
+    begin_phase(bb, ph_rebuild)
+    ok_b = trace_certificate(bb, tr, base_across, base_up)
+    end_phase(bb)
+    tstep(bb, tr, k_phase_drop, [])
+    if not ok_a
+        return "A: B's certificate is empty"
+    if not ok_b
+        return "B: A's certificate is empty"
+    pa.rebuilt = point_of(ba, base_across, base_up)
+    pb.rebuilt = point_of(bb, base_across, base_up)
+    return ""
+
+func trace_clear_two(b: inout Board, tr: inout Tracer, h1: int, h2: int)
+    begin_phase(b, ph_rebuild)
+    tstep(b, tr, k_clear, [h1])
+    tstep(b, tr, k_clear, [h2])
+    end_phase(b)
+
+func trace_compare_both(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player, tr: inout Tracer) -> text
+    pa.matched = certificate_matches(ba)
+    tr.player = 0
+    trace_clear_two(ba, tr, bottom, gap)
+    pb.matched = certificate_matches(bb)
+    tr.player = 1
+    trace_clear_two(bb, tr, bottom, gap)
+    tr.player = 0
+    trace_clear_two(ba, tr, across, up)
+    tr.player = 1
+    trace_clear_two(bb, tr, across, up)
+    if not pa.matched
+        return "A: B's certificate does not match"
+    if not pb.matched
+        return "B: A's certificate does not match"
+    return ""
+
+func trace_shared_walk(b: inout Board, tr: inout Tracer, cells: List<int>) -> bool
+    begin_phase(b, ph_shared_walk)
+    live, ok = trace_walk_chord(b, tr, cells)
+    ok = live and ok
+    if ok
+        tstep(b, tr, k_clear, [base_across])
+        tstep(b, tr, k_clear, [base_up])
+    end_phase(b)
+    return ok
+
+// fold_phase, recorded as one summary whose board after shows the across as the
+// player leaves it: rows C and D lifted onto rows A and B (the model's board keeps the
+// across; fold_key only reads it).
+func trace_fold_phase(b: inout Board, tr: inout Tracer) -> List<int>
+    m0 = b.cost.moves
+    before = b
+    before.phase = ph_fold
+    moves: List<PegMove> = []
+    folded = trace_fold_key(b, moves)
+    b.cost.moves_by_phase[ph_fold] = b.cost.moves - m0
+    p = pegs_of(before)
+    for i = 0 to moves.length - 1
+        apply_move(p, moves[i])
+    after = b
+    after.phase = ph_fold
+    after.home[across] = p[across]
+    tr.steps.append(TraceStep(tr.player, ph_fold, k_fold, [], before, after))
+    return folded
+
+func trace_walk_and_fold(ba: inout Board, bb: inout Board, pa: inout Player, pb: inout Player, cells_a: List<int>, cells_b: List<int>, tr: inout Tracer) -> text
+    tr.player = 0
+    ok_a = trace_shared_walk(ba, tr, cells_a)
+    tr.player = 1
+    ok_b = trace_shared_walk(bb, tr, cells_b)
+    if not (ok_a and ok_b)
+        return "exceptional case in the shared walk"
+    pa.shared = point_of(ba, across, up)
+    pb.shared = point_of(bb, across, up)
+    tr.player = 0
+    folded_a = trace_fold_phase(ba, tr)
+    pa.folded = folded_a
+    tr.player = 1
+    folded_b = trace_fold_phase(bb, tr)
+    pb.folded = folded_b
+    return ""
+
+// exchange (Demo), every step recorded in tr.
+func trace_steps_exchange(t: Tier, cells_a: List<int>, cells_b: List<int>, tr: inout Tracer) -> Result<Exchange, text>
+    assert t.demo
+    assert (cells_a.length == t.cells) and (cells_b.length == t.cells)
+    assert is_trits(cells_a) and is_trits(cells_b)
+    ba = new_board(t)
+    bb = new_board(t)
+    pa = blank_player(ba)
+    pb = blank_player(bb)
+    tr.player = 0
+    if not trace_publish(ba, tr, cells_a, pa)
+        return Err("A: reroll (empty key or exceptional case)")
+    tr.player = 1
+    if not trace_publish(bb, tr, cells_b, pb)
+        return Err("B: reroll (empty key or exceptional case)")
+    trace_swap_both(ba, bb, tr)
+    fail = trace_curve_tests(ba, bb, pa, pb, tr)
+    if fail == ""
+        fail = trace_certify_own(ba, bb, pa, pb, tr)
+    if fail == ""
+        fail = trace_rebuild_theirs(ba, bb, pa, pb, tr)
+    if fail == ""
+        trace_swap_both(ba, bb, tr)
+        fail = trace_compare_both(ba, bb, pa, pb, tr)
+    if fail == ""
+        fail = trace_walk_and_fold(ba, bb, pa, pb, cells_a, cells_b, tr)
+    if fail != ""
+        return Err(fail)
+    report(ba, pa)
+    report(bb, pb)
+    return Ok(Exchange(pa, pb))
+
+// One d10 face read by roll_key: its index in the stream, the face, the attempt (a
+// whole reroll after an all-empty key starts the next), the die pair it fills (holes
+// 2 pair and 2 pair + 1) and whether it was kept (a 0 is thrown again).
+record Throw
+    index: int
+    face: int
+    attempt: int
+    pair: int
+    kept: bool
+
+// roll_key, recording every face it reads.
+func trace_roll_key(t: Tier, faces: List<int>, throws: inout List<Throw>) -> Option<Rolled>
+    next = 0
+    for attempt = 1 to faces.length + 1
+        cells = filled(t.cells, 0)
+        for pair = 0 to (t.cells + 1) / 2 - 1
+            face = 0
+            for f = next to faces.length - 1
+                face = faces[f]
+                next = f + 1
+                assert (face >= 0) and (face <= 9)
+                throws.append(Throw(f, face, attempt, pair, face != 0))
+                if face != 0
+                    break
+            if face == 0
+                return None
+            cells[2 * pair] = keypad_first(face)
+            if 2 * pair + 1 < t.cells
+                cells[2 * pair + 1] = keypad_second(face)
+        if not is_empty(cells)
+            return Some(Rolled(cells, next, attempt))
+    return None
+
+// Everything the demo animates. throws_*: each player's key roll, face by face;
+// rolled_*: false when the faces ran out; cells_*: the rolled keys. start_*: each
+// board before its first step (new_board: the ladder built). steps: the exchange in
+// order, both players. ok, error, a, b: exchange's outcome (blank players unless ok).
+record Trace
+    throws_a: List<Throw>
+    throws_b: List<Throw>
+    rolled_a: bool
+    rolled_b: bool
+    cells_a: List<int>
+    cells_b: List<int>
+    start_a: Board
+    start_b: Board
+    steps: List<TraceStep>
+    ok: bool
+    error: text
+    a: Player
+    b: Player
+
+func trace_exchange(t: Tier, faces_a: List<int>, faces_b: List<int>) -> Trace
+    assert t.demo
+    ta: List<Throw> = []
+    tb: List<Throw> = []
+    ra = trace_roll_key(t, faces_a, ta)
+    rb = trace_roll_key(t, faces_b, tb)
+    start = new_board(t)
+    none: List<TraceStep> = []
+    out = Trace(ta, tb, false, false, filled(t.cells, 0), filled(t.cells, 0), start, start,
+        none, false, "", blank_player(start), blank_player(start))
+    match ra
+        case Some(r)
+            out.rolled_a = true
+            out.cells_a = r.cells
+        case None
+            out.error = "A: the faces ran out"
+    match rb
+        case Some(r)
+            out.rolled_b = true
+            out.cells_b = r.cells
+        case None
+            if out.error == ""
+                out.error = "B: the faces ran out"
+    if not (out.rolled_a and out.rolled_b)
+        return out
+    tr = Tracer(0, none)
+    match trace_steps_exchange(t, out.cells_a, out.cells_b, tr)
+        case Ok(e)
+            out.ok = true
+            out.a = e.a
+            out.b = e.b
+        case Err(why)
+            out.error = why
+    out.steps = tr.steps
+    return out
+
+// The checks: every summary is what the rules do to the board before it, nothing
+// moves between one player's summaries, and its peg moves (step_moves) replayed from
+// the board before land exactly on the board after. Multiplies and cubes also run
+// their twins, and a park its twin: same board as the rules. Returns each player's
+// number of moves.
+func check_trace_steps(start_a: Board, start_b: Board, steps: List<TraceStep>) -> List<int>
+    last_a = pegs_of(start_a)
+    last_b = pegs_of(start_b)
+    total = [0, 0]
+    for k = 0 to steps.length - 1
+        st = steps[k]
+        p = pegs_of(st.before)
+        if st.player == 0
+            assert p == last_a
+        else
+            assert p == last_b
+        moves = step_moves(st)
+        assert moves.length > 0
+        total[st.player] = total[st.player] + moves.length
+        for i = 0 to moves.length - 1
+            apply_move(p, moves[i])
+        assert p == pegs_of(st.after)
+        if st.op != k_fold
+            b = st.before
+            run_op(b, st.op, st.args)
+            assert b == st.after
+        if st.op == k_mul
+            c = st.before
+            m: List<PegMove> = []
+            a = st.args
+            trace_mul(c, a[0], a[1], a[2], a[3] == 1, a[4] == 1, a[5] == 1, m)
+            assert c == st.after
+        if st.op == k_cube
+            c = st.before
+            m: List<PegMove> = []
+            trace_cube(c, st.args[0], st.args[1], m)
+            assert c == st.after
+        if st.op == k_park
+            c = st.before
+            m: List<PegMove> = []
+            trace_park_rung(c, st.args[0], m)
+            assert c == st.after
+        if st.player == 0
+            last_a = p
+        else
+            last_b = p
+    return total
+
+// The trace of a face stream is roll_key's keys and exchange's outcome, step by step.
+func check_trace_exchange(t: Tier, faces_a: List<int>, faces_b: List<int>) -> Trace
+    tr = trace_exchange(t, faces_a, faces_b)
+    assert roll_key(t, faces_a) == Some(Rolled(tr.cells_a, tr.throws_a[tr.throws_a.length - 1].index + 1, tr.throws_a[tr.throws_a.length - 1].attempt))
+    assert roll_key(t, faces_b) == Some(Rolled(tr.cells_b, tr.throws_b[tr.throws_b.length - 1].index + 1, tr.throws_b[tr.throws_b.length - 1].attempt))
+    assert tr.ok
+    match exchange(t, tr.cells_a, tr.cells_b)
+        case Ok(e)
+            assert tr.a == e.a
+            assert tr.b == e.b
+        case Err(m)
+            assert false
+    // Every move the cost model counts is a peg move of the trace, and no other: the
+    // board moves and the control-row moves, less the ladder (built before the first
+    // step), with the fold's drops counted as a lift and a drop.
+    n = check_trace_steps(tr.start_a, tr.start_b, tr.steps)
+    assert n[0] == moves_animated(tr.a, tr.start_a)
+    assert n[1] == moves_animated(tr.b, tr.start_b)
+    return tr
+
+func moves_animated(p: Player, start: Board) -> int
+    return p.cost.moves + p.cost.moves_by_phase[ph_fold] + p.cost.ctrl - start.cost.ctrl
+
+// The d10 faces of the Demo exchange vectors in proofs/key_exchange/ecbs/vectors/
+// inputs.json, for the trace tests below. check_oracle.py checks they are the file's.
+func faces_exchange_demo_run0_a() -> List<int>
+    return [6, 3, 4, 2, 3]
+
+func faces_exchange_demo_run0_b() -> List<int>
+    return [2, 0, 7, 6, 1]
+
+func faces_exchange_demo_run1_a() -> List<int>
+    return [7, 1, 4, 3, 6]
+
+func faces_exchange_demo_run1_b() -> List<int>
+    return [0, 1, 1, 7, 8]
+
+// ---------------------------------------------------------------------------
 // Tests. Expected values are PARI/GP's (ffgen over x^n - x^k - 1, ellinit
 // [0, 2, 0, 0, 1]); proofs/key_exchange/ecbs/vectors/ holds the full known-answer
 // vectors for all four tiers. The tests stay at Demo and Toy so the emitted Lean
@@ -1727,3 +2712,83 @@ test "§1 Demo's 16-hole control row overruns with a 15-hole script"
     t = with_script(tier("Demo"), 15)
     expect_trap AssertFailed
         new_board(t)
+
+test "trace twins: mul, cube, lane fold and fold_key give the rules' board and result"
+    t = tier("Demo")
+    b = new_board(t)
+    b = place(b, across, [1, 2, 0, 2, 1, 0, 0])
+    b = place(b, up, [0, 2, 1, 1, 2, 0, 2])
+    c = b
+    m: List<PegMove> = []
+    mul(b, gap, across, up, true, false, false)
+    trace_mul(c, gap, across, up, true, false, false, m)
+    assert b == c
+    assert m.length > 0
+    settle(b)
+    settle(c)
+    mul(b, gap, across, up, true, true, true)
+    trace_mul(c, gap, across, up, true, true, true, m)
+    assert b == c
+    cube(b, across, across)
+    trace_cube(c, across, across, m)
+    assert b == c
+    settle(b)
+    settle(c)
+    assert fold_key(b) == trace_fold_key(c, m)
+    assert b == c
+
+test "trace twins: base point, walk, curve test, certificate, inverse and calling record the rules' board"
+    t = tier("Demo")
+    tr = Tracer(0, [])
+    b = new_board(t)
+    c = b
+    assert base_point(b) == trace_base_point(c, tr)
+    assert b == c
+    b1 = b
+    c1 = c
+    assert on_curve(b1) == trace_on_curve(c1, tr)
+    assert b1 == c1
+    live, ok = walk_chord(b, [1, 2])
+    tlive, tok = trace_walk_chord(c, tr, [1, 2])
+    assert (live == tlive) and (ok == tok)
+    assert b == c
+    assert certificate(b, across, up) == trace_certificate(c, tr, across, up)
+    assert b == c
+    d = new_board(t)
+    d = place(d, bottom, [1, 2, 0, 2, 1, 0, 0])
+    e = d
+    invert_checked(d, bottom)
+    trace_invert_checked(e, tr, bottom)
+    assert d == e
+    rec = new_board(t)
+    assert call_in(rec, b) == trace_call_in(rec, b, tr)
+    assert tr.steps.length > 0
+
+test "trace_roll_key: every face read, a 0 thrown again, an all-empty key rolled again"
+    t = tier("Demo")
+    th: List<Throw> = []
+    assert trace_roll_key(t, [0, 1, 1, 7, 8], th) == roll_key(t, [0, 1, 1, 7, 8])
+    assert th == [Throw(0, 0, 1, 0, false), Throw(1, 1, 1, 0, true), Throw(2, 1, 2, 0, true), Throw(3, 7, 3, 0, true)]
+    u: List<Throw> = []
+    assert trace_roll_key(t, [0], u) == None
+    assert u == [Throw(0, 0, 1, 0, false)]
+    v: List<Throw> = []
+    assert trace_roll_key(tier("Toy"), [0, 5, 9, 1, 3, 7, 2, 4, 8, 6], v) == roll_key(tier("Toy"), [0, 5, 9, 1, 3, 7, 2, 4, 8, 6])
+    assert v.length == 9
+
+test "trace_exchange matches roll_key and exchange on the Demo exchange vector run 0"
+    tr = check_trace_exchange(tier("Demo"), faces_exchange_demo_run0_a(), faces_exchange_demo_run0_b())
+    assert tr.cells_a == [1, 2]
+    assert tr.cells_b == [0, 1]
+
+test "trace_exchange matches roll_key and exchange on the Demo exchange vector run 1"
+    tr = check_trace_exchange(tier("Demo"), faces_exchange_demo_run1_a(), faces_exchange_demo_run1_b())
+    assert tr.throws_b.length == 4
+    assert tr.throws_b[3].attempt == 3
+
+test "trace_exchange: when the faces run out there is no key and no step"
+    tr = trace_exchange(tier("Demo"), [1, 1], [5])
+    assert not tr.rolled_a
+    assert tr.rolled_b
+    assert tr.error == "A: the faces ran out"
+    assert tr.steps.length == 0

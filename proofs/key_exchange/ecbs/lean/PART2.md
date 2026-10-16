@@ -377,17 +377,17 @@ The closing slide does not write the marker, the script maximum, the control cou
 
 4303 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. The resident peaks of the modules this change rebuilt are InvertWalk 799936 kB, ChordLay 1707620 kB, and ChordOpen 2736036 kB. ChordOpen is above 2 GB. The virtual limit held.
 
-## Next
-
 The chord tail turns the bench off. It writes ops slot 0 and leaves every other slot. Slot 0 becomes the value it was given plus 3. Slots 2 and 3 on that board are the slots `open_checked` returned, each a natural `c` with `c + 1 ≤ checkOpsCap base + 3`.
 
-4304 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. ChordLay peaked at 1703484 kB and ChordOpen at 2716136 kB. ChordOpen is above 2 GB. The virtual limit held.
+`ChordTailPoint` is `chord_tail_point` and the tail caps. `ChordRoom` is `TailRoom` and `tailRoom_of`. `ChordOpen` keeps the inverse and `chord_add_point`. That split is what brings every file under 2097152 kB. The first measurement of the split was ChordTailPoint 2045576 kB, ChordOpen 1143060, ChordRoom 1005748, ChordLive 494576, ChordNext 461580, EcbsLink2 439644.
 
-`ChordTailPoint` is `chord_tail_point` and the tail caps. `ChordRoom` is `TailRoom` and `tailRoom_of`. `ChordOpen` keeps the inverse and `chord_add_point`. Every rebuilt file is under 2097152 kB: ChordTailPoint 2045576, ChordOpen 1143060, ChordRoom 1005748, ChordLive 494576, ChordNext 461580, EcbsLink2 439644.
+`chord_rise` returns `bR.row = b.row`. `place` and `add` do not write the control row (`place_row`, `addBoard_row`). `chord_tail_after_inv` carries that equality through the restored marker.
 
-4304 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded.
+4305 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Rebuilt peaks: ChordRise 293264 kB, ChordTail 266664, ChordCell 812988, ChordLay 1703676, ChordTailPoint 2020864, ChordRoom 1005820, ChordOpen 1143172, ChordLive 494652, ChordNext 461588, EcbsLink2 439780. All under 2097152 kB.
 
-`chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, `tallyOrigin ≤ high`, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). The tail counters above are the marker, control, script maximum, and the natural cost fields. The move bound is `tailMoveCap`. The rise does not yet export the control row, so that equality is not on the board `chord_add_live` returns. Chain the frame to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+## Next
+
+`chord_add_point` returns the tail pack. Then `chord_add_live_frame`, chained to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

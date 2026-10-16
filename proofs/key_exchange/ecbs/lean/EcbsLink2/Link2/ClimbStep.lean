@@ -1418,7 +1418,13 @@ theorem unpark_after_climb
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       bU.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
       bU.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
-        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      bU.sudo_5Board_6ladder = b.sudo_5Board_6ladder ∧
+      bU.sudo_5Board_7ladder0 = b.sudo_5Board_7ladder0 ∧
+      bU.sudo_5Board_6nrungs = b.sudo_5Board_6nrungs ∧
+      bU.sudo_5Board_9park_hole = b.sudo_5Board_9park_hole ∧
+      bU.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+        b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
   obtain ⟨colour, hcell⟩ := h.shape.park.parkHeld hge
   have hsrc := h.shape.park.srcOk hge
   let src := s.fromHole.toNat
@@ -1435,7 +1441,7 @@ theorem unpark_after_climb
   have hrun := unpark_rung_back b src s.parkAt colour s.high base.control s.ctrl
     hFrom h.inv.park hRowS hRowP hColour h.shape.tierC hsrc.2.1 h.inv.high
     hsrc.2.2.1 h.inv.ctrl h.shape.park.fit2
-  refine ⟨_, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨_, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   all_goals rfl
 
 end EcbsLink2.Link2

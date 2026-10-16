@@ -440,7 +440,7 @@ theorem final_cube_settle
   have hk : done.length ≤ base.R := by simpa using h.kLe
   obtain ⟨bU, hun, _, _, hhomeU, hheldU, hbonU, htoU, hbenchU, hmvU, hslU, hpkU,
       hctrlU, ht0U, htierU, hmkU, hopsU, hstrictU, hholeU, hlenU, hhighU,
-      hmarkU, hmxU⟩ :=
+      hmarkU, hmxU, _, _, _, _, _⟩ :=
     unpark_after_climb h hge
   obtain ⟨mv, hmv, htailM⟩ := tail_move_fit h hon hk
   obtain ⟨sl, hsl, htailS⟩ := tail_slide_fit h hon hk

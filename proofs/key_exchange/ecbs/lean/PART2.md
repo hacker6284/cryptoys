@@ -347,9 +347,9 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 `FrameScalar` is the ladder, its origin, the rung count, the park hole, parked-from, the rung index, the tally length, the tally origin, and `tally_max`. `mul_refines` returns it: a copy multiply writes the spare and the bench, and those nine fields stay. `tally_max` is the incoming value, not a closed formula. It is not an export result. `walk_key` returns a point.
 
-`TailStay` is that scalar frame plus the tier and homes 3 and 4. The chord tail keeps it. `gap_settle_lay`, `square_white_lay`, `x3_settle_lay`, `chord_take_mirror`, the onto multiply, and `chord_up_slide` each return `TailStay`. `square_kept`, `bottom_lay`, and `chord_tail_point` compose them. The board `chord_tail` returns agrees with the rise board on the control frame and on the two base homes.
+`TailStay` is that scalar frame plus the tier and homes 3 and 4. The chord tail keeps it. `gap_settle_lay`, `square_white_lay`, `x3_settle_lay`, `chord_take_mirror`, the onto multiply, and `chord_up_slide` each return `TailStay`. `square_kept`, `bottom_lay`, and `chord_tail_point` compose them. The board `chord_tail` returns agrees with the rise board on the control frame and on the two base homes. `unpark_after_climb` keeps the ladder, its origin, the rung count, the park hole, and `tally_max`, and it still sets parked-from to `-1` and the rung index to `0`. Putting that through the final cube inside `final_cube_settle` hits the heartbeat limit, so those equations stay on the unpark board.
 
-4268 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 995000 kB VmHWM. The heavy modules were already built; this run elaborated the rest. Under 2 GB.
+4268 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1677204 kB VmHWM. Under 2 GB. The earlier incremental build of the same tail proofs, with the heavy modules already built, peaked at 995000 kB.
 
 ## Next
 

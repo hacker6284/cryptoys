@@ -401,7 +401,11 @@ The chord tail turns the bench off. It writes ops slot 0 and leaves every other 
 
 4409 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: ChordTailLay 867952 kB, ChordTailPoint 1547700, ChordRoom 1006512, CopyLay 367640, ChordOpen 1327712, ChordFrame 493408, EcbsLink2 416208. ChordLive's successful elaboration of the `LiveLeft` return peaked at 481592 kB. All are under about 1.8 GB and under 2097152 kB.
 
-The general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+`walkCharge` is `cellMoveCharge` plus `2 · n`, the rise's two homes. `cellsLeft i toN` is the cells still to run, including `i`. A cell with `cellsLeft ≥ 2` gives the frame `fuel = cellsLeft - 1`, so the extra cell is the next index. The last index has `cellsLeft = 1` and is `chordStep_live_last`: `chord_add_live` and `chordStep_open`, one charge, no next frame. `chordStep_live_cell` is that branch. `suffix_move_room` and `suffix_ctrl_room` carry the envelope down the suffix when each cell spends at most one charge. The frame's `1 ≤ fuel` is not a hypothesis of these theorems.
+
+4434 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: WalkCharge 447556 kB, WalkLast 443048, WalkStep 447988, EcbsLink2 411776. All under about 1.8 GB and under 2097152 kB.
+
+The loop that carries the board from one live cell through `marker_lift` and `frobenius_affine` into the next `RunFrame`, then `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

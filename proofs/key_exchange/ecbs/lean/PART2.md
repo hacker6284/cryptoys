@@ -262,15 +262,16 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 - `benchAdd_high` / `x3_settle_lay` / `bottom_lay`. The two bench adds, the clear, and the settle into the bottom keep that same high. `bottom_lay`'s board has the high the tail's rise board had.
 - `chord_take_mirror` / `ontoFoldBoard_high` / `mul_onto_off_fold` / `mul_onto_up_prefix` / `moveBand_high` / `chord_up_slide` / `slide_point` / `point_from_bottom` / `chord_tail_point`. The take, the onto multiply, and the closing slide keep that high. `chord_tail` on the rise board returns a board with the same `control_highest`.
 
-The rise (`copy_band`, then `add`) is not yet shown to keep it, so the tail's input is not yet tied to the board `invert_checked` leaves. `RunFrame.highLt` is still the first cell only. The next tally start, once `tally_len = 0`, `t0 ≤ high`, and `1 ≤ tally_max`, is `tally_start_again`: the white peg is written and the high stays. The climb body after that start still uses `ClimbInvK.highTop` as an equality and `tally_put_raise`, which ask for a mark that sits on the current tally end. A second cell does not have that mark.
+- `place_high` / `rise_add` / `chord_rise`. The spare copy and the following add leave `control_highest`. White and red share that fact. `chord_tail_after_inv` still drops it, so the board `chord_tail` returns is not yet tied back to the board `invert_checked` leaves.
+- `later_climb_entry`. The next cell's tally start, once `tally_len = 0`, `t0 ≤ high`, and `1 ≤ tally_max`, is `tally_start_again`. The white peg is written, `tally_len` becomes 1, and the high stays. `¬ high < t0`, so `RunFrame.highLt` is not this entry. `ClimbInvK.highTop` still asks for `high = t0 + tally - 1` on every later rung, and this start does not give that equality.
 
-4165 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1697136 kB VmHWM. Under 2 GB.
+4167 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1597324 kB VmHWM while ChordLay was rebuilt. Under 2 GB.
 
 4158 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 991828 kB VmHWM. The rebuild that re-elaborated ChordLay after the high conjunct peaked at 1594024 kB. Both are under 2 GB.
 
 ## Next
 
-Show the rise keeps the checked board's high, so the chord result's high is the climb water mark. The next cell's climb entry is `tally_start_again`, not `RunFrame.highLt`. The climb body after that entry is still the equality `highTop`. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+Carry the rise's high through `chord_tail_after_inv` onto the board `chord_tail` returns, so that board's high is the climb water mark. The climb body after `later_climb_entry` is still the equality `highTop`. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

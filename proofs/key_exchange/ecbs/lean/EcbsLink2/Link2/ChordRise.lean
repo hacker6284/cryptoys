@@ -66,6 +66,15 @@ private theorem place_same (b : Ecbs.Board) (home : Nat)
   dsimp only
   split <;> exact ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
+private theorem place_high (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+  unfold placeBoard
+  dsimp only
+  split <;> rfl
+
 private theorem place_home_at (b : Ecbs.Board)
     (hH : 6 < b.sudo_5Board_4home.size) (hD : 6 < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak i : Nat) (hne : (6 : Nat) ≠ i)
@@ -144,7 +153,9 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
         b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
       bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
         b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
-      bR.sudo_5Board_4cost.sudo_5Costs_4peak = b.sudo_5Board_4cost.sudo_5Costs_4peak := by
+      bR.sudo_5Board_4cost.sudo_5Costs_4peak = b.sudo_5Board_4cost.sudo_5Costs_4peak ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   have h6H : 6 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h6D : 6 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have h1H : 1 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -157,7 +168,7 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
     (moves + pegCount accY)
   have hsub : fieldAdd n ySrc (mirrorTrits accY) = fieldSub n ySrc accY := rfl
   refine ⟨bR, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl]
     simpa [bR, hsub] using hadd
@@ -250,6 +261,7 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
       simp [bR, addBoard, withMoves]
     have h5 : 5 < b.sudo_5Board_4held.size := by rw [hszD]; decide
     exact idx_eq hheld 5 (by rw [hheld]; exact h5)
+  · simp [bR, addBoard, withMoves]
   · simp [bR, addBoard, withMoves]
   · simp [bR, addBoard, withMoves]
   · simp [bR, addBoard, withMoves]
@@ -409,7 +421,9 @@ theorem chord_rise_white (b : Ecbs.Board) (baseY accY : List Nat)
         b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
       bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
         b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
-      ∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
+      (∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   have hpeg : pegCount baseY ≤ n := by rw [← hyB]; exact pegCount_le baseY
   have hfitn : FitsLen n := FitsLen.of_le hfit (by omega)
   have hfitC : FitsLen (moves + pegCount baseY) := FitsLen.of_le hfit (by omega)
@@ -435,13 +449,13 @@ theorem chord_rise_white (b : Ecbs.Board) (baseY accY : List Nat)
   have hflag1 : b1.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := hplace.2.2.2.2.1
   obtain ⟨bR, hadd, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, hflag,
       h0aR, h0tR, h2aR, h2tR, h5aR, h5tR, htR, hmR, hcR, hxR, hslR, hopR, honR, hbR, htoR,
-      hhoR, hstR, hpkR⟩ :=
+      hhoR, hstR, hpkR, hhiR⟩ :=
     rise_add b1 baseY accY baseY n (moves + pegCount baseY) hszH1 hszD1 hyB hyA hpos
       htriB htriA hn1 hmoves1 hfitA hplace.2.2.2.2.2.2.1 hplace.2.2.2.2.2.1
       hplace.2.2.2.2.2.2.2.2.1 hplace.2.2.2.2.2.2.2.1
       hplace.2.2.2.2.2.2.2.2.2.2 hplace.2.2.2.2.2.2.2.2.2.1
   refine ⟨bR, ?_, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
         show Ecbs.base_up = ((4 : Nat) : Int) from rfl, hcopy, ok_bind]
     simpa [b1] using hadd
@@ -478,6 +492,7 @@ theorem chord_rise_white (b : Ecbs.Board) (baseY accY : List Nat)
   · exact hstR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.2.2.2.2.2.2.2
   · have hpk := place_peak_nat b 6 h6H h6D baseY moves peak hpeak
     exact ⟨_, hpkR.trans hpk⟩
+  · exact hhiR.trans (place_high b 6 h6H h6D baseY moves peak)
 
 /-- Red rise. The spare becomes the negated base up minus the accumulator up. -/
 theorem chord_rise_red (b : Ecbs.Board) (baseY accY : List Nat)
@@ -537,7 +552,9 @@ theorem chord_rise_red (b : Ecbs.Board) (baseY accY : List Nat)
         b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
       bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
         b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
-      ∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
+      (∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   have hpeg : pegCount baseY ≤ n := by rw [← hyB]; exact pegCount_le baseY
   have hpegM : pegCount (mirrorTrits baseY) = pegCount baseY := pegCount_mirror baseY htriB
   have hlenM : (mirrorTrits baseY).length = n := by rw [mirror_length, hyB]
@@ -567,14 +584,14 @@ theorem chord_rise_red (b : Ecbs.Board) (baseY accY : List Nat)
   have hflag1 : b1.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := hplace.2.2.2.2.1
   obtain ⟨bR, hadd, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, hmv, hflag,
       h0aR, h0tR, h2aR, h2tR, h5aR, h5tR, htR, hmR, hcR, hxR, hslR, hopR, honR, hbR, htoR,
-      hhoR, hstR, hpkR⟩ :=
+      hhoR, hstR, hpkR, hhiR⟩ :=
     rise_add b1 (mirrorTrits baseY) accY baseY n (moves + pegCount baseY) hszH1 hszD1
       hlenM hyA hpos htriM htriA hn1 hmoves1 hfitA
       hplace.2.2.2.2.2.2.1 hplace.2.2.2.2.2.1
       hplace.2.2.2.2.2.2.2.2.1 hplace.2.2.2.2.2.2.2.1
       hplace.2.2.2.2.2.2.2.2.2.2 hplace.2.2.2.2.2.2.2.2.2.1
   refine ⟨bR, ?_, h6a, h6t, h1aR, h1tR, h4aR, h4tR, hszDR, hszHR, hnR, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
         show Ecbs.base_up = ((4 : Nat) : Int) from rfl, hcopy, ok_bind]
     simpa [b1] using hadd
@@ -611,6 +628,7 @@ theorem chord_rise_red (b : Ecbs.Board) (baseY accY : List Nat)
   · exact hstR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.2.2.2.2.2.2.2
   · have hpk := place_peak_nat b 6 h6H h6D (mirrorTrits baseY) moves peak hpeak
     exact ⟨_, hpkR.trans hpk⟩
+  · exact hhiR.trans (place_high b 6 h6H h6D (mirrorTrits baseY) moves peak)
 
 /-- The rise, white or red. `red` mirrors the base up before the subtraction. -/
 theorem chord_rise (b : Ecbs.Board) (red : Bool) (baseY accY : List Nat)
@@ -671,7 +689,9 @@ theorem chord_rise (b : Ecbs.Board) (red : Bool) (baseY accY : List Nat)
         b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
       bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
         b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
-      ∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
+      (∃ pk, bR.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
+      bR.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   cases red
   · simpa using
       chord_rise_white b baseY accY n moves peak hszH hszD hyB hyA hpos htriB htriA

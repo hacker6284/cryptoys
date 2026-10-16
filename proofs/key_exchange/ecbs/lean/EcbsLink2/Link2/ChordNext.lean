@@ -254,4 +254,37 @@ theorem tally_start_again (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
   rw [tally_note_keep _ 1 tmax hlen1 (by simpa using hMax) hNote, ok_bind, pure_eq_ok]
   simp [hrow]
 
+/-- A later cell does not enter under `RunFrame.highLt`. Once the mark is at or
+    above the origin and `tally_max` is already positive, `tally_start` writes
+    the white peg and leaves `control_highest`. `ClimbInvK.highTop` still asks
+    for `high = t0 + tally - 1` on every later rung, and this start does not
+    give that equality. -/
+theorem later_climb_entry (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
+    (hLen0 : b.sudo_5Board_9tally_len = 0)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 < b.sudo_5Board_3row.size)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 ≤ high)
+    (hFitT : FitsLen t0)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitC : FitsLen (ctrl + 1))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
+    (hNote : 1 ≤ tmax) :
+    ∃ b',
+      Ecbs.tally_start b = .ok b' ∧
+      b'.sudo_5Board_9tally_len = 1 ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      ¬ high < t0 := by
+  let b' := { b with
+    sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0, hrow⟩ (1 : Int)
+    sudo_5Board_9tally_len := 1
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } }
+  refine ⟨b', tally_start_again b t0 high control ctrl tmax hLen0 hT0 hrow hCtrlN hic
+      hHigh hle hFitT hCtrl hFitC hMax hNote, rfl, rfl, ?_⟩
+  omega
+
 end EcbsLink2.Link2

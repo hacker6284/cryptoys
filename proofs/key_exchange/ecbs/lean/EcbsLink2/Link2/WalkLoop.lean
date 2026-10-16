@@ -256,9 +256,13 @@ theorem walk_chord_zeros (b : Ecbs.Board) (cells : List Nat)
       (chordDone b ctrl).sudo_5Board_4held = b.sudo_5Board_4held ∧
       (chordDone b ctrl).sudo_5Board_9marker_on = false ∧
       (chordDone b ctrl).sudo_5Board_6marker = -1 ∧
-      walkRun n k bench base false acc cells = some (false, acc) := by
+      walkRun n k bench base false acc cells = some (false, acc) ∧
+      walkGo n k bench base false acc cells = some acc := by
   refine ⟨?_, by simp [chordDone, chordLift, chordFlag], by simp [chordDone, chordLift, chordFlag],
-    by simp [chordDone], by simp [chordDone, chordLift], walkRun_zeros n k bench base acc cells hz⟩
+    by simp [chordDone], by simp [chordDone, chordLift],
+    walkRun_zeros n k bench base acc cells hz,
+    walkRun_walkGo n k bench base false acc cells false acc
+      (walkRun_zeros n k bench base acc cells hz)⟩
   rw [walk_chord_eq]
   unfold walkChordGo
   rw [listLen_embed]
@@ -495,7 +499,8 @@ theorem walk_chord_white_open (b : Ecbs.Board) (zs : List Nat) (x y : List Nat)
       (∀ h : 0 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[0] = embed x) ∧
       (∀ h : 1 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[1] = embed y) ∧
       bF.sudo_5Board_9marker_on = false ∧
-      walkRun n k bench (x, y) false acc (zs ++ [1]) = some (true, (x, y)) := by
+      walkRun n k bench (x, y) false acc (zs ++ [1]) = some (true, (x, y)) ∧
+      walkGo n k bench (x, y) false acc (zs ++ [1]) = some (x, y) := by
   have hheldL := lift_held b ctrl
   have hhomeL := lift_home b ctrl
   have hszHL : (chordLift b ctrl).sudo_5Board_4home.size = 8 := by rw [hhomeL, hszH]
@@ -524,7 +529,10 @@ theorem walk_chord_white_open (b : Ecbs.Board) (zs : List Nat) (x y : List Nat)
   have hmark2 : b2.sudo_5Board_6marker = -1 := by
     simpa [chordLift] using hmarkB
   let bF := { b2 with sudo_5Board_9marker_on := false }
-  refine ⟨b2, bF, ?_, rfl, ?_, ?_, rfl, walkRun_open_white n k bench (x, y) acc zs hz⟩
+  refine ⟨b2, bF, ?_, rfl, ?_, ?_, rfl,
+    walkRun_open_white n k bench (x, y) acc zs hz,
+    walkRun_walkGo n k bench (x, y) false acc (zs ++ [1]) true (x, y)
+      (walkRun_open_white n k bench (x, y) acc zs hz)⟩
   · have hbeq : SudoRt.SEq.beq (Int.ofNat 1) (2 : Int) = false := by
       rw [show (2 : Int) = Int.ofNat 2 from rfl, sEq_ofNat 1 2]
       decide
@@ -691,7 +699,9 @@ theorem walk_chord_red_open (b : Ecbs.Board) (zs : List Nat) (x y : List Nat)
         bF.sudo_5Board_4home[1] = embed (mirrorTrits y)) ∧
       bF.sudo_5Board_9marker_on = false ∧
       walkRun n k bench (x, y) false acc (zs ++ [2]) =
-        some (true, (x, mirrorTrits y)) := by
+        some (true, (x, mirrorTrits y)) ∧
+      walkGo n k bench (x, y) false acc (zs ++ [2]) =
+        some (x, mirrorTrits y) := by
   have hheldL := lift_held b ctrl
   have hhomeL := lift_home b ctrl
   have hszHL : (chordLift b ctrl).sudo_5Board_4home.size = 8 := by rw [hhomeL, hszH]
@@ -721,7 +731,9 @@ theorem walk_chord_red_open (b : Ecbs.Board) (zs : List Nat) (x y : List Nat)
     simpa [chordLift] using hmarkB
   let bF := { b2 with sudo_5Board_9marker_on := false }
   refine ⟨b2, bF, ?_, rfl, ?_, ?_, rfl,
-    walkRun_open_red n k bench x y acc zs hz⟩
+    walkRun_open_red n k bench x y acc zs hz,
+    walkRun_walkGo n k bench (x, y) false acc (zs ++ [2]) true (x, mirrorTrits y)
+      (walkRun_open_red n k bench x y acc zs hz)⟩
   · have hbeq : SudoRt.SEq.beq (Int.ofNat 2) (2 : Int) = true := by
       rw [show (2 : Int) = Int.ofNat 2 from rfl, sEq_ofNat 2 2]
       decide

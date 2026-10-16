@@ -309,7 +309,7 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 - `walkRun_walkGo`. A successful `walkRun` is Spec `walkGo` of the same point. `walkGo` is the walk Spec `walk_chord` is measured against.
 - `chord_add_live` states the new point by the chord formulas, not by a `let` that hides them. The board high is still only a natural at least the origin, and that high is not an export result.
 
-The loop that feeds the next cell's `RunFrame` from this cell's board is not proved. Zeros, and zeros followed by one opening cell, are already `walk_chord_zeros`, `walk_chord_white_open`, and `walk_chord_red_open`. `chordStep_open` is the emitted step once `chord_add_demo` has returned; joining it to `chord_add_live` in one theorem elaborates past the heartbeat limit, so they stay separate.
+`walk_chord_zeros`, `walk_chord_white_open`, and `walk_chord_red_open` conclude Spec `walkGo` as well as the emitted `.ok`. That is the walk on an empty key, and on empty cells followed by one opening cell. A later live cell still has to rebuild `RunFrame` from the board `chord_add_live` returns. `chordStep_open` is the emitted step once `chord_add_demo` has returned; joining it to `chord_add_live` in one theorem elaborates past the heartbeat limit, so they stay separate.
 
 4185 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. The sampled peak while this group's climb files were elaborated was 1702276 kB VmHWM. Under 2 GB.
 

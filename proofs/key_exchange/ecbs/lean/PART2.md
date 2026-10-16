@@ -343,9 +343,17 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 4231 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1699728 kB VmHWM. Under 2 GB.
 
+## Done toward the next cell's frame
+
+`FrameScalar` is the ladder, its origin, the rung count, the park hole, parked-from, the rung index, the tally length, the tally origin, and `tally_max`. `mul_refines` returns it: a copy multiply writes the spare and the bench, and those nine fields stay. `tally_max` is the incoming value, not a closed formula. It is not an export result. `walk_key` returns a point.
+
+`TailStay` is that scalar frame plus the tier and homes 3 and 4. The chord tail keeps it. `gap_settle_lay`, `square_white_lay`, `x3_settle_lay`, `chord_take_mirror`, the onto multiply, and `chord_up_slide` each return `TailStay`. `square_kept`, `bottom_lay`, and `chord_tail_point` compose them. The board `chord_tail` returns agrees with the rise board on the control frame and on the two base homes.
+
+4268 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 995000 kB VmHWM. The heavy modules were already built; this run elaborated the rest. Under 2 GB.
+
 ## Next
 
-Show the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, the control row the painted row). Chain that lemma to `chordStep_open` by `obtain` in the induction step. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+Name the rise board's frame (ladder `tierClimb`, `from = -1`, `ridx = 0`, `tally_len = 0`, `1 ≤ tally_max`, row already `paintedRow`, high already at least the origin) and assemble `chord_add_live_frame`: the board `chord_add_live` returns is the next cell's `RunFrame` (`hStart`'s later branch, rooms from `cell_rooms_left`, homes 0 and 1 the new point, homes 3 and 4 the base, scratch homes 2, 5, and 6 empty). Chain that lemma to `chordStep_open` by `obtain`. Then the general `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

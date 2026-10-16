@@ -301,7 +301,8 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
         bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG) ∧
       bS.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-      bS.sudo_5Board_3row = b.sudo_5Board_3row := by
+      bS.sudo_5Board_3row = b.sudo_5Board_3row ∧
+      TailStay b bS := by
   intro slope
   have hmul := chord_gap_mul b inv rise w h r n k moves hole bench peak peakS cOps m ctrl mx
     script hmk hoff hm hc hx hscript hbound hfitM hfitC hfit2 hops hop0 hfops hbl hF hHome hHF
@@ -412,7 +413,7 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
     simpa [slope] using (slope_mul_swap n k bench rise inv hrT hxsT).symm
   have hmix := gapMul_ix b inv rise n k moves hole bench peak peakS cOps m ctrl mx hops hS hHomeS
   have hsix := settle_ix bC 5 hH hD xs n mv slides peakC
-  refine ⟨bS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hmulEq, ok_bind, hclearEq, ok_bind]
     simpa [bS, show Ecbs.gap = ((5 : Nat) : Int) from rfl] using hset
   · have hflag : bC.sudo_5Board_9marker_on = true := by
@@ -516,6 +517,25 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
       unfold bS settleBoard
       split <;> rfl
     exact hrowS.trans (hrowC.trans hrowM)
+  · have hstayM : TailStay b bM := by
+      unfold bM gapMulBoard mulNoOffBoard markerUpFeed
+      refine TailStay.of_eq rfl rfl rfl rfl rfl rfl rfl rfl rfl rfl ?_ ?_ ?_ ?_
+      · unfold homeD
+        rw [Array.getElem?_set_ne _ _ _ (by decide : (6 : Nat) ≠ 3)]
+      · unfold heldD
+        rw [Array.getElem?_set_ne _ _ _ (by decide : (6 : Nat) ≠ 3)]
+      · unfold homeD
+        rw [Array.getElem?_set_ne _ _ _ (by decide : (6 : Nat) ≠ 4)]
+      · unfold heldD
+        rw [Array.getElem?_set_ne _ _ _ (by decide : (6 : Nat) ≠ 4)]
+    have hstayC : TailStay bM bC := by
+      simpa [bC] using
+        TailStay.set_cell bM 5 h5 h5D (#[] : Array Int) false (Int.ofNat mv)
+          (by decide) (by decide)
+    have hstayS : TailStay bC bS := by
+      simpa [bS] using
+        settleBoard_stay bC 5 hH hD xs n mv slides peakC (by decide) (by decide)
+    exact TailStay.trans hstayM (TailStay.trans hstayC hstayS)
 
 /-- The square and the white peg. Homes other than the spare stay.
     The bench prefix is slope² + 1. -/
@@ -596,7 +616,8 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
         bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG) ∧
       bW.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-      bW.sudo_5Board_3row = b.sudo_5Board_3row := by
+      bW.sudo_5Board_3row = b.sudo_5Board_3row ∧
+      TailStay b bW := by
   let feed := markerUpFeed b m ctrl mx
   have hup := mul_copy_up_eq b 2 5 5 slope slope w h r n k moves hole bench peak peakS cOps
     m ctrl mx script hmk hoff hm hc hx hscript hbound hfitM hfitCtrl hfit2 hops hop0 hfops
@@ -621,7 +642,7 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
     (by simp [feed, markerUpFeed, hr]) (by simp [feed, markerUpFeed, hk])
     (by simp [feed, markerUpFeed, hhole]) hsm hnsm hfitB hfold
   rcases href with ⟨b0, hb, hon, hto, hbench, htake, hhigh, hmv, hpk, hsl, ht, hsz, hheld,
-      _h5, hkeep, _hmk, hopsR, hstrict, hholeR, hmark, hctrl, hmxR, hhi0, hrow0⟩
+      _h5, hkeep, _hmk, hopsR, hstrict, hholeR, hmark, hctrl, hmxR, hhi0, hrow0, hsc⟩
   let bF := { b0 with sudo_5Board_9marker_on := true }
   have hmulF : Ecbs.mul b Ecbs.bottom Ecbs.gap Ecbs.gap true false false = .ok bF := by
     rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, show Ecbs.gap = ((5 : Nat) : Int) from rfl,
@@ -674,7 +695,7 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
       unfold coeff
       simp [hpos]
     simpa [benchL, hc0, htakeL] using hset
-  refine ⟨bW, benchL, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bW, benchL, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hmulF, ok_bind, hwhite]
   · simp [bW, bF]
   · simpa [bW, bF] using hon
@@ -745,6 +766,67 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
   · have hfeed : feed.sudo_5Board_3row = b.sudo_5Board_3row := by
       simp [feed, markerUpFeed]
     simpa [bW, bF] using hrow0.trans hfeed
+  · have hfeed : FrameScalar b feed := by
+      refine FrameScalar.of_eq (by simp [feed, markerUpFeed]) (by simp [feed, markerUpFeed])
+        (by simp [feed, markerUpFeed]) (by simp [feed, markerUpFeed])
+        (by simp [feed, markerUpFeed]) (by simp [feed, markerUpFeed])
+        (by simp [feed, markerUpFeed]) (by simp [feed, markerUpFeed])
+        (by simp [feed, markerUpFeed])
+    have hscW : FrameScalar b0 bW := by
+      refine FrameScalar.of_eq (by simp [bW, bF]) (by simp [bW, bF]) (by simp [bW, bF])
+        (by simp [bW, bF]) (by simp [bW, bF]) (by simp [bW, bF]) (by simp [bW, bF])
+        (by simp [bW, bF]) (by simp [bW, bF])
+    have hscAll := FrameScalar.trans (FrameScalar.trans hfeed hsc) hscW
+    have htier : bW.sudo_5Board_1t = b.sudo_5Board_1t := by
+      simp [bW, bF, feed, markerUpFeed, ht]
+    have h3H : 3 < b.sudo_5Board_4home.size := by omega
+    have h4H : 4 < b.sudo_5Board_4home.size := by omega
+    have h3D : 3 < b.sudo_5Board_4held.size := by omega
+    have h4D : 4 < b.sudo_5Board_4held.size := by omega
+    have h3Wb : 3 < b0.sudo_5Board_4home.size := by rw [hsz]; exact h3H
+    have h4Wb : 4 < b0.sudo_5Board_4home.size := by rw [hsz]; exact h4H
+    refine TailStay.of_eq hscAll.ladder hscAll.l0 hscAll.nr hscAll.park hscAll.fromH
+      hscAll.ridx hscAll.tlen hscAll.t0 hscAll.tmax htier ?_ ?_ ?_ ?_
+    · unfold homeD
+      have hW : bW.sudo_5Board_4home = b0.sudo_5Board_4home := by simp [bW, bF]
+      have h3F : 3 < feed.sudo_5Board_4home.size := by simpa [feed, markerUpFeed] using h3H
+      have harr : feed.sudo_5Board_4home = b.sudo_5Board_4home := by simp [feed, markerUpFeed]
+      rw [hW, Array.getElem?_eq_getElem h3Wb, Array.getElem?_eq_getElem h3H]
+      exact congrArg (fun a => a.getD #[]) (congrArg some
+        ((hkeep 3 h3F h3Wb (by decide)).trans (ix harr 3 h3F)))
+    · unfold heldD
+      have hW : bW.sudo_5Board_4held = b0.sudo_5Board_4held := by simp [bW, bF]
+      have h3b0 : 3 < b0.sudo_5Board_4held.size := by
+        rw [hheld, Array.size_set, Array.size_set]
+        simpa [feed, markerUpFeed] using h3D
+      have h3F : 3 < feed.sudo_5Board_4held.size := by simpa [feed, markerUpFeed] using h3D
+      rw [hW, Array.getElem?_eq_getElem h3b0, Array.getElem?_eq_getElem h3D]
+      have harr : feed.sudo_5Board_4held = b.sudo_5Board_4held := by simp [feed, markerUpFeed]
+      have hne : (6 : Nat) ≠ 3 := by decide
+      have hix0 := ix hheld 3 h3b0
+      have hset : b0.sudo_5Board_4held[3]'h3b0 = feed.sudo_5Board_4held[3]'h3F := by
+        simpa [Array.getElem_set_ne, hne] using hix0
+      exact congrArg (fun a => a.getD false) (congrArg some (hset.trans (ix harr 3 h3F)))
+    · unfold homeD
+      have hW : bW.sudo_5Board_4home = b0.sudo_5Board_4home := by simp [bW, bF]
+      have h4F : 4 < feed.sudo_5Board_4home.size := by simpa [feed, markerUpFeed] using h4H
+      have harr : feed.sudo_5Board_4home = b.sudo_5Board_4home := by simp [feed, markerUpFeed]
+      rw [hW, Array.getElem?_eq_getElem h4Wb, Array.getElem?_eq_getElem h4H]
+      exact congrArg (fun a => a.getD #[]) (congrArg some
+        ((hkeep 4 h4F h4Wb (by decide)).trans (ix harr 4 h4F)))
+    · unfold heldD
+      have hW : bW.sudo_5Board_4held = b0.sudo_5Board_4held := by simp [bW, bF]
+      have h4b0 : 4 < b0.sudo_5Board_4held.size := by
+        rw [hheld, Array.size_set, Array.size_set]
+        simpa [feed, markerUpFeed] using h4D
+      have h4F : 4 < feed.sudo_5Board_4held.size := by simpa [feed, markerUpFeed] using h4D
+      rw [hW, Array.getElem?_eq_getElem h4b0, Array.getElem?_eq_getElem h4D]
+      have harr : feed.sudo_5Board_4held = b.sudo_5Board_4held := by simp [feed, markerUpFeed]
+      have hne : (6 : Nat) ≠ 4 := by decide
+      have hix0 := ix hheld 4 h4b0
+      have hset : b0.sudo_5Board_4held[4]'h4b0 = feed.sudo_5Board_4held[4]'h4F := by
+        simpa [Array.getElem_set_ne, hne] using hix0
+      exact congrArg (fun a => a.getD false) (congrArg some (hset.trans (ix harr 4 h4F)))
 
 /-- Gap settle, then the square, obtained from the settled board. -/
 theorem gap_square_obtain (b : Ecbs.Board) (inv rise : List Nat)
@@ -956,7 +1038,8 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
       (∃ peakX, bX.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakX) ∧
       bX.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
-      bX.sudo_5Board_3row = b.sudo_5Board_3row := by
+      bX.sudo_5Board_3row = b.sudo_5Board_3row ∧
+      TailStay b bX := by
   intro x3
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2H : 2 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -1054,7 +1137,7 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
     rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl, h2, ok_bind]
     rw [hclear, ok_bind]
     rw [hset]
-  refine ⟨bX, hdo, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bX, hdo, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · exact settle_bench_off bC 2 ⟨hHc, hDc⟩ L2 n (mv2 + pegCount run) slides peak
   · intro h2x
     have hh := settle_home_eq bC 2 ⟨hHc, hDc⟩ L2 n (mv2 + pegCount run) slides peak
@@ -1153,5 +1236,20 @@ theorem x3_settle_lay (b : Ecbs.Board) (accX run benchL : List Nat)
       unfold bX settleBoard
       split <;> rfl
     exact hrowX.trans hrowC
+  · have hstay1 : TailStay b b1 := by
+      simpa [b1, benchAddBoard, withMoves] using
+        TailStay.bench_moves b (embed L1) (Int.ofNat mv1)
+    have hstay2 : TailStay b1 b2 := by
+      simpa [b2, benchAddBoard, withMoves] using
+        TailStay.bench_moves b1 (embed L2) (Int.ofNat mv2)
+    have hstayC : TailStay b2 bC := by
+      simpa [bC] using
+        TailStay.set_cell b2 2 h2H2 h2D2 (#[] : Array Int) false
+          (Int.ofNat (mv2 + pegCount run)) (by decide) (by decide)
+    have hstayX : TailStay bC bX := by
+      simpa [bX] using
+        settleBoard_stay bC 2 hHc hDc L2 n (mv2 + pegCount run) slides peak
+          (by decide) (by decide)
+    exact TailStay.trans hstay1 (TailStay.trans hstay2 (TailStay.trans hstayC hstayX))
 
 end EcbsLink2.Link2

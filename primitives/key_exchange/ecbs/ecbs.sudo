@@ -2437,9 +2437,9 @@ func trace_exchange(t: Tier, faces_a: List<int>, faces_b: List<int>) -> Trace
     ra = trace_roll_key(t, faces_a, ta)
     rb = trace_roll_key(t, faces_b, tb)
     start = new_board(t)
-    none: List<TraceStep> = []
+    no_steps: List<TraceStep> = []
     out = Trace(ta, tb, false, false, filled(t.cells, 0), filled(t.cells, 0), start, start,
-        none, false, "", blank_player(start), blank_player(start))
+        no_steps, false, "", blank_player(start), blank_player(start))
     match ra
         case Some(r)
             out.rolled_a = true
@@ -2455,7 +2455,7 @@ func trace_exchange(t: Tier, faces_a: List<int>, faces_b: List<int>) -> Trace
                 out.error = "B: the faces ran out"
     if not (out.rolled_a and out.rolled_b)
         return out
-    tr = Tracer(0, none)
+    tr = Tracer(0, no_steps)
     match trace_steps_exchange(t, out.cells_a, out.cells_b, tr)
         case Ok(e)
             out.ok = true

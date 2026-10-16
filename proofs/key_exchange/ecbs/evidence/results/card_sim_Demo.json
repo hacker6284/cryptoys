@@ -1,7 +1,7 @@
 {
  "provenance": {
   "source": "primitives/key_exchange/ecbs/ecbs.sudo",
-  "sudo_sha256": "cae139bc709dbc14c92a553212b294279da1eb7691f826a7a99557824bcd24d9",
+  "sudo_sha256": "37b1e7edabcffbfb3c8f6af27ffae5ce695f4030b93e0f9a44e0661c6d715c63",
   "sudocode_commit": "87aaaee58029182362b2bc274689ffbc743b0b35",
   "target": "sudoc js",
   "sudo_tests": "# 22/22 passed"

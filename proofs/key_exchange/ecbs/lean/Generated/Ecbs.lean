@@ -10599,12 +10599,12 @@ def trace_exchange (t : Tier) (faces_a : Array (Int)) (faces_b : Array (Int)) : 
     let rb := _ret4437
     let _t4439 ← new_board t
     let start := _t4439
-    let «none» := (#[] : Array (TraceStep))
+    let no_steps := (#[] : Array (TraceStep))
     let _t4440 ← SudoRt.filledL (t).sudo_4Tier_5cells (0 : Int)
     let _t4441 ← SudoRt.filledL (t).sudo_4Tier_5cells (0 : Int)
     let _t4442 ← blank_player start
     let _t4443 ← blank_player start
-    let out := ({ sudo_5Trace_8throws_a := ta, sudo_5Trace_8throws_b := tb, sudo_5Trace_8rolled_a := false, sudo_5Trace_8rolled_b := false, sudo_5Trace_7cells_a := _t4440, sudo_5Trace_7cells_b := _t4441, sudo_5Trace_7start_a := start, sudo_5Trace_7start_b := start, sudo_5Trace_5steps := «none», sudo_5Trace_2ok := false, sudo_5Trace_5error := (#[] : Array Int), sudo_5Trace_1a := _t4442, sudo_5Trace_1b := _t4443 } : Trace)
+    let out := ({ sudo_5Trace_8throws_a := ta, sudo_5Trace_8throws_b := tb, sudo_5Trace_8rolled_a := false, sudo_5Trace_8rolled_b := false, sudo_5Trace_7cells_a := _t4440, sudo_5Trace_7cells_b := _t4441, sudo_5Trace_7start_a := start, sudo_5Trace_7start_b := start, sudo_5Trace_5steps := no_steps, sudo_5Trace_2ok := false, sudo_5Trace_5error := (#[] : Array Int), sudo_5Trace_1a := _t4442, sudo_5Trace_1b := _t4443 } : Trace)
     match (ra : Option (Rolled)) with
     | some r =>
       do
@@ -10626,7 +10626,7 @@ def trace_exchange (t : Tier) (faces_a : Array (Int)) (faces_b : Array (Int)) : 
                 pure out
             else
               do
-                let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := «none» } : Tracer)
+                let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
                 let _io4449 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
                 let ⟨_ret4450, _iw04451⟩ := _io4449
                 let tr := _iw04451
@@ -10670,7 +10670,7 @@ def trace_exchange (t : Tier) (faces_a : Array (Int)) (faces_b : Array (Int)) : 
                         pure out
                     else
                       do
-                        let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := «none» } : Tracer)
+                        let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
                         let _io4461 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
                         let ⟨_ret4462, _iw04463⟩ := _io4461
                         let tr := _iw04463
@@ -10707,7 +10707,7 @@ def trace_exchange (t : Tier) (faces_a : Array (Int)) (faces_b : Array (Int)) : 
                         pure out
                     else
                       do
-                        let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := «none» } : Tracer)
+                        let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
                         let _io4471 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
                         let ⟨_ret4472, _iw04473⟩ := _io4471
                         let tr := _iw04473
@@ -10757,7 +10757,7 @@ def trace_exchange (t : Tier) (faces_a : Array (Int)) (faces_b : Array (Int)) : 
                     pure out
                 else
                   do
-                    let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := «none» } : Tracer)
+                    let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
                     let _io4484 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
                     let ⟨_ret4485, _iw04486⟩ := _io4484
                     let tr := _iw04486
@@ -10801,7 +10801,7 @@ def trace_exchange (t : Tier) (faces_a : Array (Int)) (faces_b : Array (Int)) : 
                             pure out
                         else
                           do
-                            let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := «none» } : Tracer)
+                            let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
                             let _io4496 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
                             let ⟨_ret4497, _iw04498⟩ := _io4496
                             let tr := _iw04498
@@ -10838,7 +10838,7 @@ def trace_exchange (t : Tier) (faces_a : Array (Int)) (faces_b : Array (Int)) : 
                             pure out
                         else
                           do
-                            let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := «none» } : Tracer)
+                            let tr := ({ sudo_6Tracer_6player := (0 : Int), sudo_6Tracer_5steps := no_steps } : Tracer)
                             let _io4506 ← trace_steps_exchange t (out).sudo_5Trace_7cells_a (out).sudo_5Trace_7cells_b tr
                             let ⟨_ret4507, _iw04508⟩ := _io4506
                             let tr := _iw04508

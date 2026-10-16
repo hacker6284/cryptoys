@@ -295,9 +295,16 @@ The check multiply, the rise, and the chord tail are not yet shown to keep this 
 
 4180 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1702512 kB VmHWM. Under 2 GB.
 
+## Done in the climb entry
+
+- `tally_start_mark`. The first cell (`high < origin` and `tally_max = 0`) raises both marks. A later cell (`origin ≤ high` and `1 ≤ tally_max`) keeps both. The recorded high is `max` of the entry high and the origin. `tally_max` is `max` of the old maximum and `1`. `tally_start_again` is the keep branch; it now lives next to `tally_start_raise`.
+- `OpenLay.hStart` and `RunFrame.hStart` are that disjunction. `highLt` is no longer a field. `open_climb` and `chord_add_live` take the disjunction, so the first cell and `later_climb_entry` are both instances. The climb model is `openModelAt`: its high is `max` of the entry high and `tallyOrigin`. On the first cell that max is `tallyOrigin`.
+
+4182 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` peaked at 1697560 kB VmHWM. Under 2 GB.
+
 ## Next
 
-Re-prove `open_climb` and `chord_add_live` from an entry high `h0`. The first cell (`RunFrame.highLt`, so `h0 < t0`, and the max is `t0 + tally - 1`) and `later_climb_entry` (`t0 ≤ h0`) are both instances. `tmaxLt` no longer asks for `tmax < 2 · tally`. `open_climb` still enters through `tally_start_raise`, which needs `high < tallyOrigin` and `tally_max = 0`. Keep the old statements as corollaries where something still calls them. Then the full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
+The full `walk_chord` induction, `.ok` of Spec `walkChord` on the stated domain. A later live cell can enter `chord_add_live` through `RunFrame.hStart`. Then `walk_fform`; `base_point_of` (errors 963 and 1527, Demo non-vacuity only); `walk_key`, `exchange`, `receive_check`, `make_certificate`; `fold` / `fold_key`, `roll_key`, `call_in`.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

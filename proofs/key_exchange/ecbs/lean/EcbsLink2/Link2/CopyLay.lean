@@ -216,11 +216,13 @@ structure RunFrame (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat) wher
   hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak
   hctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl
   hhigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = Int.ofNat high
-  highLt : high < tallyOrigin t
+  tmax : Nat
   htally : b.sudo_5Board_9tally_len = 0
   ht0 : b.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t)
   hrow : b.sudo_5Board_3row = embed (paintedRow t)
-  htmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = 0
+  htmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)
+  /-- The first cell raises the high and `tally_max`. A later cell keeps both. -/
+  hStart : (high < tallyOrigin t ∧ tmax = 0) ∨ (tallyOrigin t ≤ high ∧ 1 ≤ tmax)
   hlad : b.sudo_5Board_6ladder = embed (tierClimb t)
   hl0 : b.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2)
   hnr : b.sudo_5Board_6nrungs = Int.ofNat (tierR t)
@@ -349,7 +351,7 @@ private theorem finish_copy
     (htallyOff : bOff.sudo_5Board_9tally_len = 0)
     (ht0Off : bOff.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t))
     (hrowOff : bOff.sudo_5Board_3row = embed (paintedRow t))
-    (htmaxOff : bOff.sudo_5Board_4cost.sudo_5Costs_9tally_max = 0)
+    (htmaxOff : bOff.sudo_5Board_4cost.sudo_5Costs_9tally_max = (fr.tmax : Int))
     (hladOff : bOff.sudo_5Board_6ladder = embed (tierClimb t))
     (hl0Off : bOff.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2))
     (hnrOff : bOff.sudo_5Board_6nrungs = Int.ofNat (tierR t))
@@ -454,11 +456,12 @@ private theorem finish_copy
       hpeak := hpkOff
       hctrl := hctrlOff
       hhigh := hhighOff
-      highLt := fr.highLt
+      tmax := fr.tmax
       htally := htallyOff
       ht0 := ht0Off
       hrow := hrowOff
       htmax := htmaxOff
+      hStart := fr.hStart
       hlad := hladOff
       hl0 := hl0Off
       hnr := hnrOff
@@ -763,7 +766,7 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     rw [ht0O, ht0A, ht01, ht0B, fr.ht0]
   have hrowOff : bOff.sudo_5Board_3row = embed (paintedRow t) := by
     rw [hrowO, hrowA, hrow1, hrowB, fr.hrow]
-  have htmaxOff : bOff.sudo_5Board_4cost.sudo_5Costs_9tally_max = 0 := by
+  have htmaxOff : bOff.sudo_5Board_4cost.sudo_5Costs_9tally_max = (fr.tmax : Int) := by
     rw [congrArg (fun c => c.sudo_5Costs_9tally_max) hcostO, htmaxA, htmax1, htmaxB, fr.htmax]
   have hladOff : bOff.sudo_5Board_6ladder = embed (tierClimb t) := by
     rw [hladO, hladA, hlad1, hladB, fr.hlad]

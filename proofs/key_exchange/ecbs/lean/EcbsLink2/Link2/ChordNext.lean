@@ -1,9 +1,10 @@
 /-
   What one live cell leaves for the next one. The five rooms are one charge
   each; a fuel of further cells keeps what this cell does not spend. The
-  climb's recorded high is a high-water mark: `tally_clear` does not lower it,
-  so the next cell does not have `RunFrame.highLt`. `tally_start_again` is the
-  restart when that mark is already at or above the tally origin.
+  climb's recorded high is a high-water mark: `tally_clear` does not lower it.
+  `OpenLay.hStart` is the first cell (`high < origin` and `tally_max = 0`) or a
+  later cell (`origin ≤ high` and `1 ≤ tally_max`). `tally_start_again` is the
+  later restart: the peg is written and the high stays.
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.ChordLive
@@ -218,43 +219,6 @@ theorem gap_settle_high (b : Ecbs.Board) (inv rise : List Nat)
       hpeakS hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm
       hnsm hfitB hfold hfitClear hpeg hfitSM hfitSS
   exact ⟨bS, hdo, hhi⟩
-
-/-- `tally_start` when the recorded high is already at or above the origin and
-    `tally_max` already records a positive length. The white peg is written.
-    The high and the maximum stay. -/
-theorem tally_start_again (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
-    (hLen0 : b.sudo_5Board_9tally_len = 0)
-    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
-    (hrow : t0 < b.sudo_5Board_3row.size)
-    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
-    (hic : t0 < control)
-    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
-    (hle : t0 ≤ high)
-    (hFitT : FitsLen t0)
-    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
-    (hFitC : FitsLen (ctrl + 1))
-    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
-    (hNote : 1 ≤ tmax) :
-    Ecbs.tally_start b =
-      .ok { b with
-        sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0, hrow⟩ (1 : Int)
-        sudo_5Board_9tally_len := 1
-        sudo_5Board_4cost := { b.sudo_5Board_4cost with
-          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } } := by
-  unfold Ecbs.tally_start
-  rw [hLen0, sudoAssertEq_int rfl 344, ok_bind]
-  have hrow0 : t0 + 0 < b.sudo_5Board_3row.size := by simpa using hrow
-  conv =>
-    pattern (Ecbs.tally_put b (0 : Int) (1 : Int))
-    rw [show (0 : Int) = ((0 : Nat) : Int) from rfl, show (1 : Int) = ((1 : Nat) : Int) from rfl]
-  rw [tally_put_keep b t0 0 1 high control hT0 hrow0 hCtrlN (by simpa using hic)
-      hHigh (by simpa using hle) (by simpa using hFitT), ok_bind]
-  conv => zeta
-  dsimp only
-  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hFitC, ok_bind]
-  have hlen1 : (1 : Int) = ((1 : Nat) : Int) := rfl
-  rw [tally_note_keep _ 1 tmax hlen1 (by simpa using hMax) hNote, ok_bind, pure_eq_ok]
-  simp [hrow]
 
 /-- A later cell does not enter under `RunFrame.highLt`. Once the mark is at or
     above the origin and `tally_max` is already positive, `tally_start` writes

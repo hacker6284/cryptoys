@@ -61,11 +61,13 @@ structure OpenLay (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat) where
   hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak
   hctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl
   hhigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = Int.ofNat high
-  highLt : high < tallyOrigin t
+  tmax : Nat
   htally : b.sudo_5Board_9tally_len = 0
   ht0 : b.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t)
   hrow : b.sudo_5Board_3row = embed (paintedRow t)
-  htmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = 0
+  htmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)
+  /-- The first cell raises the high and `tally_max`. A later cell keeps both. -/
+  hStart : (high < tallyOrigin t ∧ tmax = 0) ∨ (tallyOrigin t ≤ high ∧ 1 ≤ tmax)
   hlad : b.sudo_5Board_6ladder = embed (tierClimb t)
   hl0 : b.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2)
   hnr : b.sudo_5Board_6nrungs = Int.ofNat (tierR t)
@@ -123,6 +125,11 @@ structure OpenMatch {b : Ecbs.Board} {t : Spec.Tier} {xs : List Nat}
 def openModel (t : Spec.Tier) (xs : List Nat) (ctrl : Nat) : ClimbModel :=
   { entryModel t xs with ctrl := ctrl + 1 }
 
+/-- The same model when the entry high may already sit at or above the origin.
+    `tally_start` records `max` of that high and the origin. -/
+def openModelAt (t : Spec.Tier) (xs : List Nat) (ctrl high : Nat) : ClimbModel :=
+  { openModel t xs ctrl with high := max high (tallyOrigin t) }
+
 /-- Bump `op_inv`, copy the bottom into the empty gap, and lay the first tally
     peg. The gap is the input. The control counter and the recorded high move
     to the tally origin. -/
@@ -144,7 +151,7 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       bT.sudo_5Board_9tally_len = 1 ∧
       bT.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (lay.ctrl + 1) ∧
       bT.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        ((tallyOrigin t : Nat) : Int) ∧
+        ((max lay.high (tallyOrigin t) : Nat) : Int) ∧
       bT.sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t) ∧
       bT.sudo_5Board_3row = embed (entryRow t) ∧
       bT.sudo_5Board_9park_hole = Int.ofNat (t.script + 2 + tierR t) ∧
@@ -167,7 +174,8 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       bT.sudo_5Board_4cost.sudo_5Costs_4peak =
         Int.ofNat (raisedPeak lay.peak
           (countHeld (b.sudo_5Board_4held.set ⟨5, by rw [lay.szD]; decide⟩ true) 7)) ∧
-      bT.sudo_5Board_4cost.sudo_5Costs_9tally_max = 1 ∧
+      bT.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+        ((max lay.tmax 1 : Nat) : Int) ∧
       bT.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat lay.peakS ∧
       bT.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat lay.hole ∧
       bT.sudo_5Board_4cost.sudo_5Costs_3ops =
@@ -232,10 +240,10 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       sudo_5Board_3row := bG.sudo_5Board_3row.set ⟨tallyOrigin t, hrowSz⟩ (1 : Int)
       sudo_5Board_9tally_len := 1
       sudo_5Board_4cost := { bG.sudo_5Board_4cost with
-        sudo_5Costs_15control_highest := ((tallyOrigin t : Nat) : Int)
+        sudo_5Costs_15control_highest := ((max lay.high (tallyOrigin t) : Nat) : Int)
         sudo_5Costs_4ctrl := Int.ofNat (lay.ctrl + 1)
-        sudo_5Costs_9tally_max := 1 } }
-  have htallyRun := tally_start_raise bG (tallyOrigin t) lay.high t.control lay.ctrl 0
+        sudo_5Costs_9tally_max := ((max lay.tmax 1 : Nat) : Int) } }
+  have htallyRun := tally_start_mark bG (tallyOrigin t) lay.high t.control lay.ctrl lay.tmax
     (by rw [hlenG, show bB.sudo_5Board_9tally_len = b.sudo_5Board_9tally_len from rfl,
         lay.htally])
     (by rw [ht0G, show bB.sudo_5Board_6tally0 = b.sudo_5Board_6tally0 from rfl, lay.ht0,
@@ -244,15 +252,13 @@ theorem open_tally (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
     (by rw [hhighG, show bB.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest from rfl, lay.hhigh,
         ofNat_eq_natCast])
-    lay.highLt hfit0
+    hfit0
     (by rw [hctrlG, show bB.sudo_5Board_4cost.sudo_5Costs_4ctrl =
         b.sudo_5Board_4cost.sudo_5Costs_4ctrl from rfl, lay.hctrl, ofNat_eq_natCast])
     lay.fitCtrl
-    (by
-      rw [htmaxG, show bB.sudo_5Board_4cost.sudo_5Costs_9tally_max =
-        b.sudo_5Board_4cost.sudo_5Costs_9tally_max from rfl, lay.htmax]
-      rfl)
-    (by decide)
+    (by rw [htmaxG, show bB.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+        b.sudo_5Board_4cost.sudo_5Costs_9tally_max from rfl, lay.htmax])
+    lay.hStart
   have hrowSet : bG.sudo_5Board_3row.set ⟨tallyOrigin t, hrowSz⟩ (1 : Int) =
       embed (entryRow t) := by
     have hlenP : tallyOrigin t < (paintedRow t).length := by
@@ -431,7 +437,7 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         let b ← Ecbs.copy_band b Ecbs.gap ((2 : Nat) : Int) false
         Ecbs.tally_start b) = .ok bT ∧
       bT.sudo_5Board_6ladder = embed (tierClimb t) ∧
-      ClimbInvK [] (tierClimb t) bT (openModel t xs lay.ctrl) base := by
+      ClimbInvK [] (tierClimb t) bT (openModelAt t xs lay.ctrl lay.high) base := by
   obtain ⟨bT, hdo, hmark, hbench, hlen, hctrl, hhigh, ht0, hrow, hpark, hfrom, hridx,
       hlad, hl0, hnr, htier, hszH, hszD, h5t, h5a, h6e, h2t, h2a, hmv, hsl, hpk,
       htmax, hstrict, hhole, hops, h0a, h0t, h1a, h1t, h4a, h4t, hmarkIx, hmxT⟩ :=
@@ -465,26 +471,26 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           (by rw [Array.size_set]; exact hi0) hne
       refine ⟨c, hidx.trans (hget.trans hc), ?_⟩
       simpa [h2] using hle
-  have hInv : ClimbInv bT (openModel t xs lay.ctrl) :=
+  have hInv : ClimbInv bT (openModelAt t xs lay.ctrl lay.high) :=
     { hG := hsz5
       hGs := hsz5D
       marker := hmark
-      len := by simpa [openModel, entryModel, ofNat_eq_natCast] using hlen
-      ctrl := by simpa [openModel, entryModel, ofNat_eq_natCast] using hctrl
-      high := by simpa [openModel, entryModel, ofNat_eq_natCast] using hhigh
-      t0 := by simpa [openModel, entryModel, ofNat_eq_natCast] using ht0
-      row := by simpa [openModel, entryModel] using hrow
-      park := by simpa [openModel, entryModel, ofNat_eq_natCast] using hpark
-      fromP := by simpa [openModel, entryModel] using hfrom
-      ridx := by simpa [openModel, entryModel] using hridx
+      len := by simpa [openModelAt, openModel, entryModel, ofNat_eq_natCast] using hlen
+      ctrl := by simpa [openModelAt, openModel, entryModel, ofNat_eq_natCast] using hctrl
+      high := by simpa [openModelAt, openModel, entryModel, ofNat_eq_natCast] using hhigh
+      t0 := by simpa [openModelAt, openModel, entryModel, ofNat_eq_natCast] using ht0
+      row := by simpa [openModelAt, openModel, entryModel] using hrow
+      park := by simpa [openModelAt, openModel, entryModel, ofNat_eq_natCast] using hpark
+      fromP := by simpa [openModelAt, openModel, entryModel] using hfrom
+      ridx := by simpa [openModelAt, openModel, entryModel] using hridx
       gapHome := by
         intro _
         refine ⟨h5t hsz5D, ?_⟩
-        simpa [openModel, entryModel] using h5a hsz5
+        simpa [openModelAt, openModel, entryModel] using h5a hsz5
       gapBench := by
         intro h
-        simp [openModel, entryModel] at h }
-  have hparkR : ParkRead bT (openModel t xs lay.ctrl) (tierClimb t) base :=
+        simp [openModelAt, openModel, entryModel] at h }
+  have hparkR : ParkRead bT (openModelAt t xs lay.ctrl lay.high) (tierClimb t) base :=
     { ladder0B := by simp [hm.ladder0, hl0, ofNat_eq_natCast]
       nrungsB := by simp [hm.R, hnr, ofNat_eq_natCast]
       climbH := by
@@ -500,46 +506,48 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           unfold tierR at hL ⊢
           omega
       holeLt := by
-        simpa [openModel, entryModel, hm.ladder0, hm.R] using entry_hole_lt t hOk hR
-      parkLt := by simpa [openModel, entryModel] using entry_park_lt t sat
+        simpa [openModelAt, openModel, entryModel, hm.ladder0, hm.R] using entry_hole_lt t hOk hR
+      parkLt := by simpa [openModelAt, openModel, entryModel] using entry_park_lt t sat
       parkNe := by
-        simp [openModel, entryModel, hm.ladder0, hm.R, climbAt]
+        simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R, climbAt]
         omega
       parkLe := by
-        simp [openModel, entryModel]
-        unfold tallyOrigin
-        omega
+        have hpark : (openModelAt t xs lay.ctrl lay.high).parkAt ≤ tallyOrigin t := by
+          simp [openModelAt, openModel, entryModel]
+          unfold tallyOrigin
+          omega
+        simpa [openModelAt] using Nat.le_trans hpark (Nat.le_max_right _ _)
       parkIn := by
-        simp [openModel, entryModel, hm.control]
+        simp [openModelAt, openModel, entryModel, hm.control]
         have h := origin_lt t sat
         unfold tallyOrigin at h
         omega
       parkCell := by
         intro _
-        simpa [openModel, entryModel] using
+        simpa [openModelAt, openModel, entryModel] using
           entry_park_cell t (entry_park_lt t sat)
       fromIdle := by
         intro _
-        simp [openModel, entryModel]
+        simp [openModelAt, openModel, entryModel]
       fromNat := by
         intro h
-        simp [openModel, entryModel] at h
+        simp [openModelAt, openModel, entryModel] at h
       srcOk := by
         intro h
-        simp [openModel, entryModel] at h
+        simp [openModelAt, openModel, entryModel] at h
       parkHeld := by
         intro h
-        simp [openModel, entryModel] at h
+        simp [openModelAt, openModel, entryModel] at h
       nextRung := by
         intro r rs hrest
-        simpa [openModel, entryModel, hm.ladder0, hm.R] using
+        simpa [openModelAt, openModel, entryModel, hm.ladder0, hm.R] using
           entry_nextRung t hOk hR r rs hrest
       ladderTail := by
         intro k hk hlt
-        simpa [openModel, entryModel, hm.ladder0, hm.R] using
+        simpa [openModelAt, openModel, entryModel, hm.ladder0, hm.R] using
           entry_ladderTail t hOk k hk
       fit2 := by
-        rw [show (openModel t xs lay.ctrl).ctrl = lay.ctrl + 1 from rfl]
+        rw [show (openModelAt t xs lay.ctrl lay.high).ctrl = lay.ctrl + 1 from rfl]
         apply FitsLen.of_le base.fitCtrl
         rw [hm.ctrl0, hm.R, hm.mMax]
         refine Nat.add_le_add_left ?_ (lay.ctrl + 1)
@@ -550,7 +558,7 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           Nat.mul_le_mul_right _ (Nat.succ_le_succ (Nat.zero_le (tierR t)))
         exact Nat.le_trans h5 (Nat.le_trans (Nat.le_of_eq hx) hmul)
       fit4 := by
-        rw [show (openModel t xs lay.ctrl).ctrl = lay.ctrl + 1 from rfl]
+        rw [show (openModelAt t xs lay.ctrl lay.high).ctrl = lay.ctrl + 1 from rfl]
         apply FitsLen.of_le base.fitCtrl
         rw [hm.ctrl0, hm.R, hm.mMax]
         have hL : (lay.ctrl + 1 + 2) + 2 = (lay.ctrl + 1) + 4 := by omega
@@ -563,7 +571,7 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           Nat.mul_le_mul_right _ (Nat.succ_le_succ (Nat.zero_le (tierR t)))
         exact Nat.le_trans h5 (Nat.le_trans (Nat.le_of_eq hx) hmul)
       fitI := by
-        simp only [openModel, entryModel]
+        simp only [openModelAt, openModel, entryModel]
         unfold FitsLen i64MaxNat
         decide
       l0pos := by
@@ -579,7 +587,7 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         have hL := hOk.ladder
         unfold tierR at hL ⊢
         omega }
-  have hpeg : PegRead bT (openModel t xs lay.ctrl) base :=
+  have hpeg : PegRead bT (openModelAt t xs lay.ctrl lay.high) base :=
     { opsGt := by
         have hsz : bT.sudo_5Board_4cost.sudo_5Costs_3ops.size =
             b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -597,22 +605,26 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         exact ⟨c, by simpa [ofNat_eq_natCast] using hc⟩
       peakS := ⟨lay.peakS, by simpa [ofNat_eq_natCast] using hstrict⟩
       holeM := ⟨lay.hole, by simpa [ofNat_eq_natCast] using hhole⟩
-      trits := by simpa [openModel, entryModel] using lay.tri
+      trits := by simpa [openModelAt, openModel, entryModel] using lay.tri
       top := by
         intro _
-        simp [openModel, entryModel]
+        have hend : (openModelAt t xs lay.ctrl lay.high).t0 +
+            (openModelAt t xs lay.ctrl lay.high).tally - 1 = tallyOrigin t := by
+          simp [openModelAt, openModel, entryModel]
+        rw [hend]
+        simpa [openModelAt] using Nat.le_max_right lay.high (tallyOrigin t)
       fitRow := by
-        simp only [openModel, entryModel]
+        simp only [openModelAt, openModel, entryModel]
         apply FitsLen.of_le (fits_of hOk.fits_control)
         have h := origin_lt t sat
         omega
       fitTall := by
-        simp only [openModel, entryModel]
+        simp only [openModelAt, openModel, entryModel]
         unfold FitsLen i64MaxNat
         decide
       fitCtrl := by
-        rw [show (openModel t xs lay.ctrl).ctrl = lay.ctrl + 1 from rfl,
-          show (openModel t xs lay.ctrl).tally = 1 from rfl]
+        rw [show (openModelAt t xs lay.ctrl lay.high).ctrl = lay.ctrl + 1 from rfl,
+          show (openModelAt t xs lay.ctrl lay.high).tally = 1 from rfl]
         apply FitsLen.of_le base.fitCtrl
         rw [hm.ctrl0, hm.R, hm.mMax]
         refine Nat.add_le_add_left ?_ (lay.ctrl + 1)
@@ -622,26 +634,26 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         have hmul : 1 * (3 * rowRoom t + 5) ≤ (tierR t + 1) * (3 * rowRoom t + 5) :=
           Nat.mul_le_mul_right _ (Nat.succ_le_succ (Nat.zero_le (tierR t)))
         exact Nat.le_trans h1 (Nat.le_trans (Nat.le_of_eq hx) hmul)
-      n_pos := by simpa [openModel, entryModel] using hOk.n_pos
-      span := by simpa [openModel, entryModel, hm.cg] using sat.cube_span
+      n_pos := by simpa [openModelAt, openModel, entryModel] using hOk.n_pos
+      span := by simpa [openModelAt, openModel, entryModel, hm.cg] using sat.cube_span
       small := by simpa [hm.w, hm.h, hm.r] using hsh.small
-      n_small := by simpa [openModel, entryModel] using hsh.n_small
+      n_small := by simpa [openModelAt, openModel, entryModel] using hsh.n_small
       fitN := by
-        simp only [openModel, entryModel]
+        simp only [openModelAt, openModel, entryModel]
         exact FitsLen.of_le (fits_of hOk.fits_n) (by omega)
       fitBn := by
-        simp only [openModel, entryModel]
+        simp only [openModelAt, openModel, entryModel]
         exact FitsLen.of_le (by unfold FitsLen i64MaxNat; decide) hsh.small.2.2.2
       fit3 := by
-        simp only [openModel, entryModel]
+        simp only [openModelAt, openModel, entryModel]
         exact FitsLen.of_le (fits_of hOk.fits_n) (by omega) }
   refine ⟨bT, hdo, hlad, ?_⟩
   exact
     { inv := hInv
-      idx := by simp [openModel, entryModel]
-      hn := by simp [openModel, entryModel, hm.n]
-      hbench := by simp [openModel, entryModel, hm.bench]
-      htally0 := by simp [openModel, entryModel, hm.tally0, climbTallyPrefix]
+      idx := by simp [openModelAt, openModel, entryModel]
+      hn := by simp [openModelAt, openModel, entryModel, hm.n]
+      hbench := by simp [openModelAt, openModel, entryModel, hm.bench]
+      htally0 := by simp [openModelAt, openModel, entryModel, hm.tally0, climbTallyPrefix]
       kLe := by
         simp [hm.R]
         unfold tierClimb tierR
@@ -654,7 +666,7 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           h7 := by rw [hszD]; decide
           gapClear := by
             intro h
-            simp [openModel, entryModel] at h
+            simp [openModelAt, openModel, entryModel] at h
           offWhenHome := fun _ => hbench
           xD := by rw [hm.xHome, hszD]; decide
           xH := by rw [hm.xHome, hszH]; decide
@@ -662,30 +674,30 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           xArr := by simpa [hm.x, hm.xHome] using h2a (by rw [hszH]; decide)
           xNe5 := by simp [hm.xHome]
           xNe6 := by simp [hm.xHome]
-          gapLen := by simpa [openModel, entryModel, lay.len]
-          seg := by simpa [openModel, entryModel] using entry_seg t sat hR
+          gapLen := by simpa [openModelAt, openModel, entryModel, lay.len]
+          seg := by simpa [openModelAt, openModel, entryModel] using entry_seg t sat hR
           tierN := by
             rw [htier]
-            simp [embTier, openModel, entryModel, ofNat_eq_natCast]
+            simp [embTier, openModelAt, openModel, entryModel, ofNat_eq_natCast]
           tierK := by
             rw [htier]
-            simp [embTier, openModel, entryModel, ofNat_eq_natCast]
+            simp [embTier, openModelAt, openModel, entryModel, ofNat_eq_natCast]
           tierB := by
             rw [htier]
-            simp [embTier, openModel, entryModel, hm.bench, ofNat_eq_natCast]
+            simp [embTier, openModelAt, openModel, entryModel, hm.bench, ofNat_eq_natCast]
           tierW := by rw [htier]; simp [embTier, hm.w, ofNat_eq_natCast]
           tierH := by rw [htier]; simp [embTier, hm.h, ofNat_eq_natCast]
           tierR := by rw [htier]; simp [embTier, hm.r, ofNat_eq_natCast]
           tierCg := by rw [htier]; simp [embTier, hm.cg, ofNat_eq_natCast]
           tierC := by rw [htier]; simp [embTier, hm.control, ofNat_eq_natCast]
-          rowLen := by simp [openModel, entryModel, hm.control, entry_row_len]
+          rowLen := by simp [openModelAt, openModel, entryModel, hm.control, entry_row_len]
           w0 := by simpa [hm.w] using hsh.w0
           h0 := by simpa [hm.h] using hsh.h0
           r0 := by simpa [hm.r] using hsh.r0
           rlt := by simpa [hm.r, hm.h] using hsh.rlt
-          n_eq := by simpa [openModel, entryModel, hm.w, hm.h] using hsh.n_eq
-          k_le := by simpa [openModel, entryModel] using hsh.k_le
-          gap_eq := by simpa [openModel, entryModel, hm.w, hm.r] using hsh.gap
+          n_eq := by simpa [openModelAt, openModel, entryModel, hm.w, hm.h] using hsh.n_eq
+          k_le := by simpa [openModelAt, openModel, entryModel] using hsh.k_le
+          gap_eq := by simpa [openModelAt, openModel, entryModel, hm.w, hm.r] using hsh.gap
           side :=
             { h0H := by rw [hszH]; decide
               h0D := by rw [hszD]; decide
@@ -708,46 +720,43 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           park := hparkR
           peg := hpeg }
       moves := ⟨lay.moves + pegCount xs, by rw [hmv, ofNat_eq_natCast], by
-        rw [show (openModel t xs lay.ctrl).onBench = false from rfl, hm.moves0]
+        rw [show (openModelAt t xs lay.ctrl lay.high).onBench = false from rfl, hm.moves0]
         simp⟩
       slides := ⟨lay.slides, by rw [hsl, ofNat_eq_natCast], by
-        rw [show (openModel t xs lay.ctrl).onBench = false from rfl, hm.slides0]
+        rw [show (openModelAt t xs lay.ctrl lay.high).onBench = false from rfl, hm.slides0]
         simp⟩
       ops := by
         intro i hi
         obtain ⟨c, hc, hle⟩ := hopsSlot i hi
         refine ⟨c, hc, ?_⟩
-        rw [show (openModel t xs lay.ctrl).onBench = false from rfl, hm.ops0]
+        rw [show (openModelAt t xs lay.ctrl lay.high).onBench = false from rfl, hm.ops0]
         simpa using hle
       peak := ⟨base.peak0, by rw [hpk, ← hm.peak0, ofNat_eq_natCast],
         Nat.le_max_left _ _⟩
       highTop := by
-        have hle : base.high0 ≤ tallyOrigin t := by
-          rw [hm.high0]
-          exact Nat.le_of_lt lay.highLt
-        simp [openModel, entryModel, Nat.max_eq_right hle]
+        simp [openModelAt, openModel, entryModel, hm.high0]
       parkBelow := by
-        simp [openModel, entryModel]
+        simp [openModelAt, openModel, entryModel]
         unfold tallyOrigin
         omega
       holeBelow := by
-        simp [openModel, entryModel, hm.ladder0, hm.R, climbAt]
+        simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R, climbAt]
         unfold tallyOrigin
         omega
       fromBelow := by
         intro h
-        simp [openModel, entryModel] at h
+        simp [openModelAt, openModel, entryModel] at h
       finalLe := by
-        simpa [openModel, entryModel, hm.tally0] using climbTally_ge 1 (tierClimb t)
+        simpa [openModelAt, openModel, entryModel, hm.tally0] using climbTally_ge 1 (tierClimb t)
       tailFit := by
         have hpre : tallyPrefixesLe 1 (rowRoom t) (tierClimb t ++ []) = true := by
           simpa using sat.prefixes
         have hct : climbTally 1 (tierClimb t) ≤ rowRoom t := by
           rw [← climbTallyPrefix_full]
           exact tallyPrefixesLe_spec 1 (rowRoom t) (tierClimb t) [] hpre
-        have ht0m : (openModel t xs lay.ctrl).t0 = tallyOrigin t := rfl
-        have hrowL : (openModel t xs lay.ctrl).row.length = t.control := by
-          simp [openModel, entryModel, entry_row_len]
+        have ht0m : (openModelAt t xs lay.ctrl lay.high).t0 = tallyOrigin t := rfl
+        have hrowL : (openModelAt t xs lay.ctrl lay.high).row.length = t.control := by
+          simp [openModelAt, openModel, entryModel, entry_row_len]
         rw [ht0m, hrowL, hm.tally0, List.nil_append]
         have hor := sat.origin_le
         unfold rowRoom at hct
@@ -755,29 +764,29 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       tailZero := by
         intro k hk1 _ hix
         have hlt : tallyOrigin t < tallyOrigin t + k := by
-          simp [openModel, entryModel] at hk1
+          simp [openModelAt, openModel, entryModel] at hk1
           omega
-        simpa [openModel, entryModel] using entry_past t (tallyOrigin t + k) hlt hix
+        simpa [openModelAt, openModel, entryModel] using entry_past t (tallyOrigin t + k) hlt hix
       openRoom := by
         intro h2
         have hroom := entry_double_room t sat h2
-        simpa [openModel, entryModel, hm.control] using hroom
+        simpa [openModelAt, openModel, entryModel, hm.control] using hroom
       openZero := by
         intro _ k hk hix
         have hk0 : k = 0 := by
-          simp [openModel, entryModel] at hk
+          simp [openModelAt, openModel, entryModel] at hk
           omega
         subst hk0
         have hix' : tallyOrigin t + 1 < (entryRow t).length := by
-          simpa [openModel, entryModel] using hix
+          simpa [openModelAt, openModel, entryModel] using hix
         have hpast := entry_past t (tallyOrigin t + 1) (by omega) hix'
-        simpa [openModel, entryModel] using hpast
-      tmaxLt := ⟨1, by simpa [ofNat_eq_natCast] using htmax⟩
+        simpa [openModelAt, openModel, entryModel] using hpast
+      tmaxLt := ⟨max lay.tmax 1, by simpa [ofNat_eq_natCast] using htmax⟩
       ctrlLe := by
-        simp [openModel, entryModel, hm.ctrl0]
+        simp [openModelAt, openModel, entryModel, hm.ctrl0]
       srcAbove := by
         intro h
-        simp [openModel, entryModel] at h }
+        simp [openModelAt, openModel, entryModel] at h }
 
 /-- `Ecbs.invert` on an open walk board is the climb of that tally board. -/
 theorem open_invert (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
@@ -786,19 +795,19 @@ theorem open_invert (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
     ∃ bT,
       Ecbs.invert b ((2 : Nat) : Int) =
         climbEmit (climbStepBoard ((2 : Nat) : Int)) bT (tierClimb t) >>= finalTail ∧
-      ClimbInvK [] (tierClimb t) bT (openModel t xs lay.ctrl) base := by
+      ClimbInvK [] (tierClimb t) bT (openModelAt t xs lay.ctrl lay.high) base := by
   obtain ⟨bT, hdo, hlad, hK⟩ := open_climb b t xs lay hOk sat hR hsh base hm
   let hL : ClimbInvL (tierClimb t) 0 bT base :=
     { done := []
       rest := tierClimb t
-      s := openModel t xs lay.ctrl
+      s := openModelAt t xs lay.ctrl lay.high
       split := by simp
       k_eq := rfl
       inv := hK
       ladder := hlad
-      m_pos := by simp [openModel, entryModel]
+      m_pos := by simp [openModelAt, openModel, entryModel]
       m_le := by
-        rw [show (openModel t xs lay.ctrl).tally = 1 from rfl, hm.control]
+        rw [show (openModelAt t xs lay.ctrl lay.high).tally = 1 from rfl, hm.control]
         have hC := hOk.ladder
         unfold tierR at hC
         omega
@@ -806,7 +815,7 @@ theorem open_invert (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
   have hpos : 0 < (tierClimb t).length := by
     simpa [tierClimb, List.length_reverse, tierR] using hR
   have hpark : hL.s.parkAt = base.ladder0 + base.R := by
-    simp [hL, openModel, entryModel, hm.ladder0, hm.R]
+    simp [hL, openModelAt, openModel, entryModel, hm.ladder0, hm.R]
   have hcap : ∀ done rest, tierClimb t = done ++ rest →
       climbTallyPrefix base.tally0 done rest ≤ base.mMax := by
     intro done rest hsplit
@@ -854,9 +863,9 @@ theorem open_invGap (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       Ecbs.invert b ((2 : Nat) : Int) = .ok bZ ∧
       bZ.sudo_5Board_4home[5]'h5 = embed (invGap t.n t.k t.benchlen xs) := by
   obtain ⟨bT, hem, hK⟩ := open_invert b t xs lay hOk sat hR hsh base hm
-  have hpark : (openModel t xs lay.ctrl).parkAt = base.ladder0 + base.R := by
-    simp [openModel, entryModel, hm.ladder0, hm.R]
-  have hm0 : 0 < (openModel t xs lay.ctrl).tally := by simp [openModel, entryModel]
+  have hpark : (openModelAt t xs lay.ctrl lay.high).parkAt = base.ladder0 + base.R := by
+    simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R]
+  have hm0 : 0 < (openModelAt t xs lay.ctrl lay.high).tally := by simp [openModelAt, openModel, entryModel]
   have hcap : ∀ done rest, tierClimb t = done ++ rest →
       climbTallyPrefix base.tally0 done rest ≤ base.mMax := by
     intro done rest hsplit
@@ -865,7 +874,7 @@ theorem open_invGap (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
   have hxLen : base.x.length = base.n := by rw [hm.x, hm.n, lay.len]
   have hxT : allTritList base.x := by simpa [hm.x] using lay.tri
   obtain ⟨b', s', hrun, hs', hK', hgap, htmax⟩ := climb_refines_emit (tierClimb t)
-      bT (openModel t xs lay.ctrl) base hK hpark hm0 hcap hxLen hxT
+      bT (openModelAt t xs lay.ctrl lay.high) base hK hpark hm0 hcap hxLen hxT
   have hpos : 0 < (tierClimb t).length := by
     simpa [tierClimb, List.length_reverse, tierR] using hR
   cases hL : tierClimb t with
@@ -875,13 +884,13 @@ theorem open_invGap (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         climbAt base.ladder0 base.R s.ridx
       have hon : s'.onBench = true := by
         rw [hs', hL]
-        exact modelClimb_onBench (openModel t xs lay.ctrl) base.x hole r rs
+        exact modelClimb_onBench (openModelAt t xs lay.ctrl lay.high) base.x hole r rs
       have hge : 0 ≤ s'.fromHole := by
         rw [hs', hL]
-        exact modelClimb_fromHole (openModel t xs lay.ctrl) base.x hole r rs
+        exact modelClimb_fromHole (openModelAt t xs lay.ctrl lay.high) base.x hole r rs
       have hmt : 0 < s'.tally := by
         rw [hs', modelClimb_tally]
-        simp [openModel, entryModel]
+        simp [openModelAt, openModel, entryModel]
         exact Nat.lt_of_lt_of_le (by decide : (0 : Nat) < 1) (climbTally_ge 1 (tierClimb t))
       obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hhome⟩ :=
         final_cube_home hK' hon hge htmax hmt
@@ -890,21 +899,21 @@ theorem open_invGap (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       have hok : Ecbs.invert b ((2 : Nat) : Int) = .ok bZ := by
         rw [hem, hrun', ok_bind]
         simp [finalTail, hun, hc, hset, hz, ok_bind]
-      have hlay := modelClimb_params (openModel t xs lay.ctrl) base.x hole (tierClimb t)
+      have hlay := modelClimb_params (openModelAt t xs lay.ctrl lay.high) base.x hole (tierClimb t)
       have hpair : (s'.gap, s'.tally) =
           invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t) := by
-        simpa [openModel, entryModel, hm.n, hm.bench, hm.x, lay.len] using hgap
+        simpa [openModelAt, openModel, entryModel, hm.n, hm.bench, hm.x, lay.len] using hgap
       have hgap1 : s'.gap = (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1 :=
         congrArg Prod.fst hpair
       have hn : s'.n = t.n := by
         rw [hs']
-        simpa [openModel, entryModel] using hlay.1
+        simpa [openModelAt, openModel, entryModel] using hlay.1
       have hk : s'.k = t.k := by
         rw [hs']
-        simpa [openModel, entryModel] using hlay.2.1
+        simpa [openModelAt, openModel, entryModel] using hlay.2.1
       have hb : s'.benchlen = t.benchlen := by
         rw [hs']
-        simpa [openModel, entryModel] using hlay.2.2
+        simpa [openModelAt, openModel, entryModel] using hlay.2.2
       refine ⟨bZ, hhome.h5, hok, ?_⟩
       refine hhome.arr.trans (congrArg embed ?_)
       rw [hn, hk, hb, hgap1]
@@ -982,9 +991,9 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
         tallyOrigin t ≤ high := by
   obtain ⟨bT, hem, hK⟩ := open_invert b t xs lay hOk sat hR hsh base hm
-  have hpark : (openModel t xs lay.ctrl).parkAt = base.ladder0 + base.R := by
-    simp [openModel, entryModel, hm.ladder0, hm.R]
-  have hm0 : 0 < (openModel t xs lay.ctrl).tally := by simp [openModel, entryModel]
+  have hpark : (openModelAt t xs lay.ctrl lay.high).parkAt = base.ladder0 + base.R := by
+    simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R]
+  have hm0 : 0 < (openModelAt t xs lay.ctrl lay.high).tally := by simp [openModelAt, openModel, entryModel]
   have hcap : ∀ done rest, tierClimb t = done ++ rest →
       climbTallyPrefix base.tally0 done rest ≤ base.mMax := by
     intro done rest hsplit
@@ -993,7 +1002,7 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
   have hxLen : base.x.length = base.n := by rw [hm.x, hm.n, lay.len]
   have hxT : allTritList base.x := by simpa [hm.x] using lay.tri
   obtain ⟨b', s', hrun, hs', hKpost, hgap, htmax⟩ := climb_refines_emit (tierClimb t)
-      bT (openModel t xs lay.ctrl) base hK hpark hm0 hcap hxLen hxT
+      bT (openModelAt t xs lay.ctrl lay.high) base hK hpark hm0 hcap hxLen hxT
   have hpos : 0 < (tierClimb t).length := by
     simpa [tierClimb, List.length_reverse, tierR] using hR
   cases hLc : tierClimb t with
@@ -1003,13 +1012,13 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         climbAt base.ladder0 base.R s.ridx
       have hon : s'.onBench = true := by
         rw [hs', hLc]
-        exact modelClimb_onBench (openModel t xs lay.ctrl) base.x hole r rs
+        exact modelClimb_onBench (openModelAt t xs lay.ctrl lay.high) base.x hole r rs
       have hge : 0 ≤ s'.fromHole := by
         rw [hs', hLc]
-        exact modelClimb_fromHole (openModel t xs lay.ctrl) base.x hole r rs
+        exact modelClimb_fromHole (openModelAt t xs lay.ctrl lay.high) base.x hole r rs
       have hmt : 0 < s'.tally := by
         rw [hs', modelClimb_tally]
-        simp [openModel, entryModel]
+        simp [openModelAt, openModel, entryModel]
         exact Nat.lt_of_lt_of_le (by decide : (0 : Nat) < 1) (climbTally_ge 1 (tierClimb t))
       obtain ⟨bU, bC, bOut, bZ, hun, hc, hset, hz, hsg, hread, hsideZ, hquietZ, hbound, hhighZ⟩ :=
         final_cube_both hKpost hon hge htmax hmt
@@ -1018,14 +1027,14 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       have hok : Ecbs.invert b ((2 : Nat) : Int) = .ok bZ := by
         rw [hem, hrun', ok_bind]
         simp [finalTail, hun, hc, hset, hz, ok_bind]
-      have hlayp := modelClimb_params (openModel t xs lay.ctrl) base.x hole (tierClimb t)
-      have hn : s'.n = t.n := by rw [hs']; simpa [openModel, entryModel] using hlayp.1
-      have hkS : s'.k = t.k := by rw [hs']; simpa [openModel, entryModel] using hlayp.2.1
+      have hlayp := modelClimb_params (openModelAt t xs lay.ctrl lay.high) base.x hole (tierClimb t)
+      have hn : s'.n = t.n := by rw [hs']; simpa [openModelAt, openModel, entryModel] using hlayp.1
+      have hkS : s'.k = t.k := by rw [hs']; simpa [openModelAt, openModel, entryModel] using hlayp.2.1
       have hbL : s'.benchlen = t.benchlen := by
-        rw [hs']; simpa [openModel, entryModel] using hlayp.2.2
+        rw [hs']; simpa [openModelAt, openModel, entryModel] using hlayp.2.2
       have hpair : (s'.gap, s'.tally) =
           invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t) := by
-        simpa [openModel, entryModel, hm.n, hm.bench, hm.x] using hgap
+        simpa [openModelAt, openModel, entryModel, hm.n, hm.bench, hm.x] using hgap
       have hgap1 : s'.gap =
           (invClimb t.n t.k t.benchlen xs (xs, 1) (tierClimb t)).1 :=
         congrArg Prod.fst hpair
@@ -1521,9 +1530,9 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
           rw [hKpost.highTop]
           exact Nat.le_max_right _ _
         have ht0 : s'.t0 = tallyOrigin t := by
-          have hmodel : s' = modelClimb (openModel t xs lay.ctrl) base.x hole (tierClimb t) := hs'
+          have hmodel : s' = modelClimb (openModelAt t xs lay.ctrl lay.high) base.x hole (tierClimb t) := hs'
           rw [hmodel, modelClimb_t0]
-          simp [openModel, entryModel]
+          simp [openModelAt, openModel, entryModel]
         omega
       refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl,
         ⟨h5DR, mvM + nz, hheldR, hmvR, hfitR, hnR⟩, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,

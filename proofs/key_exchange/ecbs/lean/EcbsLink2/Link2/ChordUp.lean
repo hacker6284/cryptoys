@@ -163,6 +163,18 @@ theorem moveBand_on (b : Ecbs.Board) (dst src : Nat)
   dsimp only
   split <;> rfl
 
+theorem moveBand_high (b : Ecbs.Board) (dst src : Nat)
+    (hSrcH : src < b.sudo_5Board_4home.size)
+    (hSrcD : src < b.sudo_5Board_4held.size)
+    (hDstH : dst < b.sudo_5Board_4home.size)
+    (hDstD : dst < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves slides peak : Nat) :
+    (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+  unfold moveBandBoard moveBandCore
+  dsimp only
+  split <;> rfl
+
 theorem moveBand_marker (b : Ecbs.Board) (dst src : Nat)
     (hSrcH : src < b.sudo_5Board_4home.size)
     (hSrcD : src < b.sudo_5Board_4held.size)
@@ -420,7 +432,9 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_5moves =
         Int.ofNat (moves + pegCount slope + 2 * pegCount (benchL.take n) + 2 * pegCount x3) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides =
-        Int.ofNat (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3) := by
+        Int.ofNat (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   have hfS : FitsLen slope.length := by rw [hlenS]; exact hf
   have hfX : FitsLen x3.length := by rw [hlenX]; exact hf
   have hclear := clear_held_refines b gap slope moves hGapH hGapD hGapT hGapA hmoves hfS hfitClear
@@ -507,7 +521,7 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
     (by simpa [slS, pegY] using hfitMS)
   rw [hmove]
   let b' := moveBandBoard bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
-  refine ⟨b', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · intro h
     have hh := moveBand_home bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
     have hget := idx_eq (by simpa [b'] using hh) up (by simpa [b', hh] using h)
@@ -594,5 +608,14 @@ theorem chord_up_slide (b : Ecbs.Board) (up across bottom gap : Nat)
       moveBand_moves bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
   · simpa [b', slS, pegY] using
       moveBand_slides bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk
+  · have hhiC : bC.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by simp [bC]
+    have hhiS : bS.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        bC.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+      simpa [bS] using
+        settle_high_eq bC up ⟨hUpHc, hUpDc⟩ benchL n mvC slides peak
+    simpa [b'] using
+      (moveBand_high bS across bottom hBotHs hBotDs hAcHs hAcDs x3 mvS slS pk).trans
+        (hhiS.trans hhiC)
 
 end EcbsLink2.Link2

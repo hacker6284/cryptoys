@@ -396,6 +396,12 @@ theorem ontoFoldBoard_bench (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat
     (ontoFoldBoard b sch n k mv peak).sudo_5Board_5bench =
       embed (laneFold n (n - k) sch) := rfl
 
+theorem ontoFoldBoard_high (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
 /-- `mulAfter` on a marker-off board is that fold. -/
 theorem mulAfter_ok (b : Ecbs.Board) (sch : List Nat)
     (w h r n k mv hole bench peak : Nat)

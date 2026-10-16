@@ -503,7 +503,9 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
       (∀ h : 1 < b'.sudo_5Board_4home.size,
         b'.sudo_5Board_4home[1] = embed (benchL.take n)) ∧
       b'.sudo_5Board_8bench_on = false ∧
-      b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+      b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   have hpegY : pegCount (benchL.take n) ≤ n := by
     have hlen : (benchL.take n).length = n := by
       simp [List.length_take, Nat.min_eq_left hnle]
@@ -526,7 +528,7 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
       2 * pegCount x3) := FitsLen.of_le hRoomM (by omega)
   have hfitMS : FitsLen (slides + 2 * pegCount (benchL.take n) + 2 * pegCount x3) :=
     FitsLen.of_le hRoomS (by omega)
-  obtain ⟨b', hdo, hUp, _, hAc, _, _, _, _, _, hoff, hflag, _, _, _, _, _⟩ :=
+  obtain ⟨b', hdo, hUp, _, hAc, _, _, _, _, _, hoff, hflag, _, _, _, _, _, hhi⟩ :=
     chord_up_slide b 1 0 2 5 slope x3 benchL n moves slides peak
       (by rw [hszH]; decide) (by rw [hszD]; decide)
       (by rw [hszH]; decide) (by rw [hszD]; decide)
@@ -536,7 +538,7 @@ theorem slide_point (b : Ecbs.Board) (slope x3 benchL : List Nat)
       (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
       h5t h5a h1e h0e h2t h2a hon hto hbench hn hlenS hlenX hpos hnle hzero
       hf hfitL hmv hsl hpk hfitClear hpeg hfitSM hfitSS hfit2 hfitMM hfitMS
-  refine ⟨b', ?_, ?_, ?_, hoff, hflag⟩
+  refine ⟨b', ?_, ?_, ?_, hoff, hflag, hhi⟩
   · exact hdo
   · intro h0
     exact hAc h0
@@ -637,7 +639,9 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
           let b ← Ecbs.settle b
           Ecbs.move_band b Ecbs.across Ecbs.bottom) = .ok b' ∧
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed x3) ∧
-      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed y3) := by
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed y3) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
   intro dx yMir y3 benchL
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -648,7 +652,7 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
   have h5H : 5 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h5D : 5 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   obtain ⟨bT, h0s, h1s, htDo, h0dx, h1m, hheldT, hszT, honT, _htoT, _hbenchT, hmT, hflagT,
-      htT, hslT, hcT, hxT, hopT, hstT, hhoT, hpkT, hmvT, hkeepT⟩ :=
+      htT, hslT, hcT, hxT, hopT, hstT, hhoT, hpkT, hmvT, hkeepT, hhiT⟩ :=
     chord_take_mirror b accX x3 accY n moves h0H h0D h0t h0a h2H h2D h2t h2a h1H h1D h1t h1a
       hn hxA hx3 hyA hn0 htriX htri3 htriY hmv hfit
   have hmvN : moves + pegCount x3 + pegCount accY =
@@ -712,7 +716,7 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
   have hkT : bT.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
     conv => lhs; rw [htT]
     exact hk
-  obtain ⟨bM, hmul, hbenchM, hpreM, hlay⟩ :=
+  obtain ⟨bM, hmul, hbenchM, hpreM, hlay, hhiM⟩ :=
     mul_onto_up_prefix bT 1 5 0 yMir slope dx w h r n k
       (moves + pegCount x3 + pegCount accY) slides hole peak peakS bench cOps m ctrl mx script
       hflagM hoffM hmM hcM hxM hscriptT hbound hfitMk hfitC hfit2
@@ -825,13 +829,13 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
   have hslLe : slF + 4 * n ≤ slides + 6 * n := by
     dsimp [slF]
     omega
-  obtain ⟨b', hslide, hAc, hUp, _, _⟩ :=
+  obtain ⟨b', hslide, hAc, hUp, _, _, hhiS⟩ :=
     slide_point bU slope x3 benchL n mvF slF pkU
       hszU.1 hszU.2 h5tU h5aU h1eU h0eU h2tU h2aU honU htoU hbenchU hnU
       hslope hx3 (by rw [hlenB]; omega) (by rw [hlenB]; exact hnb) hzero
       hf (by simpa [hlenB] using hfitB) hmvU hslU hpkB
       (FitsLen.of_le hTailM hmvLe) (FitsLen.of_le hTailS hslLe)
-  refine ⟨bM, b', ?_, ?_, hpreY, hszU.1, hszU.2, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, honU, htoU, ?_, hAc, ?_⟩
+  refine ⟨bM, b', ?_, ?_, hpreY, hszU.1, hszU.2, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, honU, htoU, ?_, hAc, ?_, ?_⟩
   · have hassoc :
         (do
             let b ← Ecbs.add b Ecbs.across Ecbs.bottom true
@@ -906,6 +910,10 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
     exact hslide
   · intro h1
     simpa [hpreY] using hUp h1
+  · have hhiU : bU.sudo_5Board_4cost.sudo_5Costs_15control_highest =
+        bM.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+      simp [bU, markerOn]
+    exact hhiS.trans (hhiU.trans (hhiM.trans hhiT))
 
 
 /-- The emitted chord tail is the square-and-settle prefix, then the slide,

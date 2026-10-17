@@ -219,7 +219,11 @@ theorem seat_cell_last (t : Spec.Tier) (b : Ecbs.Board)
       Ecbs.chord_add_demo b (decide (c = 2)) = .ok (true, b') ∧
       walkStep t.n t.k t.benchlen (x, y) true (x, up) c = some (true, (x3, y3)) ∧
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed x3) ∧
-      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed y3) := by
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed y3) ∧
+      ∃ m ctrl,
+        b'.sudo_5Board_6marker = Int.ofNat m ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
+        FitsLen (ctrl + 1) := by
   obtain ⟨hm0, hs0, hc0, ho0⟩ := seat_counters t x y done fr.lenX hy hge
   have hsl0 : fr.slides ≤ 0 + slideCharge t.n := by
     rw [Nat.zero_add, slideCharge]
@@ -245,12 +249,13 @@ theorem seat_cell_last (t : Spec.Tier) (b : Ecbs.Board)
     live_ctrl_of_cell t fr.ctrl (by simpa [hleft] using hrooms.2.2.1)
   have hOps : FitsLen (liveOpsRoom t fr.opsCap) :=
     live_ops_of_cell t fr.opsCap (by simpa [hleft] using hrooms.2.2.2)
-  obtain ⟨b', hdemo, hx0, hy1h, hwalk, _hhigh, _hbud, _hpack⟩ :=
+  obtain ⟨b', hdemo, hx0, hy1h, hwalk, _hhigh, _hbud, _bI, _mv, _tp, _cap, _sl,
+      _ho, _on, hlift⟩ :=
     chord_add_live b t x (fieldCube t.n t.k t.benchlen x) y
       (fieldCube t.n t.k t.benchlen up) x up inv c fr
       hOk sat hR hsh hmk hc hY hA hf4 hf1 hy hlenCube htriY htriCube
       rfl rfl hacc hMove hSlide hCtrl hOps hmarkLt hmarkFit hhole
-  exact ⟨b', _, _, hdemo, hwalk, hx0, hy1h⟩
+  exact ⟨b', _, _, hdemo, hwalk, hx0, hy1h, hlift⟩
 
 /-- The white seat cell is not last. Frobenius, then the chord, is `walkStep`
     on the copied point, and the board it leaves is `LiveAt` at the next index. -/
@@ -299,7 +304,7 @@ theorem seat_white_last (t : Spec.Tier) (x y : List Nat) (c done left : Nat)
   obtain ⟨_bL, bF, fr, _hlift, hfrob, _hbL, hmk, hy1, hy4, hmark, hctrl, _hst, hho,
       hmv, hsl, hops, hf1, hf4⟩ :=
     seat_white t x y tw hOk sat hsh hR hx hy htriX htriY hcells
-  obtain ⟨b', x3, y3, hdemo, hwalk, hx0, hy1h⟩ :=
+  obtain ⟨b', x3, y3, hdemo, hwalk, hx0, hy1h, _hlift⟩ :=
     seat_cell_last t bF x y y c done left inv fr tw hOk sat hR hsh
       hmk hy4 hy1 hf4 hf1 hy htriY htriY hmv hsl hctrl hops hmark hho
       hc hacc hge hleft hsum
@@ -357,7 +362,7 @@ theorem seat_red_last (t : Spec.Tier) (x y : List Nat) (c done left : Nat)
     seat_red t x y tw hOk sat hsh hR hx hy htriX htriY hcells
   have hmirr : pegCount (mirrorTrits y) = pegCount y := pegCount_mirror y htriY
   rw [hmirr] at hmv
-  obtain ⟨b', x3, y3, hdemo, hwalk, hx0, hy1h⟩ :=
+  obtain ⟨b', x3, y3, hdemo, hwalk, hx0, hy1h, _hlift⟩ :=
     seat_cell_last t bF x y (mirrorTrits y) c done left inv fr tw hOk sat hR hsh
       hmk hy4 hy1 hf4 hf1 hy htriY (mirrorTrits_allTrit htriY) hmv hsl hctrl hops
       hmark hho hc hacc hge hleft hsum

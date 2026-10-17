@@ -177,7 +177,11 @@ theorem live_cell (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
       (i < toN → LiveAt t b' baseX baseY accX' accY' (done + 1)) ∧
       (i = toN →
         (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed accX') ∧
-        (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed accY')) := by
+        (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed accY') ∧
+        ∃ m ctrl,
+          b'.sudo_5Board_6marker = Int.ofNat m ∧
+          b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
+          FitsLen (ctrl + 1)) := by
   obtain ⟨fr, hmk, hY, hA, hf4, hf1, hst, hhole, hm, hs, hc, ho, hyB, htriY, hyA, htriA⟩ := hAt
   obtain ⟨bL, bF, frF, hml, hfrob, hmkF, hy1F, hy4F, hctrlF, hmarkF, hopsF, hmvF, hslF,
       hstF, hhoF, _hfitS, _hfitH, _hopsN, _hocc, _hholeEq, hf1F, hf4F⟩ :=
@@ -207,11 +211,12 @@ theorem live_cell (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
       · exact fieldCube_length t.n t.k t.benchlen accY tw.nLe
       · exact cube_trits t sat hsh accY htriA
     · intro hlast
-      refine ⟨?_, ?_⟩
+      refine ⟨?_, ?_, ?_⟩
       · intro _h0
         exact frF.home0
       · intro _h1
         simpa [hy1F] using frF.home1
+      · exact ⟨frF.mark, frF.ctrl, frF.hmark, frF.hctrl, frF.fitCtrl⟩
   · have hc2 : cells[i]'(by omega) = 1 ∨ cells[i]'(by omega) = 2 := by
       have hle := hcAt
       omega
@@ -250,7 +255,8 @@ theorem live_cell (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
         live_ctrl_of_cell t frF.ctrl (by simpa [hleft1] using hrooms.2.2.1)
       have hOps : FitsLen (liveOpsRoom t frF.opsCap) :=
         live_ops_of_cell t frF.opsCap (by simpa [hleft1] using hrooms.2.2.2)
-      obtain ⟨b', hdemo, hx0, hy1, hwalk, _hhigh, _hbud, _hpack⟩ :=
+      obtain ⟨b', hdemo, hx0, hy1, hwalk, _hhigh, _hbud, _bI, _mv0, _pack, _cap,
+          _sl, _ho, _flag, hlift⟩ :=
         chord_add_live bF t baseX (fieldCube t.n t.k t.benchlen accX) baseY
           (fieldCube t.n t.k t.benchlen accY) accX accY inv (cells[i]'(by omega)) frF
           hOk sat hR hsh hmkF hc2 hy4F hy1F hf4F hf1F hyB hyCube htriY htriCube
@@ -262,7 +268,7 @@ theorem live_cell (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
       have hstep := chordStep_open cells i toN (cells[i]'(by omega)) b bL bF b'
         hi hlen rfl hz (by omega) hml hfrob hadd hfiti
       exact ⟨b', _, _, by simpa [hlast] using hstep, by simpa [hlast] using hwalk,
-        fun hlt => absurd hlast (by omega), fun _ => ⟨hx0, hy1⟩⟩
+        fun hlt => absurd hlast (by omega), fun _ => ⟨hx0, hy1, hlift⟩⟩
     · have hlt : i < toN := by omega
       have hge : 2 ≤ t.cells - done := by
         rw [hdone]
@@ -349,7 +355,11 @@ def WalkInv (t : Spec.Tier) (baseX baseY : List Nat) (live0 : Bool)
     (i ≤ toN → LiveAt t st.1 baseX baseY ax ay i) ∧
     (toN < i →
       (∀ h : 0 < st.1.sudo_5Board_4home.size, st.1.sudo_5Board_4home[0] = embed ax) ∧
-      (∀ h : 1 < st.1.sudo_5Board_4home.size, st.1.sudo_5Board_4home[1] = embed ay))
+      (∀ h : 1 < st.1.sudo_5Board_4home.size, st.1.sudo_5Board_4home[1] = embed ay) ∧
+      ∃ m ctrl,
+        st.1.sudo_5Board_6marker = Int.ofNat m ∧
+        st.1.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
+        FitsLen (ctrl + 1))
 
 /-- The live loop from index `start`. `LiveAt` at `start` already has `peakS ≤ 7`
     and `hole ≤ bench`; later cells keep both. A nonzero cell needs the inverse

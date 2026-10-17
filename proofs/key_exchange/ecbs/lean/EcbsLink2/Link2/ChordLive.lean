@@ -156,7 +156,11 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
         (∃ (h : Nat),
           bI.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int) ∧
           h ≤ t.benchlen) ∧
-        b'.sudo_5Board_9marker_on = true := by
+        b'.sudo_5Board_9marker_on = true ∧
+        ∃ m c,
+          b'.sudo_5Board_6marker = Int.ofNat m ∧
+          b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+          FitsLen (c + 1) := by
   let red := decide (c = 2)
   let run := fieldSub t.n baseX accX
   let y := if red then mirrorTrits baseY else baseY
@@ -212,6 +216,14 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     unfold checkMoveCap liveMoveRoom
     rw [hmatch.moves0, hmov, hmatch.n, hmatch.bench, hmatch.R, hmatch.mMax]
   have hctrlEq : checkCtrlCap bud + 6 ≤ liveCtrlRoom t fr.ctrl := by
+    unfold checkCtrlCap liveCtrlRoom
+    rw [hmatch.ctrl0, hctrl, hmatch.R, hmatch.mMax]
+    have hsplit : (tierR t + 1) * (3 * rowRoom t + 5) =
+        tierR t * (3 * rowRoom t + 5) + (3 * rowRoom t + 5) := by
+      rw [Nat.succ_mul]
+    rw [hsplit]
+    omega
+  have hctrlSlack : checkCtrlCap bud + 7 ≤ liveCtrlRoom t fr.ctrl := by
     unfold checkCtrlCap liveCtrlRoom
     rw [hmatch.ctrl0, hctrl, hmatch.R, hmatch.mMax]
     have hsplit : (tierR t + 1) * (3 * rowRoom t + 5) =
@@ -317,9 +329,18 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     refine ⟨sl, hsl, ?_⟩
     rw [← hslideEq]
     exact hle
+  have hliftReady : ∃ m c,
+      b'.sudo_5Board_6marker = Int.ofNat m ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+      FitsLen (c + 1) := by
+    obtain ⟨c, hcEq, hle⟩ := hleft.ctrlLe
+    obtain ⟨m0, _hm0, hmOut⟩ := _hpack.mark
+    refine ⟨m0 + 3, c, hmOut, hcEq, ?_⟩
+    apply FitsLen.of_le hCtrl
+    exact Nat.le_trans (Nat.succ_le_succ hle) hctrlSlack
   refine ⟨b', ?_, hx0, hy1, ?_, ⟨high, hhi, hge⟩,
     ⟨bud, LiveLeft.rew _hbase rfl _hflag3 hleft, hctrlEq, hmoveEq, hopsEq, hslideEq⟩,
-    ⟨bI, moves0, _hpack, hcapFr, hslideFr, hholeIn, hflagOut⟩⟩
+    ⟨bI, moves0, _hpack, hcapFr, hslideFr, hholeIn, hflagOut, hliftReady⟩⟩
   · rw [htail]
   · have hspec : specInv t.n t.k t.benchlen
         (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen preX)) = some inv := by

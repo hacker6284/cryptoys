@@ -107,7 +107,7 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
       hpreX hpreY hacc hMove1 hSlide1 hCtrl1 hOps1 hMark hMarkF hholeFr
   obtain ⟨high, hhi, hge⟩ := hhigh
   obtain ⟨bud, hleft, hctrlEq, hmoveEq, hopsEq, _hslideEq⟩ := hbud
-  obtain ⟨_, _, hpack, hcap, hslide, hholeIn, hflagOut⟩ := hpackEx
+  obtain ⟨_, _, hpack, hcap, hslide, hholeIn, hflagOut, _hlift⟩ := hpackEx
   have hcapS : Sealed _ := ⟨hcap⟩
   clear hcap
   let red := decide (c = 2)

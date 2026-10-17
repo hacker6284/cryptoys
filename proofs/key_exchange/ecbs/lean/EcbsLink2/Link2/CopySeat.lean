@@ -524,7 +524,7 @@ theorem seat_base_last (t : Spec.Tier) (x y : List Nat) (c done left : Nat)
       hf1, hf4⟩ :=
     seat_out t b2 x y y (pegCount x + pegCount y + pegCount x + pegCount y) pk2 out
       tw hOk sat hsh hR hx hy htriX htriY (by omega) hcells
-  obtain ⟨b', x3, y3, hdemo, hwalk, hx0, hy0⟩ :=
+  obtain ⟨b', x3, y3, hdemo, hwalk, hx0, hy0, _hlift⟩ :=
     seat_cell_last t bF x y y c done left inv fr tw hOk sat hR hsh
       hmk hy4 hy1 hf4 hf1 hy htriY htriY hmv hsl hctrl hops hmark hho
       hc hacc hge hleft hsum

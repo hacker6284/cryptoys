@@ -483,7 +483,11 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5188 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5188. Peaks of the modules this change elaborated, VmHWM: WalkFail 532944 kB, WalkSeat 528880, WalkCase 528624, EcbsLink2 353308. The audit peaked at 909932 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
+`walk_fform_eq` is the emitted F-form walk: `Ecbs.walk_fform` is `walkFformGo` by `rfl`. The loop is the chord walk's loop, with line 788 as the trit check. `fformStep_zero` is an empty cell while the accumulator is not live: only the marker lifts. `fformStep_fresh` is a white or red cell in that state, and `start_walk` is the copy. `fformStep_point` is a live zero cell, and `frobenius_point` is the cube. `fformStep_add` is a live white or red cell whose `fform_add` returns the new point. `fformStep_reroll` is that cell when `fform_add` returns false: `.ok (Flow.ret ((true, false), {bA with marker_on := false}))`. Those three calls stay hypotheses of the cell. The whole walk is not yet `walkRun`.
+
+5198 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5198. Peaks of the modules this change elaborated, VmHWM: WalkFform 353312 kB. The audit peaked at 909928 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: discharging `start_walk`, `frobenius_point`, and `fform_add`, so `walk_fform` matches `walkRun` the way `walk_chord_cases` does. Then `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

@@ -11,6 +11,12 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+/-- A copy or nocopy multiply onto a zero strip, with the mirror flag off,
+    folds to `fieldMul`. `laneFold` is `reduceStrip`. -/
+theorem zero_school_mul (n k bench : Nat) (xs ys : List Nat) :
+    (laneFold n (n - k) (school n xs ys (List.replicate bench 0) false)).take n =
+      fieldMul n k bench xs ys := rfl
+
 private theorem bump_with (b : Ecbs.Board) (cOps : Nat)
     (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
     ({ b with sudo_5Board_4cost := { b.sudo_5Board_4cost with

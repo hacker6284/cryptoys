@@ -955,4 +955,53 @@ theorem copy_else_off (b : Ecbs.Board) (dst first second : Nat)
     hne6F hne6S hn0 hn hlenx hleny hf hmoves hpeak hpeakS hfitP
     hspanP hxsT hpadT hfi hfm
 
+/-- Bench off, `onto = false`, `copy_second = false`. `mulElse` aims a zero
+    strip at the destination and `mul_onto_school` lays `school` on it. The
+    mirror flag is `mirror`. The later gap lines and the new point's first
+    multiply have this shape. -/
+theorem nocopy_else_off (b : Ecbs.Board) (dst first second : Nat)
+    (xs ys : List Nat) (n moves peakS bench : Nat) (mirror : Bool)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hF : first < b.sudo_5Board_4held.size)
+    (hHome : first < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs)
+    (hS : second < b.sudo_5Board_4held.size)
+    (hHomeS : second < b.sudo_5Board_4home.size)
+    (hHS : b.sudo_5Board_4held[second] = true)
+    (hYs : b.sudo_5Board_4home[second] = embed ys)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hne : first ≠ second) (hn0 : 0 < n)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenx : xs.length = n) (hleny : ys.length = n)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hspan : 2 * (n - 1) < bench)
+    (hxsT : allTritList xs)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfm : FitsLen (moves + n * (n + 1))) :
+    let pad := List.replicate bench 0
+    Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
+        ((second : Nat) : Int) false false mirror b =
+      mulAfter (Int.ofNat 0,
+        (withMoves
+            (mulPrep b ((dst : Nat) : Int) (embed pad) second peakS hS hHomeS)
+            (Int.ofNat (moves + schoolMoves xs ys n n)),
+          embed (school n xs ys pad mirror))) := by
+  intro pad
+  unfold Ecbs.mulElse
+  simp only [Bool.false_eq_true, if_false]
+  rw [settle_off b hoff]
+  simp only [ok_bind, pure_eq_ok]
+  rw [hbl, filledL_ofNat, ok_bind, ← embed_replicate_zero]
+  rw [aim3]
+  have hspanP : 2 * (n - 1) < pad.length := by
+    simpa [pad, List.length_replicate] using hspan
+  have hpadT : allTritList pad := by simpa [pad] using replicate_trits bench
+  exact mul_onto_school b dst first second xs ys pad n moves peakS mirror
+    hF hHome hHF hArr hS hHomeS hHS hYs h7 hne hn0 hlenx hleny hf
+    hmoves hpeakS hspanP hxsT hpadT hfi hfm
+
 end EcbsLink2.Link2

@@ -4,6 +4,8 @@
   home by that copy, laid on the strip. Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.MulOnto
+import EcbsLink2.Link2.MarkerBench
+import EcbsLink2.Link2.Mirror
 
 namespace EcbsLink2.Link2
 
@@ -59,12 +61,12 @@ private theorem place_aim_comm (b : Ecbs.Board) (dst : Int) (strip : Array Int) 
   dsimp only
   split <;> apply board_ext <;> rfl
 
-/-- `mulFromHeld` with `copy_second`, mirror off, on a fresh aimed strip.
-    The second home is copied into the spare and the schoolbook reads the copy,
-    so the second home stays. The strip is `pad`, and the product laid on it is
-    `school` of the first home by the second. -/
+/-- `mulFromHeld` with `copy_second` on a fresh aimed strip. The mirror flag is
+    `mirror`. The second home is copied into the spare and the schoolbook reads
+    the copy, so the second home stays. The strip is `pad`, and the product laid
+    on it is `school` of the first home by the second. -/
 theorem held_copy_school (b : Ecbs.Board) (dst first second : Nat)
-    (xs ys pad : List Nat) (n moves peak peakS : Nat)
+    (xs ys pad : List Nat) (n moves peak peakS : Nat) (mirror : Bool)
     (hF : first < b.sudo_5Board_4held.size)
     (hHome : first < b.sudo_5Board_4home.size)
     (hHF : b.sudo_5Board_4held[first] = true)
@@ -93,14 +95,14 @@ theorem held_copy_school (b : Ecbs.Board) (dst first second : Nat)
     let bU := placeBoard b 6 hSpHome hSpH ys moves peak
     let mv := moves + pegCount ys
     Ecbs.mulFromHeld ((n : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-        true false (mulAimed b ((dst : Nat) : Int) (embed pad)) (embed pad) =
+        true mirror (mulAimed b ((dst : Nat) : Int) (embed pad)) (embed pad) =
       mulAfter (Int.ofNat 0,
         (withMoves
             (mulPrep bU ((dst : Nat) : Int) (embed pad) 6 peakS
               (by rw [aim_held_size]; exact hSpH)
               (by rw [aim_home_size]; exact hSpHome))
             (Int.ofNat (mv + schoolMoves xs ys n n)),
-          embed (school n xs ys pad false))) := by
+          embed (school n xs ys pad mirror))) := by
   intro bU mv
   unfold Ecbs.mulFromHeld
   simp only [if_true]
@@ -175,16 +177,16 @@ theorem held_copy_school (b : Ecbs.Board) (dst first second : Nat)
     simpa [bU] using (aim_strict b 6 hSpHome hSpH ys moves peak).trans hpeakS
   have hback :
       Ecbs.mulFromSrc ((n : Nat) : Int) (Int.ofNat first) ((6 : Nat) : Int)
-          (embed xs) false (mulAimed bU ((dst : Nat) : Int) (embed pad)) (embed pad) =
+          (embed xs) mirror (mulAimed bU ((dst : Nat) : Int) (embed pad)) (embed pad) =
         Ecbs.mulFromHeld ((n : Nat) : Int) (Int.ofNat first) ((6 : Nat) : Int)
-          false false (mulAimed bU ((dst : Nat) : Int) (embed pad)) (embed pad) := by
+          false mirror (mulAimed bU ((dst : Nat) : Int) (embed pad)) (embed pad) := by
     unfold Ecbs.mulFromHeld
     simp only [Bool.false_eq_true, if_false]
     rw [mulAimed_held, atL_ofNat _ first hFU, hHFU]
     simp only [sudoAssert_true, ok_bind]
     rw [mulAimed_home, atL_ofNat _ first hHomeU, hArrU, ok_bind]
   rw [hback]
-  exact mul_onto_school bU dst first 6 xs ys pad n mv peakS
+  exact mul_onto_school bU dst first 6 xs ys pad n mv peakS mirror
     hFU hHomeU hHFU hArrU h6U h6HU hHSU hYsU h7U hne6F hn0 hlenx hleny hf
     hmvU hpkS hspan hxsT hpadT hfi hfm
 
@@ -210,6 +212,7 @@ private theorem bind_ok_id {α : Type} (m : Except SudoRt.Trap α) :
     ends empty. The second home stays. -/
 theorem run_onto_copy (b : Ecbs.Board) (dst first second : Nat)
     (home xs ys : List Nat) (n moves slides peak peakS bench : Nat)
+    (mirror : Bool)
     (hoff : b.sudo_5Board_8bench_on = false)
     (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
     (hD : dst < b.sudo_5Board_4held.size)
@@ -250,7 +253,7 @@ theorem run_onto_copy (b : Ecbs.Board) (dst first second : Nat)
     let pad := pref home bench n
     let mv := moves + 2 * peg + py
     Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
-        ((second : Nat) : Int) true true false b =
+        ((second : Nat) : Int) true true mirror b =
       mulAfter (Int.ofNat 0,
         (withMoves
             (mulPrep (placeBoard bC 6
@@ -261,7 +264,7 @@ theorem run_onto_copy (b : Ecbs.Board) (dst first second : Nat)
               (by dsimp [bC]; rw [aim_held_size, ontoCharge_held_size]; exact hSpH)
               (by dsimp [bC]; rw [aim_home_size, ontoCharge_home_size]; exact hSpHome))
             (Int.ofNat (mv + schoolMoves xs ys n n)),
-          embed (school n xs ys pad false))) := by
+          embed (school n xs ys pad mirror))) := by
   intro peg py bC pad mv
   have hpegLe : peg ≤ n := by simpa [peg, hlenH] using pegCount_le home
   have hpyLe : py ≤ n := by simpa [py, hleny] using pegCount_le ys
@@ -302,7 +305,7 @@ theorem run_onto_copy (b : Ecbs.Board) (dst first second : Nat)
     simpa [bC, ontoCharge_held_size] using hSpH
   have hpost :
       ontoAfter ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
-          ((second : Nat) : Int) true false bC
+          ((second : Nat) : Int) true mirror bC
           (Int.ofNat (n - 1), embed pad) =
         mulAfter (Int.ofNat 0,
           (withMoves
@@ -311,7 +314,7 @@ theorem run_onto_copy (b : Ecbs.Board) (dst first second : Nat)
                 (by rw [aim_held_size]; exact h6DC)
                 (by rw [aim_home_size]; exact h6HC))
               (Int.ofNat (mv + schoolMoves xs ys n n)),
-            embed (school n xs ys pad false))) := by
+            embed (school n xs ys pad mirror))) := by
     unfold ontoAfter
     rw [aim3]
     have hmovesC : bC.sudo_5Board_4cost.sudo_5Costs_5moves =
@@ -351,17 +354,17 @@ theorem run_onto_copy (b : Ecbs.Board) (dst first second : Nat)
     have hSpEC : bC.sudo_5Board_4held[6] = false := by
       have hget := ontoCharge_held_get b dst 6 hD hHD moves slides peg hne6D hSpH
       simpa [bC] using hget.trans hSpE
-    exact held_copy_school bC dst first second xs ys pad n (moves + 2 * peg) peak peakS
+    exact held_copy_school bC dst first second xs ys pad n (moves + 2 * peg) peak peakS mirror
       hFC hHomeC hHFC hArrC hSC hHomeSC hHSC hYsC h6DC h6HC hSpEC h7C
       hne6F hne6S hn0 hnC hlenx hleny hf hmovesC hpeakC hstrictC hfitCopy
       hspanP hxsT hpadT hfi hfmC
   conv =>
     pattern (fun σ : Int × Array Int => _)
     change ontoAfter ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
-      ((second : Nat) : Int) true false bC
+      ((second : Nat) : Int) true mirror bC
   have hcopy := band_copy_after home bench n
       (ontoAfter ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
-        ((second : Nat) : Int) true false bC)
+        ((second : Nat) : Int) true mirror bC)
       (fun r => Except.ok r)
       (mulAfter (Int.ofNat 0,
         (withMoves
@@ -370,7 +373,7 @@ theorem run_onto_copy (b : Ecbs.Board) (dst first second : Nat)
               (by rw [aim_held_size]; exact h6DC)
               (by rw [aim_home_size]; exact h6HC))
             (Int.ofNat (mv + schoolMoves xs ys n n)),
-          embed (school n xs ys pad false))))
+          embed (school n xs ys pad mirror))))
       hn0 hnb (by rw [hlenH]; exact Nat.le_refl n) hf hpost
   rw [hcopy, bind_ok_id, ofNat_eq_natCast dst]
 
@@ -391,6 +394,7 @@ private theorem bump_with (b : Ecbs.Board) (cOps : Nat)
 /-- Marker off, bench off. The op bump, then `run_onto_copy`. -/
 theorem run_onto_off (b : Ecbs.Board) (dst first second : Nat)
     (home xs ys : List Nat) (n moves slides peak peakS bench cOps : Nat)
+    (mirror : Bool)
     (hmk : b.sudo_5Board_9marker_on = false)
     (hoff : b.sudo_5Board_8bench_on = false)
     (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
@@ -438,7 +442,7 @@ theorem run_onto_off (b : Ecbs.Board) (dst first second : Nat)
     let pad := pref home bench n
     let mv := moves + 2 * peg + py
     Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-        true true false =
+        true true mirror =
       mulAfter (Int.ofNat 0,
         (withMoves
             (mulPrep (placeBoard bC 6
@@ -449,7 +453,7 @@ theorem run_onto_off (b : Ecbs.Board) (dst first second : Nat)
               (by dsimp [bC]; rw [aim_held_size, ontoCharge_held_size, bumpOp_held]; exact hSpH)
               (by dsimp [bC]; rw [aim_home_size, ontoCharge_home_size, bumpOp_home]; exact hSpHome))
             (Int.ofNat (mv + schoolMoves xs ys n n)),
-          embed (school n xs ys pad false))) := by
+          embed (school n xs ys pad mirror))) := by
   intro b0 peg py bC pad mv
   rw [mul_keep_eq]
   unfold Ecbs.mulKeep
@@ -496,7 +500,7 @@ theorem run_onto_off (b : Ecbs.Board) (dst first second : Nat)
     simp [b0, bumpOp, hpeak]
   have hstrictB : b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
     simp [b0, bumpOp, hpeakS]
-  exact run_onto_copy b0 dst first second home xs ys n moves slides peak peakS bench
+  exact run_onto_copy b0 dst first second home xs ys n moves slides peak peakS bench mirror
     hoffB hblB hDB hHDB hHeldDB hHomeDB hFB hHomeB hHFB hArrB hSB hHomeSB hHSB hYsB
     hSpHB hSpHomeB hSpEB h7B hneD1 hneD2 hne6D hne6F hne6S hn0 hnb hnB hlenH hlenx hleny hf
     hmovesB hslidesB hpeakB hstrictB hspan hhomeT hxsT hfi hfitM hfitS hfm
@@ -506,6 +510,7 @@ theorem run_onto_off (b : Ecbs.Board) (dst first second : Nat)
     Settling first leaves the same multiply: the second prologue sees the bench off. -/
 theorem run_onto_settles (b : Ecbs.Board) (dst first second seat : Nat)
     (lane : List Nat) (n moves slides peak cOps : Nat)
+    (mirror : Bool)
     (hmk : b.sudo_5Board_9marker_on = false)
     (hon : b.sudo_5Board_8bench_on = true)
     (hto : b.sudo_5Board_8bench_to = (seat : Int))
@@ -529,10 +534,10 @@ theorem run_onto_settles (b : Ecbs.Board) (dst first second seat : Nat)
     (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
     (hfops : FitsLen (cOps + 1)) :
     Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-        true true false =
+        true true mirror =
       (Ecbs.settle b >>= fun b' =>
         Ecbs.mul b' ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-          true true false) := by
+          true true mirror) := by
   have hset := settle_refines b seat lane n moves slides peak hH hD h7 hon hto hempty
     hbench hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
   rw [hset, ok_bind]
@@ -599,6 +604,7 @@ theorem run_onto_settles (b : Ecbs.Board) (dst first second seat : Nat)
 /-- Settling the bench first is the multiply `run_onto_settles` leaves. -/
 theorem run_onto_at (b : Ecbs.Board) (dst first second seat : Nat)
     (lane : List Nat) (n moves slides peak cOps : Nat)
+    (mirror : Bool)
     (hmk : b.sudo_5Board_9marker_on = false)
     (hon : b.sudo_5Board_8bench_on = true)
     (hto : b.sudo_5Board_8bench_to = (seat : Int))
@@ -622,11 +628,11 @@ theorem run_onto_at (b : Ecbs.Board) (dst first second seat : Nat)
     (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
     (hfops : FitsLen (cOps + 1)) :
     Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-        true true false =
+        true true mirror =
       Ecbs.mul (settleBoard b seat hH hD lane n moves slides peak)
         ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-        true true false := by
-  rw [run_onto_settles b dst first second seat lane n moves slides peak cOps
+        true true mirror := by
+  rw [run_onto_settles b dst first second seat lane n moves slides peak cOps mirror
       hmk hon hto hseat hH hD h7 hempty hbench hn hpos hnle hzero hf hfitL
       hmoves hslides hpeak hpeg hfitM hfitS hops hop0 hfops]
   rw [settle_refines b seat lane n moves slides peak hH hD h7 hon hto hempty
@@ -635,9 +641,10 @@ theorem run_onto_at (b : Ecbs.Board) (dst first second seat : Nat)
 
 /-- After `frobenius_point` the marker is on and the bench is aimed at `seat`.
     The run multiply's `log_op` is `marker_step`. The onto-keep test fails, so
-    the multiply continues as `mulElse` on the flagged board that step leaves. -/
+    the multiply continues as `mulElse` on the flagged board that step leaves.
+    The mirror flag is `mirror`: `false` on the run, `true` when the rise is red. -/
 theorem run_marker_seat (b : Ecbs.Board) (dst first second seat : Nat)
-    (m ctrl mx script cOps n : Nat)
+    (m ctrl mx script cOps n : Nat) (mirror : Bool)
     (hmk : b.sudo_5Board_9marker_on = true)
     (hon : b.sudo_5Board_8bench_on = true)
     (hto : b.sudo_5Board_8bench_to = (seat : Int))
@@ -656,9 +663,9 @@ theorem run_marker_seat (b : Ecbs.Board) (dst first second seat : Nat)
     let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
       simpa [markerUpFeed] using hops
     Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-        true true false =
+        true true mirror =
       Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
-        ((second : Nat) : Int) true true false
+        ((second : Nat) : Int) true true mirror
         (markerOn (bumpOp feed 0 cOps hopsF)) := by
   intro feed hopsF
   rw [mul_keep_eq]
@@ -699,5 +706,189 @@ theorem run_marker_seat (b : Ecbs.Board) (dst first second seat : Nat)
   have hbeq : SudoRt.SEq.beq (seat : Int) ((dst : Nat) : Int) = false :=
     nat_beq_false seat dst hseat
   simp only [honL, htoL, hbeq, Bool.false_eq_true, if_false, if_true, pure_eq_ok, ok_bind]
+
+/-- `mulElse` settles a bench aimed at `seat`. The marker flag is not read, so
+    it stays on, and the multiply that follows is `mulElse` of that flagged settle. -/
+theorem run_else_flag (b : Ecbs.Board) (dst first second seat : Nat)
+    (lane : List Nat) (n moves slides peak : Nat) (mirror : Bool)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (seat : Int))
+    (hH : seat < b.sudo_5Board_4home.size)
+    (hD : seat < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[seat] = false)
+    (hbench : b.sudo_5Board_5bench = embed lane)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hpos : 0 < lane.length) (hnle : n ≤ lane.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen lane.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (lane.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (lane.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (lane.take n))) :
+    Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
+        ((second : Nat) : Int) true true mirror (markerOn b) =
+      Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
+        ((second : Nat) : Int) true true mirror
+        (markerOn (settleBoard b seat hH hD lane n moves slides peak)) := by
+  have hsettle :
+      Ecbs.settle (markerOn b) =
+        .ok (markerOn (settleBoard b seat hH hD lane n moves slides peak)) := by
+    rw [markerOn_def]
+    rw [settle_flag b seat lane n moves slides peak hmk hH hD h7 hon hto hempty
+        hbench hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS]
+    rw [settle_refines b seat lane n moves slides peak hH hD h7 hon hto hempty
+        hbench hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS]
+    simp only [ok_bind, pure_eq_ok, ← markerOn_def]
+  have hoffS :
+      (markerOn (settleBoard b seat hH hD lane n moves slides peak)).sudo_5Board_8bench_on =
+        false := by
+    rw [markerOn_on]
+    exact settle_bench_off b seat ⟨hH, hD⟩ lane n moves slides peak
+  unfold Ecbs.mulElse
+  conv =>
+    lhs
+    rw [hsettle, ok_bind]
+  conv =>
+    rhs
+    rw [settle_off (markerOn (settleBoard b seat hH hD lane n moves slides peak)) hoffS, ok_bind]
+
+/-- The marker step, then the settle inside `mulElse`. The flag stays on.
+    `mirror` is `false` for the run and the constant `true` or `false` for the rise. -/
+theorem run_marker_else (b : Ecbs.Board) (dst first second seat : Nat)
+    (lane : List Nat) (m ctrl mx script cOps n moves slides peak : Nat)
+    (mirror : Bool)
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (seat : Int))
+    (hseat : seat ≠ dst)
+    (hm : b.sudo_5Board_6marker = Int.ofNat m)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hscript : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script)
+    (hbound : m + 1 < script) (hfitMk : FitsLen (m + 1))
+    (hfitC : FitsLen (ctrl + 2)) (hfit2 : FitsLen (m + 2))
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hH : seat < b.sudo_5Board_4home.size)
+    (hD : seat < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[seat] = false)
+    (hbench : b.sudo_5Board_5bench = embed lane)
+    (hpos : 0 < lane.length) (hnle : n ≤ lane.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen lane.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (lane.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (lane.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (lane.take n))) :
+    let feed := markerUpFeed b m ctrl mx
+    let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      simpa [markerUpFeed] using hops
+    let bU := bumpOp feed 0 cOps hopsF
+    let hHU : seat < bU.sudo_5Board_4home.size := by
+      simpa [bU, bumpOp, feed, markerUpFeed] using hH
+    let hDU : seat < bU.sudo_5Board_4held.size := by
+      simpa [bU, bumpOp, feed, markerUpFeed] using hD
+    Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+        true true mirror =
+      Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
+        ((second : Nat) : Int) true true mirror
+        (markerOn (settleBoard bU seat hHU hDU lane n moves slides peak)) := by
+  intro feed hopsF bU hHU hDU
+  rw [run_marker_seat b dst first second seat m ctrl mx script cOps n mirror
+      hmk hon hto hseat hm hc hx hscript hbound hfitMk hfitC hfit2 hn hops hop0 hfops]
+  have hmkU : bU.sudo_5Board_9marker_on = false := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have honU : bU.sudo_5Board_8bench_on = true := by
+    simp [bU, bumpOp, feed, markerUpFeed, hon]
+  have htoU : bU.sudo_5Board_8bench_to = (seat : Int) := by
+    simp [bU, bumpOp, feed, markerUpFeed, hto]
+  have h7U : 7 ≤ bU.sudo_5Board_4held.size := by
+    simpa [bU, bumpOp, feed, markerUpFeed] using h7
+  have hemptyU : bU.sudo_5Board_4held[seat] = false := by
+    simpa [bU, bumpOp, feed, markerUpFeed] using hempty
+  have hbenchU : bU.sudo_5Board_5bench = embed lane := by
+    simp [bU, bumpOp, feed, markerUpFeed, hbench]
+  have hnU : bU.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    simp [bU, bumpOp, feed, markerUpFeed, hn]
+  have hmovesU : bU.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves := by
+    simp [bU, bumpOp, feed, markerUpFeed, hmoves]
+  have hslidesU : bU.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides := by
+    simp [bU, bumpOp, feed, markerUpFeed, hslides]
+  have hpeakU : bU.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+    simp [bU, bumpOp, feed, markerUpFeed, hpeak]
+  exact run_else_flag bU dst first second seat lane n moves slides peak mirror
+    hmkU honU htoU hHU hDU h7U hemptyU hbenchU hnU hpos hnle hzero hf hfitL
+    hmovesU hslidesU hpeakU hpeg hfitM hfitS
+
+/-- The rise mirrors `home`, then the onto multiply steps the marker. The mirror
+    flag of that multiply is the constant `mirror` (`false` on white, `true` on red).
+    `mirror` does not move the bench, the marker, or the op counter. -/
+theorem rise_marker (b : Ecbs.Board) (home dst first second seat : Nat)
+    (L : List Nat) (m ctrl mx script cOps n moves : Nat) (mirror : Bool)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (hheld : b.sudo_5Board_4held[home] = true)
+    (harr : b.sudo_5Board_4home[home] = embed L)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlen : L.length = n) (hpos : 0 < n) (htri : allTritList L)
+    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hfit : FitsLen (moves + n))
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (seat : Int))
+    (hseat : seat ≠ dst)
+    (hm : b.sudo_5Board_6marker = Int.ofNat m)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hscript : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script)
+    (hbound : m + 1 < script) (hfitMk : FitsLen (m + 1))
+    (hfitC : FitsLen (ctrl + 2)) (hfit2 : FitsLen (m + 2))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1)) :
+    let bM := mirrorHome b home hH (embed (mirrorTrits L)) (moves + pegCount L)
+    let feed := markerUpFeed bM m ctrl mx
+    let hopsM : 0 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      simpa [bM, mirrorHome, withMoves] using hops
+    let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      simpa [markerUpFeed] using hopsM
+    (Ecbs.mirror b ((home : Nat) : Int) >>= fun b1 =>
+        Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+          true true mirror) =
+      Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
+        ((second : Nat) : Int) true true mirror
+        (markerOn (bumpOp feed 0 cOps hopsF)) := by
+  intro bM feed hopsM hopsF
+  rw [mirror_refines b home L n moves hH hD hheld harr hn hlen hpos htri hmv hfit]
+  simp only [ok_bind]
+  have hmkM : bM.sudo_5Board_9marker_on = true := by
+    simp [bM, mirrorHome, withMoves, hmk]
+  have honM : bM.sudo_5Board_8bench_on = true := by
+    simp [bM, mirrorHome, withMoves, hon]
+  have htoM : bM.sudo_5Board_8bench_to = (seat : Int) := by
+    simp [bM, mirrorHome, withMoves, hto]
+  have hmM : bM.sudo_5Board_6marker = Int.ofNat m := by
+    simp [bM, mirrorHome, withMoves, hm]
+  have hcM : bM.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl := by
+    simp [bM, mirrorHome, withMoves, hc]
+  have hxM : bM.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx := by
+    simp [bM, mirrorHome, withMoves, hx]
+  have hsM : bM.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script := by
+    simp [bM, mirrorHome, withMoves, hscript]
+  have hnM : bM.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    simp [bM, mirrorHome, withMoves, hn]
+  have hop0M : bM.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsM = (cOps : Int) := by
+    simpa [bM, mirrorHome, withMoves] using hop0
+  exact run_marker_seat bM dst first second seat m ctrl mx script cOps n mirror
+    hmkM honM htoM hseat hmM hcM hxM hsM hbound hfitMk hfitC hfit2 hnM hopsM hop0M hfops
 
 end EcbsLink2.Link2

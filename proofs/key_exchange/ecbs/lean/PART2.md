@@ -519,7 +519,17 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5251 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5251. Peaks of the modules this change elaborated, VmHWM: FformAdd 353208 kB. This `lake build EcbsLink2` peaked at 388368 kB. The audit peaked at 912968 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: the rise, with the mirror flag a constant `true` or `false`, then the gap and the new point, so the whole `walk_fform` matches `walkRun` on all three outcomes. Then `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
+`mul_onto_school` and `held_copy_school` take the mirror flag. `run_onto_copy`, `run_onto_off`, `run_onto_settles`, `run_onto_at`, and `run_marker_seat` pass that flag through. The run supplies the constant `false`. The rise supplies the constant `false` on a white cell and the constant `true` on a red cell. The schoolbook proof does not case on the flag.
+
+`run_else_flag` is the settle inside that `mulElse`. The bench is aimed at `seat`. The marker flag is not read, so it stays on, and the multiply that follows is `mulElse` of `markerOn (settleBoard ...)`. `run_marker_else` is the marker step and then that settle. `Ecbs.mul` equals that flagged settle's `mulElse`.
+
+`rise_marker` is the rise. `Ecbs.mirror` negates the home, then the onto multiply steps the marker. The mirror flag of that multiply is the constant `mirror`. Negating the home does not move the bench, the marker, or the op counter, so `run_marker_seat` applies to `mirrorHome`.
+
+`off_marker` is a gap multiply, where `onto` is the constant `false`. The keep test does not read the bench. `log_op` is still `marker_step`, and the multiply continues as `mulElse` on the flagged board. `copy` and `mirror` are not inspected. `mul_else_flag` is the settle inside that `mulElse`, again with `onto` false. `off_marker_else` is the marker step and then that settle.
+
+5258 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5258. Peaks of the modules this change elaborated, VmHWM: FformAdd 386564 kB, FformGap 386848 kB. The root rebuild peaked at 1645036 kB. The audit peaked at 914576 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: the gap's products and the new point, so the whole `walk_fform` matches `walkRun` on all three outcomes. Then `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

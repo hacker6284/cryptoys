@@ -168,7 +168,7 @@ private theorem aim3 (b : Ecbs.Board) (dst : Int) (strip : Array Int) :
 /-- `mulFromHeld` on a strip that already holds `pad`. The schoolbook is
     `school_loop_refines` starting from `pad`, and the fold is `mulAfter`. -/
 theorem mul_onto_school (b : Ecbs.Board) (dst first second : Nat)
-    (xs ys pad : List Nat) (n moves peakS : Nat)
+    (xs ys pad : List Nat) (n moves peakS : Nat) (mirror : Bool)
     (hF : first < b.sudo_5Board_4held.size)
     (hHome : first < b.sudo_5Board_4home.size)
     (hHF : b.sudo_5Board_4held[first] = true)
@@ -188,12 +188,12 @@ theorem mul_onto_school (b : Ecbs.Board) (dst first second : Nat)
     (hfi : FitsLen (2 * (n - 1)))
     (hfm : FitsLen (moves + n * (n + 1))) :
     Ecbs.mulFromHeld ((n : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-        false false (mulAimed b ((dst : Nat) : Int) (embed pad)) (embed pad) =
+        false mirror (mulAimed b ((dst : Nat) : Int) (embed pad)) (embed pad) =
       mulAfter (Int.ofNat 0,
         (withMoves
             (mulPrep b ((dst : Nat) : Int) (embed pad) second peakS hS hHomeS)
             (Int.ofNat (moves + schoolMoves xs ys n n)),
-          embed (school n xs ys pad false))) := by
+          embed (school n xs ys pad mirror))) := by
   unfold Ecbs.mulFromHeld
   simp only [Bool.false_eq_true, if_false]
   rw [mulAimed_held, ← ofNat_eq_natCast first, atL_ofNat _ first hF, hHF]
@@ -243,7 +243,7 @@ theorem mul_onto_school (b : Ecbs.Board) (dst first second : Nat)
   rw [hfuel]
   conv =>
     pattern (rowStep _ _ _ _ _)
-    change rowStep (embed xs) (embed ys) false (Int.ofNat n) (0 : Int)
+    change rowStep (embed xs) (embed ys) mirror (Int.ofNat n) (0 : Int)
   conv =>
     pattern (fun σ : Int × (Ecbs.Board × Array Int) => _)
     change mulAfter
@@ -255,7 +255,7 @@ theorem mul_onto_school (b : Ecbs.Board) (dst first second : Nat)
     rw [show bL.sudo_5Board_4cost.sudo_5Costs_5moves =
         b.sudo_5Board_4cost.sudo_5Costs_5moves from by simp [bL, mulPrep_moves]]
     simpa [ofNat_eq_natCast] using hmoves
-  rw [school_loop_refines xs ys pad moves n false bL mulAfter (fun r => pure r)
+  rw [school_loop_refines xs ys pad moves n mirror bL mulAfter (fun r => pure r)
       hn0 (by rw [hlenx]; exact Nat.le_refl _) (by rw [hleny]; exact Nat.le_refl _)
       hspan hxsT hpadT hmL hf hfi hfm]
   exact bind_pure_id _
@@ -375,7 +375,7 @@ theorem mul_onto_else (b : Ecbs.Board) (dst first second : Nat)
       rw [ontoCharge_held_get _ _ _ _ _ _ _ _ hneD2 hS]; exact hHS
     have hYsC : bC.sudo_5Board_4home[second] = embed ys := by
       rw [ontoCharge_home_get _ _ _ _ _ _ _ _ hneD2 hHomeS]; exact hYs
-    exact mul_onto_school bC dst first second xs ys pad n (moves + 2 * peg) peakS
+    exact mul_onto_school bC dst first second xs ys pad n (moves + 2 * peg) peakS false
       hFC hHomeC hHFC hArrC hSC hHomeSC hHSC hYsC h7C hne hn0 hlenx hleny hf
       hmovesC hpeakC hspanP hxsT hpadT hfi hfmC
   conv =>

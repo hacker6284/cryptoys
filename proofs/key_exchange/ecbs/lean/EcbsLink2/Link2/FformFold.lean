@@ -5,6 +5,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.FformGap
+import EcbsLink2.Link2.FieldLin
 
 namespace EcbsLink2.Link2
 
@@ -252,5 +253,65 @@ theorem bench_is_zero (b : Ecbs.Board) (home : Nat) (xs : List Nat) (n : Nat)
     rw [size_embed, hlen]
     exact hf
   rw [is_empty_refines _ hfA, ok_bind, pure_eq_ok, embed_zero_decide (xs.take n) n hlen]
+
+/-- Laying a mirrored schoolbook onto a home and folding is the home plus
+    `mirrorTrits` of the product. A red rise uses this. -/
+theorem onto_add_mirror (n k bench : Nat) (a b home : List Nat)
+    (ht : allTritList home) (ha : allTritList a) (hb : allTritList b)
+    (hlen : home.length = n)
+    (hspan : 2 * (n - 1) < bench) (hnb : n ≤ bench) :
+    (laneFold n (n - k) (school n a b (pref home bench n) true)).take n =
+      fieldAdd n home (mirrorTrits (fieldMul n k bench a b)) := by
+  have hx : n ≤ home.length := by omega
+  have hpadLen : (pref home bench n).length = bench := pref_length hnb hx
+  have hpadT : allTritList (pref home bench n) := pref_trits home bench n ht hnb hx
+  have hy : ∀ e, n ≤ e → coeff (pref home bench n) e = 0 :=
+    fun e he => pref_coeff_hi home bench n e hnb hx he
+  have hspanP : 2 * (n - 1) < (pref home bench n).length ∨ n = 0 := by
+    rw [hpadLen]
+    exact Or.inl hspan
+  rw [school_onto n a b (pref home bench n) true hpadT hspanP]
+  have hmir := school_mirror n bench a b ha hb
+  rw [hpadLen, hmir]
+  have hsch : allTritList (school n a b (List.replicate bench 0) false) :=
+    school_zero_trits n bench a b hb
+  have hfold := laneFold_pad n (n - k)
+      ((school n a b (List.replicate bench 0) false).map flipTrit) (pref home bench n)
+      (by
+        rw [List.length_map, school_length, List.length_replicate]
+        exact hpadLen)
+      (by
+        intro x hxmem
+        simp only [List.mem_map] at hxmem
+        rcases hxmem with ⟨c, hc, rfl⟩
+        exact flipTrit_le c)
+      hy (Nat.sub_le n k)
+  rw [hfold]
+  have hflip : laneFold n (n - k) ((school n a b (List.replicate bench 0) false).map flipTrit) =
+      (laneFold n (n - k) (school n a b (List.replicate bench 0) false)).map flipTrit := by
+    rw [laneFold, laneFold, reduceStrip_flip n (n - k) _ hsch]
+  rw [hflip]
+  have hlenF : (laneFold n (n - k) (school n a b (List.replicate bench 0) false)).length = bench := by
+    rw [laneFold_length _ _ _ (by rw [school_length, List.length_replicate]; exact hnb),
+      school_length, List.length_replicate]
+  have htake : n ≤
+      ((laneFold n (n - k) (school n a b (List.replicate bench 0) false)).map flipTrit).length := by
+    rw [List.length_map, hlenF]
+    exact hnb
+  rw [stripAdd_take n _ _ htake, fieldAdd_comm]
+  have hlo : ∀ i, i < n → coeff (pref home bench n) i = coeff home i :=
+    fun i hi => pref_coeff_lo home bench n i hnb hx hi
+  rw [fieldAdd_coeff n (pref home bench n)
+      ((laneFold n (n - k) (school n a b (List.replicate bench 0) false)).map flipTrit)
+      home ((laneFold n (n - k) (school n a b (List.replicate bench 0) false)).map flipTrit)
+      hlo (fun _ _ => rfl)]
+  rw [← fieldAdd_right_take n home _ (by rw [List.length_map, hlenF]; exact hnb)]
+  have hmap : (((laneFold n (n - k) (school n a b (List.replicate bench 0) false)).take n).map
+      flipTrit) =
+      mirrorTrits ((laneFold n (n - k) (school n a b (List.replicate bench 0) false)).take n) := by
+    rw [mirrorTrits_map, List.map_take]
+  rw [← List.map_take, hmap]
+  unfold fieldMul laneFold
+  rfl
 
 end EcbsLink2.Link2

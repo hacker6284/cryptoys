@@ -465,7 +465,11 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5104 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5104. Peaks of the modules this change elaborated, VmHWM: WalkRunInv 450396 kB, EcbsLink2 448644. The audit peaked at 903364 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: join the zero prefix, this copy, and the seated chord with `walk_chord_from`, so `walk_chord` is `.ok` of the spec point on the domain alone; the same join for a red opening; `walk_fform`; `base_point_of` with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact). An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
+`red_copy_kept` is the red opening on that same abstract board. Home 1 is `embed (mirrorTrits y)`. `walk_reach_white` and `walk_reach_red` are the emitted loop through the empty cells and that copy, when at least one cell remains. The loop from index 0 is the loop at the seat cell, on the copied board.
+
+5109 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5109. Peaks of the modules this change elaborated, VmHWM: WalkReach 478236 kB, EcbsLink2 432772, CopyKeep 265200. The audit peaked at 904164 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: the seat cell on that reached board, then `walk_chord_from`, so a successful `walkRun` is `.ok ((live, true), b')` of the spec point; the failure direction, where a missing inverse is the `AssertFailed` trap `invert_checked` returns and an empty run is `.ok ((true, false), b')`; `walk_fform`; `base_point_of` with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact). An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

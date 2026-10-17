@@ -372,4 +372,362 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
   rw [hflag]
   exact hok
 
+/-- Square the run into the spare. The bench holds the previous gap value and
+    is aimed at the gap, so that value is settled, then the across is copied
+    and squared. The bench prefix is `fieldMul v v`. -/
+theorem gap_v2 (b : Ecbs.Board) (dst gap across : Nat) (v lane : List Nat)
+    (m ctrl mx script cOps n k w h r moves slides hole peak peakS bench : Nat)
+    (hG : gap < b.sudo_5Board_4home.size)
+    (hGD : gap < b.sudo_5Board_4held.size)
+    (hAH : across < b.sudo_5Board_4home.size)
+    (hAD : across < b.sudo_5Board_4held.size)
+    (hHeldA : b.sudo_5Board_4held[across] = true)
+    (hArrA : b.sudo_5Board_4home[across] = embed v)
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (gap : Int))
+    (hm : b.sudo_5Board_6marker = Int.ofNat m)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hscript : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script)
+    (hbound : m + 1 < script) (hfitMk : FitsLen (m + 1))
+    (hfitC : FitsLen (ctrl + 2)) (hfit2 : FitsLen (m + 2))
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[gap] = false)
+    (hbench : b.sudo_5Board_5bench = embed lane)
+    (hposL : 0 < lane.length) (hnle : n ≤ lane.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen lane.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (lane.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (lane.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (lane.take n)))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hSpH : 6 < b.sudo_5Board_4held.size)
+    (hSpHome : 6 < b.sudo_5Board_4home.size)
+    (hSpE : b.sudo_5Board_4held[6] = false)
+    (hne : gap ≠ across) (hne6 : across ≠ 6) (hneG6 : gap ≠ 6)
+    (hn0 : 0 < n) (hnb : n ≤ bench)
+    (hlen : v.length = n)
+    (hpeak7 : 7 ≤ peak)
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hfitP : FitsLen ((moves + 2 * pegCount (lane.take n)) + pegCount v))
+    (hspan : 2 * (n - 1) < bench)
+    (hv : allTritList v)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfm : FitsLen ((moves + 2 * pegCount (lane.take n)) + pegCount v + n * (n + 1)))
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen ((moves + 2 * pegCount (lane.take n)) + pegCount v +
+        n * (n + 1) + 3 * (bench - n))) :
+    ∃ b' lane',
+      Ecbs.mul b ((dst : Nat) : Int) ((across : Nat) : Int) ((across : Nat) : Int)
+          true false false = .ok b' ∧
+      b'.sudo_5Board_5bench = embed lane' ∧
+      lane'.take n = fieldMul n k bench v v := by
+  let feed := markerUpFeed b m ctrl mx
+  let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    simpa [feed, markerUpFeed] using hops
+  let bU := bumpOp feed 0 cOps hopsF
+  let hHU : gap < bU.sudo_5Board_4home.size := by
+    simpa [bU, bumpOp, feed, markerUpFeed] using hG
+  let hDU : gap < bU.sudo_5Board_4held.size := by
+    simpa [bU, bumpOp, feed, markerUpFeed] using hGD
+  have hflag := off_marker_else b dst across across gap lane m ctrl mx script cOps n moves slides
+    peak true false hmk hon hto hm hc hx hscript hbound hfitMk hfitC hfit2 hn hops hop0 hfops
+    hG hGD h7 hempty hbench hposL hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
+  let mvS := moves + 2 * pegCount (lane.take n)
+  let bS := markerOn (settleBoard bU gap hHU hDU lane n moves slides peak)
+  have hinS : HomeIn bU gap := ⟨hHU, hDU⟩
+  have hno : ¬ peak < countHeld (bU.sudo_5Board_4held.set ⟨gap, hDU⟩ true) 7 := by
+    have hle : countHeld (bU.sudo_5Board_4held.set ⟨gap, hDU⟩ true) 7 ≤ 7 :=
+      countHeld_seven _
+    omega
+  have hcostS : bS.sudo_5Board_4cost =
+      (settleBoard bU gap hHU hDU lane n moves slides peak).sudo_5Board_4cost := by
+    dsimp [bS, markerOn]
+  have hpeakB : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    have hpeakU : bU.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+      simp [bU, bumpOp, feed, markerUpFeed, hpeak]
+    rw [hcostS, settle_peak_eq bU gap hinS lane n moves slides peak hpeakU, if_neg hno,
+      ofNat_eq_natCast]
+  have hmovesS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mvS : Int) := by
+    rw [hcostS, settle_moves_eq bU gap hinS lane n moves slides peak]
+    dsimp [mvS]
+  have hoffS : bS.sudo_5Board_8bench_on = false := by
+    rw [markerOn_on]
+    exact settle_bench_off bU gap ⟨hHU, hDU⟩ lane n moves slides peak
+  have htierU : bU.sudo_5Board_1t = b.sudo_5Board_1t := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+  have hhomeU : bU.sudo_5Board_4home = b.sudo_5Board_4home := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+  have hheldU : bU.sudo_5Board_4held = b.sudo_5Board_4held := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+  have hhomeS : bS.sudo_5Board_4home =
+      (settleBoard bU gap hHU hDU lane n moves slides peak).sudo_5Board_4home := by
+    dsimp [bS, markerOn]
+  have hheldS0 : bS.sudo_5Board_4held =
+      (settleBoard bU gap hHU hDU lane n moves slides peak).sudo_5Board_4held := by
+    dsimp [bS, markerOn]
+  have htierS : bS.sudo_5Board_1t =
+      (settleBoard bU gap hHU hDU lane n moves slides peak).sudo_5Board_1t := by
+    dsimp [bS, markerOn]
+  have hblS : bS.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by
+    rw [htierS, settle_tier_eq bU gap hinS lane n moves slides peak, htierU, hbl]
+  have hAccD : across < bS.sudo_5Board_4held.size := by
+    rw [hheldS0, settle_held_eq bU gap hinS lane n moves slides peak, Array.size_set, hheldU]
+    exact hAD
+  have hAccH : across < bS.sudo_5Board_4home.size := by
+    rw [hhomeS, settle_home_eq bU gap hinS lane n moves slides peak, Array.size_set, hhomeU]
+    exact hAH
+  have hHeldA' : bS.sudo_5Board_4held[across]'(hAccD) = true := by
+    have hset := settle_held_eq bU gap hinS lane n moves slides peak
+    have hget := idx_eq (hheldS0.trans hset) across hAccD
+    rw [Array.getElem_set_ne (h := hne)] at hget
+    have hAU : across < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hAD
+    exact (hget.trans (idx_eq hheldU across hAU)).trans hHeldA
+  have hHomeA : bS.sudo_5Board_4home[across]'(hAccH) = embed v := by
+    have hset := settle_home_eq bU gap hinS lane n moves slides peak
+    have hget := idx_eq (hhomeS.trans hset) across hAccH
+    rw [Array.getElem_set_ne (h := hne)] at hget
+    have hAU : across < bU.sudo_5Board_4home.size := by rw [hhomeU]; exact hAH
+    rw [hget]
+    exact (idx_eq hhomeU across hAU).trans hArrA
+  have h6D : 6 < bS.sudo_5Board_4held.size := by
+    rw [hheldS0, settle_held_eq bU gap hinS lane n moves slides peak, Array.size_set, hheldU]
+    exact hSpH
+  have h6H : 6 < bS.sudo_5Board_4home.size := by
+    rw [hhomeS, settle_home_eq bU gap hinS lane n moves slides peak, Array.size_set, hhomeU]
+    exact hSpHome
+  have h6E : bS.sudo_5Board_4held[6]'(h6D) = false := by
+    have hset := settle_held_eq bU gap hinS lane n moves slides peak
+    have hget := idx_eq (hheldS0.trans hset) 6 h6D
+    rw [Array.getElem_set_ne (h := hneG6)] at hget
+    have h6U : 6 < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hSpH
+    exact (hget.trans (idx_eq hheldU 6 h6U)).trans hSpE
+  have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
+    rw [hheldS0, settle_held_eq bU gap hinS lane n moves slides peak, Array.size_set, hheldU]
+    exact h7
+  have hnS : bS.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    rw [htierS, settle_tier_eq bU gap hinS lane n moves slides peak, htierU, hn]
+  have hstrictU : bU.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+    exact hpeakS
+  have hholeU : bU.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+    exact hhole
+  have hstrictS : bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
+    rw [hcostS, settle_strict_eq bU gap hinS lane n moves slides peak, hstrictU]
+  have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
+    rw [hcostS, settle_hole_eq bU gap hinS lane n moves slides peak, hholeU]
+  have hwS : bS.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by
+    rw [htierS, settle_tier_eq bU gap hinS lane n moves slides peak, htierU, hw]
+  have hhS : bS.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h := by
+    rw [htierS, settle_tier_eq bU gap hinS lane n moves slides peak, htierU, hh]
+  have hrS : bS.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by
+    rw [htierS, settle_tier_eq bU gap hinS lane n moves slides peak, htierU, hr]
+  have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
+    rw [htierS, settle_tier_eq bU gap hinS lane n moves slides peak, htierU, hk]
+  obtain ⟨b', hok, hbench, hmul, _, _, _, _, _, _⟩ := copy_else_field bS dst across across v v
+      w h r n k mvS hole peak peakS bench hoffS hblS hAccD hAccH hHeldA' hHomeA
+      hAccD hAccH hHeldA' hHomeA h6D h6H h6E h7S hne6 hne6 hn0 hnb hnS hlen hlen hf
+      hmovesS hpeakB hpeak7 hstrictS hfitP hspan hv hfi hfm hholeS hw0 hh0 hrR hrP
+      hnE hkLe hgap hwS hhS hrS hkS hsm hnsm hfitB hfold
+  refine ⟨b', laneFold n (n - k) (school n v v (List.replicate bench 0) false), ?_, hbench, hmul⟩
+  rw [hflag]
+  exact hok
+
+/-- The squared run times the bottom. The bench holds `v²` and is aimed at the
+    spare, so that square is settled, then `fieldMul` of it by the bottom is
+    the new bench prefix. -/
+theorem gap_v2z (b : Ecbs.Board) (sp bot : Nat) (v2 z lane : List Nat)
+    (m ctrl mx script cOps n k w h r moves slides hole peak peakS bench : Nat)
+    (hS : sp < b.sudo_5Board_4home.size)
+    (hSD : sp < b.sudo_5Board_4held.size)
+    (hBH : bot < b.sudo_5Board_4home.size)
+    (hBD : bot < b.sudo_5Board_4held.size)
+    (hHeldB : b.sudo_5Board_4held[bot] = true)
+    (hArrB : b.sudo_5Board_4home[bot] = embed z)
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (sp : Int))
+    (hm : b.sudo_5Board_6marker = Int.ofNat m)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hscript : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script)
+    (hbound : m + 1 < script) (hfitMk : FitsLen (m + 1))
+    (hfitC : FitsLen (ctrl + 2)) (hfit2 : FitsLen (m + 2))
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[sp] = false)
+    (hbench : b.sudo_5Board_5bench = embed lane)
+    (hposL : 0 < lane.length) (hnle : n ≤ lane.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen lane.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (lane.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (lane.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (lane.take n)))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hne : sp ≠ bot)
+    (hn0 : 0 < n) (hnb : n ≤ bench)
+    (htake : lane.take n = v2) (hlenv : v2.length = n) (hlenz : z.length = n)
+    (hpeak7 : 7 ≤ peak)
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hspan : 2 * (n - 1) < bench)
+    (hv2 : allTritList v2)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfm : FitsLen ((moves + 2 * pegCount (lane.take n)) + n * (n + 1)))
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen ((moves + 2 * pegCount (lane.take n)) + n * (n + 1) +
+        3 * (bench - n))) :
+    ∃ b' lane',
+      Ecbs.mul b ((bot : Nat) : Int) ((sp : Nat) : Int) ((bot : Nat) : Int)
+          false false false = .ok b' ∧
+      b'.sudo_5Board_5bench = embed lane' ∧
+      lane'.take n = fieldMul n k bench v2 z := by
+  let feed := markerUpFeed b m ctrl mx
+  let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    simpa [feed, markerUpFeed] using hops
+  let bU := bumpOp feed 0 cOps hopsF
+  let hHU : sp < bU.sudo_5Board_4home.size := by
+    simpa [bU, bumpOp, feed, markerUpFeed] using hS
+  let hDU : sp < bU.sudo_5Board_4held.size := by
+    simpa [bU, bumpOp, feed, markerUpFeed] using hSD
+  have hflag := off_marker_else b bot sp bot sp lane m ctrl mx script cOps n moves slides peak
+    false false hmk hon hto hm hc hx hscript hbound hfitMk hfitC hfit2 hn hops hop0 hfops
+    hS hSD h7 hempty hbench hposL hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
+  let mvS := moves + 2 * pegCount (lane.take n)
+  let bS := markerOn (settleBoard bU sp hHU hDU lane n moves slides peak)
+  have hinS : HomeIn bU sp := ⟨hHU, hDU⟩
+  have hno : ¬ peak < countHeld (bU.sudo_5Board_4held.set ⟨sp, hDU⟩ true) 7 := by
+    have hle : countHeld (bU.sudo_5Board_4held.set ⟨sp, hDU⟩ true) 7 ≤ 7 :=
+      countHeld_seven _
+    omega
+  have hcostS : bS.sudo_5Board_4cost =
+      (settleBoard bU sp hHU hDU lane n moves slides peak).sudo_5Board_4cost := by
+    dsimp [bS, markerOn]
+  have hpeakB : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    have hpeakU : bU.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+      simp [bU, bumpOp, feed, markerUpFeed, hpeak]
+    rw [hcostS, settle_peak_eq bU sp hinS lane n moves slides peak hpeakU, if_neg hno,
+      ofNat_eq_natCast]
+  have hmovesS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mvS : Int) := by
+    rw [hcostS, settle_moves_eq bU sp hinS lane n moves slides peak]
+    dsimp [mvS]
+  have hoffS : bS.sudo_5Board_8bench_on = false := by
+    rw [markerOn_on]
+    exact settle_bench_off bU sp ⟨hHU, hDU⟩ lane n moves slides peak
+  have htierU : bU.sudo_5Board_1t = b.sudo_5Board_1t := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+  have hhomeU : bU.sudo_5Board_4home = b.sudo_5Board_4home := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+  have hheldU : bU.sudo_5Board_4held = b.sudo_5Board_4held := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+  have hhomeS : bS.sudo_5Board_4home =
+      (settleBoard bU sp hHU hDU lane n moves slides peak).sudo_5Board_4home := by
+    dsimp [bS, markerOn]
+  have hheldS0 : bS.sudo_5Board_4held =
+      (settleBoard bU sp hHU hDU lane n moves slides peak).sudo_5Board_4held := by
+    dsimp [bS, markerOn]
+  have htierS : bS.sudo_5Board_1t =
+      (settleBoard bU sp hHU hDU lane n moves slides peak).sudo_5Board_1t := by
+    dsimp [bS, markerOn]
+  have hblS : bS.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench := by
+    rw [htierS, settle_tier_eq bU sp hinS lane n moves slides peak, htierU, hbl]
+  have hSpD : sp < bS.sudo_5Board_4held.size := by
+    rw [hheldS0, settle_held_eq bU sp hinS lane n moves slides peak, Array.size_set, hheldU]
+    exact hSD
+  have hSpH : sp < bS.sudo_5Board_4home.size := by
+    rw [hhomeS, settle_home_eq bU sp hinS lane n moves slides peak, Array.size_set, hhomeU]
+    exact hS
+  have hHeldS : bS.sudo_5Board_4held[sp]'(hSpD) = true := by
+    have hset := settle_held_eq bU sp hinS lane n moves slides peak
+    have hget := idx_eq (hheldS0.trans hset) sp hSpD
+    rw [hget]
+    simp [Array.getElem_set]
+  have hHomeS : bS.sudo_5Board_4home[sp]'(hSpH) = embed v2 := by
+    have hset := settle_home_eq bU sp hinS lane n moves slides peak
+    have hget := idx_eq (hhomeS.trans hset) sp hSpH
+    rw [hget]
+    simp [Array.getElem_set]
+    rw [htake]
+  have hBotD : bot < bS.sudo_5Board_4held.size := by
+    rw [hheldS0, settle_held_eq bU sp hinS lane n moves slides peak, Array.size_set, hheldU]
+    exact hBD
+  have hBotH : bot < bS.sudo_5Board_4home.size := by
+    rw [hhomeS, settle_home_eq bU sp hinS lane n moves slides peak, Array.size_set, hhomeU]
+    exact hBH
+  have hHeldBot : bS.sudo_5Board_4held[bot]'(hBotD) = true := by
+    have hset := settle_held_eq bU sp hinS lane n moves slides peak
+    have hget := idx_eq (hheldS0.trans hset) bot hBotD
+    rw [Array.getElem_set_ne (h := hne)] at hget
+    have hBU : bot < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hBD
+    exact (hget.trans (idx_eq hheldU bot hBU)).trans hHeldB
+  have hHomeBot : bS.sudo_5Board_4home[bot]'(hBotH) = embed z := by
+    have hset := settle_home_eq bU sp hinS lane n moves slides peak
+    have hget := idx_eq (hhomeS.trans hset) bot hBotH
+    rw [Array.getElem_set_ne (h := hne)] at hget
+    have hBU : bot < bU.sudo_5Board_4home.size := by rw [hhomeU]; exact hBH
+    exact (hget.trans (idx_eq hhomeU bot hBU)).trans hArrB
+  have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
+    rw [hheldS0, settle_held_eq bU sp hinS lane n moves slides peak, Array.size_set, hheldU]
+    exact h7
+  have hnS : bS.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    rw [htierS, settle_tier_eq bU sp hinS lane n moves slides peak, htierU, hn]
+  have hstrictU : bU.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+    exact hpeakS
+  have hholeU : bU.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
+    dsimp [bU, bumpOp, feed, markerUpFeed]
+    exact hhole
+  have hstrictS : bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
+    rw [hcostS, settle_strict_eq bU sp hinS lane n moves slides peak, hstrictU]
+  have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
+    rw [hcostS, settle_hole_eq bU sp hinS lane n moves slides peak, hholeU]
+  have hwS : bS.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w := by
+    rw [htierS, settle_tier_eq bU sp hinS lane n moves slides peak, htierU, hw]
+  have hhS : bS.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h := by
+    rw [htierS, settle_tier_eq bU sp hinS lane n moves slides peak, htierU, hh]
+  have hrS : bS.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r := by
+    rw [htierS, settle_tier_eq bU sp hinS lane n moves slides peak, htierU, hr]
+  have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
+    rw [htierS, settle_tier_eq bU sp hinS lane n moves slides peak, htierU, hk]
+  obtain ⟨b', hok, hbench, hmul⟩ := nocopy_else_field bS bot sp bot v2 z
+      w h r n k mvS hole peak peakS bench hoffS hblS hSpD hSpH hHeldS hHomeS
+      hBotD hBotH hHeldBot hHomeBot h7S hne hn0 hnb hnS hlenv hlenz hf hmovesS
+      hpeakB hstrictS hspan hv2 hfi hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap
+      hwS hhS hrS hkS hsm hnsm hfitB hfold
+  refine ⟨b', laneFold n (n - k) (school n v2 z (List.replicate bench 0) false), ?_, hbench, hmul⟩
+  rw [hflag]
+  exact hok
+
 end EcbsLink2.Link2

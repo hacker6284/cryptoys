@@ -461,7 +461,11 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5099 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5099. Peaks of the modules this change elaborated, VmHWM: CopySeat 526892 kB, EcbsLink2 431956, CopyKeep 267380. The audit peaked at 902892 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: join the zero prefix, this copy, and the seated chord with `walk_chord_from`, so `walk_chord` is `.ok` of the spec point on the domain alone, with `live_chord_inv` discharging the inverse; the same join for a red opening; `walk_fform`; `base_point_of` with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact). An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
+`walkRun_at` is the cell a successful run actually stepped. `walkRun_live_inv` is the inverse at a live white or red cell of that run, by `live_chord_inv`. The final `walk_chord` uses this instead of an inverse hypothesis.
+
+5104 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5104. Peaks of the modules this change elaborated, VmHWM: WalkRunInv 450396 kB, EcbsLink2 448644. The audit peaked at 903364 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: join the zero prefix, this copy, and the seated chord with `walk_chord_from`, so `walk_chord` is `.ok` of the spec point on the domain alone; the same join for a red opening; `walk_fform`; `base_point_of` with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact). An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

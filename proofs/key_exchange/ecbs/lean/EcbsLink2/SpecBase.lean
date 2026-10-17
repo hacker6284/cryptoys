@@ -260,5 +260,35 @@ theorem basePoint_at1 (t : Tier) (hn : 1 < t.n)
   unfold basePoint
   rw [hsr]
 
+/-- SPEC.md §3 R7 line 149. The run `v = x₂Z − X`. -/
+def fformRun (n k bench : Nat) (x2 z x : List Nat) : List Nat :=
+  fieldAdd n (mirrorTrits x) (fieldMul n k bench x2 z)
+
+/-- SPEC.md §3 R7 line 150. The rise `u = y₂Z − Y`. A red cell passes `−y₂`. -/
+def fformRise (n k bench : Nat) (y2 z y : List Nat) : List Nat :=
+  fieldAdd n (mirrorTrits y) (fieldMul n k bench y2 z)
+
+/-- SPEC.md §3 R7 line 151. The gap `F = u²Z + v²(v + Z)`. -/
+def fformF (n k bench : Nat) (u v z : List Nat) : List Nat :=
+  let u2 := fieldMul n k bench u u
+  let v2 := fieldMul n k bench v v
+  fieldAdd n (fieldMul n k bench u2 z)
+    (fieldMul n k bench v2 (fieldAdd n v z))
+
+/-- SPEC.md §3 R7 line 152. The new bottom `v · (v²Z)`. -/
+def fformBottom (n k bench : Nat) (v z : List Nat) : List Nat :=
+  fieldMul n k bench v (fieldMul n k bench (fieldMul n k bench v v) z)
+
+/-- SPEC.md §3 R7 line 153. The new across `v·F + x₂·Z₃`. -/
+def fformAcross (n k bench : Nat) (x2 u v z : List Nat) : List Nat :=
+  fieldAdd n (fieldMul n k bench v (fformF n k bench u v z))
+    (fieldMul n k bench x2 (fformBottom n k bench v z))
+
+/-- SPEC.md §3 R7 line 154. The new up `−(u·F + y₂·Z₃)`. -/
+def fformUp (n k bench : Nat) (y2 u v z : List Nat) : List Nat :=
+  mirrorTrits (fieldAdd n
+    (fieldMul n k bench u (fformF n k bench u v z))
+    (fieldMul n k bench y2 (fformBottom n k bench v z)))
+
 end EcbsLink2.Spec
 

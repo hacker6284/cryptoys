@@ -109,6 +109,8 @@ import EcbsLink2.Link2.WalkPrefix
 import EcbsLink2.Link2.SeatDown
 import EcbsLink2.Link2.SeatChord
 import EcbsLink2.Link2.WalkJoin
+import EcbsLink2.Link2.CopyKeep
+import EcbsLink2.Link2.CopySeat
 import EcbsLink2.Link2.ChordNext
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn

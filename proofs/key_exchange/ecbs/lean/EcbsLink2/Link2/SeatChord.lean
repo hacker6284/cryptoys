@@ -102,7 +102,7 @@ private theorem cube_up_trits (t : Spec.Tier) (sat : TierSat t) (hsh : TierShape
 
 /-- A non-final seat cell. `fuel + 1 = left`, and `done` is that cell's index.
     `up` is the opening's up home: the base up, or its negation. -/
-private theorem seat_cell_chord (t : Spec.Tier) (b : Ecbs.Board)
+theorem seat_cell_chord (t : Spec.Tier) (b : Ecbs.Board)
     (x y up : List Nat) (c done left fuel : Nat) (inv : List Nat)
     (fr : RunFrame b t x (fieldCube t.n t.k t.benchlen x))
     (tw : TierWalk t) (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t)
@@ -195,7 +195,7 @@ private theorem seat_cell_chord (t : Spec.Tier) (b : Ecbs.Board)
     exact next_le done _ _ (tierR t - 1) fr'.ctrl hc0 hstepC (Nat.le_refl _)
 
 /-- The seat cell is the last cell. One charge, and the homes are the new point. -/
-private theorem seat_cell_last (t : Spec.Tier) (b : Ecbs.Board)
+theorem seat_cell_last (t : Spec.Tier) (b : Ecbs.Board)
     (x y up : List Nat) (c done left : Nat) (inv : List Nat)
     (fr : RunFrame b t x (fieldCube t.n t.k t.benchlen x))
     (tw : TierWalk t) (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t)

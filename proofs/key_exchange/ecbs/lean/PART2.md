@@ -495,11 +495,15 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5213 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5213. Peaks of the modules this change elaborated, VmHWM: FformStart 353312 kB. The audit peaked at 911220 kB. All under about 1.8 GB and under 2097152 kB.
 
-`frobenius_point_cubes` is the emitted point: across, then up, then the bottom, each cubed into itself. `point_across_up` is the first two. On a `DownAcross` board they leave `upFlag`: the bench is on, aimed at up, and holds the cubed up. The bottom cube is the next step, on that board.
+`frobenius_point_cubes` is the emitted point: across, then up, then the bottom, each cubed into itself. `point_across_up` is the first two. On a `DownAcross` board they leave `upFlag`: the bench is on, aimed at up, and holds the cubed up.
 
 5215 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5215. Peaks of the modules this change elaborated, VmHWM: FformPoint 353336 kB. The audit peaked at 910736 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: the bottom cube of `frobenius_point`, then `fform_add`, so the whole `walk_fform` matches `walkRun`. Then `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
+`point_bottom` is the bottom cube on that board. The bench still holds the cubed up and is aimed at up, so the cube settles the up and then folds the bottom. It is `cube` of `markerUpFeed` with the marker at 1, control `ctrl + 3`, and script maximum `max (max mx 1) 2`, and the marker flag stays on. `bottom_held` and `bottom_home` say held 2 and home 2 are the bottom the across cube left on `b1On`: the up cube writes home 1 and settles home 0. `frobenius_point_bottom` is the emitted point, the across cube and the up cube and then that bottom cube.
+
+5235 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5235. Peaks of the modules this change elaborated, VmHWM: FformPoint 353340 kB. This `lake build EcbsLink2` peaked at 387104 kB. The audit peaked at 912224 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: `fform_add`, so the whole `walk_fform` matches `walkRun` on all three outcomes. Then `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

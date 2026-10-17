@@ -569,7 +569,11 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5379 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5379. Peaks of the modules this change elaborated, VmHWM: FformGapLay 326980 kB. The audit peaked at 921436 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: the mirror-off `add`, which takes `u²Z + v³` and the bottom `v²Z` to `fformF`, then the new point (`fformAcross`, `fformUp`, `fformBottom`), then the `none` run and the three-way `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The live point cites Spec, not the card helpers.
+`add_off` is `Ecbs.add` with the mirror flag off. Both homes are held. The destination becomes `fieldAdd` of the two homes, and the move counter grows by `pegCount` of the source. `gap_fform` is the sum `(u²Z + v³) + v²Z = fformF`: the squared run distributes over `v + Z`, and addition associates. `gap_add_f` is that add on those two homes. The result is `embed (fformF ...)`.
+
+5402 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5402. Peaks of the modules this change elaborated, VmHWM: FformAddOff 220204 kB. The audit peaked at 921728 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: the new point (`fformAcross`, `fformUp`, `fformBottom`), then the `none` run and the three-way `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The live point cites Spec, not the card helpers.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

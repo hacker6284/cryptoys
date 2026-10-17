@@ -1,7 +1,8 @@
 /-
   The board a key walk hands to `walk_chord`: `new_board`, then the base point
-  in homes 3 and 4. The opening copy, with the marker still `-1`, writes that
-  point into homes 0 and 1. Strict, hole, control, and slides stay on the board
+  in homes 3 and 4.   The opening copy, with the marker still `-1`, writes that
+  point into homes 0 and 1. A red opening writes the negated base up.
+  Strict, hole, control, and slides stay on the board
   `new_board` returned. Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.BoardBuild
@@ -650,5 +651,159 @@ theorem place_tier (b : Ecbs.Board) (home : Nat)
     (xs : List Nat) (moves peak : Nat) :
     (placeBoard b home hH hD xs moves peak).sudo_5Board_1t = b.sudo_5Board_1t := by
   unfold placeBoard; dsimp only; split <;> rfl
+
+/-- The red opening. Home 1 is the negated base up. The move counter and the
+    peak match the white copy: a mirrored trit list has the same peg count,
+    and the held flags do not read the coefficients. -/
+def redRec (t : Spec.Tier) (x y : List Nat) : Ecbs.Board :=
+  { whiteRec t x y with
+    sudo_5Board_4home := (whiteRec t x y).sudo_5Board_4home.set
+      ⟨1, by rw [open_szH]; decide⟩ (embed (mirrorTrits y)) }
+
+theorem red_szH (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4home.size = 8 := by
+  simp [redRec, Array.size_set, open_szH]
+
+theorem red_szD (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4held.size = 8 := by
+  simpa [redRec] using open_szD t x y
+
+theorem red_home1 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4home[1]'(by rw [red_szH]; decide) = embed (mirrorTrits y) := by
+  simp [redRec, Array.getElem_set]
+
+theorem red_home0 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4home[0]'(by rw [red_szH]; decide) = embed x := by
+  simp [redRec, Array.getElem_set, rec_home0]
+
+theorem red_home3 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4home[3]'(by rw [red_szH]; decide) = embed x := by
+  simp [redRec, Array.getElem_set, rec_home3]
+
+theorem red_home4 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4home[4]'(by rw [red_szH]; decide) = embed y := by
+  simp [redRec, Array.getElem_set, rec_home4]
+
+theorem red_held0 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4held[0]'(by rw [red_szD]; decide) = true := by
+  simpa [redRec] using rec_held0 t x y
+
+theorem red_held1 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4held[1]'(by rw [red_szD]; decide) = true := by
+  simpa [redRec] using rec_held1 t x y
+
+theorem red_held2 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4held[2]'(by rw [red_szD]; decide) = false := by
+  simpa [redRec] using rec_held2 t x y
+
+theorem red_held3 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4held[3]'(by rw [red_szD]; decide) = true := by
+  simpa [redRec] using rec_held3 t x y
+
+theorem red_held4 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4held[4]'(by rw [red_szD]; decide) = true := by
+  simpa [redRec] using rec_held4 t x y
+
+theorem red_held5 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4held[5]'(by rw [red_szD]; decide) = false := by
+  simpa [redRec] using rec_held5 t x y
+
+theorem red_held6 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4held[6]'(by rw [red_szD]; decide) = false := by
+  simpa [redRec] using rec_held6 t x y
+
+theorem red_marker (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_6marker = -1 := by
+  simpa [redRec] using open_marker t x y
+
+theorem red_ctrl (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t) := by
+  simpa [redRec] using open_ctrl t x y
+
+theorem red_strict (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_11peak_strict = 0 := by
+  simpa [redRec] using open_strict t x y
+
+theorem red_hole (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = 0 := by
+  simpa [redRec] using open_hole t x y
+
+theorem red_slides (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_6slides = 0 := by
+  simpa [redRec] using open_slides t x y
+
+theorem red_mx (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_17script_marker_max = 0 := by
+  simpa [redRec] using open_mx t x y
+
+theorem red_moves (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (pegCount x + pegCount y + pegCount x + pegCount y) := by
+  simpa [redRec] using open_moves t x y
+
+theorem red_peak (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_4peak = 4 := by
+  simpa [redRec] using open_peak t x y
+
+theorem red_flag (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_9marker_on = true := by
+  simpa [redRec] using open_flag t x y
+
+theorem red_bench (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_8bench_on = false := by
+  simpa [redRec] using open_bench t x y
+
+theorem red_tier (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_1t = embTier t := by
+  simpa [redRec] using open_tier t x y
+
+theorem red_row (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_3row = embed (paintedRow t) := by
+  simpa [redRec] using open_row t x y
+
+theorem red_ladder (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_6ladder = embed (tierClimb t) := by
+  simpa [redRec] using open_ladder t x y
+
+theorem red_l0 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_7ladder0 = Int.ofNat (t.script + 2) := by
+  simpa [redRec] using open_l0 t x y
+
+theorem red_nr (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_6nrungs = Int.ofNat (tierR t) := by
+  simpa [redRec] using open_nr t x y
+
+theorem red_park (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_9park_hole = Int.ofNat (t.script + 2 + tierR t) := by
+  simpa [redRec] using open_park t x y
+
+theorem red_from (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_11parked_from = -1 := by
+  simpa [redRec] using open_from t x y
+
+theorem red_ridx (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_8rung_idx = 0 := by
+  simpa [redRec] using open_ridx t x y
+
+theorem red_tally (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_9tally_len = 0 := by
+  simpa [redRec] using white_tally t x y
+
+theorem red_t0 (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t) := by
+  simpa [redRec] using open_t0 t x y
+
+theorem red_high (t : Spec.Tier) (x y : List Nat) (hR : 0 < tierR t) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      Int.ofNat (t.script + tierR t + 1) := by
+  simpa [redRec] using open_high t x y hR
+
+theorem red_tmax (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_9tally_max = 0 := by
+  simpa [redRec] using open_tmax t x y
+
+theorem red_ops (t : Spec.Tier) (x y : List Nat) :
+    (redRec t x y).sudo_5Board_4cost.sudo_5Costs_3ops = Array.mkArray 5 0 := by
+  simp [redRec, open_ops, built_ops_arr]
 
 end EcbsLink2.Link2

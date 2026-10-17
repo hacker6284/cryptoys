@@ -891,4 +891,68 @@ theorem rise_marker (b : Ecbs.Board) (home dst first second seat : Nat)
   exact run_marker_seat bM dst first second seat m ctrl mx script cOps n mirror
     hmkM honM htoM hseat hmM hcM hxM hsM hbound hfitMk hfitC hfit2 hnM hopsM hop0M hfops
 
+private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := by
+  intro x hx
+  have hx' : ¬ k = 0 ∧ x = 0 := by simpa [List.mem_replicate] using hx
+  omega
+
+/-- Bench off, `onto = false`, `copy_second = true`. `mulElse` aims a zero strip
+    at the destination and `held_copy_school` lays `school` on it. The mirror
+    flag is `mirror`. This is a gap multiply once the bench has been settled. -/
+theorem copy_else_off (b : Ecbs.Board) (dst first second : Nat)
+    (xs ys : List Nat) (n moves peak peakS bench : Nat) (mirror : Bool)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hF : first < b.sudo_5Board_4held.size)
+    (hHome : first < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs)
+    (hS : second < b.sudo_5Board_4held.size)
+    (hHomeS : second < b.sudo_5Board_4home.size)
+    (hHS : b.sudo_5Board_4held[second] = true)
+    (hYs : b.sudo_5Board_4home[second] = embed ys)
+    (hSpH : 6 < b.sudo_5Board_4held.size)
+    (hSpHome : 6 < b.sudo_5Board_4home.size)
+    (hSpE : b.sudo_5Board_4held[6] = false)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hne6F : first ≠ 6) (hne6S : second ≠ 6)
+    (hn0 : 0 < n)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenx : xs.length = n) (hleny : ys.length = n)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hfitP : FitsLen (moves + pegCount ys))
+    (hspan : 2 * (n - 1) < bench)
+    (hxsT : allTritList xs)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfm : FitsLen (moves + pegCount ys + n * (n + 1))) :
+    let pad := List.replicate bench 0
+    let bU := placeBoard b 6 hSpHome hSpH ys moves peak
+    let mv := moves + pegCount ys
+    Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
+        ((second : Nat) : Int) true false mirror b =
+      mulAfter (Int.ofNat 0,
+        (withMoves
+            (mulPrep bU ((dst : Nat) : Int) (embed pad) 6 peakS
+              (by rw [aim_held_size]; exact hSpH)
+              (by rw [aim_home_size]; exact hSpHome))
+            (Int.ofNat (mv + schoolMoves xs ys n n)),
+          embed (school n xs ys pad mirror))) := by
+  intro pad bU mv
+  unfold Ecbs.mulElse
+  simp only [Bool.false_eq_true, if_false]
+  rw [settle_off b hoff]
+  simp only [ok_bind, pure_eq_ok]
+  rw [hbl, filledL_ofNat, ok_bind, ← embed_replicate_zero]
+  rw [aim3]
+  have hspanP : 2 * (n - 1) < pad.length := by
+    simpa [pad, List.length_replicate] using hspan
+  have hpadT : allTritList pad := by simpa [pad] using replicate_trits bench
+  exact held_copy_school b dst first second xs ys pad n moves peak peakS mirror
+    hF hHome hHF hArr hS hHomeS hHS hYs hSpH hSpHome hSpE h7
+    hne6F hne6S hn0 hn hlenx hleny hf hmoves hpeak hpeakS hfitP
+    hspanP hxsT hpadT hfi hfm
+
 end EcbsLink2.Link2

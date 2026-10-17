@@ -529,7 +529,11 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5258 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5258. Peaks of the modules this change elaborated, VmHWM: FformAdd 386564 kB, FformGap 386848 kB. The root rebuild peaked at 1645036 kB. The audit peaked at 914576 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: the gap's products and the new point, so the whole `walk_fform` matches `walkRun` on all three outcomes. Then `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
+`copy_else_off` is that `mulElse` once the bench is off. `onto` is false and `copy_second` is true, so it aims a zero strip at the destination and `held_copy_school` lays `school` of the first home by the second on that strip. The mirror flag is `mirror`. A gap multiply has this shape after `off_marker_else` settles the previous bench.
+
+5260 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5260. Peaks of the modules this change elaborated, VmHWM: FformAdd 386452 kB. The root rebuild peaked at 387608 kB. The audit peaked at 913812 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: the gap schedule's field value and the new point, so the whole `walk_fform` matches `walkRun` on all three outcomes. Then `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

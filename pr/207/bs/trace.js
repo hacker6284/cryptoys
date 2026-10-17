@@ -1,0 +1,165 @@
+/**
+ * BS: the show from the generated trace. Everything about the exchange
+ * comes from the sudoc-generated module of primitives/key_exchange/bs/
+ * bs.sudo: the keys from BUILD (trace_build inside trace_exchange), every
+ * multiplication, start, tidy, clear and shot from trace_exchange, and the
+ * outputs A, B and K. This file only turns its records into plain numbers
+ * and orders them into beats (one beat per summary), and rolls the dice
+ * faces BUILD reads (fresh throws; an optional debug seed repeats them).
+ * The peg moves of one step come from the generated step_moves (worker.js).
+ */
+import { plain } from "../shared/sudo-plain.js";
+
+/** '.WR' string of a register (hole 0 first), the vectors' notation. */
+export function regString(r) {
+    return r.map((t) => ".WR"[t]).join("");
+}
+
+// ---- seed → dice --------------------------------------------------------
+
+// cyrb128 string hash and sfc32: a small seeded generator of raw u32s for the dice faces.
+function cyrb128(str) {
+    let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
+    for (let i = 0; i < str.length; i++) {
+        const k = str.charCodeAt(i);
+        h1 = h2 ^ Math.imul(h1 ^ k, 597399067);
+        h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+        h3 = h4 ^ Math.imul(h3 ^ k, 951274213);
+        h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+    }
+    h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067);
+    h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+    h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213);
+    h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+    return [(h1 ^ h2 ^ h3 ^ h4) >>> 0, (h2 ^ h1) >>> 0, (h3 ^ h1) >>> 0, (h4 ^ h1) >>> 0];
+}
+
+function sfc32([a, b, c, d]) {
+    return () => {
+        a >>>= 0; b >>>= 0; c >>>= 0; d >>>= 0;
+        const t = (a + b | 0) + d | 0;
+        d = d + 1 | 0;
+        a = b ^ (b >>> 9);
+        b = c + (c << 3) | 0;
+        c = (c << 21) | (c >>> 11);
+        c = c + t | 0;
+        return t >>> 0;
+    };
+}
+
+// More faces than a build can read: d12 at most 100, d6 at most 4 per ship
+// (50 ships at most), d10 50 dice plus their zero faces.
+export const STREAM = { d12: 120, d6: 240, d10: 300 };
+
+const U32 = 2 ** 32;
+
+/**
+ * One fair face 0..sides-1 from a source of raw u32s: reject x in the
+ * top 2^32 mod sides values (they would favour the low faces), then x % sides.
+ */
+export function face(sides, nextU32) {
+    const limit = U32 - (U32 % sides);
+    for (;;) {
+        const x = nextU32();
+        if (x < limit) return x % sides;
+    }
+}
+
+// Fresh u32s from crypto.getRandomValues, one batched buffer at a time.
+function cryptoU32s() {
+    const buf = new Uint32Array(1024);
+    let i = buf.length;
+    return () => {
+        if (i >= buf.length) {
+            globalThis.crypto.getRandomValues(buf);
+            i = 0;
+        }
+        return buf[i++];
+    };
+}
+
+function throwAll(nextU32) {
+    const roll = (sides, from) => face(sides, nextU32) + from;
+    return {
+        d12: Array.from({ length: STREAM.d12 }, () => roll(12, 1)),
+        d6: Array.from({ length: STREAM.d6 }, () => roll(6, 1)),
+        d10: Array.from({ length: STREAM.d10 }, () => roll(10, 0)),
+    };
+}
+
+/** Each player's dice faces for a seed: { a: { d12, d6, d10 }, b: … } (d10 0-9, 0 the zero face). */
+export function diceFromSeed(seed) {
+    const out = {};
+    for (const who of ["a", "b"]) out[who] = throwAll(sfc32(cyrb128(`bs:${seed}:${who}`)));
+    return out;
+}
+
+/**
+ * The players' throws. No seed (the default): fresh, unrepeatable throws
+ * from crypto.getRandomValues. A seed (the optional debug field): the same
+ * throws every time.
+ */
+export function rollDice(seed = "") {
+    const s = String(seed ?? "").trim();
+    if (s) return diceFromSeed(s);
+    const next = cryptoU32s();
+    return { a: throwAll(next), b: throwAll(next) };
+}
+
+// ---- trace → show -----------------------------------------------------------
+
+/**
+ * Run the generated trace_exchange on two players' dice. raw/rt: the
+ * generated _bs_impl.mjs and _sudo_rt.mjs; tierName "T1" | "T2" | "T6".
+ * Returns the trace as plain values and the generated field and trace.
+ */
+export function runTrace(raw, rt, tierName, diceA, diceB) {
+    const list = (xs) => rt.host_list(xs, (v) => rt.host_int(v));
+    const dz = (d) => raw.dice(list(d.d12), list(d.d6), list(d.d10));
+    const field = raw[tierName.toLowerCase()];
+    if (!field) throw new Error(`unknown tier ${tierName}`);
+    const generated = raw.trace_exchange(field, dz(diceA), dz(diceB));
+    const trace = plain(generated);
+    trace.error = rt.text_str(generated.error);
+    return { field: plain(field), trace, generated: { field, trace: generated } };
+}
+
+/**
+ * The show: one beat per summary. BUILD gives a beat per key-grid hole
+ * (Alice's 100, then Bob's); the exchange a beat per trace step, its
+ * stage from the step's op and phase.
+ */
+export function buildShow({ field, trace }, meta = {}) {
+    const beats = [];
+    const reads = [trace.reads_a, trace.reads_b];
+    const cells = [trace.cells_a, trace.cells_b];
+    const holes = [trace.holes_a, trace.holes_b];
+    for (const p of [0, 1]) {
+        reads[p].forEach((read, i) => beats.push({ kind: "build", player: p, read: i, stage: `build-${p}` }));
+    }
+    trace.steps.forEach((st, i) => {
+        const shared = st.phase !== "Public";
+        let stage;
+        if (st.op === "Clear" || st.op === "Call") stage = `call-${st.player}`;
+        else if (st.op === "Check" || st.op === "CheckTidy") stage = `check-${st.player}`;
+        else stage = `${shared ? "shared" : "public"}-${st.player}`;
+        beats.push({ kind: "step", step: i, player: st.player, op: st.op, shared, stage });
+    });
+    return {
+        ...meta,
+        n: field.n,
+        toll: field.toll,
+        grids: [trace.grid_a, trace.grid_b],
+        reads,
+        cells,
+        holes,
+        steps: trace.steps,
+        beats,
+        ok: trace.ok,
+        error: trace.error,
+        publicA: trace.public_a,
+        publicB: trace.public_b,
+        secretA: trace.secret_a,
+        secretB: trace.secret_b,
+    };
+}

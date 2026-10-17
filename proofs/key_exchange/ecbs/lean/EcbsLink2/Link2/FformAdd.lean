@@ -1035,12 +1035,11 @@ private theorem place_peak_here (b : Ecbs.Board) (home : Nat)
   · simp [hlt, ofNat_eq_natCast]
   · simp [hlt, hpeak, ofNat_eq_natCast]
 
-/-- The run multiply, bench off and mirror off. The bench prefix is
-    `fieldAdd` of the destination and `fieldMul` of the two factors.
-    SPEC.md §3 R7 line 149 is this with the destination already mirrored. -/
-theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
+/-- The onto copy, bench off. `mirror = false` is the run. `mirror = true` is
+    the red rise. The bench is the lane fold of `school` on the destination. -/
+theorem run_else_lane (b : Ecbs.Board) (dst first second : Nat)
     (home xs ys : List Nat)
-    (w h r n k moves slides hole peak peakS bench : Nat)
+    (w h r n k moves slides hole peak peakS bench : Nat) (mirror : Bool)
     (hoff : b.sudo_5Board_8bench_on = false)
     (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
     (hD : dst < b.sudo_5Board_4held.size)
@@ -1089,13 +1088,11 @@ theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
     (hfold : FitsLen (moves + 3 * n + n * (n + 1) + 3 * (bench - n))) :
     ∃ b',
       Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
-          ((second : Nat) : Int) true true false b = .ok b' ∧
+          ((second : Nat) : Int) true true mirror b = .ok b' ∧
       b'.sudo_5Board_5bench =
-        embed (laneFold n (n - k) (school n xs ys (pref home bench n) false)) ∧
-      (laneFold n (n - k) (school n xs ys (pref home bench n) false)).take n =
-        fieldAdd n home (fieldMul n k bench xs ys) := by
+        embed (laneFold n (n - k) (school n xs ys (pref home bench n) mirror)) := by
   have hcopy := run_onto_copy b dst first second home xs ys n moves slides peak peakS bench
-    false hoff hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs
+    mirror hoff hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs
     hSpH hSpHome hSpE h7 hneD1 hneD2 hne6D hne6F hne6S hn0 hnb hn hlenH hlenx hleny hf
     hmoves hslides hpeak hpeakS hspan hhomeT hxsT hfi hfitM hfitS hfm
   let peg := pegCount home
@@ -1103,7 +1100,7 @@ theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
   let bC := ontoCharge b dst hD hHD moves slides peg
   let pad := pref home bench n
   let mv := moves + 2 * peg + py
-  let sch := school n xs ys pad false
+  let sch := school n xs ys pad mirror
   let mvN := mv + schoolMoves xs ys n n
   let hHomeC : 6 < bC.sudo_5Board_4home.size := by
     dsimp [bC]; rw [ontoCharge_home_size]; exact hSpHome
@@ -1118,14 +1115,14 @@ theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
       (mulPrep bP ((dst : Nat) : Int) (embed pad) 6 peakS hHeldP hHomeP)
       (Int.ofNat mvN)
   have hma : Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
-      ((second : Nat) : Int) true true false b =
+      ((second : Nat) : Int) true true mirror b =
       mulAfter (Int.ofNat 0, (bFold, embed sch)) := by
     simpa [bFold, bP, hHeldP, hHomeP, hHomeC, hHeldC, sch, peg, py, bC, pad, mv, mvN] using hcopy
   have hnle : n ≤ home.length := by omega
   have hschLen : sch.length = bench := by
-    simpa [sch, pad, pref_length hnb hnle] using school_length xs ys pad false n
+    simpa [sch, pad, pref_length hnb hnle] using school_length xs ys pad mirror n
   have hschT : allTritList sch :=
-    school_trits xs ys pad false n (pref_trits home bench n hhomeT hnb hnle)
+    school_trits xs ys pad mirror n (pref_trits home bench n hhomeT hnb hnle)
       (by
         intro i hi
         rw [pref_length hnb hnle]
@@ -1185,9 +1182,75 @@ theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
       (by rw [hschLen]; exact hfitB) hwB hhB hrB hnB hkB hblB hw0 hh0 hrR hrP hnE hkLe hgap
       hschT hmB hholeB hpeakB h7B (by rw [hschLen]; exact hsm) hnsm hfitF
       (by rw [hschLen]; exact Nat.le_refl bench) (Nat.lt_of_lt_of_le hn0 hnb)
-  refine ⟨ontoFoldBoard bFold sch n k mvN peak, ?_, ?_, ?_⟩
+  refine ⟨ontoFoldBoard bFold sch n k mvN peak, ?_, ?_⟩
   · rw [hma]; exact hOk
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
-  · exact onto_add n k bench xs ys home hhomeT hlenH (Or.inl hspan) hnb
+
+/-- The run multiply, bench off and mirror off. The bench prefix is
+    `fieldAdd` of the destination and `fieldMul` of the two factors.
+    SPEC.md §3 R7 line 149 is this with the destination already mirrored. -/
+theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
+    (home xs ys : List Nat)
+    (w h r n k moves slides hole peak peakS bench : Nat)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hD : dst < b.sudo_5Board_4held.size)
+    (hHD : dst < b.sudo_5Board_4home.size)
+    (hHeldD : b.sudo_5Board_4held[dst] = true)
+    (hHomeD : b.sudo_5Board_4home[dst] = embed home)
+    (hF : first < b.sudo_5Board_4held.size)
+    (hHome : first < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[first] = true)
+    (hArr : b.sudo_5Board_4home[first] = embed xs)
+    (hS : second < b.sudo_5Board_4held.size)
+    (hHomeS : second < b.sudo_5Board_4home.size)
+    (hHS : b.sudo_5Board_4held[second] = true)
+    (hYs : b.sudo_5Board_4home[second] = embed ys)
+    (hSpH : 6 < b.sudo_5Board_4held.size)
+    (hSpHome : 6 < b.sudo_5Board_4home.size)
+    (hSpE : b.sudo_5Board_4held[6] = false)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hneD1 : dst ≠ first) (hneD2 : dst ≠ second)
+    (hne6D : dst ≠ 6) (hne6F : first ≠ 6) (hne6S : second ≠ 6)
+    (hn0 : 0 < n) (hnb : n ≤ bench)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenH : home.length = n) (hlenx : xs.length = n) (hleny : ys.length = n)
+    (hf : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeak7 : 7 ≤ peak)
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hspan : 2 * (n - 1) < bench)
+    (hhomeT : allTritList home) (hxsT : allTritList xs)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfitM : FitsLen (moves + 3 * n))
+    (hfitS : FitsLen (slides + 2 * n))
+    (hfm : FitsLen (moves + 3 * n + n * (n + 1)))
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 3 * n + n * (n + 1) + 3 * (bench - n))) :
+    ∃ b',
+      Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
+          ((second : Nat) : Int) true true false b = .ok b' ∧
+      b'.sudo_5Board_5bench =
+        embed (laneFold n (n - k) (school n xs ys (pref home bench n) false)) ∧
+      (laneFold n (n - k) (school n xs ys (pref home bench n) false)).take n =
+        fieldAdd n home (fieldMul n k bench xs ys) := by
+  obtain ⟨b', hok, hbench⟩ := run_else_lane b dst first second home xs ys
+    w h r n k moves slides hole peak peakS bench false hoff hbl hD hHD hHeldD hHomeD
+    hF hHome hHF hArr hS hHomeS hHS hYs hSpH hSpHome hSpE h7 hneD1 hneD2 hne6D
+    hne6F hne6S hn0 hnb hn hlenH hlenx hleny hf hmoves hslides hpeak hpeak7 hpeakS
+    hspan hhomeT hxsT hfi hfitM hfitS hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
+    hsm hnsm hfitB hfold
+  refine ⟨b', hok, hbench, onto_add n k bench xs ys home hhomeT hlenH (Or.inl hspan) hnb⟩
 
 end EcbsLink2.Link2

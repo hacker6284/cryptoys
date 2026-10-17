@@ -97,7 +97,8 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     (hSlide : FitsLen (liveSlideRoom t fr.slides))
     (hCtrl : FitsLen (liveCtrlRoom t fr.ctrl))
     (hOps : FitsLen (liveOpsRoom t fr.opsCap))
-    (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4)) :
+    (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4))
+    (hholeFr : fr.hole ≤ t.benchlen) :
     ∃ b',
       Ecbs.chord_add_demo b (decide (c = 2)) = .ok (true, b') ∧
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed
@@ -143,12 +144,19 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
         checkCtrlCap bud + 6 ≤ liveCtrlRoom t fr.ctrl ∧
         checkMoveCap bud + tailMoveCap t.n t.benchlen =
           liveMoveRoom t fr.moves baseX accX ∧
-        checkOpsCap bud + 3 = liveOpsRoom t fr.opsCap) ∧
+        checkOpsCap bud + 3 = liveOpsRoom t fr.opsCap ∧
+        checkSlideCap bud + tailSlideCap t.n = liveSlideRoom t fr.slides) ∧
       ∃ bI moves0,
         TailPack t.n t.benchlen (moves0 + pegCount baseY + pegCount accY) bI b' ∧
         (∃ (p : Nat),
           bI.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
-          p ≤ max fr.peakS 7) := by
+          p ≤ max fr.peakS 7) ∧
+        (∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+          sl ≤ liveSlideRoom t fr.slides) ∧
+        (∃ (h : Nat),
+          bI.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int) ∧
+          h ≤ t.benchlen) ∧
+        b'.sudo_5Board_9marker_on = true := by
   let red := decide (c = 2)
   let run := fieldSub t.n baseX accX
   let y := if red then mirrorTrits baseY else baseY
@@ -187,7 +195,7 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     FitsLen.of_le hCtrl (by unfold liveCtrlRoom; omega)
   obtain ⟨bA, hcopy, hflag, lay, bud, hmatch, hmov, hslay, hctrl, hcops, hops,
       hmark, hmx, hside1, hflag1, hside4, hflag4, hside0, hflag0, _hbase, _hflag3,
-      hszOps, hpeakLay⟩ :=
+      hszOps, hpeakLay, hholeLay⟩ :=
     copy_add_open b t baseX accX fr hOk sat hM hS hO hTailM hTailS hCheck hCtrlC
   have hmkA : bA.sudo_5Board_9marker_on = true := hflag.trans hmk
   have hrunL : run.length = t.n := fieldSub_length t.n baseX accX
@@ -252,7 +260,9 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
       htriX htriUp htriR htriI htriRise hfitN sat.mul_span
       hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsh.small hsh.n_small
       hChord hChordS hMarkL hMarkL' hCtrlP hOpsP (hszOps ▸ fr.ops3)
-  obtain ⟨_, b', htail, hx0, hy1, hwater, _hpack, hleft, hstrictIn⟩ := hand
+      (by rw [hholeLay]; exact hholeFr)
+  obtain ⟨_, b', htail, hx0, hy1, hwater, _hpack, hleft, hstrictIn, hslideOut,
+      hholeIn, hflagOut⟩ := hand
   have h2H : 2 < bA.sudo_5Board_4home.size := by
     have hsz : ({ bA with sudo_5Board_9marker_on := false } : Ecbs.Board).sudo_5Board_4home.size =
         bA.sudo_5Board_4home.size := rfl
@@ -298,9 +308,18 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     obtain ⟨p, hp, hle⟩ := hstrictIn
     refine ⟨p, hp, ?_⟩
     simpa [hpeakLay] using hle
+  have hslideEq : checkSlideCap bud + tailSlideCap t.n = liveSlideRoom t fr.slides := by
+    unfold checkSlideCap liveSlideRoom
+    rw [hmatch.slides0, hslay, hmatch.n, hmatch.R, hmatch.mMax]
+  have hslideFr : ∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+      sl ≤ liveSlideRoom t fr.slides := by
+    obtain ⟨sl, hsl, hle⟩ := hslideOut
+    refine ⟨sl, hsl, ?_⟩
+    rw [← hslideEq]
+    exact hle
   refine ⟨b', ?_, hx0, hy1, ?_, ⟨high, hhi, hge⟩,
-    ⟨bud, LiveLeft.rew _hbase rfl _hflag3 hleft, hctrlEq, hmoveEq, hopsEq⟩,
-    ⟨bI, moves0, _hpack, hcapFr⟩⟩
+    ⟨bud, LiveLeft.rew _hbase rfl _hflag3 hleft, hctrlEq, hmoveEq, hopsEq, hslideEq⟩,
+    ⟨bI, moves0, _hpack, hcapFr, hslideFr, hholeIn, hflagOut⟩⟩
   · rw [htail]
   · have hspec : specInv t.n t.k t.benchlen
         (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen preX)) = some inv := by

@@ -785,6 +785,11 @@ structure RungDelta (b b' : Ecbs.Board) (base : ClimbBudget) (m : Nat) : Prop wh
     b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) ∧
     b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps' : Int) ∧
     ps' ≤ max ps 7
+  /-- The bench hole moves by `raisedHole` against a top at most `bench`. -/
+  hole : ∃ (h h' : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int) ∧
+    b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h' : Int) ∧
+    h' ≤ max h base.bench
 
 /-- `RungDelta` plus the tight conjuncts `mv' + 2 · n ≤ mv + rungCharge` and
     the same for slides. The loose fields are unchanged. Bench composition
@@ -1300,6 +1305,11 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   strictLe : ∃ (ps : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) ∧
     ps ≤ max base.peakS0 7
+  /-- The bench hole stays at most the bench. It starts there and each rung
+      raises it only by a top index at most `bench`. -/
+  holeLe : ∃ (h : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int) ∧
+    h ≤ base.bench
   /-- The recorded high is the entry mark until the tally grows past it,
       then the last peg of the current tally. `0 < base.tally0` keeps the
       tally positive, so the zero branch of `highMark` is not this state. -/
@@ -1372,6 +1382,9 @@ structure ClimbInvKCore (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   strictLe : ∃ (ps : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) ∧
     ps ≤ max base.peakS0 7
+  holeLe : ∃ (h : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int) ∧
+    h ≤ base.bench
   highTop : s.high = max base.high0 (s.t0 + s.tally - 1)
   parkBelow : s.parkAt < s.t0
   holeBelow : climbAt base.ladder0 base.R s.ridx < s.t0
@@ -1412,6 +1425,7 @@ theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel
       cases hs : s.onBench <;> simp [hs] at hle <;> omega
     peak := h.peak
     strictLe := h.strictLe
+    holeLe := h.holeLe
     highTop := h.highTop
     parkBelow := h.parkBelow
     holeBelow := h.holeBelow
@@ -1863,6 +1877,7 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       ops := ?_
       peak := ?_
       strictLe := ?_
+      holeLe := ?_
       highTop := by
         have hmt : 0 < s.tally :=
           Nat.lt_of_lt_of_le base.tallyPos (by
@@ -1928,6 +1943,11 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     obtain ⟨ps0, hb0, hbound⟩ := h.strictLe
     have hps : ps = ps0 := ofNat_inj_nat (hb.symm.trans hb0)
     refine ⟨ps', hb', peak_carry base.peakS0 ps ps' (by rw [hps]; exact hbound) hle⟩
+  · obtain ⟨ho, ho', hb, hb', hle⟩ := hδ.hole
+    obtain ⟨ho0, hb0, hbound⟩ := h.holeLe
+    have heq : ho = ho0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨ho', hb', ?_⟩
+    exact Nat.le_trans hle (Nat.max_le.mpr ⟨by rw [heq]; exact hbound, Nat.le_refl _⟩)
   · have hp : (modelRung s x r hole rest.isEmpty).parkAt = s.parkAt := by
       simp [modelRung]
     have ht0 : (modelRung s x r hole rest.isEmpty).t0 = s.t0 := by
@@ -2191,6 +2211,7 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       ops := ?_
       peak := ?_
       strictLe := ?_
+      holeLe := ?_
       highTop := by
         have hmt : 0 < s.tally :=
           Nat.lt_of_lt_of_le base.tallyPos (by
@@ -2350,6 +2371,11 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     obtain ⟨ps0, hb0, hbound⟩ := h.strictLe
     have hps : ps = ps0 := ofNat_inj_nat (hb.symm.trans hb0)
     refine ⟨ps', hb', peak_carry base.peakS0 ps ps' (by rw [hps]; exact hbound) hle⟩
+  · obtain ⟨ho, ho', hb, hb', hle⟩ := hδ.hole
+    obtain ⟨ho0, hb0, hbound⟩ := h.holeLe
+    have heq : ho = ho0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨ho', hb', ?_⟩
+    exact Nat.le_trans hle (Nat.max_le.mpr ⟨by rw [heq]; exact hbound, Nat.le_refl _⟩)
   · have hp : (modelRung s x r hole rest.isEmpty).parkAt = s.parkAt := by
       simp [modelRung]
     have ht0 : (modelRung s x r hole rest.isEmpty).t0 = s.t0 := by

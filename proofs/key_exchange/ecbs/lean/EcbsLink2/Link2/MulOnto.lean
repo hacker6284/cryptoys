@@ -16,6 +16,26 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+private theorem mul_top_len (xs : List Nat) : topIdx xs ≤ xs.length := by
+  unfold topIdx
+  suffices ∀ k t, k ≤ xs.length → t ≤ xs.length →
+      (List.range k).foldl (fun t i => if coeff xs i = 0 then t else i) t ≤ xs.length from
+    this xs.length 0 (Nat.le_refl _) (Nat.zero_le _)
+  intro k
+  induction k with
+  | zero =>
+    intro t _ ht
+    simpa using ht
+  | succ k ih =>
+    intro t hk ht
+    rw [List.range_succ, List.foldl_append]
+    have hpre := ih t (Nat.le_of_lt (Nat.lt_of_succ_le hk)) ht
+    simp only [List.foldl_cons, List.foldl_nil]
+    by_cases h0 : coeff xs k = 0
+    · simpa [h0] using hpre
+    · simp only [h0, ite_false]
+      exact Nat.le_of_lt (Nat.lt_of_succ_le hk)
+
 private theorem nat_beq_false (a b : Nat) (h : a ≠ b) :
     SudoRt.SEq.beq (a : Int) (b : Int) = false := by
   rw [sEq_int, decide_eq_false_iff_not]
@@ -1026,7 +1046,8 @@ theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_3ops = (bumpOp b 0 cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops ∧
       (∃ occ, occ ≤ 7 ∧ b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
         Int.ofNat (raisedPeak peakS occ)) ∧
-      (∃ ho : Nat, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) := by
+      (∃ ho : Nat, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho ∧
+        ho ≤ max hole bench) := by
   have hOff := mul_onto_off b dst first second home xs ys n moves slides peakS bench cOps
     hmk hoff hops hop0 hfops hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs
     h7 hneD1 hneD2 hne hn0 hnb hn hlenH hlenx hleny hf hmoves hslides hpeakS hspan
@@ -1114,12 +1135,15 @@ theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
     split <;> exact ⟨countHeld _ 7, countHeld_seven _, rfl⟩
   have hhoFold : ∃ ho : Nat,
       (ontoFoldBoard bFold sch n k mvN peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
-        Int.ofNat ho := by
+        Int.ofNat ho ∧ ho ≤ max hole bench := by
     unfold ontoFoldBoard peakBoard noteBench withMoves withHole bFold mulPrep strictBoard
       mulAimed ontoCharge b0 bumpOp
     split
-    · exact ⟨topIdx sch, rfl⟩
-    · exact ⟨hole, by simpa [ofNat_eq_natCast] using hhole⟩
+    · refine ⟨topIdx sch, rfl, ?_⟩
+      exact Nat.le_trans (mul_top_len sch) (by
+        rw [hschLen]
+        exact Nat.le_max_right hole bench)
+    · refine ⟨hole, by simpa [ofNat_eq_natCast] using hhole, Nat.le_max_left _ _⟩
   refine ⟨ontoFoldBoard bFold sch n k mvN peak, hmul, ?_, ?_, ?_, ?_, ?_, ?_, hopsFold, hstFold,
       hhoFold⟩
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
@@ -1241,7 +1265,8 @@ theorem mul_onto_up_prefix (b : Ecbs.Board) (dst first second : Nat)
         b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) ∧
       (∃ occ, occ ≤ 7 ∧ b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
         Int.ofNat (raisedPeak peakS occ)) ∧
-      (∃ ho : Nat, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) := by
+      (∃ ho : Nat, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho ∧
+        ho ≤ max hole bench) := by
   rw [mul_onto_up_eq b dst first second home xs ys w h r n k moves slides hole peak peakS bench
       cOps m ctrl mx script hmk hoff hm hc hx hscript hbound hfitMk hfitC hfit2 hops hop0 hfops
       hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs h7 hneD1 hneD2 hne hn0 hnb hn

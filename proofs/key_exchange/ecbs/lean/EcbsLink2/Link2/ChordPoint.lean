@@ -262,7 +262,8 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
       (∃ pk', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk') ∧
       (∃ occ, occ ≤ 7 ∧ b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
         Int.ofNat (raisedPeak peakS occ)) ∧
-      (∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) ∧
+      (∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho ∧
+        ho ≤ max hole bench) ∧
       (∀ h : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
       (∀ h : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1] = true) ∧
       b'.sudo_5Board_4home.size = 8 ∧
@@ -271,7 +272,8 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
       (∀ j, j ≠ 0 → ∀ (hj : j < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
         (hj' : j < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size),
           b'.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj' =
-            b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj) := by
+            b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj) ∧
+      b'.sudo_5Board_9marker_on = true := by
   intro dx yMir y3 benchL
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -471,7 +473,7 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
       (hlay.heldK 6 (by decide) (by decide) h6T h6M).trans h6eT
     have hEq : bU.sudo_5Board_4held = bM.sudo_5Board_4held := by simp [bU, markerOn_held]
     exact cell_eq_of hEq h6eM
-  obtain ⟨b', hslide, hAc, hUp, hoffS, _, hhiS, hrowS, hstayS, h2e, h2f, h5e, h5f, h6f,
+  obtain ⟨b', hslide, hAc, hUp, hoffS, hflagS, hhiS, hrowS, hstayS, h2e, h2f, h5e, h5f, h6f,
       hmarkS, hmxS, hctrlS, hopsS, hstrictS, hholeS, hpkS, hmvS, hslS, h0tS, h1tS,
       hszHS, hszDS⟩ :=
     slide_point bU slope x3 benchL n mvF slF pkU
@@ -534,15 +536,19 @@ theorem point_from_bottom (b : Ecbs.Board) (accX accY x3 slope : List Nat)
     have hU : bU.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
         bM.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by simp [bU, markerOn]
     exact hstrictS.trans (hU.trans hst)
-  have hhoOut : ∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho := by
-    obtain ⟨ho, hho⟩ := hhoM'
-    refine ⟨ho, ?_⟩
+  have hhoOut : ∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho ∧
+      ho ≤ max hole bench := by
+    obtain ⟨ho, hho, hle⟩ := hhoM'
+    refine ⟨ho, ?_, hle⟩
     have hU : bU.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
         bM.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by simp [bU, markerOn]
     exact hholeS.trans (hU.trans hho)
+  have hflagOut : b'.sudo_5Board_9marker_on = true := by
+    have hU : bU.sudo_5Board_9marker_on = true := by simp [bU, markerOn]
+    exact hflagS.trans hU
   refine ⟨bM, b', ?_, ?_, hpreY, hszU.1, hszU.2, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, honU, htoU,
       ?_, hAc, ?_, ?_, ?_, ?_, h2e, h2f, h5e, h5f, h6f, hmarkOut, hctrlOut, hmxOut, hopsOut,
-      hmvOut, hslOut, hpkS, hstOut, hhoOut, h0tS, h1tS, hszHS, hszDS, hoffS, ?_⟩
+      hmvOut, hslOut, hpkS, hstOut, hhoOut, h0tS, h1tS, hszHS, hszDS, hoffS, ?_, hflagOut⟩
   · have hassoc :
         (do
             let b ← Ecbs.add b Ecbs.across Ecbs.bottom true

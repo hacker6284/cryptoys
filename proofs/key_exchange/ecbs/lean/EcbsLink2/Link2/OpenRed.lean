@@ -935,6 +935,10 @@ theorem red_open_ge
       bTall.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
     unfold bRec
     rfl
+  have hholeRec : bRec.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      bTall.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+    unfold bRec
+    rfl
   have hmvF : b'.sudo_5Board_4cost.sudo_5Costs_5moves =
       bRedP.sudo_5Board_4cost.sudo_5Costs_5moves := by
     unfold b'
@@ -965,10 +969,16 @@ theorem red_open_ge
     rw [withPark_strict, hstrictRec]
     unfold bTall
     rw [withTally_strict, hredSame]
+  have hholeF : b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      bRedP.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+    unfold b'
+    rw [withPark_hole, hholeRec]
+    unfold bTall
+    rw [withTally_hole, hredSame]
   have hδ' : RungDelta b b' base s.tally :=
-    rungDelta_cost hcarry.delta hmvF hslF hopsF hpkF hstrictF
+    rungDelta_cost hcarry.delta hmvF hslF hopsF hpkF hstrictF hholeF
   have hTight : RungDeltaTight b b' base s.tally :=
-    rungTight_cost (rungTight_of_rel hcarry.delta hrelP hcarry.opsTight) hmvF hslF hopsF hpkF hstrictF
+    rungTight_cost (rungTight_of_rel hcarry.delta hrelP hcarry.opsTight) hmvF hslF hopsF hpkF hstrictF hholeF
   have hhomeRec : bRec.sudo_5Board_4home = bRedC.sudo_5Board_4home := by
     unfold bRec
     unfold bTall

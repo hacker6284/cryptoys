@@ -146,13 +146,14 @@ theorem settle_high_mark
 theorem checked_high_mark (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
     (lay : OpenLay b t xs) (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t)
     (hsh : TierShape t) (base : ClimbBudget) (hm : OpenMatch lay base)
+    (hholeLe : lay.hole ≤ t.benchlen)
     (hacc : fieldInv t.n t.k t.benchlen xs = some ans) :
     ∃ (b' : Ecbs.Board) (high : Nat),
       Ecbs.invert_checked b ((2 : Nat) : Int) = .ok b' ∧
       b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
       tallyOrigin t ≤ high := by
   obtain ⟨b', _, _, hinv, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hwater, _hrow⟩ :=
-    open_checked b t xs ans lay hOk sat hR hsh base hm hacc
+    open_checked b t xs ans lay hOk sat hR hsh base hm hholeLe hacc
   obtain ⟨high, hh, hge⟩ := hwater
   exact ⟨b', high, hinv, hh, hge⟩
 

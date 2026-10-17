@@ -34,6 +34,7 @@ theorem chordStep_live_last (cells : List Nat) (i toN c : Nat)
     (hCtrl : FitsLen (liveCtrlRoom t fr.ctrl))
     (hOps : FitsLen (liveOpsRoom t fr.opsCap))
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4))
+    (hholeFr : fr.hole ≤ t.benchlen)
     (hi : i = toN) (hlen : cells.length = toN + 1)
     (hcAt : cells[i]'(by omega) = c) (hc0 : c ≠ 0) (hc2 : c ≤ 2)
     (hml : Ecbs.marker_lift b0 = .ok b)
@@ -44,7 +45,7 @@ theorem chordStep_live_last (cells : List Nat) (i toN c : Nat)
   obtain ⟨bA, hdemo, _⟩ :=
     chord_add_live bF t baseX accX baseY accY preX preY inv c fr
       hOk sat hR hsh hmk hc hY hA hf4 hf1 hyB hyA htriY htriUp
-      hpreX hpreY hacc hMove hSlide hCtrl hOps hMark hMarkF
+      hpreX hpreY hacc hMove hSlide hCtrl hOps hMark hMarkF hholeFr
   have hadd : Ecbs.chord_add_demo bF (SudoRt.SEq.beq (Int.ofNat c) (2 : Int)) =
       .ok (true, bA) := by
     have hflag : SudoRt.SEq.beq (Int.ofNat c) (2 : Int) = decide (c = 2) := by

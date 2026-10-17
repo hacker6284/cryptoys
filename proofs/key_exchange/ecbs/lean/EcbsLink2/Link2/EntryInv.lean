@@ -1037,6 +1037,10 @@ theorem entry_climbInv (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
         rcases hplain with ⟨-, -, -, -, -, hstrict, -, -, -, -⟩
         refine ⟨0, hstrict, ?_⟩
         simp [entryBudget]
+      holeLe := by
+        have hplain := tally_plain t xs sat hR
+        rcases hplain with ⟨-, -, -, -, -, -, hhole, -, -, -⟩
+        refine ⟨0, hhole, Nat.zero_le _⟩
       highTop := by
         show (entryModel t xs).high =
           max (entryBudget t hOk xs hx sat hR lay).high0

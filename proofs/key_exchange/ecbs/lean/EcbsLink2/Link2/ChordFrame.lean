@@ -33,6 +33,14 @@ private theorem ctrl_ge (t : Spec.Tier) : 1 ≤ cellCtrlCharge t := by
   unfold cellCtrlCharge
   omega
 
+/-- The tail's hole is at most `max` of the checked hole and the bench.
+    A checked hole already under the bench stays there. -/
+private theorem frame_hole_le (bench ho h0 hCap : Nat)
+    (hle : ho ≤ max h0 bench) (heq : h0 = hCap) (hcap : hCap ≤ bench) :
+    ho ≤ bench := by
+  have h0le : h0 ≤ bench := by rw [heq]; exact hcap
+  exact hole_under bench h0 ho h0le hle
+
 /-- One live cell, with fuel for at least one cell after it. The output board
     is a `RunFrame` whose homes 0 and 1 are the new point and whose homes 3
     and 4 are still the base. -/
@@ -55,6 +63,7 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
     (hCtrl : FitsLen (fr.ctrl + (fuel + 1) * cellCtrlCharge t))
     (hOps : FitsLen (fr.opsCap + (fuel + 1) * cellOpsCharge t))
     (hst7 : fr.peakS ≤ 7)
+    (hholeFr : fr.hole ≤ t.benchlen)
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4)) :
     ∃ b' x3 y3,
       Ecbs.chord_add_demo b (decide (c = 2)) = .ok (true, b') ∧
@@ -72,7 +81,14 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
         fr'.opsCap = fr.opsCap + cellOpsCharge t ∧
         fr'.moves ≤ fr.moves + walkCharge t ∧
         fr'.ctrl ≤ fr.ctrl + cellCtrlCharge t ∧
-        fr'.peakS ≤ 7 := by
+        fr'.slides ≤ fr.slides + cellSlideCharge t ∧
+        fr'.peakS ≤ 7 ∧
+        fr'.hole ≤ t.benchlen ∧
+        fr'.y1 = y3 ∧
+        fr'.y4 = baseY ∧
+        fr'.flag1 = true ∧
+        fr'.flag4 = true ∧
+        b'.sudo_5Board_9marker_on = true := by
   have hMove1 : FitsLen (liveMoveRoom t fr.moves baseX accX) := by
     apply FitsLen.of_le (charge_head fr.moves (cellMoveCharge t) fuel hMove)
     exact live_move_le t fr.moves baseX accX fr.lenX fr.lenA
@@ -88,10 +104,10 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
   obtain ⟨b', hdemo, hx0, hy1, hwalk, hhigh, hbud, hpackEx⟩ :=
     chord_add_live b t baseX accX baseY accY preX preY inv c fr
       hOk sat hR hsh hmk hc hY hA hf4 hf1 hyB hyA htriY htriUp
-      hpreX hpreY hacc hMove1 hSlide1 hCtrl1 hOps1 hMark hMarkF
+      hpreX hpreY hacc hMove1 hSlide1 hCtrl1 hOps1 hMark hMarkF hholeFr
   obtain ⟨high, hhi, hge⟩ := hhigh
-  obtain ⟨bud, hleft, hctrlEq, hmoveEq, hopsEq⟩ := hbud
-  obtain ⟨_, _, hpack, hcap⟩ := hpackEx
+  obtain ⟨bud, hleft, hctrlEq, hmoveEq, hopsEq, _hslideEq⟩ := hbud
+  obtain ⟨_, _, hpack, hcap, hslide, hholeIn, hflagOut⟩ := hpackEx
   have hcapS : Sealed _ := ⟨hcap⟩
   clear hcap
   let red := decide (c = 2)
@@ -115,7 +131,7 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
   obtain ⟨c2, hc2, _hle2⟩ := hleft.ops 2 hleft.ops2lt
   obtain ⟨c3, hc3, _hle3⟩ := hleft.ops 3 hleft.ops3lt
   obtain ⟨mv, hmv, hmvLe⟩ := hleft.movesLe
-  obtain ⟨sl, hsl⟩ := hpack.slides
+  obtain ⟨sl, hsl, hslRoom⟩ := hslide
   obtain ⟨pk, hpk⟩ := hpack.peak
   obtain ⟨occ1, occ2, occ3, _p, h1, h2, h3, hp0, hst⟩ := hpack.strict
   let st := raisedPeak (raisedPeak (raisedPeak _p occ1) occ2) occ3
@@ -132,7 +148,14 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
     exact raised_thrice_le _p occ1 occ2 occ3 hp7 h1 h2 h3
   have hstN : b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st := by
     simpa [st] using hst
-  obtain ⟨ho, hho⟩ := hpack.hole
+  obtain ⟨ho, h0, hh0, hho, hleMax⟩ := hpack.hole
+  have hhoLe : ho ≤ t.benchlen := by
+    obtain ⟨hCap, hhCap, hleCap⟩ := hholeIn
+    have h0eq : h0 = hCap := by
+      apply Int.ofNat.inj
+      rw [ofNat_eq_natCast, ofNat_eq_natCast]
+      exact hh0.symm.trans hhCap
+    exact frame_hole_le t.benchlen ho h0 hCap hleMax h0eq hleCap
   obtain ⟨ctrl, hctrl, hctrlLe⟩ := hleft.ctrlLe
   obtain ⟨m0, _, hmark⟩ := hpack.mark
   obtain ⟨mMx, mx0, _, _, hmx⟩ := hpack.mx
@@ -266,7 +289,18 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
   have hstF : frOut.peakS ≤ 7 := by
     rw [show frOut.peakS = st from rfl]
     exact hstLe
-  exact ⟨b', x3, y3, hdemo, hx3, hy3, hwalk', ⟨frOut, hopsF, hmvF, hctrlF, hstF⟩⟩
+  have hslF : frOut.slides ≤ fr.slides + cellSlideCharge t := by
+    rw [show frOut.slides = sl from rfl, ← live_slide_eq t fr.slides]
+    exact hslRoom
+  have hhoF : frOut.hole ≤ t.benchlen := by
+    rw [show frOut.hole = ho from rfl]
+    exact hhoLe
+  have hy1F : frOut.y1 = y3 := rfl
+  have hy4F : frOut.y4 = baseY := rfl
+  have hf1F : frOut.flag1 = true := rfl
+  have hf4F : frOut.flag4 = true := rfl
+  exact ⟨b', x3, y3, hdemo, hx3, hy3, hwalk',
+    ⟨frOut, hopsF, hmvF, hctrlF, hslF, hstF, hhoF, hy1F, hy4F, hf1F, hf4F, hflagOut⟩⟩
 
 /-- A live cell with fuel left. The emitted step is `chordStep_open` on the
     board the frame just built. -/
@@ -290,6 +324,7 @@ theorem chordStep_from_live (cells : List Nat) (i toN c fuel : Nat)
     (hCtrl : FitsLen (fr.ctrl + (fuel + 1) * cellCtrlCharge t))
     (hOps : FitsLen (fr.opsCap + (fuel + 1) * cellOpsCharge t))
     (hst7 : fr.peakS ≤ 7)
+    (hholeFr : fr.hole ≤ t.benchlen)
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4))
     (hi : i ≤ toN) (hlen : cells.length = toN + 1)
     (hcAt : cells[i]'(by omega) = c) (hc0 : c ≠ 0) (hc2 : c ≤ 2)
@@ -302,7 +337,7 @@ theorem chordStep_from_live (cells : List Nat) (i toN c fuel : Nat)
   obtain ⟨bA, _, _, hdemo, _, _, _, _⟩ :=
     chord_add_live_frame bF t baseX accX baseY accY preX preY inv c fuel fr
       hOk sat hR hsh hmk hc hY hA hf4 hf1 hyB hyA htriY htriUp
-      hpreX hpreY hacc hFuel hMove hSlide hCtrl hOps hst7 hMark hMarkF
+      hpreX hpreY hacc hFuel hMove hSlide hCtrl hOps hst7 hholeFr hMark hMarkF
   have hadd : Ecbs.chord_add_demo bF (SudoRt.SEq.beq (Int.ofNat c) (2 : Int)) =
       .ok (true, bA) := by
     have hflag : SudoRt.SEq.beq (Int.ofNat c) (2 : Int) = decide (c = 2) := by

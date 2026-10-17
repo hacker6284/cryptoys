@@ -464,7 +464,7 @@ theorem red_slide_fit (n m mMax sl slC pegX pegY : Nat)
     No live-board term is reduced here. -/
 theorem rungDelta_cube_mul
     {b bRed : Ecbs.Board} {base : ClimbBudget} {m : Nat}
-    {mv mvRed sl slRed pk pkRed ps ps' : Nat}
+    {mv mvRed sl slRed pk pkRed ps ps' ho ho' : Nat}
     (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int))
     (hmvRed : bRed.sudo_5Board_4cost.sudo_5Costs_5moves = (mvRed : Int))
     (hMov : mvRed ≤ mv + rungCharge base.n base.bench m)
@@ -477,6 +477,9 @@ theorem rungDelta_cube_mul
     (hps : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int))
     (hps' : bRed.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps' : Int))
     (hPs : ps' ≤ max ps 7)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (ho : Int))
+    (hHole' : bRed.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (ho' : Int))
+    (hHo : ho' ≤ max ho base.bench)
     (hsz : bRed.sudo_5Board_4cost.sudo_5Costs_3ops.size =
       b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
     (hslots : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
@@ -491,7 +494,8 @@ theorem rungDelta_cube_mul
       opsSize := hsz
       ops := hslots
       peak := ⟨pk, pkRed, hpk, hpkRed, hPk⟩
-      strict := ⟨ps, ps', hps, hps', hPs⟩ }
+      strict := ⟨ps, ps', hps, hps', hPs⟩
+      hole := ⟨ho, ho', hHole, hHole', hHo⟩ }
 
 theorem pegStep_ops (bC : Ecbs.Board) (t0 j : Nat)
     (hrow : t0 + j < bC.sudo_5Board_3row.size) (ctrl : Nat) :
@@ -863,7 +867,8 @@ theorem rung_delta_peg
       opsSize := hsize
       ops := ?_
       peak := ?_
-      strict := ?_ }
+      strict := ?_
+      hole := ?_ }
   · refine ⟨mv, d.moves, hmv, ?_, ?_⟩
     · simpa [d] using hmoves
     · have hmovN' : d.moves ≤
@@ -930,6 +935,15 @@ theorem rung_delta_peg
       split <;> rfl
     refine ⟨c.peakS0, d.peakS, ?_, by simpa [d] using d.hpeakS, d.hpeakSB⟩
     exact hpl.symm.trans (hb0 ▸ c.hpeakS0)
+  · have hplH : (placeBoard b 6 h.shape.spareH h.shape.spareD s.gap mv pk).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+      unfold placeBoard
+      dsimp only
+      split <;> rfl
+    refine ⟨c.hole0, d.hole, ?_, by simpa [d] using d.hHole, ?_⟩
+    · exact hplH.symm.trans (hb0 ▸ c.hHole0)
+    · have hbench : c.bench = base.bench := hbch.trans hbB
+      simpa [hbench] using d.hholeB
 
 theorem take_n_bench (n n' bench bench' k m : Nat) (g xs : List Nat)
     (hn : n = n') (hb : bench = bench')
@@ -1148,7 +1162,8 @@ theorem rung_delta_clear
         opsSize := ?_
         ops := ?_
         peak := ?_
-        strict := ?_ }
+        strict := ?_
+        hole := ?_ }
     · refine ⟨mv, mvM + pegCount c.g, hmv, ?_, ?_⟩
       · rw [hmvC, ofNat_eq_natCast]
       · have h1 : mvM + pegCount c.g ≤ d.moves + mulCharge c.n c.bench + c.n := by
@@ -1278,6 +1293,33 @@ theorem rung_delta_clear
         peak_carry c.peakS0 d.peakS ps' d.hpeakSB
           (raisedPeak_carry d.peakS _ (countHeld_seven _))
       exact ⟨c.peakS0, ps', hpsIn, hpsC, hpsLe⟩
+    · have hplH : (placeBoard b 6 h.shape.spareH h.shape.spareD s.gap mv pk).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+          b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+        unfold placeBoard
+        dsimp only
+        split <;> rfl
+      have hIn : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (c.hole0 : Int) :=
+        hplH.symm.trans (hb0 ▸ c.hHole0)
+      let sch := school c.n c.g (d.xs.take c.n) (List.replicate c.bench 0) false
+      let ho' := raisedHole d.hole (topIdx sch)
+      have hOut : bClear.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (ho' : Int) := by
+        have hbc : bClear.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+            bMul.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+          simp [bClear, clearHeldBoard]
+        rw [hbc]
+        simpa [bMul, sch, ho', ofNat_eq_natCast] using
+          gap_mul_hole d.b 5 6 c.g d.xs
+            ⟨c.n, c.k, d.moves, d.slides, d.hole, c.bench, d.peak, d.peakS, c0, hops0⟩ ⟨hH6, hD6⟩
+      have htop : topIdx sch ≤ c.bench := by
+        have hlen : sch.length = c.bench := by
+          simpa [sch, List.length_replicate] using
+            school_length c.g (d.xs.take c.n) (List.replicate c.bench 0) false c.n
+        exact Nat.le_trans (topIdx_len sch) (Nat.le_of_eq hlen)
+      have hstep : ho' ≤ max c.hole0 c.bench :=
+        hole_carry c.bench c.hole0 d.hole ho' d.hholeB
+          (hole_raise_le d.hole (topIdx sch) c.bench htop)
+      have hbench : c.bench = base.bench := hbch.trans hbB
+      exact ⟨c.hole0, ho', hIn, hOut, by simpa [hbench] using hstep⟩
   have hcN : c.n = base.n := hn.trans hnB
   have hcbN : c.bench = base.bench := hbch.trans hbB
   let mvCN := mvM + pegCount c.g
@@ -1627,7 +1669,9 @@ theorem rungDelta_eq {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
     (hops : b2.sudo_5Board_4cost.sudo_5Costs_3ops = b1.sudo_5Board_4cost.sudo_5Costs_3ops)
     (hpeak : b2.sudo_5Board_4cost.sudo_5Costs_4peak = b1.sudo_5Board_4cost.sudo_5Costs_4peak)
     (hstrict : b2.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
-      b1.sudo_5Board_4cost.sudo_5Costs_11peak_strict) :
+      b1.sudo_5Board_4cost.sudo_5Costs_11peak_strict)
+    (hhole : b2.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b1.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) :
     RungDelta b b2 base m := by
   refine
     { moves := ?_
@@ -1635,7 +1679,8 @@ theorem rungDelta_eq {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
       opsSize := ?_
       ops := ?_
       peak := ?_
-      strict := ?_ }
+      strict := ?_
+      hole := ?_ }
   · obtain ⟨mv, mv', hb, hb', hle⟩ := hδ.moves
     exact ⟨mv, mv', hb, hmoves.trans hb', hle⟩
   · obtain ⟨sl, sl', hb, hb', hle⟩ := hδ.slides
@@ -1653,6 +1698,8 @@ theorem rungDelta_eq {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
     exact ⟨pk, pk', hb, hpeak.trans hb', hle⟩
   · obtain ⟨ps, ps', hb, hb', hle⟩ := hδ.strict
     exact ⟨ps, ps', hb, hstrict.trans hb', hle⟩
+  · obtain ⟨ho, ho', hb, hb', hle⟩ := hδ.hole
+    exact ⟨ho, ho', hb, hhole.trans hb', hle⟩
 
 /-- Doubling replaces the tally fields and leaves the four `RungDelta` counters. -/
 theorem rungDelta_withTally {b b1 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
@@ -1662,6 +1709,7 @@ theorem rungDelta_withTally {b b1 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
   apply rungDelta_eq hδ h3.1 h3.2.1 h3.2.2
   · simp [withTally]
   · exact withTally_strict b1 row len ctrl high tmax
+  · exact withTally_hole b1 row len ctrl high tmax
 
 /-- The extra white peg replaces the tally fields and leaves the four counters. -/
 theorem rungDelta_add_one {b b1 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
@@ -1676,6 +1724,7 @@ theorem rungDelta_add_one {b b1 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
         sudo_5Costs_9tally_max := tmax } }) base m := by
   have h3 := add_one_counters b1 i hi len high ctrl tmax
   apply rungDelta_eq hδ h3.1 h3.2.1 h3.2.2
+  · rfl
   · rfl
   · rfl
 
@@ -1761,6 +1810,21 @@ theorem mul_strict_cap (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
   refine ⟨ps, ?_, ?_⟩
   · simpa [ps] using mul_live_strict b dst second xs ys bud hin
   · simpa [ps] using raisedPeak_carry bud.peakS _ (countHeld_seven _)
+
+theorem mul_hole_cap (b : Ecbs.Board) (dst second : Nat) (xs ys : List Nat)
+    (bud : Budget b 0) (hin : HomeIn b second) :
+    ∃ (ho : Nat),
+      (mulNoLiveBoard b dst second xs ys bud hin).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        (ho : Int) ∧ ho ≤ max bud.hole bud.bench := by
+  let sch := school bud.n xs (ys.take bud.n) (List.replicate bud.bench 0) false
+  let ho := raisedHole bud.hole (topIdx sch)
+  refine ⟨ho, ?_, ?_⟩
+  · simpa [sch, ho] using gap_mul_hole b dst second xs ys bud hin
+  · have hlen : sch.length = bud.bench := by
+      simpa [sch, List.length_replicate] using
+        school_length xs (ys.take bud.n) (List.replicate bud.bench 0) false bud.n
+    exact hole_raise_le bud.hole (topIdx sch) bud.bench
+      (Nat.le_trans (topIdx_len sch) (Nat.le_of_eq hlen))
 
 theorem red_slot_bound
     (b bClear bCube bRed : Ecbs.Board) (base : ClimbBudget) (s : ClimbModel)
@@ -1863,6 +1927,28 @@ theorem red_strict_pack (b bClear bRed bCube : Ecbs.Board) (base : ClimbBudget) 
   · rw [hbRed]; exact hpsMul
   · have hle' : psR ≤ max peakSRed 7 := by rw [← hpeakS]; exact hleMul
     exact peak_carry ps0 peakSRed psR hSR hle'
+
+theorem red_hole_pack (b bClear bRed bCube : Ecbs.Board) (base : ClimbBudget) (m : Nat)
+    (hδ : RungDelta b bClear base m) (hole holeRed : Nat)
+    (hhole : bClear.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (hole : Int))
+    (hRed : holeRed ≤ max hole base.bench)
+    (xs ys : List Nat) (budR : Budget bCube 0) (hin6 : HomeIn bCube 6)
+    (hho : budR.hole = holeRed) (hbench : budR.bench = base.bench)
+    (hbRed : bRed = mulNoLiveBoard bCube 5 6 xs ys budR hin6) :
+    ∃ (ho0 hoR : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (ho0 : Int) ∧
+      bRed.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (hoR : Int) ∧
+      hoR ≤ max ho0 base.bench := by
+  obtain ⟨ho0, hoC, hho0, hhoC, hleC⟩ := hδ.hole
+  have hCeq : hoC = hole := natCast_inj (hhoC.symm.trans hhole)
+  have hS : hole ≤ max ho0 base.bench := by rw [← hCeq]; exact hleC
+  have hSR : holeRed ≤ max ho0 base.bench := hole_carry base.bench ho0 hole holeRed hS hRed
+  obtain ⟨hoR, hhoMul, hleMul⟩ := mul_hole_cap bCube 5 6 xs ys budR hin6
+  refine ⟨ho0, hoR, hho0, ?_, ?_⟩
+  · rw [hbRed]; exact hhoMul
+  · have hle' : hoR ≤ max holeRed budR.bench := by rw [← hho]; exact hleMul
+    have hle'' : hoR ≤ max holeRed base.bench := by simpa [hbench] using hle'
+    exact hole_carry base.bench ho0 holeRed hoR hSR hle''
 
 theorem rung_delta_red
     {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel}
@@ -1986,8 +2072,16 @@ theorem rung_delta_red
     red_strict_pack b bClear bRed bCube base s.tally hδ peakS peakSRed hstrict
       (by unfold peakSRed; exact raisedPeak_carry peakS _ (countHeld_seven _))
       base.x ys budR hin6 (by unfold budR; rfl) (by unfold bRed; rfl)
+  obtain ⟨ho0, hoR, hho0, hhoR, hhoLe⟩ :=
+    red_hole_pack b bClear bRed bCube base s.tally hδ hole holeRed hhole
+      (by
+        unfold holeRed
+        exact hole_raise_le hole (topIdx (combStrip base.n base.bench (xs.take base.n)))
+          base.bench
+          (Nat.le_trans (topIdx_len _) (by rw [combStrip_length]; exact Nat.le_refl _)))
+      base.x ys budR hin6 (by unfold budR; rfl) (by unfold budR; rfl) (by unfold bRed; rfl)
   refine ⟨bRed, rungDelta_cube_mul hmv hmvRed hMov hsl hslRed hSld hpk hpkRed hpkRedLe
-      hps0 hpsR hpsRle hsz hslotsR⟩
+      hps0 hpsR hpsRle hho0 hhoR hhoLe hsz hslotsR⟩
 
 /-- A non-final white rung doubles the tally and leaves the four counters. -/
 theorem rung_delta_white_open

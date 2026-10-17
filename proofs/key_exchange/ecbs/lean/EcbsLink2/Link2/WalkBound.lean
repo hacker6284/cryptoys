@@ -467,7 +467,8 @@ theorem demo_walk_span :
       4 * Spec.demo.cells ≤ cellCtrlCharge Spec.demo ∧
       7 ≤ (Spec.demo.cells + 1) * cellOpsCharge Spec.demo ∧
       Spec.demo.benchlen ≤ (Spec.demo.cells + 1) * cellOpsCharge Spec.demo ∧
-      Spec.demo.n ≤ Spec.demo.benchlen := by
+      Spec.demo.n ≤ Spec.demo.benchlen ∧
+      4 < Spec.demo.script := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap rungCharge mulCharge pegCharge rungSlideCharge
   rw [demo_tierR, demo_row]
@@ -481,7 +482,8 @@ theorem toy_walk_span :
       4 * Spec.toy.cells ≤ cellCtrlCharge Spec.toy ∧
       7 ≤ (Spec.toy.cells + 1) * cellOpsCharge Spec.toy ∧
       Spec.toy.benchlen ≤ (Spec.toy.cells + 1) * cellOpsCharge Spec.toy ∧
-      Spec.toy.n ≤ Spec.toy.benchlen := by
+      Spec.toy.n ≤ Spec.toy.benchlen ∧
+      4 < Spec.toy.script := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap rungCharge mulCharge pegCharge rungSlideCharge
   rw [toy_tierR, toy_row]
@@ -496,7 +498,8 @@ theorem hobby_walk_span :
       4 * Spec.hobby.cells ≤ cellCtrlCharge Spec.hobby ∧
       7 ≤ (Spec.hobby.cells + 1) * cellOpsCharge Spec.hobby ∧
       Spec.hobby.benchlen ≤ (Spec.hobby.cells + 1) * cellOpsCharge Spec.hobby ∧
-      Spec.hobby.n ≤ Spec.hobby.benchlen := by
+      Spec.hobby.n ≤ Spec.hobby.benchlen ∧
+      4 < Spec.hobby.script := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap rungCharge mulCharge pegCharge rungSlideCharge
   rw [hobby_tierR, hobby_row]
@@ -511,7 +514,8 @@ theorem serious_walk_span :
       4 * Spec.serious.cells ≤ cellCtrlCharge Spec.serious ∧
       7 ≤ (Spec.serious.cells + 1) * cellOpsCharge Spec.serious ∧
       Spec.serious.benchlen ≤ (Spec.serious.cells + 1) * cellOpsCharge Spec.serious ∧
-      Spec.serious.n ≤ Spec.serious.benchlen := by
+      Spec.serious.n ≤ Spec.serious.benchlen ∧
+      4 < Spec.serious.script := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap rungCharge mulCharge pegCharge rungSlideCharge
   rw [serious_tierR, serious_row]
@@ -531,30 +535,32 @@ structure TierWalk (t : Spec.Tier) : Prop where
   roomS : FitsLen ((t.cells + 1) * cellSlideCharge t)
   roomC : FitsLen ((t.cells + 1) * cellCtrlCharge t)
   roomO : FitsLen ((t.cells + 1) * cellOpsCharge t)
+  /-- After Frobenius the marker sits at 1, so the chord's `mark + 3 < script` is `4 < script`. -/
+  scriptRoom : 4 < t.script
 
 theorem demo_tier_walk : TierWalk Spec.demo := by
   have s := demo_walk_span
   have r := demo_walk_room
-  exact ⟨s.2.2.2.2.2.2, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
-    r.1, r.2.1, r.2.2.1, r.2.2.2⟩
+  exact ⟨s.2.2.2.2.2.2.1, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
+    r.1, r.2.1, r.2.2.1, r.2.2.2, s.2.2.2.2.2.2.2⟩
 
 theorem toy_tier_walk : TierWalk Spec.toy := by
   have s := toy_walk_span
   have r := toy_walk_room
-  exact ⟨s.2.2.2.2.2.2, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
-    r.1, r.2.1, r.2.2.1, r.2.2.2⟩
+  exact ⟨s.2.2.2.2.2.2.1, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
+    r.1, r.2.1, r.2.2.1, r.2.2.2, s.2.2.2.2.2.2.2⟩
 
 theorem hobby_tier_walk : TierWalk Spec.hobby := by
   have s := hobby_walk_span
   have r := hobby_walk_room
-  exact ⟨s.2.2.2.2.2.2, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
-    r.1, r.2.1, r.2.2.1, r.2.2.2⟩
+  exact ⟨s.2.2.2.2.2.2.1, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
+    r.1, r.2.1, r.2.2.1, r.2.2.2, s.2.2.2.2.2.2.2⟩
 
 theorem serious_tier_walk : TierWalk Spec.serious := by
   have s := serious_walk_span
   have r := serious_walk_room
-  exact ⟨s.2.2.2.2.2.2, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
-    r.1, r.2.1, r.2.2.1, r.2.2.2⟩
+  exact ⟨s.2.2.2.2.2.2.1, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
+    r.1, r.2.1, r.2.2.1, r.2.2.2, s.2.2.2.2.2.2.2⟩
 
 theorem tier_frob_fits (t : Spec.Tier) (tw : TierWalk t)
     (done left moves slides ctrl ops peakS hole : Nat)
@@ -599,7 +605,7 @@ theorem demo_frob_fits (done left moves slides ctrl ops peakS hole : Nat)
   have hspan := demo_walk_span
   have hroom := demo_walk_room
   exact frob_fits Spec.demo done left moves slides ctrl ops peakS hole
-    hsum hleft hspan.2.2.2.2.2.2 hspan.1 hspan.2.1 hspan.2.2.1 hspan.2.2.2.1
+    hsum hleft hspan.2.2.2.2.2.2.1 hspan.1 hspan.2.1 hspan.2.2.1 hspan.2.2.2.1
     hspan.2.2.2.2.1 hspan.2.2.2.2.2.1 hm hs hc ho hst hhole
     hroom.1 hroom.2.1 hroom.2.2.1 hroom.2.2.2
 
@@ -624,7 +630,7 @@ theorem toy_frob_fits (done left moves slides ctrl ops peakS hole : Nat)
   have hspan := toy_walk_span
   have hroom := toy_walk_room
   exact frob_fits Spec.toy done left moves slides ctrl ops peakS hole
-    hsum hleft hspan.2.2.2.2.2.2 hspan.1 hspan.2.1 hspan.2.2.1 hspan.2.2.2.1
+    hsum hleft hspan.2.2.2.2.2.2.1 hspan.1 hspan.2.1 hspan.2.2.1 hspan.2.2.2.1
     hspan.2.2.2.2.1 hspan.2.2.2.2.2.1 hm hs hc ho hst hhole
     hroom.1 hroom.2.1 hroom.2.2.1 hroom.2.2.2
 
@@ -650,7 +656,7 @@ theorem hobby_frob_fits (done left moves slides ctrl ops peakS hole : Nat)
   have hspan := hobby_walk_span
   have hroom := hobby_walk_room
   exact frob_fits Spec.hobby done left moves slides ctrl ops peakS hole
-    hsum hleft hspan.2.2.2.2.2.2 hspan.1 hspan.2.1 hspan.2.2.1 hspan.2.2.2.1
+    hsum hleft hspan.2.2.2.2.2.2.1 hspan.1 hspan.2.1 hspan.2.2.1 hspan.2.2.2.1
     hspan.2.2.2.2.1 hspan.2.2.2.2.2.1 hm hs hc ho hst hhole
     hroom.1 hroom.2.1 hroom.2.2.1 hroom.2.2.2
 
@@ -676,7 +682,7 @@ theorem serious_frob_fits (done left moves slides ctrl ops peakS hole : Nat)
   have hspan := serious_walk_span
   have hroom := serious_walk_room
   exact frob_fits Spec.serious done left moves slides ctrl ops peakS hole
-    hsum hleft hspan.2.2.2.2.2.2 hspan.1 hspan.2.1 hspan.2.2.1 hspan.2.2.2.1
+    hsum hleft hspan.2.2.2.2.2.2.1 hspan.1 hspan.2.1 hspan.2.2.1 hspan.2.2.2.1
     hspan.2.2.2.2.1 hspan.2.2.2.2.2.1 hm hs hc ho hst hhole
     hroom.1 hroom.2.1 hroom.2.2.1 hroom.2.2.2
 

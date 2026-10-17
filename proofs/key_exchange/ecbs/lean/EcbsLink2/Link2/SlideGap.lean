@@ -1046,6 +1046,11 @@ theorem climbCore_slideGap {done rest : List Nat} {b : Ecbs.Board}
         refine ⟨ps, ?_, hle⟩
         rw [settle_strict_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak]
         exact hps
+      holeLe := by
+        obtain ⟨ho, hho, hle⟩ := h.holeLe
+        refine ⟨ho, ?_, hle⟩
+        rw [settle_hole_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak]
+        exact hho
       highTop := h.highTop
       parkBelow := h.parkBelow
       holeBelow := h.holeBelow

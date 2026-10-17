@@ -51,7 +51,9 @@ theorem tier_cell_frob (t : Spec.Tier) (b : Ecbs.Board)
           (raisedPeak fr.peakS (countHeld b.sudo_5Board_4held 7)) occU) ∧
       fr'.hole = raisedHole
         (raisedHole fr.hole (topIdx (combStrip t.n t.benchlen accX)))
-        (topIdx (combStrip t.n t.benchlen accY)) := by
+        (topIdx (combStrip t.n t.benchlen accY)) ∧
+      fr'.flag1 = true ∧
+      fr'.flag4 = true := by
   have hfit := tier_frob_fits t tw done left fr.moves fr.slides fr.ctrl fr.opsCap
     fr.peakS fr.hole hsum hleft hm hs hc ho hst hhole
   have hMove := hfit.1
@@ -59,7 +61,7 @@ theorem tier_cell_frob (t : Spec.Tier) (b : Ecbs.Board)
   have hCtrl := hfit.2.2.1
   have hOps := hfit.2.2.2.1
   have hOpsC := hfit.2.2.2.2.2.2.1
-  obtain ⟨bL, bF, fr', hml, hfrob, hmk', hy1, hy4, _hf1', _hf4', hctrl, hmark,
+  obtain ⟨bL, bF, fr', hml, hfrob, hmk', hy1, hy4, hf1', hf4', hctrl, hmark,
       _hcOps, _hchord, hmv, hsl, hops, hheld, ⟨occU, hocc, hpeak⟩, hholeEq,
       htopX, htopY⟩ :=
     cell_run_frame b t baseX accX baseY accY fr hOk sat hsh hmk hY hA hf4 hf1
@@ -81,7 +83,7 @@ theorem tier_cell_frob (t : Spec.Tier) (b : Ecbs.Board)
     rw [hops]
     exact hOpsC
   exact ⟨bL, bF, fr', hml, hfrob, hmk', hy1, hy4, hctrl, hmark, hops, hmv, hsl,
-    hst', hho', hfitS, hfitH, hopsNext, ⟨occU, hocc, hpeak⟩, hholeEq⟩
+    hst', hho', hfitS, hfitH, hopsNext, ⟨occU, hocc, hpeak⟩, hholeEq, hf1', hf4'⟩
 
 /-- Blank counters, `done = 0`. The tier room is `tw`. -/
 theorem tier_cell_frob_zero (t : Spec.Tier) (b : Ecbs.Board)
@@ -172,6 +174,7 @@ theorem tier_cell_chord (t : Spec.Tier) (b : Ecbs.Board)
     (hctrl : fr.ctrl ≤ ctrl0 + 4)
     (hops : fr.opsCap ≤ ops0 + 2)
     (hst : fr.peakS ≤ 7)
+    (hhole : fr.hole ≤ t.benchlen)
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4)) :
     ∃ b' x3 y3, ∃ fr' : RunFrame b' t baseX x3,
       Ecbs.chord_add_demo b (decide (c = 2)) = .ok (true, b') ∧
@@ -180,7 +183,14 @@ theorem tier_cell_chord (t : Spec.Tier) (b : Ecbs.Board)
       fr'.opsCap = fr.opsCap + cellOpsCharge t ∧
       fr'.moves ≤ fr.moves + walkCharge t ∧
       fr'.ctrl ≤ fr.ctrl + cellCtrlCharge t ∧
+      fr'.slides ≤ fr.slides + cellSlideCharge t ∧
       fr'.peakS ≤ 7 ∧
+      fr'.hole ≤ t.benchlen ∧
+      fr'.y1 = y3 ∧
+      fr'.y4 = baseY ∧
+      fr'.flag1 = true ∧
+      fr'.flag4 = true ∧
+      b'.sudo_5Board_9marker_on = true ∧
       fr'.opsCap ≤ (done + 1) * (cellOpsCharge t + 2) := by
   have hrooms := chord_rooms t tw moves0 slides0 ctrl0 ops0 fr.moves fr.slides fr.ctrl
     fr.opsCap done left hsum hleft hm hs hctrl0 ho hmv hsl hctrl hops
@@ -196,11 +206,13 @@ theorem tier_cell_chord (t : Spec.Tier) (b : Ecbs.Board)
   have hOps : FitsLen (fr.opsCap + (fuel + 1) * cellOpsCharge t) := by
     rw [hleftEq]
     exact hrooms.2.2.2
-  obtain ⟨b', x3, y3, hdemo, _hx3, _hy3, hwalk, ⟨fr', hops', hmv', hctrl', hst'⟩⟩ :=
+  obtain ⟨b', x3, y3, hdemo, _hx3, _hy3, hwalk,
+      ⟨fr', hops', hmv', hctrl', hsl', hst', hho', hy1', hy4', hf1', hf4', hmk'⟩⟩ :=
     chord_add_live_frame b t baseX accX baseY accY preX preY inv c fuel fr
       hOk sat hR hsh hmk hc hY hA hf4 hf1 hyB hyA htriY htriUp hpreX hpreY hacc
-      hFuel hMove hSlide hCtrl hOps hst hMark hMarkF
-  refine ⟨b', x3, y3, fr', hdemo, hwalk, hops', hmv', hctrl', hst', ?_⟩
+      hFuel hMove hSlide hCtrl hOps hst hhole hMark hMarkF
+  refine ⟨b', x3, y3, fr', hdemo, hwalk, hops', hmv', hctrl', hsl', hst', hho',
+    hy1', hy4', hf1', hf4', hmk', ?_⟩
   · rw [hops']
     have hstep : fr.opsCap + cellOpsCharge t ≤ ops0 + 2 + cellOpsCharge t := by omega
     have hcomm : ops0 + 2 + cellOpsCharge t = ops0 + cellOpsCharge t + 2 := by omega

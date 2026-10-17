@@ -1106,7 +1106,8 @@ theorem parked_clear_ge
         opsSize := ?_
         ops := ?_
         peak := ?_
-        strict := ?_ }
+        strict := ?_
+        hole := ?_ }
     · refine ⟨mv, mvM + pegCount cIdle.g, hmv, ?_, hpiece⟩
       rw [withPark_moves]
       simp [bIdle0, clearHeldBoard]
@@ -1344,6 +1345,52 @@ theorem parked_clear_ge
         exact peak_carry cIdle.peakS0 d.peakS psOut d.hpeakSB
           (raisedPeak_carry d.peakS _ (countHeld_seven _))
       exact ⟨ps0, psOut, hpsB, hpsOut, hpsLe⟩
+    · obtain ⟨ho0, hhoB, _⟩ := h.holeLe
+      have hparkH : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+          b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+        simp [parkKeepBoard]
+      have hplaceH : cIdle.b0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+          (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+        rw [hplace]
+        unfold placeBoard
+        dsimp only
+        split <;> rfl
+      have hho0 : cIdle.hole0 = ho0 := by
+        apply ofNat_inj_nat
+        calc
+          (cIdle.hole0 : Int) = cIdle.b0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole :=
+            cIdle.hHole0.symm
+          _ = (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole :=
+            hplaceH
+          _ = b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := hparkH
+          _ = (ho0 : Int) := hhoB
+      let sch := school cIdle.n cIdle.g (d.xs.take cIdle.n) (List.replicate cIdle.bench 0) false
+      let hoOut := raisedHole d.hole (topIdx sch)
+      have hmulH : bU.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (hoOut : Int) := by
+        simpa [bU, sch, hoOut, ofNat_eq_natCast] using
+          mulLive_hole d.b 5 6 cIdle.g d.xs
+            ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩
+            ⟨hH6, hD6⟩
+      have hhoOut : (withPark bIdle0 paint ctrlM fromH ridxH).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+          (hoOut : Int) := by
+        rw [withPark_hole]
+        have hI : bIdle0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+            bU.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+          simp [bIdle0, clearHeldBoard]
+        exact hI.trans hmulH
+      have htop : topIdx sch ≤ cIdle.bench := by
+        have hlen : sch.length = cIdle.bench := by
+          simpa [sch, List.length_replicate] using
+            school_length cIdle.g (d.xs.take cIdle.n) (List.replicate cIdle.bench 0) false cIdle.n
+        exact Nat.le_trans (topIdx_len sch) (Nat.le_of_eq hlen)
+      have hhoLe : hoOut ≤ max ho0 cIdle.bench := by
+        rw [← hho0]
+        exact hole_carry cIdle.bench cIdle.hole0 d.hole hoOut d.hholeB
+          (hole_raise_le d.hole (topIdx sch) cIdle.bench htop)
+      have hbench : cIdle.bench = base.bench := by
+        rw [hbI]
+        exact h.hbench
+      exact ⟨ho0, hoOut, hhoB, hhoOut, by simpa [hbench] using hhoLe⟩
   · exact clearSlots_cast hslotsIdle (withPark_ops bIdle0 paint ctrlM fromH ridxH).symm
   · refine ⟨mv, mvM + pegCount cIdle.g, hmv, ?_, ?_⟩
     · rw [withPark_moves]
@@ -1944,6 +1991,8 @@ theorem white_open_ge
       bIdle.sudo_5Board_4cost.sudo_5Costs_4peak := rfl
   have hstrictIn : bIn.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
       bIdle.sudo_5Board_4cost.sudo_5Costs_11peak_strict := rfl
+  have hholeIn : bIn.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      bIdle.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := rfl
   let b' := withPark bIn
     (embed (paintOnes (paintOnes xsP s.t0 s.tally) (s.t0 + s.tally) s.tally))
     (Int.ofNat (c0 + 2 + 2 * s.tally))
@@ -2042,6 +2091,7 @@ theorem white_open_ge
     · unfold b'; rw [withPark_ops, hopsIn, hframe, withPark_ops]
     · unfold b'; rw [withPark_peak, hpkIn, hframe, withPark_peak]
     · unfold b'; rw [withPark_strict, hstrictIn, hframe, withPark_strict]
+    · unfold b'; rw [withPark_hole, hholeIn, hframe, withPark_hole]
   have hTight : RungDeltaTight b b' base s.tally :=
     rungTight_cost (rungTight_of_clear hδ hpieceM hpieceS
       (opsTight_of_clear hδ hT hslots))
@@ -2050,6 +2100,7 @@ theorem white_open_ge
       (by unfold b'; rw [withPark_ops, hopsIn, hframe, withPark_ops])
       (by unfold b'; rw [withPark_peak, hpkIn, hframe, withPark_peak])
       (by unfold b'; rw [withPark_strict, hstrictIn, hframe, withPark_strict])
+      (by unfold b'; rw [withPark_hole, hholeIn, hframe, withPark_hole])
   have hpark' : ParkRead b' s' rest base := by
     refine
       { ladder0B := by unfold b'; rw [withPark_ladder, hladE, h.shape.park.ladder0B]

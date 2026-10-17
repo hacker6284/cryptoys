@@ -2786,6 +2786,46 @@ theorem raisedPeak_carry (peak occ : Nat) (ho : occ ≤ 7) :
   · simp [h]
     exact Nat.le_max_left _ _
 
+/-- `raisedHole` against a top at most `cap` stays at most `max(hole, cap)`. -/
+theorem hole_raise_le (hole top cap : Nat) (ht : top ≤ cap) :
+    raisedHole hole top ≤ max hole cap := by
+  unfold raisedHole
+  by_cases h : hole < top
+  · simp [h]
+    exact Nat.le_trans ht (Nat.le_max_right hole cap)
+  · simp [h]
+    exact Nat.le_max_left _ _
+
+/-- A value already under the cap, raised only up to that cap, stays under it. -/
+theorem hole_under (cap a b : Nat) (ha : a ≤ cap) (hb : b ≤ max a cap) : b ≤ cap :=
+  Nat.le_trans hb (Nat.max_le.mpr ⟨ha, Nat.le_refl _⟩)
+
+/-- Two raises against the same cap compose. -/
+theorem hole_carry (cap a b c : Nat) (ha : b ≤ max a cap) (hb : c ≤ max b cap) :
+    c ≤ max a cap :=
+  Nat.le_trans hb (Nat.max_le.mpr ⟨ha, Nat.le_max_right _ _⟩)
+
+/-- The highest-hole scan never returns an index past the strip. -/
+theorem topIdx_len (xs : List Nat) : topIdx xs ≤ xs.length := by
+  unfold topIdx
+  suffices ∀ k t, k ≤ xs.length → t ≤ xs.length →
+      (List.range k).foldl (fun t i => if coeff xs i = 0 then t else i) t ≤ xs.length from
+    this xs.length 0 (Nat.le_refl _) (Nat.zero_le _)
+  intro k
+  induction k with
+  | zero =>
+    intro t _ ht
+    simpa using ht
+  | succ k ih =>
+    intro t hk ht
+    rw [List.range_succ, List.foldl_append]
+    have hpre := ih t (Nat.le_of_lt (Nat.lt_of_succ_le hk)) ht
+    simp only [List.foldl_cons, List.foldl_nil]
+    by_cases h0 : coeff xs k = 0
+    · simpa [h0] using hpre
+    · simp only [h0, ite_false]
+      exact Nat.le_of_lt (Nat.lt_of_succ_le hk)
+
 theorem countHeld_seven (held : Array Bool) : countHeld held 7 ≤ 7 := by
   have : ∀ i, countHeld held i ≤ i := by
     intro i
@@ -2847,6 +2887,8 @@ structure LivePeg (c : PegCtx) (i : Nat) where
   /-- The same cap for `peak_strict`. One peg raises it against at most seven
       held homes. -/
   hpeakSB : peakS ≤ max c.peakS0 7
+  /-- Each peg raises the bench hole by a comb top, which is at most `bench`. -/
+  hholeB : hole ≤ max c.hole0 c.bench
 
 theorem idx_get {α : Type} {a b : Array α} (h : a = b) (i : Nat) (ha : i < a.size) :
     a[i] = b[i]'(h ▸ ha) := by
@@ -3001,6 +3043,9 @@ def pegFromOff (c : PegCtx) : LivePeg c 1 where
     raisedPeak_carry c.peakS0
       (countHeld c.b0.sudo_5Board_4held 7)
       (countHeld_seven _)
+  hholeB :=
+    hole_raise_le c.hole0 (topIdx (combStrip c.n c.bench c.g)) c.bench
+      (Nat.le_trans (topIdx_len _) (by rw [combStrip_length]; exact Nat.le_refl _))
 
 def liveRowPr (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) :
     c.t0 + i <
@@ -3172,6 +3217,11 @@ def pegNext (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) : LivePeg c 
       (raisedPeak_carry d.peakS
         (countHeld (settleBoard d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak).sudo_5Board_4held 7)
         (countHeld_seven _))
+  hholeB :=
+    hole_carry c.bench c.hole0 d.hole _
+      d.hholeB
+      (hole_raise_le d.hole (topIdx (combStrip c.n c.bench (d.xs.take c.n))) c.bench
+        (Nat.le_trans (topIdx_len _) (by rw [combStrip_length]; exact Nat.le_refl _)))
 
 /-- After `i` steps. `i = 0` is the bench-off start; `i > 0` is `pegPack`. -/
 def pegPack (c : PegCtx) : ∀ i, 0 < i → i ≤ c.m → LivePeg c i

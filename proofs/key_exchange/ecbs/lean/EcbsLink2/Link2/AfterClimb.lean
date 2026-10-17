@@ -357,6 +357,12 @@ structure CheckRead (b0 b : Ecbs.Board) : Prop where
     b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
     b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (q : Int) ∧
     q ≤ max p 7
+  /-- The final cube raises the bench hole by a comb top, at most the bench. -/
+  holeCube : ∃ (p q bench : Nat),
+    b0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (p : Int) ∧
+    b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (q : Int) ∧
+    b.sudo_5Board_1t.sudo_4Tier_8benchlen = (bench : Int) ∧
+    q ≤ max p bench
 
 private theorem held_le_seven (held : Array Bool) : countHeld held 7 ≤ 7 := by
   have : ∀ i, countHeld held i ≤ i := by
@@ -375,6 +381,21 @@ private theorem cube_raise_le (peak occ : Nat) (ho : occ ≤ 7) :
   by_cases h : peak < occ
   · simpa [h] using Nat.le_trans ho (Nat.le_max_right peak 7)
   · simpa [h] using Nat.le_max_left peak 7
+
+private theorem cube_hole_read
+    {b bZ : Ecbs.Board} {hole bench n : Nat} {gap : List Nat}
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (hole : Int))
+    (hZ : bZ.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      ((raisedHole hole (topIdx (combStrip n bench gap)) : Nat) : Int))
+    (hbl : bZ.sudo_5Board_1t.sudo_4Tier_8benchlen = (bench : Int)) :
+    ∃ (p q bench' : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (p : Int) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (q : Int) ∧
+      bZ.sudo_5Board_1t.sudo_4Tier_8benchlen = (bench' : Int) ∧
+      q ≤ max p bench' := by
+  refine ⟨hole, raisedHole hole (topIdx (combStrip n bench gap)), bench, hhole, hZ, hbl, ?_⟩
+  exact hole_raise_le hole (topIdx (combStrip n bench gap)) bench
+    (Nat.le_trans (topIdx_len _) (by rw [combStrip_length]; exact Nat.le_refl _))
 
 private theorem cube_strict_read
     {b bZ : Ecbs.Board} {peakS : Nat} {held : Array Bool}
@@ -1127,6 +1148,11 @@ theorem final_cube_settle
     simpa [bZ, touchRow] using hhighOut
   have hstrictCube :=
     cube_strict_read (held := bS.sudo_5Board_4held) hpeakS0 hpsZ (held_le_seven _)
+  have hblZ : bZ.sudo_5Board_1t.sudo_4Tier_8benchlen = (s.benchlen : Int) := by
+    rw [htierZ]
+    exact h.shape.tierB
+  have hholeCube :=
+    cube_hole_read (n := s.n) (bench := s.benchlen) (gap := s.gap) hhole0 hholeZ hblZ
   have hpainted : bZ.sudo_5Board_3row = embed base.baseRow := by
     have hZ : bZ.sudo_5Board_3row = embed (paintZero row s.t0 s.tally) := by
       simp [bZ, touchRow]
@@ -1142,7 +1168,7 @@ theorem final_cube_settle
       ⟨_, hmvNat⟩, ⟨_, hslZ⟩, ⟨_, hctrlZ⟩, ⟨_, hpkNat⟩, ⟨_, hpsZ⟩, ⟨_, hholeZ⟩,
       h5DZ, hheld5Z,
       (by simpa [bZ, touchRow] using htierOut),
-      ⟨mvZ, base.n, base.bench, hmvZ, hnZ, hbZlen, hfitZ⟩, hstrictCube⟩,
+      ⟨mvZ, base.n, base.bench, hmvZ, hnZ, hbZlen, hfitZ⟩, hstrictCube, hholeCube⟩,
       htailM, htailS, tail_ctrl_fit h hk ht, hsideZ, hquietZ, hpost, hhighZ, hpainted⟩
 
 /-- The final tail's boards and the settled gap. The i64 bounds stay inside

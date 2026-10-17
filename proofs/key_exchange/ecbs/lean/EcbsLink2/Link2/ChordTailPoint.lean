@@ -21,6 +21,65 @@ def tailMoveCap (n bench : Nat) : Nat :=
 def tailSlideCap (n : Nat) : Nat :=
   10 * n
 
+/-- The closing multiply adds at most `6 · n` slides to `slX`, and `slX` is the
+    rise board plus at most `4 · n`. Together that is `tailSlideCap`. -/
+theorem tail_slide_out (b' : Ecbs.Board) (slides n k bench : Nat)
+    (inv rise accX accY x3 slope : List Nat) (slX : Nat)
+    (hyA : accY.length = n) (hx3 : x3.length = n)
+    (hgap : slX = slides + 2 * pegCount ((gapProduct n k bench inv rise).take n) +
+      2 * pegCount x3)
+    (hslP : b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (slX + 2 * pegCount (mirrorTrits accY) +
+        2 * pegCount ((laneFold n (n - k)
+          (school n slope (fieldSub n accX x3)
+            (pref (mirrorTrits accY) bench n) false)).take n) +
+        2 * pegCount x3)) :
+    ∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+      sl ≤ slides + tailSlideCap n := by
+  let yMir := mirrorTrits accY
+  let onTake := (laneFold n (n - k)
+    (school n slope (fieldSub n accX x3) (pref yMir bench n) false)).take n
+  let sl := slX + 2 * pegCount yMir + 2 * pegCount onTake + 2 * pegCount x3
+  refine ⟨sl, ?_, ?_⟩
+  · simpa [sl, yMir, onTake] using hslP
+  · have hpeg (xs : List Nat) (h : xs.length = n) : pegCount xs ≤ n := by
+      simpa [h] using pegCount_le xs
+    have htake : pegCount onTake ≤ n := by
+      have hlen : onTake.length ≤ n := by
+        simp [onTake, List.length_take]
+        exact Nat.min_le_left _ _
+      exact Nat.le_trans (pegCount_le onTake) hlen
+    have hgapPeg : pegCount ((gapProduct n k bench inv rise).take n) ≤ n :=
+      pegCount_take_le (gapProduct n k bench inv rise) n
+    have hx3p : pegCount x3 ≤ n := hpeg x3 hx3
+    have hy : pegCount yMir ≤ n :=
+      hpeg yMir (by simp [yMir, mirrorTrits, List.length_map, hyA])
+    have : sl ≤ slides + 10 * n := by
+      dsimp [sl]
+      rw [hgap]
+      omega
+    simpa [tailSlideCap] using this
+
+/-- Two hole raises by tops at most the bench, then one more raise up to the
+    bench, stay at most `max` of the hole the tail started from and the bench. -/
+theorem tail_hole_cap (hole holeW bench ho : Nat)
+    (hW : ∃ top1 top2, top1 ≤ bench ∧ top2 ≤ bench ∧
+      holeW = raisedHole (raisedHole hole top1) top2)
+    (hle : ho ≤ max holeW bench) : ho ≤ max hole bench := by
+  obtain ⟨top1, top2, h1, h2, hform⟩ := hW
+  have hstep (a top : Nat) (ha : a ≤ max hole bench) (ht : top ≤ bench) :
+      raisedHole a top ≤ max hole bench := by
+    unfold raisedHole
+    by_cases hlt : a < top
+    · simpa [hlt] using Nat.le_trans ht (Nat.le_max_right hole bench)
+    · simpa [hlt] using ha
+  have hA : raisedHole hole top1 ≤ max hole bench :=
+    hstep hole top1 (Nat.le_max_left _ _) h1
+  have hB : holeW ≤ max hole bench := by
+    rw [hform]
+    exact hstep (raisedHole hole top1) top2 hA h2
+  exact Nat.le_trans hle (Nat.max_le.mpr ⟨hB, Nat.le_max_right _ _⟩)
+
 private theorem tail_pieces_le (moves n bench : Nat)
     (sG fG sSq fSq sOn fOn : Nat)
     (pInv pGap pSlope pAcc pRun pRun2 pX3 pX3b pAccY pY pSlope2 pTake pX3c : Nat)
@@ -183,12 +242,14 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
         Int.ofNat (max (max (max mx (m + 2)) (m + 3)) (m + 4)) ∧
       (∃ mv, b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
         mv ≤ moves + tailMoveCap n bench) ∧
-      (∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl) ∧
+      (∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+        sl ≤ slides + tailSlideCap n) ∧
       (∃ pk', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk') ∧
       (∃ occ1 occ2 occ3, occ1 ≤ 7 ∧ occ2 ≤ 7 ∧ occ3 ≤ 7 ∧
         b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
           Int.ofNat (raisedPeak (raisedPeak (raisedPeak peakS occ1) occ2) occ3)) ∧
-      (∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) ∧
+      (∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho ∧
+        ho ≤ max hole bench) ∧
       (∀ h : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
       (∀ h : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1] = true) ∧
       b'.sudo_5Board_4home.size = 8 ∧
@@ -201,7 +262,8 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       (∀ h0 : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = Int.ofNat (cOps + 3)) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
-        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+      b'.sudo_5Board_9marker_on = true := by
   intro slope x3 y3
   obtain ⟨tb⟩ :=
     tail_bottom b inv rise accX accY run w h r n k moves hole bench slides peak peakS
@@ -282,7 +344,7 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   have hfitSox : FitsLen (slX + 2 * n) := hfitSo
   obtain ⟨_, b', _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hpost, hAc, hUp, hhi, hrow, hstay,
       h2e, h2f, h5e, h5f, h6f, hmarkP, hctrlP, hmxP, _hopsP, hmvP, hslP, hpkP, hstP, hhoP,
-      h0tP, h1tP, hszHP, hszDP, hoffP, hopP⟩ :=
+      h0tP, h1tP, hszHP, hszDP, hoffP, hopP, hflagP⟩ :=
     point_from_bottom bX accX accY x3 slope w h r n k bench mvX slX peakXN strictW holeW
       cOpsX mX ctrlX mxX script
       tb.hszH8 tb.hszD8 hflagN hoffX hmN hcN hxN hscriptX
@@ -368,10 +430,31 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
     rw [hst]
     -- `strictW` is the let of `tb.strictW`; rewrite sees the structure field.
     simp [strictW, hsw]
+  have hslideX : slX = slides + 2 * pegCount ((gapProduct n k bench inv rise).take n) +
+      2 * pegCount x3 := by
+    have hs : tb.slope = slope := tb.slopeEq
+    have hx : tb.x3 = x3 := by
+      rw [tb.x3Eq, hs]
+    have hslX : tb.slX = slX := by
+      rw [tb.slEq, hx]
+    calc
+      slX = tb.slX := hslX.symm
+      _ = slGap slides inv rise n k bench + 2 * pegCount tb.x3 := tb.slEq
+      _ = slGap slides inv rise n k bench + 2 * pegCount x3 := by rw [hx]
+      _ = slides + 2 * pegCount ((gapProduct n k bench inv rise).take n) +
+          2 * pegCount x3 := by rw [slGap]
+  have hslPack :=
+    tail_slide_out b' slides n k bench inv rise accX accY x3 slope slX
+      hyA hx3len hslideX hslP
+  have hhoPack : ∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho ∧
+      ho ≤ max hole bench := by
+    obtain ⟨ho, hho, hle⟩ := hhoP
+    exact ⟨ho, hho, tail_hole_cap hole holeW bench ho tb.holeForm hle⟩
   refine ⟨b', ?_, hAc, hUp, hhi.trans _hbottomHigh, hrow.trans hrowX,
     TailStay.trans hstayB hstay, h2e, h2f, h5e, h5f, h6f,
     hmarkP, hctrlP, hmxP,
-    hmvBound, ⟨_, hslP⟩, hpkP, hstPack, hhoP, h0tP, h1tP, hszHP, hszDP, hoffP, ?_, ?_, ?_⟩
+    hmvBound, hslPack, hpkP, hstPack, hhoPack, h0tP, h1tP, hszHP, hszDP, hoffP, ?_, ?_, ?_,
+    hflagP⟩
   rw [chord_tail_across_up]
   exact chord_do_join b bX b' hpre hpost
   · intro j hne hj hj'

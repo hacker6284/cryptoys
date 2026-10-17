@@ -121,6 +121,10 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
         bW.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakW ∧
         bW.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictW ∧
         bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeW ∧
+        (∃ occ1 occ2, occ1 ≤ 7 ∧ occ2 ≤ 7 ∧
+          strictW = raisedPeak (raisedPeak peakS occ1) occ2) ∧
+        (∃ top1 top2, top1 ≤ bench ∧ top2 ≤ bench ∧
+          holeW = raisedHole (raisedHole hole top1) top2) ∧
       bW.sudo_5Board_4cost.sudo_5Costs_3ops.size =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
       (∀ h : 0 < bW.sudo_5Board_4cost.sudo_5Costs_3ops.size,
@@ -143,7 +147,7 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
       hpeakS hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm
       hnsm hfitB hfold hfitClear hpeg hfitSM hfitSS
   obtain ⟨hp, hhiS, hrowS, hstayS⟩ := hpeak
-  obtain ⟨peakG, strictG, holeG, hpk, hst, hho⟩ := hp
+  obtain ⟨peakG, strictG, holeG, hpk, hst, hho, hstG, hhoG⟩ := hp
   have hlenS : slope.length = n := by
     simp only [slope]
     rw [← mul_no_prefix n k bench rise inv]
@@ -190,7 +194,7 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
       hpk hst hspan htriS hfi hfmS hfitP hho hw0 hh0 hrR hrP hnE hkLe hgap hwS hhS hrS hkS
       hsm hnsm hfitB hfoldS hfitW
   obtain ⟨hp, _hhiW, hrowW, hstayW⟩ := hrest
-  obtain ⟨pk, st, ho, hpkW, hstW, hhoW⟩ := hp
+  obtain ⟨pk, st, ho, hpkW, hstW, hhoW, hstS, hhoS⟩ := hp
   refine ⟨bW, benchL, ?_, hbenchW, hpreW, hlenW, hzeroW, honW, htoW, ?_, ?_, ?_, ?_, ?_, ?_,
       ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · have hassoc :
@@ -239,7 +243,19 @@ theorem square_kept (b : Ecbs.Board) (inv rise : List Nat)
       have hne5 : (5 : Nat) ≠ 6 := by decide
       exact (hheldIW 5 hne5 hiS hi').trans ((h5t hiS).trans hHF.symm)
     · exact (hheldIW i hne hiS hi').trans (hheld i h5i hne hi hiS)
-  · refine ⟨pk, st, ho, hpkW, hstW, hhoW, ?_, ?_⟩
+  · have hstComb : ∃ occ1 occ2, occ1 ≤ 7 ∧ occ2 ≤ 7 ∧
+        st = raisedPeak (raisedPeak peakS occ1) occ2 := by
+      obtain ⟨occ1, h1, heq1⟩ := hstG
+      obtain ⟨occ2, h2, heq2⟩ := hstS
+      refine ⟨occ1, occ2, h1, h2, ?_⟩
+      rw [heq2, heq1]
+    have hhoComb : ∃ top1 top2, top1 ≤ bench ∧ top2 ≤ bench ∧
+        ho = raisedHole (raisedHole hole top1) top2 := by
+      obtain ⟨top1, h1, heq1⟩ := hhoG
+      obtain ⟨top2, h2, heq2⟩ := hhoS
+      refine ⟨top1, top2, h1, h2, ?_⟩
+      rw [heq2, heq1]
+    refine ⟨pk, st, ho, hpkW, hstW, hhoW, hstComb, hhoComb, ?_, ?_⟩
     · have hszS : bS.sudo_5Board_4cost.sudo_5Costs_3ops.size =
           b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
         rw [hopsEq, Array.size_set]
@@ -398,7 +414,7 @@ theorem bottom_lay (b : Ecbs.Board) (inv rise accX run : List Nat)
       hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm hnsm hfitB
       hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW
   obtain ⟨hpW, _hhiW, hrowW, hstaySq, h6W, hopSq⟩ := htail
-  obtain ⟨peakW, strictW, holeW, hpkW, hstW, hhoW, opsSz, hop0W⟩ := hpW
+  obtain ⟨peakW, strictW, holeW, hpkW, hstW, hhoW, _hstR, _hhoR, opsSz, hop0W⟩ := hpW
   have hnb : n ≤ bench := by omega
   have htriB : allTritList (benchL.take n) := by
     rw [hpre]

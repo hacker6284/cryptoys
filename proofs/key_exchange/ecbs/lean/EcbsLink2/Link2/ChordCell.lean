@@ -27,6 +27,37 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+private theorem chord_held_seven (held : Array Bool) : countHeld held 7 ≤ 7 := by
+  have : ∀ i, countHeld held i ≤ i := by
+    intro i
+    induction i with
+    | zero => simp [countHeld]
+    | succ i ih =>
+      unfold countHeld
+      have : (if held.getD i false then 1 else 0) ≤ 1 := by split <;> decide
+      omega
+  exact this 7
+
+private theorem chord_top_le (xs : List Nat) : topIdx xs ≤ xs.length := by
+  unfold topIdx
+  suffices ∀ k t, k ≤ xs.length → t ≤ xs.length →
+      (List.range k).foldl (fun t i => if coeff xs i = 0 then t else i) t ≤ xs.length from
+    this xs.length 0 (Nat.le_refl _) (Nat.zero_le _)
+  intro k
+  induction k with
+  | zero =>
+    intro t _ ht
+    simpa using ht
+  | succ k ih =>
+    intro t hk ht
+    rw [List.range_succ, List.foldl_append]
+    have hpre := ih t (Nat.le_of_lt (Nat.lt_of_succ_le hk)) ht
+    simp only [List.foldl_cons, List.foldl_nil]
+    by_cases h0 : coeff xs k = 0
+    · simpa [h0] using hpre
+    · simp only [h0, ite_false]
+      exact Nat.le_of_lt (Nat.lt_of_succ_le hk)
+
 /-- New x of SPEC.md §3 R7 line 156: slope² + 1 + first x − run. -/
 def chordX3 (n k bench : Nat) (slope accX run : List Nat) : List Nat :=
   fieldAdd n (fieldAdd n (fieldAdd n (fieldMul n k bench slope slope) (whiteHole0 n)) accX)
@@ -298,7 +329,9 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
       (∃ peakG strictG holeG,
         bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakG ∧
         bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictG ∧
-        bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG ∧
+        (∃ occ, occ ≤ 7 ∧ strictG = raisedPeak peakS occ) ∧
+        (∃ top, top ≤ bench ∧ holeG = raisedHole hole top)) ∧
       bS.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       bS.sudo_5Board_3row = b.sudo_5Board_3row ∧
@@ -493,7 +526,15 @@ theorem gap_settle_lay (b : Ecbs.Board) (inv rise : List Nat)
     let holeG := raisedHole hole (topIdx (school n inv rise (List.replicate bench 0) false))
     let peakG := if peakC < countHeld (bC.sudo_5Board_4held.set ⟨5, hD⟩ true) 7
       then countHeld (bC.sudo_5Board_4held.set ⟨5, hD⟩ true) 7 else peakC
-    refine ⟨peakG, strictG, holeG, ?_, ?_, ?_⟩
+    have htopG : topIdx (school n inv rise (List.replicate bench 0) false) ≤ bench := by
+      have hlenG : (school n inv rise (List.replicate bench 0) false).length = bench := by
+        simpa [List.length_replicate] using
+          school_length inv rise (List.replicate bench 0) false n
+      have hidx := chord_top_le (school n inv rise (List.replicate bench 0) false)
+      rwa [hlenG] at hidx
+    refine ⟨peakG, strictG, holeG, ?_, ?_, ?_,
+      ⟨countHeld b.sudo_5Board_4held 7, chord_held_seven _, rfl⟩,
+      ⟨topIdx (school n inv rise (List.replicate bench 0) false), htopG, rfl⟩⟩
     · simpa [bS, peakG] using settle_peak_eq bC 5 ⟨hH, hD⟩ xs n mv slides peakC hpkC
     · have hst : bC.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictG := by
         simp only [bC, bM, strictG]
@@ -613,7 +654,9 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
       (∃ peakG strictG holeG,
         bW.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakG ∧
         bW.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat strictG ∧
-        bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG) ∧
+        bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeG ∧
+        (∃ occ, occ ≤ 7 ∧ strictG = raisedPeak peakS occ) ∧
+        (∃ top, top ≤ bench ∧ holeG = raisedHole hole top)) ∧
       bW.sudo_5Board_4cost.sudo_5Costs_15control_highest =
         b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
       bW.sudo_5Board_3row = b.sudo_5Board_3row ∧
@@ -753,9 +796,13 @@ theorem square_white_lay (b : Ecbs.Board) (slope : List Nat)
     simpa [bW, bF, hopF] using hopsR
   · let peakG := mulPeak feed.sudo_5Board_4held b0.sudo_5Board_4held
       (by simp [feed, markerUpFeed]; exact h6) peak
-    refine ⟨peakG, raisedPeak peakS (countHeld (feed.sudo_5Board_4held.set
-        ⟨6, by simp [feed, markerUpFeed]; exact h6⟩ true) 7),
-      raisedHole hole (topIdx sch), ?_, ?_, ?_⟩
+    have htopS : topIdx sch ≤ bench := by
+      have hidx := chord_top_le sch
+      rwa [hlenS] at hidx
+    let occS := countHeld (feed.sudo_5Board_4held.set
+      ⟨6, by simp [feed, markerUpFeed]; exact h6⟩ true) 7
+    refine ⟨peakG, raisedPeak peakS occS, raisedHole hole (topIdx sch), ?_, ?_, ?_,
+      ⟨occS, chord_held_seven _, rfl⟩, ⟨topIdx sch, htopS, rfl⟩⟩
     · simpa [bW, bF, peakG] using hpk
     · simpa [bW, bF, feed, markerUpFeed] using hstrict
     · simpa [bW, bF, sch] using hholeR
@@ -907,7 +954,7 @@ theorem gap_square_obtain (b : Ecbs.Board) (inv rise : List Nat)
       hpeakS hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm
       hnsm hfitB hfold hfitClear hpeg hfitSM hfitSS
   obtain ⟨hp, _hhiS⟩ := hpeak
-  obtain ⟨peakG, strictG, holeG, hpk, hst, hho⟩ := hp
+  obtain ⟨peakG, strictG, holeG, hpk, hst, hho, _hstR, _hhoR⟩ := hp
   have hlenS : slope.length = n := by
     simp only [slope]
     rw [← mul_no_prefix n k bench rise inv]

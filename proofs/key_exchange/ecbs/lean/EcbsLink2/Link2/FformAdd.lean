@@ -633,4 +633,71 @@ theorem run_onto_at (b : Ecbs.Board) (dst first second seat : Nat)
       hbench hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS,
       ok_bind]
 
+/-- After `frobenius_point` the marker is on and the bench is aimed at `seat`.
+    The run multiply's `log_op` is `marker_step`. The onto-keep test fails, so
+    the multiply continues as `mulElse` on the flagged board that step leaves. -/
+theorem run_marker_seat (b : Ecbs.Board) (dst first second seat : Nat)
+    (m ctrl mx script cOps n : Nat)
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (seat : Int))
+    (hseat : seat ≠ dst)
+    (hm : b.sudo_5Board_6marker = Int.ofNat m)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hscript : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script)
+    (hbound : m + 1 < script) (hfitMk : FitsLen (m + 1))
+    (hfitC : FitsLen (ctrl + 2)) (hfit2 : FitsLen (m + 2))
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1)) :
+    let feed := markerUpFeed b m ctrl mx
+    let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      simpa [markerUpFeed] using hops
+    Ecbs.mul b ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+        true true false =
+      Ecbs.mulElse ((n : Nat) : Int) ((dst : Nat) : Int) ((first : Nat) : Int)
+        ((second : Nat) : Int) true true false
+        (markerOn (bumpOp feed 0 cOps hopsF)) := by
+  intro feed hopsF
+  rw [mul_keep_eq]
+  unfold Ecbs.mulKeep
+  rw [show Ecbs.op_mul = Int.ofNat 0 from rfl]
+  conv =>
+    lhs
+    rw [atL_ofNat _ 0 hops, hop0, ok_bind,
+      ← ofNat_eq_natCast cOps, addI_ofNat_one cOps hfops, ok_bind,
+      putL_ofNat _ 0 (Int.ofNat (cOps + 1)) hops, ok_bind]
+    dsimp only
+    rw [bump_with b cOps hops]
+  rw [log_op_on (bumpOp b 0 cOps hops) (by simp [bumpOp, hmk])]
+  have hmB : (bumpOp b 0 cOps hops).sudo_5Board_6marker = Int.ofNat m := by
+    simp [bumpOp, hm]
+  have hcB : (bumpOp b 0 cOps hops).sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl := by
+    simp [bumpOp, hc]
+  have hxB : (bumpOp b 0 cOps hops).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat mx := by simp [bumpOp, hx]
+  have hsB : (bumpOp b 0 cOps hops).sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script := by
+    simp [bumpOp, hscript]
+  rw [marker_step_up (bumpOp b 0 cOps hops) m ctrl mx script hmB hcB hxB hsB
+      hbound hfitMk hfitC hfit2]
+  rw [← mul_up_bump b m ctrl mx cOps hops hmk]
+  simp only [ok_bind]
+  have hU : { bumpOp feed 0 cOps hopsF with sudo_5Board_9marker_on := true } =
+      markerOn (bumpOp feed 0 cOps hopsF) := by
+    simp [markerOn, feed]
+  rw [hU]
+  have hnL : (bumpOp (markerUpFeed b m ctrl mx) 0 cOps hopsF).sudo_5Board_1t.sudo_4Tier_1n =
+      (n : Int) := by
+    simp [bumpOp, markerUpFeed, hn]
+  rw [hnL]
+  have honL : (bumpOp (markerUpFeed b m ctrl mx) 0 cOps hopsF).sudo_5Board_8bench_on = true := by
+    simp [bumpOp, markerUpFeed, hon]
+  have htoL : (bumpOp (markerUpFeed b m ctrl mx) 0 cOps hopsF).sudo_5Board_8bench_to = (seat : Int) := by
+    simp [bumpOp, markerUpFeed, hto]
+  have hbeq : SudoRt.SEq.beq (seat : Int) ((dst : Nat) : Int) = false :=
+    nat_beq_false seat dst hseat
+  simp only [honL, htoL, hbeq, Bool.false_eq_true, if_false, if_true, pure_eq_ok, ok_bind]
+
 end EcbsLink2.Link2

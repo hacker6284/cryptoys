@@ -6,6 +6,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.CellFrame
+import EcbsLink2.Link2.WalkBound
 
 namespace EcbsLink2.Link2
 
@@ -400,9 +401,48 @@ theorem ops_kept {b : Ecbs.Board} {t : Spec.Tier} {accX accY : List Nat}
     rw [hBL]; exact hj
   exact affine_ops cell j hj1 hjF hjU hjS hjE hj1n hjL hBL hj
 
+/-- The across cube raises strict by the held-count it sees, and does not read
+    the feed's marker. -/
+theorem across_strict
+    (b0 : Ecbs.Board) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps ctrl mx : Nat)
+    (hops : 1 < b0.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : 0 < b0.sudo_5Board_4held.size)
+    (hHome : 0 < b0.sudo_5Board_4home.size) :
+    (acrossBoard b0 xs n k moves hole bench peak peakS cOps ctrl mx hops hF hHome).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      Int.ofNat (raisedPeak peakS (countHeld b0.sudo_5Board_4held 7)) := by
+  have hcost :
+      (acrossBoard b0 xs n k moves hole bench peak peakS cOps ctrl mx hops hF hHome).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        (cubeOffBoard (markerDownFeed b0 ctrl mx) 0 0 xs n k moves hole bench peak peakS cOps
+          hops hF hHome).sudo_5Board_4cost.sudo_5Costs_11peak_strict := rfl
+  rw [hcost, cube_off_strict, feed_held]
+
+/-- The across cube raises the hole by the comb's top index. -/
+theorem across_hole
+    (b0 : Ecbs.Board) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps ctrl mx : Nat)
+    (hops : 1 < b0.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : 0 < b0.sudo_5Board_4held.size)
+    (hHome : 0 < b0.sudo_5Board_4home.size) :
+    (acrossBoard b0 xs n k moves hole bench peak peakS cOps ctrl mx hops hF hHome).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      Int.ofNat (raisedHole hole (topIdx (combStrip n bench xs))) := by
+  have hcost :
+      (acrossBoard b0 xs n k moves hole bench peak peakS cOps ctrl mx hops hF hHome).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        (cubeOffBoard (markerDownFeed b0 ctrl mx) 0 0 xs n k moves hole bench peak peakS cOps
+          hops hF hHome).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := rfl
+  rw [hcost, cube_off_hole]
+
+theorem comb_top_le (n bench : Nat) (xs : List Nat) :
+    topIdx (combStrip n bench xs) ≤ bench := by
+  have hlen : (combStrip n bench xs).length = bench := combStrip_length n bench xs
+  have htop := topIdx_le (combStrip n bench xs)
+  rwa [hlen] at htop
+
 /-- The output board is a `RunFrame` for the cubed accumulator. Held flags other
     than 0 and 1 are the incoming flags. Ops slots 2 and 3 are the incoming
-    slots. Strict and hole are the values the up cube writes. -/
+    slots. Strict and hole are the values the up cube writes: `raisedPeak` of
+    the across cube's strict, and `raisedHole` of its hole. The ops cap is the
+    incoming cap plus 2. -/
 theorem cell_run_frame (b : Ecbs.Board) (t : Spec.Tier)
     (baseX accX baseY accY : List Nat) (fr : RunFrame b t baseX accX)
     (hOk : BoardOk t) (sat : TierSat t) (hsh : TierShape t)
@@ -427,7 +467,17 @@ theorem cell_run_frame (b : Ecbs.Board) (t : Spec.Tier)
       fr'.cOps = fr.cOps ∧
       fr'.chordOps = fr.chordOps ∧
       fr'.moves ≤ fr.moves + cubeCharge t.n t.benchlen ∧
-      fr'.slides ≤ fr.slides + slideCharge t.n := by
+      fr'.slides ≤ fr.slides + slideCharge t.n ∧
+      fr'.opsCap = fr.opsCap + 2 ∧
+      countHeld b.sudo_5Board_4held 7 ≤ 7 ∧
+      (∃ occU, occU ≤ 7 ∧
+        fr'.peakS = raisedPeak
+          (raisedPeak fr.peakS (countHeld b.sudo_5Board_4held 7)) occU) ∧
+      fr'.hole = raisedHole
+        (raisedHole fr.hole (topIdx (combStrip t.n t.benchlen accX)))
+        (topIdx (combStrip t.n t.benchlen accY)) ∧
+      topIdx (combStrip t.n t.benchlen accX) ≤ t.benchlen ∧
+      topIdx (combStrip t.n t.benchlen accY) ≤ t.benchlen := by
   obtain ⟨cell⟩ := cell_affine b t baseX accX accY fr hOk sat hsh hmk hA hf1 hyA htriY
     hMove hSlide hCtrl hOps
   have href := marker_lift_refines b fr.mark fr.ctrl fr.hmark fr.hctrl
@@ -582,7 +632,39 @@ theorem cell_run_frame (b : Ecbs.Board) (t : Spec.Tier)
     simpa [fr', mvN, cubeCharge] using hMle
   have hslide : fr'.slides ≤ fr.slides + slideCharge t.n := by
     simpa [fr', slN, slideCharge] using hSle
+  have hpeak1 : cell.a.peakS1 =
+      raisedPeak fr.peakS (countHeld b.sudo_5Board_4held 7) := by
+    have hs := cell.a.hstrictOn
+    rw [cell.onEq] at hs
+    rw [across_strict cell.bL accX t.n t.k fr.moves fr.hole t.benchlen fr.peak fr.peakS
+      cell.cubeOps (fr.ctrl + 1) fr.mx cell.hops cell.h0D cell.h0H] at hs
+    rw [hHeldL] at hs
+    apply Int.ofNat.inj
+    simpa [ofNat_eq_natCast] using hs.symm
+  have hhole1 : cell.a.hole1 =
+      raisedHole fr.hole (topIdx (combStrip t.n t.benchlen accX)) := by
+    have hs := cell.a.hholeOn
+    rw [cell.onEq] at hs
+    rw [across_hole cell.bL accX t.n t.k fr.moves fr.hole t.benchlen fr.peak fr.peakS
+      cell.cubeOps (fr.ctrl + 1) fr.mx cell.hops cell.h0D cell.h0H] at hs
+    apply Int.ofNat.inj
+    simpa [ofNat_eq_natCast] using hs.symm
+  have hpeakForm : fr'.peakS = raisedPeak
+      (raisedPeak fr.peakS (countHeld b.sudo_5Board_4held 7))
+      (countHeld (upSettled cell.a).sudo_5Board_4held 7) := by
+    rw [show fr'.peakS = stN from rfl]
+    rw [show stN = raisedPeak cell.a.peakS1
+      (countHeld (upSettled cell.a).sudo_5Board_4held 7) from rfl, hpeak1]
+  have hholeForm : fr'.hole = raisedHole
+      (raisedHole fr.hole (topIdx (combStrip t.n t.benchlen accX)))
+      (topIdx (combStrip t.n t.benchlen accY)) := by
+    rw [show fr'.hole = hoN from rfl]
+    rw [show hoN = raisedHole cell.a.hole1
+      (topIdx (combStrip t.n t.benchlen accY)) from rfl, hhole1]
   exact ⟨cell.bL, bF, fr', cell.liftEq, cell.frobEq, cellOut_on cell.a,
-    rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, hmove, hslide⟩
+    rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, hmove, hslide,
+    rfl, held_seven _,
+    ⟨_, held_seven _, hpeakForm⟩,
+    hholeForm, comb_top_le t.n t.benchlen accX, comb_top_le t.n t.benchlen accY⟩
 
 end EcbsLink2.Link2

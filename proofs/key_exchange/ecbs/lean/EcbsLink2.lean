@@ -94,11 +94,13 @@ import EcbsLink2.Link2.ChordOpen
 import EcbsLink2.Link2.ChordLive
 import EcbsLink2.Link2.ChordFrame
 import EcbsLink2.Link2.WalkCharge
+import EcbsLink2.Link2.WalkBound
 import EcbsLink2.Link2.WalkLast
 import EcbsLink2.Link2.WalkStep
 import EcbsLink2.Link2.CellCube
 import EcbsLink2.Link2.CellFrame
 import EcbsLink2.Link2.CellRun
+import EcbsLink2.Link2.WalkCell
 import EcbsLink2.Link2.ChordNext
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn

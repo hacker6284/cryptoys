@@ -8,6 +8,7 @@
 -/
 import EcbsLink2.Link2.ChordNext
 import EcbsLink2.Link2.WalkLive
+import EcbsLink2.Link2.WalkCharge
 
 namespace EcbsLink2.Link2
 
@@ -62,7 +63,10 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
         (fieldSub t.n accX x3) accY ∧
       walkStep t.n t.k t.benchlen (baseX, baseY) true (preX, preY) c =
         some (true, (x3, y3)) ∧
-      Nonempty (RunFrame b' t baseX x3) := by
+      ∃ fr' : RunFrame b' t baseX x3,
+        fr'.opsCap = fr.opsCap + cellOpsCharge t ∧
+        fr'.moves ≤ fr.moves + walkCharge t ∧
+        fr'.ctrl ≤ fr.ctrl + cellCtrlCharge t := by
   have hMove1 : FitsLen (liveMoveRoom t fr.moves baseX accX) := by
     apply FitsLen.of_le (charge_head fr.moves (cellMoveCharge t) fuel hMove)
     exact live_move_le t fr.moves baseX accX fr.lenX fr.lenA
@@ -154,7 +158,7 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
   have htriX : allTritList x3 := by
     simp only [x3, chordX3]
     exact fieldAdd_span_trits _ _ _
-  refine ⟨b', x3, y3, hdemo, hx3, hy3, hwalk', ⟨{
+  let frOut : RunFrame b' t baseX x3 := {
     szH := hpack.szH
     szD := hpack.szD
     bench := hpack.benchOff
@@ -226,7 +230,18 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
     fitCtrl := hfitCtrl
     fitRoom := hfitRoom
     opsRoom := hleft.ops
-  }⟩⟩
+  }
+  have hopsF : frOut.opsCap = fr.opsCap + cellOpsCharge t := by
+    rw [show frOut.opsCap = checkOpsCap bud + 3 from rfl, hopsEq, live_ops_eq]
+  have hmvF : frOut.moves ≤ fr.moves + walkCharge t := by
+    rw [show frOut.moves = mv from rfl, walkCharge]
+    simpa [Nat.add_assoc] using hmvRoom
+  have hctrlF : frOut.ctrl ≤ fr.ctrl + cellCtrlCharge t := by
+    rw [show frOut.ctrl = ctrl from rfl]
+    have h := Nat.le_trans hctrlLe hctrlEq
+    rw [live_ctrl_eq] at h
+    exact h
+  exact ⟨b', x3, y3, hdemo, hx3, hy3, hwalk', ⟨frOut, hopsF, hmvF, hctrlF⟩⟩
 
 /-- A live cell with fuel left. The emitted step is `chordStep_open` on the
     board the frame just built. -/

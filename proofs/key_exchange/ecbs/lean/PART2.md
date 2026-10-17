@@ -413,7 +413,15 @@ The chord tail turns the bench off. It writes ops slot 0 and leaves every other 
 
 4550 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: CellRun 506052 kB, EcbsLink2 413476. All under about 1.8 GB and under 2097152 kB.
 
-Still open: the `walk_chord` induction, then `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+`demo_walk_span`, `toy_walk_span`, `hobby_walk_span`, and `serious_walk_span` sit inside those products. Each says `2 · cells + 2 ≤ cellOpsCharge`, the Frobenius move overhead `(6 · benchlen + 2 · n) · cells ≤ walkCharge`, `4 · n · cells ≤ cellSlideCharge`, `4 · cells ≤ cellCtrlCharge`, and both `7` and `benchlen` are at most `(cells + 1) · cellOpsCharge`. `frob_fits` turns a cell's counters (`moves ≤ done · (walkCharge + overhead)`, and the same shape for slides, control, and `ops ≤ done · (cellOpsCharge + 2)`, with `peakS ≤ 7` and `hole ≤ benchlen`) into `FitsLen (ops + 2)`, `FitsLen` of the two counters, and the chord's four rooms. `demo_frob_fits` and its three siblings supply the span and the room; those are not hypotheses.
+
+`cell_run_frame` now also says the ops cap is the incoming cap plus 2, and strict and hole are `raisedPeak` and `raisedHole`. The across cube raises the incoming strict by `countHeld` of the eight held flags and the incoming hole by `topIdx` of the across comb. The up cube raises those again, by `countHeld` of the settled up board and by `topIdx` of the up comb. `held_seven` is `countHeld ≤ 7`. `comb_top_le` is `topIdx` of a comb at most `benchlen`. `demo_cell_frob` is that step on Demo: the four `FitsLen` checks are `demo_frob_fits`, the cubed frame has `peakS ≤ 7` and `hole ≤ benchlen`, and both of those are `FitsLen` of the ops product. `demo_cell_frob_zero` is the blank counters, `done = 0`. `demo_chord_rooms` is the chord's four rooms from the same product. `demo_cell_chord` is a non-final Demo chord: `chord_add_live_frame` gets those rooms, and the frame it returns has ops cap `incoming + cellOpsCharge`, which is at most `(done + 1) · (cellOpsCharge + 2)` when the incoming cap is the Frobenius cap.
+
+`chord_add_live_frame` exports that ops cap, `moves ≤ incoming + walkCharge`, and `ctrl ≤ incoming + cellCtrlCharge`. Its strict and hole are still the tail pack's naturals. The pack does not yet say they are `raisedPeak` and `raisedHole` of the incoming counters, so `peakS ≤ 7` is not yet carried across the chord.
+
+4598 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: WalkBound 599632 kB, CellRun 502332, ChordFrame 490620, WalkCell 458940, WalkStep 455508, EcbsLink2 444204. All under about 1.8 GB and under 2097152 kB.
+
+Still open: that chord bound, then the `walk_chord` induction; `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

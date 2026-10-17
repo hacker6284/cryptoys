@@ -394,7 +394,8 @@ private theorem finish_copy
         lay.base3 = baseX ∧
         lay.flag3 = true ∧
         bA.sudo_5Board_4cost.sudo_5Costs_3ops.size =
-          b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+        lay.peakS = fr.peakS := by
   have h0HOff : 0 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
   have h0DOff : 0 < bOff.sudo_5Board_4held.size := by rw [hszDOff]; decide
   have h1HOff : 1 < bOff.sudo_5Board_4home.size := by rw [hszHOff]; decide
@@ -570,7 +571,7 @@ private theorem finish_copy
     exact Fin.ext rfl
   cases hbOff
   exact ⟨bA, hdo, hflag, lay, baseB, hmatch, hmvEq, rfl, rfl, rfl, rfl,
-    rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, by rw [hopsEq, Array.size_set]⟩
+    rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, by rw [hopsEq, Array.size_set], rfl⟩
 
 theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     (fr : RunFrame b t baseX accX) (hOk : BoardOk t) (sat : TierSat t)
@@ -614,7 +615,8 @@ theorem copy_add_open (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
         lay.base3 = baseX ∧
         lay.flag3 = true ∧
         bA.sudo_5Board_4cost.sudo_5Costs_3ops.size =
-          b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+        lay.peakS = fr.peakS := by
   let xs := fieldSub t.n baseX accX
   have hpos : 0 < t.n := hOk.n_pos
   have hpegB : pegCount baseX ≤ t.n := by rw [← fr.lenX]; exact pegCount_le baseX

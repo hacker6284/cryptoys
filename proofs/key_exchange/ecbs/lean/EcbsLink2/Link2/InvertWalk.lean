@@ -1021,6 +1021,34 @@ def CheckedOps (b : Ecbs.Board) (cap : Nat) : Prop :=
     ∃ c, b.sudo_5Board_4cost.sudo_5Costs_3ops[i]'hi = Int.ofNat c ∧
       (if i = 2 then c + 1 else if i = 3 then c + 1 else c) ≤ cap
 
+/-- The cube's raise and the check multiply's raise, each by a count of at
+    most 7, stay under `max` of the strict the climb started from and 7. -/
+theorem join_check_strict
+    {bZ bM bR : Ecbs.Board} {peakS0 layPeak ps q pS occ : Nat}
+    (hpsLe : ps ≤ max peakS0 7)
+    (hq : bZ.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (q : Int))
+    (hqLe : q ≤ max ps 7)
+    (hpS : bZ.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (pS : Int))
+    (hM : bM.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      Int.ofNat (raisedPeak pS occ))
+    (hR : bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      bM.sudo_5Board_4cost.sudo_5Costs_11peak_strict)
+    (ho : occ ≤ 7)
+    (hcap : peakS0 = layPeak) :
+    ∃ (p : Nat),
+      bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
+      p ≤ max layPeak 7 := by
+  have hpsq : pS = q := by
+    apply Int.ofNat.inj
+    rw [ofNat_eq_natCast, ofNat_eq_natCast]
+    exact hpS.symm.trans hq
+  have hqCap : q ≤ max peakS0 7 := peak_carry peakS0 ps q hpsLe hqLe
+  refine ⟨raisedPeak pS occ, ?_, ?_⟩
+  · rw [hR, hM, ofNat_eq_natCast]
+  · have hstep : raisedPeak pS occ ≤ max q 7 := by
+      simpa [hpsq] using raisedPeak_carry q occ ho
+    simpa [hcap] using peak_carry peakS0 q (raisedPeak pS occ) hqCap hstep
+
 /-- The check multiply on the board `open_invert` leaves. Home 5 is `invGap`,
     home 2 is still the input, and the bench prefix is their product. -/
 theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
@@ -1084,7 +1112,10 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         ∃ (h3 : 3 < bR.sudo_5Board_4cost.sudo_5Costs_3ops.size) (c3 : Nat),
           bR.sudo_5Board_4cost.sudo_5Costs_3ops[3]'h3 = (c3 : Int) ∧
           c3 + 1 ≤ checkOpsCap base + 3) ∧
-      CheckedOps bR (checkOpsCap base + 3) := by
+      CheckedOps bR (checkOpsCap base + 3) ∧
+      (∃ (p : Nat),
+        bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
+        p ≤ max lay.peakS 7) := by
   obtain ⟨bT, hem, hK, hladT, h2T, hszT⟩ := open_invert b t xs lay hOk sat hR hsh base hm
   have hpark : (openModelAt t xs lay.ctrl lay.high).parkAt = base.ladder0 + base.R := by
     simp [openModelAt, openModel, entryModel, hm.ladder0, hm.R]
@@ -1862,11 +1893,26 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
                 exact hcap
               · simp only [h2, h3]
                 exact Nat.le_trans (Nat.le_succ c) hcap
+      have hstrictLe : ∃ (p : Nat),
+          bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
+          p ≤ max lay.peakS 7 := by
+        obtain ⟨ps, hpsB, hpsLe⟩ := hKpost.strictLe
+        obtain ⟨p0, q, hp0, hq, hqLe⟩ := hread.strictCube
+        have hpEq : p0 = ps := by
+          apply Int.ofNat.inj
+          rw [ofNat_eq_natCast, ofNat_eq_natCast]
+          exact hp0.symm.trans hpsB
+        have hqLe' : q ≤ max ps 7 := by simpa [hpEq] using hqLe
+        have hR : bR.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+            bM.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+          simp [bR]
+        exact join_check_strict hpsLe hq hqLe' hpS hstrictM hR
+          (countHeld_seven _) hm.peakS0
       refine ⟨bZ, bM, bR, embed (lane.take t.n), h5R, hok, ?_, hreadM, ?_, hhomeR, rfl,
         ⟨h5DR, mvM + nz, hheldR, hmvR, hfitR, hnR⟩, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
         hcarryR, hbnd, ⟨mvM + nz, by simpa [bR, ofNat_eq_natCast] using hmvR, hwhiteSlack⟩,
         hhighR, hwater, hrowR, hLc ▸ hladR, ?_, ?_, hl0R, hnrR, hparkR, hfromR, hridxR,
-        htlenR, ht0R, htmaxR, hopSlots.1, hopSlots.2, hopsAll⟩
+        htlenR, ht0R, htmaxR, hopSlots.1, hopSlots.2, hopsAll, hstrictLe⟩
       · simpa [Ecbs.check_target, Ecbs.gap] using hmulOk
       · exact congrArg embed htakeL
       · intro _
@@ -1890,6 +1936,14 @@ private theorem head_of_peg (P : List Nat) (n c : Nat) (hP : 0 < P.length)
     (hv : P = c :: List.replicate (n - 1) 0) : P[0] = c := by
   subst hv
   simp
+
+/-- `j - 1 < n - 1` from `1 ≤ j < n`. Kept off `omega`: the checked board's
+    strict cap is in that context, and `omega` then builds a combo past its atoms. -/
+private theorem scan_tail_lt (j n : Nat) (hj1 : 1 ≤ j) (hj : j < n) (hn : 0 < n) :
+    j - 1 < n - 1 := by
+  apply Nat.lt_of_add_lt_add_right (n := 1)
+  rw [Nat.sub_add_cancel hj1, Nat.sub_add_cancel (Nat.succ_le_of_lt hn)]
+  exact hj
 
 private theorem mirror_size (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (arr : Array Int) (mv : Nat) :
@@ -1941,7 +1995,10 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
         ∃ (h3 : 3 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size) (c3 : Nat),
           b'.sudo_5Board_4cost.sudo_5Costs_3ops[3]'h3 = (c3 : Int) ∧
           c3 + 1 ≤ checkOpsCap base + 3) ∧
-      CheckedOps b' (checkOpsCap base + 3) := by
+      CheckedOps b' (checkOpsCap base + 3) ∧
+      (∃ (p : Nat),
+        b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
+        p ≤ max lay.peakS 7) := by
   have hpos : 0 < t.n := hOk.n_pos
   have hnbench := mul_span_n t.n t.benchlen hpos sat.mul_span
   have hspan3 := cube_span_le t.n t.benchlen t.combgap sat.cube_span
@@ -1960,7 +2017,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
   obtain ⟨_bZ, _bM, bR, _v, h5, hinv, hmul, hread, hv, hhome5, _hbench, hframe, hhome2, hheld2,
       h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, hslack, hhighR, hwater, hrowR, hladR,
       h3a, h3t, hl0R, hnrR, hparkF, hfromR, hridxR, htlenR, ht0R, htmaxR, hop2R, hop3R,
-      hopsAll⟩ :=
+      hopsAll, hstrictLe⟩ :=
     open_check_mul b t xs lay hOk sat hR hsh base hm
   obtain ⟨h5D, mv, hheld, hmv, hfit, hnT⟩ := hframe
   have hfitn : FitsLen t.n := FitsLen.of_le hfit (Nat.le_add_left t.n mv)
@@ -1994,7 +2051,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
       · refine ⟨bR, h5, h5D, rfl, ?_, hheld, hnT, ?_, hhome2, hheld2,
             h0a, h0t, h1a, h1t, h4a, h4t, hcarry, hbnd, ?_, hrowR, hladR, h3a, h3t,
             hl0R, hnrR, hparkF, hfromR, hridxR, htlenR, ht0R, htmaxR, hop2R, hop3R,
-            hopsAll⟩
+            hopsAll, hstrictLe⟩
         · rw [hans]
           simpa [g] using hhome5
         · rw [hans]
@@ -2024,7 +2081,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
             mirrorHome_held bR 5 h5 _ _]
           exact h5D
         refine ⟨bM, h5', h5D', rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-            ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+            ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
         · rw [hans]
           exact mirrorHome_at bR 5 h5 (embed (mirrorTrits g)) (mv + pegCount g) h5'
         · exact hheld
@@ -2207,6 +2264,9 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
           obtain ⟨c, hc, hle⟩ := hopsAll j (hsz ▸ hj)
           refine ⟨c, ?_, hle⟩
           simpa [bM, mirrorHome, withMoves] using hc
+        · obtain ⟨p, hp, hle⟩ := hstrictLe
+          refine ⟨p, ?_, hle⟩
+          simp [bM, mirrorHome, withMoves, hp]
   · intro k
     rfl
   · intro j hj1 hj
@@ -2214,9 +2274,9 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
     rcases hpeg with hvP | hvP
     · rw [hvP, show j = j - 1 + 1 from (Nat.sub_add_cancel hj1).symm, List.getD_cons_succ,
         List.getD_eq_getElem?_getD, List.getElem?_replicate,
-        if_pos (by omega : j - 1 < t.n - 1), Option.getD_some]
+        if_pos (scan_tail_lt j t.n hj1 (by rwa [hlenP] at hj) hpos), Option.getD_some]
     · rw [hvP, show j = j - 1 + 1 from (Nat.sub_add_cancel hj1).symm, List.getD_cons_succ,
         List.getD_eq_getElem?_getD, List.getElem?_replicate,
-        if_pos (by omega : j - 1 < t.n - 1), Option.getD_some]
+        if_pos (scan_tail_lt j t.n hj1 (by rwa [hlenP] at hj) hpos), Option.getD_some]
 
 end EcbsLink2.Link2

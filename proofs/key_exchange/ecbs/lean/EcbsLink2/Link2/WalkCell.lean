@@ -1,9 +1,11 @@
 /-
   One live cell of `walk_chord`, for any tier that has a `TierWalk`.
-  Frobenius asks for `FitsLen (opsCap + 2)` and writes strict and hole
-  through `raisedPeak` and `raisedHole`. Those checks are `tier_frob_fits`.
-  They are not hypotheses beyond the tier's proved room. The chord that
-  follows is charged from the same room.
+  `tier_cell_frob` and `tier_cell_chord` are that cell for demo, toy, hobby,
+  and serious: each shipped tier is a `TierWalk`. Frobenius asks for
+  `FitsLen (opsCap + 2)` and writes strict and hole through `raisedPeak`
+  and `raisedHole`. Those checks are `tier_frob_fits`. They are not
+  hypotheses beyond the tier's proved room. The chord that follows is
+  charged from the same room, and it keeps `peakS ≤ 7`.
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.CellRun
@@ -169,6 +171,7 @@ theorem tier_cell_chord (t : Spec.Tier) (b : Ecbs.Board)
     (hsl : fr.slides ≤ slides0 + slideCharge t.n)
     (hctrl : fr.ctrl ≤ ctrl0 + 4)
     (hops : fr.opsCap ≤ ops0 + 2)
+    (hst : fr.peakS ≤ 7)
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4)) :
     ∃ b' x3 y3, ∃ fr' : RunFrame b' t baseX x3,
       Ecbs.chord_add_demo b (decide (c = 2)) = .ok (true, b') ∧
@@ -177,6 +180,7 @@ theorem tier_cell_chord (t : Spec.Tier) (b : Ecbs.Board)
       fr'.opsCap = fr.opsCap + cellOpsCharge t ∧
       fr'.moves ≤ fr.moves + walkCharge t ∧
       fr'.ctrl ≤ fr.ctrl + cellCtrlCharge t ∧
+      fr'.peakS ≤ 7 ∧
       fr'.opsCap ≤ (done + 1) * (cellOpsCharge t + 2) := by
   have hrooms := chord_rooms t tw moves0 slides0 ctrl0 ops0 fr.moves fr.slides fr.ctrl
     fr.opsCap done left hsum hleft hm hs hctrl0 ho hmv hsl hctrl hops
@@ -192,11 +196,11 @@ theorem tier_cell_chord (t : Spec.Tier) (b : Ecbs.Board)
   have hOps : FitsLen (fr.opsCap + (fuel + 1) * cellOpsCharge t) := by
     rw [hleftEq]
     exact hrooms.2.2.2
-  obtain ⟨b', x3, y3, hdemo, _hx3, _hy3, hwalk, ⟨fr', hops', hmv', hctrl'⟩⟩ :=
+  obtain ⟨b', x3, y3, hdemo, _hx3, _hy3, hwalk, ⟨fr', hops', hmv', hctrl', hst'⟩⟩ :=
     chord_add_live_frame b t baseX accX baseY accY preX preY inv c fuel fr
       hOk sat hR hsh hmk hc hY hA hf4 hf1 hyB hyA htriY htriUp hpreX hpreY hacc
-      hFuel hMove hSlide hCtrl hOps hMark hMarkF
-  refine ⟨b', x3, y3, fr', hdemo, hwalk, hops', hmv', hctrl', ?_⟩
+      hFuel hMove hSlide hCtrl hOps hst hMark hMarkF
+  refine ⟨b', x3, y3, fr', hdemo, hwalk, hops', hmv', hctrl', hst', ?_⟩
   · rw [hops']
     have hstep : fr.opsCap + cellOpsCharge t ≤ ops0 + 2 + cellOpsCharge t := by omega
     have hcomm : ops0 + 2 + cellOpsCharge t = ops0 + cellOpsCharge t + 2 := by omega

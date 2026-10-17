@@ -120,7 +120,8 @@ structure TailPack (n bench movesIn : Nat) (b0 b : Ecbs.Board) : Prop where
     mv ≤ movesIn + tailMoveCap n bench
   slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl
   peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
-  strict : ∃ occ1 occ2 occ3 p, occ1 ≤ 7 ∧ occ2 ≤ 7 ∧ occ3 ≤ 7 ∧
+  strict : ∃ (occ1 occ2 occ3 p : Nat), occ1 ≤ 7 ∧ occ2 ≤ 7 ∧ occ3 ≤ 7 ∧
+    b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
     b.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
       Int.ofNat (raisedPeak (raisedPeak (raisedPeak p occ1) occ2) occ3)
   hole : ∃ ho, b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho
@@ -135,6 +136,11 @@ structure TailPack (n bench movesIn : Nat) (b0 b : Ecbs.Board) : Prop where
       (hj' : j < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
       b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj' =
         b0.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj
+
+/-- `omega` opens an `∃` in the local context. The strict cap is that kind of
+    fact, and opening it pushes a later numeric `omega` past its atoms. -/
+private structure Sealed (P : Prop) : Prop where
+  prf : P
 
 private theorem home_at (b : Ecbs.Board) (i : Nat) (hi : i < b.sudo_5Board_4home.size) :
     homeD b i = b.sudo_5Board_4home[i]'hi := by
@@ -445,7 +451,8 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
       peak := hpkT
       strict := by
         obtain ⟨occ1, occ2, occ3, h1, h2, h3, hst⟩ := hstT
-        exact ⟨occ1, occ2, occ3, peakS, h1, h2, h3, hst⟩
+        refine ⟨occ1, occ2, occ3, peakS, h1, h2, h3, ?_, hst⟩
+        simpa [restoreMarker] using hstrict0
       hole := hhoT
       ops0 := ⟨by simpa [restoreMarker] using hops0, cOps,
         by simpa [restoreMarker] using hop00, hop0T⟩
@@ -514,13 +521,18 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
           b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧
           tallyOrigin t ≤ high) ∧
         TailPack t.n t.benchlen (moves0 + pegCount baseY + pegCount accY) bI b' ∧
-        LiveLeft b' t bud lay.base3 baseY lay.flag3 := by
+        LiveLeft b' t bud lay.base3 baseY lay.flag3 ∧
+        (∃ (p : Nat),
+          bI.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
+          p ≤ max lay.peakS 7) := by
   obtain ⟨bI, _h5, _h5D, hinv0, h5aI, h5tI, hnT, _hlenA, h2aI, h2tI, h0aI, h0tI,
       h1aI, h1tI, h4aI, h4tI, hcarry, hbnd, hwater, hrowI, hladI, h3aI, h3tI,
       hl0I, hnrI, hparkI, hfromI, hridxI, htlenI, ht0I, htmaxI, _hop2I, _hop3I,
-      hopsAllI⟩ :=
+      hopsAllI, hstrictIn⟩ :=
     open_checked { b with sudo_5Board_9marker_on := false } t run inv lay hOk sat hR hsh
       bud hmatch hacc
+  have hstrictSeal : Sealed _ := ⟨hstrictIn⟩
+  clear hstrictIn
   have _hwater := hwater
   have hinv : Ecbs.invert_checked { b with sudo_5Board_9marker_on := false } Ecbs.bottom =
       .ok bI := by simpa [Ecbs.bottom] using hinv0
@@ -766,7 +778,7 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
           obtain ⟨h3, _, _, _⟩ := _hop3I hSlot3
           exact hpack.opsSz ▸ h3 }
   refine ⟨bI, moves0, peak0, slides, peakS, hole, ctrl, cOps, hr,
-    b', hct, hx, hy, ⟨high, hhi.trans hh, hge⟩, hpack, hleft⟩
+    b', hct, hx, hy, ⟨high, hhi.trans hh, hge⟩, hpack, hleft, hstrictSeal.prf⟩
 
 
 /-- `chordAddTail` after the inverse is `chord_tail` on the rise board.

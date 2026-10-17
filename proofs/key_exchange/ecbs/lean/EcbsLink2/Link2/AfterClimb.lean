@@ -352,6 +352,41 @@ structure CheckRead (b0 b : Ecbs.Board) : Prop where
     b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) ∧
     b.sudo_5Board_1t.sudo_4Tier_8benchlen = (bench : Int) ∧
     FitsLen (mv + n + n * (n + 1) + 3 * (bench - n) + 2 * n)
+  /-- The final cube raises strict once, by a held-count of at most 7. -/
+  strictCube : ∃ (p q : Nat),
+    b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (q : Int) ∧
+    q ≤ max p 7
+
+private theorem held_le_seven (held : Array Bool) : countHeld held 7 ≤ 7 := by
+  have : ∀ i, countHeld held i ≤ i := by
+    intro i
+    induction i with
+    | zero => simp [countHeld]
+    | succ i ih =>
+      unfold countHeld
+      have : (if held.getD i false then 1 else 0) ≤ 1 := by split <;> decide
+      omega
+  exact this 7
+
+private theorem cube_raise_le (peak occ : Nat) (ho : occ ≤ 7) :
+    raisedPeak peak occ ≤ max peak 7 := by
+  unfold raisedPeak
+  by_cases h : peak < occ
+  · simpa [h] using Nat.le_trans ho (Nat.le_max_right peak 7)
+  · simpa [h] using Nat.le_max_left peak 7
+
+private theorem cube_strict_read
+    {b bZ : Ecbs.Board} {peakS : Nat} {held : Array Bool}
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hpsZ : bZ.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      ((raisedPeak peakS (countHeld held 7) : Nat) : Int))
+    (ho : countHeld held 7 ≤ 7) :
+    ∃ (p q : Nat),
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (q : Int) ∧
+      q ≤ max p 7 := by
+  refine ⟨peakS, raisedPeak peakS (countHeld held 7), hpeak, hpsZ, cube_raise_le _ _ ho⟩
 
 /-- Move envelope of the check multiply: the climb, the final cube, one copy,
     the schoolbook, the fold, and the check's settle. -/
@@ -1090,6 +1125,8 @@ theorem final_cube_settle
       ops := ⟨hopsZ, c0, hopZ, hopsLe⟩ }
   have hhighZ : bZ.sudo_5Board_4cost.sudo_5Costs_15control_highest = (s.high : Int) := by
     simpa [bZ, touchRow] using hhighOut
+  have hstrictCube :=
+    cube_strict_read (held := bS.sudo_5Board_4held) hpeakS0 hpsZ (held_le_seven _)
   have hpainted : bZ.sudo_5Board_3row = embed base.baseRow := by
     have hZ : bZ.sudo_5Board_3row = embed (paintZero row s.t0 s.tally) := by
       simp [bZ, touchRow]
@@ -1105,7 +1142,7 @@ theorem final_cube_settle
       ⟨_, hmvNat⟩, ⟨_, hslZ⟩, ⟨_, hctrlZ⟩, ⟨_, hpkNat⟩, ⟨_, hpsZ⟩, ⟨_, hholeZ⟩,
       h5DZ, hheld5Z,
       (by simpa [bZ, touchRow] using htierOut),
-      ⟨mvZ, base.n, base.bench, hmvZ, hnZ, hbZlen, hfitZ⟩⟩,
+      ⟨mvZ, base.n, base.bench, hmvZ, hnZ, hbZlen, hfitZ⟩, hstrictCube⟩,
       htailM, htailS, tail_ctrl_fit h hk ht, hsideZ, hquietZ, hpost, hhighZ, hpainted⟩
 
 /-- The final tail's boards and the settled gap. The i64 bounds stay inside

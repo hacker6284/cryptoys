@@ -9,11 +9,15 @@
 import EcbsLink2.Link2.ChordNext
 import EcbsLink2.Link2.WalkLive
 import EcbsLink2.Link2.WalkCharge
+import EcbsLink2.Link2.WalkBound
 
 namespace EcbsLink2.Link2
 
 open MegaDreifach.Link2
 open EcbsLink2.Spec
+
+private structure Sealed (P : Prop) : Prop where
+  prf : P
 
 private theorem charge_head (a c fuel : Nat) (h : FitsLen (a + (fuel + 1) * c)) :
     FitsLen (a + c) := by
@@ -50,6 +54,7 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
     (hSlide : FitsLen (fr.slides + (fuel + 1) * cellSlideCharge t))
     (hCtrl : FitsLen (fr.ctrl + (fuel + 1) * cellCtrlCharge t))
     (hOps : FitsLen (fr.opsCap + (fuel + 1) * cellOpsCharge t))
+    (hst7 : fr.peakS ≤ 7)
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4)) :
     ∃ b' x3 y3,
       Ecbs.chord_add_demo b (decide (c = 2)) = .ok (true, b') ∧
@@ -66,7 +71,8 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
       ∃ fr' : RunFrame b' t baseX x3,
         fr'.opsCap = fr.opsCap + cellOpsCharge t ∧
         fr'.moves ≤ fr.moves + walkCharge t ∧
-        fr'.ctrl ≤ fr.ctrl + cellCtrlCharge t := by
+        fr'.ctrl ≤ fr.ctrl + cellCtrlCharge t ∧
+        fr'.peakS ≤ 7 := by
   have hMove1 : FitsLen (liveMoveRoom t fr.moves baseX accX) := by
     apply FitsLen.of_le (charge_head fr.moves (cellMoveCharge t) fuel hMove)
     exact live_move_le t fr.moves baseX accX fr.lenX fr.lenA
@@ -85,7 +91,9 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
       hpreX hpreY hacc hMove1 hSlide1 hCtrl1 hOps1 hMark hMarkF
   obtain ⟨high, hhi, hge⟩ := hhigh
   obtain ⟨bud, hleft, hctrlEq, hmoveEq, hopsEq⟩ := hbud
-  obtain ⟨_, _, hpack⟩ := hpackEx
+  obtain ⟨_, _, hpack, hcap⟩ := hpackEx
+  have hcapS : Sealed _ := ⟨hcap⟩
+  clear hcap
   let red := decide (c = 2)
   let run := fieldSub t.n baseX accX
   let y := if red then mirrorTrits baseY else baseY
@@ -109,8 +117,19 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
   obtain ⟨mv, hmv, hmvLe⟩ := hleft.movesLe
   obtain ⟨sl, hsl⟩ := hpack.slides
   obtain ⟨pk, hpk⟩ := hpack.peak
-  obtain ⟨occ1, occ2, occ3, _p, h1, h2, h3, hst⟩ := hpack.strict
+  obtain ⟨occ1, occ2, occ3, _p, h1, h2, h3, hp0, hst⟩ := hpack.strict
   let st := raisedPeak (raisedPeak (raisedPeak _p occ1) occ2) occ3
+  have hstLe : st ≤ 7 := by
+    obtain ⟨pCap, hpCap, hleCap⟩ := hcapS.prf
+    have hpEq : _p = pCap := by
+      apply Int.ofNat.inj
+      rw [ofNat_eq_natCast, ofNat_eq_natCast]
+      exact hp0.symm.trans hpCap
+    have hp7 : _p ≤ 7 := by
+      have hle : pCap ≤ 7 :=
+        Nat.le_trans hleCap (Nat.max_le.mpr ⟨hst7, Nat.le_refl _⟩)
+      simpa [hpEq] using hle
+    exact raised_thrice_le _p occ1 occ2 occ3 hp7 h1 h2 h3
   have hstN : b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st := by
     simpa [st] using hst
   obtain ⟨ho, hho⟩ := hpack.hole
@@ -244,7 +263,10 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
     have h := Nat.le_trans hctrlLe hctrlEq
     rw [live_ctrl_eq] at h
     exact h
-  exact ⟨b', x3, y3, hdemo, hx3, hy3, hwalk', ⟨frOut, hopsF, hmvF, hctrlF⟩⟩
+  have hstF : frOut.peakS ≤ 7 := by
+    rw [show frOut.peakS = st from rfl]
+    exact hstLe
+  exact ⟨b', x3, y3, hdemo, hx3, hy3, hwalk', ⟨frOut, hopsF, hmvF, hctrlF, hstF⟩⟩
 
 /-- A live cell with fuel left. The emitted step is `chordStep_open` on the
     board the frame just built. -/
@@ -267,6 +289,7 @@ theorem chordStep_from_live (cells : List Nat) (i toN c fuel : Nat)
     (hSlide : FitsLen (fr.slides + (fuel + 1) * cellSlideCharge t))
     (hCtrl : FitsLen (fr.ctrl + (fuel + 1) * cellCtrlCharge t))
     (hOps : FitsLen (fr.opsCap + (fuel + 1) * cellOpsCharge t))
+    (hst7 : fr.peakS ≤ 7)
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4))
     (hi : i ≤ toN) (hlen : cells.length = toN + 1)
     (hcAt : cells[i]'(by omega) = c) (hc0 : c ≠ 0) (hc2 : c ≤ 2)
@@ -279,7 +302,7 @@ theorem chordStep_from_live (cells : List Nat) (i toN c fuel : Nat)
   obtain ⟨bA, _, _, hdemo, _, _, _, _⟩ :=
     chord_add_live_frame bF t baseX accX baseY accY preX preY inv c fuel fr
       hOk sat hR hsh hmk hc hY hA hf4 hf1 hyB hyA htriY htriUp
-      hpreX hpreY hacc hFuel hMove hSlide hCtrl hOps hMark hMarkF
+      hpreX hpreY hacc hFuel hMove hSlide hCtrl hOps hst7 hMark hMarkF
   have hadd : Ecbs.chord_add_demo bF (SudoRt.SEq.beq (Int.ofNat c) (2 : Int)) =
       .ok (true, bA) := by
     have hflag : SudoRt.SEq.beq (Int.ofNat c) (2 : Int) = decide (c = 2) := by

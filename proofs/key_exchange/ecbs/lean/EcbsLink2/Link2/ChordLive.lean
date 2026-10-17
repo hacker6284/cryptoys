@@ -145,7 +145,10 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
           liveMoveRoom t fr.moves baseX accX ∧
         checkOpsCap bud + 3 = liveOpsRoom t fr.opsCap) ∧
       ∃ bI moves0,
-        TailPack t.n t.benchlen (moves0 + pegCount baseY + pegCount accY) bI b' := by
+        TailPack t.n t.benchlen (moves0 + pegCount baseY + pegCount accY) bI b' ∧
+        (∃ (p : Nat),
+          bI.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
+          p ≤ max fr.peakS 7) := by
   let red := decide (c = 2)
   let run := fieldSub t.n baseX accX
   let y := if red then mirrorTrits baseY else baseY
@@ -184,7 +187,7 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     FitsLen.of_le hCtrl (by unfold liveCtrlRoom; omega)
   obtain ⟨bA, hcopy, hflag, lay, bud, hmatch, hmov, hslay, hctrl, hcops, hops,
       hmark, hmx, hside1, hflag1, hside4, hflag4, hside0, hflag0, _hbase, _hflag3,
-      hszOps⟩ :=
+      hszOps, hpeakLay⟩ :=
     copy_add_open b t baseX accX fr hOk sat hM hS hO hTailM hTailS hCheck hCtrlC
   have hmkA : bA.sudo_5Board_9marker_on = true := hflag.trans hmk
   have hrunL : run.length = t.n := fieldSub_length t.n baseX accX
@@ -249,7 +252,7 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
       htriX htriUp htriR htriI htriRise hfitN sat.mul_span
       hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsh.small hsh.n_small
       hChord hChordS hMarkL hMarkL' hCtrlP hOpsP (hszOps ▸ fr.ops3)
-  obtain ⟨_, b', htail, hx0, hy1, hwater, _hpack, hleft⟩ := hand
+  obtain ⟨_, b', htail, hx0, hy1, hwater, _hpack, hleft, hstrictIn⟩ := hand
   have h2H : 2 < bA.sudo_5Board_4home.size := by
     have hsz : ({ bA with sudo_5Board_9marker_on := false } : Ecbs.Board).sudo_5Board_4home.size =
         bA.sudo_5Board_4home.size := rfl
@@ -289,9 +292,15 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
   rw [decide_eq_false hne]
   simp only [Bool.false_eq_true, if_false]
   obtain ⟨high, hhi, hge⟩ := hwater
+  have hcapFr : ∃ (p : Nat),
+      bI.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (p : Int) ∧
+      p ≤ max fr.peakS 7 := by
+    obtain ⟨p, hp, hle⟩ := hstrictIn
+    refine ⟨p, hp, ?_⟩
+    simpa [hpeakLay] using hle
   refine ⟨b', ?_, hx0, hy1, ?_, ⟨high, hhi, hge⟩,
     ⟨bud, LiveLeft.rew _hbase rfl _hflag3 hleft, hctrlEq, hmoveEq, hopsEq⟩,
-    ⟨bI, moves0, _hpack⟩⟩
+    ⟨bI, moves0, _hpack, hcapFr⟩⟩
   · rw [htail]
   · have hspec : specInv t.n t.k t.benchlen
         (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen preX)) = some inv := by

@@ -31,6 +31,7 @@ theorem chordStep_live_later (cells : List Nat) (i toN c : Nat)
     (hSlide : FitsLen (fr.slides + cellsLeft i toN * cellSlideCharge t))
     (hCtrl : FitsLen (fr.ctrl + cellsLeft i toN * cellCtrlCharge t))
     (hOps : FitsLen (fr.opsCap + cellsLeft i toN * cellOpsCharge t))
+    (hst7 : fr.peakS ≤ 7)
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4))
     (hi : i < toN) (hlen : cells.length = toN + 1)
     (hcAt : cells[i]'(by omega) = c) (hc0 : c ≠ 0) (hc2 : c ≤ 2)
@@ -53,7 +54,7 @@ theorem chordStep_live_later (cells : List Nat) (i toN c : Nat)
       hpreX hpreY hacc (by simpa [hfuelEq] using hfuel)
       (by simpa [hfuelEq] using hMf) (by simpa [hfuelEq] using hSf)
       (by simpa [hfuelEq] using hCf) (by simpa [hfuelEq] using hOf)
-      hMark hMarkF (by omega) hlen hcAt hc0 hc2 hml hfrob hfiti
+      hst7 hMark hMarkF (by omega) hlen hcAt hc0 hc2 hml hfrob hfiti
   have hne : ¬ i = toN := by
     intro heq
     exact absurd heq (by omega)
@@ -80,6 +81,7 @@ theorem chordStep_live_cell (cells : List Nat) (i toN c : Nat)
     (hSlide : FitsLen (fr.slides + cellsLeft i toN * cellSlideCharge t))
     (hCtrl : FitsLen (fr.ctrl + cellsLeft i toN * cellCtrlCharge t))
     (hOps : FitsLen (fr.opsCap + cellsLeft i toN * cellOpsCharge t))
+    (hst7 : fr.peakS ≤ 7)
     (hMark : fr.mark + 3 < t.script) (hMarkF : FitsLen (fr.mark + 4))
     (hi : i ≤ toN) (hlen : cells.length = toN + 1)
     (hcAt : cells[i]'(by omega) = c) (hc0 : c ≠ 0) (hc2 : c ≤ 2)
@@ -104,7 +106,7 @@ theorem chordStep_live_cell (cells : List Nat) (i toN c : Nat)
     obtain ⟨bA, hstep⟩ := chordStep_live_later cells i toN c b0 b bF t
       baseX accX baseY accY preX preY inv fr
       hOk sat hR hsh hmk hc hY hA hf4 hf1 hyB hyA htriY htriUp
-      hpreX hpreY hacc hMove hSlide hCtrl hOps hMark hMarkF hlt hlen hcAt hc0 hc2
+      hpreX hpreY hacc hMove hSlide hCtrl hOps hst7 hMark hMarkF hlt hlen hcAt hc0 hc2
       hml hfrob hfiti
     refine ⟨bA, ?_⟩
     have hne : ¬ i = toN := by

@@ -437,7 +437,15 @@ The final cube's bench hole is `CheckRead.holeCube`: one `raisedHole` by a comb 
 
 4681 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2.Link2.WalkInd` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 4681. Peaks of the modules this change elaborated, VmHWM: ChordTailPoint 1661196 kB, ChordOpen 1524664, ChordPoint 1412604, InvertWalk 830972, AfterClimb 701968, WalkBound 623752, WalkInd 616860, ChordFrame 516900, ChordLive 494208, WalkCell 460736. All under about 1.8 GB and under 2097152 kB.
 
-Still open: `walk_fform`; `base_point_of` with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact). The live suffix starts from a seated `RunFrame` whose strict and hole are the initial board's. The opening copy, which leaves the marker at `-1`, is the step that produces that frame.
+`walk_chord_from` is that live loop starting at any index. `walk_chord_live` is the index-0 case: the first frame still reads `peakS ≤ 7` and `hole ≤ bench` off the initial board. `asc_resume` is the prefix of a loop whose every step continues, so the loop from 0 is the loop from the index where the prefix stopped.
+
+The marker on `new_board` is already `-1`. `marker_lift` of that board is the board itself, and control does not move. `chord_fresh_white_down` and `chord_fresh_red_down` are the opening copy in that state. The two `place`s keep strict, hole, control, and slides. `walk_chord_zeros_down` is an empty key: the homes stay, the result is not live, and `walkRun` keeps the accumulator. `walk_chord_white_down` and `walk_chord_red_down` are the empty cells before that copy. Across becomes the base across. Up becomes the base up, or its negation when the cell is red. The marker is still `-1`. `walkRun` is that copied point.
+
+`baseBoard` is `new_board` with the base point in homes 3 and 4. `openWhite` is the white copy of that point into homes 0 and 1, flag on, marker still `-1`. A `place` does not write the control row, the ladder, the park, the tally, the bench flag, or the marker flag.
+
+4779 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 4779. Peaks of the modules this change elaborated, VmHWM: WalkInd 617180 kB, WalkPrefix 494208, WalkLoop 304312, OpenBoard 260364, WalkChord 247628, CopyMirror 235792, WalkCopy 222292, EcbsLink2 428580. The audit itself peaked at 895632 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: the first live cell, which seats the marker from `-1` and has to become the `RunFrame` `walk_chord_from` reads; the join of that frame with the opening so `walk_chord` is `.ok` of the spec point, with no hypothesis beyond the domain; `walk_fform`; `base_point_of` with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact). An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

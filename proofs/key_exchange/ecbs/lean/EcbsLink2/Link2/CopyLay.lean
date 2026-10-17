@@ -508,6 +508,7 @@ private theorem finish_copy
       ops0 := fr.opsCap
       peak0 := raisedPeak pk
         (countHeld (bOff.sudo_5Board_4held.set ⟨5, by rw [lay.szD]; decide⟩ true) 7)
+      peakS0 := fr.peakS
       tally0 := 1
       tallyPos := by decide
       high0 := fr.high
@@ -562,7 +563,7 @@ private theorem finish_copy
           rfl }
   have hmatch : OpenMatch lay baseB := by
     refine ⟨rfl, rfl, rfl, rfl, rfl, ?_, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl,
-      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+      rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
     apply congrArg (fun occ => raisedPeak lay.peak occ)
     apply countHeld_congr
     apply congrArg (fun i => bOff.sudo_5Board_4held.set i true)

@@ -120,7 +120,9 @@ structure TailPack (n bench movesIn : Nat) (b0 b : Ecbs.Board) : Prop where
     mv ≤ movesIn + tailMoveCap n bench
   slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl
   peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
-  strict : ∃ st, b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st
+  strict : ∃ occ1 occ2 occ3 p, occ1 ≤ 7 ∧ occ2 ≤ 7 ∧ occ3 ≤ 7 ∧
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      Int.ofNat (raisedPeak (raisedPeak (raisedPeak p occ1) occ2) occ3)
   hole : ∃ ho, b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho
   ops0 : ∃ (h0 : 0 < b0.sudo_5Board_4cost.sudo_5Costs_3ops.size) (c : Nat),
     b0.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = (c : Int) ∧
@@ -441,7 +443,9 @@ theorem chord_add_point_of_inv (b : Ecbs.Board) (red : Bool) (bI : Ecbs.Board)
       moves := hmvT
       slides := hslT
       peak := hpkT
-      strict := hstT
+      strict := by
+        obtain ⟨occ1, occ2, occ3, h1, h2, h3, hst⟩ := hstT
+        exact ⟨occ1, occ2, occ3, peakS, h1, h2, h3, hst⟩
       hole := hhoT
       ops0 := ⟨by simpa [restoreMarker] using hops0, cOps,
         by simpa [restoreMarker] using hop00, hop0T⟩

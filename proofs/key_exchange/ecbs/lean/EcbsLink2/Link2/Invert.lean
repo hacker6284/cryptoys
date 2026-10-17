@@ -2844,6 +2844,9 @@ structure LivePeg (c : PegCtx) (i : Nat) where
   /-- Each peg raises peak against at most seven homes, so it stays under the
       cap the loop started with. -/
   hpeakB : peak ≤ max c.peak0 7
+  /-- The same cap for `peak_strict`. One peg raises it against at most seven
+      held homes. -/
+  hpeakSB : peakS ≤ max c.peakS0 7
 
 theorem idx_get {α : Type} {a b : Array α} (h : a = b) (i : Nat) (ha : i < a.size) :
     a[i] = b[i]'(h ▸ ha) := by
@@ -2993,6 +2996,10 @@ def pegFromOff (c : PegCtx) : LivePeg c 1 where
   hpeakB :=
     raisedPeak_carry c.peak0
       (countHeld (c.b0.sudo_5Board_4held.set ⟨c.src, c.hF⟩ false) 7)
+      (countHeld_seven _)
+  hpeakSB :=
+    raisedPeak_carry c.peakS0
+      (countHeld c.b0.sudo_5Board_4held 7)
       (countHeld_seven _)
 
 def liveRowPr (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) :
@@ -3158,6 +3165,12 @@ def pegNext (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) : LivePeg c 
           (countHeld (d.b.sudo_5Board_4held.set ⟨c.src, d.hD⟩ true) 7)
           (countHeld_seven _)))
       (raisedPeak_carry _ _
+        (countHeld_seven _))
+  hpeakSB :=
+    peak_carry c.peakS0 d.peakS _
+      d.hpeakSB
+      (raisedPeak_carry d.peakS
+        (countHeld (settleBoard d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak).sudo_5Board_4held 7)
         (countHeld_seven _))
 
 /-- After `i` steps. `i = 0` is the bench-off start; `i > 0` is `pegPack`. -/

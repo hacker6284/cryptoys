@@ -694,6 +694,8 @@ structure ClimbBudget where
   slides0 : Nat
   ops0 : Nat
   peak0 : Nat
+  /-- `peak_strict` on the board the climb starts from. -/
+  peakS0 : Nat
   tally0 : Nat
   /-- The climb starts on a positive tally. Entry writes one white peg first. -/
   tallyPos : 0 < tally0
@@ -778,6 +780,11 @@ structure RungDelta (b b' : Ecbs.Board) (base : ClimbBudget) (m : Nat) : Prop wh
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     b'.sudo_5Board_4cost.sudo_5Costs_4peak = (pk' : Int) ∧
     pk' ≤ max pk 7
+  /-- `peak_strict` moves by `raisedPeak` against at most seven held homes. -/
+  strict : ∃ (ps ps' : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) ∧
+    b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps' : Int) ∧
+    ps' ≤ max ps 7
 
 /-- `RungDelta` plus the tight conjuncts `mv' + 2 · n ≤ mv + rungCharge` and
     the same for slides. The loose fields are unchanged. Bench composition
@@ -1289,6 +1296,10 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   peak : ∃ (pk : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     pk ≤ max base.peak0 7
+  /-- `peak_strict` stays under `max` of the value the climb started from and 7. -/
+  strictLe : ∃ (ps : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) ∧
+    ps ≤ max base.peakS0 7
   /-- The recorded high is the entry mark until the tally grows past it,
       then the last peg of the current tally. `0 < base.tally0` keeps the
       tally positive, so the zero branch of `highMark` is not this state. -/
@@ -1358,6 +1369,9 @@ structure ClimbInvKCore (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   peak : ∃ (pk : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     pk ≤ max base.peak0 7
+  strictLe : ∃ (ps : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) ∧
+    ps ≤ max base.peakS0 7
   highTop : s.high = max base.high0 (s.t0 + s.tally - 1)
   parkBelow : s.parkAt < s.t0
   holeBelow : climbAt base.ladder0 base.R s.ridx < s.t0
@@ -1397,6 +1411,7 @@ theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel
       refine ⟨c, hc, ?_⟩
       cases hs : s.onBench <;> simp [hs] at hle <;> omega
     peak := h.peak
+    strictLe := h.strictLe
     highTop := h.highTop
     parkBelow := h.parkBelow
     holeBelow := h.holeBelow
@@ -1847,6 +1862,7 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       shape := hshape
       ops := ?_
       peak := ?_
+      strictLe := ?_
       highTop := by
         have hmt : 0 < s.tally :=
           Nat.lt_of_lt_of_le base.tallyPos (by
@@ -1908,6 +1924,10 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     obtain ⟨pk0, hb0, hbound⟩ := h.peak
     have hpk : pk = pk0 := ofNat_inj_nat (hb.symm.trans hb0)
     refine ⟨pk', hb', peak_carry base.peak0 pk pk' (by rw [hpk]; exact hbound) hle⟩
+  · obtain ⟨ps, ps', hb, hb', hle⟩ := hδ.strict
+    obtain ⟨ps0, hb0, hbound⟩ := h.strictLe
+    have hps : ps = ps0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨ps', hb', peak_carry base.peakS0 ps ps' (by rw [hps]; exact hbound) hle⟩
   · have hp : (modelRung s x r hole rest.isEmpty).parkAt = s.parkAt := by
       simp [modelRung]
     have ht0 : (modelRung s x r hole rest.isEmpty).t0 = s.t0 := by
@@ -2170,6 +2190,7 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       slides := ?_
       ops := ?_
       peak := ?_
+      strictLe := ?_
       highTop := by
         have hmt : 0 < s.tally :=
           Nat.lt_of_lt_of_le base.tallyPos (by
@@ -2325,6 +2346,10 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     obtain ⟨pk0, hb0, hbound⟩ := h.peak
     have hpk : pk = pk0 := ofNat_inj_nat (hb.symm.trans hb0)
     refine ⟨pk', hb', peak_carry base.peak0 pk pk' (by rw [hpk]; exact hbound) hle⟩
+  · obtain ⟨ps, ps', hb, hb', hle⟩ := hδ.strict
+    obtain ⟨ps0, hb0, hbound⟩ := h.strictLe
+    have hps : ps = ps0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨ps', hb', peak_carry base.peakS0 ps ps' (by rw [hps]; exact hbound) hle⟩
   · have hp : (modelRung s x r hole rest.isEmpty).parkAt = s.parkAt := by
       simp [modelRung]
     have ht0 : (modelRung s x r hole rest.isEmpty).t0 = s.t0 := by

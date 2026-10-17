@@ -1105,7 +1105,8 @@ theorem parked_clear_ge
         slides := ?_
         opsSize := ?_
         ops := ?_
-        peak := ?_ }
+        peak := ?_
+        strict := ?_ }
     · refine ⟨mv, mvM + pegCount cIdle.g, hmv, ?_, hpiece⟩
       rw [withPark_moves]
       simp [bIdle0, clearHeldBoard]
@@ -1305,6 +1306,44 @@ theorem parked_clear_ge
         simp only [bIdle0, clearHeldBoard]
       rw [hpkB]
       exact mul_live_peak d.b 5 6 cIdle.g d.xs ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩ ⟨hH6, hD6⟩
+    · obtain ⟨ps0, hpsB, _⟩ := h.strictLe
+      have hparkS : (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+          b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+        simp [parkKeepBoard]
+      have hplaceS : cIdle.b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+          (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+        rw [hplace]
+        unfold placeBoard
+        dsimp only
+        split <;> rfl
+      have hps0 : cIdle.peakS0 = ps0 := by
+        apply ofNat_inj_nat
+        calc
+          (cIdle.peakS0 : Int) = cIdle.b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict :=
+            cIdle.hpeakS0.symm
+          _ = (parkKeepBoard b hole s.parkAt r s.ridx s.ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_11peak_strict :=
+            hplaceS
+          _ = b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := hparkS
+          _ = (ps0 : Int) := hpsB
+      let bS := settleBoard d.b 6 hH6 hD6 d.xs cIdle.n d.moves d.slides d.peak
+      let psOut := raisedPeak d.peakS (countHeld bS.sudo_5Board_4held 7)
+      have hmulS : bU.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (psOut : Int) := by
+        simpa [bU, bS, psOut, ofNat_eq_natCast] using
+          mul_live_strict d.b 5 6 cIdle.g d.xs
+            ⟨cIdle.n, cIdle.k, d.moves, d.slides, d.hole, cIdle.bench, d.peak, d.peakS, cMul, hkeep.opsLt⟩
+            ⟨hH6, hD6⟩
+      have hpsOut : (withPark bIdle0 paint ctrlM fromH ridxH).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+          (psOut : Int) := by
+        rw [withPark_strict]
+        have hI : bIdle0.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+            bU.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+          simp [bIdle0, clearHeldBoard]
+        exact hI.trans hmulS
+      have hpsLe : psOut ≤ max ps0 7 := by
+        rw [← hps0]
+        exact peak_carry cIdle.peakS0 d.peakS psOut d.hpeakSB
+          (raisedPeak_carry d.peakS _ (countHeld_seven _))
+      exact ⟨ps0, psOut, hpsB, hpsOut, hpsLe⟩
   · exact clearSlots_cast hslotsIdle (withPark_ops bIdle0 paint ctrlM fromH ridxH).symm
   · refine ⟨mv, mvM + pegCount cIdle.g, hmv, ?_, ?_⟩
     · rw [withPark_moves]
@@ -1903,6 +1942,8 @@ theorem white_open_ge
       bIdle.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
   have hpkIn : bIn.sudo_5Board_4cost.sudo_5Costs_4peak =
       bIdle.sudo_5Board_4cost.sudo_5Costs_4peak := rfl
+  have hstrictIn : bIn.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      bIdle.sudo_5Board_4cost.sudo_5Costs_11peak_strict := rfl
   let b' := withPark bIn
     (embed (paintOnes (paintOnes xsP s.t0 s.tally) (s.t0 + s.tally) s.tally))
     (Int.ofNat (c0 + 2 + 2 * s.tally))
@@ -2000,6 +2041,7 @@ theorem white_open_ge
     · unfold b'; rw [withPark_slides, hslIn, hframe, withPark_slides]
     · unfold b'; rw [withPark_ops, hopsIn, hframe, withPark_ops]
     · unfold b'; rw [withPark_peak, hpkIn, hframe, withPark_peak]
+    · unfold b'; rw [withPark_strict, hstrictIn, hframe, withPark_strict]
   have hTight : RungDeltaTight b b' base s.tally :=
     rungTight_cost (rungTight_of_clear hδ hpieceM hpieceS
       (opsTight_of_clear hδ hT hslots))
@@ -2007,6 +2049,7 @@ theorem white_open_ge
       (by unfold b'; rw [withPark_slides, hslIn, hframe, withPark_slides])
       (by unfold b'; rw [withPark_ops, hopsIn, hframe, withPark_ops])
       (by unfold b'; rw [withPark_peak, hpkIn, hframe, withPark_peak])
+      (by unfold b'; rw [withPark_strict, hstrictIn, hframe, withPark_strict])
   have hpark' : ParkRead b' s' rest base := by
     refine
       { ladder0B := by unfold b'; rw [withPark_ladder, hladE, h.shape.park.ladder0B]

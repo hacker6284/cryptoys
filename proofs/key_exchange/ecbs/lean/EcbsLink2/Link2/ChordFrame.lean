@@ -109,7 +109,10 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
   obtain ⟨mv, hmv, hmvLe⟩ := hleft.movesLe
   obtain ⟨sl, hsl⟩ := hpack.slides
   obtain ⟨pk, hpk⟩ := hpack.peak
-  obtain ⟨st, hst⟩ := hpack.strict
+  obtain ⟨occ1, occ2, occ3, _p, h1, h2, h3, hst⟩ := hpack.strict
+  let st := raisedPeak (raisedPeak (raisedPeak _p occ1) occ2) occ3
+  have hstN : b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st := by
+    simpa [st] using hst
   obtain ⟨ho, hho⟩ := hpack.hole
   obtain ⟨ctrl, hctrl, hctrlLe⟩ := hleft.ctrlLe
   obtain ⟨m0, _, hmark⟩ := hpack.mark
@@ -213,7 +216,7 @@ theorem chord_add_live_frame (b : Ecbs.Board) (t : Spec.Tier)
     hpark := hleft.park
     hfrom := hleft.fromH
     hridx := hleft.ridx
-    hstrict := hst
+    hstrict := hstN
     hhole := hho
     ops2 := hleft.ops2lt
     ops3 := hleft.ops3lt

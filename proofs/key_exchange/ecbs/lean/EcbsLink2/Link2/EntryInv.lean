@@ -390,6 +390,7 @@ def entryBudget (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
   slides0 := 0
   ops0 := 1
   peak0 := 2
+  peakS0 := 0
   tally0 := 1
   tallyPos := by decide
   high0 := 0
@@ -1031,6 +1032,11 @@ theorem entry_climbInv (t : Spec.Tier) (hOk : BoardOk t) (xs : List Nat)
         · simpa [entryBudget] using tally_peak t xs sat hR
         · simp [entryBudget]
           omega
+      strictLe := by
+        have hplain := tally_plain t xs sat hR
+        rcases hplain with ⟨-, -, -, -, -, hstrict, -, -, -, -⟩
+        refine ⟨0, hstrict, ?_⟩
+        simp [entryBudget]
       highTop := by
         show (entryModel t xs).high =
           max (entryBudget t hOk xs hx sat hR lay).high0

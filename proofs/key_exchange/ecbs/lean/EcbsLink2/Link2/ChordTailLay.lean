@@ -4,7 +4,7 @@
   not elaborated in one process.
   Proof-only. Not a security claim.
 -/
-import EcbsLink2.Link2.ChordLay
+import EcbsLink2.Link2.ChordPoint
 
 namespace EcbsLink2.Link2
 
@@ -12,7 +12,7 @@ open MegaDreifach.Link2
 open EcbsLink2.Spec
 
 structure TailBottom (b : Ecbs.Board) (inv rise accX accY run : List Nat)
-    (w h r n k moves hole bench slides cOps m ctrl mx script : Nat) where
+    (w h r n k moves hole bench slides peakS cOps m ctrl mx script : Nat) where
   bX : Ecbs.Board
   slope : List Nat
   x3 : List Nat
@@ -92,6 +92,10 @@ structure TailBottom (b : Ecbs.Board) (inv rise accX accY run : List Nat)
   ctrlEq : ctrlX = ctrl + 4
   mxEq : mxX = max (max mx (m + 2)) (m + 3)
   cOpsEq : cOpsX = cOps + 2
+  strictForm : ∃ occ1 occ2, occ1 ≤ 7 ∧ occ2 ≤ 7 ∧
+    strictW = raisedPeak (raisedPeak peakS occ1) occ2
+  holeForm : ∃ top1 top2, top1 ≤ bench ∧ top2 ≤ bench ∧
+    holeW = raisedHole (raisedHole hole top1) top2
 
 /-- `bottom_lay` plus the counters `point_from_bottom` reads. -/
 theorem tail_bottom (b : Ecbs.Board) (inv rise accX accY run : List Nat)
@@ -169,8 +173,8 @@ theorem tail_bottom (b : Ecbs.Board) (inv rise accX accY run : List Nat)
         2 * pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run)))
     (hfitSX : FitsLen (slGap slides inv rise n k bench +
         2 * pegCount (chordX3 n k bench (fieldMul n k bench rise inv) accX run))) :
-    Nonempty (TailBottom b inv rise accX accY run w h r n k moves hole bench slides cOps m
-      ctrl mx script) := by
+    Nonempty (TailBottom b inv rise accX accY run w h r n k moves hole bench slides peakS
+      cOps m ctrl mx script) := by
 
   let slope := fieldMul n k bench rise inv
   let x3 := chordX3 n k bench slope accX run
@@ -185,7 +189,7 @@ theorem tail_bottom (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       hspan hxsT hrT hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
       hsm hnsm hfitB hfold hfitClear hpegG hfitSM hfitSS hfmS hfoldS hfitW
       hfit1 hfitA hfitRun hpegX hfitMX hfitSX
-  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX⟩, hhiX, hrowX, hstayB, h6X, hopX⟩ := htail
+  obtain ⟨⟨peakXN, strictW, holeW, hpkX, hstX, hhoX, hstR, hhoR⟩, hhiX, hrowX, hstayB, h6X, hopX⟩ := htail
   have _hbottomHigh := hhiX
   let mvX := mvSq (mvGap moves inv rise n k bench) slope n k bench +
     pegCount accX + pegCount run + pegCount run + 2 * pegCount x3
@@ -324,6 +328,8 @@ theorem tail_bottom (b : Ecbs.Board) (inv rise accX accY run : List Nat)
       mEq := mEq
       ctrlEq := ctrlEq
       mxEq := mxEq
-      cOpsEq := cOpsEq }
+      cOpsEq := cOpsEq
+      strictForm := hstR
+      holeForm := hhoR }
 
 end EcbsLink2.Link2

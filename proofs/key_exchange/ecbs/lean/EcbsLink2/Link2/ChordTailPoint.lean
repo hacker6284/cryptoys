@@ -185,7 +185,9 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
         mv ≤ moves + tailMoveCap n bench) ∧
       (∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl) ∧
       (∃ pk', b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk') ∧
-      (∃ st, b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st) ∧
+      (∃ occ1 occ2 occ3, occ1 ≤ 7 ∧ occ2 ≤ 7 ∧ occ3 ≤ 7 ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+          Int.ofNat (raisedPeak (raisedPeak (raisedPeak peakS occ1) occ2) occ3)) ∧
       (∃ ho, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) ∧
       (∀ h : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
       (∀ h : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1] = true) ∧
@@ -357,10 +359,19 @@ theorem chord_tail_point (b : Ecbs.Board) (inv rise accX accY run : List Nat)
           (htake (laneFold n (n - k) schOn))
           (hpeg x3 (by simp [x3, chordX3, fieldAdd, List.length_map, List.length_range]))
     exact ⟨mvOut, hEq, hle⟩
+  have hstPack : ∃ occ1 occ2 occ3, occ1 ≤ 7 ∧ occ2 ≤ 7 ∧ occ3 ≤ 7 ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        Int.ofNat (raisedPeak (raisedPeak (raisedPeak peakS occ1) occ2) occ3) := by
+    obtain ⟨occ3, h3, hst⟩ := hstP
+    obtain ⟨occ1, occ2, h1, h2, hsw⟩ := tb.strictForm
+    refine ⟨occ1, occ2, occ3, h1, h2, h3, ?_⟩
+    rw [hst]
+    -- `strictW` is the let of `tb.strictW`; rewrite sees the structure field.
+    simp [strictW, hsw]
   refine ⟨b', ?_, hAc, hUp, hhi.trans _hbottomHigh, hrow.trans hrowX,
     TailStay.trans hstayB hstay, h2e, h2f, h5e, h5f, h6f,
     hmarkP, hctrlP, hmxP,
-    hmvBound, ⟨_, hslP⟩, hpkP, hstP, hhoP, h0tP, h1tP, hszHP, hszDP, hoffP, ?_, ?_, ?_⟩
+    hmvBound, ⟨_, hslP⟩, hpkP, hstPack, hhoP, h0tP, h1tP, hszHP, hszDP, hoffP, ?_, ?_, ?_⟩
   rw [chord_tail_across_up]
   exact chord_do_join b bX b' hpre hpost
   · intro j hne hj hj'

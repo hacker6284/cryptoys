@@ -1041,6 +1041,11 @@ theorem climbCore_slideGap {done rest : List Nat} {b : Ecbs.Board}
         have hpk' : pk' ≤ max pk0 7 := by
           simpa [pk', hpkN] using hle
         exact peak_carry base.peak0 pk0 pk' hpkLe hpk'
+      strictLe := by
+        obtain ⟨ps, hps, hle⟩ := h.strictLe
+        refine ⟨ps, ?_, hle⟩
+        rw [settle_strict_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak]
+        exact hps
       highTop := h.highTop
       parkBelow := h.parkBelow
       holeBelow := h.holeBelow

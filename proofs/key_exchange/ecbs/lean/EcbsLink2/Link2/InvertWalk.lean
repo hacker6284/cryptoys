@@ -132,6 +132,7 @@ structure OpenMatch {b : Ecbs.Board} {t : Spec.Tier} {xs : List Nat}
   baseRow : base.baseRow = paintedRow t
   base3 : base.base3 = lay.base3
   held3 : base.held3 = lay.flag3
+  peakS0 : base.peakS0 = lay.peakS
 
 /-- The model at the first tally peg. The control counter is whatever the walk
     has already charged, plus the peg `tally_start` writes. -/
@@ -765,6 +766,7 @@ theorem open_climb (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         simpa using hle
       peak := ⟨base.peak0, by rw [hpk, ← hm.peak0, ofNat_eq_natCast],
         Nat.le_max_left _ _⟩
+      strictLe := ⟨lay.peakS, hstrict, by rw [hm.peakS0]; exact Nat.le_max_left _ _⟩
       highTop := by
         simp [openModelAt, openModel, entryModel, hm.high0]
       parkBelow := by

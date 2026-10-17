@@ -1024,7 +1024,8 @@ theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
       b'.sudo_5Board_3row = b.sudo_5Board_3row ∧
       TailStay b b' ∧
       b'.sudo_5Board_4cost.sudo_5Costs_3ops = (bumpOp b 0 cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops ∧
-      (∃ st : Nat, b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st) ∧
+      (∃ occ, occ ≤ 7 ∧ b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        Int.ofNat (raisedPeak peakS occ)) ∧
       (∃ ho : Nat, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) := by
   have hOff := mul_onto_off b dst first second home xs ys n moves slides peakS bench cOps
     hmk hoff hops hop0 hfops hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs
@@ -1105,12 +1106,12 @@ theorem mul_onto_off_fold (b : Ecbs.Board) (dst first second : Nat)
     unfold ontoFoldBoard peakBoard noteBench withMoves withHole
     simp [bFold, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp]
     split <;> rfl
-  have hstFold : ∃ st : Nat,
+  have hstFold : ∃ occ, occ ≤ 7 ∧
       (ontoFoldBoard bFold sch n k mvN peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
-        Int.ofNat st := by
+        Int.ofNat (raisedPeak peakS occ) := by
     unfold ontoFoldBoard peakBoard noteBench withMoves withHole
     simp [bFold, mulPrep, strictBoard, mulAimed, ontoCharge, b0, bumpOp]
-    split <;> exact ⟨_, rfl⟩
+    split <;> exact ⟨countHeld _ 7, countHeld_seven _, rfl⟩
   have hhoFold : ∃ ho : Nat,
       (ontoFoldBoard bFold sch n k mvN peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
         Int.ofNat ho := by
@@ -1238,7 +1239,8 @@ theorem mul_onto_up_prefix (b : Ecbs.Board) (dst first second : Nat)
       TailStay b b' ∧
       b'.sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) ∧
-      (∃ st : Nat, b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat st) ∧
+      (∃ occ, occ ≤ 7 ∧ b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        Int.ofNat (raisedPeak peakS occ)) ∧
       (∃ ho : Nat, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat ho) := by
   rw [mul_onto_up_eq b dst first second home xs ys w h r n k moves slides hole peak peakS bench
       cOps m ctrl mx script hmk hoff hm hc hx hscript hbound hfitMk hfitC hfit2 hops hop0 hfops

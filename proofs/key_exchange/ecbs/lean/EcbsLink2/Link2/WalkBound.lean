@@ -36,6 +36,12 @@ theorem strict_out_le (peakS occA occU : Nat) (hst : peakS ≤ 7)
     raisedPeak (raisedPeak peakS occA) occU ≤ 7 :=
   raised_keep 7 _ _ (raised_keep 7 peakS occA hst ha) hu
 
+/-- Three raises by counts of at most seven stay at most seven. -/
+theorem raised_thrice_le (p a b c : Nat) (hp : p ≤ 7) (ha : a ≤ 7) (hb : b ≤ 7)
+    (hc : c ≤ 7) :
+    raisedPeak (raisedPeak (raisedPeak p a) b) c ≤ 7 :=
+  raised_keep 7 _ c (strict_out_le p a b hp ha hb) hc
+
 /-- Two hole raises stay under the bench when each top does. -/
 theorem hole_out_le (hole topA topU bench : Nat) (hh : hole ≤ bench)
     (ha : topA ≤ bench) (hu : topU ≤ bench) :

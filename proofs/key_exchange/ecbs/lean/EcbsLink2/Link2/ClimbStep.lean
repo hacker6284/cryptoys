@@ -1226,6 +1226,7 @@ theorem climb_step_bench_of
     (by simpa [bS, slS, pegs, ofNat_eq_natCast] using hslS)
     (by simpa [bS, pkS] using hpkS)
     rfl rfl hpegs hpkLe (by simpa [bS] using hops)
+    (by simpa [bS] using settle_strict_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak)
   have hmod : modelRung sH base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty =
       modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty := by
     simp [sH, modelRung]

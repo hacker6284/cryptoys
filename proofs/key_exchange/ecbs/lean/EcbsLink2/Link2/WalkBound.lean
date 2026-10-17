@@ -512,6 +512,66 @@ theorem serious_walk_span :
   simp only [Spec.serious]
   decide
 
+/-- The proved span and the proved `(cells + 1)` rooms, as one fact a cell can take. -/
+structure TierWalk (t : Spec.Tier) : Prop where
+  nLe : t.n ≤ t.benchlen
+  opsOver : 2 * t.cells + 2 ≤ cellOpsCharge t
+  moveOver : (6 * t.benchlen + 2 * t.n) * t.cells ≤ walkCharge t
+  slideOver : 4 * t.n * t.cells ≤ cellSlideCharge t
+  ctrlOver : 4 * t.cells ≤ cellCtrlCharge t
+  sevenLe : 7 ≤ (t.cells + 1) * cellOpsCharge t
+  benchLe : t.benchlen ≤ (t.cells + 1) * cellOpsCharge t
+  roomM : FitsLen ((t.cells + 1) * walkCharge t)
+  roomS : FitsLen ((t.cells + 1) * cellSlideCharge t)
+  roomC : FitsLen ((t.cells + 1) * cellCtrlCharge t)
+  roomO : FitsLen ((t.cells + 1) * cellOpsCharge t)
+
+theorem demo_tier_walk : TierWalk Spec.demo := by
+  have s := demo_walk_span
+  have r := demo_walk_room
+  exact ⟨s.2.2.2.2.2.2, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
+    r.1, r.2.1, r.2.2.1, r.2.2.2⟩
+
+theorem toy_tier_walk : TierWalk Spec.toy := by
+  have s := toy_walk_span
+  have r := toy_walk_room
+  exact ⟨s.2.2.2.2.2.2, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
+    r.1, r.2.1, r.2.2.1, r.2.2.2⟩
+
+theorem hobby_tier_walk : TierWalk Spec.hobby := by
+  have s := hobby_walk_span
+  have r := hobby_walk_room
+  exact ⟨s.2.2.2.2.2.2, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
+    r.1, r.2.1, r.2.2.1, r.2.2.2⟩
+
+theorem serious_tier_walk : TierWalk Spec.serious := by
+  have s := serious_walk_span
+  have r := serious_walk_room
+  exact ⟨s.2.2.2.2.2.2, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
+    r.1, r.2.1, r.2.2.1, r.2.2.2⟩
+
+theorem tier_frob_fits (t : Spec.Tier) (tw : TierWalk t)
+    (done left moves slides ctrl ops peakS hole : Nat)
+    (hsum : done + left = t.cells) (hleft : 0 < left)
+    (hm : moves ≤ done * (walkCharge t + (6 * t.benchlen + 2 * t.n)))
+    (hs : slides ≤ done * (cellSlideCharge t + 4 * t.n))
+    (hc : ctrl ≤ done * (cellCtrlCharge t + 4))
+    (ho : ops ≤ done * (cellOpsCharge t + 2))
+    (hst : peakS ≤ 7) (hhole : hole ≤ t.benchlen) :
+    FitsLen (moves + cubeCharge t.n t.benchlen + 3 * t.n) ∧
+      FitsLen (slides + slideCharge t.n) ∧
+      FitsLen (ctrl + 5) ∧
+      FitsLen (ops + 2) ∧
+      FitsLen peakS ∧
+      FitsLen hole ∧
+      FitsLen (ops + 2 + left * cellOpsCharge t) ∧
+      FitsLen (moves + cubeCharge t.n t.benchlen + left * cellMoveCharge t) ∧
+      FitsLen (slides + slideCharge t.n + left * cellSlideCharge t) ∧
+      FitsLen (ctrl + 4 + left * cellCtrlCharge t) :=
+  frob_fits t done left moves slides ctrl ops peakS hole hsum hleft tw.nLe tw.opsOver
+    tw.moveOver tw.slideOver tw.ctrlOver tw.sevenLe tw.benchLe hm hs hc ho hst hhole
+    tw.roomM tw.roomS tw.roomC tw.roomO
+
 theorem demo_frob_fits (done left moves slides ctrl ops peakS hole : Nat)
     (hsum : done + left = Spec.demo.cells) (hleft : 0 < left)
     (hm : moves ≤ done * (walkCharge Spec.demo + (6 * Spec.demo.benchlen + 2 * Spec.demo.n)))

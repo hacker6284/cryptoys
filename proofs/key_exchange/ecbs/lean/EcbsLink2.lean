@@ -106,6 +106,7 @@ import EcbsLink2.Link2.WalkCell
 import EcbsLink2.Link2.WalkInd
 import EcbsLink2.Link2.OpenBoard
 import EcbsLink2.Link2.WalkPrefix
+import EcbsLink2.Link2.SeatDown
 import EcbsLink2.Link2.ChordNext
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn

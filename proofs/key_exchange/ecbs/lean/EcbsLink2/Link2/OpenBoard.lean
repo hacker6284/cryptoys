@@ -1,7 +1,7 @@
 /-
   The board a key walk hands to `walk_chord`: `new_board`, then the base point
   in homes 3 and 4. The opening copy, with the marker still `-1`, writes that
-  point into homes 0 and 1. Strict, hole, control, and slides stay the board
+  point into homes 0 and 1. Strict, hole, control, and slides stay on the board
   `new_board` returned. Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.BoardBuild
@@ -346,6 +346,223 @@ theorem openAcross_held1 (t : Spec.Tier) (x y : List Nat) :
 def openWhite (t : Spec.Tier) (x y : List Nat) : Ecbs.Board :=
   placeBoard (openAcross t x y) 1 (openAcross_home1 t x y) (openAcross_held1 t x y)
     y (pegCount x + pegCount y + pegCount x) 3
+
+/-- The first copy, written out. Peak becomes 3 because homes 0, 3, and 4 are held. -/
+def acrossRec (t : Spec.Tier) (x y : List Nat) : Ecbs.Board :=
+  let b := flagged t x y
+  { b with
+    sudo_5Board_4home := b.sudo_5Board_4home.set ⟨0, base_home0 t x y⟩ (embed x)
+    sudo_5Board_4held := b.sudo_5Board_4held.set ⟨0, base_held0 t x y⟩ true
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_5moves := Int.ofNat (pegCount x + pegCount y + pegCount x)
+      sudo_5Costs_4peak := 3 } }
+
+theorem openAcross_eq (t : Spec.Tier) (x y : List Nat) :
+    openAcross t x y = acrossRec t x y := by
+  have hlt : 2 < countHeld
+      ((flagged t x y).sudo_5Board_4held.set ⟨0, base_held0 t x y⟩ true) 7 := by
+    rw [flag_occ3]; decide
+  rw [openAcross, place_raise (flagged t x y) 0 (base_home0 t x y) (base_held0 t x y)
+    x (pegCount x + pegCount y) 2 hlt, flag_occ3]
+  rfl
+
+private theorem count_set_congr {a b : Array Bool} (h : a = b) (i : Nat)
+    (ha : i < a.size) (hb : i < b.size) (k : Nat) :
+    countHeld (a.set ⟨i, ha⟩ true) k = countHeld (b.set ⟨i, hb⟩ true) k := by
+  subst h
+  have : (⟨i, ha⟩ : Fin _) = ⟨i, hb⟩ := Fin.ext rfl
+  simp [this]
+
+theorem open_occ4 (t : Spec.Tier) (x y : List Nat) :
+    countHeld ((openAcross t x y).sudo_5Board_4held.set ⟨1, openAcross_held1 t x y⟩ true) 7 = 4 := by
+  have hheld : (openAcross t x y).sudo_5Board_4held =
+      (acrossRec t x y).sudo_5Board_4held := by
+    rw [openAcross_eq]
+  have hb : 1 < (acrossRec t x y).sudo_5Board_4held.size := by
+    rw [← openAcross_eq]
+    exact openAcross_held1 t x y
+  rw [count_set_congr hheld 1 (openAcross_held1 t x y) hb 7]
+  simpa [acrossRec, flagged, baseBoard, putAcross, base_held0, heldIx, ← built_held_arr] using occ_four
+
+/-- Both copies. Peak is 4. Moves are two peg-counts of each base home. -/
+def whiteRec (t : Spec.Tier) (x y : List Nat) : Ecbs.Board :=
+  let b := acrossRec t x y
+  { b with
+    sudo_5Board_4home := b.sudo_5Board_4home.set ⟨1, openAcross_home1 t x y⟩ (embed y)
+    sudo_5Board_4held := b.sudo_5Board_4held.set ⟨1, openAcross_held1 t x y⟩ true
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_5moves := Int.ofNat
+        (pegCount x + pegCount y + pegCount x + pegCount y)
+      sudo_5Costs_4peak := 4 } }
+
+theorem openWhite_eq (t : Spec.Tier) (x y : List Nat) :
+    openWhite t x y = whiteRec t x y := by
+  have hlt : 3 < countHeld
+      ((openAcross t x y).sudo_5Board_4held.set ⟨1, openAcross_held1 t x y⟩ true) 7 := by
+    rw [open_occ4]; decide
+  rw [openWhite, place_raise (openAcross t x y) 1 (openAcross_home1 t x y)
+    (openAcross_held1 t x y) y (pegCount x + pegCount y + pegCount x) 3 hlt, open_occ4]
+  rfl
+
+theorem open_szH (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4home.size = 8 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.size_set, built_szH]
+
+theorem open_szD (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4held.size = 8 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.size_set, built_szD]
+
+theorem open_marker (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_6marker = -1 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_marker_down]
+
+theorem open_ctrl (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t) := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_ctrl_eq]
+
+theorem open_strict (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_11peak_strict = 0 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, builtBoard, midBoard, placed, blankOf]
+
+theorem open_hole (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = 0 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, builtBoard, midBoard, placed, blankOf]
+
+theorem open_slides (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_6slides = 0 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_slides0]
+
+theorem open_mx (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_17script_marker_max = 0 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_mx0]
+
+theorem open_moves (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (pegCount x + pegCount y + pegCount x + pegCount y) := by
+  simp [whiteRec]
+
+theorem open_peak (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_4peak = 4 := by
+  simp [whiteRec]
+
+theorem open_flag (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_9marker_on = true := by
+  simp [whiteRec, acrossRec, flagged]
+
+theorem open_bench (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_8bench_on = false := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_bench_off]
+
+theorem open_tier (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_1t = embTier t := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_tier_eq]
+
+theorem open_row (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_3row = embed (paintedRow t) := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_row_eq]
+
+theorem open_ladder (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_6ladder = embed (tierClimb t) := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_ladder_eq]
+
+theorem open_l0 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_7ladder0 = Int.ofNat (t.script + 2) := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_l0_eq]
+
+theorem open_nr (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_6nrungs = Int.ofNat (tierR t) := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_nr_eq]
+
+theorem open_park (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_9park_hole = Int.ofNat (t.script + 2 + tierR t) := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_park_eq]
+
+theorem open_from (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_11parked_from = -1 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_from_eq]
+
+theorem open_ridx (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_8rung_idx = 0 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_ridx_eq]
+
+theorem white_tally (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_9tally_len = 0 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_tally0]
+
+theorem open_t0 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_6tally0 = Int.ofNat (tallyOrigin t) := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_t0_eq]
+
+theorem open_high (t : Spec.Tier) (x y : List Nat) (hR : 0 < tierR t) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_15control_highest =
+      Int.ofNat (t.script + tierR t + 1) := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_high_eq t hR]
+
+theorem open_tmax (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_9tally_max = 0 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, built_tmax0]
+
+theorem open_ops (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4cost.sudo_5Costs_3ops =
+      (builtBoard t).sudo_5Board_4cost.sudo_5Costs_3ops := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross]
+
+theorem rec_szH (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4home.size = 8 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.size_set, built_szH]
+
+theorem rec_szD (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4held.size = 8 := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.size_set, built_szD]
+
+theorem rec_home0 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4home[0]'(by rw [rec_szH]; decide) = embed x := by
+  simp [whiteRec, acrossRec, Array.getElem_set]
+
+theorem rec_home1 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4home[1]'(by rw [rec_szH]; decide) = embed y := by
+  simp [whiteRec, Array.getElem_set]
+
+theorem rec_home3 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4home[3]'(by rw [rec_szH]; decide) = embed x := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.getElem_set, built_home_arr,
+    Array.getElem_mkArray]
+
+theorem rec_home4 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4home[4]'(by rw [rec_szH]; decide) = embed y := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.getElem_set]
+
+theorem rec_held0 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4held[0]'(by rw [rec_szD]; decide) = true := by
+  simp [whiteRec, acrossRec, Array.getElem_set]
+
+theorem rec_held1 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4held[1]'(by rw [rec_szD]; decide) = true := by
+  simp [whiteRec, Array.getElem_set]
+
+theorem rec_held3 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4held[3]'(by rw [rec_szD]; decide) = true := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.getElem_set, built_held_arr,
+    Array.getElem_mkArray]
+
+theorem rec_held4 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4held[4]'(by rw [rec_szD]; decide) = true := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.getElem_set]
+
+theorem rec_held2 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4held[2]'(by rw [rec_szD]; decide) = false := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.getElem_set, built_held_arr,
+    Array.getElem_mkArray]
+
+theorem rec_held5 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4held[5]'(by rw [rec_szD]; decide) = false := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.getElem_set, built_held_arr,
+    Array.getElem_mkArray]
+
+theorem rec_held6 (t : Spec.Tier) (x y : List Nat) :
+    (whiteRec t x y).sudo_5Board_4held[6]'(by rw [rec_szD]; decide) = false := by
+  simp [whiteRec, acrossRec, flagged, baseBoard, putAcross, Array.getElem_set, built_held_arr,
+    Array.getElem_mkArray]
 
 theorem place_row (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)

@@ -237,4 +237,48 @@ theorem fform_bottom_step (b : Ecbs.Board)
       exact hs.trans hsH,
     s1.clearedH⟩
 
+/-- The copy-true onto-keep, mirror off, with the bench holding `F·v` and the
+    factors `x₂` and `Z₃`, is SPEC.md §3 R7's new across. -/
+theorem across_on_bench (b b' : Ecbs.Board) (lane' f v z3 x2 : List Nat)
+    (dst first second m ctrl mx cOps n k moves slides peak peakS hole bench : Nat)
+    (u z : List Nat)
+    (h : KeepCopy b b' lane' (fieldMul n k bench f v) x2 z3 dst first second
+      m ctrl mx cOps n k moves slides peak peakS hole bench false)
+    (hfT : allTritList f) (hv : allTritList v)
+    (hf : f = fformF n k bench u v z)
+    (hz3 : z3 = fformBottom n k bench v z) :
+    lane'.take n = fformAcross n k bench x2 u v z := by
+  rw [h.take_eq, if_neg (fun h => Bool.noConfusion h)]
+  exact across_sum n k bench x2 u v z f z3 hfT hv hf hz3
+
+/-- The same onto-keep for the new up. White mirrors the base-up product.
+    Red does not, and the rise that was passed in is already `−y₂` when the
+    cell is red: the caller passes that `y₂`. -/
+theorem up_on_bench (b b' : Ecbs.Board) (lane' f u y2 z3 : List Nat) (red : Bool)
+    (dst first second m ctrl mx cOps n k moves slides peak peakS hole bench : Nat)
+    (v z : List Nat)
+    (h : KeepCopy b b' lane' (mirrorTrits (fieldMul n k bench f u)) y2 z3
+      dst first second m ctrl mx cOps n k moves slides peak peakS hole bench (! red))
+    (hspan : 2 * (n - 1) < bench) (hnb : n ≤ bench)
+    (hfT : allTritList f) (hu : allTritList u) (hy2 : allTritList y2)
+    (hz3T : allTritList z3)
+    (hfu : allTritList (fieldMul n k bench f u))
+    (hyz : allTritList (fieldMul n k bench y2 z3))
+    (hf : f = fformF n k bench u v z)
+    (hz3 : z3 = fformBottom n k bench v z) :
+    lane'.take n =
+      (if red then fformUp n k bench (mirrorTrits y2) u v z
+        else fformUp n k bench y2 u v z) := by
+  cases red
+  · have ht := h.take_eq
+    simp only [Bool.not_false] at ht
+    rw [ht]
+    simp
+    exact up_white n k bench y2 u v z f z3 hfT hu hfu hyz hf hz3
+  · have ht := h.take_eq
+    simp only [Bool.not_true] at ht
+    rw [ht]
+    simp
+    exact up_red n k bench y2 u v z f z3 hspan hnb hfT hu hy2 hz3T hfu hyz hf hz3
+
 end EcbsLink2.Link2

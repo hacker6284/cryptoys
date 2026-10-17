@@ -541,7 +541,11 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5266 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5266. Peaks of the modules this change elaborated, VmHWM: FformField 380516 kB. The root rebuild peaked at 404884 kB. The audit peaked at 914372 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: the three outcomes of `walk_fform`, then `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
+`walk_fform_zeros` is an empty key with the marker already `-1`. `Ecbs.walk_fform` only lifts the marker. The homes stay, the result is `.ok ((false, true), {b with marker_on := false})`, and `walkRun` is `some (false, acc)`. `walk_fform_idle` is that walk on `baseBoard`. `TierWalk` supplies `FitsLen` of the cell count. This is the dead run. The live point and the `none` run are still open.
+
+5272 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5272. Peaks of the modules this change elaborated, VmHWM: the root rebuild 387168 kB. The audit peaked at 915024 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: the live point and the `none` run of `walk_fform`, then `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

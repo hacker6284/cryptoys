@@ -279,4 +279,94 @@ theorem fformStep_reroll (cells : List Nat) (i toN c : Nat)
   dsimp only
   rw [pure_eq_ok]
 
+private theorem after_down (b : Ecbs.Board) (j : Int)
+    (hm : b.sudo_5Board_6marker = -1) :
+    chordAfter (j, (chordFlag b, false)) =
+      .ok ((false, true), { b with sudo_5Board_9marker_on := false }) := by
+  unfold chordAfter
+  dsimp only
+  have hm' : (chordFlag b).sudo_5Board_6marker = -1 := by simp [chordFlag, hm]
+  rw [marker_lift_down (chordFlag b) hm', ok_bind]
+  simp [pure_eq_ok, chordFlag]
+
+private theorem flag_marker (b : Ecbs.Board) (hm : b.sudo_5Board_6marker = -1) :
+    Ecbs.marker_lift (chordFlag b) = .ok (chordFlag b) :=
+  marker_lift_down (chordFlag b) (by simp [chordFlag, hm])
+
+/-- Every cell empty, marker already `-1`. The F-form walk only lifts the
+    marker, the homes stay, the result is not live, and `walkRun` keeps the
+    accumulator. -/
+theorem walk_fform_zeros (b : Ecbs.Board) (cells : List Nat)
+    (n k bench : Nat) (base acc : List Nat × List Nat)
+    (hz : ∀ c ∈ cells, c = 0)
+    (hm : b.sudo_5Board_6marker = -1)
+    (hfit : FitsLen cells.length) :
+    Ecbs.walk_fform b (embed cells) =
+        .ok ((false, true), { b with sudo_5Board_9marker_on := false }) ∧
+      walkRun n k bench base false acc cells = some (false, acc) ∧
+      walkGo n k bench base false acc cells = some acc := by
+  refine ⟨?_, walkRun_zeros n k bench base acc cells hz,
+    walkRun_walkGo n k bench base false acc cells false acc
+      (walkRun_zeros n k bench base acc cells hz)⟩
+  rw [walk_fform_eq]
+  unfold walkFformGo
+  rw [listLen_embed]
+  cases cells with
+  | nil =>
+    rw [show (([] : List Nat).length) = 0 from rfl,
+      show Int.ofNat 0 = (0 : Int) from rfl, subI_zero_one, ok_bind]
+    dsimp only
+    rw [except_bind_pure]
+    have hgt : (0 : Int) > (-1 : Int) := by decide
+    have hstep :
+        fformStep (embed ([] : List Nat)) (-1) ((0 : Int), (chordFlag b, false)) =
+          .ok (SudoRt.Flow.brk ((0 : Int), (chordFlag b, false))) := by
+      unfold fformStep
+      dsimp only
+      rw [if_pos hgt, pure_eq_ok]
+    change SudoRt.runLoopOn (ρ := (Bool × Bool) × Ecbs.Board)
+      ((0 : Int), (chordFlag b, false)) (fuelRange (0 : Int) (-1))
+      (fformStep (embed ([] : List Nat)) (-1)) chordAfter (fun r => pure r) = _
+    rw [asc_break (0 : Int) (-1) (chordFlag b, false)
+      (fformStep (embed ([] : List Nat)) (-1)) chordAfter (fun r => pure r) hgt hstep]
+    exact after_down b 0 hm
+  | cons c cs =>
+    have hpos : 0 < (c :: cs).length := by simp
+    rw [subI_ofNat_one (c :: cs).length hpos hfit, ok_bind]
+    dsimp only
+    rw [except_bind_pure]
+    have hlen : (c :: cs).length - 1 = cs.length := by simp
+    rw [hlen]
+    let toN := cs.length
+    change SudoRt.runLoopOn (ρ := (Bool × Bool) × Ecbs.Board)
+      (Int.ofNat 0, (chordFlag b, false))
+      (fuelRange (Int.ofNat 0) (Int.ofNat toN))
+      (fformStep (embed (c :: cs)) (Int.ofNat toN)) chordAfter (fun r => pure r) = _
+    refine asc_goal (α := Ecbs.Board × Bool)
+      (ρ := (Bool × Bool) × Ecbs.Board)
+      (β := (Bool × Bool) × Ecbs.Board)
+      (Inv := fun _ (st : Ecbs.Board × Bool) =>
+        st.2 = false ∧ st.1 = chordFlag b)
+      (fromN := 0) (toN := toN) (s0 := (chordFlag b, false))
+      (goal := .ok ((false, true), { b with sudo_5Board_9marker_on := false }))
+      (Nat.zero_le _) ⟨rfl, rfl⟩ ?hstep ?hpost
+    · intro i st _hi hito hI
+      have hlive : st.2 = false := hI.1
+      have hb : st.1 = chordFlag b := hI.2
+      have hiz : (c :: cs)[i]'(by simp; omega) = 0 := hz _ (List.getElem_mem _)
+      have hfiti : FitsLen (i + 1) := FitsLen.of_le hfit (by simp; omega)
+      have hlen' : (c :: cs).length = toN + 1 := by simp [toN]
+      have hml := flag_marker b hm
+      have hst := fformStep_zero (c :: cs) i toN st.1 (chordFlag b)
+        hito hlen' (by simpa [hb] using hiz) (by rw [hb]; exact hml) hfiti
+      refine ⟨(chordFlag b, false), ?_, ?_⟩
+      · exact ⟨rfl, rfl⟩
+      · have hs : st = (chordFlag b, false) := Prod.ext hb hlive
+        rw [hs]
+        simpa [hb] using hst
+    · intro st hI
+      have hs : st = (chordFlag b, false) := Prod.ext hI.2 hI.1
+      rw [hs]
+      exact after_down b (Int.ofNat toN) hm
+
 end EcbsLink2.Link2

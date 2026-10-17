@@ -337,20 +337,93 @@ theorem live_cell (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
         exact next_le done _ _ fr.ctrl fr'.ctrl hc hstepC (Nat.le_refl _)
 
 /-- What stays true at index `i` of a live walk. At `toN + 1` the homes are the
-    point `walkRun` reached; before that, the board is a `LiveAt` frame. -/
-def WalkInv (t : Spec.Tier) (baseX baseY accX accY : List Nat) (cells : List Nat)
+    point `walkRun` reached; before that, the board is a `LiveAt` frame.
+    `live0` and `acc0` are the spec walk this loop continues. -/
+def WalkInv (t : Spec.Tier) (baseX baseY : List Nat) (live0 : Bool)
+    (acc0 : List Nat × List Nat) (cells : List Nat)
     (toN : Nat) (i : Nat) (st : Ecbs.Board × Bool) : Prop :=
   st.2 = true ∧
   ∃ ax ay,
-    walkRun t.n t.k t.benchlen (baseX, baseY) true (accX, accY) (cells.take i) =
+    walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take i) =
       some (true, (ax, ay)) ∧
     (i ≤ toN → LiveAt t st.1 baseX baseY ax ay i) ∧
     (toN < i →
       (∀ h : 0 < st.1.sudo_5Board_4home.size, st.1.sudo_5Board_4home[0] = embed ax) ∧
       (∀ h : 1 < st.1.sudo_5Board_4home.size, st.1.sudo_5Board_4home[1] = embed ay))
 
-/-- The live suffix. The frame at index 0 discharges `peakS ≤ 7` and
-    `hole ≤ bench` from the initial board; the walk does not take either bound. -/
+/-- The live loop from index `start`. `LiveAt` at `start` already has `peakS ≤ 7`
+    and `hole ≤ bench`; later cells keep both. A nonzero cell needs the inverse
+    of the run it actually reaches. -/
+theorem walk_chord_from (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
+    (baseX baseY accX accY : List Nat) (live0 : Bool) (acc0 : List Nat × List Nat)
+    (start : Nat) (cells : List Nat)
+    (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t) (hsh : TierShape t)
+    (hAt : LiveAt t b baseX baseY accX accY start)
+    (hlen : cells.length = t.cells) (hpos : 0 < t.cells)
+    (hstart : start ≤ t.cells - 1)
+    (hspec : walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take start) =
+      some (true, (accX, accY)))
+    (hc2 : ∀ i (hi : i < cells.length), cells[i] ≤ 2)
+    (hready : ∀ i (hi : i < cells.length), start ≤ i → cells[i] ≠ 0 →
+      ∀ ax ay, walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take i) =
+        some (true, (ax, ay)) →
+        ∃ inv, fieldInv t.n t.k t.benchlen
+          (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen ax)) = some inv) :
+    ∃ st : Ecbs.Board × Bool,
+      WalkInv t baseX baseY live0 acc0 cells (t.cells - 1) t.cells st ∧
+      SudoRt.runLoopOn (Int.ofNat start, (b, true))
+        (fuelRange (Int.ofNat start) (Int.ofNat (t.cells - 1)))
+        (chordStep (embed cells) (Int.ofNat (t.cells - 1))) chordAfter (fun r => pure r) =
+        chordAfter (Int.ofNat (t.cells - 1), st) := by
+  let toN := t.cells - 1
+  have hto : toN + 1 = t.cells := by
+    have h := hpos
+    omega
+  have h0 : WalkInv t baseX baseY live0 acc0 cells toN start (b, true) := by
+    refine ⟨rfl, accX, accY, hspec, fun _ => hAt, fun h => absurd h (by omega)⟩
+  have hstep : ∀ i s, start ≤ i → i ≤ toN →
+      WalkInv t baseX baseY live0 acc0 cells toN i s →
+      ∃ s', WalkInv t baseX baseY live0 acc0 cells toN (i + 1) s' ∧
+        chordStep (embed cells) (Int.ofNat toN) (Int.ofNat i, s) =
+          if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, s'))
+          else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), s')) := by
+    intro i st hi hito hI
+    cases st with
+    | mk sb slive =>
+    obtain ⟨hlive, ax, ay, hrun, hliveAt, _hhome⟩ := hI
+    have hslive : slive = true := hlive
+    subst hslive
+    have hAt := hliveAt hito
+    have hiLen : i < cells.length := by omega
+    have hfiti := index_fit t tw i (by omega)
+    have hsum : i + (t.cells - i) = t.cells := by omega
+    have hleft : 0 < t.cells - i := by omega
+    obtain ⟨b', ax', ay', hstep, hwalk, hnext, hlast⟩ :=
+      live_cell t tw sb baseX baseY ax ay i cells i toN hOk sat hR hsh hAt
+        rfl hto hsum hleft hito (by rw [hlen]; exact hto.symm) (hc2 i hiLen) hfiti
+        (fun hnz => hready i hiLen (by omega) hnz ax ay hrun)
+    have htake := take_succ_cell cells i hiLen
+    have hrun' := walkRun_snoc t.n t.k t.benchlen (baseX, baseY) acc0
+      (ax, ay) (ax', ay') (cells.take i) (cells[i]'hiLen) live0 hrun hwalk
+    refine ⟨(b', true), ?_, ?_⟩
+    · refine ⟨rfl, ax', ay', ?_, ?_, ?_⟩
+      · simpa [htake] using hrun'
+      · intro hle'
+        have hlt : i < toN := by omega
+        exact hnext hlt
+      · intro hgt
+        have hlastI : i = toN := by omega
+        exact hlast hlastI
+    exact hstep
+  obtain ⟨st, hI, heq⟩ := asc_inv (chordStep (embed cells) (Int.ofNat toN)) chordAfter
+    (fun r => pure r) (WalkInv t baseX baseY live0 acc0 cells toN) start toN
+    hstart hstep (b, true) h0
+  refine ⟨st, ?_, ?_⟩
+  · simpa [hto] using hI
+  · exact heq
+
+/-- The live suffix from a seated first frame. `peakS ≤ 7` and `hole ≤ bench`
+    are the initial board's zeros; the walk does not take either bound. -/
 theorem walk_chord_live (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
     (baseX baseY accX accY : List Nat) (fr : RunFrame b t baseX accX) (cells : List Nat)
     (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t) (hsh : TierShape t)
@@ -372,58 +445,15 @@ theorem walk_chord_live (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
         ∃ inv, fieldInv t.n t.k t.benchlen
           (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen ax)) = some inv) :
     ∃ st : Ecbs.Board × Bool,
-      WalkInv t baseX baseY accX accY cells (t.cells - 1) t.cells st ∧
+      WalkInv t baseX baseY true (accX, accY) cells (t.cells - 1) t.cells st ∧
       SudoRt.runLoopOn (Int.ofNat 0, (b, true))
         (fuelRange (Int.ofNat 0) (Int.ofNat (t.cells - 1)))
         (chordStep (embed cells) (Int.ofNat (t.cells - 1))) chordAfter (fun r => pure r) =
         chordAfter (Int.ofNat (t.cells - 1), st) := by
-  have hstart := live_at_initial t b baseX baseY accX accY fr hs hh hmk hY hA hf4 hf1
+  have hAt := live_at_initial t b baseX baseY accX accY fr hs hh hmk hY hA hf4 hf1
     hm0 hs0 hc0 ho0 hyB htriY hyA htriA
-  let toN := t.cells - 1
-  have hle : 0 ≤ toN := Nat.zero_le _
-  have hto : toN + 1 = t.cells := by
-    have h := hpos
-    omega
-  have h0 : WalkInv t baseX baseY accX accY cells toN 0 (b, true) := by
-    refine ⟨rfl, accX, accY, ?_, fun _ => hstart, fun h => absurd h (by omega)⟩
-    simp [walkRun]
-  have hstep : ∀ i s, 0 ≤ i → i ≤ toN → WalkInv t baseX baseY accX accY cells toN i s →
-      ∃ s', WalkInv t baseX baseY accX accY cells toN (i + 1) s' ∧
-        chordStep (embed cells) (Int.ofNat toN) (Int.ofNat i, s) =
-          if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, s'))
-          else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), s')) := by
-    intro i st hi hito hI
-    cases st with
-    | mk sb slive =>
-    obtain ⟨hlive, ax, ay, hrun, hliveAt, _hhome⟩ := hI
-    have hslive : slive = true := hlive
-    subst hslive
-    have hAt := hliveAt hito
-    have hiLen : i < cells.length := by omega
-    have hfiti := index_fit t tw i (by omega)
-    have hsum : i + (t.cells - i) = t.cells := by omega
-    have hleft : 0 < t.cells - i := by omega
-    obtain ⟨b', ax', ay', hstep, hwalk, hnext, hlast⟩ :=
-      live_cell t tw sb baseX baseY ax ay i cells i toN hOk sat hR hsh hAt
-        rfl hto hsum hleft hito (by rw [hlen]; exact hto.symm) (hc2 i hiLen) hfiti
-        (fun hnz => hready i hiLen hnz ax ay hrun)
-    have htake := take_succ_cell cells i hiLen
-    have hrun' := walkRun_snoc t.n t.k t.benchlen (baseX, baseY) (accX, accY)
-      (ax, ay) (ax', ay') (cells.take i) (cells[i]'hiLen) true hrun hwalk
-    refine ⟨(b', true), ?_, ?_⟩
-    · refine ⟨rfl, ax', ay', ?_, ?_, ?_⟩
-      · simpa [htake] using hrun'
-      · intro hle'
-        have hlt : i < toN := by omega
-        exact hnext hlt
-      · intro hgt
-        have hlastI : i = toN := by omega
-        exact hlast hlastI
-    exact hstep
-  obtain ⟨st, hI, heq⟩ := asc_inv (chordStep (embed cells) (Int.ofNat toN)) chordAfter
-    (fun r => pure r) (WalkInv t baseX baseY accX accY cells toN) 0 toN hle hstep (b, true) h0
-  refine ⟨st, ?_, ?_⟩
-  · simpa [hto] using hI
-  · exact heq
+  exact walk_chord_from t tw b baseX baseY accX accY true (accX, accY) 0 cells
+    hOk sat hR hsh hAt hlen hpos (Nat.zero_le _) (by simp [walkRun]) hc2
+    (fun i hi _ hnz ax ay hrun => hready i hi hnz ax ay hrun)
 
 end EcbsLink2.Link2

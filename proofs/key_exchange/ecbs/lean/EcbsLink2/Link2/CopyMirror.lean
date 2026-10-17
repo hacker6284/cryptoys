@@ -225,7 +225,15 @@ theorem walk_copy_red (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
       mv2 = moves + pegCount x + pegCount (mirrorTrits y) ∧
       b2.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv2 ∧
       b2.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk2 ∧
-      b2.sudo_5Board_6marker = b.sudo_5Board_6marker := by
+      b2.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_6slides =
+        b.sudo_5Board_4cost.sudo_5Costs_6slides := by
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have h3H : 3 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -283,7 +291,15 @@ theorem walk_copy_red (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
   refine ⟨b2, mv1 + pegCount (mirrorTrits y),
       if pk1 < countHeld (b1.sudo_5Board_4held.set ⟨1, h1D1⟩ true) 7
         then countHeld (b1.sudo_5Board_4held.set ⟨1, h1D1⟩ true) 7 else pk1,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+      (place_strict_eq b1 1 h1H1 h1D1 (mirrorTrits y) mv1 pk1).trans
+        (place_strict_eq b 0 h0H h0D x moves peak),
+      (place_hole_eq b1 1 h1H1 h1D1 (mirrorTrits y) mv1 pk1).trans
+        (place_hole_eq b 0 h0H h0D x moves peak),
+      (place_ctrl_eq b1 1 h1H1 h1D1 (mirrorTrits y) mv1 pk1).trans
+        (place_ctrl_eq b 0 h0H h0D x moves peak),
+      (place_slides_eq b1 1 h1H1 h1D1 (mirrorTrits y) mv1 pk1).trans
+        (place_slides_eq b 0 h0H h0D x moves peak)⟩
   · rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
         show Ecbs.base_across = ((3 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl,

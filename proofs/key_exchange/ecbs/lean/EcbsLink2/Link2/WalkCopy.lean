@@ -62,6 +62,51 @@ theorem place_tier_eq (b : Ecbs.Board) (home : Nat)
   dsimp only
   split <;> rfl
 
+theorem place_strict_eq (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+  unfold placeBoard
+  dsimp only
+  split <;> rfl
+
+theorem place_hole_eq (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+  unfold placeBoard
+  dsimp only
+  split <;> rfl
+
+theorem place_slides_eq (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_6slides =
+      b.sudo_5Board_4cost.sudo_5Costs_6slides := by
+  unfold placeBoard
+  dsimp only
+  split <;> rfl
+
+theorem place_ctrl_eq (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+  unfold placeBoard
+  dsimp only
+  split <;> rfl
+
+theorem place_ops_eq (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+  unfold placeBoard
+  dsimp only
+  split <;> rfl
+
 theorem place_marker_eq (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) :
@@ -113,7 +158,15 @@ theorem walk_copy_white (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
       b2.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv2 ∧
       b2.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk2 ∧
       mv2 = moves + pegCount x + pegCount y ∧
-      b2.sudo_5Board_6marker = b.sudo_5Board_6marker := by
+      b2.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_6slides =
+        b.sudo_5Board_4cost.sudo_5Costs_6slides := by
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have h1H : 1 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -169,7 +222,15 @@ theorem walk_copy_white (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
   refine ⟨b2, mv1 + pegCount y,
       if pk1 < countHeld (b1.sudo_5Board_4held.set ⟨1, h1D1⟩ true) 7
         then countHeld (b1.sudo_5Board_4held.set ⟨1, h1D1⟩ true) 7 else pk1,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, rfl, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, rfl, ?_,
+      (place_strict_eq b1 1 h1H1 h1D1 y mv1 pk1).trans
+        (place_strict_eq b 0 h0H h0D x moves peak),
+      (place_hole_eq b1 1 h1H1 h1D1 y mv1 pk1).trans
+        (place_hole_eq b 0 h0H h0D x moves peak),
+      (place_ctrl_eq b1 1 h1H1 h1D1 y mv1 pk1).trans
+        (place_ctrl_eq b 0 h0H h0D x moves peak),
+      (place_slides_eq b1 1 h1H1 h1D1 y mv1 pk1).trans
+        (place_slides_eq b 0 h0H h0D x moves peak)⟩
   · rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
         show Ecbs.base_across = ((3 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl,

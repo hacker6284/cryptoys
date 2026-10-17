@@ -114,6 +114,8 @@ import EcbsLink2.Link2.CopySeat
 import EcbsLink2.Link2.WalkRunInv
 import EcbsLink2.Link2.WalkReach
 import EcbsLink2.Link2.WalkSeat
+import EcbsLink2.Link2.WalkFail
+import EcbsLink2.Link2.WalkCase
 import EcbsLink2.Link2.ChordNext
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn

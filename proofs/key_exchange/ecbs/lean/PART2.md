@@ -473,7 +473,17 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5132 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5132. Peaks of the modules this change elaborated, VmHWM: WalkInd 590968 kB, WalkSeat 528912, ChordFrame 522236, CopySeat 505008, ChordLive 499304, SeatChord 470356, WalkLast 442992, EcbsLink2 426948. The audit peaked at 905692 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: the two failure results. An all-zero chord run is Spec `walkStep = none` (`walkStep_empty_run`) and the emitted cell `.ok (Flow.ret ((true, false), {bA with marker_on := false}))` (`chordStep_empty_run`). Both refuse a point: Spec returns `none`, and the code's ok bit is false with the marker off. That cell fact is not yet the whole walk. A nonempty run whose inverse is missing is the `AssertFailed` trap `invert_checked` returns, lines 728 and 730, and that error is not yet the whole walk either. Then `walk_fform`; `base_point_of` with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact). An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
+`walk_chord_cases` is the walk on the domain: every cell is `0`, `1`, or `2`, with `TierWalk`, `BoardOk`, `TierSat`, `TierShape`, and `0 < tierR`. There are three results.
+
+`walkRun = some (false, acc')` never goes live. `walk_chord_idle` says every cell is `0`, `acc' = acc`, and `Ecbs.walk_chord` is `.ok ((false, true), {baseBoard with marker_on := false})`. The homes stay.
+
+`walkRun = some (true, (px, py))` is `walk_chord_success`: `.ok ((true, true), b')`, home 0 is `embed px`, and home 1 is `embed py`.
+
+`walkRun = none` is `walk_chord_none`. The first refused cell is live and white or red, and `fieldInv` of that run is `none`. An all-zero run is Spec `walkStep = none` and the emitted walk `.ok ((true, false), {bA with marker_on := false})`. Both refuse a point. A nonempty run whose inverse is missing is `.error e` with `e.kind = "AssertFailed"` and detail `s!"line {728}"`, or `s!"line {730}: {SudoRt.Canon.canon (Int.ofNat d)} != {SudoRt.Canon.canon (0 : Int)}"` for a nonzero `d`. The refusal at the seat index is `seat_is_fail`. A later cell is `land_seat`, then `live_until`, then `frame_is_fail`. `invert_checked` on that walk board is `invert_checked_lay_none`.
+
+5188 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5188. Peaks of the modules this change elaborated, VmHWM: WalkFail 532944 kB, WalkSeat 528880, WalkCase 528624, EcbsLink2 353308. The audit peaked at 909932 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). An empty key does not write the accumulator into the homes. The homes match the spec point once a cell has copied it.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

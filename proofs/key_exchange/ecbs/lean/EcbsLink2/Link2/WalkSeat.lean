@@ -208,7 +208,7 @@ private theorem ready_of_run (t : Spec.Tier) (x y : List Nat)
     (true, (px, py)) hi hc hpre h
 
 /-- The cubed opening, as a `LiveAt` at any later index. `1 ≤ done`. -/
-private theorem cubed_live (t : Spec.Tier) (b : Ecbs.Board)
+theorem cubed_live (t : Spec.Tier) (b : Ecbs.Board)
     (x y up : List Nat) (mv : Nat)
     (fr : RunFrame b t x (fieldCube t.n t.k t.benchlen x))
     (done : Nat) (tw : TierWalk t) (sat : TierSat t) (hsh : TierShape t)

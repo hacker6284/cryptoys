@@ -407,7 +407,13 @@ The chord tail turns the bench off. It writes ops slot 0 and leaves every other 
 
 4451 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: WalkCharge 585124 kB, WalkLast 442456, WalkStep 447496, EcbsLink2 420840. All under about 1.8 GB and under 2097152 kB.
 
-The loop that carries the board from one live cell through `marker_lift` and `frobenius_affine` into the next `RunFrame`, then `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+`cell_affine` is `marker_lift` then `frobenius_affine` on a live `RunFrame`. The output board is `cellOut`. `cell_to_frame` says homes 0 and 1 are `fieldCube` of the incoming point, the marker sits at 1, and the control counter is the incoming counter plus 4. `affine_home` says every other home is the home of the lifted board. `affine_card` says a projection the two settles and the two cubes do not write (the ladder, the row, the tally, the park) is that same board's projection. `frob_move_le_walk` puts one Frobenius, plus the three homes the next invert copies, inside one `walkCharge`. The same for slides, five control steps, and two op bumps.
+
+The `RunFrame` record on that output board is not assembled. Held flags other than 0 and 1, ops slots 2 and 3, and the strict and hole counters the cube rewrites are the fields still to connect. `affine_home` and `affine_card` are the lemmas that connection uses.
+
+4529 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: CellCube 468100 kB, CellFrame 477496, EcbsLink2 426940. All under about 1.8 GB and under 2097152 kB.
+
+Still open: that output `RunFrame`, then `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

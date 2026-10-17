@@ -98,6 +98,7 @@ import EcbsLink2.Link2.WalkLast
 import EcbsLink2.Link2.WalkStep
 import EcbsLink2.Link2.CellCube
 import EcbsLink2.Link2.CellFrame
+import EcbsLink2.Link2.CellRun
 import EcbsLink2.Link2.ChordNext
 import EcbsLink2.Link2.MarkerBench
 import EcbsLink2.Link2.FrobeniusOn

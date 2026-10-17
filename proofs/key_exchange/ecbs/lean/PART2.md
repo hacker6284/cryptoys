@@ -409,11 +409,11 @@ The chord tail turns the bench off. It writes ops slot 0 and leaves every other 
 
 `cell_affine` is `marker_lift` then `frobenius_affine` on a live `RunFrame`. The output board is `cellOut`. `cell_to_frame` says homes 0 and 1 are `fieldCube` of the incoming point, the marker sits at 1, and the control counter is the incoming counter plus 4. `affine_home` says every other home is the home of the lifted board. `affine_card` says a projection the two settles and the two cubes do not write (the ladder, the row, the tally, the park) is that same board's projection. `frob_move_le_walk` puts one Frobenius, plus the three homes the next invert copies, inside one `walkCharge`. The same for slides, five control steps, and two op bumps.
 
-The `RunFrame` record on that output board is not assembled. Held flags other than 0 and 1, ops slots 2 and 3, and the strict and hole counters the cube rewrites are the fields still to connect. `affine_home` and `affine_card` are the lemmas that connection uses.
+`cell_run_frame` is that output as a `RunFrame` on the cubed accumulator. `held_kept` carries held flags other than 0 and 1, which the cubes and settles do not write. `ops_kept` carries every ops slot other than 1; slots 2 and 3 stay the incoming naturals, and `opsRoom` uses cap `opsCap + 2` because slot 1 grew by two. `cell_strict` and `cell_hole` are the values the up cube writes: `raisedPeak` of the across cube's strict, and `raisedHole` of its hole. The ladder, row, tally, and park are `affine_card`. Moves and slides are at most one `cubeCharge` and one `slideCharge`.
 
-4529 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: CellCube 468100 kB, CellFrame 477496, EcbsLink2 426940. All under about 1.8 GB and under 2097152 kB.
+4550 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded. Peaks: CellRun 506052 kB, EcbsLink2 413476. All under about 1.8 GB and under 2097152 kB.
 
-Still open: that output `RunFrame`, then `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
+Still open: the `walk_chord` induction, then `walk_fform`; `base_point_of`; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold`, `roll_key`, `call_in` (cost fields exact).
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

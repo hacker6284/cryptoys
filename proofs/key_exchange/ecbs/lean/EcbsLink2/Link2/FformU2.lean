@@ -370,7 +370,7 @@ theorem rise_gap_u2z (b : Ecbs.Board) (dst first second seat gap : Nat)
         n * (n + 1) + 3 * (bench - n)) + 2 * n + n * (n + 1) + 3 * (bench - n)))
     (hSlideZ : FitsLen (riseSlideCount y lane n slides + 2 * n + 2 * n)) :
     let u := fformRise n k bench (if mirror then mirrorTrits y2 else y2) z y
-    ∃ b2 b3 lane3 hole3,
+    ∃ b2 b3 lane3 hole3 moves3 slides3,
       Ecbs.mul b2 ((gap : Nat) : Int) ((second : Nat) : Int) ((gap : Nat) : Int)
           false false false = .ok b3 ∧
       lane3.take n = fieldMul n k bench z (fieldMul n k bench u u) ∧
@@ -378,7 +378,25 @@ theorem rise_gap_u2z (b : Ecbs.Board) (dst first second seat gap : Nat)
       (∀ hs : seat < b3.sudo_5Board_4home.size,
         b3.sudo_5Board_4home[seat]'hs = embed (lane.take n)) ∧
       (∀ hs : seat < b3.sudo_5Board_4held.size,
-        b3.sudo_5Board_4held[seat]'hs = true) := by
+        b3.sudo_5Board_4held[seat]'hs = true) ∧
+      b3.sudo_5Board_5bench = embed lane3 ∧
+      b3.sudo_5Board_8bench_on = true ∧
+      b3.sudo_5Board_8bench_to = ((gap : Nat) : Int) ∧
+      b3.sudo_5Board_9marker_on = true ∧
+      b3.sudo_5Board_6marker = Int.ofNat ((m + 2) + 1) ∧
+      b3.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ((ctrl + 4) + 2) ∧
+      b3.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max (max mx (m + 3)) ((m + 2) + 2)) ∧
+      b3.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves3 ∧
+      b3.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides3 ∧
+      (∀ hg : gap < b3.sudo_5Board_4held.size, b3.sudo_5Board_4held[gap]'hg = false) ∧
+      b3.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b3.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      b3.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      (∀ h2 : second < b3.sudo_5Board_4home.size,
+        b3.sudo_5Board_4home[second]'h2 = embed z) ∧
+      (∀ h2 : second < b3.sudo_5Board_4held.size,
+        b3.sudo_5Board_4held[second]'h2 = true) := by
   intro u
   obtain ⟨_bR, b2, lane2, hole2, _hokR, _hok2, ht2, carry2, hon2, hto2, hmk2, htier2,
       hix2, hctrl2, hmx2, hmv2, hsl2, hszH2, hszHome2, hbotA, hbotH, hgapE,
@@ -493,7 +511,12 @@ theorem rise_gap_u2z (b : Ecbs.Board) (dst first second seat gap : Nat)
       (by rw [htier2]; exact hw) (by rw [htier2]; exact hh)
       (by rw [htier2]; exact hr) (by rw [htier2]; exact hk)
       hsm hnsm hfitB hfold2 carry2.spareSz carry2.spare hneG6
-  refine ⟨b2, b3, lane3, hole3, hok3, ht3, ?_, ?_, ?_⟩
+  let moves3 := (moves2 + 2 * pegCount (lane2.take n)) + schoolMoves z u2 n n +
+    foldCharge n (n - k) (school n z u2 (List.replicate bench 0) false)
+  let slides3 := slides2 + 2 * pegCount (lane2.take n)
+  refine ⟨b2, b3, lane3, hole3, moves3, slides3, hok3, ht3, ?_, ?_, ?_,
+      _hb3, _hon3, _hto3, _hmk3, _hix3, _hctrl3, _hmx3, ?_, ?_, _hsec3,
+      ?_, ?_, ?_, ?_, ?_⟩
   · have hc : (cOps + 2) + 1 = cOps + 3 := by omega
     simpa [hc] using carry3
   · intro hs
@@ -508,5 +531,22 @@ theorem rise_gap_u2z (b : Ecbs.Board) (dst first second seat gap : Nat)
       rw [hszD] at hs
       exact hs
     exact (hheldJ seat (Ne.symm hneGS) hs2 hs).trans (_hseatH hs2)
+  · simpa [moves3] using _hmv3
+  · simpa [slides3] using _hsl3
+  · exact _htier3.trans htier2
+  · rw [_hszD3, hszH2]
+  · rw [hszH3, hszHome2]
+  · intro h2
+    have h2b : second < b2.sudo_5Board_4home.size := by
+      rw [hszH3] at h2
+      exact h2
+    exact (hhomeJ second hneBot h2b h2).trans (hbotA h2b)
+  · intro h2
+    have h2b : second < b2.sudo_5Board_4held.size := by
+      have hszD : b3.sudo_5Board_4held.size = b2.sudo_5Board_4held.size := by
+        rw [_hszD3]
+      rw [hszD] at h2
+      exact h2
+    exact (hheldJ second hneBot h2b h2).trans (hbotH h2b)
 
 end EcbsLink2.Link2

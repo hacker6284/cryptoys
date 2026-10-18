@@ -940,7 +940,9 @@ theorem gap_v2 (b : Ecbs.Board) (dst gap across : Nat) (v lane : List Nat)
 
 /-- The squared run times the bottom. The bench holds `v²` and is aimed at the
     spare, so that square is settled, then `fieldMul` of it by the bottom is
-    the new bench prefix. -/
+    the new bench prefix. `cOps` is the ops cell this multiply reads. The cell
+    it leaves is `cOps + 1`. The spare receives `v²`, so it is not the empty
+    spare of `BenchCarry`. -/
 theorem gap_v2z (b : Ecbs.Board) (sp bot : Nat) (v2 z lane : List Nat)
     (m ctrl mx script cOps n k w h r moves slides hole peak peakS bench : Nat)
     (hS : sp < b.sudo_5Board_4home.size)
@@ -1001,7 +1003,14 @@ theorem gap_v2z (b : Ecbs.Board) (sp bot : Nat) (v2 z lane : List Nat)
       Ecbs.mul b ((bot : Nat) : Int) ((sp : Nat) : Int) ((bot : Nat) : Int)
           false false false = .ok b' ∧
       b'.sudo_5Board_5bench = embed lane' ∧
-      lane'.take n = fieldMul n k bench v2 z := by
+      lane'.take n = fieldMul n k bench v2 z ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = ((bot : Nat) : Int) ∧
+      b'.sudo_5Board_9marker_on = true ∧
+      b'.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
+      (∀ h : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h = Int.ofNat (cOps + 1)) := by
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     simpa [feed, markerUpFeed] using hops
@@ -1109,14 +1118,52 @@ theorem gap_v2z (b : Ecbs.Board) (sp bot : Nat) (v2 z lane : List Nat)
     rw [htierS, settle_tier_eq bU sp hinS lane n moves slides peak, htierU, hr]
   have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
     rw [htierS, settle_tier_eq bU sp hinS lane n moves slides peak, htierU, hk]
-  obtain ⟨b', hok, hbench, hmul, _⟩ := nocopy_else_field bS bot sp bot v2 z
+  obtain ⟨b', hok, hbench, hmul, _hpk, _hst, _hho, hopsEq, _hsz, _hheld,
+      hon', hto', hmk', _htier, hix, hctrl, _hmx, _hmv, _hsl, _hsec⟩ :=
+    nocopy_else_field bS bot sp bot v2 z
       w h r n k mvS hole peak peakS bench hoffS hblS hSpD hSpH hHeldS hHomeS
       hBotD hBotH hHeldBot hHomeBot h7S hne hn0 hnb hnS hlenv hlenz hf hmovesS
       hpeakB hpeak7 hstrictS hpeakS7 hspan hv2 hfi hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap
       hwS hhS hrS hkS hsm hnsm hfitB hfold
-  refine ⟨b', laneFold n (n - k) (school n v2 z (List.replicate bench 0) false), ?_, hbench, hmul⟩
-  rw [hflag]
-  exact hok
+  have hmU : bU.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hcU : bU.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hmS : bS.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+    rw [show bS.sudo_5Board_6marker =
+        (settleBoard bU sp hHU hDU lane n moves slides peak).sudo_5Board_6marker from by
+          dsimp [bS, markerOn],
+      settle_ix_eq bU sp hinS lane n moves slides peak, hmU]
+  have hcS : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    rw [hcostS, settle_ctrl_eq bU sp hinS lane n moves slides peak, hcU]
+  have hmkS : bS.sudo_5Board_9marker_on = true := by
+    simp [bS, markerOn]
+  have hopsS : bS.sudo_5Board_4cost.sudo_5Costs_3ops = bU.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    rw [show bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+        (settleBoard bU sp hHU hDU lane n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops
+        from by dsimp [bS, markerOn]]
+    exact settle_ops bU sp hinS lane n moves slides peak
+  have hopSet := bumpOp_ops feed 0 cOps hopsF
+  have hszU : 0 < bU.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hopSet, Array.size_set]
+    exact hopsF
+  have hopU : bU.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hszU = Int.ofNat (cOps + 1) :=
+    cell_eq_of hopSet
+      (Array.getElem_set_eq feed.sudo_5Board_4cost.sudo_5Costs_3ops ⟨0, hopsF⟩
+        (Int.ofNat (cOps + 1)) rfl (by rw [Array.size_set]; exact hopsF))
+  have hsz' : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hopsEq, hopsS]
+    exact hszU
+  have hop' : b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hsz' = Int.ofNat (cOps + 1) :=
+    cell_eq_of (hopsEq.trans hopsS) hopU
+  have hopAll : ∀ h : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h = Int.ofNat (cOps + 1) := by
+    intro h
+    exact (idx_irrel).trans hop'
+  refine ⟨b', laneFold n (n - k) (school n v2 z (List.replicate bench 0) false), ?_, hbench, hmul,
+      hon', hto', hmk'.trans hmkS, hix.trans hmS, hctrl.trans hcS, hopAll⟩
+  · rw [hflag]
+    exact hok
 
 /-- Onto, with the bench already aimed at the destination and that home empty.
     The keep test takes the bench as the strip. Schooling the two factors onto

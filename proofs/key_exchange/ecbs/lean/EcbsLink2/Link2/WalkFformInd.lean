@@ -77,7 +77,11 @@ theorem serious_script_cube : 2 < Spec.serious.script := by decide
 
 /-- A live F-form board, `done` cells already run. The charges are `LiveAt`'s.
     `px` and `py` are the affine point `walkRun` has reached. `ProjOn` is the
-    projective triple of that point. -/
+    projective triple of that point. `cOps` is ops slot 1, the cube counter,
+    with room for three cubes. `c0` is ops slot 0, the multiply counter.
+    `FitsLen (c0 + 13)` is one cell of multiply slack: `comb_u2z` asks for 8,
+    and the tail asks for 6 more after the seven multiplies already counted
+    at the sum. -/
 def FformAt (t : Spec.Tier) (b : Ecbs.Board)
     (baseX baseY px py : List Nat) (done : Nat) : Prop :=
   b.sudo_5Board_9marker_on = true ∧
@@ -97,7 +101,7 @@ def FformAt (t : Spec.Tier) (b : Ecbs.Board)
   b.sudo_5Board_4home.size = 8 ∧
   b.sudo_5Board_4held.size = 8 ∧
   ProjOn t b px py ∧
-  ∃ (moves slides ctrl mark mx pk peakS hole cOps : Nat),
+  ∃ (moves slides ctrl mark mx pk peakS hole cOps c0 : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves ∧
     b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides ∧
     b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
@@ -108,8 +112,10 @@ def FformAt (t : Spec.Tier) (b : Ecbs.Board)
     b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole ∧
     1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
     b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (cOps : Int) ∧
+    b.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) ∧
     FitsLen (ctrl + 6) ∧
     FitsLen (cOps + 3) ∧
+    FitsLen (c0 + 13) ∧
     FitsLen (moves + 2 * t.n + cubeCharge t.n t.benchlen + 2 * t.n +
       3 * (t.benchlen - t.n)) ∧
     FitsLen (slides + 2 * t.n + slideCharge t.n) ∧
@@ -348,8 +354,8 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
   subst hslive
   have hpack := hAtF
   rcases hpack with ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-    hproj, ⟨_moves, _slides, ctrl, mark, _mx, _pk, _ps, _hole, _cOps,
-      _, _, hctrl, hmark, _, _, _, _, _, _, hfit6, _, _, _, _, _, _⟩⟩
+    hproj, ⟨_moves, _slides, ctrl, mark, _mx, _pk, _ps, _hole, _cOps, _c0,
+      _, _, hctrl, hmark, _, _, _, _, _, _, _, hfit6, _, _, _, _, _, _, _⟩⟩
   rcases hproj with ⟨xP, yP, zP, lay, hxL, hyL, hzL, hxt, hyt, hzt, hx, hy, hz, h0, hlay, _hw⟩
   have hfit : FitsLen (ctrl + 1) := FitsLen.of_le hfit6 (by omega)
   have hclose := chord_after_nat bF (Int.ofNat (t.cells - 1)) true

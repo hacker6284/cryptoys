@@ -65,4 +65,67 @@ theorem settle_ops_get1 (b : Ecbs.Board) (home : Nat)
   exact (get_eq_of_array (settle_ops b home ⟨hH, hD⟩ xs n moves slides peak) 1
       (by rw [settle_ops b home ⟨hH, hD⟩ xs n moves slides peak]; exact hops)).trans hop
 
+/-- The same fact through `getElem?`, so the two bound proofs are not unified. -/
+theorem settle_ops_get1?
+    (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (n moves slides peak : Nat) (v : Int)
+    (hop : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some v) :
+    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
+      some v := by
+  rw [settle_ops b home ⟨hH, hD⟩ xs n moves slides peak]
+  exact hop
+
+/-- Size proofs sealed on `pointFeed`, so a later use does not unfold it to
+    match `upFlag`. -/
+theorem pointFeed_homeIx
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
+    1 < (pointFeed a).sudo_5Board_4home.size := upFlagH a
+
+theorem pointFeed_heldIx
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
+    1 < (pointFeed a).sudo_5Board_4held.size := upFlag1 a
+
+theorem pointFeed_op1?
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
+    (pointFeed a).sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
+      some (((cOps + 2 : Nat) : Int)) := by
+  rw [Array.getElem?_eq_getElem (pointFeed_ops a)]
+  exact congrArg some (pointFeed_op1 a)
+
+section
+attribute [local irreducible] pointFeed
+
+/-- The cube counter after the slide. `pointFeed` is irreducible, the goal is
+    the `settleBoard` expression `seatBoard` unfolds to, and the read is
+    `getElem?`. -/
+theorem seat_op1
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
+    (settleBoard (pointFeed a) 1 (pointFeed_homeIx a) (pointFeed_heldIx a)
+      (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)).sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
+      some (((cOps + 2 : Nat) : Int)) := by
+  exact settle_ops_get1? (pointFeed a) 1 (pointFeed_homeIx a) (pointFeed_heldIx a)
+    (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a) _ (pointFeed_op1? a)
+
+theorem seat_opsIx
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
+    1 < (settleBoard (pointFeed a) 1 (pointFeed_homeIx a) (pointFeed_heldIx a)
+      (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  rw [settle_ops (pointFeed a) 1 ⟨pointFeed_homeIx a, pointFeed_heldIx a⟩
+      (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)]
+  exact pointFeed_ops a
+
+theorem seat_op1_get
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
+    (settleBoard (pointFeed a) 1 (pointFeed_homeIx a) (pointFeed_heldIx a)
+      (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)).sudo_5Board_4cost.sudo_5Costs_3ops[1]'
+        (seat_opsIx a) =
+      (((cOps + 2 : Nat) : Int)) := by
+  have h := seat_op1 a
+  rw [Array.getElem?_eq_getElem (seat_opsIx a)] at h
+  exact Option.some.inj h
+
+end
+
 end EcbsLink2.Link2

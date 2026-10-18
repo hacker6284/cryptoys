@@ -109,6 +109,21 @@ theorem laneAdd_length (lane src : List Nat) (n i : Nat) (hn : n ≤ lane.length
     (laneAdd lane src n i).length = lane.length := by
   simp [laneAdd, addPlain_length, List.length_drop, hn]
 
+theorem laneAdd_high (lane src : List Nat) (n i j : Nat)
+    (hn : n ≤ lane.length) (hj : n ≤ j)
+    (hjj : j < (laneAdd lane src n i).length) :
+    (laneAdd lane src n i)[j]'hjj =
+      lane[j]'(by rw [← laneAdd_length lane src n i hn]; exact hjj) := by
+  have hpre : (addPlain n i (lane.take n) src).length = n := by
+    simp [addPlain_length, List.length_take, Nat.min_eq_left hn]
+  unfold laneAdd
+  rw [List.getElem_append_right (by rw [hpre]; omega)]
+  rw [List.getElem_drop]
+  have hidx : n + (j - (addPlain n i (lane.take n) src).length) = j := by
+    rw [hpre]
+    exact Nat.add_sub_cancel' hj
+  simp [hidx]
+
 theorem addPlain_zero (n : Nat) (dst src : List Nat) (hd : dst.length = n) :
     addPlain n 0 dst src = dst := by
   apply List.ext_getElem
@@ -414,7 +429,9 @@ theorem gap_add_on_sum (b : Ecbs.Board) (gap bot : Nat) (u v z lane : List Nat)
     (hu : allTritList u) (hv : allTritList v) (hz : allTritList z)
     (hspan : 2 * (n - 1) < bench)
     (hm : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
-    (hfit : FitsLen (moves + n)) :
+    (hfit : FitsLen (moves + n))
+    (hposL : 0 < lane.length) (hfitL : FitsLen lane.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i]'hi = 0) :
     ∃ (b' : Ecbs.Board) (lane' : List Nat),
       Ecbs.add b (gap : Int) (bot : Int) false = .ok b' ∧
       b'.sudo_5Board_5bench = embed lane' ∧
@@ -443,7 +460,11 @@ theorem gap_add_on_sum (b : Ecbs.Board) (gap bot : Nat) (u v z lane : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_5moves =
         Int.ofNat (moves + pegCount (fieldMul n k bench (fieldMul n k bench v v) z)) ∧
       (laneAdd lane (fieldMul n k bench (fieldMul n k bench v v) z) n n).length =
-        lane.length := by
+        lane.length ∧
+      0 < lane'.length ∧
+      n ≤ lane'.length ∧
+      FitsLen lane'.length ∧
+      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) := by
   let u2 := fieldMul n k bench u u
   let v2 := fieldMul n k bench v v
   let sum := fieldAdd n (fieldMul n k bench z u2) (fieldMul n k bench v v2)
@@ -484,7 +505,11 @@ theorem gap_add_on_sum (b : Ecbs.Board) (gap bot : Nat) (u v z lane : List Nat)
       addOnBench_marker b arr mv, addOnBench_flag b arr mv, rfl, rfl, rfl, rfl, rfl, rfl, rfl,
       rfl,
       (by rw [addOnBench_moves]),
-      laneAdd_length lane (fieldMul n k bench (fieldMul n k bench v v) z) n n hnle⟩
+      laneAdd_length lane (fieldMul n k bench (fieldMul n k bench v v) z) n n hnle,
+      by rw [laneAdd_length lane v2z n n hnle]; exact hposL,
+      by rw [laneAdd_length lane v2z n n hnle]; exact hnle,
+      by rw [laneAdd_length lane v2z n n hnle]; exact hfitL,
+      ?_⟩
   · rw [hpre]
     have hF := gap_fform n k bench u v z hu hv hz hspan hnb
     simpa [sum, u2, v2, v2z, hcomm] using hF
@@ -492,5 +517,10 @@ theorem gap_add_on_sum (b : Ecbs.Board) (gap bot : Nat) (u v z lane : List Nat)
     simpa [addOnBench_held] using hempty
   · intro h
     simpa [addOnBench_home] using hArrB
+  · intro i hi hii
+    have hiiL : i < lane.length := by
+      rwa [laneAdd_length lane v2z n n hnle] at hii
+    rw [laneAdd_high lane v2z n n i hnle hi hii]
+    exact hzero i hi hiiL
 
 end EcbsLink2.Link2

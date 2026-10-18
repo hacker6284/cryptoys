@@ -39,6 +39,80 @@ private theorem peg_under (a peg q r s : Nat) :
     2 * peg ≤ ((a + 2 * peg) + q) + r + s := by
   omega
 
+/-- The board the onto sum leaves. The bench prefix is `u²Z + v³`, aimed at
+    the empty gap. The bottom holds `v²Z`. Homes 0, 1, 3, and 4 stay held. -/
+structure SumAt (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
+    (u v z x2 y2 : List Nat) (script w h r : Nat)
+    (m ctrl mx cOps moves slides hole peak peakS : Nat) : Prop where
+  on : b.sudo_5Board_8bench_on = true
+  to5 : b.sudo_5Board_8bench_to = (5 : Int)
+  markOn : b.sudo_5Board_9marker_on = true
+  marker : b.sudo_5Board_6marker = Int.ofNat m
+  ctrlEq : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl
+  mxEq : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx
+  movesEq : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves
+  slidesEq : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides
+  peakEq : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak
+  strictEq : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int)
+  holeEq : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole
+  opsSz : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+  ops0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'opsSz = Int.ofNat cOps
+  nEq : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int)
+  kEq : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k
+  benchEq : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench
+  scriptEq : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script
+  wEq : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w
+  hEq : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h
+  rEq : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r
+  home7 : 7 ≤ b.sudo_5Board_4home.size
+  home0 : b.sudo_5Board_4home[0]? = some (embed v)
+  held0 : b.sudo_5Board_4held[0]? = some true
+  home1 : b.sudo_5Board_4home[1]? = some (embed u)
+  held1 : b.sudo_5Board_4held[1]? = some true
+  home2 : b.sudo_5Board_4home[2]? =
+    some (embed (fieldMul n k bench (fieldMul n k bench v v) z))
+  held2 : b.sudo_5Board_4held[2]? = some true
+  home3 : b.sudo_5Board_4home[3]? = some (embed x2)
+  held3 : b.sudo_5Board_4held[3]? = some true
+  home4 : b.sudo_5Board_4home[4]? = some (embed y2)
+  held4 : b.sudo_5Board_4held[4]? = some true
+  held5 : b.sudo_5Board_4held[5]? = some false
+  held6 : b.sudo_5Board_4held[6]? = some false
+  benchArr : b.sudo_5Board_5bench = embed lane
+  posL : 0 < lane.length
+  nle : n ≤ lane.length
+  fitL : FitsLen lane.length
+  zero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i]'hi = 0
+  take : lane.take n =
+    fieldAdd n (fieldMul n k bench z (fieldMul n k bench u u))
+      (fieldMul n k bench v (fieldMul n k bench v v))
+  fitN : FitsLen (moves + n)
+  lenU : u.length = n
+  lenV : v.length = n
+  lenZ : z.length = n
+  lenX : x2.length = n
+  lenY : y2.length = n
+  triU : allTritList u
+  triV : allTritList v
+  triZ : allTritList z
+  triX : allTritList x2
+  triY : allTritList y2
+  span : 2 * (n - 1) < bench
+  npos : 0 < n
+  nbench : n ≤ bench
+  peak7 : 7 ≤ peak
+  peakS7 : 7 ≤ peakS
+  fi : FitsLen (2 * (n - 1))
+
+private theorem sum_room (movesZ cap peg pu sch fold n bench : Nat)
+    (hm : movesZ ≤ cap + 2 * stepBudget n bench + n)
+    (hp : peg ≤ n) (hu : pu ≤ n) (hs : sch ≤ n * (n + 1))
+    (hf : fold ≤ 3 * (bench - n)) :
+    (((movesZ + 2 * peg) + 2 * pu) + sch + fold) + n ≤
+      cap + 16 * stepBudget n bench := by
+  simp only [stepBudget] at *
+  omega
+
 private theorem slide_room (slides3 cap n peg : Nat)
     (hs : slides3 ≤ cap) (hp : peg ≤ n) :
     slides3 + 2 * peg ≤ cap + 16 * n := by
@@ -207,7 +281,12 @@ theorem v2_on_comb (b : Ecbs.Board)
     (hSRoom : FitsLen (u2zSlideCap y (fformRunLane n k bench x x2 z) n
         (fformRunSlides slides n x lane) + 16 * n))
     (hCtrlRoom : FitsLen (ctrl + 40)) :
-    ∃ _bZ : Ecbs.Board, True := by
+    ∃ (bS : Ecbs.Board) (laneS : List Nat)
+      (mS ctrlS mxS cOpsS movesS slidesS holeS : Nat),
+      SumAt bS laneS n k bench
+        (fformRise n k bench (if red then mirrorTrits y2 else y2) z y)
+        (fformRun n k bench x2 z x) z x2 y2 script w h r
+        mS ctrlS mxS cOpsS movesS slidesS holeS peak peakS := by
   let u := fformRise n k bench (if red then mirrorTrits y2 else y2) z y
   let v := fformRun n k bench x2 z x
   let cap := u2zMoveCap y y2 z (fformRunLane n k bench x x2 z) red n k bench
@@ -437,7 +516,9 @@ theorem v2_on_comb (b : Ecbs.Board)
   have h6DZ : 6 < bZ.sudo_5Board_4held.size := by rw [hszDZ]; exact h6DV
   have h2HZ : 2 < bZ.sudo_5Board_4home.size := by rw [hszHZ]; exact h2HV
   have h2DZ : 2 < bZ.sudo_5Board_4held.size := by rw [hszDZ]; exact h2DV
-  obtain ⟨bS, _laneS, _⟩ :=
+  obtain ⟨bS, laneS, _hokS, hbS, htS, hopsS, honS, htoS, hmkS, hixS, hbotS, hheldBS,
+      hgapES, hspES, hctrlS, hmxS, htierS, hmvS, hslS, hszDS, hszHS, hkeepS, hkeepDS,
+      hposS, hnleS, hfitLS, hzeroS, hpkS, hstS, hopsSzS, ⟨holeS, hholeOutS⟩⟩ :=
     gap_sum_on_v2z bZ 5 0 6 2 u v v2 gHome z laneZ
       (((m + 4) + 1) + 1) (((ctrl + 8) + 2) + 2)
       (max (max mx3 ((m + 4) + 2)) (((m + 4) + 1) + 2))
@@ -469,7 +550,7 @@ theorem v2_on_comb (b : Ecbs.Board)
       (by rw [htierZ, htierV, htier3]; exact hbl)
       (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
       hpos hnb hlenG hvlen hlenv2 rfl rfl
-      carryV.peak7 hstZ hspan hu2zT hvT hfi
+      carryV.peak7 hstZ hpeakS7 hspan hu2zT hvT hfi
       (fits_le hfoldS (under_two ((movesZ + 2 * pegCount (laneZ.take n)) + 2 * n)
         (n * (n + 1)) (3 * (bench - n))))
       (fits_le hSRoom (by
@@ -487,6 +568,151 @@ theorem v2_on_comb (b : Ecbs.Board)
       (by rw [htierZ, htierV, htier3]; exact hr)
       (by rw [htierZ, htierV, htier3]; exact hk)
       hsm hnsm hfitB hfoldS
-  exact ⟨bS, trivial⟩
+  have h1H3 : 1 < b3.sudo_5Board_4home.size := by rw [hszH3]; exact h1H
+  have h1D3 : 1 < b3.sudo_5Board_4held.size := by rw [hszD3]; exact h1D
+  have h3H3 : 3 < b3.sudo_5Board_4home.size := by rw [hszH3]; exact h3H
+  have h3D3 : 3 < b3.sudo_5Board_4held.size := by rw [hszD3]; exact h3D
+  have h4H3 : 4 < b3.sudo_5Board_4home.size := by rw [hszH3]; exact h4H
+  have h4D3 : 4 < b3.sudo_5Board_4held.size := by rw [hszD3]; exact h4D
+  have h1HV : 1 < bV.sudo_5Board_4home.size := by rw [hszHV]; exact h1H3
+  have h1DV : 1 < bV.sudo_5Board_4held.size := by rw [hszDV]; exact h1D3
+  have h3HV : 3 < bV.sudo_5Board_4home.size := by rw [hszHV]; exact h3H3
+  have h3DV : 3 < bV.sudo_5Board_4held.size := by rw [hszDV]; exact h3D3
+  have h4HV : 4 < bV.sudo_5Board_4home.size := by rw [hszHV]; exact h4H3
+  have h4DV : 4 < bV.sudo_5Board_4held.size := by rw [hszDV]; exact h4D3
+  have h1HZ : 1 < bZ.sudo_5Board_4home.size := by rw [hszHZ]; exact h1HV
+  have h1DZ : 1 < bZ.sudo_5Board_4held.size := by rw [hszDZ]; exact h1DV
+  have h3HZ : 3 < bZ.sudo_5Board_4home.size := by rw [hszHZ]; exact h3HV
+  have h3DZ : 3 < bZ.sudo_5Board_4held.size := by rw [hszDZ]; exact h3DV
+  have h4HZ : 4 < bZ.sudo_5Board_4home.size := by rw [hszHZ]; exact h4HV
+  have h4DZ : 4 < bZ.sudo_5Board_4held.size := by rw [hszDZ]; exact h4DV
+  have h1HS : 1 < bS.sudo_5Board_4home.size := by rw [hszHS]; exact h1HZ
+  have h1DS : 1 < bS.sudo_5Board_4held.size := by rw [hszDS]; exact h1DZ
+  have h3HS : 3 < bS.sudo_5Board_4home.size := by rw [hszHS]; exact h3HZ
+  have h3DS : 3 < bS.sudo_5Board_4held.size := by rw [hszDS]; exact h3DZ
+  have h4HS : 4 < bS.sudo_5Board_4home.size := by rw [hszHS]; exact h4HZ
+  have h4DS : 4 < bS.sudo_5Board_4held.size := by rw [hszDS]; exact h4DZ
+  have h0HS : 0 < bS.sudo_5Board_4home.size := by rw [hszHS]; exact h0HZ
+  have h0DS : 0 < bS.sudo_5Board_4held.size := by rw [hszDS]; exact h0DZ
+  have h2HS : 2 < bS.sudo_5Board_4home.size := by rw [hszHS]; exact h2HZ
+  have h2DS : 2 < bS.sudo_5Board_4held.size := by rw [hszDS]; exact h2DZ
+  have h5HS : 5 < bS.sudo_5Board_4held.size := by rw [hszDS]; exact h5DZ
+  have h6HS : 6 < bS.sudo_5Board_4held.size := by rw [hszDS]; exact h6DZ
+  have hhome1S : bS.sudo_5Board_4home[1]'h1HS = embed u :=
+    (hkeepS 1 (by decide) (by decide) (by decide) h1HZ h1HS).trans
+      ((hkeepHZ 1 (by decide) (by decide) h1HV h1HZ).trans
+        ((hkeepH 1 (by decide) (by decide) h1H3 h1HV).trans (by simpa [u] using hhome1 h1H3)))
+  have hheld1S : bS.sudo_5Board_4held[1]'h1DS = true :=
+    (hkeepDS 1 (by decide) (by decide) (by decide) h1DZ h1DS).trans
+      ((hkeepDZ 1 (by decide) (by decide) h1DV h1DZ).trans
+        ((hkeepD 1 (by decide) (by decide) h1D3 h1DV).trans (hheld1 h1D3)))
+  have hhome3S : bS.sudo_5Board_4home[3]'h3HS = embed x2 :=
+    (hkeepS 3 (by decide) (by decide) (by decide) h3HZ h3HS).trans
+      ((hkeepHZ 3 (by decide) (by decide) h3HV h3HZ).trans
+        ((hkeepH 3 (by decide) (by decide) h3H3 h3HV).trans (hhome3 h3H3)))
+  have hheld3S : bS.sudo_5Board_4held[3]'h3DS = true :=
+    (hkeepDS 3 (by decide) (by decide) (by decide) h3DZ h3DS).trans
+      ((hkeepDZ 3 (by decide) (by decide) h3DV h3DZ).trans
+        ((hkeepD 3 (by decide) (by decide) h3D3 h3DV).trans (hheld3 h3D3)))
+  have hhome4S : bS.sudo_5Board_4home[4]'h4HS = embed y2 :=
+    (hkeepS 4 (by decide) (by decide) (by decide) h4HZ h4HS).trans
+      ((hkeepHZ 4 (by decide) (by decide) h4HV h4HZ).trans
+        ((hkeepH 4 (by decide) (by decide) h4H3 h4HV).trans (hhome4 h4H3)))
+  have hheld4S : bS.sudo_5Board_4held[4]'h4DS = true :=
+    (hkeepDS 4 (by decide) (by decide) (by decide) h4DZ h4DS).trans
+      ((hkeepDZ 4 (by decide) (by decide) h4DV h4DZ).trans
+        ((hkeepD 4 (by decide) (by decide) h4D3 h4DV).trans (hheld4 h4D3)))
+  have hhome0S : bS.sudo_5Board_4home[0]'h0HS = embed v :=
+    (hkeepS 0 (by decide) (by decide) (by decide) h0HZ h0HS).trans hhome0Z
+  have hheld0S : bS.sudo_5Board_4held[0]'h0DS = true :=
+    (hkeepDS 0 (by decide) (by decide) (by decide) h0DZ h0DS).trans
+      ((hkeepDZ 0 (by decide) (by decide) h0DV h0DZ).trans
+        ((hkeepD 0 (by decide) (by decide) h0D3 h0DV).trans (hheld0 h0D3)))
+  have huT : allTritList u := by
+    simpa [u, fformRise] using
+      fieldAdd_trits n (mirrorTrits y)
+        (fieldMul n k bench (if red then mirrorTrits y2 else y2) z)
+  have huLen : u.length = n := by
+    simp [u, fformRise, fieldAdd, List.length_map, List.length_range]
+  let mS := (((m + 4) + 1) + 1) + 1
+  let cS := (((ctrl + 8) + 2) + 2) + 2
+  let cOpsS := ((cOps + 1) + 5) + 1
+  let mxS := max (max (max mx3 ((m + 4) + 2)) (((m + 4) + 1) + 2))
+    ((((m + 4) + 1) + 1) + 2)
+  let movesS := ((movesZ + 2 * pegCount (laneZ.take n)) + 2 * pegCount gHome) +
+    schoolMoves v v2 n n +
+    foldCharge n (n - k) (school n v v2 (pref gHome bench n) false)
+  let slidesS := (slidesZ + 2 * pegCount (laneZ.take n)) + 2 * pegCount gHome
+  exact ⟨bS, laneS, mS, cS, mxS, cOpsS, movesS, slidesS, holeS, {
+    on := honS
+    to5 := by simpa using htoS
+    markOn := hmkS
+    marker := by simpa [mS] using hixS
+    ctrlEq := by simpa [cS] using hctrlS
+    mxEq := by simpa using hmxS
+    movesEq := by simpa [movesS, gHome] using hmvS
+    slidesEq := by simpa [slidesS, gHome] using hslS
+    peakEq := by simpa [ofNat_eq_natCast] using hpkS
+    strictEq := hstS
+    holeEq := hholeOutS
+    opsSz := hopsSzS
+    ops0 := by simpa [cOpsS, ofNat_eq_natCast] using hopsS hopsSzS
+    nEq := by rw [htierS, htierZ, htierV, htier3]; exact hn
+    kEq := by rw [htierS, htierZ, htierV, htier3]; exact hk
+    benchEq := by rw [htierS, htierZ, htierV, htier3]; exact hbl
+    scriptEq := by rw [htierS, htierZ, htierV, htier3]; exact hscript
+    wEq := by rw [htierS, htierZ, htierV, htier3]; exact hw
+    hEq := by rw [htierS, htierZ, htierV, htier3]; exact hh
+    rEq := by rw [htierS, htierZ, htierV, htier3]; exact hr
+    home7 := by rw [hszHS, hszHZ, hszHV, hszH3]; exact Nat.succ_le_of_lt h6H
+    home0 := (Array.getElem?_eq_getElem h0HS).trans (congrArg some hhome0S)
+    held0 := (Array.getElem?_eq_getElem h0DS).trans (congrArg some hheld0S)
+    home1 := (Array.getElem?_eq_getElem h1HS).trans (congrArg some hhome1S)
+    held1 := (Array.getElem?_eq_getElem h1DS).trans (congrArg some hheld1S)
+    home2 := (Array.getElem?_eq_getElem h2HS).trans (congrArg some (hbotS h2HS))
+    held2 := (Array.getElem?_eq_getElem h2DS).trans (congrArg some (hheldBS h2DS))
+    home3 := (Array.getElem?_eq_getElem h3HS).trans (congrArg some hhome3S)
+    held3 := (Array.getElem?_eq_getElem h3DS).trans (congrArg some hheld3S)
+    home4 := (Array.getElem?_eq_getElem h4HS).trans (congrArg some hhome4S)
+    held4 := (Array.getElem?_eq_getElem h4DS).trans (congrArg some hheld4S)
+    held5 := (Array.getElem?_eq_getElem h5HS).trans (congrArg some (hgapES h5HS))
+    held6 := (Array.getElem?_eq_getElem h6HS).trans (congrArg some (hspES h6HS))
+    benchArr := hbS
+    posL := hposS
+    nle := hnleS
+    fitL := hfitLS
+    zero := hzeroS
+    take := by simpa [v2] using htS
+    fitN := fits_le hVRoom (by
+      have hpu : pegCount gHome ≤ n := by simpa [hlenG] using pegCount_le gHome
+      have hsch : schoolMoves v v2 n n ≤ n * (n + 1) := schoolMoves_bound v v2 n
+      have hlenSch : (school n v v2 (pref gHome bench n) false).length = bench := by
+        rw [school_length, pref_length hnb (by rw [hlenG]; exact Nat.le_refl n)]
+      have hfc : foldCharge n (n - k) (school n v v2 (pref gHome bench n) false) ≤
+          3 * (bench - n) := by
+        simpa [hlenSch] using
+          foldCharge_bound n (n - k) (school n v v2 (pref gHome bench n) false)
+      simpa [movesS] using
+        sum_room movesZ cap (pegCount (laneZ.take n)) (pegCount gHome)
+          (schoolMoves v v2 n n)
+          (foldCharge n (n - k) (school n v v2 (pref gHome bench n) false))
+          n bench hmvZle hpegZ hpu hsch hfc)
+    lenU := huLen
+    lenV := hvlen
+    lenZ := hlenZ
+    lenX := hlen2
+    lenY := hleny2
+    triU := huT
+    triV := hvT
+    triZ := hz
+    triX := hx2
+    triY := hty2
+    span := hspan
+    npos := hpos
+    nbench := hnb
+    peak7 := carryV.peak7
+    peakS7 := hpeakS7
+    fi := hfi
+  }⟩
 
 end EcbsLink2.Link2

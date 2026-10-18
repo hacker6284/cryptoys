@@ -54,7 +54,13 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       lane'.take n =
         (if red then fformUp n k bench (mirrorTrits y2) u v z
           else fformUp n k bench y2 u v z) ∧
-      (∀ hg : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5]'hg = false) := by
+      (∀ hg : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5]'hg = false) ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = (1 : Int) ∧
+      (∀ h1 : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1]'h1 = false) ∧
+      (∀ h2 : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2]'h2 = true) ∧
+      n ≤ lane'.length ∧
+      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) := by
   have h0d : (0 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h1d : (1 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h2d : (2 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
@@ -272,7 +278,20 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
     sudo_5Board_4held := b4.sudo_5Board_4held.set ⟨5, h5d4⟩ false
     sudo_5Board_4cost := { b4.sudo_5Board_4cost with
       sudo_5Costs_5moves := Int.ofNat (moves4 + pegCount f) } }
-  refine ⟨bC, lane4, ?_, ?_, ?_, ?_, hY, ?_⟩
+  have hschLen : (keepSchool n bench y2 (fformBottom n k bench v z)
+      (mirrorTrits (fieldMul n k bench f u)) (! red)).length = bench := by
+    simp [keepSchool, school_length, pref_length hnb (by rw [hmirLen]; exact Nat.le_refl n)]
+  have hlen4 : lane4.length = bench := by
+    rw [s4.lane_eq, laneFold_length n (n - k) _
+      (by rw [hschLen]; exact hnb), hschLen]
+  have hgapPos : 0 < n - k := by
+    have hwr : 0 < w * r := Nat.mul_pos hw0 hrP
+    rw [← hgapE] at hwr
+    exact hwr
+  refine ⟨bC, lane4, ?_, ?_, ?_, ?_, hY, ?_,
+      by simpa [bC] using s4.on,
+      by simpa [bC, ofNat_eq_natCast] using s4.to_eq,
+      ?_, ?_, by rw [hlen4]; exact hnb, ?_⟩
   · have hUp := fform_consts.2.1
     have hBot := fform_consts.2.2.1
     have hBu := fform_consts.2.2.2.2.1
@@ -288,5 +307,28 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
   · simpa [bC] using s4.bench_eq
   · intro _
     simp [bC, Array.getElem_set]
+  · intro h
+    have h1d4 : (1 : Nat) < b4.sudo_5Board_4held.size := by rw [s4.heldSz]; exact h1d3
+    have hheld1 : b4.sudo_5Board_4held[1] = false :=
+      (s4.stayH 1 (by decide) h1d3 h1d4).trans hemptyU
+    have hne : (5 : Nat) ≠ 1 := by decide
+    simpa [bC, Array.getElem_set_ne, hne] using hheld1
+  · intro h
+    have h2d4 : (2 : Nat) < b4.sudo_5Board_4held.size := by rw [s4.heldSz]; exact h2d3
+    have hheld2 : b4.sudo_5Board_4held[2] = true :=
+      (s4.stayH 2 (by decide) h2d3 h2d4).trans hzHeld3
+    have hne : (5 : Nat) ≠ 2 := by decide
+    simpa [bC, Array.getElem_set_ne, hne] using hheld2
+  · intro i hi hii
+    have hii4 : i < lane4.length := by
+      simpa [bC] using hii
+    rw [s4.lane_eq] at hii4
+    have hiiS : i < (keepSchool n bench y2 (fformBottom n k bench v z)
+        (mirrorTrits (fieldMul n k bench f u)) (! red)).length := by
+      rw [← laneFold_length n (n - k) _ (by rw [hschLen]; exact hnb)]
+      exact hii4
+    rw [← coeff_eq_get lane4 i hii, s4.lane_eq]
+    exact laneFold_high n (n - k) _ i hn0 hgapPos
+      (by rw [hschLen]; exact hnb) hi hiiS
 
 end EcbsLink2.Link2

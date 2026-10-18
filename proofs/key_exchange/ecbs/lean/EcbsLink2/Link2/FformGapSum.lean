@@ -286,6 +286,7 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
     (hv2 : v2 = fieldMul n k bench v v)
     (hpeak7 : 7 ≤ peak)
     (hstrict : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hhomeT : allTritList u2z) (hv : allTritList v)
     (hfi : FitsLen (2 * (n - 1)))
@@ -343,7 +344,15 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
       (∀ j, j ≠ gap → j ≠ sp → j ≠ bot →
         ∀ hj : j < b.sudo_5Board_4held.size,
         ∀ hj' : j < b'.sudo_5Board_4held.size,
-          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) ∧
+      0 < lane'.length ∧
+      n ≤ lane'.length ∧
+      FitsLen lane'.length ∧
+      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) ∧
+      0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+      ∃ hole', b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole' := by
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     simpa [feed, markerUpFeed] using hops
@@ -627,10 +636,42 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
   have hslOut : bOut.sudo_5Board_4cost.sudo_5Costs_6slides =
       Int.ofNat ((slides + 2 * pegCount (lane.take n)) + 2 * pegCount u2z) := by
     simpa [slidesS, peg] using hlay.slides
+  have hlenR : (laneFold n (n - k) sch).length = bench := by
+    rw [laneFold_length n (n - k) sch (by rw [hschLen]; exact hnb), hschLen]
+  have hgapPos : 0 < n - k := by
+    have hwr : 0 < w * r := Nat.mul_pos hw0 hrP
+    omega
+  have hnoF : ¬ peak < countHeld bFold.sudo_5Board_4held 7 := by
+    have hle : countHeld bFold.sudo_5Board_4held 7 ≤ 7 := countHeld_seven _
+    omega
+  have hpeakOut : bOut.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    unfold bOut ontoFoldBoard peakBoard raisedPeak noteBench withMoves withHole
+    split <;> simp [hnoF, hpeakF, ofNat_eq_natCast]
+  have hstay : raisedPeak peakS
+      (countHeld (bS.sudo_5Board_4held.set ⟨gap, hGapD⟩ false) 7) = peakS := by
+    have hle : countHeld (bS.sudo_5Board_4held.set ⟨gap, hGapD⟩ false) 7 ≤ 7 :=
+      countHeld_seven _
+    unfold raisedPeak
+    split <;> omega
+  have hstrictF : bFold.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, ontoCharge, hstrictS, hstay,
+      ofNat_eq_natCast]
+  have hstrictOut : bOut.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
+    unfold bOut ontoFoldBoard peakBoard raisedPeak noteBench withMoves withHole
+    split <;> simp [hstrictF]
+  have hholeOut : ∃ hole', bOut.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      Int.ofNat hole' := by
+    unfold bOut ontoFoldBoard peakBoard noteBench withMoves withHole
+    split
+    · exact ⟨topIdx sch, by simp⟩
+    · exact ⟨hole, by simp [hholeF]⟩
   refine ⟨bOut, laneFold n (n - k) sch, ?_, ?_, ?_, ?_, hlay.on, hlay.to_,
       hlay.flag.trans (by simp [bS, markerOn]), ?_, ?_, ?_, ?_, ?_,
       hlay.ctrl.trans hcS, hlay.mx.trans hxS, hlay.tier.trans htierS, hmvOut, hslOut,
-      hszHeld, hszHomeB, ?_, ?_⟩
+      hszHeld, hszHomeB, ?_, ?_,
+      by rw [hlenR]; exact Nat.lt_of_lt_of_le hn0 hnb,
+      by rw [hlenR]; exact hnb,
+      by rw [hlenR]; exact hfitB, ?_, hpeakOut, hstrictOut, hszOut, hholeOut⟩
   · rw [hflag]
     exact hmul
   · simpa [bOut, sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
@@ -672,5 +713,11 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
       rw [hheldU]
       exact hj
     exact hEq.trans (hget.trans (idx_eq hheldU j hjU))
+  · intro i hi hii
+    have hiiS : i < sch.length := by
+      rwa [hlenR, ← hschLen] at hii
+    rw [← coeff_eq_get (laneFold n (n - k) sch) i hii]
+    exact laneFold_high n (n - k) sch i hn0 hgapPos
+      (by rw [hschLen]; exact hnb) hi hiiS
 
 end EcbsLink2.Link2

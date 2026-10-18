@@ -91,7 +91,13 @@ theorem fform_add_on_f (b : Ecbs.Board) (red : Bool)
       lane'.take n =
         (if red then fformUp n k bench (mirrorTrits y2) u v z
           else fformUp n k bench y2 u v z) ∧
-      (∀ hg : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5]'hg = false) :=
+      (∀ hg : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5]'hg = false) ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = (1 : Int) ∧
+      (∀ h1 : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1]'h1 = false) ∧
+      (∀ h2 : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2]'h2 = true) ∧
+      n ≤ lane'.length ∧
+      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) :=
   fform_add_point b red (fformF n k bench u v z) v z x2 u y2 lane
     m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
     h7 h7H hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH

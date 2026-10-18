@@ -131,7 +131,36 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
       (∀ hD' : dst < b'.sudo_5Board_4held.size,
         b'.sudo_5Board_4held[dst]'hD' = false) ∧
       Ecbs.is_zero b' ((dst : Nat) : Int) =
-        .ok (decide (fformRun n k bench x2 z x = List.replicate n 0)) := by
+        .ok (decide (fformRun n k bench x2 z x = List.replicate n 0)) ∧
+      b'.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max mx (m + 2)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat ((moves + pegCount x + 2 * pegCount (lane.take n)) +
+          2 * pegCount (mirrorTrits x) + pegCount z + schoolMoves x2 z n n +
+          foldCharge n (n - k)
+            (school n x2 z (pref (mirrorTrits x) bench n) false)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount (lane.take n) + 2 * pegCount (mirrorTrits x)) ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      (∀ j, j ≠ dst → j ≠ seat → j ≠ 6 →
+        ∀ hj : j < b.sudo_5Board_4home.size,
+        ∀ hj' : j < b'.sudo_5Board_4home.size,
+          b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) ∧
+      (∀ j, j ≠ dst → j ≠ seat → j ≠ 6 →
+        ∀ hj : j < b.sudo_5Board_4held.size,
+        ∀ hj' : j < b'.sudo_5Board_4held.size,
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) ∧
+      (∀ h2 : second < b'.sudo_5Board_4home.size,
+        b'.sudo_5Board_4home[second]'h2 = embed z) ∧
+      (∀ h2 : second < b'.sudo_5Board_4held.size,
+        b'.sudo_5Board_4held[second]'h2 = true) ∧
+      ∃ hole',
+        BenchCarry b'
+          (laneFold n (n - k) (school n x2 z (pref (mirrorTrits x) bench n) false))
+          n (cOps + 1) peak hole' peakS := by
   let bM := mirrorHome b dst hH (embed (mirrorTrits x)) (moves + pegCount x)
   let feed := markerUpFeed bM m ctrl mx
   let hopsM : 0 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -315,8 +344,25 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
     exact h7
+  have hmU : bU.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hcU : bU.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hxU : bU.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx (m + 2)) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hmS : bS.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+    rw [show bS.sudo_5Board_6marker =
+        (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_6marker from by
+          dsimp [bS, markerOn],
+      settle_ix_eq bU seat hinS lane n mvM slides peak, hmU]
+  have hcS : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    rw [hcostS, settle_ctrl_eq bU seat hinS lane n mvM slides peak, hcU]
+  have hxS : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx (m + 2)) := by
+    rw [hcostS, settle_mx_eq bU seat hinS lane n mvM slides peak, hxU]
   obtain ⟨b', hok, hbench', htakeF, hon', hto', hmk', htier', hsz', hempty',
-      _hszH, _hhome, _hheldK, _hix, _hctrl, _hmx, _hops, _hmv, _hsl⟩ :=
+      hszH, hhome, hheldK, hix, hctrl, hmx, hopsEq, hmv, hsl, hpk, hst, hho, hsp6⟩ :=
     run_else_field bS dst first second
       (mirrorTrits x) x2 z w h r n k mvS slS hole peak peakS bench
       hoffS hblS hDD hHD hHeldD hHomeD hF' hHomeF' hHF' hArr' hS' hHomeS' hHS' hYs'
@@ -351,12 +397,108 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
     rw [hzero, htakeF]
     unfold fformRun
     rfl
-  refine ⟨b', ?_, hbench', ?_, hon', hto', ?_, htierB, hempty', hzeroR⟩
+  have hszHeld : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+    rw [hsz', hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
+  have hszHomeB : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
+    rw [hszH, hhomeS, settle_home_eq bU seat hinS lane n mvM slides peak, Array.size_set,
+      hhomeU, Array.size_set]
+  have h2Home : second < b'.sudo_5Board_4home.size := by
+    rw [hszH]; exact hHomeS'
+  have h2Held : second < b'.sudo_5Board_4held.size := by
+    rw [hsz']; exact hS'
+  refine ⟨b', ?_, hbench', ?_, hon', hto', ?_, htierB, hempty', hzeroR,
+      hix.trans hmS, hctrl.trans hcS, hmx.trans hxS, ?_, ?_, hszHeld, hszHomeB, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hrise, hflag]
     exact hok
   · rw [htakeF]
     unfold fformRun
     rfl
   · rw [hmk', hmkS]
+  · simpa [mvS, pegL] using hmv
+  · simpa [slS, pegL] using hsl
+  · intro j hneD hneSeat hne6 hj hj'
+    have hjS : j < bS.sudo_5Board_4home.size := by
+      rw [hszH] at hj'
+      exact hj'
+    have hEqS := hhome j hneD hne6 hjS hj'
+    have hset := settle_home_eq bU seat hinS lane n mvM slides peak
+    have hget := idx_eq (hhomeS.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hneSeat)] at hget
+    have hjU : j < bU.sudo_5Board_4home.size := by
+      rw [hhomeU, Array.size_set]
+      exact hj
+    have hraw := idx_eq hhomeU j hjU
+    have hBU : bU.sudo_5Board_4home[j]'hjU = b.sudo_5Board_4home[j]'hj := by
+      rw [Array.getElem_set_ne (h := Ne.symm hneD)] at hraw
+      exact hraw
+    exact hEqS.trans (hget.trans hBU)
+  · intro j hneD hneSeat hne6 hj hj'
+    have hjS : j < bS.sudo_5Board_4held.size := by
+      rw [hsz'] at hj'
+      exact hj'
+    have hEqS := hheldK j hneD hne6 hjS hj'
+    have hset := settle_held_eq bU seat hinS lane n mvM slides peak
+    have hget := idx_eq (hheldS0.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hneSeat)] at hget
+    have hjU : j < bU.sudo_5Board_4held.size := by
+      rw [hheldU]
+      exact hj
+    exact hEqS.trans (hget.trans (idx_eq hheldU j hjU))
+  · intro h2
+    exact (hhome second (Ne.symm hneD2) hne6S hHomeS' h2).trans hYs'
+  · intro h2
+    exact (hheldK second (Ne.symm hneD2) hne6S hS' h2).trans hHS'
+  · let schR := school n x2 z (pref (mirrorTrits x) bench n) false
+    let hole' := if hole < topIdx schR then topIdx schR else hole
+    have hgapPos : 0 < n - k := by
+      have hwr : 0 < w * r := Nat.mul_pos hw0 hrP
+      omega
+    have hholeN : (if decide (Int.ofNat (topIdx schR) > Int.ofNat hole) then
+          Int.ofNat (topIdx schR) else Int.ofNat hole) = Int.ofNat hole' := by
+      by_cases hlt : hole < topIdx schR
+      · have hgt : Int.ofNat (topIdx schR) > Int.ofNat hole := by
+          rw [gt_iff_lt, ofNat_lt_iff]
+          exact hlt
+        simp [hole', hlt, hgt]
+      · have hng : ¬ Int.ofNat (topIdx schR) > Int.ofNat hole := by
+          rw [gt_iff_lt, ofNat_lt_iff]
+          exact hlt
+        simp [hole', hlt, hng]
+    have hhole' : b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole' := by
+      rw [hho, hholeN]
+    have hopsS : bS.sudo_5Board_4cost.sudo_5Costs_3ops = bU.sudo_5Board_4cost.sudo_5Costs_3ops := by
+      rw [show bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+          (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_4cost.sudo_5Costs_3ops
+          from by dsimp [bS, markerOn]]
+      exact settle_ops bU seat hinS lane n mvM slides peak
+    have hopSet := bumpOp_ops feed 0 cOps hopsF
+    have hszU : 0 < bU.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      rw [hopSet, Array.size_set]
+      exact hopsF
+    have hopU : bU.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hszU = Int.ofNat (cOps + 1) :=
+      cell_eq_of hopSet
+        (Array.getElem_set_eq feed.sudo_5Board_4cost.sudo_5Costs_3ops ⟨0, hopsF⟩
+          (Int.ofNat (cOps + 1)) rfl (by rw [Array.size_set]; exact hopsF))
+    have hszOp : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      rw [hopsEq, hopsS]
+      exact hszU
+    have hop' : b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hszOp = Int.ofNat (cOps + 1) :=
+      cell_eq_of (hopsEq.trans hopsS) hopU
+    have h6 : 6 < b'.sudo_5Board_4held.size := by
+      rw [hsz', hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
+      exact hSpH
+    refine ⟨hole', hszOp, hop', h6, hsp6 h6, hpeak7, hpk, hst, hhole', ?_, ?_, ?_, ?_⟩
+    · rw [hlenR]
+      exact Nat.lt_of_lt_of_le hpos hnb
+    · rw [hlenR]
+      exact hnb
+    · rw [hlenR]
+      exact hfitB
+    · intro i hi hii
+      have hiiS : i < schR.length := by
+        rwa [hlenR, ← hschLen] at hii
+      rw [← coeff_eq_get laneR i hii]
+      exact laneFold_high n (n - k) schR i hpos hgapPos
+        (by rw [hschLen]; exact hnb) hi hiiS
 
 end EcbsLink2.Link2

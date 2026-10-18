@@ -150,7 +150,7 @@ theorem rise_gap_u2 (b : Ecbs.Board) (dst first second seat gap : Nat)
       b2.sudo_5Board_5bench = embed lane2 := by
   intro u
   obtain ⟨bR, hokR, hbenchR, htakeR, honR, htoR, hmkR, htierR, hemptyR, hixR, hctrlR, hmxR,
-      hmvR, hslR, hszH, hszHome, hhomeR, hheldR, holeR, carry⟩ :=
+      hmvR, hslR, hszH, hszHome, hhomeR, hheldR, _hseatA, _hseatH, holeR, carry⟩ :=
     rise_on_board b dst first second seat y y2 z lane mirror
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       hH hD hheld harr hn hlen hpos htri hmv hfit hmk hon hto hseat hm hc hx hscript

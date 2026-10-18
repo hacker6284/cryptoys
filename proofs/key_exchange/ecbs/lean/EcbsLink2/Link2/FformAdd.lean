@@ -1662,9 +1662,17 @@ theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
           schoolMoves xs ys n n +
           foldCharge n (n - k) (school n xs ys (pref home bench n) false)) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides =
-        Int.ofNat (slides + 2 * pegCount home) := by
+        Int.ofNat (slides + 2 * pegCount home) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        (if decide (Int.ofNat (topIdx (school n xs ys (pref home bench n) false)) >
+              Int.ofNat hole) then
+            Int.ofNat (topIdx (school n xs ys (pref home bench n) false))
+          else Int.ofNat hole) ∧
+      (∀ h6 : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6]'h6 = false) := by
   obtain ⟨b', hok, hbench, hon, hto, hmk, htier, hsz, hempty, hszH, hhome, hheldK,
-      hix, hctrl, hmx, hops', hmv, hsl, _, _, _, _⟩ :=
+      hix, hctrl, hmx, hops', hmv, hsl, hpk, hst, hho, hsp6⟩ :=
     run_else_lane b dst first second home xs ys
       w h r n k moves slides hole peak peakS bench false hoff hbl hD hHD hHeldD hHomeD
       hF hHome hHF hArr hS hHomeS hHS hYs hSpH hSpHome hSpE h7 hneD1 hneD2 hne6D
@@ -1672,7 +1680,8 @@ theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
       hspan hhomeT hxsT hfi hfitM hfitS hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
       hsm hnsm hfitB hfold
   refine ⟨b', hok, hbench, onto_add n k bench xs ys home hhomeT hlenH (Or.inl hspan) hnb,
-    hon, hto, hmk, htier, hsz, hempty, hszH, hhome, hheldK, hix, hctrl, hmx, hops', hmv, hsl⟩
+    hon, hto, hmk, htier, hsz, hempty, hszH, hhome, hheldK, hix, hctrl, hmx, hops', hmv, hsl,
+    hpk, hst, hho, hsp6⟩
 
 private theorem fold_peak (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat)
     (hno : ¬ peak < countHeld b.sudo_5Board_4held 7) :

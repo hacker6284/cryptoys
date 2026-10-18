@@ -440,7 +440,17 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
         Int.ofNat ((moves + 2 * pegCount (lane.take n)) + schoolMoves z u2 n n +
           foldCharge n (n - k) (school n z u2 (List.replicate bench 0) false)) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides =
-        Int.ofNat (slides + 2 * pegCount (lane.take n)) := by
+        Int.ofNat (slides + 2 * pegCount (lane.take n)) ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      (∀ j, j ≠ gap →
+        ∀ hj : j < b.sudo_5Board_4home.size,
+        ∀ hj' : j < b'.sudo_5Board_4home.size,
+          b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) ∧
+      (∀ j, j ≠ gap →
+        ∀ hj : j < b.sudo_5Board_4held.size,
+        ∀ hj' : j < b'.sudo_5Board_4held.size,
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     simpa [feed, markerUpFeed] using hops
@@ -558,7 +568,7 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
     have h6U : 6 < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hSpH
     exact (hget.trans (idx_eq hheldU 6 h6U)).trans hSpE
   obtain ⟨b', hok, hbench, hmul, hpk, hst, hho, hopsEq, hszH, hheldK,
-      hon', hto', hmk', htier', hix, hctrl, hmx, hmv', hsl', hsec, _hszHome, _hhomeJ⟩ :=
+      hon', hto', hmk', htier', hix, hctrl, hmx, hmv', hsl', hsec, hszHome, hhomeJ⟩ :=
     nocopy_else_field bS gap bot gap z u2
       w h r n k mvS hole peak peakS bench hoffS hblS hBotD hBotH hHeldBot hHomeBot
       hGapD hGapH hHeldG hHomeG h7S hne hn0 hnb hnS hlenz hlenu hf hmovesS
@@ -645,8 +655,13 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
       Int.ofNat ((moves + 2 * pegCount (lane.take n)) + schoolMoves z u2 n n +
         foldCharge n (n - k) (school n z u2 (List.replicate bench 0) false)) := by
     simpa [mvS] using hmv'
+  have hszHeld : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+    rw [hszH, hheldS0, settle_held_eq bU gap hinS lane n moves slides peak, Array.size_set, hheldU]
+  have hszHomeB : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
+    rw [hszHome, hhomeS, settle_home_eq bU gap hinS lane n moves slides peak, Array.size_set, hhomeU]
   refine ⟨b', lane', hole', ?_, hbench, hmul, ?_, hon', hto', hmk'.trans hmkS, htierB,
-      hix.trans hmS, hctrl.trans hcS, hmx.trans hxS, hsec, hmvOut, hsl'.trans hslS⟩
+      hix.trans hmS, hctrl.trans hcS, hmx.trans hxS, hsec, hmvOut, hsl'.trans hslS,
+      hszHeld, hszHomeB, ?_, ?_⟩
   · rw [hflag]
     exact hok
   · refine ⟨hsz', hop', h6, hsp, hpeak7, hpk, hst, hhole', ?_, ?_, ?_, ?_⟩
@@ -662,6 +677,30 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
       rw [← coeff_eq_get lane' i hii]
       exact laneFold_high n (n - k) schZ i hn0 hgapPos
         (by rw [hschLen]; exact hnb) hi hiiS
+  · intro j hne hj hj'
+    have hjS : j < bS.sudo_5Board_4home.size := by
+      rw [hszHome] at hj'
+      exact hj'
+    have hEq := hhomeJ j hne hjS hj'
+    have hset := settle_home_eq bU gap hinS lane n moves slides peak
+    have hget := idx_eq (hhomeS.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hne)] at hget
+    have hjU : j < bU.sudo_5Board_4home.size := by
+      rw [hhomeU]
+      exact hj
+    exact hEq.trans (hget.trans (idx_eq hhomeU j hjU))
+  · intro j hne hj hj'
+    have hjS : j < bS.sudo_5Board_4held.size := by
+      rw [hszH] at hj'
+      exact hj'
+    have hEq := hheldK j hne hjS hj'
+    have hset := settle_held_eq bU gap hinS lane n moves slides peak
+    have hget := idx_eq (hheldS0.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hne)] at hget
+    have hjU : j < bU.sudo_5Board_4held.size := by
+      rw [hheldU]
+      exact hj
+    exact hEq.trans (hget.trans (idx_eq hheldU j hjU))
 
 /-- Square the run into the spare. The bench holds the previous gap value and
     is aimed at the gap, so `mulElse` settles that value into the gap home.

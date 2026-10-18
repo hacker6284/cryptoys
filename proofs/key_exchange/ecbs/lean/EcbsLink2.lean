@@ -126,6 +126,7 @@ import EcbsLink2.Link2.FformLine
 import EcbsLink2.Link2.FformKept
 import EcbsLink2.Link2.FformCount
 import EcbsLink2.Link2.FformHold
+import EcbsLink2.Link2.FformCell
 import EcbsLink2.Link2.FformAddTie
 import EcbsLink2.Link2.FformOpen
 import EcbsLink2.Link2.FformStart

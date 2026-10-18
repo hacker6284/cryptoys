@@ -169,6 +169,10 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
         ∀ hj : j < b.sudo_5Board_4held.size,
         ∀ hj' : j < b'.sudo_5Board_4held.size,
           b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) ∧
+      (∀ hs : seat < b'.sudo_5Board_4home.size,
+        b'.sudo_5Board_4home[seat]'hs = embed (lane.take n)) ∧
+      (∀ hs : seat < b'.sudo_5Board_4held.size,
+        b'.sudo_5Board_4held[seat]'hs = true) ∧
       ∃ hole',
         BenchCarry b'
           (laneFold n (n - k) (school n y2 z (pref (mirrorTrits y) bench n) mirror))
@@ -411,9 +415,26 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
         (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_4home.size from by
           dsimp [bS, markerOn]]
     rw [settle_home_eq bU seat hinS lane n mvM slides peak, Array.size_set, hhomeU, Array.size_set]
+  have hSeatS : seat < bS.sudo_5Board_4home.size := by
+    rw [hhomeS, settle_home_eq bU seat hinS lane n mvM slides peak, Array.size_set, hhomeU,
+      Array.size_set]
+    exact hHseat
+  have hSeatD : seat < bS.sudo_5Board_4held.size := by
+    rw [hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
+    exact hDseat
+  have hSeatHome : bS.sudo_5Board_4home[seat]'hSeatS = embed (lane.take n) := by
+    have hset := settle_home_eq bU seat hinS lane n mvM slides peak
+    have hget := idx_eq (hhomeS.trans hset) seat hSeatS
+    simp only [Array.getElem_set, if_pos rfl] at hget
+    exact hget
+  have hSeatHeld : bS.sudo_5Board_4held[seat]'hSeatD = true := by
+    have hset := settle_held_eq bU seat hinS lane n mvM slides peak
+    have hget := idx_eq (hheldS0.trans hset) seat hSeatD
+    simp only [Array.getElem_set, if_pos rfl] at hget
+    exact hget
   refine ⟨b', ?_, hbench, rise_lane_spec mirror n k bench y2 z y hy2 hz hlen hspan hnb,
       hon, hto, hmk'.trans hmkS, htierB, hempty, hix.trans hmS, hctrl.trans hcS,
-      hmx.trans hxS, ?_, ?_, hszHeld, hszHomeB, ?_, ?_, ?_⟩
+      hmx.trans hxS, ?_, ?_, hszHeld, hszHomeB, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hrise, hflag]
     exact hok
   · rw [hmv, hmvS]
@@ -448,6 +469,18 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
     have hBU : bU.sudo_5Board_4held[j]'hjU = b.sudo_5Board_4held[j]'hj :=
       idx_eq hheldU j hjU
     exact hEqS.trans (hget.trans hBU)
+  · intro hs
+    have hS0 : seat < bS.sudo_5Board_4home.size := by
+      rw [hszHome] at hs
+      exact hs
+    exact (hhomeK seat hseat hneSeat6 hS0 hs).trans
+      ((idx_irrel (h1 := hS0) (h2 := hSeatS)).trans hSeatHome)
+  · intro hs
+    have hS0 : seat < bS.sudo_5Board_4held.size := by
+      rw [hszD] at hs
+      exact hs
+    exact (hheldK seat hseat hneSeat6 hS0 hs).trans
+      ((idx_irrel (h1 := hS0) (h2 := hSeatD)).trans hSeatHeld)
   · let schR := school n y2 z (pref (mirrorTrits y) bench n) mirror
     let laneR := laneFold n (n - k) schR
     let hole' := if hole < topIdx schR then topIdx schR else hole

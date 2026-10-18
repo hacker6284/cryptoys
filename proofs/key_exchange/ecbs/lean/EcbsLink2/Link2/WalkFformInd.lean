@@ -63,6 +63,25 @@ def ProjOn (t : Spec.Tier) (b : Ecbs.Board) (px py : List Nat) : Prop :=
     ∃ wInv, wInv.length = t.n ∧ allTritList wInv ∧
       fieldMul t.n t.k t.benchlen zP wInv = onePeg t.n
 
+/-- One live cell still to run leaves `FitsLen (c0 + 13)`, which is what
+    `comb_u2z` and the tail read off the incoming counter. -/
+theorem mul_slack_cell (c0 cells done : Nat)
+    (h : FitsLen (c0 + 13 * (cells - done))) (hpos : done < cells) :
+    FitsLen (c0 + 13) := by
+  refine FitsLen.of_le h ?_
+  have hone : 1 ≤ cells - done := by omega
+  have hmul : 13 * 1 ≤ 13 * (cells - done) := Nat.mul_le_mul_left 13 hone
+  omega
+
+/-- After a cell spends at most 13 multiplies, the same room covers the
+    cells that remain. -/
+theorem mul_slack_next (c0 k cells done : Nat)
+    (h : FitsLen (c0 + 13 * (cells - done))) (hk : k ≤ 13) (hpos : done < cells) :
+    FitsLen (c0 + k + 13 * (cells - (done + 1))) := by
+  refine FitsLen.of_le h ?_
+  have hsplit : cells - done = (cells - (done + 1)) + 1 := by omega
+  omega
+
 /-- One cell spends `spend`. The room that remains is still inside an i64. -/
 theorem room_after_spend (moves spend moves' rest : Nat)
     (h : FitsLen (moves + spend + rest)) (hle : moves' ≤ moves + spend) :
@@ -77,11 +96,12 @@ theorem serious_script_cube : 2 < Spec.serious.script := by decide
 
 /-- A live F-form board, `done` cells already run. The charges are `LiveAt`'s.
     `px` and `py` are the affine point `walkRun` has reached. `ProjOn` is the
-    projective triple of that point. `cOps` is ops slot 1, the cube counter,
+    projective triple of that point.     `cOps` is ops slot 1, the cube counter,
     with room for three cubes. `c0` is ops slot 0, the multiply counter.
-    `FitsLen (c0 + 13)` is one cell of multiply slack: `comb_u2z` asks for 8,
-    and the tail asks for 6 more after the seven multiplies already counted
-    at the sum. -/
+    One cell asks for 13 of multiply slack: `comb_u2z` asks for 8, and the
+    tail asks for 6 more after the seven multiplies already counted at the
+    sum. The field keeps that slack for every cell still to run,
+    `13 * (t.cells - done)`. -/
 def FformAt (t : Spec.Tier) (b : Ecbs.Board)
     (baseX baseY px py : List Nat) (done : Nat) : Prop :=
   b.sudo_5Board_9marker_on = true ∧
@@ -115,7 +135,7 @@ def FformAt (t : Spec.Tier) (b : Ecbs.Board)
     b.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) ∧
     FitsLen (ctrl + 6) ∧
     FitsLen (cOps + 3) ∧
-    FitsLen (c0 + 13) ∧
+    FitsLen (c0 + 13 * (t.cells - done)) ∧
     FitsLen (moves + 2 * t.n + cubeCharge t.n t.benchlen + 2 * t.n +
       3 * (t.benchlen - t.n)) ∧
     FitsLen (slides + 2 * t.n + slideCharge t.n) ∧

@@ -247,4 +247,43 @@ theorem start_walk_ops0 (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
         hops, out.ops]
       exact zero_ops0
 
+theorem demo_mul_cells : 13 * demo.cells = 26 := rfl
+theorem toy_mul_cells : 13 * toy.cells = 208 := rfl
+theorem hobby_mul_cells : 13 * hobby.cells = 663 := rfl
+theorem serious_mul_cells : 13 * serious.cells = 2106 := rfl
+
+private theorem ble_le (a b : Nat) (h : Nat.ble a b = true) : a ≤ b :=
+  Nat.le_of_ble_eq_true h
+
+theorem demo_mul_fit : FitsLen (13 * demo.cells) := by
+  rw [demo_mul_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+theorem toy_mul_fit : FitsLen (13 * toy.cells) := by
+  rw [toy_mul_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+theorem hobby_mul_fit : FitsLen (13 * hobby.cells) := by
+  rw [hobby_mul_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+theorem serious_mul_fit : FitsLen (13 * serious.cells) := by
+  rw [serious_mul_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+/-- The opening counter is 0, and every shipped tier leaves room for 13
+    multiplies in each cell of the key. -/
+theorem start_walk_mul_room (t : Spec.Tier)
+    (h : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
+    FitsLen (0 + 13 * (t.cells - 0)) := by
+  rcases h with rfl | rfl | rfl | rfl
+  · simpa using demo_mul_fit
+  · simpa using toy_mul_fit
+  · simpa using hobby_mul_fit
+  · simpa using serious_mul_fit
+
 end EcbsLink2.Link2

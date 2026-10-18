@@ -181,7 +181,7 @@ theorem rise_gap_u2 (b : Ecbs.Board) (dst first second seat gap : Nat)
     simpa [ofNat_eq_natCast] using carry.peakEq
   have hopCast : bR.sudo_5Board_4cost.sudo_5Costs_3ops[0]'carry.opsSz = ((cOps + 1 : Nat) : Int) := by
     simpa [ofNat_eq_natCast] using carry.ops0
-  obtain ⟨b2, lane2, hole2, hok2, _hb, ht2, carry2⟩ :=
+  obtain ⟨b2, lane2, hole2, hok2, _hb, ht2, carry2, _⟩ :=
     gap_u2 bR gap dst u laneR (m + 1) (ctrl + 2) (max mx (m + 2)) script (cOps + 1)
       n k w h r movesR slidesR holeR peak peakS bench
       hUpH hUpD hmkR honR htoR hixR hctrlR hmxR

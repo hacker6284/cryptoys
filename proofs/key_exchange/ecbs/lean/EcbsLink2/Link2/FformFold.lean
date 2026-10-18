@@ -12,6 +12,40 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+private theorem fold_ops_here (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_peak_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat)
+    (hno : ¬ peak < countHeld b.sudo_5Board_4held 7) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_4peak =
+      (peak : Int) := by
+  unfold ontoFoldBoard peakBoard raisedPeak noteBench withMoves withHole
+  dsimp only
+  split <;> simp [hno, ofNat_eq_natCast]
+
+private theorem fold_strict_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_hole_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      (if decide (Int.ofNat (topIdx sch) >
+            b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) then
+          Int.ofNat (topIdx sch)
+        else b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) := by
+  unfold ontoFoldBoard peakBoard
+  rw [noteBench_hole]
+
+private theorem fold_held_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4held = b.sudo_5Board_4held := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
 /-- Bench off, not onto, not a copy. The length-`n` prefix is `fieldMul` of
     the two homes. The mirror flag is off, so this is SPEC.md's product, not
     a mirrored one. -/
@@ -35,7 +69,9 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
     (hf : FitsLen n)
     (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hpeak7 : 7 ≤ peak)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
@@ -59,7 +95,19 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
           (school n xs ys (List.replicate bench 0) false)) ∧
       (laneFold n (n - k)
           (school n xs ys (List.replicate bench 0) false)).take n =
-        fieldMul n k bench xs ys := by
+        fieldMul n k bench xs ys ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        (if decide (Int.ofNat (topIdx (school n xs ys (List.replicate bench 0) false)) >
+              Int.ofNat hole) then
+            Int.ofNat (topIdx (school n xs ys (List.replicate bench 0) false))
+          else Int.ofNat hole) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      (∀ j, j ≠ second → ∀ hj : j < b.sudo_5Board_4held.size,
+        ∀ hj' : j < b'.sudo_5Board_4held.size,
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
   have hOff := nocopy_else_off b dst first second xs ys n moves peakS bench false
     hoff hbl hF hHome hHF hArr hS hHomeS hHS hYs h7 hne hn0 hn hlenx hleny hf
     hmoves hpeakS hspan hxsT hfi hfm
@@ -119,11 +167,40 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
       (by rw [hschLen]; exact hfitB) hwB hhB hrB hnB hkB hblB hw0 hh0 hrR hrP hnE hkLe hgap
       hschT hmB hholeB hpeakB h7B (by rw [hschLen]; exact hsm) hnsm hfitF
       (by rw [hschLen]; exact Nat.le_refl bench) (Nat.lt_of_lt_of_le hn0 hnb)
-  refine ⟨ontoFoldBoard bFold sch n k mvN peak, ?_, ?_, ?_⟩
+  have hnoF : ¬ peak < countHeld bFold.sudo_5Board_4held 7 := by
+    have hle : countHeld bFold.sudo_5Board_4held 7 ≤ 7 := countHeld_seven _
+    omega
+  have hstrictB : bFold.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
+    have hcount : countHeld b.sudo_5Board_4held 7 ≤ 7 := countHeld_seven _
+    have hnot : ¬ peakS < countHeld b.sudo_5Board_4held 7 := by omega
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, raisedPeak, hpeakS, hnot,
+      ofNat_eq_natCast]
+  have hopsB : bFold.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hheldB : bFold.sudo_5Board_4held =
+      b.sudo_5Board_4held.set ⟨second, hS⟩ false := by
+    simp [bFold, withMoves, mulPrep, mulAimed]
+  refine ⟨ontoFoldBoard bFold sch n k mvN peak, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hma]
     exact hOk
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
   · simpa [sch, pad] using zero_school_mul n k bench xs ys
+  · exact fold_peak_out bFold sch n k mvN peak hnoF
+  · rw [fold_strict_out bFold sch n k mvN peak, hstrictB]
+  · rw [fold_hole_out bFold sch n k mvN peak, hholeB]
+  · exact (fold_ops_here bFold sch n k mvN peak).trans hopsB
+  · rw [fold_held_out bFold sch n k mvN peak, hheldB, Array.size_set]
+  · intro j hneJ hj hj'
+    have hEq : (ontoFoldBoard bFold sch n k mvN peak).sudo_5Board_4held =
+        b.sudo_5Board_4held.set ⟨second, hS⟩ false :=
+      (fold_held_out bFold sch n k mvN peak).trans hheldB
+    have hset : j < (b.sudo_5Board_4held.set ⟨second, hS⟩ false).size := by
+      rw [Array.size_set]; exact hj
+    have hv : (b.sudo_5Board_4held.set ⟨second, hS⟩ false)[j]'hset =
+        b.sudo_5Board_4held[j]'hj := by
+      rw [Array.getElem_set, if_neg (Ne.symm hneJ)]
+    exact cell_eq_of hEq hv
 
 /-- The run multiply with the across already mirrored. The bench prefix is
     SPEC.md §3 R7's run `v = x₂Z − X`. -/

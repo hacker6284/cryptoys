@@ -46,7 +46,8 @@ def ProjOn (t : Spec.Tier) (b : Ecbs.Board) (px py : List Nat) : Prop :=
           b.sudo_5Board_8bench_on = true ∧
           b.sudo_5Board_8bench_to = (1 : Int) ∧
           (∃ lane, b.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
-            lane.take t.n = yP) ∧
+            lane.take t.n = yP ∧
+            ∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
           (∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = false) ∧
           (∀ h : 2 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[2] = embed zP) ∧
           (∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = true)
@@ -54,10 +55,23 @@ def ProjOn (t : Spec.Tier) (b : Ecbs.Board) (px py : List Nat) : Prop :=
           b.sudo_5Board_8bench_on = true ∧
           b.sudo_5Board_8bench_to = (2 : Int) ∧
           (∃ lane, b.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
-            lane.take t.n = zP) ∧
+            lane.take t.n = zP ∧
+            ∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
           (∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = embed yP) ∧
           (∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = true) ∧
           (∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = false))
+
+/-- One cell spends `spend`. The room that remains is still inside an i64. -/
+theorem room_after_spend (moves spend moves' rest : Nat)
+    (h : FitsLen (moves + spend + rest)) (hle : moves' ≤ moves + spend) :
+    FitsLen (moves' + rest) :=
+  FitsLen.of_le h (by omega)
+
+/-- The four shipped tiers leave room for the bottom cube's marker. -/
+theorem demo_script_cube : 2 < Spec.demo.script := by decide
+theorem toy_script_cube : 2 < Spec.toy.script := by decide
+theorem hobby_script_cube : 2 < Spec.hobby.script := by decide
+theorem serious_script_cube : 2 < Spec.serious.script := by decide
 
 /-- A live F-form board, `done` cells already run. The charges are `LiveAt`'s.
     `px` and `py` are the affine point `walkRun` has reached. `ProjOn` is the
@@ -76,13 +90,27 @@ def FformAt (t : Spec.Tier) (b : Ecbs.Board)
   (∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = embed baseY) ∧
   (∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true) ∧
   (∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = true) ∧
+  (∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0] = true) ∧
+  2 < t.script ∧
+  b.sudo_5Board_4home.size = 8 ∧
+  b.sudo_5Board_4held.size = 8 ∧
   ProjOn t b px py ∧
-  ∃ moves slides ctrl mark,
+  ∃ (moves slides ctrl mark mx pk peakS hole cOps : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves ∧
     b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides ∧
     b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
     b.sudo_5Board_6marker = Int.ofNat mark ∧
-    FitsLen (ctrl + 1) ∧
+    b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx ∧
+    b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk ∧
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS ∧
+    b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole ∧
+    1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+    b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (cOps : Int) ∧
+    FitsLen (ctrl + 6) ∧
+    FitsLen (cOps + 3) ∧
+    FitsLen (moves + 2 * t.n + cubeCharge t.n t.benchlen + 2 * t.n +
+      3 * (t.benchlen - t.n)) ∧
+    FitsLen (slides + 2 * t.n + slideCharge t.n) ∧
     moves ≤ done * (walkCharge t + (6 * t.benchlen + 2 * t.n)) ∧
     slides ≤ done * (cellSlideCharge t + slideCharge t.n) ∧
     ctrl ≤ done * (cellCtrlCharge t + 4)
@@ -294,7 +322,8 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
             bF.sudo_5Board_8bench_on = true ∧
             bF.sudo_5Board_8bench_to = (1 : Int) ∧
             (∃ lane, bF.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
-              lane.take t.n = yP) ∧
+              lane.take t.n = yP ∧
+              ∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
             (∀ h : 1 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[1] = false) ∧
             (∀ h : 2 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[2] = embed zP) ∧
             (∀ h : 2 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[2] = true)
@@ -302,7 +331,8 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
             bF.sudo_5Board_8bench_on = true ∧
             bF.sudo_5Board_8bench_to = (2 : Int) ∧
             (∃ lane, bF.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
-              lane.take t.n = zP) ∧
+              lane.take t.n = zP ∧
+              ∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
             (∀ h : 1 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[1] = embed yP) ∧
             (∀ h : 1 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[1] = true) ∧
             (∀ h : 2 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[2] = false)) := by
@@ -315,9 +345,11 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
   have hslive : slive = true := hlive
   subst hslive
   have hpack := hAtF
-  rcases hpack with ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
-    hproj, ⟨_moves, _slides, ctrl, mark, _, _, hctrl, hmark, hfit, _, _, _⟩⟩
+  rcases hpack with ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
+    hproj, ⟨_moves, _slides, ctrl, mark, _mx, _pk, _ps, _hole, _cOps,
+      _, _, hctrl, hmark, _, _, _, _, _, _, hfit6, _, _, _, _, _, _⟩⟩
   rcases hproj with ⟨xP, yP, zP, lay, hxL, hyL, hzL, hxt, hyt, hzt, hx, hy, hz, h0, hlay⟩
+  have hfit : FitsLen (ctrl + 1) := FitsLen.of_le hfit6 (by omega)
   have hclose := chord_after_nat bF (Int.ofNat (t.cells - 1)) true
     mark ctrl hmark hctrl hfit
   refine ⟨bF, pxF, pyF, xP, yP, zP, lay, ctrl, hAtF, hctrl, hrun,

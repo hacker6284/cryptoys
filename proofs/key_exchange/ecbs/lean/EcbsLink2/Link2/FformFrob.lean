@@ -4,7 +4,7 @@
   is `down_across`, and home 2 is still `Z`. `frobenius_bottom_field` then
   cubes that bottom onto the bench. Proof-only. Not a security claim.
 -/
-import EcbsLink2.Link2.BottomGlue
+import EcbsLink2.Link2.BottomHomes
 import EcbsLink2.Link2.WalkFformInd
 import EcbsLink2.Link2.CellCube
 import EcbsLink2.Link2.BenchDown
@@ -249,7 +249,10 @@ theorem frobenius_fform_homes
       bZ.sudo_5Board_8bench_to = (2 : Int) ∧
       ∃ lane,
         bZ.sudo_5Board_5bench = embed lane ∧
-        lane.take t.n = fieldCube t.n t.k t.benchlen zP := by
+        lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
+        (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+        bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
   obtain ⟨bL, a, hlift, hhome?, hheld?⟩ :=
     fform_homes_across t b baseX baseY px py xP yP zP done hAt hsh hOk sat
       hxL hyL hxT hyT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff moves slides c0 mark mx
@@ -299,13 +302,13 @@ theorem frobenius_fform_homes
     have h := hheld?
     rw [Array.getElem?_eq_getElem hsz] at h
     exact elem_cast _ 2 hsz (by rw [a.hszDOn]; decide) (Option.some.inj h)
-  obtain ⟨bZ, hfrob, hmon, hbon, hto, hlane, htake⟩ :=
-    frobenius_bottom_field a zP hyT hyL hheld2 hhome2 hzL hzT hn0 hnbL hnb hgap0
+  obtain ⟨bZ, hfrob, hmon, hbon, hto, hlane, htake, hxH, hyH, hzero⟩ :=
+    frobenius_bottom_homes a zP hyT hyL hheld2 hhome2 hzL hzT hn0 hnbL hnb hgap0
       hs1 hs2 (FitsLen.of_le hCtrl (by omega)) (FitsLen.of_le hOps (by omega))
       (FitsLen.of_le hCtrl (by omega)) hOps hspan h3 hnFit hbenchFit hpeg hfitMv hfitSl
       hfm hfold hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsm hnsm
   exact ⟨bL, bZ, hlift, hfrob, hmon, hbon, hto,
-    ⟨laneFold t.n (t.n - t.k) (combStrip t.n t.benchlen zP), hlane, htake⟩⟩
+    ⟨laneFold t.n (t.n - t.k) (combStrip t.n t.benchlen zP), hlane, htake, hzero, hxH, hyH⟩⟩
 
 /-- Homes layout, marker already lifted, bench off. `frobenius_point` leaves
     `fieldCube Z` on the bench, aimed at home 2. -/
@@ -346,7 +349,10 @@ theorem frobenius_on_lifted
       bZ.sudo_5Board_8bench_to = (2 : Int) ∧
       ∃ lane,
         bZ.sudo_5Board_5bench = embed lane ∧
-        lane.take t.n = fieldCube t.n t.k t.benchlen zP := by
+        lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
+        (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+        bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
   have hn0 : 0 < t.n := hOk.n_pos
   have hs1 : 1 < t.script := by have h := hsh.script_ge; omega
   have hspan : 3 * (t.n - 1) + t.combgap < t.benchlen := sat.cube_span
@@ -449,13 +455,13 @@ theorem frobenius_on_lifted
     have h := hheld?
     rw [Array.getElem?_eq_getElem hsz] at h
     exact elem_cast _ 2 hsz (by rw [a.hszDOn]; decide) (Option.some.inj h)
-  obtain ⟨bZ, hfrob, hmon, hbon, hto, hlane, htake⟩ :=
-    frobenius_bottom_field a zP hyT hyL hheld2 hhome2 hzL hzT hn0 hnbL hnb hgap0
+  obtain ⟨bZ, hfrob, hmon, hbon, hto, hlane, htake, hxH, hyH, hzero⟩ :=
+    frobenius_bottom_homes a zP hyT hyL hheld2 hhome2 hzL hzT hn0 hnbL hnb hgap0
       hs1 hs2 (FitsLen.of_le hCtrl (by omega)) (FitsLen.of_le hOps (by omega))
       hCtrl hOps hspan h3 hnFit hbenchFit hpeg hfitMv hfitSlP hfmP hfoldP
       hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsm hnsm
   exact ⟨bZ, hfrob, hmon, hbon, hto,
-    ⟨laneFold t.n (t.n - t.k) (combStrip t.n t.benchlen zP), hlane, htake⟩⟩
+    ⟨laneFold t.n (t.n - t.k) (combStrip t.n t.benchlen zP), hlane, htake, hzero, hxH, hyH⟩⟩
 
 /-- Marker lifted, bench on and aimed at `home`, which is not across.
     `frobenius_point` slides that bench first, so it is `frobenius_point` of the
@@ -574,7 +580,10 @@ theorem frobenius_ybench_lifted
       bZ.sudo_5Board_8bench_to = (2 : Int) ∧
       ∃ lane,
         bZ.sudo_5Board_5bench = embed lane ∧
-        lane.take t.n = fieldCube t.n t.k t.benchlen zP := by
+        lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
+        (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+        bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
   have hn0 : 0 < t.n := hOk.n_pos
   have hspan : 3 * (t.n - 1) + t.combgap < t.benchlen := sat.cube_span
   have hsm := hsh.small
@@ -771,7 +780,10 @@ theorem frobenius_zbench_lifted
       bZ.sudo_5Board_8bench_to = (2 : Int) ∧
       ∃ lane,
         bZ.sudo_5Board_5bench = embed lane ∧
-        lane.take t.n = fieldCube t.n t.k t.benchlen zP := by
+        lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
+        (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+        bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
   have hn0 : 0 < t.n := hOk.n_pos
   have hspan : 3 * (t.n - 1) + t.combgap < t.benchlen := sat.cube_span
   have hsm := hsh.small
@@ -968,7 +980,10 @@ theorem frobenius_fform_ybench
       bZ.sudo_5Board_8bench_to = (2 : Int) ∧
       ∃ lane,
         bZ.sudo_5Board_5bench = embed lane ∧
-        lane.take t.n = fieldCube t.n t.k t.benchlen zP := by
+        lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
+        (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+        bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
   let bL := { b with
     sudo_5Board_6marker := -1
     sudo_5Board_4cost := { b.sudo_5Board_4cost with
@@ -1036,7 +1051,10 @@ theorem frobenius_fform_zbench
       bZ.sudo_5Board_8bench_to = (2 : Int) ∧
       ∃ lane,
         bZ.sudo_5Board_5bench = embed lane ∧
-        lane.take t.n = fieldCube t.n t.k t.benchlen zP := by
+        lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
+        (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+        bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
   let bL := { b with
     sudo_5Board_6marker := -1
     sudo_5Board_4cost := { b.sudo_5Board_4cost with

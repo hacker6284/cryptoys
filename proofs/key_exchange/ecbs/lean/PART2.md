@@ -729,6 +729,10 @@ On the comb `bottomFlag`, the counters are exact. `bottomFlag_moves` is `cubeMov
 
 6067 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 6067. Peaks of the modules this change elaborated, VmHWM: FformCount 455352 kB, EcbsLink2 469668 kB. The audit peaked at 952856 kB. All under about 1.8 GB and under 2097152 kB.
 
+`fform_add_on_proj` is the six multiplies of `fform_add` once the bench already holds `fformF`. `add_board_proj` rewrites that across and that up by the two equalities `across_on_x3` and `up_on_parts` supply, so home 0 is `x₃ · Z₃` and the bench prefix is `y₃ · Z₃`. Home 2 stays `Z₃`.
+
+6070 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 6070. Peaks of the modules this change elaborated, VmHWM: FformAddTie 466628 kB, EcbsLink2 441272 kB. The audit peaked at 952732 kB. All under about 1.8 GB and under 2097152 kB.
+
 5927 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5927. Peaks of the modules this change elaborated, VmHWM: FieldMulAssoc 283008 kB, EcbsLink2 450736 kB. The audit peaked at 949884 kB. All under about 1.8 GB and under 2097152 kB.
 
 5886 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5886. Peaks of the modules this change elaborated, VmHWM: FieldRing 262684 kB, FieldPoly 259940 kB, FieldReduce 260876 kB, FieldAssoc 260992 kB, FieldBridge 285732 kB, EcbsLink2 443768 kB. The audit peaked at 949148 kB. All under about 1.8 GB and under 2097152 kB.

@@ -1,0 +1,243 @@
+/-
+  The live suffix of `walk_fform`, in the shape of `walk_chord_from`.
+  The spec point is `walkStep`: a zero cell cubes, and a white or red cell
+  is `chordAdd` once the run inverts. The board frame is `FformAt`.
+  It carries the same cell charges as `LiveAt`. It does not claim that
+  homes 0 and 1 are the affine point; `finish` is what clears the denominator.
+  Proof-only. Not a security claim.
+-/
+import EcbsLink2.Link2.WalkFform
+import EcbsLink2.Link2.WalkCharge
+import EcbsLink2.Link2.WalkSeat
+
+namespace EcbsLink2.Link2
+
+open MegaDreifach.Link2
+open EcbsLink2.Spec
+
+/-- A live F-form board, `done` cells already run. The charges are `LiveAt`'s.
+    `px` and `py` are the affine point `walkRun` has reached. -/
+def FformAt (t : Spec.Tier) (b : Ecbs.Board)
+    (baseX baseY px py : List Nat) (done : Nat) : Prop :=
+  b.sudo_5Board_9marker_on = true ∧
+  b.sudo_5Board_1t = embTier t ∧
+  px.length = t.n ∧ py.length = t.n ∧
+  allTritList px ∧ allTritList py ∧
+  baseX.length = t.n ∧ baseY.length = t.n ∧
+  allTritList baseX ∧ allTritList baseY ∧
+  ∃ moves slides ctrl mark,
+    b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves ∧
+    b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides ∧
+    b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
+    b.sudo_5Board_6marker = Int.ofNat mark ∧
+    FitsLen (ctrl + 1) ∧
+    moves ≤ done * (walkCharge t + (6 * t.benchlen + 2 * t.n)) ∧
+    slides ≤ done * (cellSlideCharge t + slideCharge t.n) ∧
+    ctrl ≤ done * (cellCtrlCharge t + 4)
+
+/-- What stays true at index `i`. At `toN + 1` the frame is the point the
+    whole suffix reached. -/
+def FformInv (t : Spec.Tier) (baseX baseY : List Nat) (live0 : Bool)
+    (acc0 : List Nat × List Nat) (cells : List Nat)
+    (i : Nat) (st : Ecbs.Board × Bool) : Prop :=
+  st.2 = true ∧
+  ∃ px py,
+    walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take i) =
+      some (true, (px, py)) ∧
+    FformAt t st.1 baseX baseY px py i
+
+/-- A live white or red cell whose run inverts is `chordAdd` of the cubed
+    accumulator and the base point. SPEC.md §3 R7 lines 156–157 and R8. -/
+theorem walkStep_chord (n k bench : Nat) (base acc : List Nat × List Nat)
+    (c : Nat) (inv : List Nat) (hc : c = 1 ∨ c = 2)
+    (hinv : fieldInv n k bench (fieldSub n base.1 (fieldCube n k bench acc.1)) =
+      some inv) :
+    ∃ p,
+      walkStep n k bench base true acc c = some (true, p) ∧
+      chordAdd n k bench (pointCube n k bench acc)
+        (base.1, if c = 2 then mirrorTrits base.2 else base.2) = some p := by
+  have h0 : c ≠ 0 := by rcases hc with rfl | rfl <;> decide
+  have hbad : ¬ (c ≠ 1 ∧ c ≠ 2) := by rcases hc with rfl | rfl <;> decide
+  unfold walkStep
+  simp only [ite_true]
+  rw [if_neg h0, if_neg hbad]
+  dsimp only [pointCube, chordAdd]
+  simp only [specInv_eq, hinv, Prod.fst, Prod.snd]
+  exact ⟨_, rfl, rfl⟩
+
+private theorem take_succ_cell (cells : List Nat) (i : Nat) (hi : i < cells.length) :
+    cells.take (i + 1) = cells.take i ++ [cells[i]] := by
+  rw [List.take_succ, List.getElem?_eq_getElem hi]
+  simp
+
+private theorem walkRun_snoc (n k bench : Nat) (base acc p p' : List Nat × List Nat)
+    (cells : List Nat) (c : Nat) (live : Bool)
+    (h : walkRun n k bench base live acc cells = some (true, p))
+    (hstep : walkStep n k bench base true p c = some (true, p')) :
+    walkRun n k bench base live acc (cells ++ [c]) = some (true, p') := by
+  induction cells generalizing live acc with
+  | nil =>
+    simp only [walkRun] at h
+    cases h
+    simp [walkRun, hstep]
+  | cons d ds ih =>
+    simp only [walkRun] at h
+    cases hgo : walkStep n k bench base live acc d with
+    | none => simp [hgo] at h
+    | some q =>
+      simp only [hgo] at h
+      have hrec := ih q.2 q.1 h
+      simp [walkRun, hgo, hrec]
+
+/-- The live loop from index `start`. A nonzero cell needs the inverse of the
+    run it reaches. `hframe` is the one cell: `fformStep` lands on a board
+    whose `FformAt` is the point `walkStep` just produced. -/
+theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
+    (baseX baseY px py : List Nat) (live0 : Bool) (acc0 : List Nat × List Nat)
+    (start : Nat) (cells : List Nat)
+    (hAt : FformAt t b baseX baseY px py start)
+    (hlen : cells.length = t.cells) (hpos : 0 < t.cells)
+    (hstart : start ≤ t.cells - 1)
+    (hspec : walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take start) =
+      some (true, (px, py)))
+    (hc2 : ∀ i (hi : i < cells.length), cells[i] ≤ 2)
+    (hready : ∀ i (hi : i < cells.length), start ≤ i → cells[i] ≠ 0 →
+      ∀ ax ay, walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take i) =
+        some (true, (ax, ay)) →
+        ∃ inv, fieldInv t.n t.k t.benchlen
+          (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen ax)) = some inv)
+    (hframe : ∀ i (sb : Ecbs.Board) (ax ay ax' ay' : List Nat)
+      (hi0 : start ≤ i) (hi1 : i ≤ t.cells - 1),
+      FformAt t sb baseX baseY ax ay i →
+      walkStep t.n t.k t.benchlen (baseX, baseY) true (ax, ay)
+        (cells[i]'(by rw [hlen]; omega)) =
+        some (true, (ax', ay')) →
+      ∃ sb',
+        fformStep (embed cells) (Int.ofNat (t.cells - 1)) (Int.ofNat i, (sb, true)) =
+          (if i = t.cells - 1 then .ok (SudoRt.Flow.brk (Int.ofNat i, (sb', true)))
+            else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), (sb', true)))) ∧
+        FformAt t sb' baseX baseY ax' ay' (i + 1)) :
+    ∃ st : Ecbs.Board × Bool, ∃ pxF pyF,
+      FformInv t baseX baseY live0 acc0 cells t.cells st ∧
+      FformAt t st.1 baseX baseY pxF pyF t.cells ∧
+      walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 cells =
+        some (true, (pxF, pyF)) ∧
+      SudoRt.runLoopOn (Int.ofNat start, (b, true))
+        (fuelRange (Int.ofNat start) (Int.ofNat (t.cells - 1)))
+        (fformStep (embed cells) (Int.ofNat (t.cells - 1))) chordAfter (fun r => pure r) =
+        chordAfter (Int.ofNat (t.cells - 1), st) := by
+  let toN := t.cells - 1
+  have hto : toN + 1 = t.cells := by omega
+  have h0 : FformInv t baseX baseY live0 acc0 cells start (b, true) :=
+    ⟨rfl, px, py, hspec, hAt⟩
+  have hstep : ∀ i s, start ≤ i → i ≤ toN →
+      FformInv t baseX baseY live0 acc0 cells i s →
+      ∃ s', FformInv t baseX baseY live0 acc0 cells (i + 1) s' ∧
+        fformStep (embed cells) (Int.ofNat toN) (Int.ofNat i, s) =
+          if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, s'))
+          else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), s')) := by
+    intro i st hi hito hI
+    cases st with
+    | mk sb slive =>
+    obtain ⟨hlive, ax, ay, hrun, hAtI⟩ := hI
+    have hslive : slive = true := hlive
+    subst hslive
+    have hiLen : i < cells.length := by omega
+    have hc := hc2 i hiLen
+    have hwalk : ∃ ax' ay',
+        walkStep t.n t.k t.benchlen (baseX, baseY) true (ax, ay) (cells[i]'hiLen) =
+          some (true, (ax', ay')) := by
+      by_cases hz : cells[i]'hiLen = 0
+      · refine ⟨(pointCube t.n t.k t.benchlen (ax, ay)).1,
+          (pointCube t.n t.k t.benchlen (ax, ay)).2, ?_⟩
+        simpa [hz] using walkStep_cube t.n t.k t.benchlen (baseX, baseY) (ax, ay)
+      · have hc12 : cells[i]'hiLen = 1 ∨ cells[i]'hiLen = 2 := by omega
+        obtain ⟨inv, hinv⟩ := hready i hiLen (by omega) hz ax ay hrun
+        obtain ⟨p, hstep, _hadd⟩ :=
+          walkStep_chord t.n t.k t.benchlen (baseX, baseY) (ax, ay)
+            (cells[i]'hiLen) inv hc12 hinv
+        exact ⟨p.1, p.2, by simpa using hstep⟩
+    obtain ⟨ax', ay', hwalk⟩ := hwalk
+    have hiTo : i ≤ t.cells - 1 := hito
+    obtain ⟨sb', hst, hAt'⟩ := hframe i sb ax ay ax' ay' hi hiTo hAtI hwalk
+    have htake := take_succ_cell cells i hiLen
+    have hrun' := walkRun_snoc t.n t.k t.benchlen (baseX, baseY) acc0
+      (ax, ay) (ax', ay') (cells.take i) (cells[i]'hiLen) live0 hrun hwalk
+    refine ⟨(sb', true), ?_, ?_⟩
+    · refine ⟨rfl, ax', ay', ?_, ?_⟩
+      · simpa [htake, hto] using hrun'
+      · simpa [hto] using hAt'
+    · simpa [hto] using hst
+  rcases asc_inv (fformStep (embed cells) (Int.ofNat toN)) chordAfter
+      (fun r => pure r) (FformInv t baseX baseY live0 acc0 cells) start toN
+      hstart hstep (b, true) h0 with ⟨st, hInv, heq⟩
+  have hInvC : FformInv t baseX baseY live0 acc0 cells t.cells st := by
+    rw [hto] at hInv
+    exact hInv
+  have hcopy := hInvC
+  rcases hcopy with ⟨_hlive, pxF, pyF, hrun0, hAtF⟩
+  have htakeAll : cells.take t.cells = cells := by
+    rw [← hlen]
+    exact List.take_length cells
+  refine ⟨st, pxF, pyF, hInvC, hAtF, ?_, heq⟩
+  simpa [htakeAll] using hrun0
+
+/-- Closing the live loop. The frame's marker is a natural and one more
+    control step fits, so the suffix is `.ok ((true, true), …)`. The closing
+    lift turns the marker off. Homes stay whatever the frame left. -/
+theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
+    (baseX baseY px py : List Nat) (live0 : Bool) (acc0 : List Nat × List Nat)
+    (start : Nat) (cells : List Nat)
+    (hAt : FformAt t b baseX baseY px py start)
+    (hlen : cells.length = t.cells) (hpos : 0 < t.cells)
+    (hstart : start ≤ t.cells - 1)
+    (hspec : walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take start) =
+      some (true, (px, py)))
+    (hc2 : ∀ i (hi : i < cells.length), cells[i] ≤ 2)
+    (hready : ∀ i (hi : i < cells.length), start ≤ i → cells[i] ≠ 0 →
+      ∀ ax ay, walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take i) =
+        some (true, (ax, ay)) →
+        ∃ inv, fieldInv t.n t.k t.benchlen
+          (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen ax)) = some inv)
+    (hframe : ∀ i (sb : Ecbs.Board) (ax ay ax' ay' : List Nat)
+      (hi0 : start ≤ i) (hi1 : i ≤ t.cells - 1),
+      FformAt t sb baseX baseY ax ay i →
+      walkStep t.n t.k t.benchlen (baseX, baseY) true (ax, ay)
+        (cells[i]'(by rw [hlen]; omega)) =
+        some (true, (ax', ay')) →
+      ∃ sb',
+        fformStep (embed cells) (Int.ofNat (t.cells - 1)) (Int.ofNat i, (sb, true)) =
+          (if i = t.cells - 1 then .ok (SudoRt.Flow.brk (Int.ofNat i, (sb', true)))
+            else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), (sb', true)))) ∧
+        FformAt t sb' baseX baseY ax' ay' (i + 1)) :
+    ∃ bF pxF pyF ctrl,
+      FformAt t bF baseX baseY pxF pyF t.cells ∧
+      bF.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
+      walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 cells =
+        some (true, (pxF, pyF)) ∧
+      SudoRt.runLoopOn (Int.ofNat start, (b, true))
+        (fuelRange (Int.ofNat start) (Int.ofNat (t.cells - 1)))
+        (fformStep (embed cells) (Int.ofNat (t.cells - 1))) chordAfter (fun r => pure r) =
+        .ok ((true, true),
+          { bF with
+            sudo_5Board_6marker := -1
+            sudo_5Board_4cost := { bF.sudo_5Board_4cost with
+              sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) }
+            sudo_5Board_9marker_on := false }) := by
+  obtain ⟨st, pxF, pyF, hI, hAtF, hrun, hloop⟩ :=
+    walk_fform_from t b baseX baseY px py live0 acc0 start cells
+      hAt hlen hpos hstart hspec hc2 hready hframe
+  have hlive : st.2 = true := hI.1
+  cases st with
+  | mk bF slive =>
+  have hslive : slive = true := hlive
+  subst hslive
+  have hpack := hAtF
+  rcases hpack with ⟨_, _, _, _, _, _, _, _, _, _,
+    ⟨_moves, _slides, ctrl, mark, _, _, hctrl, hmark, hfit, _, _, _⟩⟩
+  have hclose := chord_after_nat bF (Int.ofNat (t.cells - 1)) true
+    mark ctrl hmark hctrl hfit
+  refine ⟨bF, pxF, pyF, ctrl, hAtF, hctrl, hrun, ?_⟩
+  rw [hloop, hclose]
+
+end EcbsLink2.Link2

@@ -119,6 +119,7 @@ import EcbsLink2.Link2.WalkCase
 import EcbsLink2.Link2.WalkFform
 import EcbsLink2.Link2.WalkFformIdle
 import EcbsLink2.Link2.WalkFformNone
+import EcbsLink2.Link2.WalkFformInd
 import EcbsLink2.Link2.FformOpen
 import EcbsLink2.Link2.FformStart
 import EcbsLink2.Link2.FformPoint

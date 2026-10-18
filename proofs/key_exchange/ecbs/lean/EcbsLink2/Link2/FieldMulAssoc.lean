@@ -387,7 +387,7 @@ private theorem mulPart_add (n k : Nat) (hn : 0 < n) (hk : k < n)
       (by rw [rowSplat_len, mulPart_len])
       (by rw [rowSplat_len, mulPart_len])
 
-private theorem mulVal_add (n k : Nat) (hn : 0 < n) (hk : k < n)
+theorem mulVal_add (n k : Nat) (hn : 0 < n) (hk : k < n)
     (x p q : List Nat) (hx : allTritList x) (hpL : p.length = n) (hqL : q.length = n)
     (hpT : allTritList p) (hqT : allTritList q) :
     mulVal n k hn hk x (stripAdd p q) =
@@ -395,7 +395,7 @@ private theorem mulVal_add (n k : Nat) (hn : 0 < n) (hk : k < n)
   rw [← mulPart_full, ← mulPart_full, ← mulPart_full]
   exact mulPart_add n k hn hk x p q hx hpL hqL hpT hqT n (Nat.le_refl _)
 
-private theorem mulVal_zero (n k : Nat) (hn : 0 < n) (hk : k < n) (x : List Nat) :
+theorem mulVal_zero (n k : Nat) (hn : 0 < n) (hk : k < n) (x : List Nat) :
     mulVal n k hn hk x (List.replicate n 0) = List.replicate n 0 := by
   unfold mulVal
   suffices ∀ m, m ≤ n →
@@ -475,7 +475,7 @@ private theorem row_high (n k : Nat) (hn : 0 < n) (hk : k < n)
   rw [← row_full, ← row_full, ← row_full]
   exact rowPart_high n k hn hk x hx e d n hd he (Nat.le_refl _)
 
-private theorem mulVal_splat (n k : Nat) (hn : 0 < n) (hk : k < n)
+theorem mulVal_splat (n k : Nat) (hn : 0 < n) (hk : k < n)
     (x : List Nat) (hx : allTritList x) (d e : Nat) (hd : d ≤ 2) :
     mulVal n k hn hk x (splat n k hn hk d e) = rowSplat n k hn hk x e d := by
   induction e using Nat.strongRecOn with

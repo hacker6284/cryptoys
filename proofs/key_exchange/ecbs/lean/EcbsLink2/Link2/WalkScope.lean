@@ -26,6 +26,22 @@ theorem serious_script_fform : fformScript < Spec.serious.script := by decide
 /-- Demo is outside the `walk_fform` statements. See `DEMO_SCRIPT.md`. -/
 theorem demo_not_fform : ¬ (fformScript < Spec.demo.script) := by decide
 
+/-- A finished cell leaves a seated marker. The next cell's `marker_lift`
+    sets that index back to `-1` (`marker_lift_refines`). A marker that is
+    already `-1` stays there (`marker_lift_down`). The fifteen steps of one
+    live cell therefore start from `-1` again; `fformScript < script` is not
+    a sum across cells. -/
+theorem cell_marker_low (b : Ecbs.Board) (marker ctrl : Nat)
+    (hm : b.sudo_5Board_6marker = Int.ofNat marker)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hfit : FitsLen (ctrl + 1)) :
+    ∃ b', Ecbs.marker_lift b = .ok b' ∧ b'.sudo_5Board_6marker = -1 := by
+  refine ⟨{ b with
+      sudo_5Board_6marker := -1
+      sudo_5Board_4cost := { b.sudo_5Board_4cost with
+        sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } },
+    marker_lift_refines b marker ctrl hm hc hfit, rfl⟩
+
 /-- A demo board takes `walk_chord`. `finish` is not called. -/
 theorem walk_and_finish_demo (b : Ecbs.Board) (cells : Array Int)
     (hdemo : b.sudo_5Board_1t.sudo_4Tier_4demo = true) :

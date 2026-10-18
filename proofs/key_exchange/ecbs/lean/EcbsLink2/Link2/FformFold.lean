@@ -169,7 +169,8 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
         Int.ofNat (moves + schoolMoves xs ys n n +
           foldCharge n (n - k) (school n xs ys (List.replicate bench 0) false)) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides =
-        b.sudo_5Board_4cost.sudo_5Costs_6slides := by
+        b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      (∀ h : second < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[second]'h = false) := by
   have hOff := nocopy_else_off b dst first second xs ys n moves peakS bench false
     hoff hbl hF hHome hHF hArr hS hHomeS hHS hYs h7 hne hn0 hn hlenx hleny hf
     hmoves hpeakS hspan hxsT hfi hfm
@@ -263,7 +264,7 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
       b.sudo_5Board_4cost.sudo_5Costs_6slides := by
     simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
   refine ⟨ontoFoldBoard bFold sch n k mvN peak, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hma]
     exact hOk
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
@@ -292,6 +293,15 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
   · exact (fold_mx_out bFold sch n k mvN peak).trans hmxB
   · rw [fold_moves_out bFold sch n k mvN peak]
   · exact (fold_slides_out bFold sch n k mvN peak).trans hslB
+  · intro hsec
+    have hEq : (ontoFoldBoard bFold sch n k mvN peak).sudo_5Board_4held =
+        b.sudo_5Board_4held.set ⟨second, hS⟩ false :=
+      (fold_held_out bFold sch n k mvN peak).trans hheldB
+    have hset : second < (b.sudo_5Board_4held.set ⟨second, hS⟩ false).size := by
+      rw [Array.size_set]; exact hS
+    have hv : (b.sudo_5Board_4held.set ⟨second, hS⟩ false)[second]'hset = false := by
+      rw [Array.getElem_set, if_pos rfl]
+    exact cell_eq_of hEq hv
 
 /-- The run multiply with the across already mirrored. The bench prefix is
     SPEC.md §3 R7's run `v = x₂Z − X`. -/

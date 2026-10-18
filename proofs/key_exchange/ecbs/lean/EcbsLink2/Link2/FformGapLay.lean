@@ -19,7 +19,8 @@ private theorem idx_eq {α : Type} {a b : Array α} (h : a = b) (i : Nat)
 
 /-- Square the rise. `Ecbs.mul` of the gap by the up, copying the up, mirror
     off. The bench was aimed at the up, so that rise is settled first. The new
-    bench prefix is `fieldMul u u`. -/
+    bench prefix is `fieldMul u u`. `cOps` is the ops cell this square reads.
+    The cell it leaves is `cOps + 1`, one bump from that read. -/
 theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
     (m ctrl mx script cOps n k w h r moves slides hole peak peakS bench : Nat)
     (hH : up < b.sudo_5Board_4home.size)
@@ -89,7 +90,23 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
       b'.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
-        Int.ofNat (max mx (m + 2)) := by
+        Int.ofNat (max mx (m + 2)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat ((moves + 2 * pegCount (lane.take n)) + pegCount u +
+          schoolMoves u u n n +
+          foldCharge n (n - k) (school n u u (List.replicate bench 0) false)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount (lane.take n)) ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      (∀ j, j ≠ up → j ≠ 6 →
+        ∀ hj : j < b.sudo_5Board_4home.size,
+        ∀ hj' : j < b'.sudo_5Board_4home.size,
+          b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) ∧
+      (∀ j, j ≠ up → j ≠ 6 →
+        ∀ hj : j < b.sudo_5Board_4held.size,
+        ∀ hj' : j < b'.sudo_5Board_4held.size,
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     simpa [feed, markerUpFeed] using hops
@@ -194,8 +211,8 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
     rw [htierS, settle_tier_eq bU up hinS lane n moves slides peak, htierU, hr]
   have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
     rw [htierS, settle_tier_eq bU up hinS lane n moves slides peak, htierU, hk]
-  obtain ⟨b', hok, hbench, hmul, hmk', hon', hto', htier', _hsl, hpk,
-      hix, hctrl, hmx, hopsEq, _hmv, hst, hho, hsp, hszH, _hszHome, _hhome, _hheld⟩ :=
+  obtain ⟨b', hok, hbench, hmul, hmk', hon', hto', htier', hsl', hpk,
+      hix, hctrl, hmx, hopsEq, hmv', hst, hho, hsp, hszH, hszHome, hhomeK, hheldK⟩ :=
     copy_else_field bS dst up up u u w h r n k mvS hole peak peakS bench
       hoffS hblS hUpD hUpH hHeldUp hHomeUp hUpD hUpH hHeldUp hHomeUp
       h6D h6H h6E h7S hne6 hne6 hn0 hnb hnS hlen hlen hf hmovesS hpeakSboard hpeak7
@@ -270,8 +287,33 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
         (settleBoard bU up hHU hDU lane n moves slides peak).sudo_5Board_1t from by
           dsimp [bS, markerOn],
       settle_tier_eq bU up hinS lane n moves slides peak, htierU]
+  have hmvOut : b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat ((moves + 2 * pegCount (lane.take n)) + pegCount u +
+        schoolMoves u u n n +
+        foldCharge n (n - k) (school n u u (List.replicate bench 0) false)) := by
+    simpa [mvS, pegL] using hmv'
+  have hslS : bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (slides + 2 * pegCount (lane.take n)) := by
+    rw [show bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+        (settleBoard bU up hHU hDU lane n moves slides peak).sudo_5Board_4cost.sudo_5Costs_6slides
+        from by dsimp [bS, markerOn],
+      settle_slides_eq bU up hinS lane n moves slides peak]
+  have hslOut : b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (slides + 2 * pegCount (lane.take n)) := hsl'.trans hslS
+  have hszHeld : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+    rw [hszH]
+    rw [show bS.sudo_5Board_4held.size =
+        (settleBoard bU up hHU hDU lane n moves slides peak).sudo_5Board_4held.size from by
+          dsimp [bS, markerOn]]
+    rw [settle_held_eq bU up hinS lane n moves slides peak, Array.size_set, hheldU]
+  have hszHomeB : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
+    rw [hszHome]
+    rw [show bS.sudo_5Board_4home.size =
+        (settleBoard bU up hHU hDU lane n moves slides peak).sudo_5Board_4home.size from by
+          dsimp [bS, markerOn]]
+    rw [settle_home_eq bU up hinS lane n moves slides peak, Array.size_set, hhomeU]
   refine ⟨b', lane', hole', ?_, hbench, hmul, ?_, hon', hto', hmk'.trans hmkS, htierB,
-      hix.trans hmS, hctrl.trans hcS, hmx.trans hxS⟩
+      hix.trans hmS, hctrl.trans hcS, hmx.trans hxS, hmvOut, hslOut, hszHeld, hszHomeB, ?_, ?_⟩
   · rw [hflag]
     exact hok
   · refine ⟨hsz', hop', h6, hsp h6, hpeak7, hpk, hst, hhole', ?_, ?_, ?_, ?_⟩
@@ -287,10 +329,39 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
       rw [← coeff_eq_get lane' i hii]
       exact laneFold_high n (n - k) schU i hn0 hgapPos
         (by rw [hschLen]; exact hnb) hi hiiS
+  · intro j hneU hne6 hj hj'
+    have hjS : j < bS.sudo_5Board_4home.size := by
+      rw [hszHome] at hj'
+      exact hj'
+    have hEqS := hhomeK j hne6 hjS hj'
+    have hset := settle_home_eq bU up hinS lane n moves slides peak
+    have hget := idx_eq (hhomeS.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hneU)] at hget
+    have hjU : j < bU.sudo_5Board_4home.size := by
+      rw [hhomeU]
+      exact hj
+    have hBU : bU.sudo_5Board_4home[j]'hjU = b.sudo_5Board_4home[j]'hj :=
+      idx_eq hhomeU j hjU
+    exact hEqS.trans (hget.trans hBU)
+  · intro j hneU hne6 hj hj'
+    have hjS : j < bS.sudo_5Board_4held.size := by
+      rw [hszH] at hj'
+      exact hj'
+    have hEqS := hheldK j hne6 hjS hj'
+    have hset := settle_held_eq bU up hinS lane n moves slides peak
+    have hget := idx_eq (hheldS0.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hneU)] at hget
+    have hjU : j < bU.sudo_5Board_4held.size := by
+      rw [hheldU]
+      exact hj
+    have hBU : bU.sudo_5Board_4held[j]'hjU = b.sudo_5Board_4held[j]'hj :=
+      idx_eq hheldU j hjU
+    exact hEqS.trans (hget.trans hBU)
 
 /-- The bottom times the squared rise. The bench holds `u²` and is aimed at the
     gap, so that square is settled, then `fieldMul` of the bottom by it is the
-    new bench prefix. -/
+    new bench prefix. `cOps` is the ops cell this multiply reads, the cell the
+    square left. The cell it leaves is `cOps + 1` from that read. -/
 theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
     (m ctrl mx script cOps n k w h r moves slides hole peak peakS bench : Nat)
     (hG : gap < b.sudo_5Board_4home.size)

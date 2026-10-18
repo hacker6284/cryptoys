@@ -123,6 +123,8 @@ import EcbsLink2.Link2.WalkFformInd
 import EcbsLink2.Link2.FformOpen
 import EcbsLink2.Link2.FformStart
 import EcbsLink2.Link2.FformPoint
+import EcbsLink2.Link2.BottomField
+import EcbsLink2.Link2.BottomOff
 import EcbsLink2.Link2.FformAdd
 import EcbsLink2.Link2.FformGap
 import EcbsLink2.Link2.FformFold

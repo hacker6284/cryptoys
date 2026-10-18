@@ -2,8 +2,8 @@
   The live suffix of `walk_fform`, in the shape of `walk_chord_from`.
   The spec point is `walkStep`: a zero cell cubes, and a white or red cell
   is `chordAdd` once the run inverts. The board frame is `FformAt`.
-  It carries the same cell charges as `LiveAt`. It does not claim that
-  homes 0 and 1 are the affine point; `finish` is what clears the denominator.
+  `ProjOn` is SPEC.md §3 R7: `X = px·Z` and `Y = py·Z`, with `Z` not the
+  zero home. `finish` is what clears the denominator.
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.WalkFform
@@ -15,8 +15,53 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+/-- Where the projective triple sits. `walk_fform` leaves `Y` on the bench
+    after an addition, and `Z` on the bench after a cube. SPEC.md §3 R7. -/
+inductive ProjLay
+  | homes
+  | yBench
+  | zBench
+
+/-- The projective triple SPEC.md §3 R7 writes, before `finish` inverts `Z`.
+    `X = px·Z` and `Y = py·Z`, and `Z` is not the zero home. Home 0 holds `X`.
+    `homes` keeps `Y` and `Z` in homes 1 and 2. `yBench` holds `Y` on the bench,
+    aimed at home 1, with `Z` still in home 2. `zBench` holds `Z` on the bench,
+    aimed at home 2, with `Y` still in home 1. -/
+def ProjOn (t : Spec.Tier) (b : Ecbs.Board) (px py : List Nat) : Prop :=
+  ∃ xP yP zP, ∃ lay : ProjLay,
+    xP.length = t.n ∧ yP.length = t.n ∧ zP.length = t.n ∧
+    allTritList xP ∧ allTritList yP ∧ allTritList zP ∧
+    xP = fieldMul t.n t.k t.benchlen px zP ∧
+    yP = fieldMul t.n t.k t.benchlen py zP ∧
+    zP ≠ List.replicate t.n 0 ∧
+    (∀ h : 0 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[0] = embed xP) ∧
+    (match lay with
+      | .homes =>
+          b.sudo_5Board_8bench_on = false ∧
+          (∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = embed yP) ∧
+          (∀ h : 2 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[2] = embed zP) ∧
+          (∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = true) ∧
+          (∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = true)
+      | .yBench =>
+          b.sudo_5Board_8bench_on = true ∧
+          b.sudo_5Board_8bench_to = (1 : Int) ∧
+          (∃ lane, b.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
+            lane.take t.n = yP) ∧
+          (∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = false) ∧
+          (∀ h : 2 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[2] = embed zP) ∧
+          (∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = true)
+      | .zBench =>
+          b.sudo_5Board_8bench_on = true ∧
+          b.sudo_5Board_8bench_to = (2 : Int) ∧
+          (∃ lane, b.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
+            lane.take t.n = zP) ∧
+          (∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = embed yP) ∧
+          (∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = true) ∧
+          (∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = false))
+
 /-- A live F-form board, `done` cells already run. The charges are `LiveAt`'s.
-    `px` and `py` are the affine point `walkRun` has reached. -/
+    `px` and `py` are the affine point `walkRun` has reached. `ProjOn` is the
+    projective triple of that point. -/
 def FformAt (t : Spec.Tier) (b : Ecbs.Board)
     (baseX baseY px py : List Nat) (done : Nat) : Prop :=
   b.sudo_5Board_9marker_on = true ∧
@@ -25,6 +70,13 @@ def FformAt (t : Spec.Tier) (b : Ecbs.Board)
   allTritList px ∧ allTritList py ∧
   baseX.length = t.n ∧ baseY.length = t.n ∧
   allTritList baseX ∧ allTritList baseY ∧
+  7 ≤ b.sudo_5Board_4home.size ∧
+  7 ≤ b.sudo_5Board_4held.size ∧
+  (∀ h : 3 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[3] = embed baseX) ∧
+  (∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = embed baseY) ∧
+  (∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true) ∧
+  (∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = true) ∧
+  ProjOn t b px py ∧
   ∃ moves slides ctrl mark,
     b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves ∧
     b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides ∧
@@ -184,7 +236,8 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
 
 /-- Closing the live loop. The frame's marker is a natural and one more
     control step fits, so the suffix is `.ok ((true, true), …)`. The closing
-    lift turns the marker off. Homes stay whatever the frame left. -/
+    lift turns the marker off and leaves the homes. Those homes are `ProjOn`:
+    the projective triple `walk_fform` returns before `finish`. -/
 theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
     (baseX baseY px py : List Nat) (live0 : Bool) (acc0 : List Nat × List Nat)
     (start : Nat) (cells : List Nat)
@@ -210,11 +263,16 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
           (if i = t.cells - 1 then .ok (SudoRt.Flow.brk (Int.ofNat i, (sb', true)))
             else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), (sb', true)))) ∧
         FformAt t sb' baseX baseY ax' ay' (i + 1)) :
-    ∃ bF pxF pyF ctrl,
+    ∃ bF pxF pyF xP yP zP, ∃ lay : ProjLay, ∃ ctrl,
       FformAt t bF baseX baseY pxF pyF t.cells ∧
       bF.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
       walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 cells =
         some (true, (pxF, pyF)) ∧
+      xP.length = t.n ∧ yP.length = t.n ∧ zP.length = t.n ∧
+      allTritList xP ∧ allTritList yP ∧ allTritList zP ∧
+      xP = fieldMul t.n t.k t.benchlen pxF zP ∧
+      yP = fieldMul t.n t.k t.benchlen pyF zP ∧
+      zP ≠ List.replicate t.n 0 ∧
       SudoRt.runLoopOn (Int.ofNat start, (b, true))
         (fuelRange (Int.ofNat start) (Int.ofNat (t.cells - 1)))
         (fformStep (embed cells) (Int.ofNat (t.cells - 1))) chordAfter (fun r => pure r) =
@@ -223,7 +281,31 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
             sudo_5Board_6marker := -1
             sudo_5Board_4cost := { bF.sudo_5Board_4cost with
               sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) }
-            sudo_5Board_9marker_on := false }) := by
+            sudo_5Board_9marker_on := false }) ∧
+      (∀ h : 0 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[0] = embed xP) ∧
+      (match lay with
+        | .homes =>
+            bF.sudo_5Board_8bench_on = false ∧
+            (∀ h : 1 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[1] = embed yP) ∧
+            (∀ h : 2 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[2] = embed zP) ∧
+            (∀ h : 1 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[1] = true) ∧
+            (∀ h : 2 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[2] = true)
+        | .yBench =>
+            bF.sudo_5Board_8bench_on = true ∧
+            bF.sudo_5Board_8bench_to = (1 : Int) ∧
+            (∃ lane, bF.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
+              lane.take t.n = yP) ∧
+            (∀ h : 1 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[1] = false) ∧
+            (∀ h : 2 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[2] = embed zP) ∧
+            (∀ h : 2 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[2] = true)
+        | .zBench =>
+            bF.sudo_5Board_8bench_on = true ∧
+            bF.sudo_5Board_8bench_to = (2 : Int) ∧
+            (∃ lane, bF.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
+              lane.take t.n = zP) ∧
+            (∀ h : 1 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[1] = embed yP) ∧
+            (∀ h : 1 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[1] = true) ∧
+            (∀ h : 2 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[2] = false)) := by
   obtain ⟨st, pxF, pyF, hI, hAtF, hrun, hloop⟩ :=
     walk_fform_from t b baseX baseY px py live0 acc0 start cells
       hAt hlen hpos hstart hspec hc2 hready hframe
@@ -233,11 +315,13 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
   have hslive : slive = true := hlive
   subst hslive
   have hpack := hAtF
-  rcases hpack with ⟨_, _, _, _, _, _, _, _, _, _,
-    ⟨_moves, _slides, ctrl, mark, _, _, hctrl, hmark, hfit, _, _, _⟩⟩
+  rcases hpack with ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
+    hproj, ⟨_moves, _slides, ctrl, mark, _, _, hctrl, hmark, hfit, _, _, _⟩⟩
+  rcases hproj with ⟨xP, yP, zP, lay, hxL, hyL, hzL, hxt, hyt, hzt, hx, hy, hz, h0, hlay⟩
   have hclose := chord_after_nat bF (Int.ofNat (t.cells - 1)) true
     mark ctrl hmark hctrl hfit
-  refine ⟨bF, pxF, pyF, ctrl, hAtF, hctrl, hrun, ?_⟩
+  refine ⟨bF, pxF, pyF, xP, yP, zP, lay, ctrl, hAtF, hctrl, hrun,
+    hxL, hyL, hzL, hxt, hyt, hzt, hx, hy, hz, ?_, h0, hlay⟩
   rw [hloop, hclose]
 
 end EcbsLink2.Link2

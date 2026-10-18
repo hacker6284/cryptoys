@@ -87,6 +87,8 @@ structure KeepCopy
       Int.ofNat (raisedHole hole (topIdx (keepSchool n bench xs ys home mir)))
   ops0 : ∀ h : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
       b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h = Int.ofNat (cOps + 1)
+  opsSz : b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size
   heldSz : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size
   homeSz : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size
   spareH : ∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6]'h = false
@@ -458,6 +460,12 @@ theorem keep_copy (b : Ecbs.Board) (dst first second : Nat)
       have hget := idx_eq hopsEq 0 h
       rw [hget]
       simp [bU, markerOn, bumpOp, Array.getElem_set]
+    opsSz := by
+      rw [fold_ops, ops_withMoves, prep_ops]
+      dsimp [bPlace]
+      unfold placeBoard
+      dsimp only
+      split <;> simp [bU, markerOn, bumpOp, feed, markerUpFeed]
     heldSz := by
       rw [hheldEq, Array.size_set, placeHeldSize, hheldU0]
     homeSz := by

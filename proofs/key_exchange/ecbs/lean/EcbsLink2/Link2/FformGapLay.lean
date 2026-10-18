@@ -426,7 +426,15 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
           false false false = .ok b' ∧
       b'.sudo_5Board_5bench = embed lane' ∧
       lane'.take n = fieldMul n k bench z u2 ∧
-      BenchCarry b' lane' n (cOps + 1) peak hole' peakS := by
+      BenchCarry b' lane' n (cOps + 1) peak hole' peakS ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = ((gap : Nat) : Int) ∧
+      b'.sudo_5Board_9marker_on = true ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max mx (m + 2)) := by
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     simpa [feed, markerUpFeed] using hops
@@ -543,7 +551,8 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
     rw [Array.getElem_set_ne (h := hneG6)] at hget
     have h6U : 6 < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hSpH
     exact (hget.trans (idx_eq hheldU 6 h6U)).trans hSpE
-  obtain ⟨b', hok, hbench, hmul, hpk, hst, hho, hopsEq, hszH, hheldK⟩ :=
+  obtain ⟨b', hok, hbench, hmul, hpk, hst, hho, hopsEq, hszH, hheldK,
+      hon', hto', hmk', htier', hix, hctrl, hmx, _hmv, _hsl⟩ :=
     nocopy_else_field bS gap bot gap z u2
       w h r n k mvS hole peak peakS bench hoffS hblS hBotD hBotH hHeldBot hHomeBot
       hGapD hGapH hHeldG hHomeG h7S hne hn0 hnb hnS hlenz hlenu hf hmovesS
@@ -595,7 +604,33 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
   have hgapPos : 0 < n - k := by
     have hwr : 0 < w * r := Nat.mul_pos hw0 hrP
     omega
-  refine ⟨b', lane', hole', ?_, hbench, hmul, ?_⟩
+  have hmU : bU.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hcU : bU.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hxU : bU.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx (m + 2)) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hmS : bS.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+    rw [show bS.sudo_5Board_6marker =
+        (settleBoard bU gap hHU hDU lane n moves slides peak).sudo_5Board_6marker from by
+          dsimp [bS, markerOn],
+      settle_ix_eq bU gap hinS lane n moves slides peak, hmU]
+  have hcS : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    rw [hcostS, settle_ctrl_eq bU gap hinS lane n moves slides peak, hcU]
+  have hxS : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx (m + 2)) := by
+    rw [hcostS, settle_mx_eq bU gap hinS lane n moves slides peak, hxU]
+  have hmkS : bS.sudo_5Board_9marker_on = true := by
+    simp [bS, markerOn]
+  have htierB : b'.sudo_5Board_1t = b.sudo_5Board_1t := by
+    rw [htier',
+      show bS.sudo_5Board_1t =
+        (settleBoard bU gap hHU hDU lane n moves slides peak).sudo_5Board_1t from by
+          dsimp [bS, markerOn],
+      settle_tier_eq bU gap hinS lane n moves slides peak, htierU]
+  refine ⟨b', lane', hole', ?_, hbench, hmul, ?_, hon', hto', hmk'.trans hmkS, htierB,
+      hix.trans hmS, hctrl.trans hcS, hmx.trans hxS⟩
   · rw [hflag]
     exact hok
   · refine ⟨hsz', hop', h6, hsp, hpeak7, hpk, hst, hhole', ?_, ?_, ?_, ?_⟩

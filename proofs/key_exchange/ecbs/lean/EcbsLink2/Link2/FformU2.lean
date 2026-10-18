@@ -453,7 +453,7 @@ theorem rise_gap_u2z (b : Ecbs.Board) (dst first second seat gap : Nat)
   have hopCast : b2.sudo_5Board_4cost.sudo_5Costs_3ops[0]'carry2.opsSz =
       ((cOps + 2 : Nat) : Int) := by
     simpa [ofNat_eq_natCast] using carry2.ops0
-  obtain ⟨b3, lane3, hole3, hok3, _hb3, ht3, carry3⟩ :=
+  obtain ⟨b3, lane3, hole3, hok3, _hb3, ht3, carry3, _⟩ :=
     gap_u2z b2 gap second u2 z lane2 (m + 2) (ctrl + 4) (max mx (m + 3)) script (cOps + 2)
       n k w h r moves2 slides2 hole2 peak peakS bench
       hGH hGD hBH hBD (hbotH hBD) (hbotA hBH)

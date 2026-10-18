@@ -46,6 +46,55 @@ private theorem fold_held_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : N
   unfold ontoFoldBoard peakBoard noteBench withMoves withHole
   split <;> rfl
 
+private theorem fold_on_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_8bench_on = b.sudo_5Board_8bench_on := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_to_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_8bench_to = b.sudo_5Board_8bench_to := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_ix_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_6marker = b.sudo_5Board_6marker := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_ctrl_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_mx_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_marker_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_tier_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_1t = b.sudo_5Board_1t := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_moves_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (mv + foldCharge n (n - k) sch) := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_slides_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_6slides =
+      b.sudo_5Board_4cost.sudo_5Costs_6slides := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
 /-- Bench off, not onto, not a copy. The length-`n` prefix is `fieldMul` of
     the two homes. The mirror flag is off, so this is SPEC.md's product, not
     a mirrored one. -/
@@ -107,7 +156,20 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
       b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
       (∀ j, j ≠ second → ∀ hj : j < b.sudo_5Board_4held.size,
         ∀ hj' : j < b'.sudo_5Board_4held.size,
-          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = ((dst : Nat) : Int) ∧
+      b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + schoolMoves xs ys n n +
+          foldCharge n (n - k) (school n xs ys (List.replicate bench 0) false)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        b.sudo_5Board_4cost.sudo_5Costs_6slides := by
   have hOff := nocopy_else_off b dst first second xs ys n moves peakS bench false
     hoff hbl hF hHome hHF hArr hS hHomeS hHS hYs h7 hne hn0 hn hlenx hleny hf
     hmoves hpeakS hspan hxsT hfi hfm
@@ -181,7 +243,27 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
   have hheldB : bFold.sudo_5Board_4held =
       b.sudo_5Board_4held.set ⟨second, hS⟩ false := by
     simp [bFold, withMoves, mulPrep, mulAimed]
-  refine ⟨ontoFoldBoard bFold sch n k mvN peak, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  have honB : bFold.sudo_5Board_8bench_on = true := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have htoB : bFold.sudo_5Board_8bench_to = ((dst : Nat) : Int) := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hmkB : bFold.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have htierB : bFold.sudo_5Board_1t = b.sudo_5Board_1t := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hixB : bFold.sudo_5Board_6marker = b.sudo_5Board_6marker := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hctrlB : bFold.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hmxB : bFold.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hslB : bFold.sudo_5Board_4cost.sudo_5Costs_6slides =
+      b.sudo_5Board_4cost.sudo_5Costs_6slides := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  refine ⟨ontoFoldBoard bFold sch n k mvN peak, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hma]
     exact hOk
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
@@ -201,6 +283,15 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
         b.sudo_5Board_4held[j]'hj := by
       rw [Array.getElem_set, if_neg (Ne.symm hneJ)]
     exact cell_eq_of hEq hv
+  · exact (fold_on_out bFold sch n k mvN peak).trans honB
+  · exact (fold_to_out bFold sch n k mvN peak).trans htoB
+  · exact (fold_marker_out bFold sch n k mvN peak).trans hmkB
+  · exact (fold_tier_out bFold sch n k mvN peak).trans htierB
+  · exact (fold_ix_out bFold sch n k mvN peak).trans hixB
+  · exact (fold_ctrl_out bFold sch n k mvN peak).trans hctrlB
+  · exact (fold_mx_out bFold sch n k mvN peak).trans hmxB
+  · rw [fold_moves_out bFold sch n k mvN peak]
+  · exact (fold_slides_out bFold sch n k mvN peak).trans hslB
 
 /-- The run multiply with the across already mirrored. The bench prefix is
     SPEC.md §3 R7's run `v = x₂Z − X`. -/

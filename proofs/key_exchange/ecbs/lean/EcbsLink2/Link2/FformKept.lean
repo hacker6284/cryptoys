@@ -107,4 +107,53 @@ theorem off_home_ne (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
   have hget := at_eq hset (by rw [hset, Array.size_set]; exact hi) (by rw [Array.size_set]; exact hi)
   exact hget.trans (set_ne b.sudo_5Board_4home src i hHome #[] hne hi)
 
+section
+variable {b : Ecbs.Board} {x y : List Nat}
+  {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
+
+/-- `frobenius_point` returns the bottom comb with the marker flag put back. -/
+theorem frobenius_bottom_eq
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat)
+    (hyt : allTritList y) (hy : y.length = n)
+    (hheld2 : a.b1On.sudo_5Board_4held[2]'(by rw [a.hszDOn]; decide) = true)
+    (hhome2 : a.b1On.sudo_5Board_4home[2]'(by rw [a.hszHOn]; decide) = embed z)
+    (hz : z.length = n) (hzt : allTritList z)
+    (hn0 : 0 < n) (hnbL : n ≤ a.laneX.length) (hnb : n ≤ bench) (hgap0 : 0 < n - k)
+    (hs1 : 1 < script) (hs2 : 2 < script)
+    (hfitU : FitsLen ((ctrl + 1) + 2)) (hfitC : FitsLen (cOps + 2))
+    (hfitCtrl : FitsLen (ctrl + 5)) (hfitC3 : FitsLen (cOps + 3))
+    (hspan : 3 * (n - 1) + cg < bench)
+    (h3 : FitsLen (3 * (n - 1))) (hnFit : FitsLen n) (hbenchFit : FitsLen bench)
+    (hpeg : FitsLen (2 * pegCount ((upLane n k bench y).take n)))
+    (hfitMv : FitsLen (upMv2 a + 2 * pegCount ((upLane n k bench y).take n)))
+    (hfitSl : FitsLen (upSl a + 2 * pegCount ((upLane n k bench y).take n)))
+    (hfm : FitsLen (upMv2 a + 2 * pegCount ((upLane n k bench y).take n) + 2 * n))
+    (hfold : FitsLen (upMv2 a + 2 * pegCount ((upLane n k bench y).take n) + 2 * n +
+        3 * (bench - n)))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000) :
+    Ecbs.frobenius_point b = .ok
+      { cubeOffBoard (seatAt a) 2 2 z n k
+          (upMv2 a + 2 * pegCount ((upLane n k bench y).take n))
+          (raisedHole a.hole1 (topIdx (combStrip n bench y))) bench
+          (raisedPeak (upPk2 a)
+            (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+          (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+          (cOps + 2) (seatAt_ops a) (seatAt_held2ix a) (seatAt_home2ix a) with
+        sudo_5Board_9marker_on := true } := by
+  have hseat := pointFeed_seat a hn0 hnb hgap0 hnFit hfitC3 hpeg hfitMv hfitSl hbenchFit
+  have hcube := seatAt_cube a z hhome2 hheld2 hz hzt hn0 hspan h3 hnFit hbenchFit hfitC3
+    hfm hfold hw0 hh0 hrR hrP hnE hkLe hgap hsm hnsm
+  rw [frobenius_point_bottom a z hyt hy hheld2 hhome2 hz hzt hn0 hnbL hnb hgap0
+    hs1 hs2 hfitU hfitC hfitCtrl hfitC3 hspan h3 hnFit hbenchFit hpeg hfitMv hfitSl hfm hfold
+    hw0 hh0 hrR hrP hnE hkLe hgap hsm hnsm]
+  rw [show Ecbs.bottom = ((2 : Nat) : Int) from rfl]
+  rw [← pointFeed]
+  rw [hseat, ← seatAt_cast a, hcube, ok_bind, pure_eq_ok]
+
+end
+
 end EcbsLink2.Link2

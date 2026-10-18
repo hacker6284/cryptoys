@@ -166,6 +166,7 @@ import EcbsLink2.Link2.FieldBridge
 import EcbsLink2.Link2.FieldMulAssoc
 import EcbsLink2.Link2.FieldUnit
 import EcbsLink2.Link2.FieldCube
+import EcbsLink2.Link2.TierSpan
 import EcbsLink2.Link2.CurveTest
 import EcbsLink2.Link2.CurveAsm
 import EcbsLink2.Link2.CurveCube

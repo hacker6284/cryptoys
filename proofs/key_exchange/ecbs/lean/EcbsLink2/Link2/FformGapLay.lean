@@ -5,6 +5,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.FformFold
+import EcbsLink2.Link2.BenchCarry
 
 namespace EcbsLink2.Link2
 
@@ -57,6 +58,7 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
     (htake : lane.take n = u) (hlen : u.length = n)
     (hpeak7 : 7 ≤ peak)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hpeakS7 : 7 ≤ peakS)
     (hfitP : FitsLen ((moves + 2 * pegCount (lane.take n)) + pegCount u))
     (hspan : 2 * (n - 1) < bench)
     (hu : allTritList u)
@@ -74,11 +76,12 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
     (hfitB : FitsLen bench)
     (hfold : FitsLen ((moves + 2 * pegCount (lane.take n)) + pegCount u +
         n * (n + 1) + 3 * (bench - n))) :
-    ∃ b' lane',
+    ∃ b' lane' hole',
       Ecbs.mul b ((dst : Nat) : Int) ((up : Nat) : Int) ((up : Nat) : Int)
           true false false = .ok b' ∧
       b'.sudo_5Board_5bench = embed lane' ∧
-      lane'.take n = fieldMul n k bench u u := by
+      lane'.take n = fieldMul n k bench u u ∧
+      BenchCarry b' lane' n (cOps + 1) peak hole' peakS := by
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     simpa [feed, markerUpFeed] using hops
@@ -183,15 +186,73 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
     rw [htierS, settle_tier_eq bU up hinS lane n moves slides peak, htierU, hr]
   have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
     rw [htierS, settle_tier_eq bU up hinS lane n moves slides peak, htierU, hk]
-  obtain ⟨b', hok, hbench, hmul, _hmk, _hon, _hto, _htier, _hsl, _hpk⟩ :=
+  obtain ⟨b', hok, hbench, hmul, _hmk, _hon, _hto, _htier, _hsl, hpk,
+      _hix, _hctrl, _hmx, hopsEq, _hmv, hst, hho, hsp, hszH, _hszHome, _hhome, _hheld⟩ :=
     copy_else_field bS dst up up u u w h r n k mvS hole peak peakS bench
       hoffS hblS hUpD hUpH hHeldUp hHomeUp hUpD hUpH hHeldUp hHomeUp
       h6D h6H h6E h7S hne6 hne6 hn0 hnb hnS hlen hlen hf hmovesS hpeakSboard hpeak7
-      hstrictS hfitP hspan hu hfi hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap
+      hstrictS hpeakS7 hfitP hspan hu hfi hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap
       hwS hhS hrS hkS hsm hnsm hfitB hfold
-  refine ⟨b', laneFold n (n - k) (school n u u (List.replicate bench 0) false), ?_, hbench, hmul⟩
-  rw [hflag]
-  exact hok
+  let schU := school n u u (List.replicate bench 0) false
+  let lane' := laneFold n (n - k) schU
+  let hole' := if hole < topIdx schU then topIdx schU else hole
+  have hholeN : (if decide (Int.ofNat (topIdx schU) > Int.ofNat hole) then
+        Int.ofNat (topIdx schU) else Int.ofNat hole) = Int.ofNat hole' := by
+    by_cases hlt : hole < topIdx schU
+    · have hgt : Int.ofNat (topIdx schU) > Int.ofNat hole := by
+        rw [gt_iff_lt, ofNat_lt_iff]
+        exact hlt
+      simp [hole', hlt, hgt]
+    · have hng : ¬ Int.ofNat (topIdx schU) > Int.ofNat hole := by
+        rw [gt_iff_lt, ofNat_lt_iff]
+        exact hlt
+      simp [hole', hlt, hng]
+  have hhole' : b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole' := by
+    rw [hho, hholeN]
+  have hopsS : bS.sudo_5Board_4cost.sudo_5Costs_3ops = bU.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    rw [show bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+        (settleBoard bU up hHU hDU lane n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops
+        from by dsimp [bS, markerOn]]
+    exact settle_ops bU up hinS lane n moves slides peak
+  have hopSet := bumpOp_ops feed 0 cOps hopsF
+  have hszU : 0 < bU.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hopSet, Array.size_set]
+    exact hopsF
+  have hopU : bU.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hszU = Int.ofNat (cOps + 1) :=
+    cell_eq_of hopSet
+      (Array.getElem_set_eq feed.sudo_5Board_4cost.sudo_5Costs_3ops ⟨0, hopsF⟩
+        (Int.ofNat (cOps + 1)) rfl (by rw [Array.size_set]; exact hopsF))
+  have hsz' : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hopsEq, hopsS]
+    exact hszU
+  have hop' : b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hsz' = Int.ofNat (cOps + 1) :=
+    cell_eq_of (hopsEq.trans hopsS) hopU
+  have hschLen : schU.length = bench := by
+    rw [school_length, List.length_replicate]
+  have hlenR : lane'.length = bench := by
+    rw [laneFold_length n (n - k) schU (by rw [hschLen]; exact hnb), hschLen]
+  have h6 : 6 < b'.sudo_5Board_4held.size := by
+    rw [hszH]
+    exact h6D
+  have hgapPos : 0 < n - k := by
+    have hwr : 0 < w * r := Nat.mul_pos hw0 hrP
+    omega
+  refine ⟨b', lane', hole', ?_, hbench, hmul, ?_⟩
+  · rw [hflag]
+    exact hok
+  · refine ⟨hsz', hop', h6, hsp h6, hpeak7, hpk, hst, hhole', ?_, ?_, ?_, ?_⟩
+    · rw [hlenR]
+      exact Nat.lt_of_lt_of_le hn0 hnb
+    · rw [hlenR]
+      exact hnb
+    · rw [hlenR]
+      exact hfitB
+    · intro i hi hii
+      have hiiS : i < schU.length := by
+        rwa [hlenR, ← hschLen] at hii
+      rw [← coeff_eq_get lane' i hii]
+      exact laneFold_high n (n - k) schU i hn0 hgapPos
+        (by rw [hschLen]; exact hnb) hi hiiS
 
 /-- The bottom times the squared rise. The bench holds `u²` and is aimed at the
     gap, so that square is settled, then `fieldMul` of the bottom by it is the
@@ -417,6 +478,7 @@ theorem gap_v2 (b : Ecbs.Board) (dst gap across : Nat) (v lane : List Nat)
     (hlen : v.length = n)
     (hpeak7 : 7 ≤ peak)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hpeakS7 : 7 ≤ peakS)
     (hfitP : FitsLen ((moves + 2 * pegCount (lane.take n)) + pegCount v))
     (hspan : 2 * (n - 1) < bench)
     (hv : allTritList v)
@@ -545,7 +607,7 @@ theorem gap_v2 (b : Ecbs.Board) (dst gap across : Nat) (v lane : List Nat)
   obtain ⟨b', hok, hbench, hmul, _, _, _, _, _, _⟩ := copy_else_field bS dst across across v v
       w h r n k mvS hole peak peakS bench hoffS hblS hAccD hAccH hHeldA' hHomeA
       hAccD hAccH hHeldA' hHomeA h6D h6H h6E h7S hne6 hne6 hn0 hnb hnS hlen hlen hf
-      hmovesS hpeakB hpeak7 hstrictS hfitP hspan hv hfi hfm hholeS hw0 hh0 hrR hrP
+      hmovesS hpeakB hpeak7 hstrictS hpeakS7 hfitP hspan hv hfi hfm hholeS hw0 hh0 hrR hrP
       hnE hkLe hgap hwS hhS hrS hkS hsm hnsm hfitB hfold
   refine ⟨b', laneFold n (n - k) (school n v v (List.replicate bench 0) false), ?_, hbench, hmul⟩
   rw [hflag]

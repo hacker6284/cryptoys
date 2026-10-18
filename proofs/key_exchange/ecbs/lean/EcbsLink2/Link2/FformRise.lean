@@ -159,6 +159,16 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
             (school n y2 z (pref (mirrorTrits y) bench n) mirror)) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides =
         Int.ofNat (slides + 2 * pegCount (lane.take n) + 2 * pegCount (mirrorTrits y)) ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      (∀ j, j ≠ dst → j ≠ seat → j ≠ 6 →
+        ∀ hj : j < b.sudo_5Board_4home.size,
+        ∀ hj' : j < b'.sudo_5Board_4home.size,
+          b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) ∧
+      (∀ j, j ≠ dst → j ≠ seat → j ≠ 6 →
+        ∀ hj : j < b.sudo_5Board_4held.size,
+        ∀ hj' : j < b'.sudo_5Board_4held.size,
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) ∧
       ∃ hole',
         BenchCarry b'
           (laneFold n (n - k) (school n y2 z (pref (mirrorTrits y) bench n) mirror))
@@ -347,7 +357,7 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
     exact h7
-  obtain ⟨b', hok, hbench, hon, hto, hmk', htier', _hszD, hempty, _, _, _,
+  obtain ⟨b', hok, hbench, hon, hto, hmk', htier', hszD, hempty, hszHome, hhomeK, hheldK,
       hix, hctrl, hmx, hopsEq, hmv, hsl, hpk, hst, hho, hsp⟩ :=
     run_else_lane bS dst first second (mirrorTrits y) y2 z
       w h r n k mvS slS hole peak peakS bench mirror hoffS hblS hDD hHD hHeldD hHomeD
@@ -389,13 +399,55 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
         (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_1t from by
           dsimp [bS, markerOn],
       settle_tier_eq bU seat hinS lane n mvM slides peak, htierU]
+  have hszHeld : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+    rw [hszD]
+    rw [show bS.sudo_5Board_4held.size =
+        (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_4held.size from by
+          dsimp [bS, markerOn]]
+    rw [settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
+  have hszHomeB : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
+    rw [hszHome]
+    rw [show bS.sudo_5Board_4home.size =
+        (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_4home.size from by
+          dsimp [bS, markerOn]]
+    rw [settle_home_eq bU seat hinS lane n mvM slides peak, Array.size_set, hhomeU, Array.size_set]
   refine ⟨b', ?_, hbench, rise_lane_spec mirror n k bench y2 z y hy2 hz hlen hspan hnb,
       hon, hto, hmk'.trans hmkS, htierB, hempty, hix.trans hmS, hctrl.trans hcS,
-      hmx.trans hxS, ?_, ?_, ?_⟩
+      hmx.trans hxS, ?_, ?_, hszHeld, hszHomeB, ?_, ?_, ?_⟩
   · rw [hrise, hflag]
     exact hok
   · rw [hmv, hmvS]
   · rw [hsl, hslS]
+  · intro j hneD hneSeat hne6 hj hj'
+    have hjS : j < bS.sudo_5Board_4home.size := by
+      rw [hszHome] at hj'
+      exact hj'
+    have hEqS := hhomeK j hneD hne6 hjS hj'
+    have hset := settle_home_eq bU seat hinS lane n mvM slides peak
+    have hget := idx_eq (hhomeS.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hneSeat)] at hget
+    have hjU : j < bU.sudo_5Board_4home.size := by
+      rw [hhomeU, Array.size_set]
+      exact hj
+    have hraw := idx_eq hhomeU j hjU
+    have hBU : bU.sudo_5Board_4home[j]'hjU = b.sudo_5Board_4home[j]'hj := by
+      rw [Array.getElem_set_ne (h := Ne.symm hneD)] at hraw
+      exact hraw
+    exact hEqS.trans (hget.trans hBU)
+  · intro j hneD hneSeat hne6 hj hj'
+    have hjS : j < bS.sudo_5Board_4held.size := by
+      rw [hszD] at hj'
+      exact hj'
+    have hEqS := hheldK j hneD hne6 hjS hj'
+    have hset := settle_held_eq bU seat hinS lane n mvM slides peak
+    have hget := idx_eq (hheldS0.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hneSeat)] at hget
+    have hjU : j < bU.sudo_5Board_4held.size := by
+      rw [hheldU]
+      exact hj
+    have hBU : bU.sudo_5Board_4held[j]'hjU = b.sudo_5Board_4held[j]'hj :=
+      idx_eq hheldU j hjU
+    exact hEqS.trans (hget.trans hBU)
   · let schR := school n y2 z (pref (mirrorTrits y) bench n) mirror
     let laneR := laneFold n (n - k) schR
     let hole' := if hole < topIdx schR then topIdx schR else hole
@@ -441,7 +493,7 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
     have hlenR : laneR.length = bench := by
       rw [laneFold_length n (n - k) schR (by rw [hschLen]; exact hnb), hschLen]
     have h6 : 6 < b'.sudo_5Board_4held.size := by
-      rw [_hszD]
+      rw [hszD]
       rw [show bS.sudo_5Board_4held.size =
           (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_4held.size from by
             dsimp [bS, markerOn]]

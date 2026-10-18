@@ -98,9 +98,42 @@ theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot gap : Nat)
       (∀ h : sp < b'.sudo_5Board_4held.size,
         b'.sudo_5Board_4held[sp]'h = true) ∧
       (∀ h : bot < b'.sudo_5Board_4held.size,
-        b'.sudo_5Board_4held[bot]'h = false) := by
-  obtain ⟨b', lane', hok, _hb, ht, hon', hto', _hmk, hix, hctrl, hops,
-      hhomeG, hheldG, hhomeS, hheldS, hemptyB⟩ :=
+        b'.sudo_5Board_4held[bot]'h = false) ∧
+      b'.sudo_5Board_5bench = embed lane' ∧
+      b'.sudo_5Board_9marker_on = true ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max mx (m + 2)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat ((moves + 2 * pegCount (lane.take n)) + schoolMoves v2 z n n +
+          foldCharge n (n - k) (school n v2 z (List.replicate bench 0) false)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount (lane.take n)) ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      (∀ j, j ≠ bot → j ≠ sp →
+        ∀ hj : j < b.sudo_5Board_4home.size,
+        ∀ hj' : j < b'.sudo_5Board_4home.size,
+          b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) ∧
+      (∀ j, j ≠ bot → j ≠ sp →
+        ∀ hj : j < b.sudo_5Board_4held.size,
+        ∀ hj' : j < b'.sudo_5Board_4held.size,
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        Int.ofNat (if hole < topIdx (school n v2 z (List.replicate bench 0) false) then
+          topIdx (school n v2 z (List.replicate bench 0) false) else hole) ∧
+      0 < lane'.length ∧
+      n ≤ lane'.length ∧
+      FitsLen lane'.length ∧
+      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) ∧
+      0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  obtain ⟨b', lane', hok, hb, ht, hon', hto', hmk, hix, hctrl, hops,
+      hhomeG, hheldG, hhomeS, hheldS, hemptyB, _hb2, _hmk2, htier, _hctrl2, hmx,
+      hmv, hsl, hszD, hszH, hhome, hheld, hpk, hst, hhole, hposL', hnle', hfitL', hzero',
+      hopsSz⟩ :=
     gap_v2z b sp bot gap v2 z lane gHome m ctrl mx script cOps n k w h r moves slides hole
       peak peakS bench hS hSD hBH hBD hHeldB hArrB hGH hGD hHeldG hArrG hneGS hneGB
       hmk hon hto hm hc hx hscript
@@ -111,7 +144,9 @@ theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot gap : Nat)
       hw hh hr hk hsm hnsm hfitB hfold
   have hc : cOps + 1 = cRise + 5 := by
     rw [hRead]
-  refine ⟨b', lane', hok, ?_, ?_, hon', hto', hix, ?_, hheldG, ?_, hheldS, hemptyB⟩
+  refine ⟨b', lane', hok, ?_, ?_, hon', hto', hix, ?_, hheldG, ?_, hheldS, hemptyB,
+      hb, hmk, htier, hctrl, hmx, hmv, hsl, hszD, hszH, hhome, hheld,       hpk, hst, hhole,
+      hposL', hnle', hfitL', hzero', hopsSz⟩
   · rw [ht, hvSq]
   · intro h
     simpa [hc] using hops h

@@ -462,7 +462,20 @@ theorem comb_u2z (b : Ecbs.Board)
       b3.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
       (∀ hg : 5 < b3.sudo_5Board_4held.size, b3.sudo_5Board_4held[5]'hg = false) ∧
       b3.sudo_5Board_1t = b.sudo_5Board_1t ∧
-      BenchCarry b3 lane3 n (cOps + 4) peak hole3 peakS := by
+      BenchCarry b3 lane3 n (cOps + 4) peak hole3 peakS ∧
+      (∀ h1 : 1 < b3.sudo_5Board_4home.size,
+        b3.sudo_5Board_4home[1]'h1 = embed u) ∧
+      (∀ h1 : 1 < b3.sudo_5Board_4held.size, b3.sudo_5Board_4held[1]'h1 = true) ∧
+      (∀ h3 : 3 < b3.sudo_5Board_4home.size,
+        b3.sudo_5Board_4home[3]'h3 = embed x2) ∧
+      (∀ h3 : 3 < b3.sudo_5Board_4held.size, b3.sudo_5Board_4held[3]'h3 = true) ∧
+      (∀ h4 : 4 < b3.sudo_5Board_4home.size,
+        b3.sudo_5Board_4home[4]'h4 = embed y2) ∧
+      (∀ h4 : 4 < b3.sudo_5Board_4held.size, b3.sudo_5Board_4held[4]'h4 = true) ∧
+      moves3 ≤ u2zMoveCap y y2 z (fformRunLane n k bench x x2 z) red n k bench
+        (fformRunMoves moves n k bench x x2 z lane) ∧
+      slides3 ≤ u2zSlideCap y (fformRunLane n k bench x x2 z) n
+        (fformRunSlides slides n x lane) := by
   intro u
   let laneR := fformRunLane n k bench x x2 z
   let movesR := fformRunMoves moves n k bench x x2 z lane
@@ -533,7 +546,7 @@ theorem comb_u2z (b : Ecbs.Board)
     (hheldR 5 (by decide) (by decide) (by decide) h5D h5DR).trans hheld5
   obtain ⟨bMid, b3, lane3, hole3, moves3, slides3, hmul, htakeZ, carry, hseatH, hseatD,
       hbench3, hon3, hto3, hmk3, hix3, hctrl3, hmx3, hmv3, hsl3, hgapF, htier3,
-      _hszD, _hszH, hbot3, hbotD⟩ :=
+      _hszD, _hszH, hbot3, hbotD, hupA, hupH, hkeepH, hkeepD, hmvLe, hslLe⟩ :=
     rise_gap_u2z bRun 1 4 2 0 5 y y2 z laneR red
       (m + 1) (ctrl + 2) (max mx (m + 2)) script (cOps + 1) n k w h r movesR slidesR
       holeR peak peakS bench
@@ -564,7 +577,7 @@ theorem comb_u2z (b : Ecbs.Board)
     simpa [laneR, fformRunLane] using htakeR
   refine ⟨bRun, bMid, b3, lane3, hole3, moves3, slides3, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
       hbench3, hon3, ?_, hmk3, ?_, ?_, hmv3, hsl3, hmx3, ?_, ?_, ?_,
-      htier3.trans htierR, ?_⟩
+      htier3.trans htierR, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · simpa [Ecbs.across, Ecbs.base_across, Ecbs.bottom] using hokR
   · simpa [Ecbs.gap, Ecbs.bottom] using hmul
   · simpa [u] using htakeZ
@@ -587,3 +600,33 @@ theorem comb_u2z (b : Ecbs.Board)
     exact hgapF hg
   · have hc4 : (cOps + 1) + 3 = cOps + 4 := by omega
     simpa [hc4] using carry
+  · intro h1
+    simpa [u] using hupA h1
+  · intro h1
+    exact hupH h1
+  · intro h3
+    have h3R : 3 < bRun.sudo_5Board_4home.size := by
+      rw [_hszH] at h3
+      exact h3
+    exact ((hkeepH 3 (by decide) (by decide) (by decide) (by decide) h3R h3).trans
+      (hhomeR 3 (by decide) (by decide) (by decide) h3H h3R)).trans hhome3
+  · intro h3
+    have h3R : 3 < bRun.sudo_5Board_4held.size := by
+      rw [_hszD] at h3
+      exact h3
+    exact ((hkeepD 3 (by decide) (by decide) (by decide) (by decide) h3R h3).trans
+      (hheldR 3 (by decide) (by decide) (by decide) h3D h3R)).trans hheld3
+  · intro h4
+    have h4R : 4 < bRun.sudo_5Board_4home.size := by
+      rw [_hszH] at h4
+      exact h4
+    exact ((hkeepH 4 (by decide) (by decide) (by decide) (by decide) h4R h4).trans
+      (hhomeR 4 (by decide) (by decide) (by decide) h4H h4R)).trans hhome4
+  · intro h4
+    have h4R : 4 < bRun.sudo_5Board_4held.size := by
+      rw [_hszD] at h4
+      exact h4
+    exact ((hkeepD 4 (by decide) (by decide) (by decide) (by decide) h4R h4).trans
+      (hheldR 4 (by decide) (by decide) (by decide) h4D h4R)).trans hheld4
+  · simpa [laneR, movesR, fformRunLane, fformRunMoves] using hmvLe
+  · simpa [laneR, slidesR, fformRunLane, fformRunSlides] using hslLe

@@ -323,7 +323,27 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
           embed (fieldMul n k bench (fieldMul n k bench v v) z)) ∧
       (∀ h : bot < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[bot]'h = true) ∧
       (∀ h : gap < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[gap]'h = false) ∧
-      (∀ h : sp < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[sp]'h = false) := by
+      (∀ h : sp < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[sp]'h = false) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max mx (m + 2)) ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (((moves + 2 * pegCount (lane.take n)) + 2 * pegCount u2z) +
+          schoolMoves v v2 n n +
+          foldCharge n (n - k) (school n v v2 (pref u2z bench n) false)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat ((slides + 2 * pegCount (lane.take n)) + 2 * pegCount u2z) ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      (∀ j, j ≠ gap → j ≠ sp → j ≠ bot →
+        ∀ hj : j < b.sudo_5Board_4home.size,
+        ∀ hj' : j < b'.sudo_5Board_4home.size,
+          b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) ∧
+      (∀ j, j ≠ gap → j ≠ sp → j ≠ bot →
+        ∀ hj : j < b.sudo_5Board_4held.size,
+        ∀ hj' : j < b'.sudo_5Board_4held.size,
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     simpa [feed, markerUpFeed] using hops
@@ -582,8 +602,35 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
     have hget := hlay.heldK bot (Ne.symm hneGB) (Ne.symm hneSB) hBotD
       (by rw [hlay.szD]; exact hBotD)
     exact hget.trans hHeldBS
+  have hcS : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    rw [show bS.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+        (settleBoard bU bot hHU hDU lane n moves slides peak).sudo_5Board_4cost.sudo_5Costs_4ctrl
+        from by dsimp [bS, markerOn],
+      settle_ctrl_eq bU bot hinS lane n moves slides peak, hcU]
+  have hxU : bU.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx (m + 2)) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hxS : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx (m + 2)) := by
+    rw [hcostS, settle_mx_eq bU bot hinS lane n moves slides peak, hxU]
+  have hszHeld : bOut.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+    rw [hlay.szD, hheldS0, settle_held_eq bU bot hinS lane n moves slides peak, Array.size_set,
+      hheldU]
+  have hszHomeB : bOut.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
+    rw [hlay.szH, hhomeS, settle_home_eq bU bot hinS lane n moves slides peak, Array.size_set,
+      hhomeU]
+  have hmvOut : bOut.sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (((moves + 2 * pegCount (lane.take n)) + 2 * pegCount u2z) +
+        schoolMoves v v2 n n +
+        foldCharge n (n - k) (school n v v2 (pref u2z bench n) false)) := by
+    simpa [movesS, peg, mvN, sch, pad] using hlay.moves
+  have hslOut : bOut.sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat ((slides + 2 * pegCount (lane.take n)) + 2 * pegCount u2z) := by
+    simpa [slidesS, peg] using hlay.slides
   refine ⟨bOut, laneFold n (n - k) sch, ?_, ?_, ?_, ?_, hlay.on, hlay.to_,
-      hlay.flag.trans (by simp [bS, markerOn]), ?_, ?_, ?_, ?_, ?_⟩
+      hlay.flag.trans (by simp [bS, markerOn]), ?_, ?_, ?_, ?_, ?_,
+      hlay.ctrl.trans hcS, hlay.mx.trans hxS, hlay.tier.trans htierS, hmvOut, hslOut,
+      hszHeld, hszHomeB, ?_, ?_⟩
   · rw [hflag]
     exact hmul
   · simpa [bOut, sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
@@ -601,5 +648,29 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
     exact hlay.heldD h
   · intro h
     exact hlay.heldS h
+  · intro j hneG hneS hneB hj hj'
+    have hjS : j < bS.sudo_5Board_4home.size := by
+      rw [hlay.szH] at hj'
+      exact hj'
+    have hEq := hlay.homeK j hneG hneS hjS hj'
+    have hset := settle_home_eq bU bot hinS lane n moves slides peak
+    have hget := idx_eq (hhomeS.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hneB)] at hget
+    have hjU : j < bU.sudo_5Board_4home.size := by
+      rw [hhomeU]
+      exact hj
+    exact hEq.trans (hget.trans (idx_eq hhomeU j hjU))
+  · intro j hneG hneS hneB hj hj'
+    have hjS : j < bS.sudo_5Board_4held.size := by
+      rw [hlay.szD] at hj'
+      exact hj'
+    have hEq := hlay.heldK j hneG hneS hjS hj'
+    have hset := settle_held_eq bU bot hinS lane n moves slides peak
+    have hget := idx_eq (hheldS0.trans hset) j hjS
+    rw [Array.getElem_set_ne (h := Ne.symm hneB)] at hget
+    have hjU : j < bU.sudo_5Board_4held.size := by
+      rw [hheldU]
+      exact hj
+    exact hEq.trans (hget.trans (idx_eq hheldU j hjU))
 
 end EcbsLink2.Link2

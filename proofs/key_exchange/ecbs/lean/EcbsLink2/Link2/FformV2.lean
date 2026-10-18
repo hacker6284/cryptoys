@@ -94,9 +94,29 @@ theorem gap_v2_on_u2z (b : Ecbs.Board) (dst gap across : Nat)
         b'.sudo_5Board_4home[gap]'h =
           embed (fieldMul n k bench z (fieldMul n k bench u u))) ∧
       (∀ h : gap < b'.sudo_5Board_4held.size,
-        b'.sudo_5Board_4held[gap]'h = true) := by
-  obtain ⟨b', lane', hole', hok, _hb, ht, carry, hon', hto', hmk', _htier, hix, hctrl, _hmx,
-      hhomeG, hheldG⟩ :=
+        b'.sudo_5Board_4held[gap]'h = true) ∧
+      b'.sudo_5Board_5bench = embed lane' ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max mx (m + 2)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat ((moves + 2 * pegCount (lane.take n)) + pegCount v +
+          schoolMoves v v n n +
+          foldCharge n (n - k) (school n v v (List.replicate bench 0) false)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount (lane.take n)) ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      (∀ j, j ≠ gap → j ≠ 6 →
+        ∀ hj : j < b.sudo_5Board_4home.size,
+        ∀ hj' : j < b'.sudo_5Board_4home.size,
+          b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) ∧
+      (∀ j, j ≠ gap → j ≠ 6 →
+        ∀ hj : j < b.sudo_5Board_4held.size,
+        ∀ hj' : j < b'.sudo_5Board_4held.size,
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
+  obtain ⟨b', lane', hole', hok, hb, ht, carry, hon', hto', hmk', htier, hix, hctrl, hmx,
+      hhomeG, hheldG, hmv, hsl, hszD, hszH, hhome, hheld⟩ :=
     gap_v2 b dst gap across v lane m ctrl mx script cOps n k w h r moves slides hole
       peak peakS bench hG hGD hAH hAD hHeldA hArrA hmk hon hto hm hc hx hscript
       hbound hfitMk hfitC hfit2 hn hops hop0 hfops h7 hempty hbench hposL hnle hzero
@@ -105,7 +125,8 @@ theorem gap_v2_on_u2z (b : Ecbs.Board) (dst gap across : Nat)
       hnE hkLe hgap hw hh hr hk hsm hnsm hfitB hfold
   have hc : cOps + 1 = cRise + 4 := by
     rw [hRead]
-  refine ⟨b', lane', hole', hok, ht, hpref, ?_, hon', hto', hmk', hix, hctrl, ?_, hheldG⟩
+  refine ⟨b', lane', hole', hok, ht, hpref, ?_, hon', hto', hmk', hix, hctrl, ?_, hheldG,
+      hb, htier, hmx, hmv, hsl, hszD, hszH, hhome, hheld⟩
   · simpa [hc] using carry
   · intro h
     rw [hhomeG h, hpref]

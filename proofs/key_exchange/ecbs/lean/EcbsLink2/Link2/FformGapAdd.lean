@@ -426,7 +426,24 @@ theorem gap_add_on_sum (b : Ecbs.Board) (gap bot : Nat) (u v z lane : List Nat)
       (∀ h : gap < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[gap]'h = false) ∧
       (∀ h : bot < b'.sudo_5Board_4home.size,
         b'.sudo_5Board_4home[bot]'h =
-          embed (fieldMul n k bench (fieldMul n k bench v v) z)) := by
+          embed (fieldMul n k bench (fieldMul n k bench v v) z)) ∧
+      b'.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      b'.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak = b.sudo_5Board_4cost.sudo_5Costs_4peak ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + pegCount (fieldMul n k bench (fieldMul n k bench v v) z)) ∧
+      (laneAdd lane (fieldMul n k bench (fieldMul n k bench v v) z) n n).length =
+        lane.length := by
   let u2 := fieldMul n k bench u u
   let v2 := fieldMul n k bench v v
   let sum := fieldAdd n (fieldMul n k bench z u2) (fieldMul n k bench v v2)
@@ -463,7 +480,11 @@ theorem gap_add_on_sum (b : Ecbs.Board) (gap bot : Nat) (u v z lane : List Nat)
   let mv := moves + pegCount v2z
   refine ⟨addOnBench b arr mv, laneAdd lane v2z n n, hok, addOnBench_bench b arr mv, ?_,
       addOnBench_on b arr mv ▸ hon, addOnBench_to b arr mv ▸ hto,
-      addOnBench_home b arr mv, addOnBench_held b arr mv, ?_, ?_⟩
+      addOnBench_home b arr mv, addOnBench_held b arr mv, ?_, ?_,
+      addOnBench_marker b arr mv, addOnBench_flag b arr mv, rfl, rfl, rfl, rfl, rfl, rfl, rfl,
+      rfl,
+      (by rw [addOnBench_moves]),
+      laneAdd_length lane (fieldMul n k bench (fieldMul n k bench v v) z) n n hnle⟩
   · rw [hpre]
     have hF := gap_fform n k bench u v z hu hv hz hspan hnb
     simpa [sum, u2, v2, v2z, hcomm] using hF

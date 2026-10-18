@@ -1068,6 +1068,41 @@ private theorem fold_tier (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) 
   unfold ontoFoldBoard peakBoard noteBench withMoves withHole
   split <;> rfl
 
+private theorem fold_ix (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_6marker = b.sudo_5Board_6marker := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_ctrl (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_mx (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_ops (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_moves (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (mv + foldCharge n (n - k) sch) := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+private theorem fold_slides (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_6slides =
+      b.sudo_5Board_4cost.sudo_5Costs_6slides := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
 /-- The onto copy clears `dst` before it aims the bench there. Folding does not
     put that home back. -/
 private theorem aimed_dst_empty
@@ -1243,7 +1278,18 @@ theorem run_else_lane (b : Ecbs.Board) (dst first second : Nat)
           b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) ∧
       (∀ j, j ≠ dst → j ≠ 6 → ∀ hj : j < b.sudo_5Board_4held.size,
         ∀ hj' : j < b'.sudo_5Board_4held.size,
-          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) ∧
+      b'.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + 2 * pegCount home + pegCount ys +
+          schoolMoves xs ys n n +
+          foldCharge n (n - k) (school n xs ys (pref home bench n) mirror)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount home) := by
   have hcopy := run_onto_copy b dst first second home xs ys n moves slides peak peakS bench
     mirror hoff hbl hD hHD hHeldD hHomeD hF hHome hHF hArr hS hHomeS hHS hYs
     hSpH hSpHome hSpE h7 hneD1 hneD2 hne6D hne6F hne6S hn0 hnb hn hlenH hlenx hleny hf
@@ -1359,7 +1405,7 @@ theorem run_else_lane (b : Ecbs.Board) (dst first second : Nat)
     simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, htierP, htierC]
   have hheldB : bFold.sudo_5Board_4held =
       bP.sudo_5Board_4held.set ⟨6, hHeldP⟩ false := by
-    simp [bFold, withMoves, mulPrep]
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
   have hszP : bP.sudo_5Board_4held.size = bC.sudo_5Board_4held.size :=
     aim_held_size bC 6 hHomeC hHeldC ys (moves + 2 * peg) peak
   have hszC : bC.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
@@ -1385,8 +1431,69 @@ theorem run_else_lane (b : Ecbs.Board) (dst first second : Nat)
       b.sudo_5Board_4home.size := by
     rw [fold_home bFold sch n k mvN peak]
     simp [bFold, withMoves, mulPrep, Array.size_set, hszPH, hszCH]
+  have hixC : bC.sudo_5Board_6marker = b.sudo_5Board_6marker := by
+    simp [bC, ontoCharge]
+  have hixP : bP.sudo_5Board_6marker = bC.sudo_5Board_6marker := by
+    dsimp [bP]
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hixB : bFold.sudo_5Board_6marker = bP.sudo_5Board_6marker := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hctrlC : bC.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+    simp [bC, ontoCharge]
+  have hctrlP : bP.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      bC.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+    dsimp [bP]
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hctrlB : bFold.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      bP.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hmxC : bC.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+    simp [bC, ontoCharge]
+  have hmxP : bP.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      bC.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+    dsimp [bP]
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hmxB : bFold.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      bP.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hopsC : bC.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    simp [bC, ontoCharge]
+  have hopsP : bP.sudo_5Board_4cost.sudo_5Costs_3ops =
+      bC.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    dsimp [bP]
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hopsB : bFold.sudo_5Board_4cost.sudo_5Costs_3ops =
+      bP.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hslC : bC.sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (slides + 2 * peg) := by
+    simp [bC, ontoCharge, peg]
+  have hslP : bP.sudo_5Board_4cost.sudo_5Costs_6slides =
+      bC.sudo_5Board_4cost.sudo_5Costs_6slides := by
+    dsimp [bP]
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hslB : bFold.sudo_5Board_4cost.sudo_5Costs_6slides =
+      bP.sudo_5Board_4cost.sudo_5Costs_6slides := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
+  have hmvForm : moves + 2 * pegCount home + pegCount ys + schoolMoves xs ys n n +
+      foldCharge n (n - k) (school n xs ys (pref home bench n) mirror) =
+      mvN + foldCharge n (n - k) sch := by
+    simp [mvN, mv, peg, py, sch, pad]
   refine ⟨ontoFoldBoard bFold sch n k mvN peak, ?_, ?_, ?_, ?_, ?_, ?_, hszOut, ?_,
-      hszHome, ?_, ?_⟩
+      hszHome, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hma]; exact hOk
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
   · exact (fold_on bFold sch n k mvN peak).trans honB
@@ -1412,6 +1519,12 @@ theorem run_else_lane (b : Ecbs.Board) (dst first second : Nat)
       (Ne.symm hne6) hjC hjP
     exact prep_held_ne bP (embed pad) peakS mvN peak n k sch dst j
       hHeldP hHomeP hne6 hjP _ (hP.trans hC) hj'
+  · exact ((fold_ix bFold sch n k mvN peak).trans hixB).trans (hixP.trans hixC)
+  · exact ((fold_ctrl bFold sch n k mvN peak).trans hctrlB).trans (hctrlP.trans hctrlC)
+  · exact ((fold_mx bFold sch n k mvN peak).trans hmxB).trans (hmxP.trans hmxC)
+  · exact ((fold_ops bFold sch n k mvN peak).trans hopsB).trans (hopsP.trans hopsC)
+  · rw [fold_moves bFold sch n k mvN peak, hmvForm]
+  · exact ((fold_slides bFold sch n k mvN peak).trans hslB).trans (hslP.trans hslC)
 
 /-- The run multiply, bench off and mirror off. The bench prefix is
     `fieldAdd` of the destination and `fieldMul` of the two factors.
@@ -1485,8 +1598,20 @@ theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
           b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) ∧
       (∀ j, j ≠ dst → j ≠ 6 → ∀ hj : j < b.sudo_5Board_4held.size,
         ∀ hj' : j < b'.sudo_5Board_4held.size,
-          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
-  obtain ⟨b', hok, hbench, hon, hto, hmk, htier, hsz, hempty, hszH, hhome, hheldK⟩ :=
+          b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) ∧
+      b'.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + 2 * pegCount home + pegCount ys +
+          schoolMoves xs ys n n +
+          foldCharge n (n - k) (school n xs ys (pref home bench n) false)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount home) := by
+  obtain ⟨b', hok, hbench, hon, hto, hmk, htier, hsz, hempty, hszH, hhome, hheldK,
+      hix, hctrl, hmx, hops', hmv, hsl⟩ :=
     run_else_lane b dst first second home xs ys
       w h r n k moves slides hole peak peakS bench false hoff hbl hD hHD hHeldD hHomeD
       hF hHome hHF hArr hS hHomeS hHS hYs hSpH hSpHome hSpE h7 hneD1 hneD2 hne6D
@@ -1494,13 +1619,7 @@ theorem run_else_field (b : Ecbs.Board) (dst first second : Nat)
       hspan hhomeT hxsT hfi hfitM hfitS hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
       hsm hnsm hfitB hfold
   refine ⟨b', hok, hbench, onto_add n k bench xs ys home hhomeT hlenH (Or.inl hspan) hnb,
-    hon, hto, hmk, htier, hsz, hempty, hszH, hhome, hheldK⟩
-
-private theorem fold_slides (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
-    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_6slides =
-      b.sudo_5Board_4cost.sudo_5Costs_6slides := by
-  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
-  split <;> rfl
+    hon, hto, hmk, htier, hsz, hempty, hszH, hhome, hheldK, hix, hctrl, hmx, hops', hmv, hsl⟩
 
 private theorem fold_peak (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat)
     (hno : ¬ peak < countHeld b.sudo_5Board_4held 7) :

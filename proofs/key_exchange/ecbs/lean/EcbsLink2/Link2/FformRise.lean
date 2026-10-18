@@ -140,7 +140,23 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
           (school n y2 z (pref (mirrorTrits y) bench n) mirror)) ∧
       (laneFold n (n - k)
           (school n y2 z (pref (mirrorTrits y) bench n) mirror)).take n =
-        fformRise n k bench (if mirror then mirrorTrits y2 else y2) z y := by
+        fformRise n k bench (if mirror then mirrorTrits y2 else y2) z y ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = ((dst : Nat) : Int) ∧
+      b'.sudo_5Board_9marker_on = true ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      (∀ hD' : dst < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[dst]'hD' = false) ∧
+      b'.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max mx (m + 2)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat ((moves + pegCount y + 2 * pegCount (lane.take n)) +
+          2 * pegCount (mirrorTrits y) + pegCount z + schoolMoves y2 z n n +
+          foldCharge n (n - k)
+            (school n y2 z (pref (mirrorTrits y) bench n) mirror)) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount (lane.take n) + 2 * pegCount (mirrorTrits y)) := by
   let bM := mirrorHome b dst hH (embed (mirrorTrits y)) (moves + pegCount y)
   let feed := markerUpFeed bM m ctrl mx
   let hopsM : 0 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -325,14 +341,53 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
     exact h7
-  obtain ⟨b', hok, hbench, _, _, _, _, _, _⟩ := run_else_lane bS dst first second (mirrorTrits y) y2 z
-    w h r n k mvS slS hole peak peakS bench mirror hoffS hblS hDD hHD hHeldD hHomeD
-    hF' hHomeF' hHF' hArr' hS' hHomeS' hHS' hYs' hSpH' hSpHome' hSpE' h7S
-    hneD1 hneD2 hne6D hne6F hne6S hpos hnb hnS (mirror_len y n hlen) hlen2 hlenz hf
-    hmovesS hslidesS hpeakSboard hpeak7 hstrictS hspan (mirror_trits y) hy2 hfi
-    hfitM hfitS hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap hwS hhS hrS hkS hsm hnsm hfitB hfold
-  refine ⟨b', ?_, hbench, rise_lane_spec mirror n k bench y2 z y hy2 hz hlen hspan hnb⟩
-  rw [hrise, hflag]
-  exact hok
+  obtain ⟨b', hok, hbench, hon, hto, hmk', htier', _, hempty, _, _, _, hix, hctrl, hmx, _, hmv, hsl⟩ :=
+    run_else_lane bS dst first second (mirrorTrits y) y2 z
+      w h r n k mvS slS hole peak peakS bench mirror hoffS hblS hDD hHD hHeldD hHomeD
+      hF' hHomeF' hHF' hArr' hS' hHomeS' hHS' hYs' hSpH' hSpHome' hSpE' h7S
+      hneD1 hneD2 hne6D hne6F hne6S hpos hnb hnS (mirror_len y n hlen) hlen2 hlenz hf
+      hmovesS hslidesS hpeakSboard hpeak7 hstrictS hspan (mirror_trits y) hy2 hfi
+      hfitM hfitS hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap hwS hhS hrS hkS hsm hnsm hfitB hfold
+  have hmU : bU.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hcU : bU.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hxU : bU.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx (m + 2)) := by
+    simp [bU, bumpOp, feed, markerUpFeed]
+  have hmS : bS.sudo_5Board_6marker = Int.ofNat (m + 1) := by
+    rw [show bS.sudo_5Board_6marker =
+        (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_6marker from by
+          dsimp [bS, markerOn],
+      settle_ix_eq bU seat hinS lane n mvM slides peak, hmU]
+  have hcS : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    rw [hcostS0, settle_ctrl_eq bU seat hinS lane n mvM slides peak, hcU]
+  have hxS : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx (m + 2)) := by
+    rw [hcostS0, settle_mx_eq bU seat hinS lane n mvM slides peak, hxU]
+  have hmvS : mvS + 2 * pegCount (mirrorTrits y) + pegCount z + schoolMoves y2 z n n +
+      foldCharge n (n - k) (school n y2 z (pref (mirrorTrits y) bench n) mirror) =
+      (moves + pegCount y + 2 * pegCount (lane.take n)) +
+        2 * pegCount (mirrorTrits y) + pegCount z + schoolMoves y2 z n n +
+        foldCharge n (n - k) (school n y2 z (pref (mirrorTrits y) bench n) mirror) := by
+    simp [mvS, pegL]
+  have hslS : slS + 2 * pegCount (mirrorTrits y) =
+      slides + 2 * pegCount (lane.take n) + 2 * pegCount (mirrorTrits y) := by
+    simp [slS, pegL]
+  have hmkS : bS.sudo_5Board_9marker_on = true := by
+    simp [bS, markerOn]
+  have htierB : b'.sudo_5Board_1t = b.sudo_5Board_1t := by
+    rw [htier',
+      show bS.sudo_5Board_1t =
+        (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_1t from by
+          dsimp [bS, markerOn],
+      settle_tier_eq bU seat hinS lane n mvM slides peak, htierU]
+  refine ⟨b', ?_, hbench, rise_lane_spec mirror n k bench y2 z y hy2 hz hlen hspan hnb,
+      hon, hto, hmk'.trans hmkS, htierB, hempty, hix.trans hmS, hctrl.trans hcS,
+      hmx.trans hxS, ?_, ?_⟩
+  · rw [hrise, hflag]
+    exact hok
+  · rw [hmv, hmvS]
+  · rw [hsl, hslS]
 
 end EcbsLink2.Link2

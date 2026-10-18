@@ -315,7 +315,7 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
     rw [hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
     exact h7
   obtain ⟨b', hok, hbench', htakeF, hon', hto', hmk', htier', hsz', hempty',
-      _hszH, _hhome, _hheldK⟩ :=
+      _hszH, _hhome, _hheldK, _hix, _hctrl, _hmx, _hops, _hmv, _hsl⟩ :=
     run_else_field bS dst first second
       (mirrorTrits x) x2 z w h r n k mvS slS hole peak peakS bench
       hoffS hblS hDD hHD hHeldD hHomeD hF' hHomeF' hHF' hArr' hS' hHomeS' hHS' hYs'

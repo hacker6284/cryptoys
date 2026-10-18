@@ -171,4 +171,64 @@ theorem shift_add (n k : Nat) (hn : 0 < n) (hk : k < n) (s : Nat)
       (by rw [splat_len, partialShift_len])
       (by rw [splat_len, partialShift_len])
 
+private theorem fold_monom (n k : Nat) (hn : 0 < n) (hk : k < n) (c e s m : Nat)
+    (hc : c ≤ 2) (he : e < n) (hm : m ≤ n) :
+    (List.range m).foldl
+        (fun acc t =>
+          stripAdd acc (splat n k hn hk (coeff ((List.replicate n 0).set e c) t) (t + s)))
+        (List.replicate n 0) =
+      if m ≤ e then List.replicate n 0 else splat n k hn hk c (e + s) := by
+  induction m with
+  | zero =>
+    simp
+  | succ m ih =>
+    have hm' : m ≤ n := by omega
+    rw [List.range_succ, List.foldl_append, List.foldl_cons, List.foldl_nil, ih hm']
+    by_cases hlt : m < e
+    · have hle : m + 1 ≤ e := by omega
+      rw [if_pos (Nat.le_of_lt hlt), if_pos hle,
+        coeff_set_ne (List.replicate n 0) e c m (by simpa [List.length_replicate] using (by omega : m < n))
+          (by omega),
+        coeff_replicate_zero, splat_zero, stripAdd_replicate]
+    · by_cases heq : m = e
+      · have hgt : ¬ m + 1 ≤ e := by omega
+        rw [if_pos (by omega : m ≤ e), if_neg hgt, heq,
+          coeff_set_eq (List.replicate n 0) e c (by simpa [List.length_replicate] using he)]
+        have hz := stripAdd_left_zero (splat n k hn hk c (e + s))
+          (splat_trits n k hn hk c (e + s) hc)
+        simp only [splat_len] at hz
+        exact hz
+      · have hgt : ¬ m ≤ e := by omega
+        have hgt1 : ¬ m + 1 ≤ e := by omega
+        rw [if_neg hgt, if_neg hgt1,
+          coeff_set_ne (List.replicate n 0) e c m (by simpa [List.length_replicate] using (by omega : m < n))
+            (by omega),
+          coeff_replicate_zero, splat_zero,
+          stripAdd_right_zero _ (splat_trits n k hn hk c (e + s) hc) (by rw [splat_len])]
+
+/-- Shifting one reduced power moves the exponent. Below hole `n` the power is a single peg. -/
+theorem shift_monom (n k : Nat) (hn : 0 < n) (hk : k < n) (c e s : Nat)
+    (hc : c ≤ 2) (he : e < n) :
+    shiftAdd n k hn hk s (splat n k hn hk c e) = splat n k hn hk c (e + s) := by
+  rw [splat_lt n k hn hk c e he]
+  unfold shiftAdd
+  have h := fold_monom n k hn hk c e s n hc he (Nat.le_refl _)
+  rw [h, if_neg (by omega : ¬ n ≤ e)]
+
+/-- Shifting a power, high or low, moves the exponent and reduces again. -/
+theorem shift_splat (n k : Nat) (hn : 0 < n) (hk : k < n) (c e s : Nat) (hc : c ≤ 2) :
+    shiftAdd n k hn hk s (splat n k hn hk c e) = splat n k hn hk c (e + s) := by
+  induction e using Nat.strongRecOn with
+  | ind e ih =>
+    by_cases he : e < n
+    · exact shift_monom n k hn hk c e s hc he
+    · rw [splat_ge n k hn hk c e he,
+        shift_add n k hn hk s (splat n k hn hk c (e - n)) (splat n k hn hk c (e - n + k))
+          (by rw [splat_len]) (by rw [splat_len])
+          (splat_trits n k hn hk c (e - n) hc) (splat_trits n k hn hk c (e - n + k) hc),
+        ih (e - n) (by omega), ih (e - n + k) (by omega)]
+      have h1 : e - n + s = e + s - n := by omega
+      have h2 : e - n + k + s = e + s - n + k := by omega
+      rw [h1, h2, ← splat_ge n k hn hk c (e + s) (by omega)]
+
 end EcbsLink2.Link2

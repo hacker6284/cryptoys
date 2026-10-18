@@ -685,9 +685,11 @@ This entry is the homes layout, not yet `yBench` or `zBench`. `fform_add` is not
 
 5857 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5857. Peaks of the modules this change elaborated, VmHWM: FieldRing 263028 kB, FieldPoly 260020 kB, FieldReduce 260848 kB, FieldAssoc 246704 kB, EcbsLink2 437136 kB. The audit peaked at 948200 kB. All under about 1.8 GB and under 2097152 kB.
 
-`shift_add` says shifting a sum of two length-`n` trit lists is the sum of the shifts. The shift of one power, and the bridge from `fieldMul` to `mulVal`, are the next two lemmas.
+`shift_add` says shifting a sum of two length-`n` trit lists is the sum of the shifts. `shift_monom` shifts a single peg below hole `n`. `shift_splat` shifts any power: the high case splits by `X^n = 1 + X^k` and uses `shift_add`. The bridge from `fieldMul` to `mulVal` is the next lemma.
 
 5859 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5859. Peaks of the modules this change elaborated, VmHWM: FieldRing 262256 kB, FieldPoly 259564 kB, FieldReduce 270772 kB, FieldAssoc 261180 kB, EcbsLink2 460548 kB. The audit peaked at 948268 kB. All under about 1.8 GB and under 2097152 kB.
+
+5862 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5862. Peaks of the modules this change elaborated, VmHWM: FieldRing 263008 kB, FieldPoly 259604 kB, FieldReduce 260876 kB, FieldAssoc 266172 kB, EcbsLink2 447080 kB. The audit peaked at 948436 kB. All under about 1.8 GB and under 2097152 kB.
 
 Still open: `ProjOn` of that point, so `hframe` can go; the opening `start_walk` board as an `FformAt`, including the room from the tier budget; the `none` run from the base board; the three-way `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The live point cites Spec, not the card helpers.
 

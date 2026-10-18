@@ -713,6 +713,10 @@ The theorem `fieldMul_eq_mulVal` proves `fieldMul = mulVal`. It is not a hypothe
 
 6024 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 6024. Peaks of the modules this change elaborated, VmHWM: WalkFformInd 493660 kB, FformProj 458932 kB, FformChord 477372 kB, FformLine 463848 kB, FformFrob 583552 kB, EcbsLink2 452480 kB. The audit peaked at 952088 kB. All under about 1.8 GB and under 2097152 kB.
 
+`upSettled_home_ne`, `upBoard_home_ne`, and `seatAt_home_ne` are the homes a settle or a cube does not write. `seat_keeps_later` is a home other than 0 or 1 on the board the up settle leaves, equal to that home on `b1On`. `off_home_ne` is the same fact for `cubeOffBoard`: it writes the source home only. The returned board of `frobenius_point` is not yet that `cubeOff`, so these do not yet fill `FformAt`.
+
+6032 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 6032. Peaks of the modules this change elaborated, VmHWM: FformKept 444540 kB, EcbsLink2 451712 kB. The audit peaked at 951928 kB. All under about 1.8 GB and under 2097152 kB.
+
 5927 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5927. Peaks of the modules this change elaborated, VmHWM: FieldMulAssoc 283008 kB, EcbsLink2 450736 kB. The audit peaked at 949884 kB. All under about 1.8 GB and under 2097152 kB.
 
 5886 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5886. Peaks of the modules this change elaborated, VmHWM: FieldRing 262684 kB, FieldPoly 259940 kB, FieldReduce 260876 kB, FieldAssoc 260992 kB, FieldBridge 285732 kB, EcbsLink2 443768 kB. The audit peaked at 949148 kB. All under about 1.8 GB and under 2097152 kB.

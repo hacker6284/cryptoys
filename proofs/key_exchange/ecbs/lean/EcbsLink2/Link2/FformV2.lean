@@ -13,7 +13,9 @@ open EcbsLink2.Spec
 
 /-- Square the run on the board `gap_u2z` leaves. `cOps` is the ops cell that
     line left. `cRise` is the cell the rise read, and `cOps = cRise + 3`.
-    This square reads `cOps` and leaves `cRise + 4`. The bench prefix is `v²`. -/
+    This square reads `cOps` and leaves `cRise + 4`. The bench it reads holds
+    `u²Z` and is aimed at the gap, so that home is held and contains `u²Z`.
+    The new bench prefix is `v²`. -/
 theorem gap_v2_on_u2z (b : Ecbs.Board) (dst gap across : Nat)
     (v lane u z : List Nat)
     (m ctrl mx script cOps cRise n k w h r moves slides hole peak peakS bench : Nat)
@@ -87,8 +89,14 @@ theorem gap_v2_on_u2z (b : Ecbs.Board) (dst gap across : Nat)
       b'.sudo_5Board_8bench_to = ((dst : Nat) : Int) ∧
       b'.sudo_5Board_9marker_on = true ∧
       b'.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
-  obtain ⟨b', lane', hole', hok, _hb, ht, carry, hon', hto', hmk', _htier, hix, hctrl, _hmx⟩ :=
+      b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
+      (∀ h : gap < b'.sudo_5Board_4home.size,
+        b'.sudo_5Board_4home[gap]'h =
+          embed (fieldMul n k bench z (fieldMul n k bench u u))) ∧
+      (∀ h : gap < b'.sudo_5Board_4held.size,
+        b'.sudo_5Board_4held[gap]'h = true) := by
+  obtain ⟨b', lane', hole', hok, _hb, ht, carry, hon', hto', hmk', _htier, hix, hctrl, _hmx,
+      hhomeG, hheldG⟩ :=
     gap_v2 b dst gap across v lane m ctrl mx script cOps n k w h r moves slides hole
       peak peakS bench hG hGD hAH hAD hHeldA hArrA hmk hon hto hm hc hx hscript
       hbound hfitMk hfitC hfit2 hn hops hop0 hfops h7 hempty hbench hposL hnle hzero
@@ -97,7 +105,9 @@ theorem gap_v2_on_u2z (b : Ecbs.Board) (dst gap across : Nat)
       hnE hkLe hgap hw hh hr hk hsm hnsm hfitB hfold
   have hc : cOps + 1 = cRise + 4 := by
     rw [hRead]
-  refine ⟨b', lane', hole', hok, ht, hpref, ?_, hon', hto', hmk', hix, hctrl⟩
+  refine ⟨b', lane', hole', hok, ht, hpref, ?_, hon', hto', hmk', hix, hctrl, ?_, hheldG⟩
   · simpa [hc] using carry
+  · intro h
+    rw [hhomeG h, hpref]
 
 end EcbsLink2.Link2

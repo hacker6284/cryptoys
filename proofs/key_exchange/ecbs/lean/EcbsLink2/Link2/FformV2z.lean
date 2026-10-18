@@ -12,8 +12,10 @@ open MegaDreifach.Link2
 open EcbsLink2.Spec
 
 /-- `v²` times `Z` on the board `gap_v2` leaves. `cOps = cRise + 4`. The cell
-    this multiply leaves is `cRise + 5`. -/
-theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot : Nat) (v v2 z lane : List Nat)
+    this multiply leaves is `cRise + 5`. The gap stays held and still contains
+    `u²Z`. The spare holds `v²`. The bottom ends empty. -/
+theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot gap : Nat)
+    (v v2 z lane gHome u : List Nat)
     (m ctrl mx script cOps cRise n k w h r moves slides hole peak peakS bench : Nat)
     (hRead : cOps = cRise + 4)
     (hS : sp < b.sudo_5Board_4home.size)
@@ -22,6 +24,12 @@ theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot : Nat) (v v2 z lane : List Nat)
     (hBD : bot < b.sudo_5Board_4held.size)
     (hHeldB : b.sudo_5Board_4held[bot] = true)
     (hArrB : b.sudo_5Board_4home[bot] = embed z)
+    (hGH : gap < b.sudo_5Board_4home.size)
+    (hGD : gap < b.sudo_5Board_4held.size)
+    (hHeldG : b.sudo_5Board_4held[gap] = true)
+    (hArrG : b.sudo_5Board_4home[gap] = embed gHome)
+    (hneGS : gap ≠ sp) (hneGB : gap ≠ bot)
+    (hGHome : gHome = fieldMul n k bench z (fieldMul n k bench u u))
     (hmk : b.sudo_5Board_9marker_on = true)
     (hon : b.sudo_5Board_8bench_on = true)
     (hto : b.sudo_5Board_8bench_to = (sp : Int))
@@ -79,19 +87,37 @@ theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot : Nat) (v v2 z lane : List Nat)
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h = Int.ofNat (cRise + 5)) ∧
       b'.sudo_5Board_8bench_on = true ∧
       b'.sudo_5Board_8bench_to = ((bot : Nat) : Int) ∧
-      b'.sudo_5Board_6marker = Int.ofNat (m + 1) := by
-  obtain ⟨b', lane', hok, _hb, ht, hon', hto', _hmk, hix, hctrl, hops⟩ :=
-    gap_v2z b sp bot v2 z lane m ctrl mx script cOps n k w h r moves slides hole
-      peak peakS bench hS hSD hBH hBD hHeldB hArrB hmk hon hto hm hc hx hscript
+      b'.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
+      (∀ h : gap < b'.sudo_5Board_4home.size,
+        b'.sudo_5Board_4home[gap]'h =
+          embed (fieldMul n k bench z (fieldMul n k bench u u))) ∧
+      (∀ h : gap < b'.sudo_5Board_4held.size,
+        b'.sudo_5Board_4held[gap]'h = true) ∧
+      (∀ h : sp < b'.sudo_5Board_4home.size,
+        b'.sudo_5Board_4home[sp]'h = embed (fieldMul n k bench v v)) ∧
+      (∀ h : sp < b'.sudo_5Board_4held.size,
+        b'.sudo_5Board_4held[sp]'h = true) ∧
+      (∀ h : bot < b'.sudo_5Board_4held.size,
+        b'.sudo_5Board_4held[bot]'h = false) := by
+  obtain ⟨b', lane', hok, _hb, ht, hon', hto', _hmk, hix, hctrl, hops,
+      hhomeG, hheldG, hhomeS, hheldS, hemptyB⟩ :=
+    gap_v2z b sp bot gap v2 z lane gHome m ctrl mx script cOps n k w h r moves slides hole
+      peak peakS bench hS hSD hBH hBD hHeldB hArrB hGH hGD hHeldG hArrG hneGS hneGB
+      hmk hon hto hm hc hx hscript
       hbound hfitMk hfitC hfit2 hn hops hop0 hfops h7 hempty hbench hposL hnle hzero
-      hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hbl hne hn0 hnb htake hlenv hlenz
+      hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hbl
+      hne hn0 hnb htake hlenv hlenz
       hpeak7 hpeakS hpeakS7 hspan hv2 hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap
       hw hh hr hk hsm hnsm hfitB hfold
   have hc : cOps + 1 = cRise + 5 := by
     rw [hRead]
-  refine ⟨b', lane', hok, ?_, ?_, hon', hto', hix⟩
+  refine ⟨b', lane', hok, ?_, ?_, hon', hto', hix, ?_, hheldG, ?_, hheldS, hemptyB⟩
   · rw [ht, hvSq]
   · intro h
     simpa [hc] using hops h
+  · intro h
+    rw [hhomeG h, hGHome]
+  · intro h
+    rw [hhomeS h, hvSq]
 
 end EcbsLink2.Link2

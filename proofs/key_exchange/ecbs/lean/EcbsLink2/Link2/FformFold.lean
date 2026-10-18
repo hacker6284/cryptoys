@@ -46,6 +46,11 @@ private theorem fold_held_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : N
   unfold ontoFoldBoard peakBoard noteBench withMoves withHole
   split <;> rfl
 
+private theorem fold_home_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4home = b.sudo_5Board_4home := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
 private theorem fold_on_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
     (ontoFoldBoard b sch n k mv peak).sudo_5Board_8bench_on = b.sudo_5Board_8bench_on := by
   unfold ontoFoldBoard peakBoard noteBench withMoves withHole
@@ -170,7 +175,11 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
           foldCharge n (n - k) (school n xs ys (List.replicate bench 0) false)) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides =
         b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
-      (∀ h : second < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[second]'h = false) := by
+      (∀ h : second < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[second]'h = false) ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      (∀ j, j ≠ second → ∀ hj : j < b.sudo_5Board_4home.size,
+        ∀ hj' : j < b'.sudo_5Board_4home.size,
+          b'.sudo_5Board_4home[j]'hj' = b.sudo_5Board_4home[j]'hj) := by
   have hOff := nocopy_else_off b dst first second xs ys n moves peakS bench false
     hoff hbl hF hHome hHF hArr hS hHomeS hHS hYs h7 hne hn0 hn hlenx hleny hf
     hmoves hpeakS hspan hxsT hfi hfm
@@ -244,6 +253,9 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
   have hheldB : bFold.sudo_5Board_4held =
       b.sudo_5Board_4held.set ⟨second, hS⟩ false := by
     simp [bFold, withMoves, mulPrep, mulAimed]
+  have hhomeB : bFold.sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨second, hHomeS⟩ (#[] : Array Int) := by
+    simp [bFold, withMoves, mulPrep, mulAimed]
   have honB : bFold.sudo_5Board_8bench_on = true := by
     simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
   have htoB : bFold.sudo_5Board_8bench_to = ((dst : Nat) : Int) := by
@@ -264,7 +276,7 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
       b.sudo_5Board_4cost.sudo_5Costs_6slides := by
     simp [bFold, withMoves, mulPrep, strictBoard, mulAimed]
   refine ⟨ontoFoldBoard bFold sch n k mvN peak, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hma]
     exact hOk
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
@@ -301,6 +313,17 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
       rw [Array.size_set]; exact hS
     have hv : (b.sudo_5Board_4held.set ⟨second, hS⟩ false)[second]'hset = false := by
       rw [Array.getElem_set, if_pos rfl]
+    exact cell_eq_of hEq hv
+  · rw [fold_home_out bFold sch n k mvN peak, hhomeB, Array.size_set]
+  · intro j hneJ hj hj'
+    have hEq : (ontoFoldBoard bFold sch n k mvN peak).sudo_5Board_4home =
+        b.sudo_5Board_4home.set ⟨second, hHomeS⟩ (#[] : Array Int) :=
+      (fold_home_out bFold sch n k mvN peak).trans hhomeB
+    have hset : j < (b.sudo_5Board_4home.set ⟨second, hHomeS⟩ (#[] : Array Int)).size := by
+      rw [Array.size_set]; exact hj
+    have hv : (b.sudo_5Board_4home.set ⟨second, hHomeS⟩ (#[] : Array Int))[j]'hset =
+        b.sudo_5Board_4home[j]'hj := by
+      rw [Array.getElem_set, if_neg (Ne.symm hneJ)]
     exact cell_eq_of hEq hv
 
 /-- The run multiply with the across already mirrored. The bench prefix is

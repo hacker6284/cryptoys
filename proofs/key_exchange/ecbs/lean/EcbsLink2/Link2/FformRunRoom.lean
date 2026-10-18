@@ -250,7 +250,7 @@ private theorem run_lane_len (n k bench : Nat) (x x2 z : List Nat)
     rw [school_length, hpref]
   rw [laneFold_length n (n - k) _ (by rw [hschool]; exact hnb), hschool]
 
-private theorem rise_le (moves n k bench : Nat) (x x2 y y2 z lane : List Nat) (red : Bool)
+theorem rise_le (moves n k bench : Nat) (x x2 y y2 z lane : List Nat) (red : Bool)
     (hx : x.length = n) (hy : y.length = n) (hz : z.length = n)
     (hnb : n ≤ bench) (hnle : n ≤ lane.length) :
     riseMoveCount y y2 z (fformRunLane n k bench x x2 z) red n k bench

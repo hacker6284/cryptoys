@@ -158,6 +158,10 @@ import EcbsLink2.Link2.FrobeniusOn
 import EcbsLink2.Link2.FrobeniusRead
 import EcbsLink2.Link2.OneField
 import EcbsLink2.Link2.FieldNeg
+import EcbsLink2.Link2.FieldRing
+import EcbsLink2.Link2.FieldPoly
+import EcbsLink2.Link2.FieldReduce
+import EcbsLink2.Link2.FieldAssoc
 import EcbsLink2.Link2.CurveTest
 import EcbsLink2.Link2.CurveAsm
 import EcbsLink2.Link2.CurveCube

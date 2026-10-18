@@ -154,6 +154,78 @@ theorem frobenius_bottom_eq
   rw [← pointFeed]
   rw [hseat, ← seatAt_cast a, hcube, ok_bind, pure_eq_ok]
 
+private def bottomOff
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) : Ecbs.Board :=
+  cubeOffBoard (seatAt a) 2 2 z n k
+    (upMv2 a + 2 * pegCount ((upLane n k bench y).take n))
+    (raisedHole a.hole1 (topIdx (combStrip n bench y))) bench
+    (raisedPeak (upPk2 a)
+      (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+    (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+    (cOps + 2) (seatAt_ops a) (seatAt_held2ix a) (seatAt_home2ix a)
+
+private def bottomFlag
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) : Ecbs.Board :=
+  { bottomOff a z with sudo_5Board_9marker_on := true }
+
+theorem bottomFlag_sz
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) :
+    (bottomFlag a z).sudo_5Board_4home.size = 8 := by
+  have hhome : (bottomFlag a z).sudo_5Board_4home = (bottomOff a z).sudo_5Board_4home := rfl
+  rw [hhome, bottomOff, cube_off_home, Array.size_set, seatAt_szH]
+
+/-- A home other than 0, 1, and 2 on the comb is the home the across cube left. -/
+theorem bottomFlag_later
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) (i : Nat) (h0 : (0 : Nat) ≠ i) (h1 : (1 : Nat) ≠ i)
+    (h2 : (2 : Nat) ≠ i) (hi : i < 8) :
+    (bottomFlag a z).sudo_5Board_4home[i]'(by rw [bottomFlag_sz a z]; exact hi) =
+      a.b1On.sudo_5Board_4home[i]'(by rw [a.hszHOn]; exact hi) := by
+  have hhome : (bottomFlag a z).sudo_5Board_4home = (bottomOff a z).sudo_5Board_4home := rfl
+  have hoff := off_home_ne (seatAt a) 2 2 z n k
+    (upMv2 a + 2 * pegCount ((upLane n k bench y).take n))
+    (raisedHole a.hole1 (topIdx (combStrip n bench y))) bench
+    (raisedPeak (upPk2 a)
+      (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+    (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+    (cOps + 2) (seatAt_ops a) (seatAt_held2ix a) (seatAt_home2ix a) i h2
+    (by rw [seatAt_szH a]; exact hi)
+  have hget := at_eq hhome (by rw [bottomFlag_sz a z]; exact hi)
+    (by rw [bottomOff, cube_off_home, Array.size_set, seatAt_szH]; exact hi)
+  exact (hget.trans hoff).trans (seat_keeps_later a i h0 h1 hi)
+
+theorem frobenius_is_flag
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat)
+    (hyt : allTritList y) (hy : y.length = n)
+    (hheld2 : a.b1On.sudo_5Board_4held[2]'(by rw [a.hszDOn]; decide) = true)
+    (hhome2 : a.b1On.sudo_5Board_4home[2]'(by rw [a.hszHOn]; decide) = embed z)
+    (hz : z.length = n) (hzt : allTritList z)
+    (hn0 : 0 < n) (hnbL : n ≤ a.laneX.length) (hnb : n ≤ bench) (hgap0 : 0 < n - k)
+    (hs1 : 1 < script) (hs2 : 2 < script)
+    (hfitU : FitsLen ((ctrl + 1) + 2)) (hfitC : FitsLen (cOps + 2))
+    (hfitCtrl : FitsLen (ctrl + 5)) (hfitC3 : FitsLen (cOps + 3))
+    (hspan : 3 * (n - 1) + cg < bench)
+    (h3 : FitsLen (3 * (n - 1))) (hnFit : FitsLen n) (hbenchFit : FitsLen bench)
+    (hpeg : FitsLen (2 * pegCount ((upLane n k bench y).take n)))
+    (hfitMv : FitsLen (upMv2 a + 2 * pegCount ((upLane n k bench y).take n)))
+    (hfitSl : FitsLen (upSl a + 2 * pegCount ((upLane n k bench y).take n)))
+    (hfm : FitsLen (upMv2 a + 2 * pegCount ((upLane n k bench y).take n) + 2 * n))
+    (hfold : FitsLen (upMv2 a + 2 * pegCount ((upLane n k bench y).take n) + 2 * n +
+        3 * (bench - n)))
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000) :
+    Ecbs.frobenius_point b = .ok (bottomFlag a z) := by
+  simpa [bottomFlag, bottomOff] using
+    frobenius_bottom_eq a z hyt hy hheld2 hhome2 hz hzt hn0 hnbL hnb hgap0
+      hs1 hs2 hfitU hfitC hfitCtrl hfitC3 hspan h3 hnFit hbenchFit hpeg hfitMv hfitSl
+      hfm hfold hw0 hh0 hrR hrP hnE hkLe hgap hsm hnsm
+
 end
 
 end EcbsLink2.Link2

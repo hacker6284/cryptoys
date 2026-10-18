@@ -721,6 +721,10 @@ The theorem `fieldMul_eq_mulVal` proves `fieldMul = mulVal`. It is not a hypothe
 
 6033 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 6033. Peaks of the modules this change elaborated, VmHWM: FformKept 460848 kB, EcbsLink2 440516 kB. The audit peaked at 952020 kB. All under about 1.8 GB and under 2097152 kB.
 
+`bottomFlag` is that comb with the marker flag on. `frobenius_is_flag` says `frobenius_point` returns it. `bottomFlag_later` says a home other than 0, 1, or 2 on that board is the home `b1On` held. Held flags and the cost counters are not in that conclusion.
+
+6038 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 6038. Peaks of the modules this change elaborated, VmHWM: FformKept 452800 kB, EcbsLink2 452164 kB. The audit peaked at 952164 kB. All under about 1.8 GB and under 2097152 kB.
+
 5927 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5927. Peaks of the modules this change elaborated, VmHWM: FieldMulAssoc 283008 kB, EcbsLink2 450736 kB. The audit peaked at 949884 kB. All under about 1.8 GB and under 2097152 kB.
 
 5886 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5886. Peaks of the modules this change elaborated, VmHWM: FieldRing 262684 kB, FieldPoly 259940 kB, FieldReduce 260876 kB, FieldAssoc 260992 kB, FieldBridge 285732 kB, EcbsLink2 443768 kB. The audit peaked at 949148 kB. All under about 1.8 GB and under 2097152 kB.

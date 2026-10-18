@@ -581,7 +581,11 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 5551 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5551. Peaks of the modules this change elaborated, VmHWM: FformSuffix 1155888 kB, FformUpClear 599756 kB, FformJoin 579096 kB, EcbsLink2 387352 kB. The audit peaked at 930444 kB. All under about 1.8 GB and under 2097152 kB.
 
-Still open: the `none` run and the three-way `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The live point cites Spec, not the card helpers.
+`fform_loop_reroll` is one live cell whose `fform_add` returns false. The loop returns `.ok ((true, false), {bA with marker_on := false})` and does not take another cell. `fform_add` does not invert, so this is not the chord's check trap at lines 728 and 730. The walk from the base board when `walkRun` is `none` is not this theorem yet.
+
+5552 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5552. Peaks of the modules this change elaborated, VmHWM: WalkFformNone 385108 kB, EcbsLink2 423048 kB. The audit peaked at 929672 kB. All under about 1.8 GB and under 2097152 kB.
+
+Still open: that `none` run from the base board, then the three-way `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The live point cites Spec, not the card helpers.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.
 

@@ -120,6 +120,9 @@ import EcbsLink2.Link2.WalkFform
 import EcbsLink2.Link2.WalkFformIdle
 import EcbsLink2.Link2.WalkFformNone
 import EcbsLink2.Link2.WalkFformInd
+import EcbsLink2.Link2.FformProj
+import EcbsLink2.Link2.FformChord
+import EcbsLink2.Link2.FformLine
 import EcbsLink2.Link2.FformOpen
 import EcbsLink2.Link2.FformStart
 import EcbsLink2.Link2.FformPoint

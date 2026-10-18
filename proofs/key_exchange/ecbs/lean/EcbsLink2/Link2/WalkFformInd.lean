@@ -59,7 +59,9 @@ def ProjOn (t : Spec.Tier) (b : Ecbs.Board) (px py : List Nat) : Prop :=
             ∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
           (∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = embed yP) ∧
           (∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = true) ∧
-          (∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = false))
+          (∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = false)) ∧
+    ∃ wInv, wInv.length = t.n ∧ allTritList wInv ∧
+      fieldMul t.n t.k t.benchlen zP wInv = onePeg t.n
 
 /-- One cell spends `spend`. The room that remains is still inside an i64. -/
 theorem room_after_spend (moves spend moves' rest : Nat)
@@ -348,7 +350,7 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
   rcases hpack with ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
     hproj, ⟨_moves, _slides, ctrl, mark, _mx, _pk, _ps, _hole, _cOps,
       _, _, hctrl, hmark, _, _, _, _, _, _, hfit6, _, _, _, _, _, _⟩⟩
-  rcases hproj with ⟨xP, yP, zP, lay, hxL, hyL, hzL, hxt, hyt, hzt, hx, hy, hz, h0, hlay⟩
+  rcases hproj with ⟨xP, yP, zP, lay, hxL, hyL, hzL, hxt, hyt, hzt, hx, hy, hz, h0, hlay, _hw⟩
   have hfit : FitsLen (ctrl + 1) := FitsLen.of_le hfit6 (by omega)
   have hclose := chord_after_nat bF (Int.ofNat (t.cells - 1)) true
     mark ctrl hmark hctrl hfit

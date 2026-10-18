@@ -346,12 +346,16 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
     (hnsm : n ≤ 1000000)
     (hfitB : FitsLen bench)
     (hfold : FitsLen ((moves + 2 * pegCount (lane.take n)) + n * (n + 1) +
-        3 * (bench - n))) :
-    ∃ b' lane',
+        3 * (bench - n)))
+    (hSpH : 6 < b.sudo_5Board_4held.size)
+    (hSpE : b.sudo_5Board_4held[6] = false)
+    (hneG6 : gap ≠ 6) :
+    ∃ b' lane' hole',
       Ecbs.mul b ((gap : Nat) : Int) ((bot : Nat) : Int) ((gap : Nat) : Int)
           false false false = .ok b' ∧
       b'.sudo_5Board_5bench = embed lane' ∧
-      lane'.take n = fieldMul n k bench z u2 := by
+      lane'.take n = fieldMul n k bench z u2 ∧
+      BenchCarry b' lane' n (cOps + 1) peak hole' peakS := by
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     simpa [feed, markerUpFeed] using hops
@@ -459,14 +463,83 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
     rw [htierS, settle_tier_eq bU gap hinS lane n moves slides peak, htierU, hr]
   have hkS : bS.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k := by
     rw [htierS, settle_tier_eq bU gap hinS lane n moves slides peak, htierU, hk]
-  obtain ⟨b', hok, hbench, hmul, _⟩ := nocopy_else_field bS gap bot gap z u2
+  have h6D : 6 < bS.sudo_5Board_4held.size := by
+    rw [hheldS0, settle_held_eq bU gap hinS lane n moves slides peak, Array.size_set, hheldU]
+    exact hSpH
+  have h6E : bS.sudo_5Board_4held[6]'(h6D) = false := by
+    have hset := settle_held_eq bU gap hinS lane n moves slides peak
+    have hget := idx_eq (hheldS0.trans hset) 6 h6D
+    rw [Array.getElem_set_ne (h := hneG6)] at hget
+    have h6U : 6 < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hSpH
+    exact (hget.trans (idx_eq hheldU 6 h6U)).trans hSpE
+  obtain ⟨b', hok, hbench, hmul, hpk, hst, hho, hopsEq, hszH, hheldK⟩ :=
+    nocopy_else_field bS gap bot gap z u2
       w h r n k mvS hole peak peakS bench hoffS hblS hBotD hBotH hHeldBot hHomeBot
       hGapD hGapH hHeldG hHomeG h7S hne hn0 hnb hnS hlenz hlenu hf hmovesS
       hpeakB hpeak7 hstrictS hpeakS7 hspan hz hfi hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap
       hwS hhS hrS hkS hsm hnsm hfitB hfold
-  refine ⟨b', laneFold n (n - k) (school n z u2 (List.replicate bench 0) false), ?_, hbench, hmul⟩
-  rw [hflag]
-  exact hok
+  let schZ := school n z u2 (List.replicate bench 0) false
+  let lane' := laneFold n (n - k) schZ
+  let hole' := if hole < topIdx schZ then topIdx schZ else hole
+  have hholeN : (if decide (Int.ofNat (topIdx schZ) > Int.ofNat hole) then
+        Int.ofNat (topIdx schZ) else Int.ofNat hole) = Int.ofNat hole' := by
+    by_cases hlt : hole < topIdx schZ
+    · have hgt : Int.ofNat (topIdx schZ) > Int.ofNat hole := by
+        rw [gt_iff_lt, ofNat_lt_iff]
+        exact hlt
+      simp [hole', hlt, hgt]
+    · have hng : ¬ Int.ofNat (topIdx schZ) > Int.ofNat hole := by
+        rw [gt_iff_lt, ofNat_lt_iff]
+        exact hlt
+      simp [hole', hlt, hng]
+  have hhole' : b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole' := by
+    rw [hho, hholeN]
+  have hopsS : bS.sudo_5Board_4cost.sudo_5Costs_3ops = bU.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    rw [show bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+        (settleBoard bU gap hHU hDU lane n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops
+        from by dsimp [bS, markerOn]]
+    exact settle_ops bU gap hinS lane n moves slides peak
+  have hopSet := bumpOp_ops feed 0 cOps hopsF
+  have hszU : 0 < bU.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hopSet, Array.size_set]
+    exact hopsF
+  have hopU : bU.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hszU = Int.ofNat (cOps + 1) :=
+    cell_eq_of hopSet
+      (Array.getElem_set_eq feed.sudo_5Board_4cost.sudo_5Costs_3ops ⟨0, hopsF⟩
+        (Int.ofNat (cOps + 1)) rfl (by rw [Array.size_set]; exact hopsF))
+  have hsz' : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hopsEq, hopsS]
+    exact hszU
+  have hop' : b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hsz' = Int.ofNat (cOps + 1) :=
+    cell_eq_of (hopsEq.trans hopsS) hopU
+  have hschLen : schZ.length = bench := by
+    rw [school_length, List.length_replicate]
+  have hlenR : lane'.length = bench := by
+    rw [laneFold_length n (n - k) schZ (by rw [hschLen]; exact hnb), hschLen]
+  have h6 : 6 < b'.sudo_5Board_4held.size := by
+    rw [hszH]
+    exact h6D
+  have hsp : b'.sudo_5Board_4held[6]'h6 = false :=
+    (hheldK 6 (Ne.symm hneG6) h6D h6).trans h6E
+  have hgapPos : 0 < n - k := by
+    have hwr : 0 < w * r := Nat.mul_pos hw0 hrP
+    omega
+  refine ⟨b', lane', hole', ?_, hbench, hmul, ?_⟩
+  · rw [hflag]
+    exact hok
+  · refine ⟨hsz', hop', h6, hsp, hpeak7, hpk, hst, hhole', ?_, ?_, ?_, ?_⟩
+    · rw [hlenR]
+      exact Nat.lt_of_lt_of_le hn0 hnb
+    · rw [hlenR]
+      exact hnb
+    · rw [hlenR]
+      exact hfitB
+    · intro i hi hii
+      have hiiS : i < schZ.length := by
+        rwa [hlenR, ← hschLen] at hii
+      rw [← coeff_eq_get lane' i hii]
+      exact laneFold_high n (n - k) schZ i hn0 hgapPos
+        (by rw [hschLen]; exact hnb) hi hiiS
 
 /-- Square the run into the spare. The bench holds the previous gap value and
     is aimed at the gap, so that value is settled, then the across is copied

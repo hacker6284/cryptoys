@@ -162,6 +162,7 @@ import EcbsLink2.Link2.FieldRing
 import EcbsLink2.Link2.FieldPoly
 import EcbsLink2.Link2.FieldReduce
 import EcbsLink2.Link2.FieldAssoc
+import EcbsLink2.Link2.FieldBridge
 import EcbsLink2.Link2.CurveTest
 import EcbsLink2.Link2.CurveAsm
 import EcbsLink2.Link2.CurveCube

@@ -691,6 +691,10 @@ This entry is the homes layout, not yet `yBench` or `zBench`. `fform_add` is not
 
 5862 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5862. Peaks of the modules this change elaborated, VmHWM: FieldRing 263008 kB, FieldPoly 259604 kB, FieldReduce 260876 kB, FieldAssoc 266172 kB, EcbsLink2 447080 kB. The audit peaked at 948436 kB. All under about 1.8 GB and under 2097152 kB.
 
+`fieldMul_eq_mulVal` is the bridge. For `0 < n`, `k < n`, `n ≤ bench`, `2 * (n - 1) < bench`, and trit factors, `fieldMul` is `mulVal`: the schoolbook rows are the reduced rows, the lane fold does not change that remainder, and the holes at and above `n` are empty, so the length-`n` prefix is the product. Associativity, the one-peg unit, and `(a · b)^3 = a^3 · b^3` use this.
+
+5886 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5886. Peaks of the modules this change elaborated, VmHWM: FieldRing 262684 kB, FieldPoly 259940 kB, FieldReduce 260876 kB, FieldAssoc 260992 kB, FieldBridge 285732 kB, EcbsLink2 443768 kB. The audit peaked at 949148 kB. All under about 1.8 GB and under 2097152 kB.
+
 Still open: `ProjOn` of that point, so `hframe` can go; the opening `start_walk` board as an `FformAt`, including the room from the tier budget; the `none` run from the base board; the three-way `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The live point cites Spec, not the card helpers.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.

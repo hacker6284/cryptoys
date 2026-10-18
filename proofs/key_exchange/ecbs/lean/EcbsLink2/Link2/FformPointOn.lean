@@ -97,7 +97,14 @@ theorem fform_add_on_f (b : Ecbs.Board) (red : Bool)
       (∀ h1 : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1]'h1 = false) ∧
       (∀ h2 : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2]'h2 = true) ∧
       n ≤ lane'.length ∧
-      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) :=
+      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) ∧
+      (∀ h3 : 3 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[3]'h3 = embed x2) ∧
+      (∀ h3 : 3 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[3]'h3 = true) ∧
+      (∀ h4 : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4]'h4 = embed y2) ∧
+      (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4]'h4 = true) ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size :=
   fform_add_point b red (fformF n k bench u v z) v z x2 u y2 lane
     m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
     h7 h7H hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH

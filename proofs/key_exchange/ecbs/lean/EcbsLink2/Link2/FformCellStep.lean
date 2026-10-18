@@ -28,7 +28,7 @@ private theorem read_some {α : Type} (a : Array α) (i : Nat) {v : α}
 /-- The projective triple the nonzero cell writes. Home 0 holds `x₃·Z₃`,
     home 2 holds `Z₃`, and the bench prefix is `y₃·Z₃`. -/
 structure CellAt (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
-    (v z x3 yUp : List Nat) : Prop where
+    (v z x2 y2 x3 yUp : List Nat) (tier : Ecbs.Tier) (szHome szHeld : Nat) : Prop where
   home0 : ∀ h0 : 0 < b.sudo_5Board_4home.size,
     b.sudo_5Board_4home[0]'h0 = embed (fieldMul n k bench x3 (fformBottom n k bench v z))
   home2 : ∀ h2 : 2 < b.sudo_5Board_4home.size,
@@ -42,6 +42,13 @@ structure CellAt (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
   held2 : ∀ h2 : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2]'h2 = true
   nle : n ≤ lane.length
   zero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i]'hi = 0
+  home3 : ∀ h3 : 3 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[3]'h3 = embed x2
+  held3 : ∀ h3 : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3]'h3 = true
+  home4 : ∀ h4 : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4]'h4 = embed y2
+  held4 : ∀ h4 : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4]'h4 = true
+  tierEq : b.sudo_5Board_1t = tier
+  szH : b.sudo_5Board_4home.size = szHome
+  szD : b.sudo_5Board_4held.size = szHeld
 
 /-- `fform_add_on_f`, then `add_board_proj`, on the board `AddAt` describes. -/
 theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
@@ -71,7 +78,8 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
         Ecbs.mul b Ecbs.up Ecbs.base_up Ecbs.bottom true true (! red) >>= fun b =>
         Ecbs.clear b Ecbs.gap >>= fun b =>
         pure (true, b)) = .ok (true, b') ∧
-      CellAt b' lane' n k bench v z x3 yUp := by
+      CellAt b' lane' n k bench v z x2 y2 x3 yUp b.sudo_5Board_1t
+        b.sudo_5Board_4home.size b.sudo_5Board_4held.size := by
   obtain ⟨_, hvH⟩ := read_some b.sudo_5Board_4held 0 s.held0
   obtain ⟨_, hvA⟩ := read_some b.sudo_5Board_4home 0 s.home0
   obtain ⟨_, huH⟩ := read_some b.sudo_5Board_4held 1 s.held1
@@ -85,7 +93,8 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
   obtain ⟨_, hgH⟩ := read_some b.sudo_5Board_4held 5 s.held5
   obtain ⟨_, hsH⟩ := read_some b.sudo_5Board_4held 6 s.held6
   obtain ⟨hops, hop0⟩ := read_some b.sudo_5Board_4cost.sudo_5Costs_3ops 0 s.ops0
-  obtain ⟨b', lane', hdo, h0, h2, hbench, htake, hheld, hon, hto, h1, h2h, hnle, hzero⟩ :=
+  obtain ⟨b', lane', hdo, h0, h2, hbench, htake, hheld, hon, hto, h1, h2h, hnle, hzero,
+      h3a, h3h, h4a, h4h, htier, hszH, hszD⟩ :=
     fform_add_on_f b red v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       s.held7 s.home7 hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH
@@ -111,13 +120,20 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
     held2 := h2h
     nle := hnle
     zero := hzero
+    home3 := h3a
+    held3 := h3h
+    home4 := h4a
+    held4 := h4h
+    tierEq := htier
+    szH := hszH
+    szD := hszD
   }⟩
 
 /-- `CellAt` is `ProjOn` in the `yBench` layout: `X = x₃·Z₃` in home 0,
     `Z₃` in home 2, and `Y = y₃·Z₃` on the bench aimed at home 1. -/
 theorem cell_proj (t : Spec.Tier) (b : Ecbs.Board) (lane : List Nat)
-    (v z x3 yUp : List Nat)
-    (c : CellAt b lane t.n t.k t.benchlen v z x3 yUp)
+    (v z x2 y2 x3 yUp : List Nat) (tier : Ecbs.Tier) (szH szD : Nat)
+    (c : CellAt b lane t.n t.k t.benchlen v z x2 y2 x3 yUp tier szH szD)
     (hspan : 2 * (t.n - 1) < t.benchlen) (hnb : t.n ≤ t.benchlen)
     (hne : fformBottom t.n t.k t.benchlen v z ≠ List.replicate t.n 0)
     (hinv : ∃ w, w.length = t.n ∧ allTritList w ∧

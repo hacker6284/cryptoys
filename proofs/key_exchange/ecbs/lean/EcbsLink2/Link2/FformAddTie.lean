@@ -117,8 +117,16 @@ theorem fform_add_on_proj (b : Ecbs.Board) (red : Bool)
       (∀ h1 : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1]'h1 = false) ∧
       (∀ h2 : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2]'h2 = true) ∧
       n ≤ lane'.length ∧
-      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) := by
-  obtain ⟨b', lane', hdo, h0, h2, hbench, htake, hheld, hon, hto, h1, h2h, hnle', hzero⟩ :=
+      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) ∧
+      (∀ h3 : 3 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[3]'h3 = embed x2) ∧
+      (∀ h3 : 3 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[3]'h3 = true) ∧
+      (∀ h4 : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4]'h4 = embed y2) ∧
+      (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4]'h4 = true) ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+  obtain ⟨b', lane', hdo, h0, h2, hbench, htake, hheld, hon, hto, h1, h2h, hnle', hzero,
+      h3a, h3h, h4a, h4h, htier, hszH, hszD⟩ :=
     fform_add_on_f b red v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h7 h7H hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH
@@ -130,6 +138,7 @@ theorem fform_add_on_proj (b : Ecbs.Board) (red : Bool)
   have htake' : lane'.take n = addUp n k bench red y2 u v z := by
     simpa [addUp] using htake
   obtain ⟨h0', h2', hy'⟩ := add_board_proj n k bench x2 u v z x3 yUp red y2 b' lane' h0 h2 htake' hx hy
-  exact ⟨b', lane', hdo, h0', h2', hbench, hy', hheld, hon, hto, h1, h2h, hnle', hzero⟩
+  exact ⟨b', lane', hdo, h0', h2', hbench, hy', hheld, hon, hto, h1, h2h, hnle', hzero,
+      h3a, h3h, h4a, h4h, htier, hszH, hszD⟩
 
 end EcbsLink2.Link2

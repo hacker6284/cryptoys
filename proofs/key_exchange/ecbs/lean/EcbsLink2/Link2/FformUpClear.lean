@@ -60,7 +60,14 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       (∀ h1 : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1]'h1 = false) ∧
       (∀ h2 : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2]'h2 = true) ∧
       n ≤ lane'.length ∧
-      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) := by
+      (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) ∧
+      (∀ h3 : 3 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[3]'h3 = embed x2) ∧
+      (∀ h3 : 3 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[3]'h3 = true) ∧
+      (∀ h4 : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4]'h4 = embed y2) ∧
+      (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4]'h4 = true) ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
   have h0d : (0 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h1d : (1 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h2d : (2 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
@@ -288,10 +295,40 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
     have hwr : 0 < w * r := Nat.mul_pos hw0 hrP
     rw [← hgapE] at hwr
     exact hwr
+  have h3bA : (3 : Nat) < bA.sudo_5Board_4home.size := by
+    rw [hA.homeSz]; omega
+  have h3dA : (3 : Nat) < bA.sudo_5Board_4held.size := by
+    rw [hA.heldSz]; omega
+  have h3b3 : (3 : Nat) < b3.sudo_5Board_4home.size := by rw [s3.homeSz]; exact h3bA
+  have h3d3 : (3 : Nat) < b3.sudo_5Board_4held.size := by rw [s3.heldSz]; exact h3dA
+  have h3b4 : (3 : Nat) < b4.sudo_5Board_4home.size := by rw [s4.homeSz]; exact h3b3
+  have h3d4 : (3 : Nat) < b4.sudo_5Board_4held.size := by rw [s4.heldSz]; exact h3d3
+  have h4b4 : (4 : Nat) < b4.sudo_5Board_4home.size := by rw [s4.homeSz]; exact h4b3
+  have h4d4 : (4 : Nat) < b4.sudo_5Board_4held.size := by rw [s4.heldSz]; exact h4d3
+  have hx4 : b4.sudo_5Board_4home[3] = embed x2 := by
+    have h3on : b3.sudo_5Board_4home[3] = embed x2 := by
+      have hs := s3.stayA 3 (by decide) h3bA h3b3
+      rw [if_neg (by decide : ¬ (3 = 0))] at hs
+      exact hs.trans (hA.xA h3bA)
+    exact (s4.stayA 3 (by decide) h3b3 h3b4).trans h3on
+  have hxH4 : b4.sudo_5Board_4held[3] = true := by
+    have h3on : b3.sudo_5Board_4held[3] = true := by
+      have hs := s3.stayH 3 (by decide) h3dA h3d3
+      rw [if_neg (by decide : ¬ (3 = 0))] at hs
+      exact hs.trans (hA.xH h3dA)
+    exact (s4.stayH 3 (by decide) h3d3 h3d4).trans h3on
+  have hy4 : b4.sudo_5Board_4home[4] = embed y2 :=
+    (s4.stayA 4 (by decide) h4b3 h4b4).trans hyHome3
+  have hyH4 : b4.sudo_5Board_4held[4] = true :=
+    (s4.stayH 4 (by decide) h4d3 h4d4).trans hyHeld3
   refine ⟨bC, lane4, ?_, ?_, ?_, ?_, hY, ?_,
       by simpa [bC] using s4.on,
       by simpa [bC, ofNat_eq_natCast] using s4.to_eq,
-      ?_, ?_, by rw [hlen4]; exact hnb, ?_⟩
+      ?_, ?_, by rw [hlen4]; exact hnb, ?_,
+      ?_, ?_, ?_, ?_,
+      by simpa [bC] using s4.tier.trans (s3.tier.trans hA.tier),
+      by simpa [bC, Array.size_set] using s4.homeSz.trans (s3.homeSz.trans hA.homeSz),
+      by simpa [bC, Array.size_set] using s4.heldSz.trans (s3.heldSz.trans hA.heldSz)⟩
   · have hUp := fform_consts.2.1
     have hBot := fform_consts.2.2.1
     have hBu := fform_consts.2.2.2.2.1
@@ -330,5 +367,17 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
     rw [← coeff_eq_get lane4 i hii, s4.lane_eq]
     exact laneFold_high n (n - k) _ i hn0 hgapPos
       (by rw [hschLen]; exact hnb) hi hiiS
+  · intro h
+    have hne : (5 : Nat) ≠ 3 := by decide
+    simpa [bC, Array.getElem_set_ne, hne] using hx4
+  · intro h
+    have hne : (5 : Nat) ≠ 3 := by decide
+    simpa [bC, Array.getElem_set_ne, hne] using hxH4
+  · intro h
+    have hne : (5 : Nat) ≠ 4 := by decide
+    simpa [bC, Array.getElem_set_ne, hne] using hy4
+  · intro h
+    have hne : (5 : Nat) ≠ 4 := by decide
+    simpa [bC, Array.getElem_set_ne, hne] using hyH4
 
 end EcbsLink2.Link2

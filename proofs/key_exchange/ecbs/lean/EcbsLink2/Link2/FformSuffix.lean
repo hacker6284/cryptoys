@@ -74,6 +74,8 @@ structure AcrossBoard
   botH : ∀ h : 2 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[2]'h = true
   yA : ∀ h : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4]'h = embed y2
   yH : ∀ h : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4]'h = true
+  xA : ∀ h : 3 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[3]'h = embed x2
+  xH : ∀ h : 3 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[3]'h = true
   gapA : ∀ h : 5 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[5]'h = embed f
   gapH : ∀ h : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5]'h = true
   spareH : ∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6]'h = false
@@ -332,6 +334,14 @@ theorem fform_across_step (b : Ecbs.Board)
     have hs := s2.stayH 1 (by decide) (by rw [s1.heldSz]; exact h1)
       (by rw [s2.heldSz, s1.heldSz]; exact h1)
     exact hs.trans huHeld1
+  have hxHome2 : b2.sudo_5Board_4home[3]'(by rw [s2.homeSz, s1.homeSz]; exact h3H) = embed x2 := by
+    have hs := s2.stayA 3 (by decide) (by rw [s1.homeSz]; exact h3H)
+      (by rw [s2.homeSz, s1.homeSz]; exact h3H)
+    exact hs.trans hxHome1
+  have hxHeld2 : b2.sudo_5Board_4held[3]'(by rw [s2.heldSz, s1.heldSz]; exact h3) = true := by
+    have hs := s2.stayH 3 (by decide) (by rw [s1.heldSz]; exact h3)
+      (by rw [s2.heldSz, s1.heldSz]; exact h3)
+    exact hs.trans hxHeld1
   have hyHome2 : b2.sudo_5Board_4home[4]'(by rw [s2.homeSz, s1.homeSz]; exact h4H) = embed y2 := by
     have hs := s2.stayA 4 (by decide) (by rw [s1.homeSz]; exact h4H)
       (by rw [s2.homeSz, s1.homeSz]; exact h4H)
@@ -389,6 +399,8 @@ theorem fform_across_step (b : Ecbs.Board)
     botH := fun _ => hzHeld2
     yA := fun _ => hyHome2
     yH := fun _ => hyHeld2
+    xA := fun _ => hxHome2
+    xH := fun _ => hxHeld2
     gapA := fun _ => hfHome2
     gapH := fun _ => hfHeld2
     spareH := fun _ => hsHeld2 }⟩

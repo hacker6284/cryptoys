@@ -124,9 +124,11 @@ theorem fform_add_on_proj (b : Ecbs.Board) (red : Bool)
       (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4]'h4 = true) ∧
       b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
-      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      (∃ moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps',
+        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps') := by
   obtain ⟨b', lane', hdo, h0, h2, hbench, htake, hheld, hon, hto, h1, h2h, hnle', hzero,
-      h3a, h3h, h4a, h4h, htier, hszH, hszD⟩ :=
+      h3a, h3h, h4a, h4h, htier, hszH, hszD, hcharge⟩ :=
     fform_add_on_f b red v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h7 h7H hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH
@@ -139,6 +141,6 @@ theorem fform_add_on_proj (b : Ecbs.Board) (red : Bool)
     simpa [addUp] using htake
   obtain ⟨h0', h2', hy'⟩ := add_board_proj n k bench x2 u v z x3 yUp red y2 b' lane' h0 h2 htake' hx hy
   exact ⟨b', lane', hdo, h0', h2', hbench, hy', hheld, hon, hto, h1, h2h, hnle', hzero,
-      h3a, h3h, h4a, h4h, htier, hszH, hszD⟩
+      h3a, h3h, h4a, h4h, htier, hszH, hszD, hcharge⟩
 
 end EcbsLink2.Link2

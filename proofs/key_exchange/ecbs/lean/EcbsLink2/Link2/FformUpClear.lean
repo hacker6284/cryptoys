@@ -9,6 +9,20 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+/-- The counters on the board the up-and-clear tail leaves. -/
+structure TailCharge (b : Ecbs.Board)
+    (moves slides ctrl mark mx pk peakS hole cOps : Nat) : Prop where
+  movesEq : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves
+  slidesEq : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides
+  ctrlEq : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl
+  markEq : b.sudo_5Board_6marker = Int.ofNat mark
+  mxEq : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx
+  peakEq : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
+  strictEq : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS
+  holeEq : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole
+  opsSz : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+  ops0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'opsSz = Int.ofNat cOps
+
 /-- From the board `fform_across_step` leaves, settle `fformAcross` into across,
     lay the mirrored rise product, keep the new up, and clear the gap.
     SPEC.md §3 R7 lines 153 and 154. -/
@@ -67,7 +81,9 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4]'h4 = true) ∧
       b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
-      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      (∃ moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps',
+        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps') := by
   have h0d : (0 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h1d : (1 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h2d : (2 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
@@ -328,7 +344,32 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       ?_, ?_, ?_, ?_,
       by simpa [bC] using s4.tier.trans (s3.tier.trans hA.tier),
       by simpa [bC, Array.size_set] using s4.homeSz.trans (s3.homeSz.trans hA.homeSz),
-      by simpa [bC, Array.size_set] using s4.heldSz.trans (s3.heldSz.trans hA.heldSz)⟩
+      by simpa [bC, Array.size_set] using s4.heldSz.trans (s3.heldSz.trans hA.heldSz),
+      ⟨moves4 + pegCount f, slides3, (ctrl + 2) + 2, (m + 1) + 1,
+        max (max mx (m + 2)) ((m + 1) + 2), peak, peakS,
+        raisedHole hole3 (topIdx (keepSchool n bench y2 (fformBottom n k bench v z)
+          (mirrorTrits (fieldMul n k bench f u)) (! red))),
+        (cOps + 1) + 1,
+        { movesEq := by simp [bC]
+          slidesEq := by simpa [bC] using s4.slides_eq
+          ctrlEq := by simpa [bC] using s4.ctrl
+          markEq := by simpa [bC] using s4.ix
+          mxEq := by simpa [bC] using s4.mx
+          peakEq := by simpa [bC, ofNat_eq_natCast] using s4.peak_eq
+          strictEq := by simpa [bC, ofNat_eq_natCast] using s4.strict_eq
+          holeEq := by simpa [bC] using s4.hole_eq
+          opsSz := by
+            have hsz : b4.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+                b3.sudo_5Board_4cost.sudo_5Costs_3ops.size := s4.opsSz
+            have hpos : 0 < b4.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+              rw [hsz]; exact hops3
+            simpa [bC] using hpos
+          ops0 := by
+            have hops4 : 0 < b4.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+              rw [s4.opsSz]; exact hops3
+            have h0 : b4.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hops4 =
+                Int.ofNat ((cOps + 1) + 1) := s4.ops0 hops4
+            simpa [bC] using h0 }⟩⟩
   · have hUp := fform_consts.2.1
     have hBot := fform_consts.2.2.1
     have hBu := fform_consts.2.2.2.2.1

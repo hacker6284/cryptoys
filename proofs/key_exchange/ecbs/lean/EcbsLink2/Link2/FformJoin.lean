@@ -94,7 +94,9 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
       (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4]'h4 = true) ∧
       b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
-      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      (∃ moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps',
+        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps') := by
   obtain ⟨bA, laneA, hA⟩ := fform_across_step b f v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h7 h7H hvH hvA huH huA hemptyB hxH hxA hyH hyA hfH hfA hsH
@@ -119,7 +121,7 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
       rw [List.length_take, Nat.min_eq_left hnle] at hp
       omega)
   obtain ⟨b', lane', htail, h0, h2, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
-      h3a, h3h, h4a, h4h, htier', hszH', hszD'⟩ :=
+      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge⟩ :=
     fform_up_clear b bA laneA f u y2 v z x2 red
       (m + 2) (ctrl + 4) (max (max mx (m + 2)) (m + 3)) script (cOps + 2)
       n k w h r
@@ -133,7 +135,7 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
       hfEq hf hBigU hSlU hbl hn0 hnb hlenf hlenu hleny hpeak7 hpeakS7 hspan
       hfT hu hy2 hfi hw0 hh0 hrR hrP hnE hkLe hgapE hw hh hr hk hsm hnsm hfitB
   refine ⟨b', lane', ?_, h0, h2, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
-      h3a, h3h, h4a, h4h, htier', hszH', hszD'⟩
+      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge⟩
   · rw [← bind_assoc, hA.mul_do, ok_bind, htail]
 
 /-- The success tail of `fform_add`, from the new bottom through `clear`.
@@ -222,7 +224,9 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4]'h4 = true) ∧
       b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
-      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
+      b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
+      (∃ moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps',
+        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps') := by
   have hpeg : FitsLen (2 * pegCount (lane.take n)) :=
     fits_le hBig (by
       have hp := pegCount_le (lane.take n)
@@ -353,7 +357,7 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       rw [List.length_take, Nat.min_eq_left hnle] at hp
       omega)
   obtain ⟨b', lane', hsuf, hAcross, hBotH, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
-      h3a, h3h, h4a, h4h, htier', hszH', hszD'⟩ :=
+      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge⟩ :=
     fform_suffix b1 red f v z x2 u y2 lane1
       (m + 1) (ctrl + 2) (max mx (m + 2)) script (cOps + 1) n k w h r
       (nocopyCharge n k moves bench v (fieldMul n k bench (fieldMul n k bench v v) z) lane false)
@@ -381,7 +385,8 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       (by rw [s1.tier]; exact hr) (by rw [s1.tier]; exact hk)
       hsm hnsm hfitB
   refine ⟨b', lane', ?_, hAcross, hBotH, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
-      h3a, h3h, h4a, h4h, htier'.trans s1.tier, hszH'.trans s1.homeSz, hszD'.trans s1.heldSz⟩
+      h3a, h3h, h4a, h4h, htier'.trans s1.tier, hszH'.trans s1.homeSz, hszD'.trans s1.heldSz,
+      hcharge⟩
   · have hmul : Ecbs.mul b Ecbs.bottom Ecbs.across Ecbs.bottom false false false = .ok b1 := by
       rw [fform_consts.2.2.1, fform_consts.1, s1.mul_ok]
     rw [hmul, ok_bind, hsuf]

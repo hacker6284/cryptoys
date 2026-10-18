@@ -49,6 +49,8 @@ structure CellAt (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
   tierEq : b.sudo_5Board_1t = tier
   szH : b.sudo_5Board_4home.size = szHome
   szD : b.sudo_5Board_4held.size = szHeld
+  charge : ∃ moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps',
+    TailCharge b moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps'
 
 /-- `fform_add_on_f`, then `add_board_proj`, on the board `AddAt` describes. -/
 theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
@@ -94,7 +96,7 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
   obtain ⟨_, hsH⟩ := read_some b.sudo_5Board_4held 6 s.held6
   obtain ⟨hops, hop0⟩ := read_some b.sudo_5Board_4cost.sudo_5Costs_3ops 0 s.ops0
   obtain ⟨b', lane', hdo, h0, h2, hbench, htake, hheld, hon, hto, h1, h2h, hnle, hzero,
-      h3a, h3h, h4a, h4h, htier, hszH, hszD⟩ :=
+      h3a, h3h, h4a, h4h, htier, hszH, hszD, hcharge⟩ :=
     fform_add_on_f b red v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       s.held7 s.home7 hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH
@@ -127,6 +129,7 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
     tierEq := htier
     szH := hszH
     szD := hszD
+    charge := hcharge
   }⟩
 
 /-- `CellAt` is `ProjOn` in the `yBench` layout: `X = x₃·Z₃` in home 0,

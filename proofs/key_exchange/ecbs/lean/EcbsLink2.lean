@@ -162,6 +162,7 @@ import EcbsLink2.Link2.FformPointOn
 import EcbsLink2.Link2.FformAddApply
 import EcbsLink2.Link2.FformCellStep
 import EcbsLink2.Link2.FformFrame
+import EcbsLink2.Link2.FformCharge
 import EcbsLink2.Link2.FieldLin
 import EcbsLink2.Link2.FformField
 import EcbsLink2.Link2.ChordNext

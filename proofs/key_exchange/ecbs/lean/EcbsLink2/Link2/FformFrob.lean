@@ -7,6 +7,7 @@
 import EcbsLink2.Link2.BottomGlue
 import EcbsLink2.Link2.WalkFformInd
 import EcbsLink2.Link2.CellCube
+import EcbsLink2.Link2.BenchDown
 
 namespace EcbsLink2.Link2
 
@@ -305,5 +306,73 @@ theorem frobenius_fform_homes
       hfm hfold hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsm hnsm
   exact ⟨bL, bZ, hlift, hfrob, hmon, hbon, hto,
     ⟨laneFold t.n (t.n - t.k) (combStrip t.n t.benchlen zP), hlane, htake⟩⟩
+
+/-- Marker lifted, bench on and aimed at `home`, which is not across.
+    `frobenius_point` slides that bench first, so it is `frobenius_point` of the
+    settled board. `yBench` settles into home 1 and `zBench` into home 2. -/
+theorem frobenius_lifted_bench
+    (b : Ecbs.Board) (home : Nat) (xs ys : List Nat)
+    (w h r n k moves slides hole bench peak peakS cOps cg ctrl mx script : Nat)
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hm : b.sudo_5Board_6marker < 0)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hs : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script)
+    (hpos : 0 < script) (hfit : FitsLen (ctrl + 1))
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hne : (0 : Nat) ≠ home)
+    (hF : 0 < b.sudo_5Board_4held.size)
+    (hHome : 0 < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[0] = true)
+    (hArr : b.sudo_5Board_4home[0] = embed xs)
+    (hDh : home < b.sudo_5Board_4held.size)
+    (hHh : home < b.sudo_5Board_4home.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hto : b.sudo_5Board_8bench_to = (home : Int))
+    (hempty : b.sudo_5Board_4held[home] = false)
+    (hbench : b.sudo_5Board_5bench = embed ys)
+    (hp : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hn0 : 0 < n)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenx : xs.length = n)
+    (hposY : 0 < ys.length) (hnle : n ≤ ys.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen ys.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeg : FitsLen (2 * pegCount (ys.take n)))
+    (hfitMv : FitsLen (moves + 2 * pegCount (ys.take n)))
+    (hfitSl : FitsLen (slides + 2 * pegCount (ys.take n)))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hcg : b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg)
+    (hspan : 3 * (n - 1) + cg < bench)
+    (h3 : FitsLen (3 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * pegCount (ys.take n) + 2 * n))
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hxsT : allTritList xs)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * pegCount (ys.take n) + 2 * n + 3 * (bench - n))) :
+    Ecbs.frobenius_point b =
+      Ecbs.frobenius_point (settleBoard b home hHh hDh ys n moves slides peak) := by
+  rw [frobenius_point_cubes,
+    frobenius_point_cubes (settleBoard b home hHh hDh ys n moves slides peak)]
+  rw [show Ecbs.across = ((0 : Nat) : Int) from rfl]
+  rw [cube_lifted_bench b 0 0 home xs ys w h r n k moves slides hole bench peak peakS cOps cg
+      ctrl mx script hmk hon hm hc hx hs hpos hfit hops hop1 hfops hne hF hHome hHF hArr hDh hHh
+      h7 hto hempty hbench hp hpeak hn0 hn hlenx hposY hnle hzero hf hfitL hmoves hslides hpeg
+      hfitMv hfitSl hbl hcg hspan h3 hfm hhole hxsT hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm
+      hnsm hfitB hfold]
 
 end EcbsLink2.Link2

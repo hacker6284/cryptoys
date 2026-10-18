@@ -197,7 +197,7 @@ theorem run_is_fformRun (b : Ecbs.Board) (dst first second : Nat)
           omega
   have hlenM : (mirrorTrits x).length = n := by
     simp [mirrorTrits, List.length_map, hlenx0]
-  obtain ⟨b', hok, _, htake⟩ := run_else_field b dst first second (mirrorTrits x) xs ys
+  obtain ⟨b', hok, _, htake, _, _, _, _, _, _⟩ := run_else_field b dst first second (mirrorTrits x) xs ys
     w h r n k moves slides hole peak peakS bench hoff hbl hD hHD hHeldD hHomeD
     hF hHome hHF hArr hS hHomeS hHS hYs hSpH hSpHome hSpE h7 hneD1 hneD2 hne6D
     hne6F hne6S hn0 hnb hn hlenM hlenx hleny hf hmoves hslides hpeak hpeak7 hpeakS

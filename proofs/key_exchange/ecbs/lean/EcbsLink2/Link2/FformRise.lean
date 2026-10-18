@@ -325,7 +325,7 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
     exact h7
-  obtain ⟨b', hok, hbench⟩ := run_else_lane bS dst first second (mirrorTrits y) y2 z
+  obtain ⟨b', hok, hbench, _, _, _, _, _, _⟩ := run_else_lane bS dst first second (mirrorTrits y) y2 z
     w h r n k mvS slS hole peak peakS bench mirror hoffS hblS hDD hHD hHeldD hHomeD
     hF' hHomeF' hHF' hArr' hS' hHomeS' hHS' hYs' hSpH' hSpHome' hSpE' h7S
     hneD1 hneD2 hne6D hne6F hne6S hpos hnb hnS (mirror_len y n hlen) hlen2 hlenz hf

@@ -122,7 +122,15 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
           (school n x2 z (pref (mirrorTrits x) bench n) false)) ∧
       (laneFold n (n - k)
           (school n x2 z (pref (mirrorTrits x) bench n) false)).take n =
-        fformRun n k bench x2 z x := by
+        fformRun n k bench x2 z x ∧
+      b'.sudo_5Board_8bench_on = true ∧
+      b'.sudo_5Board_8bench_to = ((dst : Nat) : Int) ∧
+      b'.sudo_5Board_9marker_on = true ∧
+      b'.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      (∀ hD' : dst < b'.sudo_5Board_4held.size,
+        b'.sudo_5Board_4held[dst]'hD' = false) ∧
+      Ecbs.is_zero b' ((dst : Nat) : Int) =
+        .ok (decide (fformRun n k bench x2 z x = List.replicate n 0)) := by
   let bM := mirrorHome b dst hH (embed (mirrorTrits x)) (moves + pegCount x)
   let feed := markerUpFeed bM m ctrl mx
   let hopsM : 0 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -306,18 +314,47 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
     exact h7
-  obtain ⟨b', hok, hbench', htakeF⟩ := run_else_field bS dst first second
+  obtain ⟨b', hok, hbench', htakeF, hon', hto', hmk', htier', hsz', hempty'⟩ :=
+    run_else_field bS dst first second
       (mirrorTrits x) x2 z w h r n k mvS slS hole peak peakS bench
       hoffS hblS hDD hHD hHeldD hHomeD hF' hHomeF' hHF' hArr' hS' hHomeS' hHS' hYs'
       hSpH' hSpHome' hSpE' h7S hneD1 hneD2 hne6D hne6F hne6S hpos hnb hnS
       (mirror_len x n hlen) hlen2 hlenz hf hmovesS hslidesS hpeakSboard hpeak7 hstrictS
       hspan (mirror_trits x) hx2 hfi hfitM hfitS hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap
       hwS hhS hrS hkS hsm hnsm hfitB hfold
-  refine ⟨b', ?_, hbench', ?_⟩
+  have hmkS : bS.sudo_5Board_9marker_on = true := by
+    simp [bS, markerOn]
+  have htierB : b'.sudo_5Board_1t = b.sudo_5Board_1t := by
+    rw [htier', htierS, settle_tier_eq bU seat hinS lane n mvM slides peak, htierU]
+  have hDD' : dst < b'.sudo_5Board_4held.size := by
+    rw [hsz', hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set,
+      hheldU]
+    exact hD
+  let laneR := laneFold n (n - k) (school n x2 z (pref (mirrorTrits x) bench n) false)
+  have hschLen : (school n x2 z (pref (mirrorTrits x) bench n) false).length = bench := by
+    have hnleM : n ≤ (mirrorTrits x).length := by
+      rw [mirror_len x n hlen]
+      exact Nat.le_refl n
+    rw [school_length, pref_length hnb hnleM]
+  have hlenR : laneR.length = bench := by
+    rw [laneFold_length n (n - k) _ (by rw [hschLen]; exact hnb), hschLen]
+  have htakeLen : (laneR.take n).length = n := by
+    rw [List.length_take, hlenR, Nat.min_eq_left hnb]
+  have hn' : b'.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+    rw [htierB, hn]
+  have hzero := bench_is_zero b' dst laneR n hDD' (hempty' hDD') hon' hto' hbench' hn'
+    (by rw [hlenR]; exact hnb) hf htakeLen
+  have hzeroR : Ecbs.is_zero b' ((dst : Nat) : Int) =
+      .ok (decide (fformRun n k bench x2 z x = List.replicate n 0)) := by
+    rw [hzero, htakeF]
+    unfold fformRun
+    rfl
+  refine ⟨b', ?_, hbench', ?_, hon', hto', ?_, htierB, hempty', hzeroR⟩
   · rw [hrise, hflag]
     exact hok
   · rw [htakeF]
     unfold fformRun
     rfl
+  · rw [hmk', hmkS]
 
 end EcbsLink2.Link2

@@ -154,7 +154,7 @@ theorem frobenius_bottom_eq
   rw [← pointFeed]
   rw [hseat, ← seatAt_cast a, hcube, ok_bind, pure_eq_ok]
 
-private def bottomOff
+def bottomOff
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
     (z : List Nat) : Ecbs.Board :=
   cubeOffBoard (seatAt a) 2 2 z n k
@@ -165,7 +165,7 @@ private def bottomOff
     (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
     (cOps + 2) (seatAt_ops a) (seatAt_held2ix a) (seatAt_home2ix a)
 
-private def bottomFlag
+def bottomFlag
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
     (z : List Nat) : Ecbs.Board :=
   { bottomOff a z with sudo_5Board_9marker_on := true }

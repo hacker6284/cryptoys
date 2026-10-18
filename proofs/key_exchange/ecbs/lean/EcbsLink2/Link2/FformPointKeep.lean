@@ -89,6 +89,9 @@ structure KeepCopy
       b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h = Int.ofNat (cOps + 1)
   opsSz : b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
       b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+  ops1 : ∀ h1 : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(by rw [opsSz]; exact h1) =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'h1
   heldSz : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size
   homeSz : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size
   spareH : ∀ h : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6]'h = false
@@ -466,6 +469,43 @@ theorem keep_copy (b : Ecbs.Board) (dst first second : Nat)
       unfold placeBoard
       dsimp only
       split <;> simp [bU, markerOn, bumpOp, feed, markerUpFeed]
+    ops1 := by
+      intro h1
+      have hopsEq : bOut.sudo_5Board_4cost.sudo_5Costs_3ops =
+          bU.sudo_5Board_4cost.sudo_5Costs_3ops := by
+        rw [fold_ops, ops_withMoves, prep_ops]
+        dsimp [bPlace]
+        unfold placeBoard
+        dsimp only
+        split <;> rfl
+      have h1U : 1 < bU.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        rw [← hopsEq]
+        rw [show bOut.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+            b.sudo_5Board_4cost.sudo_5Costs_3ops.size from by
+          rw [show bOut.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+              bFold.sudo_5Board_4cost.sudo_5Costs_3ops.size from by rw [fold_ops]]
+          rw [show bFold.sudo_5Board_4cost.sudo_5Costs_3ops =
+              bPlace.sudo_5Board_4cost.sudo_5Costs_3ops from by
+            rw [ops_withMoves, prep_ops]]
+          dsimp [bPlace]
+          unfold placeBoard
+          dsimp only
+          split <;> simp [bU, markerOn, bumpOp, feed, markerUpFeed]]
+        exact h1
+      have hget := idx_eq hopsEq 1 (by rw [hopsEq]; exact h1U)
+      rw [hget]
+      have hmon : bU.sudo_5Board_4cost.sudo_5Costs_3ops =
+          (bumpOp feed 0 cOps hopsF).sudo_5Board_4cost.sudo_5Costs_3ops := by
+        simp [bU, markerOn]
+      have h1B : 1 < (bumpOp feed 0 cOps hopsF).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        rw [← hmon]; exact h1U
+      have hfeed : feed.sudo_5Board_4cost.sudo_5Costs_3ops =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [feed, markerUpFeed]
+      have h1F : 1 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by rw [hfeed]; exact h1
+      have hslot := bumpOp_other feed 0 cOps 1 hopsF h1F (by decide)
+      have hread := idx_eq hmon 1 h1U
+      rw [hread, hslot]
+      simp [hfeed]
     heldSz := by
       rw [hheldEq, Array.size_set, placeHeldSize, hheldU0]
     homeSz := by

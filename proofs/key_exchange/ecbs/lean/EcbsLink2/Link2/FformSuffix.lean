@@ -64,6 +64,9 @@ structure AcrossBoard
     b.sudo_5Board_4cost.sudo_5Costs_3ops.size
   ops0 : ∀ h : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
     b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h = Int.ofNat cOps
+  ops1 : ∀ h1 : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+    b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(by rw [opsSz]; exact h1) =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'h1
   heldSz : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size
   homeSz : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size
   emptyA : ∀ h : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0]'h = false
@@ -390,6 +393,11 @@ theorem fform_across_step (b : Ecbs.Board)
     hole_eq := s2.hole_eq
     opsSz := s2.opsSz.trans s1.opsSz
     ops0 := s2.ops0
+    ops1 := by
+      intro h1
+      have h11 : 1 < b1.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        rw [s1.opsSz]; exact h1
+      exact (s2.ops1 h11).trans (s1.ops1 h1)
     heldSz := s2.heldSz.trans s1.heldSz
     homeSz := s2.homeSz.trans s1.homeSz
     emptyA := fun _ => hemptyA

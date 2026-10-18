@@ -83,7 +83,10 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
       b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
       (∃ moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps',
-        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps') := by
+        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps') ∧
+      ((1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) →
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) := by
   have h0d : (0 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h1d : (1 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h2d : (2 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
@@ -369,7 +372,24 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
               rw [s4.opsSz]; exact hops3
             have h0 : b4.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hops4 =
                 Int.ofNat ((cOps + 1) + 1) := s4.ops0 hops4
-            simpa [bC] using h0 }⟩⟩
+            simpa [bC] using h0 }⟩,
+      by
+        intro h1
+        have h1A : 1 < bA.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [hA.opsSz]; exact h1
+        have h13 : 1 < b3.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [s3.opsSz]; exact h1A
+        have h14 : 1 < b4.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [s4.opsSz]; exact h13
+        have hC : 1 < bC.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          simpa [bC] using h14
+        have hstep : bC.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hC =
+            b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'h1 := by
+          have h4eq : bC.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hC =
+              b4.sudo_5Board_4cost.sudo_5Costs_3ops[1]'h14 := by
+            simp [bC]
+          rw [h4eq, s4.ops1 h13, s3.ops1 h1A, hA.ops1 h1]
+        rw [Array.getElem?_eq_getElem hC, Array.getElem?_eq_getElem h1, hstep]⟩
   · have hUp := fform_consts.2.1
     have hBot := fform_consts.2.2.1
     have hBu := fform_consts.2.2.2.2.1

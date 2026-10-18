@@ -371,6 +371,16 @@ theorem bumpOp_ops (b : Ecbs.Board) (i cOps : Nat)
     (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops =
       b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨i, hops⟩ (Int.ofNat (cOps + 1)) := rfl
 
+/-- A bump of slot `i` leaves every other ops slot. Slot 0 is `op_mul` and
+    slot 1 is `op_cube`, so a multiply does not change the cube counter. -/
+theorem bumpOp_other (b : Ecbs.Board) (i cOps j : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hj : j < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) (hne : i ≠ j) :
+    (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops[j]'(by
+        simp [bumpOp, Array.size_set]; exact hj) =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj := by
+  simp [bumpOp, Array.getElem_set_ne, hne]
+
 theorem bumpOp_moves (b : Ecbs.Board) (i cOps : Nat)
     (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
     (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_5moves =

@@ -264,6 +264,9 @@ structure SettleNocopy
       b.sudo_5Board_4cost.sudo_5Costs_3ops.size
   ops0 : ∀ h : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
       b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h = Int.ofNat (cOps + 1)
+  ops1 : ∀ h1 : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(by rw [opsSz]; exact h1) =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'h1
   on : b'.sudo_5Board_8bench_on = true
   to_eq : b'.sudo_5Board_8bench_to = ((dst : Nat) : Int)
   tier : b'.sudo_5Board_1t = b.sudo_5Board_1t
@@ -616,6 +619,32 @@ theorem settle_nocopy (b : Ecbs.Board) (dst first second seat : Nat)
       have hread := idx_eq hUops 0 hopsU
       rw [hread]
       simp [Array.getElem_set]
+    ops1 := by
+      intro h1
+      have hopsEq : bOut.sudo_5Board_4cost.sudo_5Costs_3ops =
+          bU.sudo_5Board_4cost.sudo_5Costs_3ops := by
+        rw [fold_ops, ops_withMoves, prep_ops, hopsS]
+      have h1U : 1 < bU.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        rw [← hopsEq]
+        rw [show bOut.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+            b.sudo_5Board_4cost.sudo_5Costs_3ops.size from by
+          rw [show bOut.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+              bFold.sudo_5Board_4cost.sudo_5Costs_3ops.size from by rw [fold_ops]]
+          rw [show bFold.sudo_5Board_4cost.sudo_5Costs_3ops =
+              bP.sudo_5Board_4cost.sudo_5Costs_3ops from by rw [ops_withMoves], prep_ops, hopsS]
+          simp [bU, bumpOp, feed, markerUpFeed]]
+        exact h1
+      have hget := idx_eq hopsEq 1 (by rw [hopsEq]; exact h1U)
+      rw [hget]
+      have hfeed : feed.sudo_5Board_4cost.sudo_5Costs_3ops =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops := by simp [feed, markerUpFeed]
+      have h1F : 1 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        rw [hfeed]; exact h1
+      have hkeep := bumpOp_other feed 0 cOps 1 hopsF h1F (by decide)
+      have hU1 : bU.sudo_5Board_4cost.sudo_5Costs_3ops[1]'h1U =
+          feed.sudo_5Board_4cost.sudo_5Costs_3ops[1]'h1F := hkeep
+      rw [hU1]
+      simp [hfeed]
     on := by rw [fold_on bFold sch n k mvN peak, on_withMoves, prep_on]
     to_eq := by rw [fold_to bFold sch n k mvN peak, to_withMoves, prep_to]
     tier := by rw [fold_tier bFold sch n k mvN peak, tier_withMoves, mulPrep_tier, htierS,

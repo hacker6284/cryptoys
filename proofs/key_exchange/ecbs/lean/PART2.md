@@ -591,7 +591,9 @@ The marker on `new_board` is already `-1`. `marker_lift` of that board is the bo
 
 This entry is the board after the across cube, not yet a general `FformAt`. `fform_add` is not run from it, so `hframe` is not discharged.
 
-5640 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5640. Peaks of the modules this change elaborated, VmHWM: BottomOff 385464 kB, BottomCube 385344 kB, EcbsLink2 343036 kB. The audit peaked at 353312 kB. All under about 1.8 GB and under 2097152 kB.
+`seatAt_x?` says home 0 of the slid board is `fieldCube` of the across. The slide writes home 1, and `seatAt_yCube?` says that home is `fieldCube` of the up (`upLane_take`). The comb clears home 2 and does not write those two homes.
+
+5645 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 5645. Peaks of the modules this change elaborated, VmHWM: BottomOff 385464 kB, BottomCube 385344 kB, EcbsLink2 343036 kB. The audit peaked at 353236 kB. All under about 1.8 GB and under 2097152 kB.
 
 Still open: `fform_add` from this bottom, on a general `FformAt`, so `hframe` can go; the `none` run from the base board; the three-way `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The live point cites Spec, not the card helpers.
 

@@ -729,6 +729,10 @@ On the comb `bottomFlag`, the counters are exact. `bottomFlag_moves` is `cubeMov
 
 6067 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 6067. Peaks of the modules this change elaborated, VmHWM: FformCount 455352 kB, EcbsLink2 469668 kB. The audit peaked at 952856 kB. All under about 1.8 GB and under 2097152 kB.
 
+`bottomFlag_held_from` says a held flag other than 0, 1, and 2 on the comb is the flag `b1On` had. The across settle uses `settle_held_ne` at home 0, the up cube uses `off_held_ne` at home 1, the up settle uses `settle_held_ne` at home 1, and the bottom comb uses `off_held_ne` at home 2. Those are the same frame facts the cubes already use for a home they do not write. `bottomFlag_held3` and `bottomFlag_held4` are that fact at the two base homes: if `b1On` holds them, the comb still does. The across cube's `across_kept_held` is the same fact one cube earlier, for every home other than 0.
+
+6079 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 6079. Peaks of the modules this change elaborated, VmHWM: FformHold 447488 kB, EcbsLink2 449948 kB. The audit peaked at 952916 kB. All under about 1.8 GB and under 2097152 kB.
+
 `fform_add_on_proj` is the six multiplies of `fform_add` once the bench already holds `fformF`. `add_board_proj` rewrites that across and that up by the two equalities `across_on_x3` and `up_on_parts` supply, so home 0 is `x₃ · Z₃` and the bench prefix is `y₃ · Z₃`. Home 2 stays `Z₃`.
 
 6070 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. This `lake build EcbsLink2` under `ulimit -v 7000000` succeeded, and `lake env lean Axioms.lean` audited 6070. Peaks of the modules this change elaborated, VmHWM: FformAddTie 466628 kB, EcbsLink2 441272 kB. The audit peaked at 952732 kB. All under about 1.8 GB and under 2097152 kB.

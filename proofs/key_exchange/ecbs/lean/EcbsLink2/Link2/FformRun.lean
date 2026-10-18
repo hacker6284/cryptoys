@@ -95,6 +95,7 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
     (hnb : n ≤ bench)
     (hlen2 : x2.length = n)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hx2 : allTritList x2)
     (hfi : FitsLen (2 * (n - 1)))
@@ -320,7 +321,7 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
       (mirrorTrits x) x2 z w h r n k mvS slS hole peak peakS bench
       hoffS hblS hDD hHD hHeldD hHomeD hF' hHomeF' hHF' hArr' hS' hHomeS' hHS' hYs'
       hSpH' hSpHome' hSpE' h7S hneD1 hneD2 hne6D hne6F hne6S hpos hnb hnS
-      (mirror_len x n hlen) hlen2 hlenz hf hmovesS hslidesS hpeakSboard hpeak7 hstrictS
+      (mirror_len x n hlen) hlen2 hlenz hf hmovesS hslidesS hpeakSboard hpeak7 hstrictS hpeakS7
       hspan (mirror_trits x) hx2 hfi hfitM hfitS hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap
       hwS hhS hrS hkS hsm hnsm hfitB hfold
   have hmkS : bS.sudo_5Board_9marker_on = true := by

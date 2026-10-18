@@ -159,6 +159,7 @@ theorem run_is_fformRun (b : Ecbs.Board) (dst first second : Nat)
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
     (hpeak7 : 7 ≤ peak)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
@@ -200,7 +201,7 @@ theorem run_is_fformRun (b : Ecbs.Board) (dst first second : Nat)
   obtain ⟨b', hok, _, htake, _, _, _, _, _, _⟩ := run_else_field b dst first second (mirrorTrits x) xs ys
     w h r n k moves slides hole peak peakS bench hoff hbl hD hHD hHeldD hHomeD
     hF hHome hHF hArr hS hHomeS hHS hYs hSpH hSpHome hSpE h7 hneD1 hneD2 hne6D
-    hne6F hne6S hn0 hnb hn hlenM hlenx hleny hf hmoves hslides hpeak hpeak7 hpeakS
+    hne6F hne6S hn0 hnb hn hlenM hlenx hleny hf hmoves hslides hpeak hpeak7 hpeakS hpeakS7
     hspan hmir hxsT hfi hfitM hfitS hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
     hsm hnsm hfitB hfold
   refine ⟨b', hok, ?_⟩

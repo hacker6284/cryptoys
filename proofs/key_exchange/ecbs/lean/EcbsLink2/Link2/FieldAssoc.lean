@@ -123,4 +123,52 @@ theorem shiftAdd_len (n k : Nat) (hn : 0 < n) (hk : k < n) (s : Nat) (p : List N
     rw [List.range_succ, List.foldl_append, List.foldl_cons, List.foldl_nil, stripAdd_length]
     exact ih acc hlen
 
+private theorem partialShift_len (n k : Nat) (hn : 0 < n) (hk : k < n)
+    (s : Nat) (p : List Nat) (m : Nat) :
+    ((List.range m).foldl
+        (fun acc t => stripAdd acc (splat n k hn hk (coeff p t) (t + s)))
+        (List.replicate n 0)).length = n := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+    rw [List.range_succ, List.foldl_append, List.foldl_cons, List.foldl_nil, stripAdd_length, ih]
+
+/-- Shifting a sum is the sum of the shifts. -/
+theorem shift_add (n k : Nat) (hn : 0 < n) (hk : k < n) (s : Nat)
+    (a b : List Nat) (ha : a.length = n) (hb : b.length = n)
+    (hta : allTritList a) (htb : allTritList b) :
+    shiftAdd n k hn hk s (stripAdd a b) =
+      stripAdd (shiftAdd n k hn hk s a) (shiftAdd n k hn hk s b) := by
+  unfold shiftAdd
+  suffices ∀ m, m ≤ n →
+      (List.range m).foldl
+          (fun acc t => stripAdd acc (splat n k hn hk (coeff (stripAdd a b) t) (t + s)))
+          (List.replicate n 0) =
+        stripAdd
+          ((List.range m).foldl
+            (fun acc t => stripAdd acc (splat n k hn hk (coeff a t) (t + s)))
+            (List.replicate n 0))
+          ((List.range m).foldl
+            (fun acc t => stripAdd acc (splat n k hn hk (coeff b t) (t + s)))
+            (List.replicate n 0)) from
+    this n (Nat.le_refl _)
+  intro m
+  induction m with
+  | zero =>
+    intro _hm
+    simp
+    exact (stripAdd_replicate n).symm
+  | succ m ih =>
+    intro hm
+    have hlt : m < n := by omega
+    rw [List.range_succ, List.foldl_append, List.foldl_append, List.foldl_append,
+      List.foldl_cons, List.foldl_nil, List.foldl_cons, List.foldl_nil,
+      List.foldl_cons, List.foldl_nil, ih (by omega),
+      stripAdd_coeff a b m (by rw [ha]; exact hlt),
+      splat_add n k hn hk (coeff a m) (coeff b m) (m + s) (coeff_le hta m) (coeff_le htb m)]
+    exact stripAdd_diamond _ _ _ _
+      (by rw [partialShift_len, partialShift_len])
+      (by rw [splat_len, partialShift_len])
+      (by rw [splat_len, partialShift_len])
+
 end EcbsLink2.Link2

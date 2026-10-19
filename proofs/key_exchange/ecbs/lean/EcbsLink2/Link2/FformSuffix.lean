@@ -126,7 +126,6 @@ theorem fform_across_step (b : Ecbs.Board)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (hlenf : f.length = n) (hlenv : v.length = n)
     (hlenu : u.length = n) (hlenx : x2.length = n) (hleny : y2.length = n)
-    (hpeak7 : 7 ≤ peak) (hpeakS7 : 7 ≤ peakS)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
     (hspan : 2 * (n - 1) < bench)
     (hfT : allTritList f) (hv : allTritList v) (hx2 : allTritList x2)
@@ -140,12 +139,12 @@ theorem fform_across_step (b : Ecbs.Board)
     (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
     (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
     (hnsm : n ≤ 1000000) (hfitB : FitsLen bench) :
-    ∃ b' lane',
+    ∃ b' lane' peak' strict',
       AcrossBoard b b' lane' f u y2 v z x2 (m + 2) (ctrl + 4)
         (max (max mx (m + 2)) (m + 3)) (cOps + 2) n k
         (keepCharge n k (nocopyCharge n k moves bench f v lane false) bench x2
           (fformBottom n k bench v z) (fieldMul n k bench f v) false)
-        (slides + 2 * pegCount (lane.take n)) peak peakS
+        (slides + 2 * pegCount (lane.take n)) peak' strict'
         (raisedHole (raisedHole hole (topIdx (nocopySchool n bench f v false)))
           (topIdx (keepSchool n bench x2 (fformBottom n k bench v z)
             (fieldMul n k bench f v) false)))
@@ -190,7 +189,7 @@ theorem fform_across_step (b : Ecbs.Board)
       have hp := pegCount_le (lane.take n)
       rw [List.length_take, Nat.min_eq_left hnle] at hp
       unfold stepBudget; omega)
-  obtain ⟨b1, lane1, s1⟩ := settle_nocopy b 0 5 0 2 f v lane
+  obtain ⟨b1, lane1, peak1, strict1, s1⟩ := settle_nocopy b 0 5 0 2 f v lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h2H h2 h5H h5 h0H h0
       hfH hfA hvH hvA
@@ -201,7 +200,7 @@ theorem fform_across_step (b : Ecbs.Board)
       h7 hemptyB hbench hposL hnle hzero hf hfitL hmoves hslides hpeak
       hpeg hfitMv hfitSl hbl
       (by decide) (by decide) (by decide) hn0 hnb hlenf hlenv
-      hpeak7 hpeakS7 hpeakS hspan hfT hv false
+      hpeakS hspan hfT hv false
       hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgapE hw hh hr hk hsm hnsm hfitB hfold
   have hfv : lane1.take n = fieldMul n k bench f v := by
     rw [s1.take_eq, if_neg (fun p => Bool.noConfusion p)]
@@ -278,10 +277,10 @@ theorem fform_across_step (b : Ecbs.Board)
   let slides1 := slides + 2 * pegCount (lane.take n)
   let hole1 := raisedHole hole (topIdx (nocopySchool n bench f v false))
   let moves1 := nocopyCharge n k moves bench f v lane false
-  obtain ⟨b2, lane2, s2⟩ := keep_copy b1 0 3 2 (fieldMul n k bench f v) x2
+  obtain ⟨b2, lane2, peak2, strict2, s2⟩ := keep_copy b1 0 3 2 (fieldMul n k bench f v) x2
       (fformBottom n k bench v z)
       (m + 1) (ctrl + 2) (max mx (m + 2)) script (cOps + 1)
-      n k w h r moves1 slides1 hole1 peak peakS bench false
+      n k w h r moves1 slides1 hole1 peak1 strict1 bench false
       s1.mon s1.on s1.to_eq s1.ix s1.ctrl s1.mx
       (by rw [s1.tier]; exact hscript)
       (by omega) (fits_le hfitM (by omega)) (fits_le hfitC (by omega))
@@ -295,7 +294,7 @@ theorem fform_across_step (b : Ecbs.Board)
       (by rw [s1.heldSz]; exact h7)
       (by decide) (by decide)
       hn0 hnb hfvLen hlenx hzLen hf
-      hmv1 s1.slides_eq s1.peak_eq s1.strict_eq hpeak7 hpeakS7
+      hmv1 s1.slides_eq s1.peak_eq s1.strict_eq
       hspan hfvT hx2 hz3T hfi
       (fits_le hBig (by unfold stepBudget at hcharge1 ⊢; omega))
       (fits_le hBig (by unfold stepBudget at hcharge1 ⊢; omega))
@@ -318,7 +317,7 @@ theorem fform_across_step (b : Ecbs.Board)
   have hX : lane2.take n = fformAcross n k bench x2 u v z :=
     across_on_bench b1 b2 lane2 f v (fformBottom n k bench v z) x2
       0 3 2 (m + 1) (ctrl + 2) (max mx (m + 2)) (cOps + 1)
-      n k moves1 slides1 peak peakS hole1 bench u z s2 hfT hv hfEq rfl
+      n k moves1 slides1 peak2 strict2 hole1 bench u z s2 hfT hv hfEq rfl
   have hemptyA : b2.sudo_5Board_4held[0]'(by rw [s2.heldSz]; exact
       (by rw [s1.heldSz]; exact h0)) = false := by
     have hs := s2.stayH 0 (by decide) (by rw [s1.heldSz]; exact h0)
@@ -376,7 +375,7 @@ theorem fform_across_step (b : Ecbs.Board)
     have hBa := fform_consts.2.2.2.1
     have hGap := fform_consts.2.2.2.2.2
     rw [hAc, hGap, hBa, hBot, s1.mul_ok, ok_bind, s2.mul_ok]
-  exact ⟨b2, lane2, {
+  exact ⟨b2, lane2, peak2, strict2, {
     mul_do := hdo
     bench_eq := s2.bench_eq
     lane_len := hlen2

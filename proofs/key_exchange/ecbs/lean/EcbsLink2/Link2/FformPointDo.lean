@@ -119,7 +119,6 @@ theorem fform_bottom_step (b : Ecbs.Board)
     (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (hlenv : v.length = n)
-    (hpeak7 : 7 ≤ peak) (hpeakS7 : 7 ≤ peakS)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
     (hspan : 2 * (n - 1) < bench)
     (hv : allTritList v)
@@ -191,7 +190,7 @@ theorem fform_bottom_step (b : Ecbs.Board)
   have h4H : (4 : Nat) < b.sudo_5Board_4home.size := by omega
   have h5H : (5 : Nat) < b.sudo_5Board_4home.size := by omega
   have h6H : (6 : Nat) < b.sudo_5Board_4home.size := by omega
-  obtain ⟨b1, lane1, s1, hz3⟩ := fform_new_bottom b 0 2 5 v z lane
+  obtain ⟨b1, lane1, _pk1, _st1, s1, hz3⟩ := fform_new_bottom b 0 2 5 v z lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h5H h5 h0H h0 h2H h2 hvH hvA hzH hzA
       hmk hon hto hm hc hmx hscript
@@ -199,7 +198,7 @@ theorem fform_bottom_step (b : Ecbs.Board)
       (fits_le hfitM6 (by omega))
       hn hops hop0 (fits_le hfops6 (by omega))
       h7 hgH hbench hposL hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
-      hbl (by decide) (by decide) (by decide) hn0 hnb hlenv hpeak7 hpeakS7 hpeakS
+      hbl (by decide) (by decide) (by decide) hn0 hnb hlenv hpeakS
       hspan hv hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgapN hw hh hr hk hsm hnsm hfitB hfold
   have hAc := fform_consts.1
   have hBotC := fform_consts.2.2.1

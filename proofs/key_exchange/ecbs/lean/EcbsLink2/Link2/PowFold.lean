@@ -1,0 +1,163 @@
+/-
+  One digit of the root power, starting from a seated marker.
+  `marker_lift` sets the index to `-1`. Digit `0` then cubes and settles,
+  and the up home is `powStep` on that digit. The list step is what the
+  power loop folds into `rootY_digits`.
+  Proof-only. Not a security claim.
+-/
+import EcbsLink2.Link2.PowZero
+import EcbsLink2.Link2.WalkChord
+
+namespace EcbsLink2.Link2
+
+open MegaDreifach.Link2
+open Ecbs
+open EcbsLink2.Spec
+
+/-- The board `marker_lift` leaves when the marker is already a natural. -/
+def markerLifted (b : Ecbs.Board) (ctrl : Nat) : Ecbs.Board :=
+  { b with
+    sudo_5Board_6marker := -1
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } }
+
+private theorem markerLifted_held (b : Ecbs.Board) (ctrl : Nat) :
+    (markerLifted b ctrl).sudo_5Board_4held = b.sudo_5Board_4held := rfl
+
+private theorem markerLifted_home (b : Ecbs.Board) (ctrl : Nat) :
+    (markerLifted b ctrl).sudo_5Board_4home = b.sudo_5Board_4home := rfl
+
+private theorem markerLifted_ops (b : Ecbs.Board) (ctrl : Nat) :
+    (markerLifted b ctrl).sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
+
+private theorem marker_lift_neg (b : Ecbs.Board) (hm : b.sudo_5Board_6marker < 0) :
+    Ecbs.marker_lift b = .ok b := by
+  unfold Ecbs.marker_lift
+  have hdec : decide (b.sudo_5Board_6marker ≥ (0 : Int)) = false := by
+    rw [decide_eq_false_iff_not]
+    intro hle
+    exact Int.lt_irrefl _ (Int.lt_of_lt_of_le hm hle)
+  rw [hdec]
+  simp [Bool.false_eq_true, if_false, pure_eq_ok]
+
+/-- A root trit is red, empty, or white. -/
+theorem rootDigit_cases (n i : Nat) :
+    rootDigit n i = 0 ∨ rootDigit n i = 1 ∨ rootDigit n i = 2 := by
+  unfold rootDigit
+  by_cases h : i + 2 = n
+  · simp [h]
+  · by_cases he : i % 2 = 0
+    · simp [h, he]
+    · simp [h, he]
+
+/-- Folding one more trit is `powStep` on the prefix. -/
+theorem foldl_pow_succ (f : List Nat → Nat → List Nat) (acc : List Nat)
+    (xs : List Nat) (i : Nat) (hi : i < xs.length) :
+    (xs.take (i + 1)).foldl f acc = f ((xs.take i).foldl f acc) (xs[i]'hi) := by
+  have htake : xs.take (i + 1) = xs.take i ++ [xs[i]'hi] := by
+    rw [List.take_succ, List.getElem?_eq_getElem hi]
+    simp
+  rw [htake, List.foldl_append, List.foldl_cons, List.foldl_nil]
+
+/-- Digit `0` from a seated marker. Lift, cube the up, settle. The up home
+    is `powStep` on digit `0`, the bench is off, and the marker is `0`. -/
+theorem pow_zero_seated (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
+    (w h r n k moves slides hole bench peak peakS cOps cg ctrl mx script m : Nat)
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hm : b.sudo_5Board_6marker = Int.ofNat m)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hs : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat script)
+    (hpos : 0 < script) (hfitLift : FitsLen (ctrl + 1)) (hfitCube : FitsLen (ctrl + 2))
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hF : up < b.sudo_5Board_4held.size)
+    (hHome : up < b.sudo_5Board_4home.size)
+    (hHF : b.sudo_5Board_4held[up] = true)
+    (hArr : b.sudo_5Board_4home[up] = embed acc)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hp : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
+    (hn0 : 0 < n)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hlenx : acc.length = n)
+    (hfn : FitsLen n)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (hcg : b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat cg)
+    (hspan : 3 * (n - 1) + cg < bench)
+    (h3 : FitsLen (3 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * n))
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hxsT : allTritList acc)
+    (hw0 : 0 < w) (hh0 : 0 < h) (hrR : r < h) (hrP : 0 < r)
+    (hnE : n = w * h - 1) (hkLe : k ≤ n) (hgap : n - k = w * r)
+    (hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * n + 3 * (bench - n)))
+    (hpeg : FitsLen (2 * pegCount (fieldCube n k bench acc)))
+    (hfitMv : FitsLen (cubeMoves moves acc n k bench + 2 * pegCount (fieldCube n k bench acc)))
+    (hfitSl : FitsLen (slides + 2 * pegCount (fieldCube n k bench acc))) :
+    ∃ bS,
+      (do
+          let b ← Ecbs.marker_lift b
+          let b ← Ecbs.cube b ((up : Nat) : Int) ((up : Nat) : Int)
+          Ecbs.settle b) = .ok bS ∧
+        (bS.sudo_5Board_4home[up]?) = some (embed (powStep n k bench rhs acc 0)) ∧
+        bS.sudo_5Board_8bench_on = false ∧
+        (bS.sudo_5Board_4held[up]?) = some true ∧
+        bS.sudo_5Board_6marker = 0 := by
+  let bL := markerLifted b ctrl
+  have hlift : Ecbs.marker_lift b = .ok bL := by
+    simpa [bL, markerLifted] using marker_lift_refines b m ctrl hm hc hfitLift
+  have hzero := pow_zero_home bL up acc rhs w h r n k moves slides hole bench peak peakS
+      cOps cg (ctrl + 1) mx script
+      (by simpa [bL, markerLifted] using hmk)
+      (by simpa [bL, markerLifted] using hoff)
+      (by simp [bL, markerLifted])
+      (by simp [bL, markerLifted])
+      (by simpa [bL, markerLifted] using hx)
+      (by simpa [bL, markerLifted] using hs)
+      hpos hfitCube
+      (by simpa [bL, markerLifted] using hops)
+      (by simpa [bL, markerLifted] using hop1)
+      hfops
+      (by simpa [bL, markerLifted] using hF)
+      (by simpa [bL, markerLifted] using hHome)
+      (by simpa [bL, markerLifted] using hHF)
+      (by simpa [bL, markerLifted] using hArr)
+      (by simpa [bL, markerLifted] using h7)
+      (by simpa [bL, markerLifted] using hp)
+      (by simpa [bL, markerLifted] using hpeak)
+      hn0
+      (by simpa [bL, markerLifted] using hn)
+      hlenx hfn
+      (by simpa [bL, markerLifted] using hmoves)
+      (by simpa [bL, markerLifted] using hslides)
+      (by simpa [bL, markerLifted] using hbl)
+      (by simpa [bL, markerLifted] using hcg)
+      hspan h3 hfm
+      (by simpa [bL, markerLifted] using hhole)
+      hxsT hw0 hh0 hrR hrP hnE hkLe hgap
+      (by simpa [bL, markerLifted] using hw)
+      (by simpa [bL, markerLifted] using hh)
+      (by simpa [bL, markerLifted] using hr)
+      (by simpa [bL, markerLifted] using hk)
+      hsm hnsm hfitB hfold hpeg hfitMv hfitSl
+  rcases hzero with ⟨bS, hrun, hhome, hoffS, hheldS, hmark⟩
+  refine ⟨bS, ?_, hhome, hoffS, hheldS, hmark⟩
+  · rw [hlift, ok_bind]
+    have hid := marker_lift_neg bL (by simp [bL, markerLifted])
+    rw [hid, ok_bind] at hrun
+    exact hrun
+
+end EcbsLink2.Link2

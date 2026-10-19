@@ -130,6 +130,7 @@ import EcbsLink2.Link2.PowLiveBoard
 import EcbsLink2.Link2.PowAt
 import EcbsLink2.Link2.PowMul
 import EcbsLink2.Link2.PowDigit
+import EcbsLink2.Link2.PowFold
 import EcbsLink2.Link2.RootHit
 import EcbsLink2.Link2.WalkKeyDemo
 import EcbsLink2.Link2.WalkFformIdle

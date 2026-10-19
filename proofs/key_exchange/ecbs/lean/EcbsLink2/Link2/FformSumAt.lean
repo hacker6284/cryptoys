@@ -90,8 +90,19 @@ theorem sum_at_of_room (b : Ecbs.Board)
     (hOps : FitsLen (cOps + 8))
     (hMark : FitsLen (m + 8))
     (hScr : m + 8 < script) :
-    ∃ (bS : Ecbs.Board) (laneS : List Nat)
+    ∃ (bMir bRun bUp bRise bU b3 bV bZ bS : Ecbs.Board) (laneS : List Nat)
       (mS ctrlS mxS cOpsS movesS slidesS holeS : Nat),
+      Ecbs.mirror b Ecbs.across = .ok bMir ∧
+      Ecbs.mul bMir Ecbs.across Ecbs.base_across Ecbs.bottom true true false = .ok bRun ∧
+      Ecbs.is_zero bRun Ecbs.across =
+        .ok (decide (fformRun n k bench x2 z x = List.replicate n 0)) ∧
+      Ecbs.mirror bRun Ecbs.up = .ok bUp ∧
+      Ecbs.mul bUp Ecbs.up Ecbs.base_up Ecbs.bottom true true red = .ok bRise ∧
+      Ecbs.mul bRise Ecbs.gap Ecbs.up Ecbs.up true false false = .ok bU ∧
+      Ecbs.mul bU Ecbs.gap Ecbs.bottom Ecbs.gap false false false = .ok b3 ∧
+      Ecbs.mul b3 Ecbs.spare Ecbs.across Ecbs.across true false false = .ok bV ∧
+      Ecbs.mul bV Ecbs.bottom Ecbs.spare Ecbs.bottom false false false = .ok bZ ∧
+      Ecbs.mul bZ Ecbs.gap Ecbs.across Ecbs.spare false true false = .ok bS ∧
       SumAt bS laneS n k bench
         (fformRise n k bench (if red then mirrorTrits y2 else y2) z y)
         (fformRun n k bench x2 z x) z x2 y2 script w h r

@@ -79,14 +79,27 @@ theorem add_at_of_room (b : Ecbs.Board)
     (hOps : FitsLen (cOps + 8))
     (hMark : FitsLen (m + 8))
     (hScr : m + 8 < script) :
-    ∃ (bS bA : Ecbs.Board) (laneA : List Nat)
+    ∃ (bMir bRun bUp bRise bU b3 bV bZ bS bA : Ecbs.Board) (laneA : List Nat)
       (mA ctrlA mxA cA movesA slidesA holeA : Nat),
-      Ecbs.add bS (5 : Int) (2 : Int) false = .ok bA ∧
+      Ecbs.mirror b Ecbs.across = .ok bMir ∧
+      Ecbs.mul bMir Ecbs.across Ecbs.base_across Ecbs.bottom true true false = .ok bRun ∧
+      Ecbs.is_zero bRun Ecbs.across =
+        .ok (decide (fformRun n k bench x2 z x = List.replicate n 0)) ∧
+      Ecbs.mirror bRun Ecbs.up = .ok bUp ∧
+      Ecbs.mul bUp Ecbs.up Ecbs.base_up Ecbs.bottom true true red = .ok bRise ∧
+      Ecbs.mul bRise Ecbs.gap Ecbs.up Ecbs.up true false false = .ok bU ∧
+      Ecbs.mul bU Ecbs.gap Ecbs.bottom Ecbs.gap false false false = .ok b3 ∧
+      Ecbs.mul b3 Ecbs.spare Ecbs.across Ecbs.across true false false = .ok bV ∧
+      Ecbs.mul bV Ecbs.bottom Ecbs.spare Ecbs.bottom false false false = .ok bZ ∧
+      Ecbs.mul bZ Ecbs.gap Ecbs.across Ecbs.spare false true false = .ok bS ∧
+      Ecbs.add bS Ecbs.gap Ecbs.bottom false = .ok bA ∧
       AddAt bA laneA n k bench
         (fformRise n k bench (if red then mirrorTrits y2 else y2) z y)
         (fformRun n k bench x2 z x) z x2 y2 script w h r
         mA ctrlA mxA cA movesA slidesA holeA peak peakS := by
-  obtain ⟨bS, laneS, mS, ctrlS, mxS, cOpsS, movesS, slidesS, holeS, hSum⟩ :=
+  obtain ⟨bMir, bRun, bUp, bRise, bU, b3, bV, bZ, bS, laneS, mS, ctrlS, mxS, cOpsS,
+      movesS, slidesS, holeS, hmir, hmulR, hzero, hmirU, hmulU, hU, hUZ, hV, hVZ, hSumM,
+      hSum⟩ :=
     sum_at_of_room b x x2 y y2 z lane red
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h0H h0D h1H h1D h2H h2D h3H h3D h4H h4D h5H h5D h6H h6D
@@ -101,7 +114,9 @@ theorem add_at_of_room (b : Ecbs.Board)
   obtain ⟨bA, laneA, movesA, hok, _hmv, hA⟩ :=
     add_on_sum bS laneS n k bench u v z x2 y2 script w h r
       mS ctrlS mxS cOpsS movesS slidesS holeS peak peakS hSum
-  exact ⟨bS, bA, laneA, mS, ctrlS, mxS, cOpsS, movesA, slidesS, holeS, hok, by
-    simpa [u, v] using hA⟩
+  exact ⟨bMir, bRun, bUp, bRise, bU, b3, bV, bZ, bS, bA, laneA,
+    mS, ctrlS, mxS, cOpsS, movesA, slidesS, holeS,
+    hmir, hmulR, hzero, hmirU, hmulU, hU, hUZ, hV, hVZ, hSumM,
+    by simpa [Ecbs.gap, Ecbs.bottom] using hok, by simpa [u, v] using hA⟩
 
 end EcbsLink2.Link2

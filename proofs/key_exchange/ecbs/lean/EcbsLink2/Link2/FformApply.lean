@@ -281,8 +281,19 @@ theorem v2_on_comb (b : Ecbs.Board)
     (hSRoom : FitsLen (u2zSlideCap y (fformRunLane n k bench x x2 z) n
         (fformRunSlides slides n x lane) + 16 * n))
     (hCtrlRoom : FitsLen (ctrl + 40)) :
-    ∃ (bS : Ecbs.Board) (laneS : List Nat)
+    ∃ (bMir bRun bUp bRise bU b3 bV bZ bS : Ecbs.Board) (laneS : List Nat)
       (mS ctrlS mxS cOpsS movesS slidesS holeS : Nat),
+      Ecbs.mirror b Ecbs.across = .ok bMir ∧
+      Ecbs.mul bMir Ecbs.across Ecbs.base_across Ecbs.bottom true true false = .ok bRun ∧
+      Ecbs.is_zero bRun Ecbs.across =
+        .ok (decide (fformRun n k bench x2 z x = List.replicate n 0)) ∧
+      Ecbs.mirror bRun Ecbs.up = .ok bUp ∧
+      Ecbs.mul bUp Ecbs.up Ecbs.base_up Ecbs.bottom true true red = .ok bRise ∧
+      Ecbs.mul bRise Ecbs.gap Ecbs.up Ecbs.up true false false = .ok bU ∧
+      Ecbs.mul bU Ecbs.gap Ecbs.bottom Ecbs.gap false false false = .ok b3 ∧
+      Ecbs.mul b3 Ecbs.spare Ecbs.across Ecbs.across true false false = .ok bV ∧
+      Ecbs.mul bV Ecbs.bottom Ecbs.spare Ecbs.bottom false false false = .ok bZ ∧
+      Ecbs.mul bZ Ecbs.gap Ecbs.across Ecbs.spare false true false = .ok bS ∧
       SumAt bS laneS n k bench
         (fformRise n k bench (if red then mirrorTrits y2 else y2) z y)
         (fformRun n k bench x2 z x) z x2 y2 script w h r
@@ -294,8 +305,8 @@ theorem v2_on_comb (b : Ecbs.Board)
   let scap := u2zSlideCap y (fformRunLane n k bench x x2 z) n
     (fformRunSlides slides n x lane)
   let mx3 := max (max (max mx (m + 2)) ((m + 1) + 3)) (((m + 1) + 2) + 2)
-  obtain ⟨_bRun, _bMid, b3, lane3, hole3, moves3, slides3,
-      _hokR, _hmul, htake3, hhome0, hheld0, hhome2, hheld2,
+  obtain ⟨bMir, bRun, bUp, bRise, bU, b3, lane3, hole3, moves3, slides3,
+      hmir, hmulR, hzero, hmirU, hmulU, hU, hmul, htake3, hhome0, hheld0, hhome2, hheld2,
       hbench3, hon3, hto3, hmk3, hix3, hctrl3, hmv3, hsl3, hmx3,
       hszD3, hszH3, hgapF, htier3, carry3,
       hhome1, hheld1, hhome3, hheld3, hhome4, hheld4, hmvLe, hslLe⟩ :=
@@ -425,7 +436,7 @@ theorem v2_on_comb (b : Ecbs.Board)
     simpa [slidesV] using hslV
   have hpkV : bV.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
     simpa [ofNat_eq_natCast] using carryV.peakEq
-  obtain ⟨bZ, laneZ, _hokZ, htZ, hopsZ, honZ, htoZ, hixZ, hhomeGZ, hheldGZ,
+  obtain ⟨bZ, laneZ, hokZ, htZ, hopsZ, honZ, htoZ, hixZ, hhomeGZ, hheldGZ,
       hhomeSZ, hheldSZ, hemptyZ, hbZ, hmkZ, htierZ, hctrlZ, hmxZ, hmvZ, hslZ,
       hszDZ, hszHZ, hkeepHZ, hkeepDZ, hpkZ, hstZ, hholeZ,
       hposZ, hnleZ, hfitLZ, hzeroZ, hopsSzZ⟩ :=
@@ -516,7 +527,7 @@ theorem v2_on_comb (b : Ecbs.Board)
   have h6DZ : 6 < bZ.sudo_5Board_4held.size := by rw [hszDZ]; exact h6DV
   have h2HZ : 2 < bZ.sudo_5Board_4home.size := by rw [hszHZ]; exact h2HV
   have h2DZ : 2 < bZ.sudo_5Board_4held.size := by rw [hszDZ]; exact h2DV
-  obtain ⟨bS, laneS, _hokS, hbS, htS, hopsS, honS, htoS, hmkS, hixS, hbotS, hheldBS,
+  obtain ⟨bS, laneS, hokS, hbS, htS, hopsS, honS, htoS, hmkS, hixS, hbotS, hheldBS,
       hgapES, hspES, hctrlS, hmxS, htierS, hmvS, hslS, hszDS, hszHS, hkeepS, hkeepDS,
       hposS, hnleS, hfitLS, hzeroS, hpkS, hstS, hopsSzS, ⟨holeS, hholeOutS⟩⟩ :=
     gap_sum_on_v2z bZ 5 0 6 2 u v v2 gHome z laneZ
@@ -643,7 +654,12 @@ theorem v2_on_comb (b : Ecbs.Board)
     schoolMoves v v2 n n +
     foldCharge n (n - k) (school n v v2 (pref gHome bench n) false)
   let slidesS := (slidesZ + 2 * pegCount (laneZ.take n)) + 2 * pegCount gHome
-  exact ⟨bS, laneS, mS, cS, mxS, cOpsS, movesS, slidesS, holeS, {
+  exact ⟨bMir, bRun, bUp, bRise, bU, b3, bV, bZ, bS, laneS,
+    mS, cS, mxS, cOpsS, movesS, slidesS, holeS,
+    hmir, hmulR, hzero, hmirU, hmulU, hU, hmul,
+    by simpa [Ecbs.spare, Ecbs.across] using hok,
+    by simpa [Ecbs.bottom, Ecbs.spare] using hokZ,
+    by simpa [Ecbs.gap, Ecbs.across, Ecbs.spare] using hokS, {
     on := honS
     to5 := by simpa using htoS
     markOn := hmkS

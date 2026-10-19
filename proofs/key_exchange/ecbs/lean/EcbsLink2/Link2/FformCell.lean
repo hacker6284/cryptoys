@@ -257,7 +257,7 @@ theorem rise_on_run (b : Ecbs.Board)
       n * (n + 1) + 3 * (bench - n)) :=
     fits_le hBig (sum_fold moves n bench _ _ hpegX hpegL)
   obtain ⟨bMir, bRun, hmir, hmulR, hbenchR, htakeR, honR, htoR, hmkR, htierR, hemptyR, hzero,
-      hixR, hctrlR, hmxR, hmvR, hslR, hszDR, hszHR, hhomeR, hheldR, hbotA, hbotH, holeR, peakR, strictR, carryR⟩ :=
+      hixR, hctrlR, hmxR, hmvR, hslR, hszDR, hszHR, hhomeR, hheldR, hbotA, hbotH, ⟨holeR, peakR, strictR, carryR⟩, _, _⟩ :=
     run_on_bench b 0 3 2 2 x x2 z lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h0H h0D hheld0 hhome0 hn hlen hpos htri hmv hfit hmk hon hto (by decide) rfl
@@ -512,7 +512,7 @@ theorem comb_u2z (b : Ecbs.Board)
       n * (n + 1) + 3 * (bench - n)) :=
     fits_le hBig (sum_fold moves n bench _ _ hpegX hpegL)
   obtain ⟨bMir, bRun, hmir, hmulR, hbenchR, htakeR, honR, htoR, hmkR, htierR, hemptyR, hzero,
-      hixR, hctrlR, hmxR, hmvR, hslR, hszDR, hszHR, hhomeR, hheldR, hbotA, hbotH, holeR, peakR, strictR, carryR⟩ :=
+      hixR, hctrlR, hmxR, hmvR, hslR, hszDR, hszHR, hhomeR, hheldR, hbotA, hbotH, ⟨holeR, peakR, strictR, carryR⟩, _, _⟩ :=
     run_on_bench b 0 3 2 2 x x2 z lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h0H h0D hheld0 hhome0 hn hlen hpos htri hmv hfit hmk hon hto (by decide) rfl

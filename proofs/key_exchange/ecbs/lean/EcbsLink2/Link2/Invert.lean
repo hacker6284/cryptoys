@@ -3691,6 +3691,13 @@ def clearHeldBoard (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
     sudo_5Board_4cost := { b.sudo_5Board_4cost with
       sudo_5Costs_5moves := Int.ofNat (moves + pegCount xs) } }
 
+/-- `clear` rewrites the home and the move counter. The ops array keeps its length. -/
+theorem clear_len (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size) :
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := rfl
+
 theorem clearHeld_irrel (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
     (hH hH' : home < b.sudo_5Board_4home.size) (hD hD' : home < b.sudo_5Board_4held.size) :
     clearHeldBoard b home xs moves hH hD = clearHeldBoard b home xs moves hH' hD' := by

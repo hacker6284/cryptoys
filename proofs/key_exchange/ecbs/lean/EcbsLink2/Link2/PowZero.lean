@@ -94,7 +94,10 @@ theorem pow_zero_home (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
           let b ← Ecbs.marker_lift b
           let b ← Ecbs.cube b ((up : Nat) : Int) ((up : Nat) : Int)
           Ecbs.settle b) = .ok bS ∧
-        bS.sudo_5Board_4home[up]? = some (embed (powStep n k bench rhs acc 0)) := by
+        (bS.sudo_5Board_4home[up]?) = some (embed (powStep n k bench rhs acc 0)) ∧
+        bS.sudo_5Board_8bench_on = false ∧
+        (bS.sudo_5Board_4held[up]?) = some true ∧
+        bS.sudo_5Board_6marker = 0 := by
   have hlift := marker_lift_below b hm
   have hcube := cube_down_eq b up up acc w h r n k moves hole bench peak peakS cOps cg
       ctrl mx script hmk hoff hm hc hx hs hpos hfitCtrl hops hop1 hfops hF hHome hHF hArr h7
@@ -176,13 +179,20 @@ theorem pow_zero_home (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
   have hpegL : FitsLen (2 * pegCount (lane.take n)) := by rw [htake]; exact hpeg
   have hfitM : FitsLen (mvC + 2 * pegCount (lane.take n)) := by rw [htake]; exact hfitMv
   have hfitS : FitsLen (slides + 2 * pegCount (lane.take n)) := by rw [htake]; exact hfitSl
-  obtain ⟨bS, hset, _, _, hhome⟩ := cube_bench_settles bC up lane acc n k bench mvC slides pkC
+  obtain ⟨bS, hset, hoffS, hheldS, hhome⟩ := cube_bench_settles bC up lane acc n k bench mvC slides pkC
     hHC hDC h7C hon hto hempty hbench hnC hposL hnle hzero hfn hfitL hmvC hslC hpkC
     hpegL hfitM hfitS htake
   have hpow : powStep n k bench rhs acc 0 = fieldCube n k bench acc := by
     rw [powStep_branch]
     simp
-  refine ⟨bS, ?_, ?_⟩
+  have hmark : bS.sudo_5Board_6marker = 0 := by
+    have hsetR := settle_refines bC up lane n mvC slides pkC hHC hDC h7C hon hto hempty
+      hbench hnC hposL hnle hzero hfn hfitL hmvC hslC hpkC hpegL hfitM hfitS
+    rw [hsetR] at hset
+    injection hset with hEq
+    rw [← hEq, settle_ix_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    simp [bC, bOff, cube_off_ix, feed, markerDownFeed]
+  refine ⟨bS, ?_, ?_, hoffS, hheldS, hmark⟩
   · rw [hlift, ok_bind, hbC, ok_bind, hset]
   · rw [hhome, hpow]
 

@@ -187,7 +187,10 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
             false false false
         let b2 ← Ecbs.clear b1 ((up : Nat) : Int)
         Ecbs.settle b2) = .ok bS ∧
-      (bS.sudo_5Board_4home[up]?) = some (embed (powStep n k bench rhs acc d)) := by
+      (bS.sudo_5Board_4home[up]?) = some (embed (powStep n k bench rhs acc d)) ∧
+      bS.sudo_5Board_8bench_on = false ∧
+      (bS.sudo_5Board_4held[up]?) = some true ∧
+      bS.sudo_5Board_6marker = Int.ofNat (m + 1) := by
   have hmul := pow_mul_live b up spare lane cube factor w h r n k moves slides peak peakS cOps
       m ctrl mx script bench hole hmk hon hto hH hD h7 hempty hbench hn hpos hnle hzero hf hfitL
       hmoves hslides hpeak hpeg hfitMv hfitSl hops hop0 hfops hm hc hx hscript hbound hfitMk hfitC
@@ -326,18 +329,28 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
   rw [hset]
   let bS := settleBoard bC up hHn hDn prod n mvC (slides + 2 * pegCount (lane.take n))
       (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))
-  refine ⟨bS, rfl, ?_⟩
-  rw [show bS.sudo_5Board_4home =
-      bC.sudo_5Board_4home.set ⟨up, hHn⟩ (embed (prod.take n)) from
-    settle_home_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
-      (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
-  rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hHn)]
-  simp [Array.getElem_set, hprodTake]
-  rw [hcube]
-  rcases hbranch with ⟨hd, hf⟩ | ⟨hd, hf⟩
-  · rw [hf, hd, powStep]
-    simp
-  · rw [hf, hd, powStep]
-    simp
+  refine ⟨bS, rfl, ?_, ?_, ?_, ?_⟩
+  · rw [show bS.sudo_5Board_4home =
+        bC.sudo_5Board_4home.set ⟨up, hHn⟩ (embed (prod.take n)) from
+      settle_home_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hHn)]
+    simp [Array.getElem_set, hprodTake]
+    rw [hcube]
+    rcases hbranch with ⟨hd, hf⟩ | ⟨hd, hf⟩
+    · rw [hf, hd, powStep]
+      simp
+    · rw [hf, hd, powStep]
+      simp
+  · exact settle_bench_off bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+      (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))
+  · rw [settle_held_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hDn)]
+    simp [Array.getElem_set]
+  · rw [settle_ix_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    simp [bC, bLive, powLiveBoard, ontoFoldBoard_mark, bOff, powMulOff, withMoves, mulPrep,
+      strictBoard, mulAimed, bReady, markerSeat]
 
 end EcbsLink2.Link2

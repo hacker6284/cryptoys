@@ -43,7 +43,6 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
     (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (hlenf : f.length = n) (hlenu : u.length = n) (hleny : y2.length = n)
-    (hpeak7 : 7 ≤ peak) (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hfT : allTritList f) (hu : allTritList u) (hy2 : allTritList y2)
     (hfi : FitsLen (2 * (n - 1)))
@@ -131,7 +130,7 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
   have hz3T : allTritList (fformBottom n k bench v z) := by
     unfold fformBottom
     exact prod_trits n k bench v _ hspan hnb
-  obtain ⟨b3, lane3, s3⟩ := settle_nocopy bA 1 5 1 0 f u laneA
+  obtain ⟨b3, lane3, peak3, strict3, s3⟩ := settle_nocopy bA 1 5 1 0 f u laneA
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h0H h0d h5H h5d h1H h1d
       (hA.gapH h5d) (hA.gapA h5H) (hA.upH h1d) (hA.upA h1H)
@@ -153,7 +152,7 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       (fits_le hSlide (by omega))
       (by rw [hA.tier]; exact hbl)
       (by decide) (by decide) (by decide) hn0 hnb hlenf hlenu
-      hpeak7 hpeakS7 hA.strict_eq hspan hfT hu true
+      hA.strict_eq hspan hfT hu true
       hfi
       (fits_le hBig (by unfold stepBudget; omega))
       hA.hole_eq
@@ -231,10 +230,10 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
     rw [s3.opsSz]; exact hopsA
   have hmv3 : b3.sudo_5Board_4cost.sudo_5Costs_5moves = (moves3 : Int) := by
     rw [s3.moves_eq, ofNat_eq_natCast]
-  obtain ⟨b4, lane4, s4⟩ := keep_copy b3 1 4 2
+  obtain ⟨b4, lane4, peak4, strict4, s4⟩ := keep_copy b3 1 4 2
       (mirrorTrits (fieldMul n k bench f u)) y2 (fformBottom n k bench v z)
       (m + 1) (ctrl + 2) (max mx (m + 2)) script (cOps + 1)
-      n k w h r moves3 slides3 hole3 peak peakS bench (! red)
+      n k w h r moves3 slides3 hole3 peak3 strict3 bench (! red)
       s3.mon s3.on s3.to_eq s3.ix s3.ctrl s3.mx
       (by rw [s3.tier, hA.tier]; exact hscript)
       (by omega) (fits_le hfitM (by omega)) (fits_le hfitC (by omega))
@@ -249,7 +248,7 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       (by rw [s3.heldSz, hA.heldSz]; exact h7)
       (by decide) (by decide)
       hn0 hnb hmirLen hleny hzLen hf
-      hmv3 s3.slides_eq s3.peak_eq s3.strict_eq hpeak7 hpeakS7
+      hmv3 s3.slides_eq s3.peak_eq s3.strict_eq
       hspan hmirT hy2 hz3T hfi
       (fits_le hBig (by
         show nocopyCharge n k moves bench f u laneA true +
@@ -278,7 +277,7 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
         else fformUp n k bench y2 u v z) :=
     up_on_bench b3 b4 lane4 f u y2 (fformBottom n k bench v z) red
       1 4 2 (m + 1) (ctrl + 2) (max mx (m + 2)) (cOps + 1)
-      n k moves3 slides3 peak peakS hole3 bench v z s4
+      n k moves3 slides3 peak4 strict4 hole3 bench v z s4
       hspan hnb hfT hu hy2 hz3T hfuT hyzT hfEq rfl
   have h0b4 : (0 : Nat) < b4.sudo_5Board_4home.size := by rw [s4.homeSz]; exact h0b3
   have h2b4 : (2 : Nat) < b4.sudo_5Board_4home.size := by rw [s4.homeSz]; exact h2b3
@@ -381,7 +380,7 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       by simpa [bC, Array.size_set] using s4.homeSz.trans (s3.homeSz.trans hA.homeSz),
       by simpa [bC, Array.size_set] using s4.heldSz.trans (s3.heldSz.trans hA.heldSz),
       ⟨moves4 + pegCount f, slides3, (ctrl + 2) + 2, (m + 1) + 1,
-        max (max mx (m + 2)) ((m + 1) + 2), peak, peakS,
+        max (max mx (m + 2)) ((m + 1) + 2), peak4, strict4,
         raisedHole hole3 (topIdx (keepSchool n bench y2 (fformBottom n k bench v z)
           (mirrorTrits (fieldMul n k bench f u)) (! red))),
         (cOps + 1) + 1,

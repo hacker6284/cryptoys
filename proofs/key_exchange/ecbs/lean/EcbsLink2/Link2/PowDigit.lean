@@ -192,6 +192,7 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
       (bS.sudo_5Board_4held[up]?) = some true ∧
       bS.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
       bS.sudo_5Board_9marker_on = true ∧
+      bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
       (∀ i, i ≠ up → i ≠ spare → (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?)) := by
   have hmul := pow_mul_live b up spare lane cube factor w h r n k moves slides peak peakS cOps
       m ctrl mx script bench hole hmk hon hto hH hD h7 hempty hbench hn hpos hnle hzero hf hfitL
@@ -331,7 +332,7 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
   rw [hset]
   let bS := settleBoard bC up hHn hDn prod n mvC (slides + 2 * pegCount (lane.take n))
       (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))
-  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show bS.sudo_5Board_4home =
         bC.sudo_5Board_4home.set ⟨up, hHn⟩ (embed (prod.take n)) from
       settle_home_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
@@ -357,6 +358,10 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
   · rw [settle_marker_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
         (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
     simp [bC, bLive, powLiveBoard]
+  · rw [settle_ctrl_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    simp [bC, bLive, powLiveBoard, ontoFoldBoard_ctrl, bOff, powMulOff, withMoves, mulPrep,
+      strictBoard, mulAimed, bReady, markerSeat]
   · intro i hiu his
     rw [show bS.sudo_5Board_4home =
         bC.sudo_5Board_4home.set ⟨up, hHn⟩ (embed (prod.take n)) from

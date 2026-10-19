@@ -50,4 +50,10 @@ open MegaDreifach.Link2
   unfold ontoFoldBoard peakBoard noteBench withMoves withHole
   split <;> rfl
 
+@[simp] theorem ontoFoldBoard_ctrl (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
 end EcbsLink2.Link2

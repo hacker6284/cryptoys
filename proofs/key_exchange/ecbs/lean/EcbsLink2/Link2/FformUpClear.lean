@@ -92,7 +92,10 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
           b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) ∧
       b'.sudo_5Board_9marker_on = true ∧
-      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) := by
+      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
+      (∀ h6 : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   have h0d : (0 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h1d : (1 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h2d : (2 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
@@ -363,6 +366,8 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
     (s4.stayA 4 (by decide) h4b3 h4b4).trans hyHome3
   have hyH4 : b4.sudo_5Board_4held[4] = true :=
     (s4.stayH 4 (by decide) h4d3 h4d4).trans hyHeld3
+  have h6d4 : (6 : Nat) < b4.sudo_5Board_4held.size := by rw [s4.heldSz]; exact h6d3
+  have hsHeld4 : b4.sudo_5Board_4held[6] = false := s4.spareH h6d4
   refine ⟨bC, lane4, ?_, ?_, ?_, ?_, hY, ?_,
       by simpa [bC] using s4.on,
       by simpa [bC, ofNat_eq_natCast] using s4.to_eq,
@@ -425,7 +430,13 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
         have hH04 : b4.sudo_5Board_4held[0] = true :=
           (s4.stayH 0 (by decide) h0d3 h0d4).trans hH03
         have hne : (5 : Nat) ≠ 0 := by decide
-        simpa [bC, Array.getElem_set_ne, hne] using hH04⟩
+        simpa [bC, Array.getElem_set_ne, hne] using hH04,
+      by
+        intro h
+        have hne : (5 : Nat) ≠ 6 := by decide
+        simpa [bC, Array.getElem_set_ne, hne] using hsHeld4,
+      by
+        simpa [bC] using s4.opsSz.trans (s3.opsSz.trans hA.opsSz)⟩
   · have hUp := fform_consts.2.1
     have hBot := fform_consts.2.2.1
     have hBu := fform_consts.2.2.2.2.1

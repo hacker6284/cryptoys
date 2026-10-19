@@ -111,7 +111,10 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
           b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) ∧
       b'.sudo_5Board_9marker_on = true ∧
-      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) := by
+      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
+      (∀ h6 : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   obtain ⟨bA, laneA, hA⟩ := fform_across_step b f v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h7 h7H hvH hvA huH huA hemptyB hxH hxA hyH hyA hfH hfA hsH
@@ -136,7 +139,7 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
       rw [List.length_take, Nat.min_eq_left hnle] at hp
       omega)
   obtain ⟨b', lane', htail, h0, h2, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
-      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge, hops1, hmon, hH0⟩ :=
+      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge, hops1, hmon, hH0, h6, hopsSz⟩ :=
     fform_up_clear b bA laneA f u y2 v z x2 red
       (m + 2) (ctrl + 4) (max (max mx (m + 2)) (m + 3)) script (cOps + 2)
       n k w h r
@@ -165,7 +168,8 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
     omega
   refine ⟨b', lane', ?_, h0, h2, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
       h3a, h3h, h4a, h4h, htier', hszH', hszD',
-      ⟨mv, sl, ct, mk, mx', pk, ps, ho, cops, ch, ?_, ?_, hmvS, hslS⟩, hops1, hmon, hH0⟩
+      ⟨mv, sl, ct, mk, mx', pk, ps, ho, cops, ch, ?_, ?_, hmvS, hslS⟩, hops1, hmon, hH0,
+      h6, hopsSz⟩
   · rw [← bind_assoc, hA.mul_do, ok_bind, htail]
   · omega
   · omega
@@ -267,7 +271,10 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
           b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) ∧
       b'.sudo_5Board_9marker_on = true ∧
-      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) := by
+      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
+      (∀ h6 : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   have hpeg : FitsLen (2 * pegCount (lane.take n)) :=
     fits_le hBig (by
       have hp := pegCount_le (lane.take n)
@@ -398,7 +405,7 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       rw [List.length_take, Nat.min_eq_left hnle] at hp
       omega)
   obtain ⟨b', lane', hsuf, hAcross, hBotH, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
-      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge, hops1, hmon, hH0⟩ :=
+      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge, hops1, hmon, hH0, h6, hopsSz⟩ :=
     fform_suffix b1 red f v z x2 u y2 lane1
       (m + 1) (ctrl + 2) (max mx (m + 2)) script (cOps + 1) n k w h r
       (nocopyCharge n k moves bench v (fieldMul n k bench (fieldMul n k bench v v) z) lane false)
@@ -444,7 +451,7 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
         have h11 : 1 < b1.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
           rw [s1.opsSz]; exact h1
         rw [hops1 h11, Array.getElem?_eq_getElem h11, s1.ops1 h1,
-          Array.getElem?_eq_getElem h1], hmon, hH0⟩
+          Array.getElem?_eq_getElem h1], hmon, hH0, h6, hopsSz.trans s1.opsSz⟩
   · have hmul : Ecbs.mul b Ecbs.bottom Ecbs.across Ecbs.bottom false false false = .ok b1 := by
       rw [fform_consts.2.2.1, fform_consts.1, s1.mul_ok]
     rw [hmul, ok_bind, hsuf]

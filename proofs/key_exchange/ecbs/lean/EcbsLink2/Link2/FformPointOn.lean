@@ -115,7 +115,10 @@ theorem fform_add_on_f (b : Ecbs.Board) (red : Bool)
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
           b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) ∧
       b'.sudo_5Board_9marker_on = true ∧
-      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) :=
+      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
+      (∀ h6 : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size :=
   fform_add_point b red (fformF n k bench u v z) v z x2 u y2 lane
     m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
     h7 h7H hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH

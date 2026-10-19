@@ -308,4 +308,163 @@ theorem pow_cube_seated (b : Ecbs.Board) (up : Nat) (acc : List Nat)
       hsm hnsm hfitB hfold
     simpa [bL, markerLifted, powCubeBoard] using hcd
 
+private theorem powCube_moves (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (cubeMoves moves acc n k bench) := by
+  unfold powCubeBoard
+  rw [cube_off_moves]
+
+private theorem powCube_slides (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps slides : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size)
+    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat slides := by
+  unfold powCubeBoard
+  rw [cube_off_slides]
+  simpa [markerDownFeed, markerLifted] using hsl
+
+private theorem powCube_peak (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨up, hF⟩ false) 7)) := by
+  unfold powCubeBoard
+  rw [cube_off_peak]
+  simp [markerDownFeed, markerLifted]
+
+private theorem powCube_strict (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      Int.ofNat (raisedPeak peakS (countHeld b.sudo_5Board_4held 7)) := by
+  unfold powCubeBoard
+  rw [cube_off_strict]
+  simp [markerDownFeed, markerLifted]
+
+private theorem powCube_hole (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      Int.ofNat (raisedHole hole (topIdx (combStrip n bench acc))) := by
+  unfold powCubeBoard
+  rw [cube_off_hole]
+
+private theorem powCube_ctrl (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      Int.ofNat (ctrl + 2) := by
+  unfold powCubeBoard
+  rw [cube_off_ctrl]
+  simp only [markerDownFeed, markerLifted]
+
+private theorem powCube_mx (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      Int.ofNat (max mx 1) := by
+  unfold powCubeBoard
+  rw [cube_off_mx]
+  simp [markerDownFeed, markerLifted]
+
+private theorem powCube_mark (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_6marker = 0 := by
+  unfold powCubeBoard
+  rw [cube_off_ix]
+  simp [markerDownFeed, markerLifted]
+
+private theorem powCube_on (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_8bench_on = true := by
+  unfold powCubeBoard
+  rw [cube_off_on]
+
+private theorem powCube_to (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_8bench_to =
+      (up : Int) := by
+  unfold powCubeBoard
+  rw [cube_off_to]
+
+private theorem powCube_bench (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_5bench =
+      embed (laneFold n (n - k) (combStrip n bench acc)) := by
+  unfold powCubeBoard
+  rw [cube_off_bench]
+
+private theorem powCube_tier_n (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int)) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_1t.sudo_4Tier_1n =
+      (n : Int) := by
+  unfold powCubeBoard
+  rw [cube_off_tier]
+  simpa [markerDownFeed, markerLifted] using hn
+
+private theorem powCube_held_arr (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4held =
+      b.sudo_5Board_4held.set ⟨up, hF⟩ false := by
+  unfold powCubeBoard
+  rw [cube_off_held]
+  simp only [markerDownFeed, markerLifted]
+
+private theorem powCube_home_arr (b : Ecbs.Board) (up ctrl mx : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨up, hHome⟩ #[] := by
+  unfold powCubeBoard
+  rw [cube_off_home]
+  simp only [markerDownFeed, markerLifted]
+
+/-- A home the cube does not clear keeps its flag. -/
+private theorem powCube_held_some (b : Ecbs.Board) (up ctrl mx i : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size)
+    (v : Bool) (hne : i ≠ up) (hv : b.sudo_5Board_4held[i]? = some v) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4held[i]? =
+      some v := by
+  rw [powCube_held_arr]
+  rw [Array.getElem?_set_ne _ ⟨up, hF⟩ false hne.symm]
+  exact hv
+
+/-- A home the cube does not clear keeps its pegs. -/
+private theorem powCube_home_some (b : Ecbs.Board) (up ctrl mx i : Nat) (acc : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : up < b.sudo_5Board_4held.size) (hHome : up < b.sudo_5Board_4home.size)
+    (v : Array Int) (hne : i ≠ up) (hv : b.sudo_5Board_4home[i]? = some v) :
+    (powCubeBoard b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4home[i]? =
+      some v := by
+  rw [powCube_home_arr]
+  rw [Array.getElem?_set_ne _ ⟨up, hHome⟩ (#[] : Array Int) hne.symm]
+  exact hv
+
 end EcbsLink2.Link2

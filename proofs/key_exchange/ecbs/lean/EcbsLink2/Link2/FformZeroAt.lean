@@ -14,6 +14,105 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+private theorem flag_on_peak (b : Ecbs.Board) :
+    ({ b with sudo_5Board_9marker_on := true }).sudo_5Board_4cost.sudo_5Costs_4peak =
+      b.sudo_5Board_4cost.sudo_5Costs_4peak := rfl
+
+private theorem flag_on_strict (b : Ecbs.Board) :
+    ({ b with sudo_5Board_9marker_on := true }).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := rfl
+
+private theorem flag_on_hole (b : Ecbs.Board) :
+    ({ b with sudo_5Board_9marker_on := true }).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := rfl
+
+private theorem flag_on_mon (b : Ecbs.Board) :
+    ({ b with sudo_5Board_9marker_on := true }).sudo_5Board_9marker_on = true := rfl
+
+/-- The comb's peak, strict peak, and bench hole, as the naturals the cube writes. -/
+theorem bottomFlag_peak
+    {b : Ecbs.Board} {x y : List Nat}
+    {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) :
+    (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak
+        (raisedPeak (upPk2 a)
+          (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+        (countHeld ((seatAt a).sudo_5Board_4held.set ⟨2, seatAt_held2ix a⟩ false) 7)) := by
+  have hflag : (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_4peak =
+      (bottomOff a z).sudo_5Board_4cost.sudo_5Costs_4peak := by
+    unfold bottomFlag
+    exact flag_on_peak (bottomOff a z)
+  have hoff : (bottomOff a z).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak
+        (raisedPeak (upPk2 a)
+          (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+        (countHeld ((seatAt a).sudo_5Board_4held.set ⟨2, seatAt_held2ix a⟩ false) 7)) := by
+    unfold bottomOff
+    exact cube_off_peak (seatAt a) 2 2 z n k
+      (upMv2 a + 2 * pegCount ((upLane n k bench y).take n))
+      (raisedHole a.hole1 (topIdx (combStrip n bench y))) bench
+      (raisedPeak (upPk2 a)
+        (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+      (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+      (cOps + 2) (seatAt_ops a) (seatAt_held2ix a) (seatAt_home2ix a)
+  exact hflag.trans hoff
+
+theorem bottomFlag_strict
+    {b : Ecbs.Board} {x y : List Nat}
+    {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) :
+    (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      Int.ofNat (raisedPeak
+        (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+        (countHeld (seatAt a).sudo_5Board_4held 7)) := by
+  have hflag : (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      (bottomOff a z).sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+    unfold bottomFlag
+    exact flag_on_strict (bottomOff a z)
+  have hoff : (bottomOff a z).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      Int.ofNat (raisedPeak
+        (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+        (countHeld (seatAt a).sudo_5Board_4held 7)) := by
+    unfold bottomOff
+    exact cube_off_strict (seatAt a) 2 2 z n k
+      (upMv2 a + 2 * pegCount ((upLane n k bench y).take n))
+      (raisedHole a.hole1 (topIdx (combStrip n bench y))) bench
+      (raisedPeak (upPk2 a)
+        (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+      (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+      (cOps + 2) (seatAt_ops a) (seatAt_held2ix a) (seatAt_home2ix a)
+  exact hflag.trans hoff
+
+theorem bottomFlag_hole
+    {b : Ecbs.Board} {x y : List Nat}
+    {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) :
+    (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      Int.ofNat (raisedHole (raisedHole a.hole1 (topIdx (combStrip n bench y)))
+        (topIdx (combStrip n bench z))) := by
+  have hflag : (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      (bottomOff a z).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+    unfold bottomFlag
+    exact flag_on_hole (bottomOff a z)
+  have hoff : (bottomOff a z).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      Int.ofNat (raisedHole (raisedHole a.hole1 (topIdx (combStrip n bench y)))
+        (topIdx (combStrip n bench z))) := by
+    unfold bottomOff
+    exact cube_off_hole (seatAt a) 2 2 z n k
+      (upMv2 a + 2 * pegCount ((upLane n k bench y).take n))
+      (raisedHole a.hole1 (topIdx (combStrip n bench y))) bench
+      (raisedPeak (upPk2 a)
+        (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+      (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+      (cOps + 2) (seatAt_ops a) (seatAt_held2ix a) (seatAt_home2ix a)
+  exact hflag.trans hoff
+
+
+
 theorem frame_of_at (t : Spec.Tier) (b : Ecbs.Board)
     (baseX baseY px py : List Nat) (done : Nat)
     (hAt : FformAt t b baseX baseY px py done) :
@@ -327,10 +426,33 @@ theorem zero_cell_proj
     ∃ (bL : Ecbs.Board) (bZ : Ecbs.Board)
       (a : DownAcross bL xP yP t.n t.k t.w t.h t.r t.benchlen t.combgap
             pk moves slides hole cOps (c0 + 1) mx t.script),
-      bZ = bottomFlag a zP ∧
+      Ecbs.marker_lift b = .ok bL ∧
+      Ecbs.frobenius_point bL = .ok bZ ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (cubeMoves
+          (upMv2 a + 2 * pegCount ((upLane t.n t.k t.benchlen yP).take t.n))
+          zP t.n t.k t.benchlen) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (upSl a + 2 * pegCount ((upLane t.n t.k t.benchlen yP).take t.n)) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + 6) ∧
+      bZ.sudo_5Board_6marker = Int.ofNat 2 ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max (max (max mx 1) 2) 3) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_4peak =
+        Int.ofNat (raisedPeak
+          (raisedPeak (upPk2 a)
+            (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+          (countHeld ((seatAt a).sudo_5Board_4held.set ⟨2, seatAt_held2ix a⟩ false) 7)) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        Int.ofNat (raisedPeak
+          (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+          (countHeld (seatAt a).sudo_5Board_4held 7)) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        Int.ofNat (raisedHole (raisedHole a.hole1 (topIdx (combStrip t.n t.benchlen yP)))
+          (topIdx (combStrip t.n t.benchlen zP))) ∧
       FrameAt bZ t baseX baseY ∧
       ProjOn t bZ (fieldCube t.n t.k t.benchlen px) (fieldCube t.n t.k t.benchlen py) := by
-  obtain ⟨bL, bZ, a, _hlift, _hfrob, hbZ, hfr, _hmon, hbon, hto,
+  obtain ⟨bL, bZ, a, hlift, hfrob, hbZ, hfr, _hmon, hbon, hto,
       lane, hbench, htake, hzero, hhome0, hhome1⟩ :=
     zero_bZ_frame t b baseX baseY px py xP yP zP done hAt hsh hOk sat hs2
       hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
@@ -399,7 +521,46 @@ theorem zero_cell_proj
       have hlenT : (lane.take t.n).length = min t.n lane.length := List.length_take _ _
       rw [htake, fieldCube_length t.n t.k t.benchlen zP hnb] at hlenT
       exact hlenT.symm ▸ Nat.min_le_right t.n lane.length
-    refine ⟨bL, bZ, a, hbZ, hfr, ?_⟩
+    have hmvZ : bZ.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (cubeMoves
+          (upMv2 a + 2 * pegCount ((upLane t.n t.k t.benchlen yP).take t.n))
+          zP t.n t.k t.benchlen) :=
+      (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_5moves) hbZ).trans
+        (bottomFlag_moves a zP)
+    have hslZ : bZ.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (upSl a + 2 * pegCount ((upLane t.n t.k t.benchlen yP).take t.n)) :=
+      (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_6slides) hbZ).trans
+        (bottomFlag_slides a zP)
+    have hctrlZ : bZ.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + 6) := by
+      have h := (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_4ctrl) hbZ).trans
+        (bottomFlag_ctrl a zP)
+      have hnat : (c0 + 1) + 5 = c0 + 6 := by omega
+      simpa [hnat] using h
+    have hmarkZ : bZ.sudo_5Board_6marker = Int.ofNat 2 :=
+      (congrArg (fun brd => brd.sudo_5Board_6marker) hbZ).trans (bottomFlag_mark a zP)
+    have hmxZ : bZ.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max (max (max mx 1) 2) 3) :=
+      (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) hbZ).trans
+        (bottomFlag_mx a zP)
+    have hpkZ : bZ.sudo_5Board_4cost.sudo_5Costs_4peak =
+        Int.ofNat (raisedPeak
+          (raisedPeak (upPk2 a)
+            (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+          (countHeld ((seatAt a).sudo_5Board_4held.set ⟨2, seatAt_held2ix a⟩ false) 7)) :=
+      (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_4peak) hbZ).trans
+        (bottomFlag_peak a zP)
+    have hstZ : bZ.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        Int.ofNat (raisedPeak
+          (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+          (countHeld (seatAt a).sudo_5Board_4held 7)) :=
+      (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_11peak_strict) hbZ).trans
+        (bottomFlag_strict a zP)
+    have hholeZ : bZ.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        Int.ofNat (raisedHole (raisedHole a.hole1 (topIdx (combStrip t.n t.benchlen yP)))
+          (topIdx (combStrip t.n t.benchlen zP))) :=
+      (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) hbZ).trans
+        (bottomFlag_hole a zP)
+    refine ⟨bL, bZ, a, hlift, hfrob, hmvZ, hslZ, hctrlZ, hmarkZ, hmxZ, hpkZ, hstZ, hholeZ, hfr, ?_⟩
     refine ⟨fieldMul t.n t.k t.benchlen (fieldCube t.n t.k t.benchlen px)
         (fieldCube t.n t.k t.benchlen zP),
       fieldMul t.n t.k t.benchlen (fieldCube t.n t.k t.benchlen py)

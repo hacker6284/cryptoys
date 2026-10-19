@@ -62,4 +62,18 @@ open MegaDreifach.Link2
   unfold ontoFoldBoard peakBoard noteBench withMoves withHole
   split <;> rfl
 
+@[simp] theorem ontoFoldBoard_strict (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+  unfold ontoFoldBoard peakBoard noteBench withMoves withHole
+  split <;> rfl
+
+/-- The fold's hole is the note taken before the lane is written. -/
+theorem ontoFoldBoard_hole (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      (noteBench b (Int.ofNat (EcbsLink2.Spec.topIdx sch))
+        (Int.ofNat (mv + foldCharge n (n - k) sch))).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+  unfold ontoFoldBoard peakBoard
+  rfl
+
 end EcbsLink2.Link2

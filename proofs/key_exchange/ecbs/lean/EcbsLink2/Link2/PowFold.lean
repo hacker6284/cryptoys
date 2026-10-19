@@ -775,7 +775,7 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
       (by simpa [cube] using hpegP)
       (by simpa [htake, cube, mvP] using hfitSet)
       (by simpa [htake, cube] using hfitSl2)
-  rcases hdig with ⟨bS, hrun, hhome, hoffS, hheldS, hmarkS, hflagS, _hctrlS, hkeep⟩
+  rcases hdig with ⟨bS, hrun, hhome, hoffS, hheldS, hmarkS, hflagS, _hctrlS, hkeep, _, _⟩
   refine ⟨bS, ?_, hhome, hoffS, hheldS, hmarkS, hflagS, ?_⟩
   · rw [hlift, ok_bind, hcube, ok_bind, hcopy, ok_bind]
     exact hrun

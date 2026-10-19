@@ -193,7 +193,9 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
       bS.sudo_5Board_6marker = Int.ofNat (m + 1) ∧
       bS.sudo_5Board_9marker_on = true ∧
       bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
-      (∀ i, i ≠ up → i ≠ spare → (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?)) := by
+      (∀ i, i ≠ up → i ≠ spare → (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?)) ∧
+      (∀ i, i ≠ up → i ≠ spare → (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) ∧
+      (bS.sudo_5Board_4held[spare]?) = some false := by
   have hmul := pow_mul_live b up spare lane cube factor w h r n k moves slides peak peakS cOps
       m ctrl mx script bench hole hmk hon hto hH hD h7 hempty hbench hn hpos hnle hzero hf hfitL
       hmoves hslides hpeak hpeg hfitMv hfitSl hops hop0 hfops hm hc hx hscript hbound hfitMk hfitC
@@ -332,7 +334,7 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
   rw [hset]
   let bS := settleBoard bC up hHn hDn prod n mvC (slides + 2 * pegCount (lane.take n))
       (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))
-  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show bS.sudo_5Board_4home =
         bC.sudo_5Board_4home.set ⟨up, hHn⟩ (embed (prod.take n)) from
       settle_home_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
@@ -379,5 +381,30 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
       simp [bReady, markerSeat, bumpOp]]
     rw [settle_home_eq b up ⟨hH, hD⟩ lane n moves slides peak]
     rw [Array.getElem?_set_ne _ ⟨up, hH⟩ (embed (lane.take n)) hiu.symm]
+  · intro i hiu his
+    rw [settle_held_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    rw [Array.getElem?_set_ne _ ⟨up, hDn⟩ true hiu.symm]
+    have hlive : bC.sudo_5Board_4held = bLive.sudo_5Board_4held.set ⟨up, hDl⟩ false := by
+      simp [bC]
+    rw [hlive, Array.getElem?_set_ne _ ⟨up, hDl⟩ false hiu.symm]
+    simp only [bLive, powLiveBoard, ontoFoldBoard_held, bOff, powMulOff, withMoves, mulPrep,
+      strictBoard, mulAimed]
+    rw [Array.getElem?_set_ne _ ⟨spare, hSready⟩ false his.symm]
+    rw [show bReady.sudo_5Board_4held =
+        (settleBoard b up hH hD lane n moves slides peak).sudo_5Board_4held by
+      simp [bReady, markerSeat, bumpOp]]
+    rw [settle_held_eq b up ⟨hH, hD⟩ lane n moves slides peak]
+    rw [Array.getElem?_set_ne _ ⟨up, hD⟩ true hiu.symm]
+  · rw [settle_held_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    rw [Array.getElem?_set_ne _ ⟨up, hDn⟩ true hne]
+    have hlive : bC.sudo_5Board_4held = bLive.sudo_5Board_4held.set ⟨up, hDl⟩ false := by
+      simp [bC]
+    rw [hlive, Array.getElem?_set_ne _ ⟨up, hDl⟩ false hne]
+    simp only [bLive, powLiveBoard, ontoFoldBoard_held, bOff, powMulOff, withMoves, mulPrep,
+      strictBoard, mulAimed]
+    rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hSready)]
+    simp [Array.getElem_set]
 
 end EcbsLink2.Link2

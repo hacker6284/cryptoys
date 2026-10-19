@@ -202,7 +202,9 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
           pegCount cube + 2 * pegCount (fieldMul n k bench cube factor)) ∧
       bS.sudo_5Board_4cost.sudo_5Costs_6slides =
         Int.ofNat (slides + 2 * pegCount (lane.take n) +
-          2 * pegCount (fieldMul n k bench cube factor)) := by
+          2 * pegCount (fieldMul n k bench cube factor)) ∧
+      bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) := by
   have hmul := pow_mul_live b up spare lane cube factor w h r n k moves slides peak peakS cOps
       m ctrl mx script bench hole hmk hon hto hH hD h7 hempty hbench hn hpos hnle hzero hf hfitL
       hmoves hslides hpeak hpeg hfitMv hfitSl hops hop0 hfops hm hc hx hscript hbound hfitMk hfitC
@@ -341,7 +343,7 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
   rw [hset]
   let bS := settleBoard bC up hHn hDn prod n mvC (slides + 2 * pegCount (lane.take n))
       (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))
-  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show bS.sudo_5Board_4home =
         bC.sudo_5Board_4home.set ⟨up, hHn⟩ (embed (prod.take n)) from
       settle_home_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
@@ -419,5 +421,23 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
   · rw [settle_slides_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
         (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
     simp [hprodTake]
+  · rw [settle_ops bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    simp only [bC, bLive, powLiveBoard, ontoFoldBoard_ops, bOff, powMulOff, withMoves, mulPrep,
+      strictBoard, mulAimed, bReady, markerSeat, bumpOp]
+    have harr := settle_ops b up ⟨hH, hD⟩ lane n moves slides peak
+    apply Array.ext
+    · rw [Array.size_set, Array.size_set, harr]
+    · intro i hi hi'
+      have h? : ((settleBoard b up hH hD lane n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops.set
+          ⟨0, by rw [harr]; exact hops⟩ (Int.ofNat (cOps + 1)))[i]? =
+          (b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)))[i]? := by
+        by_cases h0 : i = 0
+        · rw [h0, Array.getElem?_set_eq, Array.getElem?_set_eq]
+        · rw [Array.getElem?_set_ne _ ⟨0, by rw [harr]; exact hops⟩ _
+              (by intro h; exact h0 h.symm),
+            Array.getElem?_set_ne _ ⟨0, hops⟩ _ (by intro h; exact h0 h.symm), harr]
+      rw [Array.getElem?_eq_getElem hi, Array.getElem?_eq_getElem hi'] at h?
+      injection h?
 
 end EcbsLink2.Link2

@@ -137,7 +137,9 @@ theorem zero_cell_at
     (cells : List Nat)
     (hpos0 : 0 < t.cells) (hi : i ≤ t.cells - 1) (hlen : cells.length = t.cells)
     (hc : cells[i]'(by omega) = 0) :
-    ∃ bZ,
+    ∃ bL bZ,
+      Ecbs.marker_lift b = .ok bL ∧
+      Ecbs.frobenius_point bL = .ok bZ ∧
       FformAt t bZ baseX baseY
         (fieldCube t.n t.k t.benchlen px) (fieldCube t.n t.k t.benchlen py) (i + 1) := by
   have hAt0 := hAt
@@ -245,6 +247,6 @@ theorem zero_cell_at
     hmon hpxC hpyC hpxCT hpyCT hbx hby hbxT hbyT hH0 hscript hfrC hpC
     moves' slides' (ctrl + 6) 2 (max (max (max mx 1) 2) 3) pk' peakS' hole'
     (c1 + 3) cMul ch hsz1 hop1' hfitC hc1' hc0' hfitM' hfitS' hmvLe' hslLe' hcLe'
-  exact ⟨bZc, hAt'⟩
+  exact ⟨bLc, bZc, hliftC, hfrobC, hAt'⟩
 
 end EcbsLink2.Link2

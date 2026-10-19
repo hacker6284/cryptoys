@@ -124,6 +124,7 @@ import EcbsLink2.Link2.RootStrip
 import EcbsLink2.Link2.CurveSideClose
 import EcbsLink2.Link2.CurveSideSeat
 import EcbsLink2.Link2.RootHit
+import EcbsLink2.Link2.WalkKeyDemo
 import EcbsLink2.Link2.WalkFformIdle
 import EcbsLink2.Link2.WalkFformNone
 import EcbsLink2.Link2.WalkRunStep

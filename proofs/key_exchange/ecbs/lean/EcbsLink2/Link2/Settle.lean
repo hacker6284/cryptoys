@@ -371,6 +371,13 @@ theorem bumpOp_ops (b : Ecbs.Board) (i cOps : Nat)
     (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops =
       b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨i, hops⟩ (Int.ofNat (cOps + 1)) := rfl
 
+/-- A bump writes one cell. The array keeps its length. -/
+theorem bumpOp_len (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  simp [bumpOp, Array.size_set]
+
 /-- A bump of slot `i` leaves every other ops slot. Slot 0 is `op_mul` and
     slot 1 is `op_cube`, so a multiply does not change the cube counter. -/
 theorem bumpOp_other (b : Ecbs.Board) (i cOps j : Nat)

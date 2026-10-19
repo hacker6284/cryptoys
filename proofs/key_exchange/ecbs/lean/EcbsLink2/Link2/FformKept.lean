@@ -170,6 +170,11 @@ def bottomFlag
     (z : List Nat) : Ecbs.Board :=
   { bottomOff a z with sudo_5Board_9marker_on := true }
 
+theorem bottomFlag_mon
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) :
+    (bottomFlag a z).sudo_5Board_9marker_on = true := rfl
+
 theorem bottomFlag_sz
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
     (z : List Nat) :

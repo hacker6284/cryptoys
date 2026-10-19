@@ -166,7 +166,7 @@ private theorem live_on
     o.hszH o.hszD rfl rfl rfl o.hopIn o.hop1 o.hcOps hleM hleS rfl hfitC1
     hfitMul hmvLe hslLe hcLe hwide h32 h46 hspan hnb o.hne o.hinv o.hopsN
 
-private theorem close_live
+theorem close_live
     (t : Spec.Tier) (b bZ : Ecbs.Board) (red : Bool)
     (baseX baseY : List Nat) (done : Nat)
     (moves slides ctrl c0 moves' slides' c1 moves0 slides0 ctrl0 c00 : Nat)
@@ -199,7 +199,8 @@ private theorem close_live
     ∃ bZ' b' x3 yUp,
       bZ' = bZ ∧
       Ecbs.fform_add bZ red = .ok (true, b') ∧
-      FformAt t b' baseX baseY x3 yUp (done + 1) := by
+      FformAt t b' baseX baseY x3 yUp (done + 1) ∧
+      x3 = o.x3 ∧ yUp = o.yUp := by
   have hm := same_nat moves moves0 _ hmv hmv0
   have hs := same_nat slides slides0 _ hsl hsl0
   have hce := same_nat ctrl ctrl0 _ hc hc0
@@ -218,7 +219,7 @@ private theorem close_live
     live_on t bZ red baseX baseY done moves slides ctrl c0 moves' slides' c1 o
       tw hpos hscript hbx hby hbxT hbyT hc1 hfitMul' hmvLe' hslLe' hcLe'
       hleM hleS hwide h32 h46 hspan hnb
-  exact ⟨bZ, b', o.x3, o.yUp, rfl, hadd, hAt'⟩
+  exact ⟨bZ, b', o.x3, o.yUp, rfl, hadd, hAt', rfl, rfl⟩
 
 /-- White or red, on homes, `yBench`, or `zBench`. The layout picks the comb
     and `red` picks the colour. -/
@@ -256,7 +257,9 @@ theorem live_any
         some (embed (fieldCube t.n t.k t.benchlen xP)) →
       bZ.sudo_5Board_4home[1]? =
         some (embed (fieldCube t.n t.k t.benchlen yP)) →
-      OnComb t bZ red baseX baseY moves' slides' (ctrl + 6) c0 c1) :
+      ∃ o : OnComb t bZ red baseX baseY moves' slides' (ctrl + 6) c0 c1,
+        o.xP = xP ∧ o.yP = yP ∧ o.zP = zP ∧
+          o.z = fieldCube t.n t.k t.benchlen zP) :
     ∃ bL bZ b' x3 yUp,
       Ecbs.marker_lift b = .ok bL ∧
       Ecbs.frobenius_point bL = .ok bZ ∧
@@ -288,10 +291,10 @@ theorem live_any
         hleM, hleS, hbon, hto, hbench, htake, hzero, hhome0, hhome1, _, _⟩ :=
       homes_layout_comb t b baseX baseY px py xP yP zP done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i h2i hd0 hd1i hd2i hoff hXP hYP hpos
-    let o := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
+    obtain ⟨o, _, _, _, _⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon hto hbench
       htake hzero hhome0 hhome1
-    obtain ⟨_, b', x3, yUp, _, hadd, hAt'⟩ :=
+    obtain ⟨_, b', x3, yUp, _, hadd, hAt', _, _⟩ :=
       close_live t b bZ red baseX baseY done moves slides ctrl c0 moves' slides'
         c1 moves0 slides0 ctrl0 c00 o tw hpos hscript hbx hby hbxT hbyT
         hmv hsl hc hopIn0 hmv0 hsl0 hc00 hop0? hc1 hfitMul hmvLe hslLe hcLe
@@ -308,10 +311,10 @@ theorem live_any
       ybench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h2i hd0 hd1i hd2i hon hto hbench
         htake hnle hzero (hfitY ys hbench) hXP hYP hpos
-    let o := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
+    obtain ⟨o, _, _, _, _⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
       htakeZ hzeroZ hhome0 hhome1
-    obtain ⟨_, b', x3, yUp, _, hadd, hAt'⟩ :=
+    obtain ⟨_, b', x3, yUp, _, hadd, hAt', _, _⟩ :=
       close_live t b bZ red baseX baseY done moves slides ctrl c0 moves' slides'
         c1 moves0 slides0 ctrl0 c00 o tw hpos hscript hbx hby hbxT hbyT
         hmv hsl hc hopIn0 hmv0 hsl0 hc00 hop0? hc1 hfitMul hmvLe hslLe hcLe
@@ -328,10 +331,10 @@ theorem live_any
       zbench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i hd0 hd1i hd2i hon hto hbench
         htake hnle hzero (hfitY ys hbench) hXP hYP hpos
-    let o := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
+    obtain ⟨o, _, _, _, _⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
       htakeZ hzeroZ hhome0 hhome1
-    obtain ⟨_, b', x3, yUp, _, hadd, hAt'⟩ :=
+    obtain ⟨_, b', x3, yUp, _, hadd, hAt', _, _⟩ :=
       close_live t b bZ red baseX baseY done moves slides ctrl c0 moves' slides'
         c1 moves0 slides0 ctrl0 c00 o tw hpos hscript hbx hby hbxT hbyT
         hmv hsl hc hopIn0 hmv0 hsl0 hc00 hop0? hc1 hfitMul hmvLe hslLe hcLe

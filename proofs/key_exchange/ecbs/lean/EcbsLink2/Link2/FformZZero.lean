@@ -342,6 +342,7 @@ structure ZOpen
   bRec : Ecbs.Board
   hopsEq : bRec.sudo_5Board_4cost.sudo_5Costs_3ops =
     b.sudo_5Board_4cost.sudo_5Costs_3ops
+  heldEq : bRec.sudo_5Board_4held = b.sudo_5Board_4held
   pack : ZSeen t bRec baseX baseY xP yP zP ys moves slides pk peakS hole c1 (ctrl + 1) mx
   hZ : bZ = bottomFlag pack.seen.a zP
 
@@ -453,6 +454,7 @@ theorem zbench_open_exists
     hop0 := hop0?
     bRec
     hopsEq := rfl
+    heldEq := rfl
     pack
     hZ
   }⟩
@@ -578,7 +580,10 @@ theorem zbench_zero_counts
       bZ.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) ∧
       moves' ≤ moves + 2 * pegCount (ys.take t.n) + cubeCharge t.n t.benchlen +
         2 * t.n + 3 * (t.benchlen - t.n) ∧
-      slides' ≤ slides + 6 * t.n := by
+      slides' ≤ slides + 6 * t.n ∧
+      bZ.sudo_5Board_4held[5]? = some false ∧
+      bZ.sudo_5Board_4held[6]? = some false ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
   let o := zbench_open t b bL bZ baseX baseY px py xP yP zP ys done hAt hsh hOk sat
     hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto hbench htake hnle hzero
     hfitY hpos hlift hfrob
@@ -649,9 +654,26 @@ theorem zbench_zero_counts
   have hleM := comb_moves_le a zP
   have hleS := comb_slides_le a
   have hpegN := peg_le ys t.n hnle
+  obtain ⟨h5, h6, hopsN⟩ := fform_open t b baseX baseY px py done hAt
+  have h5R : o.bRec.sudo_5Board_4held[5]? = some false := by
+    rw [o.heldEq]; exact h5
+  have h6R : o.bRec.sudo_5Board_4held[6]? = some false := by
+    rw [o.heldEq]; exact h6
+  have hopsR : o.bRec.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+    rw [o.hopsEq]; exact hopsN
+  have hszR : o.bRec.sudo_5Board_4held.size = 8 := by
+    rw [o.heldEq, hszD]
+  obtain ⟨h5F, h6F, hopsF⟩ :=
+    settle_comb_kept o.bRec 2 ⟨o.pack.h2H, o.pack.h2D⟩ ys t.n o.moves o.slides o.pk
+      (by decide) (by decide) a zP o.peakS o.pack.seen.hops o.pack.seen.hOn
+      hszR h5R h6R hopsR
+  have h5Z := (congrArg (fun brd => brd.sudo_5Board_4held[5]?) o.hZ).trans h5F
+  have h6Z := (congrArg (fun brd => brd.sudo_5Board_4held[6]?) o.hZ).trans h6F
+  have hopsZ5 :=
+    (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops.size) o.hZ).trans hopsF
   refine ⟨o.moves, o.slides, o.ctrl, o.mx, o.c1, o.c0, _, _, _, _, _,
       o.hmv, o.hsl, o.hc0, o.hmx, o.hop1, o.hop0, hmon, hH0, hmvZ, hslZ, hctrlZ,
-      hmarkZ, hmxZ, hpkZ, hstZ, hholeZ, ?_, hopZ, hop0Z, ?_, ?_⟩
+      hmarkZ, hmxZ, hpkZ, hstZ, hholeZ, ?_, hopZ, hop0Z, ?_, ?_, h5Z, h6Z, hopsZ5⟩
   · exact hopsZ
   · exact move_cast _ o.pack.movesS o.moves (pegCount (ys.take t.n))
       (cubeCharge t.n t.benchlen) t.n (t.benchlen - t.n) o.pack.hmovesS hleM

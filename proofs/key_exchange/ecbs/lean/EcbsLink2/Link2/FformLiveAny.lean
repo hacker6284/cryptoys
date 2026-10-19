@@ -248,7 +248,9 @@ theorem live_any
       bZ.sudo_5Board_4home[1]? =
         some (embed (fieldCube t.n t.k t.benchlen yP)) →
       OnComb t bZ red baseX baseY moves' slides' (ctrl + 6) c0 c1) :
-    ∃ bZ b' x3 yUp,
+    ∃ bL bZ b' x3 yUp,
+      Ecbs.marker_lift b = .ok bL ∧
+      Ecbs.frobenius_point bL = .ok bZ ∧
       Ecbs.fform_add bZ red = .ok (true, b') ∧
       FformAt t b' baseX baseY x3 yUp (done + 1) := by
   have hAt0 := hAt
@@ -272,7 +274,7 @@ theorem live_any
     have h2i := idx_at b.sudo_5Board_4home 2 (embed zP) hszH (by decide) h2
     have hd1i := idx_at b.sudo_5Board_4held 1 true hszD (by decide) hd1
     have hd2i := idx_at b.sudo_5Board_4held 2 true hszD (by decide) hd2
-    obtain ⟨_, bZ, moves, slides, ctrl, c0, moves', slides', lane, _, _,
+    obtain ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane, hlift, hfrob,
         hmv, hsl, hc, hopIn0, hfr, hmon, hmark, hctrl, hmv', hsl', hop0',
         hleM, hleS, hbon, hto, hbench, htake, hzero, hhome0, hhome1⟩ :=
       homes_layout_comb t b baseX baseY px py xP yP zP done hAt0 hsh hOk sat
@@ -285,13 +287,13 @@ theorem live_any
         c1 moves0 slides0 ctrl0 c00 o tw hpos hscript hbx hby hbxT hbyT
         hmv hsl hc hopIn0 hmv0 hsl0 hc00 hop0? hc1 hfitMul hmvLe hslLe hcLe
         hleM hleS hwide h32 h46 hspan hnb
-    exact ⟨bZ, b', x3, yUp, hadd, hAt'⟩
+    exact ⟨bL, bZ, b', x3, yUp, hlift, hfrob, hadd, hAt'⟩
   | yBench =>
     rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, hd1, h2, hd2⟩
     have h2i := idx_at b.sudo_5Board_4home 2 (embed zP) hszH (by decide) h2
     have hd1i := idx_at b.sudo_5Board_4held 1 false hszD (by decide) hd1
     have hd2i := idx_at b.sudo_5Board_4held 2 true hszD (by decide) hd2
-    obtain ⟨_, bZ, moves, slides, ctrl, c0, moves', slides', lane, _, _,
+    obtain ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane, hlift, hfrob,
         hmv, hsl, hc, hopIn0, hfr, hmon, hmark, hctrl, hmv', hsl', hop0',
         hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩ :=
       ybench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
@@ -305,13 +307,13 @@ theorem live_any
         c1 moves0 slides0 ctrl0 c00 o tw hpos hscript hbx hby hbxT hbyT
         hmv hsl hc hopIn0 hmv0 hsl0 hc00 hop0? hc1 hfitMul hmvLe hslLe hcLe
         hleM hleS hwide h32 h46 hspan hnb
-    exact ⟨bZ, b', x3, yUp, hadd, hAt'⟩
+    exact ⟨bL, bZ, b', x3, yUp, hlift, hfrob, hadd, hAt'⟩
   | zBench =>
     rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, h1, hd1, hd2⟩
     have h1i := idx_at b.sudo_5Board_4home 1 (embed yP) hszH (by decide) h1
     have hd1i := idx_at b.sudo_5Board_4held 1 true hszD (by decide) hd1
     have hd2i := idx_at b.sudo_5Board_4held 2 false hszD (by decide) hd2
-    obtain ⟨_, bZ, moves, slides, ctrl, c0, moves', slides', lane, _, _,
+    obtain ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane, hlift, hfrob,
         hmv, hsl, hc, hopIn0, hfr, hmon, hmark, hctrl, hmv', hsl', hop0',
         hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩ :=
       zbench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
@@ -325,6 +327,6 @@ theorem live_any
         c1 moves0 slides0 ctrl0 c00 o tw hpos hscript hbx hby hbxT hbyT
         hmv hsl hc hopIn0 hmv0 hsl0 hc00 hop0? hc1 hfitMul hmvLe hslLe hcLe
         hleM hleS hwide h32 h46 hspan hnb
-    exact ⟨bZ, b', x3, yUp, hadd, hAt'⟩
+    exact ⟨bL, bZ, b', x3, yUp, hlift, hfrob, hadd, hAt'⟩
 
 end EcbsLink2.Link2

@@ -127,6 +127,7 @@ import EcbsLink2.Link2.CurveSideSquare
 import EcbsLink2.Link2.PowZero
 import EcbsLink2.Link2.OntoFoldProj
 import EcbsLink2.Link2.PowLiveBoard
+import EcbsLink2.Link2.PowAt
 import EcbsLink2.Link2.RootHit
 import EcbsLink2.Link2.WalkKeyDemo
 import EcbsLink2.Link2.WalkFformIdle

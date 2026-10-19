@@ -634,7 +634,26 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
           (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) ∧
         (∃ hole', bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole') ∧
         (∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
-        bS.sudo_5Board_1t = b.sudo_5Board_1t := by
+        (∃ pk, bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
+        bS.sudo_5Board_1t = b.sudo_5Board_1t ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_5moves =
+          Int.ofNat (cubeMoves moves acc n k bench + pegCount factor +
+            2 * pegCount (fieldCube n k bench acc) +
+            schoolMoves (fieldCube n k bench acc) factor n n +
+            foldCharge n (n - k) (school n (fieldCube n k bench acc) factor
+              (List.replicate bench 0) false) +
+            pegCount (fieldCube n k bench acc) +
+            2 * pegCount (fieldMul n k bench (fieldCube n k bench acc) factor)) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+          Int.ofNat (slides + 2 * pegCount (fieldCube n k bench acc) +
+            2 * pegCount (fieldMul n k bench (fieldCube n k bench acc) factor)) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+        (bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]?) = some (Int.ofNat (cOp0 + 1)) ∧
+        (bS.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) = some (Int.ofNat (cOps + 1)) ∧
+        (∀ j, j ≠ 0 → j ≠ 1 →
+          (bS.sudo_5Board_4cost.sudo_5Costs_3ops[j]?) =
+            (b.sudo_5Board_4cost.sudo_5Costs_3ops[j]?)) := by
   obtain ⟨hlift, hcube⟩ := pow_cube_seated b up acc w h r n k moves hole bench peak peakS cOps cg
       ctrl mx script m hmk hoff hm hc hx hs hposS hfitLift hfitCube hops hop1 hfops hF hHome hHF
       hArr h7 hp hpeak hn0 hn hlenx hfn hmoves hbl hcg hspan h3 hfm hhole hxsT hw0 hh0 hrR hrP
@@ -826,7 +845,7 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
       (by simpa [htake, cube, mvP] using hfitSet)
       (by simpa [htake, cube] using hfitSl2)
   rcases hdig with ⟨bS, hrun, hhome, hoffS, hheldS, hmarkS, hflagS, hctrlS, hkeep, hheldK, hspS,
-      _hmvD, _hslD, _hopsD, _hpkD, hmxD, hholeD, hpsD, htierD⟩
+      hmvD, hslD, hopsD, hpkD, hmxD, hholeD, hpsD, htierD⟩
   have hctrl4 : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 4) := by
     simpa [show (ctrl + 2) + 2 = ctrl + 4 by omega] using hctrlS
   have hmx2 : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx 2) := by
@@ -837,8 +856,54 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
           Nat.max_eq_right (Nat.le_trans h1 (by decide : (1 : Nat) ≤ 2))]
       · rw [Nat.max_eq_left (by omega : 1 ≤ mx)]
     simpa [hm] using hmxD
+  have hmvS : bS.sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (cubeMoves moves acc n k bench + pegCount factor +
+        2 * pegCount (fieldCube n k bench acc) +
+        schoolMoves (fieldCube n k bench acc) factor n n +
+        foldCharge n (n - k) (school n (fieldCube n k bench acc) factor
+          (List.replicate bench 0) false) +
+        pegCount (fieldCube n k bench acc) +
+        2 * pegCount (fieldMul n k bench (fieldCube n k bench acc) factor)) := by
+    simpa [mvP, mvC, htake, cube] using hmvD
+  have hslS : bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (slides + 2 * pegCount (fieldCube n k bench acc) +
+        2 * pegCount (fieldMul n k bench (fieldCube n k bench acc) factor)) := by
+    simpa [htake, cube] using hslD
+  have hszS : bS.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hopsD, Array.size_set]
+    simp only [bP]
+    rw [place_ops_eq]
+    simp only [bC]
+    rw [powCube_ops_arr, Array.size_set]
+  have hop0S : (bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]?) =
+      some (Int.ofNat (cOp0 + 1)) := by
+    rw [hopsD]
+    rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hops0P)]
+    simp [Array.getElem_set]
+  have hop1S : (bS.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) =
+      some (Int.ofNat (cOps + 1)) := by
+    rw [hopsD]
+    rw [Array.getElem?_set_ne _ ⟨0, hops0P⟩ _ (by decide : (0 : Nat) ≠ 1)]
+    simp only [bP]
+    rw [place_ops_eq]
+    simp only [bC]
+    rw [powCube_ops_arr]
+    rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hops)]
+    simp [Array.getElem_set]
+  have hopK : ∀ j, j ≠ 0 → j ≠ 1 →
+      (bS.sudo_5Board_4cost.sudo_5Costs_3ops[j]?) =
+        (b.sudo_5Board_4cost.sudo_5Costs_3ops[j]?) := by
+    intro j hj0 hj1
+    rw [hopsD]
+    refine Eq.trans (Array.getElem?_set_ne _ ⟨0, hops0P⟩ _ (by intro h; exact hj0 h.symm)) ?_
+    simp only [bP]
+    rw [place_ops_eq]
+    simp only [bC]
+    rw [powCube_ops_arr]
+    exact Array.getElem?_set_ne _ ⟨1, hops⟩ _ (by intro h; exact hj1 h.symm)
   refine ⟨bS, ?_, hhome, hoffS, hheldS, hmarkS, hflagS, ?_, hctrl4, hmx2, hspS, ?_,
-      hholeD, hpsD, htierD.trans htierP⟩
+      hholeD, hpsD, hpkD, htierD.trans htierP, hmvS, hslS, hszS, hop0S, hop1S, hopK⟩
   · rw [hlift, ok_bind, hcube, ok_bind, hcopy, ok_bind]
     exact hrun
   · rw [hkeep src hsrcU hsrcS]

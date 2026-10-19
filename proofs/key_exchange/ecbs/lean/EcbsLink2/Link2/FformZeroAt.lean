@@ -8,6 +8,8 @@ import EcbsLink2.Link2.FformFrob
 import EcbsLink2.Link2.FformFrame
 import EcbsLink2.Link2.FformZero
 import EcbsLink2.Link2.FformCellInv
+import EcbsLink2.Link2.FformComb
+import EcbsLink2.Link2.FformSumRoom
 
 namespace EcbsLink2.Link2
 
@@ -525,5 +527,107 @@ theorem zero_bZ_lay
       moves slides c0 mark mx pk peakS hole cOps hmv hsl hc0 hmkN hmx hpk hstrict
       hhole hops hop1 hCtrl hOps hRoom hSl cells i hpos hi hlen hc hfitI
   exact ⟨bL, bZ, hlift, hfrob, hfr, hH1, hH2, hbon, hto, hlane⟩
+
+private theorem idx_of_some (a : Array Int) (i : Nat) (v : Int) (h : a[i]? = some v) :
+    i < a.size := by
+  suffices ¬ a.size ≤ i by omega
+  intro hge
+  have hn : a[i]? = none := Array.getElem?_eq_none_iff.mpr hge
+  rw [h] at hn
+  cases hn
+
+/-- The zero cell's counters, as naturals. Three cubes, and slot 0 stays. -/
+theorem zero_bZ_charge
+    (t : Spec.Tier) (b : Ecbs.Board)
+    (baseX baseY px py xP yP zP : List Nat) (done : Nat)
+    (hAt : FformAt t b baseX baseY px py done)
+    (hsh : TierShape t) (hOk : BoardOk t) (sat : TierSat t)
+    (hs2 : 2 < t.script)
+    (hxL : xP.length = t.n) (hyL : yP.length = t.n) (hzL : zP.length = t.n)
+    (hxT : allTritList xP) (hyT : allTritList yP) (hzT : allTritList zP)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (h0 : b.sudo_5Board_4home[0]'(by rw [hszH]; decide) = embed xP)
+    (h1 : b.sudo_5Board_4home[1]'(by rw [hszH]; decide) = embed yP)
+    (h2 : b.sudo_5Board_4home[2]'(by rw [hszH]; decide) = embed zP)
+    (hd0 : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = true)
+    (hd1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = true)
+    (hd2 : b.sudo_5Board_4held[2]'(by rw [hszD]; decide) = true)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (moves slides c0 mark mx pk peakS hole cOps : Nat)
+    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hc0 : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c0)
+    (hmkN : b.sudo_5Board_6marker = Int.ofNat mark)
+    (hmx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk)
+    (hstrict : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS)
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hops = (cOps : Int))
+    (cMul : Nat)
+    (hMul : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hopMul : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hMul = Int.ofNat cMul)
+    (hCtrl : FitsLen (c0 + 6)) (hOps : FitsLen (cOps + 3))
+    (hRoom : FitsLen (moves + cubeCharge t.n t.benchlen + 2 * t.n +
+        3 * (t.benchlen - t.n)))
+    (hSl : FitsLen (slides + slideCharge t.n))
+    (cells : List Nat) (i : Nat)
+    (hpos : 0 < t.cells) (hi : i ≤ t.cells - 1) (hlen : cells.length = t.cells)
+    (hc : cells[i]'(by omega) = 0)
+    (hfitI : FitsLen (i + 1)) :
+    ∃ (bL : Ecbs.Board) (bZ : Ecbs.Board) (moves' slides' pk' peakS' hole' : Nat),
+      Ecbs.marker_lift b = .ok bL ∧
+      Ecbs.frobenius_point bL = .ok bZ ∧
+      bZ.sudo_5Board_9marker_on = true ∧
+      (∀ h : 0 < bZ.sudo_5Board_4held.size, bZ.sudo_5Board_4held[0] = true) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves' ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides' ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + 6) ∧
+      bZ.sudo_5Board_6marker = Int.ofNat 2 ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        Int.ofNat (max (max (max mx 1) 2) 3) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk' ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS' ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole' ∧
+      1 < bZ.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some ((cOps + 3 : Nat) : Int) ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat cMul) ∧
+      moves' ≤ moves + cubeCharge t.n t.benchlen + 2 * t.n +
+        3 * (t.benchlen - t.n) ∧
+      slides' ≤ slides + 4 * t.n := by
+  obtain ⟨bL, bZ, a, hlift, hfrob, _hH1, _hH2, hH0, hmvZ, hslZ, hctrlZ, hmarkZ,
+      hmxZ, hpkZ, hstZ, hholeZ, hopZ, _hfr, hmon, _hbon, _hto, _hlane⟩ :=
+    zero_bZ_frame t b baseX baseY px py xP yP zP done hAt hsh hOk sat hs2
+      hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
+      moves slides c0 mark mx pk peakS hole cOps hmv hsl hc0 hmkN hmx hpk hstrict
+      hhole hops hop1 hCtrl hOps hRoom hSl cells i hpos hi hlen hc hfitI
+  obtain ⟨bL2, bZ2, hlift2, hfrob2, hop0raw⟩ :=
+    comb_ops0_board t b baseX baseY px py xP yP zP done cMul hAt hsh hOk sat hs2
+      hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
+      moves slides c0 mark mx pk peakS hole cOps hmv hsl hc0 hmkN hmx hpk hstrict
+      hhole hops hop1 hMul hopMul hCtrl hOps hRoom hSl
+  have hbL : bL2 = bL := Except.ok.inj (hlift2.symm.trans hlift)
+  have hfrobL : Ecbs.frobenius_point bL = .ok bZ2 := by
+    rw [← hbL]
+    exact hfrob2
+  have hbZ : bZ = bZ2 := Except.ok.inj (hfrob.symm.trans hfrobL)
+  have hsz1 : 1 < bZ.sudo_5Board_4cost.sudo_5Costs_3ops.size := idx_of_some _ 1 _ hopZ
+  have hop0 : bZ.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat cMul) :=
+    (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops[0]?) hbZ).trans hop0raw
+  exact ⟨bL, bZ,
+    cubeMoves (upMv2 a + 2 * pegCount ((upLane t.n t.k t.benchlen yP).take t.n))
+      zP t.n t.k t.benchlen,
+    upSl a + 2 * pegCount ((upLane t.n t.k t.benchlen yP).take t.n),
+    raisedPeak
+      (raisedPeak (upPk2 a)
+        (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+      (countHeld ((seatAt a).sudo_5Board_4held.set ⟨2, seatAt_held2ix a⟩ false) 7),
+    raisedPeak
+      (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+      (countHeld (seatAt a).sudo_5Board_4held 7),
+    raisedHole (raisedHole a.hole1 (topIdx (combStrip t.n t.benchlen yP)))
+      (topIdx (combStrip t.n t.benchlen zP)),
+    hlift, hfrob, hmon, hH0, hmvZ, hslZ, hctrlZ, hmarkZ, hmxZ, hpkZ, hstZ, hholeZ,
+    hsz1, hopZ, hop0, comb_moves_le a zP, comb_slides_le a⟩
 
 end EcbsLink2.Link2

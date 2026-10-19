@@ -358,6 +358,51 @@ theorem comb_ops0_cell
     hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsm hnsm
   exact ⟨bL, a, hlift, hflag, hops0⟩
 
+/-- Slot 0 on the board `frobenius_point` returns. The comb is not named. -/
+theorem comb_ops0_board
+    (t : Spec.Tier) (b : Ecbs.Board)
+    (baseX baseY px py xP yP zP : List Nat) (done cMul : Nat)
+    (hAt : FformAt t b baseX baseY px py done)
+    (hsh : TierShape t) (hOk : BoardOk t) (sat : TierSat t)
+    (hs2 : 2 < t.script)
+    (hxL : xP.length = t.n) (hyL : yP.length = t.n) (hzL : zP.length = t.n)
+    (hxT : allTritList xP) (hyT : allTritList yP) (hzT : allTritList zP)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (h0 : b.sudo_5Board_4home[0]'(by rw [hszH]; decide) = embed xP)
+    (h1 : b.sudo_5Board_4home[1]'(by rw [hszH]; decide) = embed yP)
+    (h2 : b.sudo_5Board_4home[2]'(by rw [hszH]; decide) = embed zP)
+    (hd0 : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = true)
+    (hd1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = true)
+    (hd2 : b.sudo_5Board_4held[2]'(by rw [hszD]; decide) = true)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (moves slides c0 mark mx pk peakS hole cOps : Nat)
+    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hc0 : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c0)
+    (hmkN : b.sudo_5Board_6marker = Int.ofNat mark)
+    (hmx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk)
+    (hstrict : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS)
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hops = (cOps : Int))
+    (hMul : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hopMul : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hMul = Int.ofNat cMul)
+    (hCtrl : FitsLen (c0 + 6)) (hOps : FitsLen (cOps + 3))
+    (hRoom : FitsLen (moves + cubeCharge t.n t.benchlen + 2 * t.n +
+        3 * (t.benchlen - t.n)))
+    (hSl : FitsLen (slides + slideCharge t.n)) :
+    ∃ (bL : Ecbs.Board) (bZ : Ecbs.Board),
+      Ecbs.marker_lift b = .ok bL ∧
+      Ecbs.frobenius_point bL = .ok bZ ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat cMul) := by
+  obtain ⟨bL, a, hlift, hflag, hops0⟩ :=
+    comb_ops0_cell t b baseX baseY px py xP yP zP done cMul hAt hsh hOk sat hs2
+      hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
+      moves slides c0 mark mx pk peakS hole cOps hmv hsl hc0 hmkN hmx hpk hstrict
+      hhole hops hop1 hMul hopMul hCtrl hOps hRoom hSl
+  exact ⟨bL, bottomFlag a zP, hlift, hflag, hops0⟩
+
 /-- The comb `comb_u2z` reads. Slot 0 is the cell's multiply counter, as a
     `Nat` cast, and home 0 is the cubed across. -/
 theorem comb_entry

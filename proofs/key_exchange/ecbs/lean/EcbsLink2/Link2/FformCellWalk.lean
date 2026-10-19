@@ -88,6 +88,25 @@ theorem walk_chord_coords (n k bench : Nat) (x2 y2 ax ay x3 y3 : List Nat) (c : 
     cases hpair
     exact ⟨g, rfl, rfl, rfl⟩
 
+/-- `specInv` is `fieldInv` on every list. The spec writes the same run,
+    `baseX − cube(px)`, that the denominator reads. -/
+theorem specInv_fieldInv (n k bench : Nat) (x : List Nat) :
+    specInv n k bench x = fieldInv n k bench x :=
+  specInv_eq n k bench x
+
+/-- A live white or red step inverts the spec run `baseX − cube(px)`.
+    `chordAdd` fails exactly when that inverse is `none`. -/
+theorem walk_run_inv (n k bench : Nat) (baseX baseY px py ax' ay' : List Nat) (c : Nat)
+    (hc : c = 1 ∨ c = 2)
+    (h : walkStep n k bench (baseX, baseY) true (px, py) c =
+      some (true, (ax', ay'))) :
+    ∃ g, specInv n k bench (fieldSub n baseX (fieldCube n k bench px)) = some g := by
+  obtain ⟨g, hfi, _, _⟩ :=
+    walk_chord_coords n k bench baseX baseY px py ax' ay' c hc h
+  refine ⟨g, ?_⟩
+  rw [specInv_fieldInv]
+  exact hfi
+
 /-- `across_on_x3`'s across home is `x₃ · Z₃` for the chord's `x₃`. -/
 theorem across_is_chord (n k bench : Nat) (x y x2 y2 z g x3 : List Nat)
     (hn : 0 < n) (hk : k < n) (hb : n ≤ bench)

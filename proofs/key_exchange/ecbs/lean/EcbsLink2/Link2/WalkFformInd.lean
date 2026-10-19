@@ -9,6 +9,7 @@
 import EcbsLink2.Link2.WalkFform
 import EcbsLink2.Link2.WalkCharge
 import EcbsLink2.Link2.WalkSeat
+import EcbsLink2.Link2.WalkRunStep
 
 namespace EcbsLink2.Link2
 
@@ -231,23 +232,19 @@ private theorem walkRun_snoc (n k bench : Nat) (base acc p p' : List Nat × List
       have hrec := ih q.2 q.1 h
       simp [walkRun, hgo, hrec]
 
-/-- The live loop from index `start`. A nonzero cell needs the inverse of the
-    run it reaches. `hframe` is the one cell: `fformStep` lands on a board
-    whose `FformAt` is the point `walkStep` just produced. -/
+/-- The live loop from index `start`, on a spec walk that returns a point.
+    `hfull` is that success. `hframe` is the one cell: `fformStep` lands on a
+    board whose `FformAt` is the point `walkStep` just produced. -/
 theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
-    (baseX baseY px py : List Nat) (live0 : Bool) (acc0 : List Nat × List Nat)
+    (baseX baseY px py pxF pyF : List Nat) (live0 : Bool) (acc0 : List Nat × List Nat)
     (start : Nat) (cells : List Nat)
     (hAt : FformAt t b baseX baseY px py start)
     (hlen : cells.length = t.cells) (hpos : 0 < t.cells)
     (hstart : start ≤ t.cells - 1)
     (hspec : walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take start) =
       some (true, (px, py)))
-    (hc2 : ∀ i (hi : i < cells.length), cells[i] ≤ 2)
-    (hready : ∀ i (hi : i < cells.length), start ≤ i → cells[i] ≠ 0 →
-      ∀ ax ay, walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take i) =
-        some (true, (ax, ay)) →
-        ∃ inv, fieldInv t.n t.k t.benchlen
-          (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen ax)) = some inv)
+    (hfull : walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 cells =
+      some (true, (pxF, pyF)))
     (hframe : ∀ i (sb : Ecbs.Board) (ax ay ax' ay' : List Nat)
       (hi0 : start ≤ i) (hi1 : i ≤ t.cells - 1),
       FformAt t sb baseX baseY ax ay i →
@@ -259,7 +256,7 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
           (if i = t.cells - 1 then .ok (SudoRt.Flow.brk (Int.ofNat i, (sb', true)))
             else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), (sb', true)))) ∧
         FformAt t sb' baseX baseY ax' ay' (i + 1)) :
-    ∃ st : Ecbs.Board × Bool, ∃ pxF pyF,
+    ∃ st : Ecbs.Board × Bool,
       FformInv t baseX baseY live0 acc0 cells t.cells st ∧
       FformAt t st.1 baseX baseY pxF pyF t.cells ∧
       walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 cells =
@@ -285,21 +282,9 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
     have hslive : slive = true := hlive
     subst hslive
     have hiLen : i < cells.length := by omega
-    have hc := hc2 i hiLen
-    have hwalk : ∃ ax' ay',
-        walkStep t.n t.k t.benchlen (baseX, baseY) true (ax, ay) (cells[i]'hiLen) =
-          some (true, (ax', ay')) := by
-      by_cases hz : cells[i]'hiLen = 0
-      · refine ⟨(pointCube t.n t.k t.benchlen (ax, ay)).1,
-          (pointCube t.n t.k t.benchlen (ax, ay)).2, ?_⟩
-        simpa [hz] using walkStep_cube t.n t.k t.benchlen (baseX, baseY) (ax, ay)
-      · have hc12 : cells[i]'hiLen = 1 ∨ cells[i]'hiLen = 2 := by omega
-        obtain ⟨inv, hinv⟩ := hready i hiLen (by omega) hz ax ay hrun
-        obtain ⟨p, hstep, _hadd⟩ :=
-          walkStep_chord t.n t.k t.benchlen (baseX, baseY) (ax, ay)
-            (cells[i]'hiLen) inv hc12 hinv
-        exact ⟨p.1, p.2, by simpa using hstep⟩
-    obtain ⟨ax', ay', hwalk⟩ := hwalk
+    obtain ⟨ax', ay', hwalk⟩ :=
+      walkRun_step_of_full t.n t.k t.benchlen (baseX, baseY) live0 acc0
+        (pxF, pyF) cells i ax ay hiLen hfull hrun
     have hiTo : i ≤ t.cells - 1 := hito
     obtain ⟨sb', hst, hAt'⟩ := hframe i sb ax ay ax' ay' hi hiTo hAtI hwalk
     have htake := take_succ_cell cells i hiLen
@@ -317,31 +302,36 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
     rw [hto] at hInv
     exact hInv
   have hcopy := hInvC
-  rcases hcopy with ⟨_hlive, pxF, pyF, hrun0, hAtF⟩
+  rcases hcopy with ⟨_hlive, pxOut, pyOut, hrun0, hAtF⟩
   have htakeAll : cells.take t.cells = cells := by
     rw [← hlen]
     exact List.take_length cells
-  refine ⟨st, pxF, pyF, hInvC, hAtF, ?_, heq⟩
-  simpa [htakeAll] using hrun0
+  have hrunOut : walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 cells =
+      some (true, (pxOut, pyOut)) := by
+    simpa [htakeAll] using hrun0
+  have heqP := Option.some.inj (hrunOut.symm.trans hfull)
+  have hpt : (pxOut, pyOut) = (pxF, pyF) := congrArg Prod.snd heqP
+  have hpx : pxOut = pxF := congrArg Prod.fst hpt
+  have hpy : pyOut = pyF := congrArg Prod.snd hpt
+  have hAtF' : FformAt t st.1 baseX baseY pxF pyF t.cells := by
+    rw [← hpx, ← hpy]
+    exact hAtF
+  exact ⟨st, hInvC, hAtF', hfull, heq⟩
 
 /-- Closing the live loop. The frame's marker is a natural and one more
     control step fits, so the suffix is `.ok ((true, true), …)`. The closing
     lift turns the marker off and leaves the homes. Those homes are `ProjOn`:
     the projective triple `walk_fform` returns before `finish`. -/
 theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
-    (baseX baseY px py : List Nat) (live0 : Bool) (acc0 : List Nat × List Nat)
+    (baseX baseY px py pxF pyF : List Nat) (live0 : Bool) (acc0 : List Nat × List Nat)
     (start : Nat) (cells : List Nat)
     (hAt : FformAt t b baseX baseY px py start)
     (hlen : cells.length = t.cells) (hpos : 0 < t.cells)
     (hstart : start ≤ t.cells - 1)
     (hspec : walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take start) =
       some (true, (px, py)))
-    (hc2 : ∀ i (hi : i < cells.length), cells[i] ≤ 2)
-    (hready : ∀ i (hi : i < cells.length), start ≤ i → cells[i] ≠ 0 →
-      ∀ ax ay, walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take i) =
-        some (true, (ax, ay)) →
-        ∃ inv, fieldInv t.n t.k t.benchlen
-          (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen ax)) = some inv)
+    (hfull : walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 cells =
+      some (true, (pxF, pyF)))
     (hframe : ∀ i (sb : Ecbs.Board) (ax ay ax' ay' : List Nat)
       (hi0 : start ≤ i) (hi1 : i ≤ t.cells - 1),
       FformAt t sb baseX baseY ax ay i →
@@ -398,9 +388,9 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
             (∀ h : 1 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[1] = embed yP) ∧
             (∀ h : 1 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[1] = true) ∧
             (∀ h : 2 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[2] = false)) := by
-  obtain ⟨st, pxF, pyF, hI, hAtF, hrun, hloop⟩ :=
-    walk_fform_from t b baseX baseY px py live0 acc0 start cells
-      hAt hlen hpos hstart hspec hc2 hready hframe
+  obtain ⟨st, hI, hAtF, hrun, hloop⟩ :=
+    walk_fform_from t b baseX baseY px py pxF pyF live0 acc0 start cells
+      hAt hlen hpos hstart hspec hfull hframe
   have hlive : st.2 = true := hI.1
   cases st with
   | mk bF slive =>

@@ -121,6 +121,7 @@ import EcbsLink2.Link2.WalkFform
 import EcbsLink2.Link2.WalkScope
 import EcbsLink2.Link2.WalkFformIdle
 import EcbsLink2.Link2.WalkFformNone
+import EcbsLink2.Link2.WalkRunStep
 import EcbsLink2.Link2.WalkFformInd
 import EcbsLink2.Link2.FformProj
 import EcbsLink2.Link2.FformChord

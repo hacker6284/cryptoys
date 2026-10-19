@@ -59,9 +59,7 @@ theorem gap_v2_on_u2z (b : Ecbs.Board) (dst gap across : Nat)
     (hne : gap ≠ across) (hne6 : across ≠ 6) (hneG6 : gap ≠ 6)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (hlen : v.length = n)
-    (hpeak7 : 7 ≤ peak)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
-    (hpeakS7 : 7 ≤ peakS)
     (hfitP : FitsLen ((moves + 2 * pegCount (lane.take n)) + pegCount v))
     (hspan : 2 * (n - 1) < bench)
     (hv : allTritList v)
@@ -79,12 +77,12 @@ theorem gap_v2_on_u2z (b : Ecbs.Board) (dst gap across : Nat)
     (hfitB : FitsLen bench)
     (hfold : FitsLen ((moves + 2 * pegCount (lane.take n)) + pegCount v +
         n * (n + 1) + 3 * (bench - n))) :
-    ∃ b' lane' hole',
+    ∃ b' lane' hole' peak' strict',
       Ecbs.mul b ((dst : Nat) : Int) ((across : Nat) : Int) ((across : Nat) : Int)
           true false false = .ok b' ∧
       lane'.take n = fieldMul n k bench v v ∧
       lane.take n = fieldMul n k bench z (fieldMul n k bench u u) ∧
-      BenchCarry b' lane' n (cRise + 4) peak hole' peakS ∧
+      BenchCarry b' lane' n (cRise + 4) peak' hole' strict' ∧
       b'.sudo_5Board_8bench_on = true ∧
       b'.sudo_5Board_8bench_to = ((dst : Nat) : Int) ∧
       b'.sudo_5Board_9marker_on = true ∧
@@ -115,17 +113,17 @@ theorem gap_v2_on_u2z (b : Ecbs.Board) (dst gap across : Nat)
         ∀ hj : j < b.sudo_5Board_4held.size,
         ∀ hj' : j < b'.sudo_5Board_4held.size,
           b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
-  obtain ⟨b', lane', hole', hok, hb, ht, carry, hon', hto', hmk', htier, hix, hctrl, hmx,
+  obtain ⟨b', lane', hole', peak', strict', hok, hb, ht, carry, hon', hto', hmk', htier, hix, hctrl, hmx,
       hhomeG, hheldG, hmv, hsl, hszD, hszH, hhome, hheld⟩ :=
     gap_v2 b dst gap across v lane m ctrl mx script cOps n k w h r moves slides hole
       peak peakS bench hG hGD hAH hAD hHeldA hArrA hmk hon hto hm hc hx hscript
       hbound hfitMk hfitC hfit2 hn hops hop0 hfops h7 hempty hbench hposL hnle hzero
       hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hbl hSpH hSpHome hSpE hne hne6 hneG6
-      hn0 hnb hlen hpeak7 hpeakS hpeakS7 hfitP hspan hv hfi hfm hhole hw0 hh0 hrR hrP
+      hn0 hnb hlen hpeakS hfitP hspan hv hfi hfm hhole hw0 hh0 hrR hrP
       hnE hkLe hgap hw hh hr hk hsm hnsm hfitB hfold
   have hc : cOps + 1 = cRise + 4 := by
     rw [hRead]
-  refine ⟨b', lane', hole', hok, ht, hpref, ?_, hon', hto', hmk', hix, hctrl, ?_, hheldG,
+  refine ⟨b', lane', hole', peak', strict', hok, ht, hpref, ?_, hon', hto', hmk', hix, hctrl, ?_, hheldG,
       hb, htier, hmx, hmv, hsl, hszD, hszH, hhome, hheld⟩
   · simpa [hc] using carry
   · intro h

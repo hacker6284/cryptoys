@@ -60,9 +60,7 @@ theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot gap : Nat)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (htake : lane.take n = v2) (hlenv : v2.length = n) (hlenz : z.length = n)
     (hvSq : v2 = fieldMul n k bench v v)
-    (hpeak7 : 7 ≤ peak)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
-    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hv2 : allTritList v2)
     (hfi : FitsLen (2 * (n - 1)))
@@ -79,7 +77,7 @@ theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot gap : Nat)
     (hfitB : FitsLen bench)
     (hfold : FitsLen ((moves + 2 * pegCount (lane.take n)) + n * (n + 1) +
         3 * (bench - n))) :
-    ∃ (b' : Ecbs.Board) (lane' : List Nat),
+    ∃ (b' : Ecbs.Board) (lane' : List Nat) (peak' strict' : Nat),
       Ecbs.mul b ((bot : Nat) : Int) ((sp : Nat) : Int) ((bot : Nat) : Int)
           false false false = .ok b' ∧
       lane'.take n = fieldMul n k bench (fieldMul n k bench v v) z ∧
@@ -120,8 +118,8 @@ theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot gap : Nat)
         ∀ hj : j < b.sudo_5Board_4held.size,
         ∀ hj' : j < b'.sudo_5Board_4held.size,
           b'.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak = (peak' : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (strict' : Int) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
         Int.ofNat (if hole < topIdx (school n v2 z (List.replicate bench 0) false) then
           topIdx (school n v2 z (List.replicate bench 0) false) else hole) ∧
@@ -130,7 +128,7 @@ theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot gap : Nat)
       FitsLen lane'.length ∧
       (∀ i, n ≤ i → ∀ hi : i < lane'.length, lane'[i]'hi = 0) ∧
       0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-  obtain ⟨b', lane', hok, hb, ht, hon', hto', hmk, hix, hctrl, hops,
+  obtain ⟨b', lane', peak', strict', hok, hb, ht, hon', hto', hmk, hix, hctrl, hops,
       hhomeG, hheldG, hhomeS, hheldS, hemptyB, _hb2, _hmk2, htier, _hctrl2, hmx,
       hmv, hsl, hszD, hszH, hhome, hheld, hpk, hst, hhole, hposL', hnle', hfitL', hzero',
       hopsSz⟩ :=
@@ -140,11 +138,11 @@ theorem gap_v2z_on_v2 (b : Ecbs.Board) (sp bot gap : Nat)
       hbound hfitMk hfitC hfit2 hn hops hop0 hfops h7 hempty hbench hposL hnle hzero
       hf hfitL hmoves hslides hpeak hpeg hfitM hfitS hbl
       hne hn0 hnb htake hlenv hlenz
-      hpeak7 hpeakS hpeakS7 hspan hv2 hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap
+      hpeakS hspan hv2 hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap
       hw hh hr hk hsm hnsm hfitB hfold
   have hc : cOps + 1 = cRise + 5 := by
     rw [hRead]
-  refine ⟨b', lane', hok, ?_, ?_, hon', hto', hix, ?_, hheldG, ?_, hheldS, hemptyB,
+  refine ⟨b', lane', peak', strict', hok, ?_, ?_, hon', hto', hix, ?_, hheldG, ?_, hheldS, hemptyB,
       hb, hmk, htier, hctrl, hmx, hmv, hsl, hszD, hszH, hhome, hheld,       hpk, hst, hhole,
       hposL', hnle', hfitL', hzero', hopsSz⟩
   · rw [ht, hvSq]

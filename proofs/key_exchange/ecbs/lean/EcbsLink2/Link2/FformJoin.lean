@@ -57,7 +57,6 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (hlenf : f.length = n) (hlenv : v.length = n)
     (hlenu : u.length = n) (hlenx : x2.length = n) (hleny : y2.length = n)
-    (hpeak7 : 7 ≤ peak) (hpeakS7 : 7 ≤ peakS)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
     (hspan : 2 * (n - 1) < bench)
     (hfT : allTritList f) (hv : allTritList v) (hu : allTritList u)
@@ -119,12 +118,12 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[4]? =
           b.sudo_5Board_4cost.sudo_5Costs_3ops[4]?) ∧
       lane'.length = bench := by
-  obtain ⟨bA, laneA, hA⟩ := fform_across_step b f v z x2 u y2 lane
+  obtain ⟨bA, laneA, peakA, strictA, hA⟩ := fform_across_step b f v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h7 h7H hvH hvA huH huA hemptyB hxH hxA hyH hyA hfH hfA hsH
       hmk hon hto hm hc hmx hscript hbound hfitM hfitC hfops hn hops hop0
       hbench hposL hnle hzero htake hfEq hf hfitL hmoves hslides hpeak hBig hSlide hbl
-      hn0 hnb hlenf hlenv hlenu hlenx hleny hpeak7 hpeakS7 hpeakS hspan
+      hn0 hnb hlenf hlenv hlenu hlenx hleny hpeakS hspan
       hfT hv hx2 hfi hhole hw0 hh0 hrR hrP hnE hkLe hgapE hw hh hr hk
       hsm hnsm hfitB
   have hnoc := nocopyCharge_le n k moves bench f v lane false hnle
@@ -154,8 +153,8 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
       (raisedHole (raisedHole hole (topIdx (nocopySchool n bench f v false)))
         (topIdx (keepSchool n bench x2 (fformBottom n k bench v z)
           (fieldMul n k bench f v) false)))
-      peak peakS bench hA h7 h7H hscript hbound hfitM hfitC hfops hn hops
-      hfEq hf hBigU hSlU hbl hn0 hnb hlenf hlenu hleny hpeak7 hpeakS7 hspan
+      peakA strictA bench hA h7 h7H hscript hbound hfitM hfitC hfops hn hops
+      hfEq hf hBigU hSlU hbl hn0 hnb hlenf hlenu hleny hspan
       hfT hu hy2 hfi hw0 hh0 hrR hrP hnE hkLe hgapE hw hh hr hk hsm hnsm hfitB
   obtain ⟨mv, sl, ct, mk, mx', pk, ps, ho, cops, ch, hopEq, hctrlEq, hmvLe, hslLe⟩ := hcharge
   have hmvS : mv ≤ moves + 16 * stepBudget n bench := by
@@ -221,7 +220,6 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (hlenv : v.length = n) (hlenu : u.length = n)
     (hlenx : x2.length = n) (hleny : y2.length = n)
-    (hpeak7 : 7 ≤ peak) (hpeakS7 : 7 ≤ peakS)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
     (hspan : 2 * (n - 1) < bench)
     (hv : allTritList v) (hfT : allTritList f) (hu : allTritList u)
@@ -324,7 +322,7 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
   have h4H : (4 : Nat) < b.sudo_5Board_4home.size := by omega
   have h5H : (5 : Nat) < b.sudo_5Board_4home.size := by omega
   have h6H : (6 : Nat) < b.sudo_5Board_4home.size := by omega
-  obtain ⟨b1, lane1, s1, hzTake⟩ := fform_new_bottom b 0 2 5 v z lane
+  obtain ⟨b1, lane1, peak1, strict1, s1, hzTake⟩ := fform_new_bottom b 0 2 5 v z lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h5H h5 h0H h0 h2H h2 hvH hvA hzH hzA
       hmk hon hto hm hc hmx hscript
@@ -332,7 +330,7 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       (fits_le hfitM6 (by omega))
       hn hops hop0 (fits_le hfops6 (by omega))
       h7 hgH hbench hposL hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitMv hfitSl
-      hbl (by decide) (by decide) (by decide) hn0 hnb hlenv hpeak7 hpeakS7 hpeakS
+      hbl (by decide) (by decide) (by decide) hn0 hnb hlenv hpeakS
       hspan hv hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgapN hw hh hr hk hsm hnsm hfitB hfold
   have hlen1 : lane1.length = bench := s1.lane_len
   have hlenf : f.length = n := by
@@ -400,9 +398,9 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
     s1.ops0 hops1
   have hto1 : b1.sudo_5Board_8bench_to = (2 : Int) := by
     simpa [ofNat_eq_natCast] using s1.to_eq
-  have hpeak1 : b1.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+  have hpeak1 : b1.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak1 := by
     rw [s1.peak_eq]
-    exact (ofNat_eq_natCast peak).symm
+    exact (ofNat_eq_natCast peak1).symm
   have hnoc := nocopyCharge_le n k moves bench v
       (fieldMul n k bench (fieldMul n k bench v v) z) lane false hnle
   have hBigS : FitsLen (nocopyCharge n k moves bench v
@@ -422,7 +420,7 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       (slides + 2 * pegCount (lane.take n))
       (raisedHole hole (topIdx (nocopySchool n bench v
         (fieldMul n k bench (fieldMul n k bench v v) z) false)))
-      peak peakS bench
+      peak1 strict1 bench
       (by rw [s1.heldSz]; exact h7) (by rw [s1.homeSz]; exact h7H)
       hvH1 hvA1 huH1 huA1 hemptyZ hxH1 hxA1 hyH1 hyA1 hfH1 hfA1 hsH1
       s1.mon s1.on hto1 s1.ix s1.ctrl s1.mx
@@ -436,7 +434,7 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       (by rw [hlen1]; exact hfitB)
       s1.moves_eq s1.slides_eq hpeak1 hBigS hSlS
       (by rw [s1.tier]; exact hbl)
-      hn0 hnb hlenf hlenv hlenu hlenx hleny hpeak7 hpeakS7 s1.strict_eq hspan
+      hn0 hnb hlenf hlenv hlenu hlenx hleny s1.strict_eq hspan
       hfT hv hu hx2 hy2 hfi s1.hole_eq
       hw0 hh0 hrR hrP hnE hkLe hgapN
       (by rw [s1.tier]; exact hw) (by rw [s1.tier]; exact hh)

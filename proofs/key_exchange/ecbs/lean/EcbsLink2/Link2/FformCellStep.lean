@@ -122,7 +122,7 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
       s.markOn s.on s.to5 s.marker s.ctrlEq s.mxEq s.scriptEq hbound
       hfitM6 hfitC6 hfops6 s.nEq hops hop0 s.benchArr s.posL s.nle s.zero s.take
       hf s.fitL s.movesEq s.slidesEq s.peakEq hBig hSlide s.benchEq s.npos s.nbench
-      s.lenV s.lenU s.lenX s.lenY s.peak7 s.peakS7 s.strictEq s.span s.triV s.triU
+      s.lenV s.lenU s.lenX s.lenY s.strictEq s.span s.triV s.triU
       s.triX s.triY s.fi s.holeEq hw0 hh0 hrR hrP hnE hkLe hgapN s.wEq s.hEq s.rEq
       s.kEq hsm hnsm hfitB
   have htake' : lane'.take n = addUp n k bench red y2 u v z := by

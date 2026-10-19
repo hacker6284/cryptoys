@@ -60,7 +60,6 @@ theorem fform_add_on_f (b : Ecbs.Board) (red : Bool)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (hlenv : v.length = n) (hlenu : u.length = n)
     (hlenx : x2.length = n) (hleny : y2.length = n)
-    (hpeak7 : 7 ≤ peak) (hpeakS7 : 7 ≤ peakS)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
     (hspan : 2 * (n - 1) < bench)
     (hv : allTritList v) (hu : allTritList u)
@@ -129,7 +128,7 @@ theorem fform_add_on_f (b : Ecbs.Board) (red : Bool)
     hmk hon hto hm hc hmx hscript hbound hfitM6 hfitC6 hfops6
     hn hops hop0 hbench hposL hnle hzero htake rfl
     hf hfitL hmoves hslides hpeak hBig hSlide hbl hn0 hnb
-    hlenv hlenu hlenx hleny hpeak7 hpeakS7 hpeakS hspan hv
+    hlenv hlenu hlenx hleny hpeakS hspan hv
     (fformF_trits n k bench u v z) hu hx2 hy2 hfi hhole
     hw0 hh0 hrR hrP hnE hkLe hgapN hw hh hr hk hsm hnsm hfitB
 

@@ -793,7 +793,19 @@ Slot 0 is `op_mul` and slot 1 is `op_cube`. `Ecbs.mul` increments slot 0. `Ecbs.
 
 `frame_of_cell` reads `FrameAt` off `CellAt` once homes 3 and 4 are the base point and the tier and the two sizes are the tier's. `live_cell_at` is the next `FformAt` on the board `fform_add_cell` returns. `cell_proj` is the `yBench` layout. Slot 1 steps by exactly 3 (`cube_slack_next`). Slot 0 steps by 12, and `mul_slack_next` leaves that inside the 13-cell room. The next move room is `FitsLen (moves' + cubeSpend + 2 * n)`. The cell spends one `cubeSpend` before the tail and at most `24 * stepBudget` in the tail, and two cube spends plus `2 * n` sit inside `8 * stepBudget`, so the sum sits inside `32 * stepBudget`. `cell_room32` is `cell_big_room` with that 32. The slide room is `slide_room32`: the comb's `4 * n` plus the tail's `16 * n` is `20 * n`, and the next `slideCharge` asks six more, which is inside `32 * n`. Control on the `AddAt` board is the incoming control plus 6, the tail adds 10, and `comb_ctrl_fit` still covers `ctrl' + 6` because 22 sits inside the comb's 46. `FformLivePack` peaked at 500224 kB. `hframe` is still a hypothesis of `walk_fform_from` and `walk_fform_close`.
 
-`zero_cell_at` now also returns `marker_lift` and `frobenius_point`, so the board `FformAt` describes is the board the emitted step lands on. `homes_zero_frame` is that cell for the homes layout and colour 0. `cell_walk_step` is the emitted `fformStep`, and `walk_zero_cubes` is the affine point. `FformZeroPack` peaked at 598828 kB after the two equations. `WalkFformStep` peaked at 490032 kB. A `yBench` or `zBench` cell is not this theorem.
+`zero_cell_at` now also returns `marker_lift` and `frobenius_point`, so the board `FformAt` describes is the board the emitted step lands on. `homes_zero_frame` is that cell for the homes layout and colour 0. `cell_walk_step` is the emitted `fformStep`, and `walk_zero_cubes` is the affine point. `FformZeroPack` peaked at 598828 kB after the two equations. `WalkFformStep` peaked at 490032 kB.
+
+`lift_frame` is homes 3 and 4 through `marker_lift`. `settle_frame` is those homes through a settle into home 1 or home 2. `lifted_across` is the across cube on an already lifted homes board. `across_base` reads homes 3 and 4 off that cube. `flag_frame` carries them through the bottom cube, so the comb board is `FrameAt`. `comb_ops0_from` is slot 0 copied from whatever board the across cube reads, settle included. `FformFrob` peaked at 609108 kB. The `yBench` zero cell still has to call these on the board `frobenius_fform_ybench` settles, and then the counters and `fform_at_pack`.
+
+The nine cells, before `hframe` is deleted:
+
+| Layout | Zero | White | Red |
+| --- | --- | --- | --- |
+| homes | `homes_zero_frame` | missing | missing |
+| yBench | `lift_frame`, `settle_frame`, `flag_frame` (not yet one lemma) | missing | missing |
+| zBench | missing | missing | missing |
+
+`ProjLay` has only those three layouts. A white cell and a red cell are the same tail with the red flag `c = 2`.
 
 `ClimbEmit` was at 1697848 kB with `bumpOp` marked locally irreducible, still too close to the line. The final rung (`red_cube_mul` through `white_of_shape`) is now `ClimbRed`. `mul_live_hole`, `cubeLive_tmax`, `pegPack_tmax`, `mulLive_tmax`, and `clear_tmax` are visible to that file. The replicate-trits fact stays private in each file, because `FieldRing.replicate_trits` already has that name. `InvertDelta` imports `ClimbRed`. Peaks, VmHWM: ClimbEmit 634272 kB, ClimbRed 1421796 kB, InvertDelta 482328 kB. All under about 1.5 GB and under 2097152 kB.
 

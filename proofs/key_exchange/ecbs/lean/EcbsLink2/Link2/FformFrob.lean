@@ -8,6 +8,8 @@ import EcbsLink2.Link2.BottomHomes
 import EcbsLink2.Link2.WalkFformInd
 import EcbsLink2.Link2.CellCube
 import EcbsLink2.Link2.BenchDown
+import EcbsLink2.Link2.FformFrame
+import EcbsLink2.Link2.FformKept
 
 namespace EcbsLink2.Link2
 
@@ -1072,5 +1074,150 @@ theorem frobenius_fform_zbench
       moves slides (c0 + 1) mx pk peakS hole cOps hmv hsl hcL hmx hpk hstrict hhole hops hop1
       (by simpa [Nat.add_assoc] using hCtrl) hOps hpeg hfitMv hfitSl hRoom hSl hfitN hfitY
   exact ⟨bL, bZ, hlift, hfrob, hmon, hbon, htoZ, hlane⟩
+
+
+
+noncomputable def lifted_across
+    (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY xP yP zP : List Nat)
+    (fr : FrameAt b t baseX baseY)
+    (hsh : TierShape t) (hOk : BoardOk t) (sat : TierSat t)
+    (hs2 : 2 < t.script)
+    (hxL : xP.length = t.n) (hyL : yP.length = t.n) (hzL : zP.length = t.n)
+    (hxT : allTritList xP) (hyT : allTritList yP) (hzT : allTritList zP)
+    (h0 : b.sudo_5Board_4home[0]'(by rw [fr.szH]; decide) = embed xP)
+    (h1 : b.sudo_5Board_4home[1]'(by rw [fr.szH]; decide) = embed yP)
+    (h2 : b.sudo_5Board_4home[2]'(by rw [fr.szH]; decide) = embed zP)
+    (hd0 : b.sudo_5Board_4held[0]'(by rw [fr.szD]; decide) = true)
+    (hd1 : b.sudo_5Board_4held[1]'(by rw [fr.szD]; decide) = true)
+    (hd2 : b.sudo_5Board_4held[2]'(by rw [fr.szD]; decide) = true)
+    (hmk : b.sudo_5Board_9marker_on = true)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hm : b.sudo_5Board_6marker < 0)
+    (moves slides ctrl mx pk peakS hole cOps cMul : Nat)
+    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hmx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk)
+    (hstrict : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS)
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hops = (cOps : Int))
+    (hMul : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hopMul : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hMul = Int.ofNat cMul)
+    (hCtrl : FitsLen (ctrl + 5)) (hOps : FitsLen (cOps + 3))
+    (hRoom : FitsLen (moves + cubeCharge t.n t.benchlen + 2 * t.n +
+        3 * (t.benchlen - t.n)))
+    (hSl : FitsLen (slides + slideCharge t.n)) :
+    DownAcross b xP yP t.n t.k t.w t.h t.r t.benchlen t.combgap pk moves slides hole
+      cOps ctrl mx t.script := by
+  have hn0 : 0 < t.n := hOk.n_pos
+  have hs1 : 1 < t.script := by have h := hsh.script_ge; omega
+  have hspan : 3 * (t.n - 1) + t.combgap < t.benchlen := sat.cube_span
+  have hsm := hsh.small
+  have hnsm := hsh.n_small
+  have hcapN := smallCap t.n t.benchlen
+  have hnFit : FitsLen t.n := geomFit t.n t.benchlen t.n hnsm hsm.2.2.2 hcapN.1
+  have hbenchFit : FitsLen t.benchlen :=
+    geomFit t.n t.benchlen t.benchlen hnsm hsm.2.2.2 hcapN.2.1
+  have h3 : FitsLen (3 * (t.n - 1)) :=
+    geomFit t.n t.benchlen (3 * (t.n - 1)) hnsm hsm.2.2.2 hcapN.2.2
+  have hMv : FitsLen (moves + cubeCharge t.n t.benchlen) :=
+    FitsLen.of_le hRoom (by omega)
+  have hfm : FitsLen (moves + 2 * t.n) := by
+    apply FitsLen.of_le hMv
+    unfold cubeCharge
+    omega
+  have hfold : FitsLen (moves + 2 * t.n + 3 * (t.benchlen - t.n)) := by
+    apply FitsLen.of_le hMv
+    unfold cubeCharge
+    omega
+  have hscript : b.sudo_5Board_1t.sudo_4Tier_6script = Int.ofNat t.script := by
+    rw [fr.tier]; rfl
+  have hn : b.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) := by
+    rw [fr.tier]; simp [embTier, ofNat_eq_natCast]
+  have hk : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat t.k := by rw [fr.tier]; rfl
+  have hw : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat t.w := by rw [fr.tier]; rfl
+  have hh : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat t.h := by rw [fr.tier]; rfl
+  have hr : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat t.r := by rw [fr.tier]; rfl
+  have hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat t.benchlen := by
+    rw [fr.tier]; rfl
+  have hcg : b.sudo_5Board_1t.sudo_4Tier_7combgap = Int.ofNat t.combgap := by
+    rw [fr.tier]; rfl
+  have h0D : 0 < b.sudo_5Board_4held.size := by rw [fr.szD]; decide
+  have h0H : 0 < b.sudo_5Board_4home.size := by rw [fr.szH]; decide
+  have h2D : 2 < b.sudo_5Board_4held.size := by rw [fr.szD]; decide
+  have h2H : 2 < b.sudo_5Board_4home.size := by rw [fr.szH]; decide
+  have hmovesC : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) :=
+    hmv.trans (ofNat_eq_natCast moves)
+  have hpeakC : b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) :=
+    hpk.trans (ofNat_eq_natCast pk)
+  have hstrictC : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) :=
+    hstrict.trans (ofNat_eq_natCast peakS)
+  let a := down_across b xP yP t.w t.h t.r t.n t.k moves slides pk peakS hole cOps
+    ctrl mx t.script fr.szH fr.szD hops hxL hyL hxT hyT hmk hoff hm hc hmx hscript hs1
+    (FitsLen.of_le hCtrl (by omega)) (FitsLen.of_le hCtrl (by omega)) hop1
+    (FitsLen.of_le hOps (by omega)) hd0 h0 hd1 h1 hn hk hw hh hr hbl hcg hmv hsl hpk
+    hstrict hhole hsh.w0 hsh.h0 hsh.rlt hsh.r0 hn0 hsh.n_eq hsh.k_le hsh.gap hspan hsm
+    hnsm
+    (by
+      unfold cubeCharge at hMv
+      simpa [Nat.add_assoc] using hMv)
+    (by simpa [slideCharge] using hSl)
+  have hdown := cube_down_eq b 0 0 xP t.w t.h t.r t.n t.k moves hole t.benchlen pk peakS
+    cOps t.combgap ctrl mx t.script hmk hoff hm hc hmx hscript
+    (by have h := hsh.script_ge; omega) (FitsLen.of_le hCtrl (by omega)) hops hop1
+    (FitsLen.of_le hOps (by omega)) h0D h0H hd0 h0 (by rw [fr.szD]; decide)
+    hstrictC hpeakC hn0 hn hxL hnFit hmovesC hbl hcg hspan h3 hfm hhole hxT
+    hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hw hh hr hk hsm hnsm
+    hbenchFit hfold
+  have hOn : a.b1On = acrossBoard b xP t.n t.k moves hole t.benchlen pk peakS cOps
+      ctrl mx hops h0D h0H :=
+    Except.ok.inj (a.hcube.symm.trans hdown)
+  have h3On : a.b1On.sudo_5Board_4home[3]'(by rw [a.hszHOn]; decide) = embed baseX := by
+    have hi : 3 < 8 := by decide
+    have hiL : 3 < b.sudo_5Board_4home.size := by rw [fr.szH]; exact hi
+    have hAc := across_home_ne b xP 3 t.n t.k moves hole t.benchlen pk peakS cOps ctrl mx
+      hops h0D h0H (by decide) hiL
+    have hhome : a.b1On.sudo_5Board_4home =
+        (acrossBoard b xP t.n t.k moves hole t.benchlen pk peakS cOps ctrl mx
+          hops h0D h0H).sudo_5Board_4home := by rw [hOn]
+    have hget := at_eq hhome (by rw [a.hszHOn]; exact hi)
+      (by rw [raw_home, Array.size_set, feed_home]; exact hiL)
+    exact hget.trans (hAc.trans (fr.home3 (by rw [fr.szH]; exact hi)))
+  have h4On : a.b1On.sudo_5Board_4home[4]'(by rw [a.hszHOn]; decide) = embed baseY := by
+    have hi : 4 < 8 := by decide
+    have hiL : 4 < b.sudo_5Board_4home.size := by rw [fr.szH]; exact hi
+    have hAc := across_home_ne b xP 4 t.n t.k moves hole t.benchlen pk peakS cOps ctrl mx
+      hops h0D h0H (by decide) hiL
+    have hhome : a.b1On.sudo_5Board_4home =
+        (acrossBoard b xP t.n t.k moves hole t.benchlen pk peakS cOps ctrl mx
+          hops h0D h0H).sudo_5Board_4home := by rw [hOn]
+    have hget := at_eq hhome (by rw [a.hszHOn]; exact hi)
+      (by rw [raw_home, Array.size_set, feed_home]; exact hiL)
+    exact hget.trans (hAc.trans (fr.home4 (by rw [fr.szH]; exact hi)))
+  have hH3On : a.b1On.sudo_5Board_4held[3]'(by rw [a.hszDOn]; decide) = true := by
+    have hi : 3 < 8 := by decide
+    have hiL : 3 < b.sudo_5Board_4held.size := by rw [fr.szD]; exact hi
+    have hAc := across_held_ne b xP 3 t.n t.k moves hole t.benchlen pk peakS cOps ctrl mx
+      hops h0D h0H (by decide) hiL
+    have hheld : a.b1On.sudo_5Board_4held =
+        (acrossBoard b xP t.n t.k moves hole t.benchlen pk peakS cOps ctrl mx
+          hops h0D h0H).sudo_5Board_4held := by rw [hOn]
+    have hget := at_eq hheld (by rw [a.hszDOn]; exact hi)
+      (by rw [raw_held, Array.size_set, feed_held]; exact hiL)
+    exact hget.trans (hAc.trans (fr.held3 (by rw [fr.szD]; exact hi)))
+  have hH4On : a.b1On.sudo_5Board_4held[4]'(by rw [a.hszDOn]; decide) = true := by
+    have hi : 4 < 8 := by decide
+    have hiL : 4 < b.sudo_5Board_4held.size := by rw [fr.szD]; exact hi
+    have hAc := across_held_ne b xP 4 t.n t.k moves hole t.benchlen pk peakS cOps ctrl mx
+      hops h0D h0H (by decide) hiL
+    have hheld : a.b1On.sudo_5Board_4held =
+        (acrossBoard b xP t.n t.k moves hole t.benchlen pk peakS cOps ctrl mx
+          hops h0D h0H).sudo_5Board_4held := by rw [hOn]
+    have hget := at_eq hheld (by rw [a.hszDOn]; exact hi)
+      (by rw [raw_held, Array.size_set, feed_held]; exact hiL)
+    exact hget.trans (hAc.trans (fr.held4 (by rw [fr.szD]; exact hi)))
+  exact a
 
 end EcbsLink2.Link2

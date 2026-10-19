@@ -79,33 +79,22 @@ private theorem seat_ops_copy
 section
 attribute [local irreducible] seatAt pointFeed
 
-/-- The comb's slot 0, once the across cube is the board `DownAcross` stores.
-    The up cube and the bottom cube each bump slot 1. The two slides copy the
-    array. -/
-theorem comb_ops0
-    (b0 b : Ecbs.Board) (cMul ctrl0 : Nat)
+/-- Slot 0 is copied from the board the across cube reads. The lift is not
+    required: a settle that copies the ops array is the same fact. -/
+theorem comb_ops0_from
+    (b : Ecbs.Board) (cMul : Nat)
     {x y : List Nat}
     {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
     (z : List Nat)
-    (h0 : 0 < b0.sudo_5Board_4cost.sudo_5Costs_3ops.size)
-    (hop : b0.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = Int.ofNat cMul)
-    (hEq : b = { b0 with
-        sudo_5Board_6marker := -1
-        sudo_5Board_4cost := { b0.sudo_5Board_4cost with
-          sudo_5Costs_4ctrl := Int.ofNat (ctrl0 + 1) } })
+    (h0b : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hb0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0b = Int.ofNat cMul)
     (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
     (hF : 0 < b.sudo_5Board_4held.size)
     (hHome : 0 < b.sudo_5Board_4home.size)
     (hOn : a.b1On = acrossBoard b x n k moves holeN bench pk peakS cOps ctrl mx
         hops hF hHome) :
     (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat cMul) := by
-  have h0b : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-    rw [hEq]; exact h0
-  have hbArr : b.sudo_5Board_4cost.sudo_5Costs_3ops =
-      b0.sudo_5Board_4cost.sudo_5Costs_3ops := by rw [hEq]
-  have hb0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0b = Int.ofNat cMul :=
-    (at0 hbArr h0b h0).trans hop
   let feed := markerDownFeed b ctrl mx
   let raw := cubeOffBoard feed 0 0 x n k moves holeN bench pk peakS cOps hops hF hHome
   have hC1 := cube_off_op0 feed 0 0 x n k moves holeN bench pk peakS cOps hops hF hHome h0b
@@ -193,6 +182,32 @@ theorem comb_ops0
     exact (at0 hEqF h0B
         (by rw [cube_off_ops, Array.size_set]; exact h0S)).trans (hC3.trans hSeat)
   exact some0 _ h0B hFlag
+
+theorem comb_ops0
+    (b0 b : Ecbs.Board) (cMul ctrl0 : Nat)
+    {x y : List Nat}
+    {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat)
+    (h0 : 0 < b0.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop : b0.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0 = Int.ofNat cMul)
+    (hEq : b = { b0 with
+        sudo_5Board_6marker := -1
+        sudo_5Board_4cost := { b0.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl0 + 1) } })
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : 0 < b.sudo_5Board_4held.size)
+    (hHome : 0 < b.sudo_5Board_4home.size)
+    (hOn : a.b1On = acrossBoard b x n k moves holeN bench pk peakS cOps ctrl mx
+        hops hF hHome) :
+    (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat cMul) := by
+  have h0b : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hEq]; exact h0
+  have hbArr : b.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b0.sudo_5Board_4cost.sudo_5Costs_3ops := by rw [hEq]
+  have hb0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'h0b = Int.ofNat cMul :=
+    (at0 hbArr h0b h0).trans hop
+  exact comb_ops0_from b cMul a z h0b hb0 hops hF hHome hOn
 
 /-- Homes layout. The lift does not write ops, the across cube is `acrossBoard`,
     and `comb_ops0` leaves slot 0 equal to the cell's incoming multiply counter. -/

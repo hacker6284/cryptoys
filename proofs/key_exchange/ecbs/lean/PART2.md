@@ -815,6 +815,17 @@ The nine cells, before `hframe` is deleted:
 
 `ClimbEmit` was at 1697848 kB with `bumpOp` marked locally irreducible, still too close to the line. The final rung (`red_cube_mul` through `white_of_shape`) is now `ClimbRed`. `mul_live_hole`, `cubeLive_tmax`, `pegPack_tmax`, `mulLive_tmax`, and `clear_tmax` are visible to that file. The replicate-trits fact stays private in each file, because `FieldRing.replicate_trits` already has that name. `InvertDelta` imports `ClimbRed`. Peaks, VmHWM: ClimbEmit 634272 kB, ClimbRed 1421796 kB, InvertDelta 482328 kB. All under about 1.5 GB and under 2097152 kB.
 
+The modulus and the inverse are paper and computer facts, not Lean theorems. `foldHigh` replaces a high peg by the rule `X^e = X^{e-n} + X^{e-(n-k)}`, so the reduction polynomial over `F_3` is `X^n - X^k - 1`. The four taps are Demo `(n, k) = (7, 5)`, Toy `(23, 15)`, Hobby `(59, 39)`, and Serious `(179, 59)`. Each `n` is prime. `invGap` is the Itoh–Tsujii climb: `rungList (n - 1)` reversed, one `invRung` per bit, then one final cube. The exponent of that climb, read from the same recurrence as `invRung`, equals `(3^n - 1) / 2 - 1` exactly on each tier (Demo 1092, and the same equality on Toy, Hobby, and Serious). In a field that element is `χ(x) · x^{-1}`, and `fieldInv` keeps it or mirrors it so the product is the white peg. Rabin's test for a prime degree — no root in `F_3`, and `X^{3^n} ≡ X` — succeeds on all four taps, so each modulus is irreducible and a nonzero residue has `fieldInv = some`. A nonzero run with `fieldInv = none` does not occur on these tiers. That is a calculation from the definitions, not a proof in this development. The kernel `decide` of Demo's seven Frobenius steps on `X` succeeds. One dense cube at Toy's degree, with reduction fuel `3 * 23`, hits the default recursion limit `512`. `set_option maxRecDepth` is not used here. Brute-force exclusion of monic factors through degree `⌊n/2⌋` counts `Σ_{d=1}^{⌊n/2⌋} 3^d = 3·(3^{⌊n/2⌋} - 1)/2` candidates:
+
+| Tier | Degree bound | Candidates |
+| --- | --- | --- |
+| Demo | 3 | 39 |
+| Toy | 11 | 265719 |
+| Hobby | 29 | 102945566047323 |
+| Serious | 89 | `3·(3^89 - 1)/2` |
+
+No field-ness hypothesis is added. `RunNonUnit` is the named open case: the affine run is nonzero and `fieldInv` is `none`.
+
 Still open: `gap_add_on_sum`, `fform_add_on_proj`, and `add_board_proj` on that same board, in their own module so the peak stays under 2097152 kB; the one-cell `FformAt` with `ProjOn`; removing `hframe` from `walk_fform_from` and `walk_fform_close`; repackaging the board `frobenius_point` leaves as the next `FformAt`, including `ProjOn` for the new point, so `hframe` can leave `walk_fform_from` and `walk_fform_close`; the opening `start_walk` board as an `FformAt`, including the room from the tier budget; the `none` run from the base board; the three-way `walk_fform`; `base_point_of` ↔ `Spec.basePoint` (lines 963 and 1527 ↔ `none`), with Demo non-vacuity; `walk_key`, `exchange`, `receive_check` (counters exact), `make_certificate`, `fold` / `fold_key`, `roll_key`, `call_in` (cost fields exact). The exported theorems discharge `TierWalk`, `BoardOk`, `TierSat`, and `TierShape` for the four shipped tiers. An empty key does not write the accumulator into the homes. The live point cites Spec, not the card helpers.
 
 The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `make_certificate`, `fold`, `roll_key`, `call_in` are not tied.

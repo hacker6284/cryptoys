@@ -123,6 +123,7 @@ import EcbsLink2.Link2.BasePointOf
 import EcbsLink2.Link2.RootStrip
 import EcbsLink2.Link2.CurveSideClose
 import EcbsLink2.Link2.CurveSideSeat
+import EcbsLink2.Link2.CurveSideSquare
 import EcbsLink2.Link2.RootHit
 import EcbsLink2.Link2.WalkKeyDemo
 import EcbsLink2.Link2.WalkFformIdle

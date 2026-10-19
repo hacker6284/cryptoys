@@ -242,7 +242,9 @@ theorem zbench_zero_cell_at
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < ys.length, ys[j] = 0)
     (hfitY : FitsLen ys.length)
     (hpos : i < t.cells) :
-    ∃ bZ,
+    ∃ bL bZ,
+      Ecbs.marker_lift b = .ok bL ∧
+      Ecbs.frobenius_point bL = .ok bZ ∧
       FformAt t bZ baseX baseY
         (fieldCube t.n t.k t.benchlen px) (fieldCube t.n t.k t.benchlen py) (i + 1) := by
   have hAt0 := hAt
@@ -390,6 +392,6 @@ theorem zbench_zero_cell_at
     hmonC hpxC hpyC hpxCT hpyCT hbx hby hbxT hbyT hH0 hscript hfr hp
     moves' slides' (ctrl + 6) 2 (max (max (max mx 1) 2) 3) pk' peakS' hole'
     (c1 + 3) c0 ch hsz1 hop1' hfitC hc1' hc0' hfitM' hfitS' hmvLe' hslLe' hcLe'
-  exact ⟨bZ, hAt'⟩
+  exact ⟨bL, bZ, hlift, hfrob, hAt'⟩
 
 end EcbsLink2.Link2

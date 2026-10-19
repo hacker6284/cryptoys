@@ -56,11 +56,9 @@ theorem add_at_of_room (b : Ecbs.Board)
     (hf : FitsLen n) (hfitL : FitsLen lane.length)
     (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
-    (hpeak7 : 7 ≤ peak)
     (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
     (hnb : n ≤ bench)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
-    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hfi : FitsLen (2 * (n - 1)))
     (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
@@ -80,7 +78,7 @@ theorem add_at_of_room (b : Ecbs.Board)
     (hMark : FitsLen (m + 8))
     (hScr : m + 8 < script) :
     ∃ (bMir bRun bUp bRise bU b3 bV bZ bS bA : Ecbs.Board) (laneA : List Nat)
-      (mA ctrlA mxA cA movesA slidesA holeA : Nat),
+      (mA ctrlA mxA cA movesA slidesA holeA peakOut strictOut : Nat),
       Ecbs.mirror b Ecbs.across = .ok bMir ∧
       Ecbs.mul bMir Ecbs.across Ecbs.base_across Ecbs.bottom true true false = .ok bRun ∧
       Ecbs.is_zero bRun Ecbs.across =
@@ -96,9 +94,9 @@ theorem add_at_of_room (b : Ecbs.Board)
       AddAt bA laneA n k bench
         (fformRise n k bench (if red then mirrorTrits y2 else y2) z y)
         (fformRun n k bench x2 z x) z x2 y2 script w h r
-        mA ctrlA mxA cA movesA slidesA holeA peak peakS := by
+        mA ctrlA mxA cA movesA slidesA holeA peakOut strictOut := by
   obtain ⟨bMir, bRun, bUp, bRise, bU, b3, bV, bZ, bS, laneS, mS, ctrlS, mxS, cOpsS,
-      movesS, slidesS, holeS, hmir, hmulR, hzero, hmirU, hmulU, hU, hUZ, hV, hVZ, hSumM,
+      movesS, slidesS, holeS, peakOut, strictOut, hmir, hmulR, hzero, hmirU, hmulU, hU, hUZ, hV, hVZ, hSumM,
       hSum⟩ :=
     sum_at_of_room b x x2 y y2 z lane red
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
@@ -106,16 +104,16 @@ theorem add_at_of_room (b : Ecbs.Board)
       hheld0 hhome0 hheld1 hhome1 hheld2 hheld3 hhome3 hheld4 hhome4 hheld5 hheld6
       hn hlen hpos htri hleny hty hleny2 hty2 hlen2 hx2 hz
       hmv hmk hon hto hm hc hmx hscript hops hop0 h7
-      hbench hposL hnle hzero htake hf hfitL hslides hpeak hpeak7 hbl hnb
-      hpeakS hpeakS7 hspan hfi hhole hw0 hh0 hrR hrP hnE hkLe hgapN
+      hbench hposL hnle hzero htake hf hfitL hslides hpeak hbl hnb
+      hpeakS hspan hfi hhole hw0 hh0 hrR hrP hnE hkLe hgapN
       hw hh hr hk hsm hnsm hfitB h24 h28 h40 hOps hMark hScr
   let u := fformRise n k bench (if red then mirrorTrits y2 else y2) z y
   let v := fformRun n k bench x2 z x
   obtain ⟨bA, laneA, movesA, hok, _hmv, hA⟩ :=
     add_on_sum bS laneS n k bench u v z x2 y2 script w h r
-      mS ctrlS mxS cOpsS movesS slidesS holeS peak peakS hSum
+      mS ctrlS mxS cOpsS movesS slidesS holeS peakOut strictOut hSum
   exact ⟨bMir, bRun, bUp, bRise, bU, b3, bV, bZ, bS, bA, laneA,
-    mS, ctrlS, mxS, cOpsS, movesA, slidesS, holeS,
+    mS, ctrlS, mxS, cOpsS, movesA, slidesS, holeS, peakOut, strictOut,
     hmir, hmulR, hzero, hmirU, hmulU, hU, hUZ, hV, hVZ, hSumM,
     by simpa [Ecbs.gap, Ecbs.bottom] using hok, by simpa [u, v] using hA⟩
 

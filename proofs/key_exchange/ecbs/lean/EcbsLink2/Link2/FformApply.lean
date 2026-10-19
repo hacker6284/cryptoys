@@ -100,8 +100,6 @@ structure SumAt (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
   span : 2 * (n - 1) < bench
   npos : 0 < n
   nbench : n ≤ bench
-  peak7 : 7 ≤ peak
-  peakS7 : 7 ≤ peakS
   fi : FitsLen (2 * (n - 1))
 
 private theorem sum_room (movesZ cap peg pu sch fold n bench : Nat)
@@ -227,11 +225,9 @@ theorem v2_on_comb (b : Ecbs.Board)
     (hf : FitsLen n) (hfitL : FitsLen lane.length)
     (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
-    (hpeak7 : 7 ≤ peak)
     (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
     (hnb : n ≤ bench)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
-    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hfi : FitsLen (2 * (n - 1)))
     (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
@@ -282,7 +278,7 @@ theorem v2_on_comb (b : Ecbs.Board)
         (fformRunSlides slides n x lane) + 16 * n))
     (hCtrlRoom : FitsLen (ctrl + 40)) :
     ∃ (bMir bRun bUp bRise bU b3 bV bZ bS : Ecbs.Board) (laneS : List Nat)
-      (mS ctrlS mxS cOpsS movesS slidesS holeS : Nat),
+      (mS ctrlS mxS cOpsS movesS slidesS holeS peakOut strictOut : Nat),
       Ecbs.mirror b Ecbs.across = .ok bMir ∧
       Ecbs.mul bMir Ecbs.across Ecbs.base_across Ecbs.bottom true true false = .ok bRun ∧
       Ecbs.is_zero bRun Ecbs.across =
@@ -297,7 +293,7 @@ theorem v2_on_comb (b : Ecbs.Board)
       SumAt bS laneS n k bench
         (fformRise n k bench (if red then mirrorTrits y2 else y2) z y)
         (fformRun n k bench x2 z x) z x2 y2 script w h r
-        mS ctrlS mxS cOpsS movesS slidesS holeS peak peakS := by
+        mS ctrlS mxS cOpsS movesS slidesS holeS peakOut strictOut := by
   let u := fformRise n k bench (if red then mirrorTrits y2 else y2) z y
   let v := fformRun n k bench x2 z x
   let cap := u2zMoveCap y y2 z (fformRunLane n k bench x x2 z) red n k bench
@@ -305,7 +301,7 @@ theorem v2_on_comb (b : Ecbs.Board)
   let scap := u2zSlideCap y (fformRunLane n k bench x x2 z) n
     (fformRunSlides slides n x lane)
   let mx3 := max (max (max mx (m + 2)) ((m + 1) + 3)) (((m + 1) + 2) + 2)
-  obtain ⟨bMir, bRun, bUp, bRise, bU, b3, lane3, hole3, moves3, slides3,
+  obtain ⟨bMir, bRun, bUp, bRise, bU, b3, lane3, hole3, peak3, strict3, moves3, slides3,
       hmir, hmulR, hzero, hmirU, hmulU, hU, hmul, htake3, hhome0, hheld0, hhome2, hheld2,
       hbench3, hon3, hto3, hmk3, hix3, hctrl3, hmv3, hsl3, hmx3,
       hszD3, hszH3, hgapF, htier3, carry3,
@@ -316,8 +312,8 @@ theorem v2_on_comb (b : Ecbs.Board)
       hheld0 hhome0 hheld1 hhome1 hheld2 hheld3 hhome3 hheld4 hhome4 hheld5 hheld6
       hn hlen hpos htri hleny hty hleny2 hty2 hlen2 hx2 hz
       hmv hmk hon hto hm hc hmx hscript hops hop0 h7
-      hbench hposL hnle hzero htake hf hfitL hslides hpeak hpeak7 hbl hnb
-      hpeakS hpeakS7 hspan hfi hhole hw0 hh0 hrR hrP hnE hkLe hgapN
+      hbench hposL hnle hzero htake hf hfitL hslides hpeak hbl hnb
+      hpeakS hspan hfi hhole hw0 hh0 hrR hrP hnE hkLe hgapN
       hw hh hr hk hsm hnsm hfitB hBig hSlide hCtrl hOps hMark hScr
       hfitR hpegRR hfitMsR hfitSsR hfitMR hfitSR hfmR hfoldR
       hSquare hRiseSlide hNext hSlideZ
@@ -348,13 +344,13 @@ theorem v2_on_comb (b : Ecbs.Board)
   have h6H3 : 6 < b3.sudo_5Board_4home.size := by rw [hszH3]; exact h6H
   have hto5 : b3.sudo_5Board_8bench_to = (5 : Int) := by
     simpa [Ecbs.gap] using hto3
-  have hpk : b3.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+  have hpk : b3.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak3 := by
     simpa [ofNat_eq_natCast] using carry3.peakEq
-  obtain ⟨bV, laneV, holeV, hok, htV, _hpref, carryV, honV, htoV, hmkV, hixV, hctrlV,
+  obtain ⟨bV, laneV, holeV, peakV, strictV, hok, htV, _hpref, carryV, honV, htoV, hmkV, hixV, hctrlV,
       hhomeG, hheldG, hbV, htierV, hmxV, hmvV, hslV, hszDV, hszHV, hkeepH, hkeepD⟩ :=
     gap_v2_on_u2z b3 6 5 0 v lane3 u z
       (m + 4) (ctrl + 8) mx3 script (cOps + 4) (cOps + 1) n k w h r moves3 slides3
-      hole3 peak peakS bench
+      hole3 peak3 strict3 bench
       (by omega) h5H3 h5D3 h0H3 h0D3 (hheld0 h0D3) (by simpa [v] using hhome0 h0H3)
       hmk3 hon3 hto5 hix3 hctrl3 (by simpa [mx3] using hmx3)
       (by rw [htier3]; exact hscript)
@@ -373,7 +369,7 @@ theorem v2_on_comb (b : Ecbs.Board)
       (by rw [htier3]; exact hbl)
       carry3.spareSz h6H3 carry3.spare
       (by decide) (by decide) (by decide)
-      hpos hnb hvlen carry3.peak7 carry3.strictEq hpeakS7
+      hpos hnb hvlen carry3.strictEq
       (fits_le hfold (under_two ((moves3 + 2 * pegCount (lane3.take n)) + pegCount v)
         (n * (n + 1)) (3 * (bench - n))))
       hspan hvT hfi
@@ -434,15 +430,15 @@ theorem v2_on_comb (b : Ecbs.Board)
     simpa [movesV] using hmvV
   have hslCast : bV.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slidesV := by
     simpa [slidesV] using hslV
-  have hpkV : bV.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+  have hpkV : bV.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakV := by
     simpa [ofNat_eq_natCast] using carryV.peakEq
-  obtain ⟨bZ, laneZ, hokZ, htZ, hopsZ, honZ, htoZ, hixZ, hhomeGZ, hheldGZ,
+  obtain ⟨bZ, laneZ, peakZ, strictZ, hokZ, htZ, hopsZ, honZ, htoZ, hixZ, hhomeGZ, hheldGZ,
       hhomeSZ, hheldSZ, hemptyZ, hbZ, hmkZ, htierZ, hctrlZ, hmxZ, hmvZ, hslZ,
       hszDZ, hszHZ, hkeepHZ, hkeepDZ, hpkZ, hstZ, hholeZ,
       hposZ, hnleZ, hfitLZ, hzeroZ, hopsSzZ⟩ :=
     gap_v2z_on_v2 bV 6 2 5 v v2 z laneV gHome u
       ((m + 4) + 1) ((ctrl + 8) + 2) (max mx3 ((m + 4) + 2)) script
-      ((cOps + 1) + 4) (cOps + 1) n k w h r movesV slidesV holeV peak peakS bench
+      ((cOps + 1) + 4) (cOps + 1) n k w h r movesV slidesV holeV peakV strictV bench
       rfl h6HV h6DV h2HV h2DV
       ((hkeepD 2 (by decide) (by decide) h2D3 h2DV).trans (hheld2 h2D3))
       ((hkeepH 2 (by decide) (by decide) h2H3 h2HV).trans (hhome2 h2H3))
@@ -467,7 +463,7 @@ theorem v2_on_comb (b : Ecbs.Board)
             hslLe hpeg3 hpegV))
       (by rw [htierV, htier3]; exact hbl)
       (by decide) hpos hnb htakeV hlenv2 hlenZ (by simpa [v2] using htV)
-      carryV.peak7 carryV.strictEq hpeakS7 hspan hv2T hfi
+      carryV.strictEq hspan hv2T hfi
       (fits_le hfoldZ (under_one
         ((movesV + 2 * pegCount (laneV.take n)) + n * (n + 1))
         (3 * (bench - n))))
@@ -517,7 +513,7 @@ theorem v2_on_comb (b : Ecbs.Board)
     simpa [movesZ] using hmvZ
   have hslZS : bZ.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slidesZ := by
     simpa [slidesZ] using hslZ
-  have hpkZS : bZ.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
+  have hpkZS : bZ.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peakZ := by
     simpa [ofNat_eq_natCast] using hpkZ
   have htakeZS : laneZ.take n = fieldMul n k bench v2 z := by
     simpa [v2] using htZ
@@ -527,13 +523,13 @@ theorem v2_on_comb (b : Ecbs.Board)
   have h6DZ : 6 < bZ.sudo_5Board_4held.size := by rw [hszDZ]; exact h6DV
   have h2HZ : 2 < bZ.sudo_5Board_4home.size := by rw [hszHZ]; exact h2HV
   have h2DZ : 2 < bZ.sudo_5Board_4held.size := by rw [hszDZ]; exact h2DV
-  obtain ⟨bS, laneS, hokS, hbS, htS, hopsS, honS, htoS, hmkS, hixS, hbotS, hheldBS,
+  obtain ⟨bS, laneS, peakOut, strictOut, hokS, hbS, htS, hopsS, honS, htoS, hmkS, hixS, hbotS, hheldBS,
       hgapES, hspES, hctrlS, hmxS, htierS, hmvS, hslS, hszDS, hszHS, hkeepS, hkeepDS,
       hposS, hnleS, hfitLS, hzeroS, hpkS, hstS, hopsSzS, ⟨holeS, hholeOutS⟩⟩ :=
     gap_sum_on_v2z bZ 5 0 6 2 u v v2 gHome z laneZ
       (((m + 4) + 1) + 1) (((ctrl + 8) + 2) + 2)
       (max (max mx3 ((m + 4) + 2)) (((m + 4) + 1) + 2))
-      script ((cOps + 1) + 5) (cOps + 1) n k w h r movesZ slidesZ holeZ peak peakS bench
+      script ((cOps + 1) + 5) (cOps + 1) n k w h r movesZ slidesZ holeZ peakZ strictZ bench
       rfl h5HZ h5DZ (hheldGZ h5DZ) (by simpa [gHome] using hhomeGZ h5HZ)
       h0HZ h0DZ hheld0Z hhome0Z
       h6HZ h6DZ (hheldSZ h6DZ) (by simpa [v2] using hhomeSZ h6HZ)
@@ -561,7 +557,7 @@ theorem v2_on_comb (b : Ecbs.Board)
       (by rw [htierZ, htierV, htier3]; exact hbl)
       (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)
       hpos hnb hlenG hvlen hlenv2 rfl rfl
-      carryV.peak7 hstZ hpeakS7 hspan hu2zT hvT hfi
+      hstZ hspan hu2zT hvT hfi
       (fits_le hfoldS (under_two ((movesZ + 2 * pegCount (laneZ.take n)) + 2 * n)
         (n * (n + 1)) (3 * (bench - n))))
       (fits_le hSRoom (by
@@ -655,7 +651,7 @@ theorem v2_on_comb (b : Ecbs.Board)
     foldCharge n (n - k) (school n v v2 (pref gHome bench n) false)
   let slidesS := (slidesZ + 2 * pegCount (laneZ.take n)) + 2 * pegCount gHome
   exact ⟨bMir, bRun, bUp, bRise, bU, b3, bV, bZ, bS, laneS,
-    mS, cS, mxS, cOpsS, movesS, slidesS, holeS,
+    mS, cS, mxS, cOpsS, movesS, slidesS, holeS, peakOut, strictOut,
     hmir, hmulR, hzero, hmirU, hmulU, hU, hmul,
     by simpa [Ecbs.spare, Ecbs.across] using hok,
     by simpa [Ecbs.bottom, Ecbs.spare] using hokZ,
@@ -726,8 +722,6 @@ theorem v2_on_comb (b : Ecbs.Board)
     span := hspan
     npos := hpos
     nbench := hnb
-    peak7 := carryV.peak7
-    peakS7 := hpeakS7
     fi := hfi
   }⟩
 

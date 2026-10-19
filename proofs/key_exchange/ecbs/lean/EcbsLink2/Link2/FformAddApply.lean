@@ -88,8 +88,6 @@ structure AddAt (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
   span : 2 * (n - 1) < bench
   npos : 0 < n
   nbench : n ≤ bench
-  peak7 : 7 ≤ peak
-  peakS7 : 7 ≤ peakS
   fi : FitsLen (2 * (n - 1))
 
 /-- `gap_add_on_sum`, read off `SumAt`. The bench prefix becomes `fformF`. -/
@@ -176,8 +174,6 @@ theorem add_on_sum (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
     span := s.span
     npos := s.npos
     nbench := s.nbench
-    peak7 := s.peak7
-    peakS7 := s.peakS7
     fi := s.fi
   }
 

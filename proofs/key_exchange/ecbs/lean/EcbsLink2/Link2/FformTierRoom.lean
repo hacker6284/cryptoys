@@ -130,4 +130,10 @@ theorem bench_fit (t : Spec.Tier)
   · exact FitsLen.of_le hobby_bench_fit hn
   · exact FitsLen.of_le serious_bench_fit hn
 
+/-- The lane of a shipped tier's bench fits in an i64. -/
+theorem lane_fit (t : Spec.Tier)
+    (h : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
+    {ys : List Nat} (hlen : ys.length ≤ t.benchlen) : FitsLen ys.length :=
+  bench_fit t h ys.length hlen
+
 end EcbsLink2.Link2

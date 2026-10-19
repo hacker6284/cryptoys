@@ -267,7 +267,7 @@ theorem homes_layout_comb
   have hZZ : bZ = bZ3 := Except.ok.inj (hfrob.symm.trans hf3)
   have hop0Z :=
     (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops[0]?) hZZ).trans hop0
-  rcases hlane with ⟨lane, hbench, htake, hzero, hhome0, hhome1⟩
+  rcases hlane with ⟨lane, hbench, htake, hzero, hhome0, hhome1, _hcap⟩
   obtain ⟨_, _, _, _, hpxA, hpyA, _, _, hbxT, hbyT, _⟩ := hAt0
   exact ⟨bL, bZ, moves, slides, ctrl, c0,
     cubeMoves (upMv2 a + 2 * pegCount ((upLane t.n t.k t.benchlen yP).take t.n))
@@ -299,7 +299,8 @@ theorem ybench_layout_comb
     (htake : ys.take t.n = yP)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < ys.length, ys[j] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hXP : xP = fieldMul t.n t.k t.benchlen px zP)
     (hYP : yP = fieldMul t.n t.k t.benchlen py zP)
     (hpos : done < t.cells) :
@@ -360,19 +361,19 @@ theorem ybench_layout_comb
       (slot1_nat _ c10 hops hop1?)
       hfitCtrl hOps hpeg hfitMvS hfitSlS hRoom hSl
       (geomFit t.n t.benchlen t.n hsh.n_small hsh.small.2.2.2 (smallCap t.n t.benchlen).1)
-      hfitY
+      hcap hship
   have hfr := ybench_zero_frame t b bL bZ baseX baseY px py xP yP zP ys done hAt0
     hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h2 hd0 hd1 hd2 hon hto hbench
-    htake hnle hzero hfitY hpos hlift hfrob
+    htake hnle hzero hcap hship hpos hlift hfrob
   obtain ⟨moves, slides, ctrl, _, _, c0, moves', slides', _, _, _,
       hmv, hsl, hc0, _, _, hop0in, _, _, hmv', hsl', hctrl', hmark', _,
       _, _, _, _, _, hop0', hleM, hleS, _, _, _⟩ :=
     ybench_zero_counts t b bL bZ baseX baseY px py xP yP zP ys done hAt0
       hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h2 hd0 hd1 hd2 hon hto
-      hbench htake hnle hzero hfitY hpos hlift hfrob
+      hbench htake hnle hzero hcap hship hpos hlift hfrob
   have hleM' := peg_bound moves' moves (pegCount (ys.take t.n))
     (cubeCharge t.n t.benchlen) t.n (t.benchlen - t.n) hpegN hleM
-  rcases hlane with ⟨lane, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩
+  rcases hlane with ⟨lane, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1, _hcap⟩
   obtain ⟨_, _, _, _, hpxA, hpyA, _, _, hbxT, hbyT, _⟩ := hAt0
   exact ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane,
     hlift, hfrob, hmv, hsl, hc0, hop0in, hfr, hmon, hmark', hctrl', hmv', hsl',
@@ -401,7 +402,8 @@ theorem zbench_layout_comb
     (htake : ys.take t.n = zP)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < ys.length, ys[j] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hXP : xP = fieldMul t.n t.k t.benchlen px zP)
     (hYP : yP = fieldMul t.n t.k t.benchlen py zP)
     (hpos : done < t.cells) :
@@ -462,19 +464,19 @@ theorem zbench_layout_comb
       (slot1_nat _ c10 hops hop1?)
       hfitCtrl hOps hpeg hfitMvS hfitSlS hRoom hSl
       (geomFit t.n t.benchlen t.n hsh.n_small hsh.small.2.2.2 (smallCap t.n t.benchlen).1)
-      hfitY
+      hcap hship
   have hfr := zbench_zero_frame t b bL bZ baseX baseY px py xP yP zP ys done hAt0
     hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto hbench
-    htake hnle hzero hfitY hpos hlift hfrob
+    htake hnle hzero hcap hship hpos hlift hfrob
   obtain ⟨moves, slides, ctrl, _, _, c0, moves', slides', _, _, _,
       hmv, hsl, hc0, _, _, hop0in, _, _, hmv', hsl', hctrl', hmark', _,
       _, _, _, _, _, hop0', hleM, hleS, _, _, _⟩ :=
     zbench_zero_counts t b bL bZ baseX baseY px py xP yP zP ys done hAt0
       hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto
-      hbench htake hnle hzero hfitY hpos hlift hfrob
+      hbench htake hnle hzero hcap hship hpos hlift hfrob
   have hleM' := peg_bound moves' moves (pegCount (ys.take t.n))
     (cubeCharge t.n t.benchlen) t.n (t.benchlen - t.n) hpegN hleM
-  rcases hlane with ⟨lane, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩
+  rcases hlane with ⟨lane, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1, _hcap⟩
   obtain ⟨_, _, _, _, hpxA, hpyA, _, _, hbxT, hbyT, _⟩ := hAt0
   exact ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane,
     hlift, hfrob, hmv, hsl, hc0, hop0in, hfr, hmon, hmark', hctrl', hmv', hsl',

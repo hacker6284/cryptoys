@@ -65,7 +65,8 @@ theorem zero_cell_flow
         lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
         (∀ j, t.n ≤ j → ∀ hj : j < lane.length, lane[j] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+        lane.length ≤ t.benchlen := by
   obtain ⟨bL, bZ, hlift, hfrob, hmon, hbon, hto, hlane⟩ :=
     frobenius_fform_homes t b baseX baseY px py xP yP zP done hAt hsh hOk sat hs2
       hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff

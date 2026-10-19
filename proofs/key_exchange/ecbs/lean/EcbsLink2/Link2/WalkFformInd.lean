@@ -48,7 +48,8 @@ def ProjOn (t : Spec.Tier) (b : Ecbs.Board) (px py : List Nat) : Prop :=
           b.sudo_5Board_8bench_to = (1 : Int) ∧
           (∃ lane, b.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
             lane.take t.n = yP ∧
-            ∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+            (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+            lane.length ≤ t.benchlen) ∧
           (∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = false) ∧
           (∀ h : 2 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[2] = embed zP) ∧
           (∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = true)
@@ -57,7 +58,8 @@ def ProjOn (t : Spec.Tier) (b : Ecbs.Board) (px py : List Nat) : Prop :=
           b.sudo_5Board_8bench_to = (2 : Int) ∧
           (∃ lane, b.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
             lane.take t.n = zP ∧
-            ∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+            (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+            lane.length ≤ t.benchlen) ∧
           (∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = embed yP) ∧
           (∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = true) ∧
           (∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = false)) ∧

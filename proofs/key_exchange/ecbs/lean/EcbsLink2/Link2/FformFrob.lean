@@ -10,11 +10,18 @@ import EcbsLink2.Link2.CellCube
 import EcbsLink2.Link2.BenchDown
 import EcbsLink2.Link2.FformFrame
 import EcbsLink2.Link2.FformKept
+import EcbsLink2.Link2.FformTierRoom
 
 namespace EcbsLink2.Link2
 
 open MegaDreifach.Link2
 open EcbsLink2.Spec
+
+/-- The comb's bench is `t.benchlen` long. The strip has that length, and the fold keeps it. -/
+private theorem comb_lane_length (n k bench : Nat) (xs : List Nat) (hnb : n ≤ bench) :
+    (laneFold n (n - k) (combStrip n bench xs)).length = bench := by
+  rw [laneFold_length n (n - k) (combStrip n bench xs)
+      (by rw [combStrip_length]; exact hnb), combStrip_length]
 
 /-- Two proofs that an index is in range read the same cell. -/
 private theorem elem_cast {α : Type} (a : Array α) (i : Nat)
@@ -254,7 +261,8 @@ theorem frobenius_fform_homes
         lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
         (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+        lane.length ≤ t.benchlen := by
   obtain ⟨bL, a, hlift, hhome?, hheld?⟩ :=
     fform_homes_across t b baseX baseY px py xP yP zP done hAt hsh hOk sat
       hxL hyL hxT hyT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff moves slides c0 mark mx
@@ -310,7 +318,8 @@ theorem frobenius_fform_homes
       (FitsLen.of_le hCtrl (by omega)) hOps hspan h3 hnFit hbenchFit hpeg hfitMv hfitSl
       hfm hfold hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsm hnsm
   exact ⟨bL, bZ, hlift, hfrob, hmon, hbon, hto,
-    ⟨laneFold t.n (t.n - t.k) (combStrip t.n t.benchlen zP), hlane, htake, hzero, hxH, hyH⟩⟩
+    ⟨laneFold t.n (t.n - t.k) (combStrip t.n t.benchlen zP), hlane, htake, hzero, hxH, hyH,
+      Nat.le_of_eq (comb_lane_length t.n t.k t.benchlen zP hnb)⟩⟩
 
 /-- Homes layout, marker already lifted, bench off. `frobenius_point` leaves
     `fieldCube Z` on the bench, aimed at home 2. -/
@@ -354,7 +363,8 @@ theorem frobenius_on_lifted
         lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
         (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+        lane.length ≤ t.benchlen := by
   have hn0 : 0 < t.n := hOk.n_pos
   have hs1 : 1 < t.script := by have h := hsh.script_ge; omega
   have hspan : 3 * (t.n - 1) + t.combgap < t.benchlen := sat.cube_span
@@ -463,7 +473,8 @@ theorem frobenius_on_lifted
       hCtrl hOps hspan h3 hnFit hbenchFit hpeg hfitMv hfitSlP hfmP hfoldP
       hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsm hnsm
   exact ⟨bZ, hfrob, hmon, hbon, hto,
-    ⟨laneFold t.n (t.n - t.k) (combStrip t.n t.benchlen zP), hlane, htake, hzero, hxH, hyH⟩⟩
+    ⟨laneFold t.n (t.n - t.k) (combStrip t.n t.benchlen zP), hlane, htake, hzero, hxH, hyH,
+      Nat.le_of_eq (comb_lane_length t.n t.k t.benchlen zP hnb)⟩⟩
 
 /-- Marker lifted, bench on and aimed at `home`, which is not across.
     `frobenius_point` slides that bench first, so it is `frobenius_point` of the
@@ -574,7 +585,8 @@ theorem frobenius_ybench_lifted
     (hRoom : FitsLen (moves + 2 * pegCount (ys.take t.n) + cubeCharge t.n t.benchlen +
         2 * t.n + 3 * (t.benchlen - t.n)))
     (hSl : FitsLen (slides + 2 * pegCount (ys.take t.n) + slideCharge t.n))
-    (hfitN : FitsLen t.n) (hfitY : FitsLen ys.length) :
+    (hfitN : FitsLen t.n) (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
     ∃ bZ,
       Ecbs.frobenius_point b = .ok bZ ∧
       bZ.sudo_5Board_9marker_on = true ∧
@@ -585,7 +597,8 @@ theorem frobenius_ybench_lifted
         lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
         (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+        lane.length ≤ t.benchlen := by
   have hn0 : 0 < t.n := hOk.n_pos
   have hspan : 3 * (t.n - 1) + t.combgap < t.benchlen := sat.cube_span
   have hsm := hsh.small
@@ -632,7 +645,7 @@ theorem frobenius_ybench_lifted
     moves slides hole t.benchlen pk peakS cOps t.combgap ctrl mx t.script
     hmk hon hm hc hmx hscript (by have h := hsh.script_ge; omega) (FitsLen.of_le hCtrl (by omega))
     hops hop1 (FitsLen.of_le hOps (by omega)) (by decide) h0D h0H hd0 h0 h1D h1H h7 hto hd1
-    hbench hstrict hpk hn0 hn hxL hposY hnle hzero hfitN hfitY hmv hsl hpeg hfitMv hfitSl
+    hbench hstrict hpk hn0 hn hxL hposY hnle hzero hfitN (lane_fit t hship hcap) hmv hsl hpeg hfitMv hfitSl
     hbl hcg hspan h3 hfm hhole hxT hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap
     hw hh hr hk hsm hnsm hbenchFit hfold
   have hszHS : bS.sudo_5Board_4home.size = 8 := by
@@ -774,7 +787,8 @@ theorem frobenius_zbench_lifted
     (hRoom : FitsLen (moves + 2 * pegCount (ys.take t.n) + cubeCharge t.n t.benchlen +
         2 * t.n + 3 * (t.benchlen - t.n)))
     (hSl : FitsLen (slides + 2 * pegCount (ys.take t.n) + slideCharge t.n))
-    (hfitN : FitsLen t.n) (hfitY : FitsLen ys.length) :
+    (hfitN : FitsLen t.n) (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
     ∃ bZ,
       Ecbs.frobenius_point b = .ok bZ ∧
       bZ.sudo_5Board_9marker_on = true ∧
@@ -785,7 +799,8 @@ theorem frobenius_zbench_lifted
         lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
         (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+        lane.length ≤ t.benchlen := by
   have hn0 : 0 < t.n := hOk.n_pos
   have hspan : 3 * (t.n - 1) + t.combgap < t.benchlen := sat.cube_span
   have hsm := hsh.small
@@ -832,7 +847,7 @@ theorem frobenius_zbench_lifted
     moves slides hole t.benchlen pk peakS cOps t.combgap ctrl mx t.script
     hmk hon hm hc hmx hscript (by have h := hsh.script_ge; omega) (FitsLen.of_le hCtrl (by omega))
     hops hop1 (FitsLen.of_le hOps (by omega)) (by decide) h0D h0H hd0 h0 h2D h2H h7 hto hd2
-    hbench hstrict hpk hn0 hn hxL hposY hnle hzero hfitN hfitY hmv hsl hpeg hfitMv hfitSl
+    hbench hstrict hpk hn0 hn hxL hposY hnle hzero hfitN (lane_fit t hship hcap) hmv hsl hpeg hfitMv hfitSl
     hbl hcg hspan h3 hfm hhole hxT hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap
     hw hh hr hk hsm hnsm hbenchFit hfold
   have hszHS : bS.sudo_5Board_4home.size = 8 := by
@@ -973,7 +988,8 @@ theorem frobenius_fform_ybench
     (hRoom : FitsLen (moves + 2 * pegCount (ys.take t.n) + cubeCharge t.n t.benchlen +
         2 * t.n + 3 * (t.benchlen - t.n)))
     (hSl : FitsLen (slides + 2 * pegCount (ys.take t.n) + slideCharge t.n))
-    (hfitN : FitsLen t.n) (hfitY : FitsLen ys.length) :
+    (hfitN : FitsLen t.n) (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
     ∃ bL bZ,
       Ecbs.marker_lift b = .ok bL ∧
       Ecbs.frobenius_point bL = .ok bZ ∧
@@ -985,7 +1001,8 @@ theorem frobenius_fform_ybench
         lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
         (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+        lane.length ≤ t.benchlen := by
   let bL := { b with
     sudo_5Board_6marker := -1
     sudo_5Board_4cost := { b.sudo_5Board_4cost with
@@ -1001,7 +1018,7 @@ theorem frobenius_fform_ybench
     frobenius_ybench_lifted t bL xP yP zP ys hsh hOk sat hs2 htierL hxL hyL hzL hxT hyT hzT
       hszH hszD h0 h2 hd0 hd1 hd2 hmk hon hto hmL hbench htake hposY hnle hzero
       moves slides (c0 + 1) mx pk peakS hole cOps hmv hsl hcL hmx hpk hstrict hhole hops hop1
-      (by simpa [Nat.add_assoc] using hCtrl) hOps hpeg hfitMv hfitSl hRoom hSl hfitN hfitY
+      (by simpa [Nat.add_assoc] using hCtrl) hOps hpeg hfitMv hfitSl hRoom hSl hfitN hcap hship
   exact ⟨bL, bZ, hlift, hfrob, hmon, hbon, htoZ, hlane⟩
 
 /-- `ProjLay.zBench` after the cell's `marker_lift`. The bench holds `Z`.
@@ -1044,7 +1061,8 @@ theorem frobenius_fform_zbench
     (hRoom : FitsLen (moves + 2 * pegCount (ys.take t.n) + cubeCharge t.n t.benchlen +
         2 * t.n + 3 * (t.benchlen - t.n)))
     (hSl : FitsLen (slides + 2 * pegCount (ys.take t.n) + slideCharge t.n))
-    (hfitN : FitsLen t.n) (hfitY : FitsLen ys.length) :
+    (hfitN : FitsLen t.n) (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
     ∃ bL bZ,
       Ecbs.marker_lift b = .ok bL ∧
       Ecbs.frobenius_point bL = .ok bZ ∧
@@ -1056,7 +1074,8 @@ theorem frobenius_fform_zbench
         lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
         (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+        lane.length ≤ t.benchlen := by
   let bL := { b with
     sudo_5Board_6marker := -1
     sudo_5Board_4cost := { b.sudo_5Board_4cost with
@@ -1072,7 +1091,7 @@ theorem frobenius_fform_zbench
     frobenius_zbench_lifted t bL xP yP zP ys hsh hOk sat hs2 htierL hxL hyL hzL hxT hyT hzT
       hszH hszD h0 h1 hd0 hd1 hd2 hmk hon hto hmL hbench htake hposY hnle hzero
       moves slides (c0 + 1) mx pk peakS hole cOps hmv hsl hcL hmx hpk hstrict hhole hops hop1
-      (by simpa [Nat.add_assoc] using hCtrl) hOps hpeg hfitMv hfitSl hRoom hSl hfitN hfitY
+      (by simpa [Nat.add_assoc] using hCtrl) hOps hpeg hfitMv hfitSl hRoom hSl hfitN hcap hship
   exact ⟨bL, bZ, hlift, hfrob, hmon, hbon, htoZ, hlane⟩
 
 

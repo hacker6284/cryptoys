@@ -151,7 +151,8 @@ theorem zbench_zproj
     (htakeZ : lane.take t.n = fieldCube t.n t.k t.benchlen zP)
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < lane.length, lane[j] = 0)
     (hhome0 : bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)))
-    (hhome1 : bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP))) :
+    (hhome1 : bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)))
+    (hcap : lane.length ≤ t.benchlen) :
     ProjOn t bZ (fieldCube t.n t.k t.benchlen px) (fieldCube t.n t.k t.benchlen py) := by
   rcases hAt with ⟨_, _, _, _, hpxT, hpyT, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hproj, _⟩
   obtain ⟨zQ, wInv, hzId, hzQT, hxQ, hyQ, hwL, hwT, hinv⟩ :=
@@ -211,7 +212,7 @@ theorem zbench_zproj
     by rw [hxMul]; exact hxLen, by rw [hyMul]; exact hyLen, hzLen,
     by rw [hxMul]; exact hxTri, by rw [hyMul]; exact hyTri, hzTri,
     rfl, rfl, hzNe, hxHome,
-    ⟨hbon, htoZ, ⟨lane, hbenchZ, hnle, htakeZ, hzero⟩, hyHome, hH1, hH2⟩,
+    ⟨hbon, htoZ, ⟨lane, hbenchZ, hnle, htakeZ, hzero, hcap⟩, hyHome, hH1, hH2⟩,
     fieldCube t.n t.k t.benchlen wInv, hcube.2.2.2.2.1, hcube.2.2.2.2.2, hzw⟩
 
 /-- `zBench`, colour still unread. The board `frobenius_point` leaves is the
@@ -240,7 +241,8 @@ theorem zbench_zero_cell_at
     (htake : ys.take t.n = zP)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < ys.length, ys[j] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hpos : i < t.cells) :
     ∃ bL bZ,
       Ecbs.marker_lift b = .ok bL ∧
@@ -276,17 +278,17 @@ theorem zbench_zero_cell_at
         exact Option.some.inj heq.symm)
       hfitCtrl hOps hpeg hfitMvS hfitSlS hRoom hSl
       (geomFit t.n t.benchlen t.n hsh.n_small hsh.small.2.2.2 (smallCap t.n t.benchlen).1)
-      hfitY
-  rcases hlane with ⟨lane, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩
+      hcap hship
+  rcases hlane with ⟨lane, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1, hcapZ⟩
   have hfr := zbench_zero_frame t b bL bZ baseX baseY px py xP yP zP ys i hAt0
     hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto hbench
-    htake hnle hzero hfitY hpos hlift hfrob
+    htake hnle hzero hcap hship hpos hlift hfrob
   obtain ⟨moves, slides, ctrl, mx, c1, c0, moves', slides', pk', peakS', hole',
       hmv, hsl, hc0, hmx, hopIn, hop0in, hmonC, hH0, hmv', hsl', hctrl', hmark', hmx',
       hpk', hst', hhole', hsz1, hop1', hop0', hleM, hleS, h5Z, h6Z, hopsNZ, hop4Z⟩ :=
     zbench_zero_counts t b bL bZ baseX baseY px py xP yP zP ys i hAt0
       hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto
-      hbench htake hnle hzero hfitY hpos hlift hfrob
+      hbench htake hnle hzero hcap hship hpos hlift hfrob
   have hmvN : moves = moves0 :=
     Int.ofNat.inj (by simpa [ofNat_eq_natCast] using hmv.symm.trans hmv0)
   have hslN : slides = slides0 :=
@@ -303,7 +305,7 @@ theorem zbench_zero_cell_at
     exact Int.ofNat.inj (by simpa [ofNat_eq_natCast] using h)
   let o := zbench_open t b bL bZ baseX baseY px py xP yP zP ys i hAt0
     hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto hbench
-    htake hnle hzero hfitY hpos hlift hfrob
+    htake hnle hzero hcap hship hpos hlift hfrob
   have hH1 : ∀ h : 1 < bZ.sudo_5Board_4held.size, bZ.sudo_5Board_4held[1] = true := by
     intro h
     have hheld := congrArg (fun brd => brd.sudo_5Board_4held) o.hZ
@@ -316,7 +318,7 @@ theorem zbench_zero_cell_at
       (bottomFlag_held2 o.pack.seen.a zP)
   have hp := zbench_zproj t b bZ baseX baseY px py xP yP zP ys i hAt0 hsh hOk sat
     hszH hszD h0 h1 hd2 hon hto hbench htake hxL hyL hzL hxT hyT hzT
-    hH1 hH2 hbon htoZ lane hbenchZ htakeZ hzeroZ hhome0 hhome1
+    hH1 hH2 hbon htoZ lane hbenchZ htakeZ hzeroZ hhome0 hhome1 hcapZ
   have hpair := cube_slack_next c10 t.cells i hc1 hpos
   have hc1' : FitsLen ((c1 + 3) + 3 * (t.cells - (i + 1))) := by
     rw [hc1N]

@@ -41,6 +41,7 @@ structure CellAt (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
   held1 : ∀ h1 : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1]'h1 = false
   held2 : ∀ h2 : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2]'h2 = true
   nle : n ≤ lane.length
+  lenEq : lane.length = bench
   zero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i]'hi = 0
   home3 : ∀ h3 : 3 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[3]'h3 = embed x2
   held3 : ∀ h3 : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3]'h3 = true
@@ -114,7 +115,7 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
   obtain ⟨hops, hop0⟩ := read_some b.sudo_5Board_4cost.sudo_5Costs_3ops 0 s.ops0
   obtain ⟨b', lane', hdo, h0, h2, hbench, htake, hheld, hon, hto, h1, h2h, hnle, hzero,
       h3a, h3h, h4a, h4h, htier, hszH, hszD, hcharge, hslot, hmon, hH0, h6, hopsSz,
-      hop4⟩ :=
+      hop4, hlen'⟩ :=
     fform_add_on_f b red v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       s.held7 s.home7 hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH
@@ -139,6 +140,7 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
     held1 := h1
     held2 := h2h
     nle := hnle
+    lenEq := hlen'
     zero := hzero
     home3 := h3a
     held3 := h3h
@@ -178,7 +180,8 @@ theorem cell_proj (t : Spec.Tier) (b : Ecbs.Board) (lane : List Nat)
   refine ⟨xP, yP, zP, .yBench, hxL, hyL, hzL, hxT, hyT, hzT, rfl, rfl, hne, ?_, ?_, hinv⟩
   · intro h
     simpa [xP, zP, n, k, bench] using c.home0 h
-  · refine ⟨c.on, c.to1, ⟨lane, c.benchArr, c.nle, ?_, c.zero⟩, c.held1, c.home2, c.held2⟩
+  · refine ⟨c.on, c.to1, ⟨lane, c.benchArr, c.nle, ?_, c.zero, Nat.le_of_eq c.lenEq⟩,
+      c.held1, c.home2, c.held2⟩
     simpa [yP, zP, n, k, bench] using c.take
 
 end EcbsLink2.Link2

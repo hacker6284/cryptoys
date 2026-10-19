@@ -47,7 +47,7 @@ theorem zero_fform_cell
       walkCharge t + (6 * t.benchlen + 2 * t.n))
     (h12 : 12 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
-    (hfitY : ∀ ys, b.sudo_5Board_5bench = embed ys → FitsLen ys.length)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hpos : 0 < t.cells) (hi : i ≤ t.cells - 1) (hlen : cells.length = t.cells)
     (hc : cells[i]'(by omega) = 0)
     (hwalk : walkStep t.n t.k t.benchlen (baseX, baseY) true (px, py)
@@ -75,21 +75,21 @@ theorem zero_fform_cell
       tw h8 h12 h46 hscript hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i h2i hd0 hd1i
       hd2i hoff cells hpos hi hlen hc hwalk
   | yBench =>
-    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, hd1, h2, hd2⟩
+    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero, hcap⟩, hd1, h2, hd2⟩
     have h2i := idx_at b.sudo_5Board_4home 2 (embed zP) hszH (by decide) h2
     have hd1i := idx_at b.sudo_5Board_4held 1 false hszD (by decide) hd1
     have hd2i := idx_at b.sudo_5Board_4held 2 true hszD (by decide) hd2
     exact ybench_zero_step t b baseX baseY px py xP yP zP ys i ax' ay' hAt0 hsh hOk
       sat tw h8 h12 h46 hxL hyL hzL hxT hyT hzT hszH hszD h0i h2i hd0 hd1i hd2i hon
-      hto hbench htake hnle hzero (hfitY ys hbench) cells hpos hi hlen hc hwalk
+      hto hbench htake hnle hzero hcap hship cells hpos hi hlen hc hwalk
   | zBench =>
-    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, h1, hd1, hd2⟩
+    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero, hcap⟩, h1, hd1, hd2⟩
     have h1i := idx_at b.sudo_5Board_4home 1 (embed yP) hszH (by decide) h1
     have hd1i := idx_at b.sudo_5Board_4held 1 true hszD (by decide) hd1
     have hd2i := idx_at b.sudo_5Board_4held 2 false hszD (by decide) hd2
     exact zbench_zero_step t b baseX baseY px py xP yP zP ys i ax' ay' hAt0 hsh hOk
       sat tw h8 h12 h46 hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i hd0 hd1i hd2i hon
-      hto hbench htake hnle hzero (hfitY ys hbench) cells hpos hi hlen hc hwalk
+      hto hbench htake hnle hzero hcap hship cells hpos hi hlen hc hwalk
 
 /-- The comb `run` returns, identified with the point `walkStep` produced. -/
 private theorem live_from_run
@@ -187,7 +187,7 @@ theorem live_fform_cell
       walkCharge t + (6 * t.benchlen + 2 * t.n))
     (h32 : 32 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
-    (hfitY : ∀ ys, b.sudo_5Board_5bench = embed ys → FitsLen ys.length)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hpos : 0 < t.cells) (hi : i ≤ t.cells - 1) (hlen : cells.length = t.cells)
     (hc : cells[i]'(by omega) = c) (hc12 : c = 1 ∨ c = 2)
     (hred : red = decide (c = 2))
@@ -264,7 +264,7 @@ theorem live_fform_cell
       hbx hby hbxT hbyT hpxL hpyL hpxT hpyT hzL hzT hXP hYP hxPid hyPid hzPid hzC hc4
       hpos hi hlen hc hc12 hred hwalk
   | yBench =>
-    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, hd1, h2, hd2⟩
+    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero, hcap⟩, hd1, h2, hd2⟩
     have h2i := idx_at b.sudo_5Board_4home 2 (embed zP) hszH (by decide) h2
     have hd1i := idx_at b.sudo_5Board_4held 1 false hszD (by decide) hd1
     have hd2i := idx_at b.sudo_5Board_4held 2 true hszD (by decide) hd2
@@ -273,7 +273,7 @@ theorem live_fform_cell
         hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1, _, _⟩ :=
       ybench_layout_comb t b baseX baseY px py xP yP zP ys i hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h2i hd0 hd1i hd2i hon hto hbench
-        htake hnle hzero (hfitY ys hbench) hXP hYP hposI
+        htake hnle hzero hcap hship hXP hYP hposI
     obtain ⟨o, hxPid, hyPid, hzPid, hzC, hsrc⟩ :=
       run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
         hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
@@ -287,7 +287,7 @@ theorem live_fform_cell
       hbx hby hbxT hbyT hpxL hpyL hpxT hpyT hzL hzT hXP hYP hxPid hyPid hzPid hzC hc4
       hpos hi hlen hc hc12 hred hwalk
   | zBench =>
-    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, h1, hd1, hd2⟩
+    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero, hcap⟩, h1, hd1, hd2⟩
     have h1i := idx_at b.sudo_5Board_4home 1 (embed yP) hszH (by decide) h1
     have hd1i := idx_at b.sudo_5Board_4held 1 true hszD (by decide) hd1
     have hd2i := idx_at b.sudo_5Board_4held 2 false hszD (by decide) hd2
@@ -296,7 +296,7 @@ theorem live_fform_cell
         hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1, _, _⟩ :=
       zbench_layout_comb t b baseX baseY px py xP yP zP ys i hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i hd0 hd1i hd2i hon hto hbench
-        htake hnle hzero (hfitY ys hbench) hXP hYP hposI
+        htake hnle hzero hcap hship hXP hYP hposI
     obtain ⟨o, hxPid, hyPid, hzPid, hzC, hsrc⟩ :=
       run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
         hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
@@ -323,7 +323,7 @@ theorem fform_frame
       walkCharge t + (6 * t.benchlen + 2 * t.n))
     (h32 : 32 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
-    (hfitY : ∀ ys, b.sudo_5Board_5bench = embed ys → FitsLen ys.length)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hpos : 0 < t.cells) (hi : i ≤ t.cells - 1) (hlen : cells.length = t.cells)
     (hwalk : walkStep t.n t.k t.benchlen (baseX, baseY) true (px, py)
         (cells[i]'(by omega)) = some (true, (ax', ay')))
@@ -363,17 +363,17 @@ theorem fform_frame
     (cells[i]'hiLen) _ hwalk
   rcases hcol with h0 | h1 | h2
   · exact zero_fform_cell t b baseX baseY px py ax' ay' i cells hAt hsh hOk sat tw
-      h8 h12 h46 hfitY hpos hi hlen h0 hwalk
+      h8 h12 h46 hship hpos hi hlen h0 hwalk
   · have hwalk1 : walkStep t.n t.k t.benchlen (baseX, baseY) true (px, py) 1 =
         some (true, (ax', ay')) := by simpa [h1] using hwalk
     exact live_fform_cell t b false baseX baseY px py ax' ay' i 1 cells hAt hsh hOk
-      sat tw hwide h32 h46 hfitY hpos hi hlen h1 (Or.inl rfl) (by decide) hwalk1
+      sat tw hwide h32 h46 hship hpos hi hlen h1 (Or.inl rfl) (by decide) hwalk1
       (fun bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane =>
         run false bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane)
   · have hwalk2 : walkStep t.n t.k t.benchlen (baseX, baseY) true (px, py) 2 =
         some (true, (ax', ay')) := by simpa [h2] using hwalk
     exact live_fform_cell t b true baseX baseY px py ax' ay' i 2 cells hAt hsh hOk
-      sat tw hwide h32 h46 hfitY hpos hi hlen h2 (Or.inr rfl) (by decide) hwalk2
+      sat tw hwide h32 h46 hship hpos hi hlen h2 (Or.inr rfl) (by decide) hwalk2
       (fun bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane =>
         run true bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane)
 

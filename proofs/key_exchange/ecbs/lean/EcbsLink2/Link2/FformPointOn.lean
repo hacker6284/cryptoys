@@ -121,7 +121,8 @@ theorem fform_add_on_f (b : Ecbs.Board) (red : Bool)
         b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
       ((4 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) →
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[4]? =
-          b.sudo_5Board_4cost.sudo_5Costs_3ops[4]?) :=
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[4]?) ∧
+      lane'.length = bench :=
   fform_add_point b red (fformF n k bench u v z) v z x2 u y2 lane
     m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
     h7 h7H hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH

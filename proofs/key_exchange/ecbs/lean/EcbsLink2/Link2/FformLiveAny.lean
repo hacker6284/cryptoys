@@ -246,7 +246,7 @@ theorem live_any
       walkCharge t + (6 * t.benchlen + 2 * t.n))
     (h32 : 32 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
-    (hfitY : ∀ ys, b.sudo_5Board_5bench = embed ys → FitsLen ys.length)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hpos : done < t.cells)
     (run : ∀ (bZ : Ecbs.Board) (xP yP zP : List Nat)
       (moves slides ctrl c0 moves' slides' c1 : Nat) (lane : List Nat),
@@ -317,7 +317,7 @@ theorem live_any
         hleM hleS hwide h32 h46 hspan hnb hc4
     exact ⟨bL, bZ, b', x3, yUp, hlift, hfrob, hadd, hAt'⟩
   | yBench =>
-    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, hd1, h2, hd2⟩
+    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero, hcap⟩, hd1, h2, hd2⟩
     have h2i := idx_at b.sudo_5Board_4home 2 (embed zP) hszH (by decide) h2
     have hd1i := idx_at b.sudo_5Board_4held 1 false hszD (by decide) hd1
     have hd2i := idx_at b.sudo_5Board_4held 2 true hszD (by decide) hd2
@@ -326,7 +326,7 @@ theorem live_any
         hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1, _, _⟩ :=
       ybench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h2i hd0 hd1i hd2i hon hto hbench
-        htake hnle hzero (hfitY ys hbench) hXP hYP hpos
+        htake hnle hzero hcap hship hXP hYP hpos
     obtain ⟨cIn, hopIn, hcIn⟩ := fform_fadd t b baseX baseY px py done hAt0
     obtain ⟨o, _, _, _, _, hsrc⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
@@ -339,7 +339,7 @@ theorem live_any
         hleM hleS hwide h32 h46 hspan hnb hc4
     exact ⟨bL, bZ, b', x3, yUp, hlift, hfrob, hadd, hAt'⟩
   | zBench =>
-    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, h1, hd1, hd2⟩
+    rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero, hcap⟩, h1, hd1, hd2⟩
     have h1i := idx_at b.sudo_5Board_4home 1 (embed yP) hszH (by decide) h1
     have hd1i := idx_at b.sudo_5Board_4held 1 true hszD (by decide) hd1
     have hd2i := idx_at b.sudo_5Board_4held 2 false hszD (by decide) hd2
@@ -348,7 +348,7 @@ theorem live_any
         hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1, _, _⟩ :=
       zbench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i hd0 hd1i hd2i hon hto hbench
-        htake hnle hzero (hfitY ys hbench) hXP hYP hpos
+        htake hnle hzero hcap hship hXP hYP hpos
     obtain ⟨cIn, hopIn, hcIn⟩ := fform_fadd t b baseX baseY px py done hAt0
     obtain ⟨o, _, _, _, _, hsrc⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ

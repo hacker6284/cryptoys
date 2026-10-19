@@ -79,7 +79,8 @@ theorem ybench_zero_step
     (htake : ys.take t.n = yP)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < ys.length, ys[j] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (cells : List Nat)
     (hpos : 0 < t.cells) (hi : i ≤ t.cells - 1) (hlen : cells.length = t.cells)
     (hc : cells[i]'(by omega) = 0)
@@ -94,7 +95,7 @@ theorem ybench_zero_step
   obtain ⟨bL, bZ, hlift, hfrob, hAtZ⟩ :=
     ybench_zero_cell_at t b baseX baseY px py xP yP zP ys i hAt hsh hOk sat tw
       hstep h12 h46 hxL hyL hzL hxT hyT hzT hszH hszD h0 h2 hd0 hd1 hd2 hon hto
-      hbench htake hnle hzero hfitY hposI
+      hbench htake hnle hzero hcap hship hposI
   have hwalk0 : walkStep t.n t.k t.benchlen (baseX, baseY) true (px, py) 0 =
       some (true, (ax', ay')) := by
     simpa [hc] using hwalk
@@ -144,7 +145,8 @@ theorem zbench_zero_step
     (htake : ys.take t.n = zP)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < ys.length, ys[j] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (cells : List Nat)
     (hpos : 0 < t.cells) (hi : i ≤ t.cells - 1) (hlen : cells.length = t.cells)
     (hc : cells[i]'(by omega) = 0)
@@ -159,7 +161,7 @@ theorem zbench_zero_step
   obtain ⟨bL, bZ, hlift, hfrob, hAtZ⟩ :=
     zbench_zero_cell_at t b baseX baseY px py xP yP zP ys i hAt hsh hOk sat tw
       hstep h12 h46 hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto
-      hbench htake hnle hzero hfitY hposI
+      hbench htake hnle hzero hcap hship hposI
   have hwalk0 : walkStep t.n t.k t.benchlen (baseX, baseY) true (px, py) 0 =
       some (true, (ax', ay')) := by
     simpa [hc] using hwalk

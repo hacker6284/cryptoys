@@ -218,7 +218,8 @@ theorem zbench_comb_eq
     (hbench : b.sudo_5Board_5bench = embed ys)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ i, t.n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (moves slides ctrl mx pk peakS hole cOps : Nat)
     (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
     (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
@@ -282,7 +283,7 @@ theorem zbench_comb_eq
     hmk hon hm hc hmx hscript (by have h := hsh.script_ge; omega)
     (FitsLen.of_le hCtrl (by omega)) hops hop1 (FitsLen.of_le hOps (by omega))
     (by decide) h0D h0H hd0 h0 pack.h2D pack.h2H h7 hto hd2
-    hbench hstrict hpk hn0 hn hxL hposY hnle hzero hnFit hfitY hmv hsl hpeg hfitMv hfitSl
+    hbench hstrict hpk hn0 hn hxL hposY hnle hzero hnFit (lane_fit t hship hcap) hmv hsl hpeg hfitMv hfitSl
     hbl hcg hspan h3 hfm hhole hxT hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap
     hw hh hr hk hsm hnsm hbenchFit hfold
   have hMv : FitsLen (pack.movesS + cubeCharge t.n t.benchlen) :=
@@ -365,7 +366,8 @@ theorem zbench_open_exists
     (htake : ys.take t.n = zP)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ i, t.n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hpos : done < t.cells)
     (hlift : Ecbs.marker_lift b = .ok bL)
     (hfrob : Ecbs.frobenius_point bL = .ok bZ) :
@@ -433,7 +435,7 @@ theorem zbench_open_exists
     simpa [he] using hfrob
   have hZ := zbench_comb_eq t bRec bZ xP yP zP ys baseX baseY hsh hOk sat hscript
     hxL hyL hzL hxT hyT hzT hszH hszD h0L hd0L hd2L hmk hon hto hmL
-    hbench hnle hzero hfitY moves slides (ctrl + 1) mx pk peakS hole c1
+    hbench hnle hzero hcap hship moves slides (ctrl + 1) mx pk peakS hole c1
     hmv hsl hcL hmx hpk hstrict hhole hopsL hopL hCtrlL hOps hpeg hfitMvS hfitSlS
     hRoom hSl pack hfrobR
   exact ⟨{
@@ -478,14 +480,15 @@ noncomputable def zbench_open
     (htake : ys.take t.n = zP)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ i, t.n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hpos : done < t.cells)
     (hlift : Ecbs.marker_lift b = .ok bL)
     (hfrob : Ecbs.frobenius_point bL = .ok bZ) :
     ZOpen t b bZ baseX baseY xP yP zP ys :=
   Classical.choice (zbench_open_exists t b bL bZ baseX baseY px py xP yP zP ys done
     hAt hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto
-    hbench htake hnle hzero hfitY hpos hlift hfrob)
+    hbench htake hnle hzero hcap hship hpos hlift hfrob)
 
 /-- A zero cell that starts in `zBench`. Homes 3 and 4 survive the lift, the
     settle of `Z` into home 2, and the comb. -/
@@ -508,14 +511,15 @@ theorem zbench_zero_frame
     (htake : ys.take t.n = zP)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ i, t.n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hpos : done < t.cells)
     (hlift : Ecbs.marker_lift b = .ok bL)
     (hfrob : Ecbs.frobenius_point bL = .ok bZ) :
     FrameAt bZ t baseX baseY := by
   let o := zbench_open t b bL bZ baseX baseY px py xP yP zP ys done hAt hsh hOk sat
     hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto hbench htake hnle hzero
-    hfitY hpos hlift hfrob
+    hcap hship hpos hlift hfrob
   exact frame_of_seen o.pack.seen.a t baseX baseY zP o.pack.frS o.pack.seen.hops
     o.pack.seen.a.h0D o.pack.seen.a.h0H o.pack.seen.hOn o.pack.seen.h3 o.pack.seen.h4
     o.pack.seen.hH3 o.pack.seen.hH4 bZ o.hZ
@@ -553,7 +557,8 @@ theorem zbench_zero_counts
     (htake : ys.take t.n = zP)
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ i, t.n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
-    (hfitY : FitsLen ys.length)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (hpos : done < t.cells)
     (hlift : Ecbs.marker_lift b = .ok bL)
     (hfrob : Ecbs.frobenius_point bL = .ok bZ) :
@@ -588,7 +593,7 @@ theorem zbench_zero_counts
         b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? := by
   let o := zbench_open t b bL bZ baseX baseY px py xP yP zP ys done hAt hsh hOk sat
     hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto hbench htake hnle hzero
-    hfitY hpos hlift hfrob
+    hcap hship hpos hlift hfrob
   let a := o.pack.seen.a
   have hZ := o.hZ
   have hmon : bZ.sudo_5Board_9marker_on = true :=

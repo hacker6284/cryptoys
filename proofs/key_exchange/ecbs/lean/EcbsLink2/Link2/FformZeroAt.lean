@@ -423,7 +423,8 @@ theorem zero_bZ_frame
         lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
         (∀ j, t.n ≤ j → ∀ hj : j < lane.length, lane[j] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+        lane.length ≤ t.benchlen := by
   obtain ⟨bL, a, hlift, hflag, hfr, _, _, _⟩ :=
     zero_comb_frame t b baseX baseY px py xP yP zP done hAt hsh hOk sat hs2
       hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
@@ -552,7 +553,8 @@ theorem zero_bZ_lay
         lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
         (∀ j, t.n ≤ j → ∀ hj : j < lane.length, lane[j] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+        bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+        lane.length ≤ t.benchlen := by
   obtain ⟨bL, bZ, _a, hlift, hfrob, hH1, hH2, _hH0, _hmv, _hsl, _hctrl, _hmark,
       _hmx, _hpk, _hst, _hhole, _hop, hfr, _hmon, hbon, hto, hlane⟩ :=
     zero_bZ_frame t b baseX baseY px py xP yP zP done hAt hsh hOk sat hs2

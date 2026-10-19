@@ -55,8 +55,7 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
       walkCharge t + (6 * t.benchlen + 2 * t.n))
     (h32 : 32 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
-    (hfitY : ∀ (sb : Ecbs.Board) (ys : List Nat),
-      sb.sudo_5Board_5bench = embed ys → FitsLen ys.length)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (run : ∀ (i : Nat) (sb : Ecbs.Board) (ax ay : List Nat),
       FformAt t sb baseX baseY ax ay i →
       ∀ (red : Bool) (bZ : Ecbs.Board) (xP yP zP : List Nat)
@@ -117,7 +116,7 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
     have hiTo : i ≤ t.cells - 1 := hito
     obtain ⟨sb', hst, hAt'⟩ :=
       fform_frame t sb baseX baseY ax ay ax' ay' i cells hAtI hsh hOk sat tw
-        h8 h12 hwide h32 h46 (fun ys hys => hfitY sb ys hys) hpos hiTo hlen hwalk
+        h8 h12 hwide h32 h46 hship hpos hiTo hlen hwalk
         (fun red bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane =>
           run i sb ax ay hAtI red bZ xP yP zP moves slides ctrl c0 moves' slides'
             c1 lane)
@@ -172,8 +171,7 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
       walkCharge t + (6 * t.benchlen + 2 * t.n))
     (h32 : 32 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
-    (hfitY : ∀ (sb : Ecbs.Board) (ys : List Nat),
-      sb.sudo_5Board_5bench = embed ys → FitsLen ys.length)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
     (run : ∀ (i : Nat) (sb : Ecbs.Board) (ax ay : List Nat),
       FformAt t sb baseX baseY ax ay i →
       ∀ (red : Bool) (bZ : Ecbs.Board) (xP yP zP : List Nat)
@@ -234,7 +232,8 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
             bF.sudo_5Board_8bench_to = (1 : Int) ∧
             (∃ lane, bF.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
               lane.take t.n = yP ∧
-              ∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+              (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+              lane.length ≤ t.benchlen) ∧
             (∀ h : 1 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[1] = false) ∧
             (∀ h : 2 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[2] = embed zP) ∧
             (∀ h : 2 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[2] = true)
@@ -243,14 +242,15 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
             bF.sudo_5Board_8bench_to = (2 : Int) ∧
             (∃ lane, bF.sudo_5Board_5bench = embed lane ∧ t.n ≤ lane.length ∧
               lane.take t.n = zP ∧
-              ∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+              (∀ i, t.n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
+              lane.length ≤ t.benchlen) ∧
             (∀ h : 1 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[1] = embed yP) ∧
             (∀ h : 1 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[1] = true) ∧
             (∀ h : 2 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[2] = false)) := by
   obtain ⟨st, hI, hAtF, hrun, hloop⟩ :=
     walk_fform_from t b baseX baseY px py pxF pyF live0 acc0 start cells
       hAt hlen hpos hstart hspec hfull hsh hOk sat tw h8 h12 hwide h32 h46
-      hfitY run
+      hship run
   have hlive : st.2 = true := hI.1
   cases st with
   | mk bF slive =>

@@ -120,7 +120,8 @@ theorem zero_zbench
     (htake : lane.take t.n = fieldCube t.n t.k t.benchlen zP)
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < lane.length, lane[j] = 0)
     (hhome0 : bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)))
-    (hhome1 : bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP))) :
+    (hhome1 : bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)))
+    (hcap : lane.length ≤ t.benchlen) :
     ProjOn t bZ (fieldCube t.n t.k t.benchlen px) (fieldCube t.n t.k t.benchlen py) := by
   rcases hAt with ⟨_, _, _, _, hpxT, hpyT, _, _, _, _, _, _, _, _, _, _, _, _, _, _,
       hproj, _⟩
@@ -170,7 +171,7 @@ theorem zero_zbench
       (fieldCube t.n t.k t.benchlen zP),
     fieldCube t.n t.k t.benchlen zP, .zBench,
     hxLen, hyLen, hzLen, hxTri, hyTri, hzTri, rfl, rfl, hzNe, hxHome,
-    ⟨hbon, hto, ⟨lane, hbench, hnle, htake, hzero⟩, hyHome, hH1, hH2⟩,
+    ⟨hbon, hto, ⟨lane, hbench, hnle, htake, hzero, hcap⟩, hyHome, hH1, hH2⟩,
     fieldCube t.n t.k t.benchlen wInv, hcube.2.2.2.2.1, hcube.2.2.2.2.2, hzw⟩
 
 end EcbsLink2.Link2

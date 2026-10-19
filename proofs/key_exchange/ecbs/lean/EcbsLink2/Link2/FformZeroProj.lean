@@ -53,7 +53,7 @@ theorem zero_cell_proj
       FrameAt bZ t baseX baseY ∧
       ProjOn t bZ (fieldCube t.n t.k t.benchlen px) (fieldCube t.n t.k t.benchlen py) := by
   obtain ⟨bL, bZ, hlift, hfrob, hfr, hH1, hH2, hbon, hto,
-      lane, hbench, htake, hzero, hhome0, hhome1⟩ :=
+      lane, hbench, htake, hzero, hhome0, hhome1, hcap⟩ :=
     zero_bZ_lay t b baseX baseY px py xP yP zP done hAt hsh hOk sat hs2
       hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
       moves slides c0 mark mx pk peakS hole cOps hmv hsl hc0 hmkN hmx hpk hstrict
@@ -61,6 +61,6 @@ theorem zero_cell_proj
   exact ⟨bL, bZ, hlift, hfrob, hfr,
     zero_zbench t b bZ baseX baseY px py xP yP zP done hAt hsh hOk sat
       hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd2 hoff hH1 hH2 hbon hto
-      lane hbench htake hzero hhome0 hhome1⟩
+      lane hbench htake hzero hhome0 hhome1 hcap⟩
 
 end EcbsLink2.Link2

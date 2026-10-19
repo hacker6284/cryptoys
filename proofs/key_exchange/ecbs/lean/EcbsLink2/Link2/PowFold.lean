@@ -187,7 +187,10 @@ theorem pow_zero_seated (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
         (∀ j, j ≠ 1 → (bS.sudo_5Board_4cost.sudo_5Costs_3ops[j]?) =
           (b.sudo_5Board_4cost.sudo_5Costs_3ops[j]?)) ∧
         (∀ i, i ≠ up → (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?)) ∧
-        (∀ i, i ≠ up → (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) := by
+        (∀ i, i ≠ up → (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) ∧
+        bS.sudo_5Board_1t = b.sudo_5Board_1t ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   let bL := markerLifted b ctrl
   have hlift : Ecbs.marker_lift b = .ok bL := by
     simpa [bL, markerLifted] using marker_lift_refines b m ctrl hm hc hfitLift
@@ -226,7 +229,7 @@ theorem pow_zero_seated (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
       (by simpa [bL, markerLifted] using hk)
       hsm hnsm hfitB hfold hpeg hfitMv hfitSl
   rcases hzero with ⟨bS, hrun, hhome, hoffS, hheldS, hmark, hflagZ, hctrlZ, hmvZ, hslZ,
-      hopsZ, hholeZ, hmxZ, hpkZ, hpsZ, hhomeZ, hheldZ⟩
+      hopsZ, hholeZ, hmxZ, hpkZ, hpsZ, hhomeZ, hheldZ, htierZ, hszZ⟩
   have hctrl2 : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
     simpa [show (ctrl + 1) + 1 = ctrl + 2 by omega] using hctrlZ
   have hop1S : (bS.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) = some (Int.ofNat (cOps + 1)) := by
@@ -240,8 +243,15 @@ theorem pow_zero_seated (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
     rw [hopsZ]
     refine Eq.trans (Array.getElem?_set_ne _ _ _ (by intro h; exact hj h.symm)) ?_
     simp [bL, markerLifted]
+  have htierS : bS.sudo_5Board_1t = b.sudo_5Board_1t := by
+    rw [htierZ]
+    simp [bL, markerLifted]
+  have hszS : bS.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hszZ]
+    simp [bL, markerLifted]
   refine ⟨bS, ?_, hhome, hoffS, hheldS, hmark, hflagZ, hctrl2, hmvZ, hslZ, hholeZ, hmxZ,
-      hpkZ, hpsZ, hop1S, hopK, hhomeZ, hheldZ⟩
+      hpkZ, hpsZ, hop1S, hopK, hhomeZ, hheldZ, htierS, hszS⟩
   · rw [hlift, ok_bind]
     have hid := marker_lift_neg bL (by simp [bL, markerLifted])
     rw [hid, ok_bind] at hrun

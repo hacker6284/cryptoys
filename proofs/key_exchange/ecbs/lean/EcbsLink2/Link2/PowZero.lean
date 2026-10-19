@@ -112,7 +112,10 @@ theorem pow_zero_home (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
         (∃ pk, bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
         (∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
         (∀ i, i ≠ up → (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?)) ∧
-        (∀ i, i ≠ up → (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) := by
+        (∀ i, i ≠ up → (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) ∧
+        bS.sudo_5Board_1t = b.sudo_5Board_1t ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   have hlift := marker_lift_below b hm
   have hcube := cube_down_eq b up up acc w h r n k moves hole bench peak peakS cOps cg
       ctrl mx script hmk hoff hm hc hx hs hpos hfitCtrl hops hop1 hfops hF hHome hHF hArr h7
@@ -252,8 +255,14 @@ theorem pow_zero_home (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
     rw [Array.getElem?_set_ne _ ⟨up, hDC⟩ _ hiu.symm]
     simp only [bC, bOff, cube_off_held, feed, markerDownFeed]
     rw [Array.getElem?_set_ne _ ⟨up, hF⟩ _ hiu.symm]
+  have htierS : bS.sudo_5Board_1t = b.sudo_5Board_1t := by
+    rw [← hEq, settle_tier_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    simp [bC, bOff, cube_off_tier, feed, markerDownFeed]
+  have hszS : bS.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hopsS, Array.size_set]
   refine ⟨bS, ?_, ?_, hoffS, hheldS, hmark, hflagS, hctrlS, hmvS, hslS, hopsS, hholeS,
-      hmxS, hpkS, hpsS, hhomeK, hheldK⟩
+      hmxS, hpkS, hpsS, hhomeK, hheldK, htierS, hszS⟩
   · rw [hlift, ok_bind, hbC, ok_bind, hset]
   · rw [hhome, hpow]
 

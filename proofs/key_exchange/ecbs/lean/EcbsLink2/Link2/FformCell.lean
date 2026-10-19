@@ -204,11 +204,13 @@ theorem rise_on_run (b : Ecbs.Board)
     (hfoldR : FitsLen ((fformRunMoves moves n k bench x x2 z lane + pegCount y) +
       2 * pegCount ((fformRunLane n k bench x x2 z).take n) + 3 * n + n * (n + 1) +
       3 * (bench - n))) :
-    ∃ bRun bRise,
-      (Ecbs.mirror b Ecbs.across >>= fun b1 =>
-          Ecbs.mul b1 Ecbs.across Ecbs.base_across Ecbs.bottom true true false) = .ok bRun ∧
-      (Ecbs.mirror bRun Ecbs.up >>= fun b1 =>
-          Ecbs.mul b1 Ecbs.up Ecbs.base_up Ecbs.bottom true true red) = .ok bRise ∧
+    ∃ bMir bRun bUp bRise,
+      Ecbs.mirror b Ecbs.across = .ok bMir ∧
+      Ecbs.mul bMir Ecbs.across Ecbs.base_across Ecbs.bottom true true false = .ok bRun ∧
+      Ecbs.is_zero bRun Ecbs.across =
+        .ok (decide (fformRun n k bench x2 z x = List.replicate n 0)) ∧
+      Ecbs.mirror bRun Ecbs.up = .ok bUp ∧
+      Ecbs.mul bUp Ecbs.up Ecbs.base_up Ecbs.bottom true true red = .ok bRise ∧
       (fformRunLane n k bench x x2 z).take n = fformRun n k bench x2 z x ∧
       (∀ h0 : 0 < bRise.sudo_5Board_4home.size,
         bRise.sudo_5Board_4home[0]'h0 = embed (fformRun n k bench x2 z x)) ∧
@@ -256,7 +258,7 @@ theorem rise_on_run (b : Ecbs.Board)
   have hfold : FitsLen ((moves + pegCount x) + 2 * pegCount (lane.take n) + 3 * n +
       n * (n + 1) + 3 * (bench - n)) :=
     fits_le hBig (sum_fold moves n bench _ _ hpegX hpegL)
-  obtain ⟨bRun, hokR, hbenchR, htakeR, honR, htoR, hmkR, htierR, hemptyR, _hzero,
+  obtain ⟨bMir, bRun, hmir, hmulR, hbenchR, htakeR, honR, htoR, hmkR, htierR, hemptyR, hzero,
       hixR, hctrlR, hmxR, hmvR, hslR, hszDR, hszHR, hhomeR, hheldR, hbotA, hbotH, holeR, carryR⟩ :=
     run_on_bench b 0 3 2 2 x x2 z lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
@@ -290,7 +292,7 @@ theorem rise_on_run (b : Ecbs.Board)
   have hheld4R : bRun.sudo_5Board_4held[4]'h4DR = true :=
     (hheldR 4 (by decide) (by decide) (by decide) h4D h4DR).trans hheld4
   have hUpH : 1 < bRun.sudo_5Board_4home.size := h1HR
-  obtain ⟨bRise, hokU, _hbenchU, htakeU, honU, htoU, hmkU, _htierU, _hemptyU, hixU, hctrlU,
+  obtain ⟨bUp, bRise, hmirU, hmulU, _hbenchU, htakeU, honU, htoU, hmkU, _htierU, _hemptyU, hixU, hctrlU,
       _hmxU, _hmvU, _hslU, _hszDU, _hszHU, _hhomeU, _hheldU, hseatA, hseatH, _holeU, carryU⟩ :=
     rise_on_board bRun 1 4 2 0 y y2 z laneR red
       (m + 1) (ctrl + 2) (max mx (m + 2)) script (cOps + 1) n k w h r movesR slidesR
@@ -316,9 +318,12 @@ theorem rise_on_run (b : Ecbs.Board)
   have htakeRun : laneR.take n = fformRun n k bench x2 z x := by
     simpa [laneR, fformRunLane] using htakeR
   let laneU := laneFold n (n - k) (school n y2 z (pref (mirrorTrits y) bench n) red)
-  refine ⟨bRun, bRise, ?_, ?_, htakeRun, ?_, ?_, ?_, ?_, honU, ?_, hmkU, ?_, ?_, ?_⟩
-  · simpa [Ecbs.across, Ecbs.base_across, Ecbs.bottom] using hokR
-  · simpa [Ecbs.up, Ecbs.base_up, Ecbs.bottom] using hokU
+  refine ⟨bMir, bRun, bUp, bRise, ?_, ?_, ?_, ?_, ?_, htakeRun, ?_, ?_, ?_, ?_, honU, ?_, hmkU, ?_, ?_, ?_⟩
+  · simpa [Ecbs.across] using hmir
+  · simpa [Ecbs.across, Ecbs.base_across, Ecbs.bottom] using hmulR
+  · simpa [Ecbs.across] using hzero
+  · simpa [Ecbs.up] using hmirU
+  · simpa [Ecbs.up, Ecbs.base_up, Ecbs.bottom] using hmulU
   · intro h0
     rw [hseatA h0, htakeRun]
   · intro h0
@@ -438,10 +443,15 @@ theorem comb_u2z (b : Ecbs.Board)
     (hSlideZ : FitsLen (riseSlideCount y (fformRunLane n k bench x x2 z) n
         (fformRunSlides slides n x lane) + 2 * n + 2 * n)) :
     let u := fformRise n k bench (if red then mirrorTrits y2 else y2) z y
-    ∃ bRun bMid b3 lane3 hole3 moves3 slides3,
-      (Ecbs.mirror b Ecbs.across >>= fun b1 =>
-          Ecbs.mul b1 Ecbs.across Ecbs.base_across Ecbs.bottom true true false) = .ok bRun ∧
-      Ecbs.mul bMid Ecbs.gap Ecbs.bottom Ecbs.gap false false false = .ok b3 ∧
+    ∃ bMir bRun bUp bRise bU b3 lane3 hole3 moves3 slides3,
+      Ecbs.mirror b Ecbs.across = .ok bMir ∧
+      Ecbs.mul bMir Ecbs.across Ecbs.base_across Ecbs.bottom true true false = .ok bRun ∧
+      Ecbs.is_zero bRun Ecbs.across =
+        .ok (decide (fformRun n k bench x2 z x = List.replicate n 0)) ∧
+      Ecbs.mirror bRun Ecbs.up = .ok bUp ∧
+      Ecbs.mul bUp Ecbs.up Ecbs.base_up Ecbs.bottom true true red = .ok bRise ∧
+      Ecbs.mul bRise Ecbs.gap Ecbs.up Ecbs.up true false false = .ok bU ∧
+      Ecbs.mul bU Ecbs.gap Ecbs.bottom Ecbs.gap false false false = .ok b3 ∧
       lane3.take n = fieldMul n k bench z (fieldMul n k bench u u) ∧
       (∀ h0 : 0 < b3.sudo_5Board_4home.size,
         b3.sudo_5Board_4home[0]'h0 = embed (fformRun n k bench x2 z x)) ∧
@@ -505,7 +515,7 @@ theorem comb_u2z (b : Ecbs.Board)
   have hfold : FitsLen ((moves + pegCount x) + 2 * pegCount (lane.take n) + 3 * n +
       n * (n + 1) + 3 * (bench - n)) :=
     fits_le hBig (sum_fold moves n bench _ _ hpegX hpegL)
-  obtain ⟨bRun, hokR, hbenchR, htakeR, honR, htoR, hmkR, htierR, hemptyR, _hzero,
+  obtain ⟨bMir, bRun, hmir, hmulR, hbenchR, htakeR, honR, htoR, hmkR, htierR, hemptyR, hzero,
       hixR, hctrlR, hmxR, hmvR, hslR, hszDR, hszHR, hhomeR, hheldR, hbotA, hbotH, holeR, carryR⟩ :=
     run_on_bench b 0 3 2 2 x x2 z lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
@@ -544,7 +554,8 @@ theorem comb_u2z (b : Ecbs.Board)
     (hheldR 4 (by decide) (by decide) (by decide) h4D h4DR).trans hheld4
   have hGapE : bRun.sudo_5Board_4held[5]'h5DR = false :=
     (hheldR 5 (by decide) (by decide) (by decide) h5D h5DR).trans hheld5
-  obtain ⟨bMid, b3, lane3, hole3, moves3, slides3, hmul, htakeZ, carry, hseatH, hseatD,
+  obtain ⟨bUp, bRise, bU, b3, lane3, hole3, moves3, slides3,
+      hmirU, hmulU, hU, hmul, htakeZ, carry, hseatH, hseatD,
       hbench3, hon3, hto3, hmk3, hix3, hctrl3, hmx3, hmv3, hsl3, hgapF, htier3,
       _hszD, _hszH, hbot3, hbotD, hupA, hupH, hkeepH, hkeepD, hmvLe, hslLe⟩ :=
     rise_gap_u2z bRun 1 4 2 0 5 y y2 z laneR red
@@ -575,10 +586,16 @@ theorem comb_u2z (b : Ecbs.Board)
       (fits_le hOps (by omega)) hNext hSlideZ
   have htakeRun : laneR.take n = fformRun n k bench x2 z x := by
     simpa [laneR, fformRunLane] using htakeR
-  refine ⟨bRun, bMid, b3, lane3, hole3, moves3, slides3, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+  refine ⟨bMir, bRun, bUp, bRise, bU, b3, lane3, hole3, moves3, slides3,
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
       hbench3, hon3, ?_, hmk3, ?_, ?_, hmv3, hsl3, hmx3, ?_, ?_, ?_,
       htier3.trans htierR, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-  · simpa [Ecbs.across, Ecbs.base_across, Ecbs.bottom] using hokR
+  · simpa [Ecbs.across] using hmir
+  · simpa [Ecbs.across, Ecbs.base_across, Ecbs.bottom] using hmulR
+  · simpa [Ecbs.across] using hzero
+  · simpa [Ecbs.up] using hmirU
+  · simpa [Ecbs.up, Ecbs.base_up, Ecbs.bottom] using hmulU
+  · simpa [Ecbs.gap, Ecbs.up] using hU
   · simpa [Ecbs.gap, Ecbs.bottom] using hmul
   · simpa [u] using htakeZ
   · intro h0

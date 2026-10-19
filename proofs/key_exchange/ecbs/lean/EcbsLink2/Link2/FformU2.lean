@@ -123,10 +123,10 @@ theorem rise_gap_u2 (b : Ecbs.Board) (dst first second seat gap : Nat)
         2 * n + n + n * (n + 1) + 3 * (bench - n)))
     (hSlide : FitsLen (riseSlideCount y lane n slides + 2 * n)) :
     let u := fformRise n k bench (if mirror then mirrorTrits y2 else y2) z y
-    ∃ bR b2 lane2 hole2,
-      (Ecbs.mirror b ((dst : Nat) : Int) >>= fun b1 =>
-          Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-            true true mirror) = .ok bR ∧
+    ∃ b1 bR b2 lane2 hole2,
+      Ecbs.mirror b ((dst : Nat) : Int) = .ok b1 ∧
+      Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+        true true mirror = .ok bR ∧
       Ecbs.mul bR ((gap : Nat) : Int) ((dst : Nat) : Int) ((dst : Nat) : Int)
           true false false = .ok b2 ∧
       lane2.take n = fieldMul n k bench u u ∧
@@ -175,7 +175,7 @@ theorem rise_gap_u2 (b : Ecbs.Board) (dst first second seat gap : Nat)
         ∀ hj' : j < b2.sudo_5Board_4held.size,
           b2.sudo_5Board_4held[j]'hj' = b.sudo_5Board_4held[j]'hj) := by
   intro u
-  obtain ⟨bR, hokR, hbenchR, htakeR, honR, htoR, hmkR, htierR, hemptyR, hixR, hctrlR, hmxR,
+  obtain ⟨b1, bR, hmir, hmulR, hbenchR, htakeR, honR, htoR, hmkR, htierR, hemptyR, hixR, hctrlR, hmxR,
       hmvR, hslR, hszH, hszHome, hhomeR, hheldR, hseatA, hseatH, holeR, carry⟩ :=
     rise_on_board b dst first second seat y y2 z lane mirror
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
@@ -266,7 +266,7 @@ theorem rise_gap_u2 (b : Ecbs.Board) (dst first second seat gap : Nat)
   have hmark : (m + 1) + 1 = m + 2 := by omega
   have hctrl4 : (ctrl + 2) + 2 = ctrl + 4 := by omega
   have hmx3 : max (max mx (m + 2)) ((m + 1) + 2) = max mx (m + 3) := by omega
-  refine ⟨bR, b2, lane2, hole2, hokR, hok2, ht2, ?_, hon2, hto2, hmk2,
+  refine ⟨b1, bR, b2, lane2, hole2, hmir, hmulR, hok2, ht2, ?_, hon2, hto2, hmk2,
       htier2.trans htierR, ?_, ?_, ?_, ?_, ?_, hszHeld2, hszHome2b, ?_, ?_, ?_, ?_, ?_, hb2,
       ?_, ?_, ?_, ?_⟩
   · have hc : (cOps + 1) + 1 = cOps + 2 := by omega
@@ -407,7 +407,12 @@ theorem rise_gap_u2z (b : Ecbs.Board) (dst first second seat gap : Nat)
         n * (n + 1) + 3 * (bench - n)) + 2 * n + n * (n + 1) + 3 * (bench - n)))
     (hSlideZ : FitsLen (riseSlideCount y lane n slides + 2 * n + 2 * n)) :
     let u := fformRise n k bench (if mirror then mirrorTrits y2 else y2) z y
-    ∃ b2 b3 lane3 hole3 moves3 slides3,
+    ∃ b1 bR b2 b3 lane3 hole3 moves3 slides3,
+      Ecbs.mirror b ((dst : Nat) : Int) = .ok b1 ∧
+      Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+        true true mirror = .ok bR ∧
+      Ecbs.mul bR ((gap : Nat) : Int) ((dst : Nat) : Int) ((dst : Nat) : Int)
+          true false false = .ok b2 ∧
       Ecbs.mul b2 ((gap : Nat) : Int) ((second : Nat) : Int) ((gap : Nat) : Int)
           false false false = .ok b3 ∧
       lane3.take n = fieldMul n k bench z (fieldMul n k bench u u) ∧
@@ -449,7 +454,7 @@ theorem rise_gap_u2z (b : Ecbs.Board) (dst first second seat gap : Nat)
       moves3 ≤ u2zMoveCap y y2 z lane mirror n k bench moves ∧
       slides3 ≤ u2zSlideCap y lane n slides := by
   intro u
-  obtain ⟨_bR, b2, lane2, hole2, _hokR, _hok2, ht2, carry2, hon2, hto2, hmk2, htier2,
+  obtain ⟨b1, bR, b2, lane2, hole2, hmir, hmulR, hok2, ht2, carry2, hon2, hto2, hmk2, htier2,
       hix2, hctrl2, hmx2, hmv2, hsl2, hszH2, hszHome2, hbotA, hbotH, hgapE,
       _hseatA, _hseatH, hb2, hupA, hupH, hkeepH, hkeepD⟩ :=
     rise_gap_u2 b dst first second seat gap y y2 z lane mirror
@@ -586,7 +591,7 @@ theorem rise_gap_u2z (b : Ecbs.Board) (dst first second seat gap : Nat)
     simp only [slides3, u2zSlideCap]
     have h2 := hslideLe
     omega
-  refine ⟨b2, b3, lane3, hole3, moves3, slides3, hok3, ht3, ?_, ?_, ?_,
+  refine ⟨b1, bR, b2, b3, lane3, hole3, moves3, slides3, hmir, hmulR, hok2, hok3, ht3, ?_, ?_, ?_,
       _hb3, _hon3, _hto3, _hmk3, _hix3, _hctrl3, _hmx3, ?_, ?_, _hsec3,
       ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hmovesCap, hslidesCap⟩
   · have hc : (cOps + 2) + 1 = cOps + 3 := by omega

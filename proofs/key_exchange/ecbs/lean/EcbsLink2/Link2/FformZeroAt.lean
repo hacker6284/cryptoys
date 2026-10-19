@@ -324,9 +324,13 @@ theorem zero_cell_proj
     (hpos : 0 < t.cells) (hi : i ≤ t.cells - 1) (hlen : cells.length = t.cells)
     (hc : cells[i]'(by omega) = 0)
     (hfitI : FitsLen (i + 1)) :
-    ∃ bZ, FrameAt bZ t baseX baseY ∧
+    ∃ (bL : Ecbs.Board) (bZ : Ecbs.Board)
+      (a : DownAcross bL xP yP t.n t.k t.w t.h t.r t.benchlen t.combgap
+            pk moves slides hole cOps (c0 + 1) mx t.script),
+      bZ = bottomFlag a zP ∧
+      FrameAt bZ t baseX baseY ∧
       ProjOn t bZ (fieldCube t.n t.k t.benchlen px) (fieldCube t.n t.k t.benchlen py) := by
-  obtain ⟨_bL, bZ, a, _hlift, _hfrob, hbZ, hfr, _hmon, hbon, hto,
+  obtain ⟨bL, bZ, a, _hlift, _hfrob, hbZ, hfr, _hmon, hbon, hto,
       lane, hbench, htake, hzero, hhome0, hhome1⟩ :=
     zero_bZ_frame t b baseX baseY px py xP yP zP done hAt hsh hOk sat hs2
       hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
@@ -395,7 +399,7 @@ theorem zero_cell_proj
       have hlenT : (lane.take t.n).length = min t.n lane.length := List.length_take _ _
       rw [htake, fieldCube_length t.n t.k t.benchlen zP hnb] at hlenT
       exact hlenT.symm ▸ Nat.min_le_right t.n lane.length
-    refine ⟨bZ, hfr, ?_⟩
+    refine ⟨bL, bZ, a, hbZ, hfr, ?_⟩
     refine ⟨fieldMul t.n t.k t.benchlen (fieldCube t.n t.k t.benchlen px)
         (fieldCube t.n t.k t.benchlen zP),
       fieldMul t.n t.k t.benchlen (fieldCube t.n t.k t.benchlen py)

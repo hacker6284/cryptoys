@@ -325,4 +325,176 @@ theorem cell_frame (t : Spec.Tier) (b : Ecbs.Board) (lane : List Nat)
     held4 := c.held4
   }
 
+private theorem read_false (b : Ecbs.Board) (i : Nat)
+    (h : b.sudo_5Board_4held[i]? = some false) :
+    ∀ hi : i < b.sudo_5Board_4held.size, b.sudo_5Board_4held[i] = false := by
+  intro hi
+  have heq := Array.getElem?_eq_getElem hi
+  rw [h] at heq
+  exact Option.some.inj heq.symm
+
+private theorem cube_len (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
+    (n k moves hole bench peak peakS cOps : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hF : src < b.sudo_5Board_4held.size)
+    (hHome : src < b.sudo_5Board_4home.size) :
+    (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  have hArr := cube_off_ops b dst src xs n k moves hole bench peak peakS cOps hops hF hHome
+  have hB := bumpOp_ops b 1 cOps hops
+  have hEq :
+      (cubeOffBoard b dst src xs n k moves hole bench peak peakS cOps hops hF hHome).sudo_5Board_4cost.sudo_5Costs_3ops =
+        (bumpOp b 1 cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops := by
+    rw [hArr, hB]
+  exact (congrArg Array.size hEq).trans (bumpOp_len b 1 cOps hops)
+
+/-- A home other than 0, 1, and 2 stays the flag the cell was given. A zero
+    cell never seats gap or spare. -/
+theorem comb_open_held
+    {b : Ecbs.Board} {x y : List Nat}
+    {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) (i : Nat) (peakS : Nat)
+    (h0 : (0 : Nat) ≠ i) (h1 : (1 : Nat) ≠ i) (h2 : (2 : Nat) ≠ i)
+    (hi : i < 8)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hOn : a.b1On = acrossBoard b x n k moves holeN bench pk peakS cOps ctrl mx
+        hops a.h0D a.h0H)
+    (hsz : b.sudo_5Board_4held.size = 8)
+    (hflag : b.sudo_5Board_4held[i]'(by rw [hsz]; exact hi) = false) :
+    (bottomFlag a z).sudo_5Board_4held[i]'(by rw [bottomFlag_szD a z]; exact hi) = false := by
+  have hfrom := bottomFlag_held_from a z i h0 h1 h2 hi
+  have hiB : i < b.sudo_5Board_4held.size := by rw [hsz]; exact hi
+  have hAc := across_held_ne b x i n k moves holeN bench pk peakS cOps ctrl mx
+    hops a.h0D a.h0H h0 hiB
+  have hArr : a.b1On.sudo_5Board_4held =
+      (acrossBoard b x n k moves holeN bench pk peakS cOps ctrl mx hops a.h0D a.h0H).sudo_5Board_4held :=
+    congrArg (fun brd => brd.sudo_5Board_4held) hOn
+  have hget := at_eq hArr (by rw [a.hszDOn]; exact hi)
+    (by rw [raw_held, Array.size_set, feed_held]; exact hiB)
+  exact hfrom.trans (hget.trans (hAc.trans hflag))
+
+/-- Gap and spare on the comb are the flags the across cube was given. -/
+theorem comb_gap_spare
+    {b : Ecbs.Board} {x y : List Nat}
+    {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) (peakS : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hOn : a.b1On = acrossBoard b x n k moves holeN bench pk peakS cOps ctrl mx
+        hops a.h0D a.h0H)
+    (hsz : b.sudo_5Board_4held.size = 8)
+    (h5 : b.sudo_5Board_4held[5]? = some false)
+    (h6 : b.sudo_5Board_4held[6]? = some false) :
+    (bottomFlag a z).sudo_5Board_4held[5]? = some false ∧
+      (bottomFlag a z).sudo_5Board_4held[6]? = some false := by
+  have h5i := read_false b 5 h5 (by rw [hsz]; decide)
+  have h6i := read_false b 6 h6 (by rw [hsz]; decide)
+  refine ⟨?_, ?_⟩
+  · rw [Array.getElem?_eq_getElem (by rw [bottomFlag_szD a z]; decide)]
+    exact congrArg some (comb_open_held a z 5 peakS (by decide) (by decide) (by decide)
+      (by decide) hops hOn hsz h5i)
+  · rw [Array.getElem?_eq_getElem (by rw [bottomFlag_szD a z]; decide)]
+    exact congrArg some (comb_open_held a z 6 peakS (by decide) (by decide) (by decide)
+      (by decide) hops hOn hsz h6i)
+
+/-- Every cube is a `bumpOp`. The ops array keeps its length through the comb. -/
+theorem comb_ops_len
+    {b : Ecbs.Board} {x y : List Nat}
+    {n k w h r bench cg pk moves slides holeN cOps ctrl mx script : Nat}
+    (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
+    (z : List Nat) (peakS : Nat)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hOn : a.b1On = acrossBoard b x n k moves holeN bench pk peakS cOps ctrl mx
+        hops a.h0D a.h0H) :
+    (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  have hOnSz := congrArg Array.size
+    (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops) hOn)
+  have hCube := cube_len (markerDownFeed b ctrl mx) 0 0 x n k moves holeN bench pk peakS
+    cOps hops a.h0D a.h0H
+  have hAcSz :
+      (acrossBoard b x n k moves holeN bench pk peakS cOps ctrl mx hops a.h0D a.h0H).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    have hA :
+        (acrossBoard b x n k moves holeN bench pk peakS cOps ctrl mx hops a.h0D a.h0H).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+          (cubeOffBoard (markerDownFeed b ctrl mx) 0 0 x n k moves holeN bench pk peakS cOps hops
+            a.h0D a.h0H).sudo_5Board_4cost.sudo_5Costs_3ops.size := rfl
+    exact hA.trans (hCube.trans (congrArg Array.size (feed_ops b ctrl mx)))
+  have hUpFeed := congrArg Array.size (upFeed_ops a)
+  have hSettle := congrArg Array.size
+    (settle_ops (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1)
+  have hUp := cube_len (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
+    (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)
+  have hPoint : (pointFeed a).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      (upBoard a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    simp [pointFeed, markerUpFeed, upFlag]
+  have hSeat := congrArg Array.size
+    (settle_ops (pointFeed a) 1 ⟨pointFeed_homeIx a, pointFeed_heldIx a⟩
+      (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a))
+  have hBot := cube_len (seatAt a) 2 2 z n k
+    (upMv2 a + 2 * pegCount ((upLane n k bench y).take n))
+    (raisedHole a.hole1 (topIdx (combStrip n bench y))) bench
+    (raisedPeak (upPk2 a)
+      (countHeld ((pointFeed a).sudo_5Board_4held.set ⟨1, pointFeed_heldIx a⟩ true) 7))
+    (raisedPeak a.peakS1 (countHeld (upSettled a).sudo_5Board_4held 7))
+    (cOps + 2) (seatAt_ops a) (seatAt_held2ix a) (seatAt_home2ix a)
+  have hFlag : (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      (bottomOff a z).sudo_5Board_4cost.sudo_5Costs_3ops.size := rfl
+  have hOff : (bottomOff a z).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      (seatAt a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [bottomOff]; exact hBot
+  have hSeatSz : (seatAt a).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      (pointFeed a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [seatAt]; exact hSeat
+  have hUpSz : (upBoard a).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [upBoard]; exact hUp
+  have hSetSz : (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      (upFeed a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [upSettled]; exact hSettle
+  exact hFlag.trans (hOff.trans (hSeatSz.trans (hPoint.trans (hUpSz.trans
+    (hSetSz.trans (hUpFeed.trans (hOnSz.trans hAcSz)))))))
+
+/-- Settling a home other than gap and spare keeps those flags empty and
+    keeps the ops length. The comb keeps both. -/
+theorem settle_comb_kept
+    (b : Ecbs.Board) (home : Nat) (hin : HomeIn b home)
+    (xs : List Nat) (n moves slides peak : Nat)
+    (hne5 : home ≠ 5) (hne6 : home ≠ 6)
+    {x y : List Nat}
+    {k w h r bench cg pkS movesS slidesS holeN cOps ctrl mx script : Nat}
+    (a : DownAcross (settleBoard b home hin.hH hin.hD xs n moves slides peak)
+        x y n k w h r bench cg pkS movesS slidesS holeN cOps ctrl mx script)
+    (z : List Nat) (peakS : Nat)
+    (hops : 1 < (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hOn : a.b1On = acrossBoard (settleBoard b home hin.hH hin.hD xs n moves slides peak)
+        x n k movesS holeN bench pkS peakS cOps ctrl mx hops a.h0D a.h0H)
+    (hsz : b.sudo_5Board_4held.size = 8)
+    (h5 : b.sudo_5Board_4held[5]? = some false)
+    (h6 : b.sudo_5Board_4held[6]? = some false)
+    (hopsN : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5) :
+    (bottomFlag a z).sudo_5Board_4held[5]? = some false ∧
+      (bottomFlag a z).sudo_5Board_4held[6]? = some false ∧
+      (bottomFlag a z).sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+  let bS := settleBoard b home hin.hH hin.hD xs n moves slides peak
+  have hset := settle_held_eq b home hin xs n moves slides peak
+  have h5S : bS.sudo_5Board_4held[5]? = some false := by
+    rw [show bS.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true from hset]
+    rw [Array.getElem?_set_ne _ _ _ hne5]
+    exact h5
+  have h6S : bS.sudo_5Board_4held[6]? = some false := by
+    rw [show bS.sudo_5Board_4held = b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true from hset]
+    rw [Array.getElem?_set_ne _ _ _ hne6]
+    exact h6
+  have hszS : bS.sudo_5Board_4held.size = 8 := by
+    rw [hset, Array.size_set, hsz]
+  have hopsS : bS.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+    rw [show bS.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size from
+        congrArg Array.size (settle_ops b home hin xs n moves slides peak)]
+    exact hopsN
+  obtain ⟨h5F, h6F⟩ := comb_gap_spare a z peakS hops hOn hszS h5S h6S
+  exact ⟨h5F, h6F, (comb_ops_len a z peakS hops hOn).trans hopsS⟩
+
 end EcbsLink2.Link2

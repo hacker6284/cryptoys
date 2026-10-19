@@ -97,7 +97,22 @@ theorem pow_zero_home (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
         (bS.sudo_5Board_4home[up]?) = some (embed (powStep n k bench rhs acc 0)) ∧
         bS.sudo_5Board_8bench_on = false ∧
         (bS.sudo_5Board_4held[up]?) = some true ∧
-        bS.sudo_5Board_6marker = 0 := by
+        bS.sudo_5Board_6marker = 0 ∧
+        bS.sudo_5Board_9marker_on = true ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 1) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_5moves =
+          Int.ofNat (cubeMoves moves acc n k bench + 2 * pegCount (fieldCube n k bench acc)) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+          Int.ofNat (slides + 2 * pegCount (fieldCube n k bench acc)) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+          Int.ofNat (raisedHole hole (topIdx (combStrip n bench acc))) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx 1) ∧
+        (∃ pk, bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
+        (∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
+        (∀ i, i ≠ up → (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?)) ∧
+        (∀ i, i ≠ up → (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) := by
   have hlift := marker_lift_below b hm
   have hcube := cube_down_eq b up up acc w h r n k moves hole bench peak peakS cOps cg
       ctrl mx script hmk hoff hm hc hx hs hpos hfitCtrl hops hop1 hfops hF hHome hHF hArr h7
@@ -185,14 +200,60 @@ theorem pow_zero_home (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
   have hpow : powStep n k bench rhs acc 0 = fieldCube n k bench acc := by
     rw [powStep_branch]
     simp
-  have hmark : bS.sudo_5Board_6marker = 0 := by
-    have hsetR := settle_refines bC up lane n mvC slides pkC hHC hDC h7C hon hto hempty
-      hbench hnC hposL hnle hzero hfn hfitL hmvC hslC hpkC hpegL hfitM hfitS
+  have hsetR := settle_refines bC up lane n mvC slides pkC hHC hDC h7C hon hto hempty
+    hbench hnC hposL hnle hzero hfn hfitL hmvC hslC hpkC hpegL hfitM hfitS
+  have hEq : settleBoard bC up hHC hDC lane n mvC slides pkC = bS := by
     rw [hsetR] at hset
     injection hset with hEq
+  have hmark : bS.sudo_5Board_6marker = 0 := by
     rw [← hEq, settle_ix_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
     simp [bC, bOff, cube_off_ix, feed, markerDownFeed]
-  refine ⟨bS, ?_, ?_, hoffS, hheldS, hmark⟩
+  have hflagS : bS.sudo_5Board_9marker_on = true := by
+    rw [← hEq, settle_marker_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+  have hctrlS : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 1) := by
+    rw [← hEq, settle_ctrl_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    simp only [bC, bOff, cube_off_ctrl, feed, markerDownFeed]
+  have hmvS : bS.sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (cubeMoves moves acc n k bench + 2 * pegCount (fieldCube n k bench acc)) := by
+    rw [← hEq, settle_moves_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    simp [mvC, htake]
+  have hslS : bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (slides + 2 * pegCount (fieldCube n k bench acc)) := by
+    rw [← hEq, settle_slides_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    simp [htake]
+  have hopsS : bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) := by
+    rw [← hEq, settle_ops bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    simp [bC, bOff, cube_off_ops, feed, markerDownFeed]
+  have hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      Int.ofNat (raisedHole hole (topIdx (combStrip n bench acc))) := by
+    rw [← hEq, settle_hole_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    simp [bC, bOff, cube_off_hole, feed, markerDownFeed, hhole]
+  have hmxS : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx 1) := by
+    rw [← hEq, settle_mx_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    simp [bC, bOff, cube_off_mx, feed, markerDownFeed]
+  have hpkS : ∃ pk, bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk := by
+    rw [← hEq]
+    exact ⟨raisedPeak pkC (countHeld (bC.sudo_5Board_4held.set ⟨up, hDC⟩ true) 7),
+      settle_peak_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC hpkC⟩
+  have hpsS : ∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps := by
+    rw [← hEq, settle_strict_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    refine ⟨raisedPeak peakS (countHeld b.sudo_5Board_4held 7), ?_⟩
+    simp [bC, bOff, cube_off_strict, feed, markerDownFeed]
+  have hhomeK : ∀ i, i ≠ up → (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?) := by
+    intro i hiu
+    rw [← hEq, settle_home_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    rw [Array.getElem?_set_ne _ ⟨up, hHC⟩ _ hiu.symm]
+    simp only [bC, bOff, cube_off_home, feed, markerDownFeed]
+    rw [Array.getElem?_set_ne _ ⟨up, hHome⟩ _ hiu.symm]
+  have hheldK : ∀ i, i ≠ up → (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?) := by
+    intro i hiu
+    rw [← hEq, settle_held_eq bC up ⟨hHC, hDC⟩ lane n mvC slides pkC]
+    rw [Array.getElem?_set_ne _ ⟨up, hDC⟩ _ hiu.symm]
+    simp only [bC, bOff, cube_off_held, feed, markerDownFeed]
+    rw [Array.getElem?_set_ne _ ⟨up, hF⟩ _ hiu.symm]
+  refine ⟨bS, ?_, ?_, hoffS, hheldS, hmark, hflagS, hctrlS, hmvS, hslS, hopsS, hholeS,
+      hmxS, hpkS, hpsS, hhomeK, hheldK⟩
   · rw [hlift, ok_bind, hbC, ok_bind, hset]
   · rw [hhome, hpow]
 

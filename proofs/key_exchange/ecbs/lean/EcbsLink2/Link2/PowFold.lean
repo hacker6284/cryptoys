@@ -171,7 +171,23 @@ theorem pow_zero_seated (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
         (bS.sudo_5Board_4home[up]?) = some (embed (powStep n k bench rhs acc 0)) ∧
         bS.sudo_5Board_8bench_on = false ∧
         (bS.sudo_5Board_4held[up]?) = some true ∧
-        bS.sudo_5Board_6marker = 0 := by
+        bS.sudo_5Board_6marker = 0 ∧
+        bS.sudo_5Board_9marker_on = true ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_5moves =
+          Int.ofNat (cubeMoves moves acc n k bench + 2 * pegCount (fieldCube n k bench acc)) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+          Int.ofNat (slides + 2 * pegCount (fieldCube n k bench acc)) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+          Int.ofNat (raisedHole hole (topIdx (combStrip n bench acc))) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx 1) ∧
+        (∃ pk, bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
+        (∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
+        (bS.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) = some (Int.ofNat (cOps + 1)) ∧
+        (∀ j, j ≠ 1 → (bS.sudo_5Board_4cost.sudo_5Costs_3ops[j]?) =
+          (b.sudo_5Board_4cost.sudo_5Costs_3ops[j]?)) ∧
+        (∀ i, i ≠ up → (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?)) ∧
+        (∀ i, i ≠ up → (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) := by
   let bL := markerLifted b ctrl
   have hlift : Ecbs.marker_lift b = .ok bL := by
     simpa [bL, markerLifted] using marker_lift_refines b m ctrl hm hc hfitLift
@@ -209,8 +225,23 @@ theorem pow_zero_seated (b : Ecbs.Board) (up : Nat) (acc rhs : List Nat)
       (by simpa [bL, markerLifted] using hr)
       (by simpa [bL, markerLifted] using hk)
       hsm hnsm hfitB hfold hpeg hfitMv hfitSl
-  rcases hzero with ⟨bS, hrun, hhome, hoffS, hheldS, hmark⟩
-  refine ⟨bS, ?_, hhome, hoffS, hheldS, hmark⟩
+  rcases hzero with ⟨bS, hrun, hhome, hoffS, hheldS, hmark, hflagZ, hctrlZ, hmvZ, hslZ,
+      hopsZ, hholeZ, hmxZ, hpkZ, hpsZ, hhomeZ, hheldZ⟩
+  have hctrl2 : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) := by
+    simpa [show (ctrl + 1) + 1 = ctrl + 2 by omega] using hctrlZ
+  have hop1S : (bS.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) = some (Int.ofNat (cOps + 1)) := by
+    have hsz : 1 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      rw [hopsZ, Array.size_set]; exact hops
+    rw [hopsZ, Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hops)]
+    simp [Array.getElem_set]
+  have hopK : ∀ j, j ≠ 1 → (bS.sudo_5Board_4cost.sudo_5Costs_3ops[j]?) =
+      (b.sudo_5Board_4cost.sudo_5Costs_3ops[j]?) := by
+    intro j hj
+    rw [hopsZ]
+    refine Eq.trans (Array.getElem?_set_ne _ _ _ (by intro h; exact hj h.symm)) ?_
+    simp [bL, markerLifted]
+  refine ⟨bS, ?_, hhome, hoffS, hheldS, hmark, hflagZ, hctrl2, hmvZ, hslZ, hholeZ, hmxZ,
+      hpkZ, hpsZ, hop1S, hopK, hhomeZ, hheldZ⟩
   · rw [hlift, ok_bind]
     have hid := marker_lift_neg bL (by simp [bL, markerLifted])
     rw [hid, ok_bind] at hrun

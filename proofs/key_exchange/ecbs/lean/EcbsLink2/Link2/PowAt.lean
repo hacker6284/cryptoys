@@ -14,7 +14,7 @@ open EcbsLink2.Spec
 attribute [local irreducible] ontoFoldBoard peakBoard noteBench laneFold
 
 /-- What clear-and-settle reads off the live multiply. -/
-structure PowAt (b : Ecbs.Board) (up spare : Nat) (cube : List Nat) (slot0 : Int) : Prop where
+structure PowLiveAt (b : Ecbs.Board) (up spare : Nat) (cube : List Nat) (slot0 : Int) : Prop where
   homeUp : b.sudo_5Board_4home[up]? = some (embed cube)
   heldUp : b.sudo_5Board_4held[up]? = some true
   spareHome : b.sudo_5Board_4home[spare]? = some (#[] : Array Int)
@@ -29,7 +29,7 @@ theorem powAt_board (b : Ecbs.Board) (sch : List Nat) (n k mv peak up spare : Na
     (hSpH : b.sudo_5Board_4home[spare]? = some (#[] : Array Int))
     (hSpD : b.sudo_5Board_4held[spare]? = some false)
     (hOps : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some slot0) :
-    PowAt (powLiveBoard b sch n k mv peak) up spare cube slot0 := by
+    PowLiveAt (powLiveBoard b sch n k mv peak) up spare cube slot0 := by
   have hHome : (powLiveBoard b sch n k mv peak).sudo_5Board_4home = b.sudo_5Board_4home := by
     simp only [powLiveBoard, ontoFoldBoard_home]
   have hHeldA : (powLiveBoard b sch n k mv peak).sudo_5Board_4held = b.sudo_5Board_4held := by

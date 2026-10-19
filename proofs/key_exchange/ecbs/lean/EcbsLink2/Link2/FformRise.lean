@@ -12,6 +12,15 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+/-- A successful bind has an intermediate `.ok`. -/
+theorem bind_ok_split {ε α β} {m : Except ε α} {f : α → Except ε β} {b : β}
+    (h : m >>= f = .ok b) : ∃ a, m = .ok a ∧ f a = .ok b := by
+  cases m with
+  | error _ =>
+    simp [Bind.bind, Except.bind] at h
+  | ok a =>
+    exact ⟨a, rfl, by simpa [Bind.bind, Except.bind] using h⟩
+
 private theorem mirror_trits (y : List Nat) : allTritList (mirrorTrits y) := by
   intro a ha
   simp only [mirrorTrits, List.mem_map] at ha
@@ -133,10 +142,10 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
     (hfitB : FitsLen bench)
     (hfold : FitsLen ((moves + pegCount y) + 2 * pegCount (lane.take n) + 3 * n +
         n * (n + 1) + 3 * (bench - n))) :
-    ∃ b',
-      (Ecbs.mirror b ((dst : Nat) : Int) >>= fun b1 =>
-          Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-            true true mirror) = .ok b' ∧
+    ∃ b1 b',
+      Ecbs.mirror b ((dst : Nat) : Int) = .ok b1 ∧
+      Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+        true true mirror = .ok b' ∧
       b'.sudo_5Board_5bench =
         embed (laneFold n (n - k)
           (school n y2 z (pref (mirrorTrits y) bench n) mirror)) ∧
@@ -432,11 +441,16 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
     have hget := idx_eq (hheldS0.trans hset) seat hSeatD
     simp only [Array.getElem_set, if_pos rfl] at hget
     exact hget
-  refine ⟨b', ?_, hbench, rise_lane_spec mirror n k bench y2 z y hy2 hz hlen hspan hnb,
+  have hbind :
+      (Ecbs.mirror b ((dst : Nat) : Int) >>= fun b1 =>
+          Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+            true true mirror) = .ok b' := by
+    rw [hrise, hflag]
+    exact hok
+  obtain ⟨b1, hmir, hmul⟩ := bind_ok_split hbind
+  refine ⟨b1, b', hmir, hmul, hbench, rise_lane_spec mirror n k bench y2 z y hy2 hz hlen hspan hnb,
       hon, hto, hmk'.trans hmkS, htierB, hempty, hix.trans hmS, hctrl.trans hcS,
       hmx.trans hxS, ?_, ?_, hszHeld, hszHomeB, ?_, ?_, ?_, ?_, ?_⟩
-  · rw [hrise, hflag]
-    exact hok
   · rw [hmv, hmvS]
   · rw [hsl, hslS]
   · intro j hneD hneSeat hne6 hj hj'

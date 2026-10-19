@@ -114,10 +114,10 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
     (hfitB : FitsLen bench)
     (hfold : FitsLen ((moves + pegCount x) + 2 * pegCount (lane.take n) + 3 * n +
         n * (n + 1) + 3 * (bench - n))) :
-    ∃ b',
-      (Ecbs.mirror b ((dst : Nat) : Int) >>= fun b1 =>
-          Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
-            true true false) = .ok b' ∧
+    ∃ b1 b',
+      Ecbs.mirror b ((dst : Nat) : Int) = .ok b1 ∧
+      Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+        true true false = .ok b' ∧
       b'.sudo_5Board_5bench =
         embed (laneFold n (n - k)
           (school n x2 z (pref (mirrorTrits x) bench n) false)) ∧
@@ -406,10 +406,15 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
     rw [hszH]; exact hHomeS'
   have h2Held : second < b'.sudo_5Board_4held.size := by
     rw [hsz']; exact hS'
-  refine ⟨b', ?_, hbench', ?_, hon', hto', ?_, htierB, hempty', hzeroR,
-      hix.trans hmS, hctrl.trans hcS, hmx.trans hxS, ?_, ?_, hszHeld, hszHomeB, ?_, ?_, ?_, ?_, ?_⟩
-  · rw [hrise, hflag]
+  have hbind :
+      (Ecbs.mirror b ((dst : Nat) : Int) >>= fun b1 =>
+          Ecbs.mul b1 ((dst : Nat) : Int) ((first : Nat) : Int) ((second : Nat) : Int)
+            true true false) = .ok b' := by
+    rw [hrise, hflag]
     exact hok
+  obtain ⟨b1, hmir, hmul⟩ := bind_ok_split hbind
+  refine ⟨b1, b', hmir, hmul, hbench', ?_, hon', hto', ?_, htierB, hempty', hzeroR,
+      hix.trans hmS, hctrl.trans hcS, hmx.trans hxS, ?_, ?_, hszHeld, hszHomeB, ?_, ?_, ?_, ?_, ?_⟩
   · rw [htakeF]
     unfold fformRun
     rfl

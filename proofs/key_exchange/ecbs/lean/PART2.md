@@ -836,6 +836,10 @@ The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `mak
 
 ## Scope that stays in the PR body
 
+- The root strip is `rootDigits` with the last hole empty (`root_strip_loop`).
+- Once `x³` and `x²` are seated, `curve_side_close` writes `curveSide`. Settling the cube bench writes the cube into the home (`cube_bench_settles`). The hit compare is `rootHit` (`root_hit_cmp`).
+- `base_point_of_spec` still takes the seated-homes premise. The square multiply, the power loop, and the search loop are not yet tied to those lemmas.
+- Demo `walk_key` is `walk_chord` after the two base puts (`walk_key_demo_chord`). `WalkKeyNonUnit` is the open cell on Toy, Hobby, and Serious. The point equality, the counters, and the other six exports are still open.
 - Success-branch reachability is not proved for Toy, Hobby, or Serious.
 - SPEC.md gives the Hobby and Serious base points only as hashes.
 - Future work, not started: proving `fieldInv` is the true field inverse, so inverses could be checked as one-multiply certificates.

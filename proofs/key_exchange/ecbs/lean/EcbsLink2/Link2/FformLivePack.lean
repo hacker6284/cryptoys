@@ -373,11 +373,12 @@ theorem live_cell_at
     (hspan : 2 * (t.n - 1) < t.benchlen) (hnb : t.n ≤ t.benchlen)
     (hne : fformBottom t.n t.k t.benchlen v z ≠ List.replicate t.n 0)
     (hinv : ∃ w, w.length = t.n ∧ allTritList w ∧
-      fieldMul t.n t.k t.benchlen (fformBottom t.n t.k t.benchlen v z) w = onePeg t.n) :
+      fieldMul t.n t.k t.benchlen (fformBottom t.n t.k t.benchlen v z) w = onePeg t.n)
+    (hopsN : b11.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5) :
     ∃ b',
       Ecbs.fform_add b red = .ok (true, b') ∧
       FformAt t b' baseX baseY x3 yUp (i + 1) := by
-  obtain ⟨b', lane', hadd, hC, hmon, hH0, hcount, hslot⟩ :=
+  obtain ⟨b', lane', hadd, hC, hmon, hH0, hcount, hslot, h6, hopsEq⟩ :=
     fform_add_cell b red t0 t1 ops b2 b3 b4 b5 b6 b7 b8 b9 b10 b11
       hAtL hInc hPut hMir hRun hZ hMirU hRise hU hUZ hV hVZ hSum hAdd
       lane n k bench u v z x2 y2 script w h r m ctrl mx cOps moves slides hole
@@ -442,12 +443,21 @@ theorem live_cell_at
   have hcLe' := ctrl_step ctrl' preCtrl i (cellCtrlCharge t + 4) hctrlFin hcLe
     (sixteen_le _ h46)
   have ch' : TailCharge b' moves' slides' ctrl' mark' mx' pk' ps' hole' cOps' := ch
+  have h5out : b'.sudo_5Board_4held[5]? = some false := by
+    have hi : 5 < b'.sudo_5Board_4held.size := by rw [hC.szD, hszD]; decide
+    rw [Array.getElem?_eq_getElem hi]
+    exact congrArg some (hC.held5 hi)
+  have h6out : b'.sudo_5Board_4held[6]? = some false := by
+    have hi : 6 < b'.sudo_5Board_4held.size := by rw [hC.szD, hszD]; decide
+    rw [Array.getElem?_eq_getElem hi]
+    exact congrArg some (h6 hi)
+  have hopsOut : b'.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := hopsEq.trans hopsN
   exact ⟨b', hadd, fform_at_pack t b' baseX baseY x3 yUp (i + 1)
     hmon hpx hpy hpxT hpyT hbx hby hbxT hbyT hH0 hscript hfr hp
     moves' slides' ctrl' mark' mx' pk' ps' hole' (c1 + 3) cOps' ch' hops1' hop1'
     hfitC hc1' hc0'
     (fit_move_tier moves' n bench t.n t.benchlen hnk.symm hbb.symm hfitM)
     (fit_slide_tier slides' n t.n hnk.symm hfitS)
-    hmvLe' hslLe' hcLe'⟩
+    hmvLe' hslLe' hcLe' h5out h6out hopsOut⟩
 
 end EcbsLink2.Link2

@@ -134,13 +134,16 @@ theorem cell_at_of_add (b : Board) (lane : List Nat) (n k bench : Nat)
         slides' ≤ slides + 16 * n) ∧
       ((1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) →
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
-          b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) := by
-  obtain ⟨b', lane', hdo, hC, hslot, hmon, hH0, hcount⟩ :=
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) ∧
+      (∀ h6 : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  obtain ⟨b', lane', hdo, hC, hslot, hmon, hH0, hcount, h6, hopsSz⟩ :=
     cell_on_add b lane n k bench u v z x2 y2 script w h r
       m ctrl mx cOps moves slides hole peak peakS red x3 yUp s
       hbound hfitM6 hfitC6 hfops6 hf hBig hSlide
       hw0 hh0 hrR hrP hnE hkLe hgapN hsm hnsm hfitB hx hy
-  refine ⟨b', lane', ?_, hC, hmon, hH0, hcount, hslot⟩
+  refine ⟨b', lane', ?_, hC, hmon, hH0, hcount, hslot, h6, hopsSz⟩
   rw [fformAddTail_chain]
   exact hdo
 
@@ -197,13 +200,16 @@ theorem fform_add_cell (b : Board) (red : Bool)
         slides' ≤ slides + 16 * n) ∧
       ((1 < b11.sudo_5Board_4cost.sudo_5Costs_3ops.size) →
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
-          b11.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) := by
-  obtain ⟨b', lane', hTail, hC, hmon, hH0, hcount, hslot⟩ :=
+          b11.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) ∧
+      (∀ h6 : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b11.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  obtain ⟨b', lane', hTail, hC, hmon, hH0, hcount, hslot, h6, hopsSz⟩ :=
     cell_at_of_add b11 lane n k bench u v z x2 y2 script w h r
       m ctrl mx cOps moves slides hole peak peakS red x3 yUp s
       hbound hfitM6 hfitC6 hfops6 hf hBig hSlide
       hw0 hh0 hrR hrP hnE hkLe hgapN hsm hnsm hfitB hx hy
-  refine ⟨b', lane', ?_, hC, hmon, hH0, hcount, hslot⟩
+  refine ⟨b', lane', ?_, hC, hmon, hH0, hcount, hslot, h6, hopsSz⟩
   exact fform_add_nz b red t0 t1 ops b2 b3 b4 b5 b6 b7 b8 b9 b10 b11 b'
     hAt hInc hPut hMir hRun hZ hMirU hRise hU hUZ hV hVZ hSum hAdd hTail
 

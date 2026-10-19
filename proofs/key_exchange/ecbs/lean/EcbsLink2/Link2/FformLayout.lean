@@ -226,7 +226,7 @@ theorem homes_layout_comb
       moves slides ctrl mark mx pk peakS hole c1
       hmv hsl hcCtrl hmark hmx hpk hstrict hhole hops hop1
       hfitCtrl hOps hRoom hSl
-  obtain ⟨bLF, a, hliftF, hflag, hfr⟩ :=
+  obtain ⟨bLF, a, hliftF, hflag, hfr, _, _, _⟩ :=
     zero_comb_frame t b baseX baseY px py xP yP zP done hAt0 hsh hOk sat hscript
       hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
       moves slides ctrl mark mx pk peakS hole c1
@@ -366,7 +366,7 @@ theorem ybench_layout_comb
     htake hnle hzero hfitY hpos hlift hfrob
   obtain ⟨moves, slides, ctrl, _, _, c0, moves', slides', _, _, _,
       hmv, hsl, hc0, _, _, hop0in, _, _, hmv', hsl', hctrl', hmark', _,
-      _, _, _, _, _, hop0', hleM, hleS⟩ :=
+      _, _, _, _, _, hop0', hleM, hleS, _, _, _⟩ :=
     ybench_zero_counts t b bL bZ baseX baseY px py xP yP zP ys done hAt0
       hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h2 hd0 hd1 hd2 hon hto
       hbench htake hnle hzero hfitY hpos hlift hfrob
@@ -468,7 +468,7 @@ theorem zbench_layout_comb
     htake hnle hzero hfitY hpos hlift hfrob
   obtain ⟨moves, slides, ctrl, _, _, c0, moves', slides', _, _, _,
       hmv, hsl, hc0, _, _, hop0in, _, _, hmv', hsl', hctrl', hmark', _,
-      _, _, _, _, _, hop0', hleM, hleS⟩ :=
+      _, _, _, _, _, hop0', hleM, hleS, _, _, _⟩ :=
     zbench_zero_counts t b bL bZ baseX baseY px py xP yP zP ys done hAt0
       hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto
       hbench htake hnle hzero hfitY hpos hlift hfrob

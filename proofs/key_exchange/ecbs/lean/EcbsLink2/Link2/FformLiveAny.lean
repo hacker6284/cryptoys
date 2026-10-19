@@ -112,6 +112,7 @@ structure OnComb (t : Spec.Tier) (bZ : Ecbs.Board) (red : Bool)
   hu : u = fformRise t.n t.k t.benchlen
     (if red then mirrorTrits baseY else baseY)
     (fieldCube t.n t.k t.benchlen zP) (fieldCube t.n t.k t.benchlen yP)
+  hopsN : b11.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
 
 private theorem same_nat (a b : Nat) (p : Int)
     (h1 : p = Int.ofNat a) (h2 : p = Int.ofNat b) : a = b :=
@@ -163,7 +164,7 @@ private theorem live_on
     o.hnsm o.hfitB o.hx o.hy baseX baseY done c0 c1 moves slides ctrl tw hpos
     hscript o.hpx o.hpy o.hpxT o.hpyT hbx hby hbxT hbyT o.hx2 o.hy2 o.htier
     o.hszH o.hszD rfl rfl rfl o.hopIn o.hop1 o.hcOps hleM hleS rfl hfitC1
-    hfitMul hmvLe hslLe hcLe hwide h32 h46 hspan hnb o.hne o.hinv
+    hfitMul hmvLe hslLe hcLe hwide h32 h46 hspan hnb o.hne o.hinv o.hopsN
 
 private theorem close_live
     (t : Spec.Tier) (b bZ : Ecbs.Board) (red : Bool)
@@ -266,7 +267,7 @@ theorem live_any
       hH0, hscript, hszH, hszD, hproj, hrest⟩
   rcases hrest with ⟨moves0, slides0, ctrl0, _, _, _, _, _, c1, c00,
       hmv0, hsl0, hc00, _, _, _, _, _, _, hop1?, hop0?,
-      _, hc1, hfitMul, _, _, hmvLe, hslLe, hcLe⟩
+      _, hc1, hfitMul, _, _, hmvLe, hslLe, hcLe, _, _, _⟩
   rcases hproj with ⟨xP, yP, zP, lay, hxL, hyL, hzL, hxT, hyT, hzT, hXP, hYP, _,
       h0, hlay, _⟩
   have hspan := span2 t.n t.benchlen t.combgap sat.cube_span

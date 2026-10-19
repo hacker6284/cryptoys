@@ -17,7 +17,6 @@ structure BenchCarry (b : Ecbs.Board) (lane : List Nat)
   ops0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'opsSz = Int.ofNat cOps
   spareSz : 6 < b.sudo_5Board_4held.size
   spare : b.sudo_5Board_4held[6]'spareSz = false
-  peak7 : 7 ≤ peak
   peakEq : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int)
   strictEq : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int)
   holeEq : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole

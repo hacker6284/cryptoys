@@ -26,6 +26,12 @@ private theorem fold_peak_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : N
   dsimp only
   split <;> simp [hno, ofNat_eq_natCast]
 
+private theorem fold_peak_rise (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak peak (countHeld b.sudo_5Board_4held 7)) := by
+  unfold ontoFoldBoard peakBoard
+  simp [noteBench_held, ofNat_eq_natCast]
+
 private theorem fold_strict_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
     (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_11peak_strict =
       b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
@@ -123,9 +129,7 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
     (hf : FitsLen n)
     (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
-    (hpeak7 : 7 ≤ peak)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
-    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
@@ -150,8 +154,10 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
       (laneFold n (n - k)
           (school n xs ys (List.replicate bench 0) false)).take n =
         fieldMul n k bench xs ys ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) ∧
-      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_4peak =
+        (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨second, hS⟩ false) 7) : Int) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        (raisedPeak peakS (countHeld b.sudo_5Board_4held 7) : Int) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
         (if decide (Int.ofNat (topIdx (school n xs ys (List.replicate bench 0) false)) >
               Int.ofNat hole) then
@@ -239,13 +245,9 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
       (by rw [hschLen]; exact hfitB) hwB hhB hrB hnB hkB hblB hw0 hh0 hrR hrP hnE hkLe hgap
       hschT hmB hholeB hpeakB h7B (by rw [hschLen]; exact hsm) hnsm hfitF
       (by rw [hschLen]; exact Nat.le_refl bench) (Nat.lt_of_lt_of_le hn0 hnb)
-  have hnoF : ¬ peak < countHeld bFold.sudo_5Board_4held 7 := by
-    have hle : countHeld bFold.sudo_5Board_4held 7 ≤ 7 := countHeld_seven _
-    omega
-  have hstrictB : bFold.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int) := by
-    have hcount : countHeld b.sudo_5Board_4held 7 ≤ 7 := countHeld_seven _
-    have hnot : ¬ peakS < countHeld b.sudo_5Board_4held 7 := by omega
-    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, raisedPeak, hpeakS, hnot,
+  have hstrictB : bFold.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      (raisedPeak peakS (countHeld b.sudo_5Board_4held 7) : Int) := by
+    simp [bFold, withMoves, mulPrep, strictBoard, mulAimed, raisedPeak, hpeakS,
       ofNat_eq_natCast]
   have hopsB : bFold.sudo_5Board_4cost.sudo_5Costs_3ops =
       b.sudo_5Board_4cost.sudo_5Costs_3ops := by
@@ -281,7 +283,8 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
     exact hOk
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
   · simpa [sch, pad] using zero_school_mul n k bench xs ys
-  · exact fold_peak_out bFold sch n k mvN peak hnoF
+  · rw [fold_peak_rise bFold sch n k mvN peak, hheldB]
+    exact ofNat_eq_natCast _
   · rw [fold_strict_out bFold sch n k mvN peak, hstrictB]
   · rw [fold_hole_out bFold sch n k mvN peak, hholeB]
   · exact (fold_ops_here bFold sch n k mvN peak).trans hopsB
@@ -358,9 +361,7 @@ theorem run_is_fformRun (b : Ecbs.Board) (dst first second : Nat)
     (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
     (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
-    (hpeak7 : 7 ≤ peak)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
-    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hxsT : allTritList xs)
     (hfi : FitsLen (2 * (n - 1)))
@@ -402,7 +403,7 @@ theorem run_is_fformRun (b : Ecbs.Board) (dst first second : Nat)
   obtain ⟨b', hok, _, htake, _, _, _, _, _, _⟩ := run_else_field b dst first second (mirrorTrits x) xs ys
     w h r n k moves slides hole peak peakS bench hoff hbl hD hHD hHeldD hHomeD
     hF hHome hHF hArr hS hHomeS hHS hYs hSpH hSpHome hSpE h7 hneD1 hneD2 hne6D
-    hne6F hne6S hn0 hnb hn hlenM hlenx hleny hf hmoves hslides hpeak hpeak7 hpeakS hpeakS7
+    hne6F hne6S hn0 hnb hn hlenM hlenx hleny hf hmoves hslides hpeak hpeakS
     hspan hmir hxsT hfi hfitM hfitS hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk
     hsm hnsm hfitB hfold
   refine ⟨b', hok, ?_⟩

@@ -110,6 +110,12 @@ theorem fold_peak (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat)
   dsimp only
   split <;> simp [hno, ofNat_eq_natCast]
 
+theorem fold_peak_rise (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+    (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak peak (countHeld b.sudo_5Board_4held 7)) := by
+  unfold ontoFoldBoard peakBoard
+  simp [noteBench_held, ofNat_eq_natCast]
+
 theorem fold_hole (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
     (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
       (if decide (Int.ofNat (topIdx sch) >
@@ -340,7 +346,6 @@ theorem settle_nocopy (b : Ecbs.Board) (dst first second seat : Nat)
     (hne : first ≠ second) (hneSeatF : seat ≠ first) (hneSeatS : seat ≠ second)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (hlenx : xs.length = n) (hleny : ys.length = n)
-    (hpeak7 : 7 ≤ peak) (hpeakS7 : 7 ≤ peakS)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
     (hspan : 2 * (n - 1) < bench)
     (hxsT : allTritList xs) (hysT : allTritList ys)
@@ -359,9 +364,9 @@ theorem settle_nocopy (b : Ecbs.Board) (dst first second seat : Nat)
     (hfitB : FitsLen bench)
     (hfold : FitsLen ((moves + 2 * pegCount (lane.take n)) + n * (n + 1) +
         3 * (bench - n))) :
-    ∃ b' lane',
+    ∃ b' lane' peak' strict',
       SettleNocopy b b' lane' lane xs ys dst first second seat
-        m ctrl mx cOps n k moves slides peak peakS hole bench mir := by
+        m ctrl mx cOps n k moves slides peak' strict' hole bench mir := by
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     simpa [feed, markerUpFeed] using hops
@@ -377,18 +382,15 @@ theorem settle_nocopy (b : Ecbs.Board) (dst first second seat : Nat)
   let mvS := moves + 2 * pegCount (lane.take n)
   let bS := markerOn (settleBoard bU seat hHU hDU lane n moves slides peak)
   have hinS : HomeIn bU seat := ⟨hHU, hDU⟩
-  have hno : ¬ peak < countHeld (bU.sudo_5Board_4held.set ⟨seat, hDU⟩ true) 7 := by
-    have hle : countHeld (bU.sudo_5Board_4held.set ⟨seat, hDU⟩ true) 7 ≤ 7 :=
-      countHeld_seven _
-    omega
+  let peakIn := raisedPeak peak (countHeld (bU.sudo_5Board_4held.set ⟨seat, hDU⟩ true) 7)
   have hcostS : bS.sudo_5Board_4cost =
       (settleBoard bU seat hHU hDU lane n moves slides peak).sudo_5Board_4cost := by
     dsimp [bS, markerOn]
-  have hpeakBd : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+  have hpeakBd : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (peakIn : Int) := by
     have hpeakU : bU.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak := by
       simp [bU, bumpOp, feed, markerUpFeed, hpeak]
-    rw [hcostS, settle_peak_eq bU seat hinS lane n moves slides peak hpeakU, if_neg hno,
-      ofNat_eq_natCast]
+    rw [hcostS, settle_peak_eq bU seat hinS lane n moves slides peak hpeakU]
+    simp [peakIn, raisedPeak, ofNat_eq_natCast]
   have hmovesS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mvS : Int) := by
     rw [hcostS, settle_moves_eq bU seat hinS lane n moves slides peak]
     dsimp [mvS]
@@ -527,7 +529,7 @@ theorem settle_nocopy (b : Ecbs.Board) (dst first second seat : Nat)
         exact Nat.lt_of_le_of_lt hle hspan)
   have hmB : bFold.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvN := by
     simp [bFold, withMoves]
-  have hpeakB : bFold.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+  have hpeakB : bFold.sudo_5Board_4cost.sudo_5Costs_4peak = (peakIn : Int) := by
     rw [show bFold.sudo_5Board_4cost.sudo_5Costs_4peak = bP.sudo_5Board_4cost.sudo_5Costs_4peak
         from by simp [bFold, peak_withMoves], mulPrep_peak, hpeakBd]
   have hholeB : bFold.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
@@ -544,16 +546,16 @@ theorem settle_nocopy (b : Ecbs.Board) (dst first second seat : Nat)
     have hsch : schoolMoves xs ys n n ≤ n * (n + 1) := schoolMoves_bound xs ys n
     simp only [mvN, mvS]
     omega
-  have hOk := mulAfter_ok bFold sch w h r n k mvN hole bench peak
+  have hOk := mulAfter_ok bFold sch w h r n k mvN hole bench peakIn
       (by rw [hschLen]; exact hfitB) hwS hhS hrS hnS hkS hblS hw0 hh0 hrR hrP hnE hkLe hgap
       hschT hmB hholeB hpeakB h7B (by rw [hschLen]; exact hsm) hnsm hfitF
       (by rw [hschLen]; exact Nat.le_refl bench) (Nat.lt_of_lt_of_le hn0 hnb)
-  let bOut := ontoFoldBoard bFold sch n k mvN peak
+  let bOut := ontoFoldBoard bFold sch n k mvN peakIn
   let lane' := laneFold n (n - k) sch
   have hhomeEq : bOut.sudo_5Board_4home = bS.sudo_5Board_4home.set ⟨second, hSecH⟩ #[] := by
-    rw [fold_home bFold sch n k mvN peak, home_withMoves, prep_home]
+    rw [fold_home bFold sch n k mvN peakIn, home_withMoves, prep_home]
   have hheldEq : bOut.sudo_5Board_4held = bS.sudo_5Board_4held.set ⟨second, hSecD⟩ false := by
-    rw [fold_held bFold sch n k mvN peak, held_withMoves, prep_held]
+    rw [fold_held bFold sch n k mvN peakIn, held_withMoves, prep_held]
   have hhomeSzS : bS.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
     rw [hhomeS, settle_home_eq bU seat hinS lane n moves slides peak, Array.size_set, hhomeU]
   have hheldSzS : bS.sudo_5Board_4held.size = b.sudo_5Board_4held.size := by
@@ -564,17 +566,16 @@ theorem settle_nocopy (b : Ecbs.Board) (dst first second seat : Nat)
   have hsetHeld : bS.sudo_5Board_4held =
       bU.sudo_5Board_4held.set ⟨seat, hDU⟩ true := by
     rw [hheldS0, settle_held_eq bU seat hinS lane n moves slides peak]
-  have hnoF : ¬ peak < countHeld bFold.sudo_5Board_4held 7 := by
-    have hle := countHeld_seven bFold.sudo_5Board_4held
-    omega
+  let peak' := raisedPeak peakIn (countHeld bFold.sudo_5Board_4held 7)
+  let strict' := raisedPeak peakS (countHeld bS.sudo_5Board_4held 7)
   have hschN : sch = nocopySchool n bench xs ys mir := by
     simp [sch, pad, nocopySchool]
   have hposG : 0 < n - k := by
     rw [hgap]
     exact Nat.mul_pos hw0 hrP
-  exact ⟨bOut, lane', {
+  exact ⟨bOut, lane', peak', strict', {
     mul_ok := by rw [hflag, hma, hOk]
-    bench_eq := by simpa [lane', sch] using ontoFoldBoard_bench bFold sch n k mvN peak
+    bench_eq := by simpa [lane', sch] using ontoFoldBoard_bench bFold sch n k mvN peakIn
     lane_eq := by simp [lane', hschN]
     lane_len := by
       have hle : n ≤ sch.length := by rw [hschLen]; exact hnb
@@ -595,11 +596,11 @@ theorem settle_nocopy (b : Ecbs.Board) (dst first second seat : Nat)
       have hcof := laneFold_high n (n - k) sch i hn0 hposG hle hi hiiS
       rw [coeff_eq_get (laneFold n (n - k) sch) i (by rw [hlenL]; exact hiiS)] at hcof
       exact hcof
-    mon := by rw [fold_marker bFold sch n k mvN peak, marker_withMoves, mulPrep_marker,
+    mon := by rw [fold_marker bFold sch n k mvN peakIn, marker_withMoves, mulPrep_marker,
       markerOn_flag]
-    ix := by rw [fold_ix bFold sch n k mvN peak, ix_withMoves, prep_ix, hIxS]
-    ctrl := by rw [fold_ctrl bFold sch n k mvN peak, ctrl_withMoves, prep_ctrl, hctrlS]
-    mx := by rw [fold_mx bFold sch n k mvN peak, mx_withMoves, prep_mx, hmxS]
+    ix := by rw [fold_ix bFold sch n k mvN peakIn, ix_withMoves, prep_ix, hIxS]
+    ctrl := by rw [fold_ctrl bFold sch n k mvN peakIn, ctrl_withMoves, prep_ctrl, hctrlS]
+    mx := by rw [fold_mx bFold sch n k mvN peakIn, mx_withMoves, prep_mx, hmxS]
     opsSz := by
       rw [show bOut.sudo_5Board_4cost.sudo_5Costs_3ops.size =
           bFold.sudo_5Board_4cost.sudo_5Costs_3ops.size from by rw [fold_ops]]
@@ -674,26 +675,24 @@ theorem settle_nocopy (b : Ecbs.Board) (dst first second seat : Nat)
           feed.sudo_5Board_4cost.sudo_5Costs_3ops[4]'h4F := hkeep
       rw [hU4]
       simp [hfeed]
-    on := by rw [fold_on bFold sch n k mvN peak, on_withMoves, prep_on]
-    to_eq := by rw [fold_to bFold sch n k mvN peak, to_withMoves, prep_to]
-    tier := by rw [fold_tier bFold sch n k mvN peak, tier_withMoves, mulPrep_tier, htierS,
+    on := by rw [fold_on bFold sch n k mvN peakIn, on_withMoves, prep_on]
+    to_eq := by rw [fold_to bFold sch n k mvN peakIn, to_withMoves, prep_to]
+    tier := by rw [fold_tier bFold sch n k mvN peakIn, tier_withMoves, mulPrep_tier, htierS,
       settle_tier_eq bU seat hinS lane n moves slides peak, htierU]
     moves_eq := by
-      rw [fold_moves bFold sch n k mvN peak]
+      rw [fold_moves bFold sch n k mvN peakIn]
       simp [nocopyCharge, mvN, mvS, hschN]
-    slides_eq := by rw [fold_slides bFold sch n k mvN peak, slides_withMoves, prep_slides,
+    slides_eq := by rw [fold_slides bFold sch n k mvN peakIn, slides_withMoves, prep_slides,
       hslidesS]
-    peak_eq := fold_peak bFold sch n k mvN peak hnoF
+    peak_eq := by
+      simpa [peak', ofNat_eq_natCast] using
+        fold_peak_rise bFold sch n k mvN peakIn
     strict_eq := by
-      rw [fold_strict bFold sch n k mvN peak, strict_withMoves]
-      dsimp [bP]
-      unfold mulPrep strictBoard mulAimed raisedPeak
-      have hle : countHeld bS.sudo_5Board_4held 7 ≤ 7 := countHeld_seven _
-      have hnoS : ¬ peakS < countHeld bS.sudo_5Board_4held 7 := by omega
-      dsimp
-      simp [hnoS, ofNat_eq_natCast]
+      rw [fold_strict bFold sch n k mvN peakIn, strict_withMoves]
+      simp [bP, mulPrep, strictBoard, mulAimed, raisedPeak, strict', hstrictS,
+        ofNat_eq_natCast]
     hole_eq := by
-      rw [fold_hole bFold sch n k mvN peak, hholeB, hschN]
+      rw [fold_hole bFold sch n k mvN peakIn, hholeB, hschN]
       by_cases hlt : hole < topIdx (nocopySchool n bench xs ys mir)
       · have hdec : decide (Int.ofNat (topIdx (nocopySchool n bench xs ys mir)) > Int.ofNat hole) =
             true := by
@@ -823,7 +822,6 @@ theorem fform_new_bottom (b : Ecbs.Board) (across bot gap : Nat) (v z lane : Lis
     (hne : across ≠ bot) (hneSeatF : gap ≠ across) (hneSeatS : gap ≠ bot)
     (hn0 : 0 < n) (hnb : n ≤ bench)
     (hlenv : v.length = n)
-    (hpeak7 : 7 ≤ peak) (hpeakS7 : 7 ≤ peakS)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
     (hspan : 2 * (n - 1) < bench)
     (hv : allTritList v)
@@ -841,24 +839,24 @@ theorem fform_new_bottom (b : Ecbs.Board) (across bot gap : Nat) (v z lane : Lis
     (hfitB : FitsLen bench)
     (hfold : FitsLen ((moves + 2 * pegCount (lane.take n)) + n * (n + 1) +
         3 * (bench - n))) :
-    ∃ b' lane',
+    ∃ b' lane' peak' strict',
       SettleNocopy b b' lane' lane v
         (fieldMul n k bench (fieldMul n k bench v v) z)
-        bot across bot gap m ctrl mx cOps n k moves slides peak peakS hole bench false ∧
+        bot across bot gap m ctrl mx cOps n k moves slides peak' strict' hole bench false ∧
       lane'.take n = fformBottom n k bench v z := by
   have hys : allTritList (fieldMul n k bench (fieldMul n k bench v v) z) :=
     prod_trits n k bench _ z hspan hnb
   have hleny : (fieldMul n k bench (fieldMul n k bench v v) z).length = n :=
     fieldMul_len n k bench _ _ hnb
-  obtain ⟨b', lane', h⟩ := settle_nocopy b bot across bot gap v
+  obtain ⟨b', lane', peak', strict', h⟩ := settle_nocopy b bot across bot gap v
       (fieldMul n k bench (fieldMul n k bench v v) z) lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       hSeatH hSeatD hFH hFD hSH hSD hHeldF hArrF hHeldS hYs
       hmk hon hto hm hc hx hscript hbound hfitMk hfitC hfit2 hn hops hop0 hfops
       h7 hempty hbench hposL hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
-      hbl hne hneSeatF hneSeatS hn0 hnb hlenv hleny hpeak7 hpeakS7 hpeakS hspan hv hys
+      hbl hne hneSeatF hneSeatS hn0 hnb hlenv hleny hpeakS hspan hv hys
       false hfi hfm hhole hw0 hh0 hrR hrP hnE hkLe hgap hw hh hr hk hsm hnsm hfitB hfold
-  refine ⟨b', lane', h, ?_⟩
+  refine ⟨b', lane', peak', strict', h, ?_⟩
   rw [h.take_eq, if_neg (fun h : false = true => Bool.noConfusion h), bottom_prod]
 
 end EcbsLink2.Link2

@@ -147,7 +147,6 @@ theorem keep_copy (b : Ecbs.Board) (dst first second : Nat)
     (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
-    (hpeak7 : 7 ≤ peak) (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hhomeT : allTritList home) (hxsT : allTritList xs) (hysT : allTritList ys)
     (hfi : FitsLen (2 * (n - 1)))
@@ -164,9 +163,9 @@ theorem keep_copy (b : Ecbs.Board) (dst first second : Nat)
     (hnsm : n ≤ 1000000)
     (hfitB : FitsLen bench)
     (hfold : FitsLen (moves + pegCount ys + n * (n + 1) + 3 * (bench - n))) :
-    ∃ b' lane',
+    ∃ b' lane' peak' strict',
       KeepCopy b b' lane' home xs ys dst first second
-        m ctrl mx cOps n k moves slides peak peakS hole bench mir := by
+        m ctrl mx cOps n k moves slides peak' strict' hole bench mir := by
   let pad := pref home bench n
   let feed := markerUpFeed b m ctrl mx
   let hopsF : 0 < feed.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -290,12 +289,11 @@ theorem keep_copy (b : Ecbs.Board) (dst first second : Nat)
         exact Nat.lt_of_le_of_lt hle hspan)
   have hmB : bFold.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mvN := by
     simp [bFold, withMoves]
-  have hnoP : ¬ peak < countHeld (bU.sudo_5Board_4held.set ⟨6, h6U⟩ true) 7 := by
-    have hle := countHeld_seven (bU.sudo_5Board_4held.set ⟨6, h6U⟩ true)
-    omega
-  have hpeakPl : bPlace.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
-    rw [place_peak bU 6 ⟨h6HU, h6U⟩ ys moves peak hpeakU, if_neg hnoP, ofNat_eq_natCast]
-  have hpeakB : bFold.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+  let peakP := raisedPeak peak (countHeld (bU.sudo_5Board_4held.set ⟨6, h6U⟩ true) 7)
+  have hpeakPl : bPlace.sudo_5Board_4cost.sudo_5Costs_4peak = (peakP : Int) := by
+    rw [place_peak bU 6 ⟨h6HU, h6U⟩ ys moves peak hpeakU]
+    simp [peakP, raisedPeak, ofNat_eq_natCast]
+  have hpeakB : bFold.sudo_5Board_4cost.sudo_5Costs_4peak = (peakP : Int) := by
     rw [show bFold.sudo_5Board_4cost.sudo_5Costs_4peak =
         bPlace.sudo_5Board_4cost.sudo_5Costs_4peak from by
           rw [peak_withMoves, mulPrep_peak], hpeakPl]
@@ -345,16 +343,16 @@ theorem keep_copy (b : Ecbs.Board) (dst first second : Nat)
     have hsch : schoolMoves xs ys n n ≤ n * (n + 1) := schoolMoves_bound xs ys n
     simp only [mvN, mv]
     omega
-  have hOk := mulAfter_ok bFold sch w h r n k mvN hole bench peak
+  have hOk := mulAfter_ok bFold sch w h r n k mvN hole bench peakP
       (by rw [hschLen]; exact hfitB) hwB hhB hrB hnB hkB hblB hw0 hh0 hrR hrP hnE hkLe hgap
       hschT hmB hholeB hpeakB h7B (by rw [hschLen]; exact hsm) hnsm hfitF
       (by rw [hschLen]; exact Nat.le_refl bench) (Nat.lt_of_lt_of_le hn0 hnb)
-  let bOut := ontoFoldBoard bFold sch n k mvN peak
+  let bOut := ontoFoldBoard bFold sch n k mvN peakP
   let lane' := laneFold n (n - k) sch
   have hhomeEq : bOut.sudo_5Board_4home = bPlace.sudo_5Board_4home.set ⟨6, h6HP⟩ #[] := by
-    rw [fold_home bFold sch n k mvN peak, home_withMoves, prep_home]
+    rw [fold_home bFold sch n k mvN peakP, home_withMoves, prep_home]
   have hheldEq : bOut.sudo_5Board_4held = bPlace.sudo_5Board_4held.set ⟨6, h6P⟩ false := by
-    rw [fold_held bFold sch n k mvN peak, held_withMoves, prep_held]
+    rw [fold_held bFold sch n k mvN peakP, held_withMoves, prep_held]
   have hsetHome : bPlace.sudo_5Board_4home =
       bU.sudo_5Board_4home.set ⟨6, h6HU⟩ (embed ys) := by
     dsimp [bPlace]
@@ -370,9 +368,8 @@ theorem keep_copy (b : Ecbs.Board) (dst first second : Nat)
     simp [bU, markerOn_home, bumpOp_home, feed, markerUpFeed]
   have hheldU0 : bU.sudo_5Board_4held = b.sudo_5Board_4held := by
     simp [bU, markerOn_held, bumpOp_held, feed, markerUpFeed]
-  have hnoF : ¬ peak < countHeld bFold.sudo_5Board_4held 7 := by
-    have hle := countHeld_seven bFold.sudo_5Board_4held
-    omega
+  let peak' := raisedPeak peakP (countHeld bFold.sudo_5Board_4held 7)
+  let strict' := raisedPeak peakS (countHeld bPlace.sudo_5Board_4held 7)
   have hschN : sch = keepSchool n bench xs ys home mir := by
     simp [sch, pad, keepSchool]
   have hIxU : bU.sudo_5Board_6marker = Int.ofNat (m + 1) := by
@@ -382,9 +379,9 @@ theorem keep_copy (b : Ecbs.Board) (dst first second : Nat)
   have hmxU : bU.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
       Int.ofNat (max mx (m + 2)) := by
     simp [bU, markerOn, bumpOp, feed, markerUpFeed]
-  exact ⟨bOut, lane', {
+  exact ⟨bOut, lane', peak', strict', {
     mul_ok := by rw [hma, hOk]
-    bench_eq := by simpa [lane', sch] using ontoFoldBoard_bench bFold sch n k mvN peak
+    bench_eq := by simpa [lane', sch] using ontoFoldBoard_bench bFold sch n k mvN peakP
     lane_eq := by simp [lane', hschN]
     take_eq := by
       cases mir with
@@ -395,53 +392,51 @@ theorem keep_copy (b : Ecbs.Board) (dst first second : Nat)
           simpa [lane', sch, pad, keepSchool] using
             onto_add_mirror n k bench xs ys home hhomeT hxsT hysT hlenH hspan hnb
     mon := by
-      rw [fold_marker bFold sch n k mvN peak, marker_withMoves, mulPrep_marker]
+      rw [fold_marker bFold sch n k mvN peakP, marker_withMoves, mulPrep_marker]
       dsimp [bPlace]
       unfold placeBoard
       dsimp only
       split <;> simp [bU, markerOn_flag]
     ix := by
-      rw [fold_ix bFold sch n k mvN peak, ix_withMoves, prep_ix]
+      rw [fold_ix bFold sch n k mvN peakP, ix_withMoves, prep_ix]
       dsimp [bPlace]
       unfold placeBoard
       dsimp only
       split <;> simp [hIxU]
     ctrl := by
-      rw [fold_ctrl bFold sch n k mvN peak, ctrl_withMoves, prep_ctrl]
+      rw [fold_ctrl bFold sch n k mvN peakP, ctrl_withMoves, prep_ctrl]
       dsimp [bPlace]
       unfold placeBoard
       dsimp only
       split <;> simp [hctrlU]
     mx := by
-      rw [fold_mx bFold sch n k mvN peak, mx_withMoves, prep_mx]
+      rw [fold_mx bFold sch n k mvN peakP, mx_withMoves, prep_mx]
       dsimp [bPlace]
       unfold placeBoard
       dsimp only
       split <;> simp [hmxU]
-    on := by rw [fold_on bFold sch n k mvN peak, on_withMoves, prep_on]
-    to_eq := by rw [fold_to bFold sch n k mvN peak, to_withMoves, prep_to]
+    on := by rw [fold_on bFold sch n k mvN peakP, on_withMoves, prep_on]
+    to_eq := by rw [fold_to bFold sch n k mvN peakP, to_withMoves, prep_to]
     tier := by
-      rw [fold_tier bFold sch n k mvN peak, tier_withMoves, mulPrep_tier, htierPl, htierU]
+      rw [fold_tier bFold sch n k mvN peakP, tier_withMoves, mulPrep_tier, htierPl, htierU]
     moves_eq := by
-      rw [fold_moves bFold sch n k mvN peak]
+      rw [fold_moves bFold sch n k mvN peakP]
       simp [keepCharge, mvN, mv, hschN]
     slides_eq := by
-      rw [fold_slides bFold sch n k mvN peak, slides_withMoves, prep_slides]
+      rw [fold_slides bFold sch n k mvN peakP, slides_withMoves, prep_slides]
       dsimp [bPlace]
       unfold placeBoard
       dsimp only
       split <;> simp [bU, markerOn, bumpOp, feed, markerUpFeed, hslides]
-    peak_eq := fold_peak bFold sch n k mvN peak hnoF
+    peak_eq := by
+      simpa [peak', ofNat_eq_natCast] using
+        fold_peak_rise bFold sch n k mvN peakP
     strict_eq := by
-      rw [fold_strict bFold sch n k mvN peak, strict_withMoves]
-      dsimp [bFold, bPlace]
-      unfold mulPrep strictBoard mulAimed raisedPeak
-      have hle : countHeld bPlace.sudo_5Board_4held 7 ≤ 7 := countHeld_seven _
-      have hnoS : ¬ peakS < countHeld bPlace.sudo_5Board_4held 7 := by omega
-      dsimp
-      simp [hnoS, ofNat_eq_natCast]
+      rw [fold_strict bFold sch n k mvN peakP, strict_withMoves]
+      simp [bFold, bPlace, mulPrep, strictBoard, mulAimed, raisedPeak, strict',
+        hpeakSU, ofNat_eq_natCast]
     hole_eq := by
-      rw [fold_hole bFold sch n k mvN peak, hholeB, hschN]
+      rw [fold_hole bFold sch n k mvN peakP, hholeB, hschN]
       by_cases hlt : hole < topIdx (keepSchool n bench xs ys home mir)
       · have hdec : decide (Int.ofNat (topIdx (keepSchool n bench xs ys home mir)) >
             Int.ofNat hole) = true := by

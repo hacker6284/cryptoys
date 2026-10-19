@@ -22,12 +22,12 @@ theorem fform_at_pack (t : Spec.Tier) (b : Ecbs.Board)
     (hscript : 2 < t.script)
     (fr : FrameAt b t baseX baseY)
     (hp : ProjOn t b px py)
-    (moves slides ctrl mark mx pk peakS hole cOps c0 : Nat)
+    (moves slides ctrl mark mx pk peakS hole c1 c0 : Nat)
     (ch : TailCharge b moves slides ctrl mark mx pk peakS hole c0)
     (hops1 : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
-    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (cOps : Int))
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (c1 : Int))
     (hctrl : FitsLen (ctrl + 6))
-    (hcOps : FitsLen (cOps + 3))
+    (hc1 : FitsLen (c1 + 3 * (t.cells - done)))
     (hc0 : FitsLen (c0 + 13 * (t.cells - done)))
     (hmv : FitsLen (moves + 2 * t.n + cubeCharge t.n t.benchlen + 2 * t.n +
       3 * (t.benchlen - t.n)))
@@ -41,9 +41,9 @@ theorem fform_at_pack (t : Spec.Tier) (b : Ecbs.Board)
       fr.szH, fr.szD, hp, ?_⟩
   · rw [fr.szH]; decide
   · rw [fr.szD]; decide
-  · refine ⟨moves, slides, ctrl, mark, mx, pk, peakS, hole, cOps, c0,
+  · refine ⟨moves, slides, ctrl, mark, mx, pk, peakS, hole, c1, c0,
       ch.movesEq, ch.slidesEq, ch.ctrlEq, ch.markEq, ch.mxEq, ch.peakEq,
-      ch.strictEq, ch.holeEq, hops1, hop1, ?_, hctrl, hcOps, hc0, hmv, hsl,
+      ch.strictEq, ch.holeEq, hops1, hop1, ?_, hctrl, hc1, hc0, hmv, hsl,
       hmvLe, hslLe, hcLe⟩
     rw [Array.getElem?_eq_getElem ch.opsSz]
     exact congrArg some ch.ops0

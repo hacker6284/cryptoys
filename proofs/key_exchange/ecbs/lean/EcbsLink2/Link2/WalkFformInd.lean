@@ -82,6 +82,23 @@ theorem mul_slack_next (c0 k cells done : Nat)
   have hsplit : cells - done = (cells - (done + 1)) + 1 := by omega
   omega
 
+/-- One cell still to run leaves `FitsLen (c1 + 3)`, the three cubes. -/
+theorem cube_slack_cell (c1 cells done : Nat)
+    (h : FitsLen (c1 + 3 * (cells - done))) (hpos : done < cells) :
+    FitsLen (c1 + 3) := by
+  refine FitsLen.of_le h ?_
+  have hone : 1 ≤ cells - done := by omega
+  have hmul : 3 * 1 ≤ 3 * (cells - done) := Nat.mul_le_mul_left 3 hone
+  omega
+
+/-- A cell spends three cubes. The room that remains covers the cells after it. -/
+theorem cube_slack_next (c1 cells done : Nat)
+    (h : FitsLen (c1 + 3 * (cells - done))) (hpos : done < cells) :
+    FitsLen (c1 + 3 + 3 * (cells - (done + 1))) := by
+  refine FitsLen.of_le h ?_
+  have hsplit : cells - done = (cells - (done + 1)) + 1 := by omega
+  omega
+
 /-- One cell spends `spend`. The room that remains is still inside an i64. -/
 theorem room_after_spend (moves spend moves' rest : Nat)
     (h : FitsLen (moves + spend + rest)) (hle : moves' ≤ moves + spend) :
@@ -96,8 +113,9 @@ theorem serious_script_cube : 2 < Spec.serious.script := by decide
 
 /-- A live F-form board, `done` cells already run. The charges are `LiveAt`'s.
     `px` and `py` are the affine point `walkRun` has reached. `ProjOn` is the
-    projective triple of that point.     `cOps` is ops slot 1, the cube counter,
-    with room for three cubes. `c0` is ops slot 0, the multiply counter.
+    projective triple of that point. `c1` is ops slot 1, the cube counter.
+    One cell cubes three times, and the field keeps that slack for every cell
+    still to run, `3 * (t.cells - done)`. `c0` is ops slot 0, the multiply counter.
     One cell asks for 13 of multiply slack: `comb_u2z` asks for 8, and the
     tail asks for 6 more after the seven multiplies already counted at the
     sum. The field keeps that slack for every cell still to run,
@@ -121,7 +139,7 @@ def FformAt (t : Spec.Tier) (b : Ecbs.Board)
   b.sudo_5Board_4home.size = 8 ∧
   b.sudo_5Board_4held.size = 8 ∧
   ProjOn t b px py ∧
-  ∃ (moves slides ctrl mark mx pk peakS hole cOps c0 : Nat),
+  ∃ (moves slides ctrl mark mx pk peakS hole c1 c0 : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves ∧
     b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides ∧
     b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
@@ -131,10 +149,10 @@ def FformAt (t : Spec.Tier) (b : Ecbs.Board)
     b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS ∧
     b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole ∧
     1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
-    b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (cOps : Int) ∧
+    b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (c1 : Int) ∧
     b.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) ∧
     FitsLen (ctrl + 6) ∧
-    FitsLen (cOps + 3) ∧
+    FitsLen (c1 + 3 * (t.cells - done)) ∧
     FitsLen (c0 + 13 * (t.cells - done)) ∧
     FitsLen (moves + 2 * t.n + cubeCharge t.n t.benchlen + 2 * t.n +
       3 * (t.benchlen - t.n)) ∧

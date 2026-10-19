@@ -286,4 +286,40 @@ theorem start_walk_mul_room (t : Spec.Tier)
   · simpa using hobby_mul_fit
   · simpa using serious_mul_fit
 
+theorem demo_cube_cells : 3 * demo.cells = 6 := rfl
+theorem toy_cube_cells : 3 * toy.cells = 48 := rfl
+theorem hobby_cube_cells : 3 * hobby.cells = 153 := rfl
+theorem serious_cube_cells : 3 * serious.cells = 486 := rfl
+
+theorem demo_cube_fit : FitsLen (3 * demo.cells) := by
+  rw [demo_cube_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+theorem toy_cube_fit : FitsLen (3 * toy.cells) := by
+  rw [toy_cube_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+theorem hobby_cube_fit : FitsLen (3 * hobby.cells) := by
+  rw [hobby_cube_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+theorem serious_cube_fit : FitsLen (3 * serious.cells) := by
+  rw [serious_cube_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+/-- The opening cube counter is 0, and every shipped tier leaves room for
+    three cubes in each cell of the key. -/
+theorem start_walk_cube_room (t : Spec.Tier)
+    (h : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
+    FitsLen (0 + 3 * (t.cells - 0)) := by
+  rcases h with rfl | rfl | rfl | rfl
+  · simpa using demo_cube_fit
+  · simpa using toy_cube_fit
+  · simpa using hobby_cube_fit
+  · simpa using serious_cube_fit
+
 end EcbsLink2.Link2

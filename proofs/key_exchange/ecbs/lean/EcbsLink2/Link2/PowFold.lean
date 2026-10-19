@@ -631,7 +631,10 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
         (bS.sudo_5Board_4held[spare]?) = some false ∧
         (∀ i, i ≠ up → i ≠ spare →
           (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?) ∧
-          (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) := by
+          (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) ∧
+        (∃ hole', bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole') ∧
+        (∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
+        bS.sudo_5Board_1t = b.sudo_5Board_1t := by
   obtain ⟨hlift, hcube⟩ := pow_cube_seated b up acc w h r n k moves hole bench peak peakS cOps cg
       ctrl mx script m hmk hoff hm hc hx hs hposS hfitLift hfitCube hops hop1 hfops hF hHome hHF
       hArr h7 hp hpeak hn0 hn hlenx hfn hmoves hbl hcg hspan h3 hfm hhole hxsT hw0 hh0 hrR hrP
@@ -823,7 +826,7 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
       (by simpa [htake, cube, mvP] using hfitSet)
       (by simpa [htake, cube] using hfitSl2)
   rcases hdig with ⟨bS, hrun, hhome, hoffS, hheldS, hmarkS, hflagS, hctrlS, hkeep, hheldK, hspS,
-      _hmvD, _hslD, _hopsD, _hpkD, hmxD⟩
+      _hmvD, _hslD, _hopsD, _hpkD, hmxD, hholeD, hpsD, htierD⟩
   have hctrl4 : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 4) := by
     simpa [show (ctrl + 2) + 2 = ctrl + 4 by omega] using hctrlS
   have hmx2 : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx 2) := by
@@ -834,7 +837,8 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
           Nat.max_eq_right (Nat.le_trans h1 (by decide : (1 : Nat) ≤ 2))]
       · rw [Nat.max_eq_left (by omega : 1 ≤ mx)]
     simpa [hm] using hmxD
-  refine ⟨bS, ?_, hhome, hoffS, hheldS, hmarkS, hflagS, ?_, hctrl4, hmx2, hspS, ?_⟩
+  refine ⟨bS, ?_, hhome, hoffS, hheldS, hmarkS, hflagS, ?_, hctrl4, hmx2, hspS, ?_,
+      hholeD, hpsD, htierD.trans htierP⟩
   · rw [hlift, ok_bind, hcube, ok_bind, hcopy, ok_bind]
     exact hrun
   · rw [hkeep src hsrcU hsrcS]

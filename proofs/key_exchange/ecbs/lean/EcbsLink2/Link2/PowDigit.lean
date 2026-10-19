@@ -95,6 +95,23 @@ private theorem of_some {α : Type} (a : Array α) (i : Nat) (v : α)
   rw [Array.getElem?_eq_getElem h] at hs
   injection hs
 
+/-- `noteBench` on two natural holes is `raisedHole`. -/
+private theorem hole_if_nat (hole top : Nat) :
+    (if decide (Int.ofNat top > Int.ofNat hole) then Int.ofNat top else Int.ofNat hole) =
+      Int.ofNat (raisedHole hole top) := by
+  by_cases hgt : hole < top
+  · have hdec : decide (Int.ofNat top > Int.ofNat hole) = true := by
+      rw [decide_eq_true_eq, gt_iff_lt]
+      simpa [ofNat_eq_natCast] using (Int.ofNat_lt.mpr hgt)
+    rw [hdec, if_pos rfl, raisedHole, if_pos hgt]
+  · have hdec : decide (Int.ofNat top > Int.ofNat hole) = false := by
+      rw [decide_eq_false_iff_not, gt_iff_lt]
+      intro hlt
+      exact hgt ((Int.ofNat_lt).mp (by simpa [ofNat_eq_natCast] using hlt))
+    rw [hdec]
+    simp only [Bool.false_eq_true, if_false]
+    rw [raisedHole, if_neg hgt]
+
 /-- After the live multiply the up home is still the cube, and it is held. -/
 theorem powLive_up (bReady : Ecbs.Board) (spare peakS up mvW bench : Nat)
     (hS : spare < bReady.sudo_5Board_4held.size)
@@ -206,7 +223,10 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
       bS.sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) ∧
       (∃ pk, bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
-      bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx (m + 2)) := by
+      bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx (m + 2)) ∧
+      (∃ hole', bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole') ∧
+      (∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
+      bS.sudo_5Board_1t = b.sudo_5Board_1t := by
   have hmul := pow_mul_live b up spare lane cube factor w h r n k moves slides peak peakS cOps
       m ctrl mx script bench hole hmk hon hto hH hD h7 hempty hbench hn hpos hnle hzero hf hfitL
       hmoves hslides hpeak hpeg hfitMv hfitSl hops hop0 hfops hm hc hx hscript hbound hfitMk hfitC
@@ -345,7 +365,7 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
   rw [hset]
   let bS := settleBoard bC up hHn hDn prod n mvC (slides + 2 * pegCount (lane.take n))
       (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))
-  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show bS.sudo_5Board_4home =
         bC.sudo_5Board_4home.set ⟨up, hHn⟩ (embed (prod.take n)) from
       settle_home_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
@@ -451,5 +471,35 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
         (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
     simp [bC, bLive, powLiveBoard, ontoFoldBoard_mx, bOff, powMulOff, withMoves, mulPrep,
       strictBoard, mulAimed, bReady, markerSeat]
+  · rw [settle_hole_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    have hbC : bC.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        bLive.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := rfl
+    rw [hbC]
+    simp only [bLive, powLiveBoard]
+    rw [ontoFoldBoard_hole, noteBench_hole]
+    have hready : bOff.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole := by
+      simp only [bOff, powMulOff, withMoves, mulPrep_hole, bReady, markerSeat, bumpOp]
+      rw [settle_hole_eq b up ⟨hH, hD⟩ lane n moves slides peak]
+      exact hhole
+    rw [hready, hole_if_nat]
+    exact ⟨raisedHole hole (topIdx sch), rfl⟩
+  · rw [settle_strict_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    have hbS : bC.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        bLive.sudo_5Board_4cost.sudo_5Costs_11peak_strict := rfl
+    rw [hbS]
+    simp only [bLive, powLiveBoard, ontoFoldBoard_strict, bOff, powMulOff, withMoves, mulPrep,
+      strictBoard]
+    exact ⟨raisedPeak peakS (countHeld
+        (mulAimed ({ bReady with sudo_5Board_9marker_on := false })
+          ((up : Nat) : Int) (embed (List.replicate bench 0))).sudo_5Board_4held 7), rfl⟩
+  · rw [settle_tier_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    have hbT : bC.sudo_5Board_1t = bLive.sudo_5Board_1t := rfl
+    rw [hbT]
+    simp only [bLive, powLiveBoard, ontoFoldBoard_tier, bOff, powMulOff, withMoves, mulPrep,
+      strictBoard, mulAimed, bReady, markerSeat, bumpOp]
+    rw [settle_tier_eq b up ⟨hH, hD⟩ lane n moves slides peak]
 
 end EcbsLink2.Link2

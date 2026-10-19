@@ -291,7 +291,7 @@ theorem rise_on_run (b : Ecbs.Board)
     (hheldR 4 (by decide) (by decide) (by decide) h4D h4DR).trans hheld4
   have hUpH : 1 < bRun.sudo_5Board_4home.size := h1HR
   obtain ⟨bUp, bRise, hmirU, hmulU, _hbenchU, htakeU, honU, htoU, hmkU, _htierU, _hemptyU, hixU, hctrlU,
-      _hmxU, _hmvU, _hslU, _hszDU, _hszHU, _hhomeU, _hheldU, hseatA, hseatH, _holeU, peakU, strictU, carryU⟩ :=
+      _hmxU, _hmvU, _hslU, _hszDU, _hszHU, _hhomeU, _hheldU, hseatA, hseatH, ⟨_holeU, peakU, strictU, carryU⟩, _, _⟩ :=
     rise_on_board bRun 1 4 2 0 y y2 z laneR red
       (m + 1) (ctrl + 2) (max mx (m + 2)) script (cOps + 1) n k w h r movesR slidesR
       holeR peakR strictR bench

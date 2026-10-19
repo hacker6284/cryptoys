@@ -180,10 +180,15 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
         b'.sudo_5Board_4home[seat]'hs = embed (lane.take n)) ∧
       (∀ hs : seat < b'.sudo_5Board_4held.size,
         b'.sudo_5Board_4held[seat]'hs = true) ∧
-      ∃ (hole' peak' strict' : Nat),
+      (∃ (hole' peak' strict' : Nat),
         BenchCarry b'
           (laneFold n (n - k) (school n y2 z (pref (mirrorTrits y) bench n) mirror))
-          n (cOps + 1) peak' hole' strict' := by
+          n (cOps + 1) peak' hole' strict') ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+      ∀ j, j ≠ 0 →
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[j]? =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[j]? := by
   let bM := mirrorHome b dst hH (embed (mirrorTrits y)) (moves + pegCount y)
   let feed := markerUpFeed bM m ctrl mx
   let hopsM : 0 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -445,7 +450,7 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
   obtain ⟨b1, hmir, hmul⟩ := bind_ok_split hbind
   refine ⟨b1, b', hmir, hmul, hbench, rise_lane_spec mirror n k bench y2 z y hy2 hz hlen hspan hnb,
       hon, hto, hmk'.trans hmkS, htierB, hempty, hix.trans hmS, hctrl.trans hcS,
-      hmx.trans hxS, ?_, ?_, hszHeld, hszHomeB, ?_, ?_, ?_, ?_, ?_⟩
+      hmx.trans hxS, ?_, ?_, hszHeld, hszHomeB, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hmv, hmvS]
   · rw [hsl, hslS]
   · intro j hneD hneSeat hne6 hj hj'
@@ -559,5 +564,30 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
       rw [← coeff_eq_get laneR i hii]
       exact laneFold_high n (n - k) schR i hpos hgapPos
         (by rw [hschLen]; exact hnb) hi hiiS
+  · have hopsS : bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+        bU.sudo_5Board_4cost.sudo_5Costs_3ops := by
+      rw [show bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+          (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_4cost.sudo_5Costs_3ops
+          from by dsimp [bS, markerOn]]
+      exact settle_ops bU seat hinS lane n mvM slides peak
+    have hopSet := bumpOp_ops feed 0 cOps hopsF
+    have hfeed : feed.sudo_5Board_4cost.sudo_5Costs_3ops =
+        bM.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
+    have hmirO : bM.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
+    rw [hopsEq, hopsS, hopSet, Array.size_set, hfeed, hmirO]
+  · intro j hne
+    have hopsS : bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+        bU.sudo_5Board_4cost.sudo_5Costs_3ops := by
+      rw [show bS.sudo_5Board_4cost.sudo_5Costs_3ops =
+          (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_4cost.sudo_5Costs_3ops
+          from by dsimp [bS, markerOn]]
+      exact settle_ops bU seat hinS lane n mvM slides peak
+    have hopSet := bumpOp_ops feed 0 cOps hopsF
+    have hfeed : feed.sudo_5Board_4cost.sudo_5Costs_3ops =
+        bM.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
+    have hmirO : bM.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops := rfl
+    rw [hopsEq, hopsS, hopSet, Array.getElem?_set_ne _ _ _ hne.symm, hfeed, hmirO]
 
 end EcbsLink2.Link2

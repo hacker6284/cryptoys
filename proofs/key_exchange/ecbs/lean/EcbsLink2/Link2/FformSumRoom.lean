@@ -352,4 +352,105 @@ theorem v2_slide_room (slides n k bench : Nat) (x x2 y z lane : List Nat)
   have hcap := u2z_slide_le slides n k bench x x2 y z lane hx hy hnb hnle
   exact FitsLen.of_le h28 (wide_slide _ _ n hcap)
 
+/-- A bench settle of `2 · n` in front of the comb, then twenty-four step budgets.
+    Toy, Hobby, and Serious keep that inside one cell of move charge. Demo does not. -/
+theorem toy_seat_move :
+    2 * toy.n + cubeCharge toy.n toy.benchlen + 2 * toy.n +
+      3 * (toy.benchlen - toy.n) + 24 * stepBudget toy.n toy.benchlen ≤
+      walkCharge toy + (6 * toy.benchlen + 2 * toy.n) := by
+  have hL : 2 * toy.n + cubeCharge toy.n toy.benchlen + 2 * toy.n +
+      3 * (toy.benchlen - toy.n) + 24 * stepBudget toy.n toy.benchlen = 18597 := by
+    simp [cubeCharge, stepBudget, toy]
+  have hR : 6 * toy.benchlen + 2 * toy.n = 478 := by simp [toy]
+  rw [hL, hR, toy_walk]
+  exact ble_le _ _ rfl
+
+theorem hobby_seat_move :
+    2 * hobby.n + cubeCharge hobby.n hobby.benchlen + 2 * hobby.n +
+      3 * (hobby.benchlen - hobby.n) + 24 * stepBudget hobby.n hobby.benchlen ≤
+      walkCharge hobby + (6 * hobby.benchlen + 2 * hobby.n) := by
+  have hL : 2 * hobby.n + cubeCharge hobby.n hobby.benchlen + 2 * hobby.n +
+      3 * (hobby.benchlen - hobby.n) + 24 * stepBudget hobby.n hobby.benchlen = 98301 := by
+    simp [cubeCharge, stepBudget, hobby]
+  have hR : 6 * hobby.benchlen + 2 * hobby.n = 1198 := by simp [hobby]
+  rw [hL, hR, hobby_walk]
+  exact ble_le _ _ rfl
+
+theorem serious_seat_move :
+    2 * serious.n + cubeCharge serious.n serious.benchlen + 2 * serious.n +
+      3 * (serious.benchlen - serious.n) +
+      24 * stepBudget serious.n serious.benchlen ≤
+      walkCharge serious + (6 * serious.benchlen + 2 * serious.n) := by
+  have hL : 2 * serious.n + cubeCharge serious.n serious.benchlen + 2 * serious.n +
+      3 * (serious.benchlen - serious.n) +
+      24 * stepBudget serious.n serious.benchlen = 813261 := by
+    simp [cubeCharge, stepBudget, serious]
+  have hR : 6 * serious.benchlen + 2 * serious.n = 3598 := by simp [serious]
+  rw [hL, hR, serious_walk]
+  exact ble_le _ _ rfl
+
+theorem demo_seat_slide : 34 * demo.n ≤ cellSlideCharge demo + slideCharge demo.n := by
+  have h : 34 * demo.n = 238 := by simp [demo]
+  rw [h, demo_slideCharge]
+  exact ble_le _ _ rfl
+
+theorem toy_seat_slide : 34 * toy.n ≤ cellSlideCharge toy + slideCharge toy.n := by
+  have h : 34 * toy.n = 782 := by simp [toy]
+  rw [h, toy_slideCharge]
+  exact ble_le _ _ rfl
+
+theorem hobby_seat_slide : 34 * hobby.n ≤ cellSlideCharge hobby + slideCharge hobby.n := by
+  have h : 34 * hobby.n = 2006 := by simp [hobby]
+  rw [h, hobby_slideCharge]
+  exact ble_le _ _ rfl
+
+theorem serious_seat_slide :
+    34 * serious.n ≤ cellSlideCharge serious + slideCharge serious.n := by
+  have h : 34 * serious.n = 6086 := by simp [serious]
+  rw [h, serious_slideCharge]
+  exact ble_le _ _ rfl
+
+private theorem add_cap4 (spend moves a b c d s : Nat)
+    (h : spend ≤ moves + a + b + c + d) :
+    spend + s ≤ moves + (a + b + c + d + s) := by
+  omega
+
+/-- The comb after a bench settle of at most `2 · n`. The extra two lengths sit in
+    the Toy, Hobby, and Serious move charge. -/
+theorem comb_move_fit_seat (t : Spec.Tier) (moves done comb : Nat) (tw : TierWalk t)
+    (hmoves : moves ≤ done * (walkCharge t + (6 * t.benchlen + 2 * t.n)))
+    (hpos : done < t.cells)
+    (hcomb : comb ≤ moves + 2 * t.n + cubeCharge t.n t.benchlen + 2 * t.n +
+        3 * (t.benchlen - t.n))
+    (hwide : 2 * t.n + cubeCharge t.n t.benchlen + 2 * t.n + 3 * (t.benchlen - t.n) +
+        24 * stepBudget t.n t.benchlen ≤
+        walkCharge t + (6 * t.benchlen + 2 * t.n)) :
+    FitsLen (comb + 24 * stepBudget t.n t.benchlen) := by
+  have hle := add_cap4 comb moves (2 * t.n) (cubeCharge t.n t.benchlen) (2 * t.n)
+      (3 * (t.benchlen - t.n)) (24 * stepBudget t.n t.benchlen) hcomb
+  exact FitsLen.of_le
+      (span_fit t.cells done moves
+        (2 * t.n + cubeCharge t.n t.benchlen + 2 * t.n + 3 * (t.benchlen - t.n) +
+          24 * stepBudget t.n t.benchlen)
+        (walkCharge t) (6 * t.benchlen + 2 * t.n) tw.roomM
+        (by simpa using tw.moveOver) hmoves hpos hwide)
+      hle
+
+private theorem slide_add6 (comb slides n : Nat) (h : comb ≤ slides + 6 * n) :
+    comb + 28 * n ≤ slides + 34 * n := by
+  omega
+
+/-- Six peg-lengths on the comb, then twenty-eight more. `34 · n` is the cell's slide charge. -/
+theorem comb_slide_fit_seat (t : Spec.Tier) (slides done comb : Nat) (tw : TierWalk t)
+    (hslides : slides ≤ done * (cellSlideCharge t + slideCharge t.n))
+    (hpos : done < t.cells)
+    (hcomb : comb ≤ slides + 6 * t.n)
+    (h34 : 34 * t.n ≤ cellSlideCharge t + slideCharge t.n) :
+    FitsLen (comb + 28 * t.n) := by
+  have hle := slide_add6 comb slides t.n hcomb
+  exact FitsLen.of_le
+      (span_fit t.cells done slides (34 * t.n) (cellSlideCharge t) (slideCharge t.n)
+        tw.roomS (by simpa [slideCharge] using tw.slideOver) hslides hpos h34)
+      hle
+
 end EcbsLink2.Link2

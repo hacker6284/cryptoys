@@ -247,6 +247,81 @@ theorem start_walk_ops0 (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
         hops, out.ops]
       exact zero_ops0
 
+private theorem open_some (b : Ecbs.Board) (i : Nat)
+    (hi : i < b.sudo_5Board_4held.size)
+    (h : b.sudo_5Board_4held[i] = false) :
+    b.sudo_5Board_4held[i]? = some false :=
+  (Array.getElem?_eq_getElem hi).trans (congrArg some h)
+
+private theorem put_open (b : Ecbs.Board) (j : Nat)
+    (hH : 2 < b.sudo_5Board_4home.size)
+    (hD : 2 < b.sudo_5Board_4held.size)
+    (n moves : Nat) (hne : (2 : Nat) ≠ j) :
+    (whitePut b 2 hH hD n moves).sudo_5Board_4held[j]? = b.sudo_5Board_4held[j]? := by
+  simp [whitePut, Array.getElem?_set_ne, hne]
+
+private theorem plant_open (b : Ecbs.Board) (j pk : Nat) :
+    (peakBoard b pk).sudo_5Board_4held[j]? = b.sudo_5Board_4held[j]? := by
+  simp [peakBoard]
+
+/-- `start_walk` copies the fresh board. Gap and spare stay empty, and the
+    ops array keeps the length `new_board` gave it. -/
+theorem start_walk_open (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
+    (mv pk : Nat) (lay : InLay t b x y mv pk) (red : Bool)
+    (hx : x.length = t.n) (hy : y.length = t.n)
+    (hpos : 0 < t.n) (hyt : allTritList y) (hf : FitsLen t.n)
+    (hfitx : FitsLen (mv + pegCount x))
+    (hfity : FitsLen (mv + pegCount x + pegCount y))
+    (hfit1 : FitsLen (mv + pegCount x + pegCount y + 1)) :
+    ∃ bW, Ecbs.start_walk b red = .ok bW ∧
+      bW.sudo_5Board_4held[5]? = some false ∧
+      bW.sudo_5Board_4held[6]? = some false ∧
+      bW.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+  let mv2 := mv + pegCount x + pegCount y
+  cases red
+  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+      white_copy_kept t b x y mv pk lay hx hy hf hfitx hfity
+    let bPut := whitePut b2 2 (by rw [out.szH]; decide) (by rw [out.szD]; decide) t.n mv2
+    let bW := peakBoard bPut pk2
+    have hplant := finish_walk t b2 x y y mv2 pk2 out hpos hf hfit1
+    refine ⟨bW, ?_, ?_, ?_, ?_⟩
+    · unfold Ecbs.start_walk
+      conv => lhs; zeta
+      rw [← bind_assoc, hcopy, ok_bind, hplant, ok_bind, pure_eq_ok]
+    · rw [plant_open bPut 5 pk2, put_open b2 5 (by rw [out.szH]; decide)
+        (by rw [out.szD]; decide) t.n mv2 (by decide)]
+      exact open_some b2 5 (by rw [out.szD]; decide) out.held5
+    · rw [plant_open bPut 6 pk2, put_open b2 6 (by rw [out.szH]; decide)
+        (by rw [out.szD]; decide) t.n mv2 (by decide)]
+      exact open_some b2 6 (by rw [out.szD]; decide) out.held6
+    · have hops := plant_ops b2 2 (by rw [out.szH]; decide) (by rw [out.szD]; decide)
+        t.n mv2 pk2
+      rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
+          (peakBoard bPut pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
+        hops, out.ops]
+      simp [Array.size_mkArray]
+  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+      red_copy_kept t b x y mv pk lay hx hy hpos hyt hf hfitx hfity
+    let bPut := whitePut b2 2 (by rw [out.szH]; decide) (by rw [out.szD]; decide) t.n mv2
+    let bW := peakBoard bPut pk2
+    have hplant := finish_walk t b2 x (mirrorTrits y) y mv2 pk2 out hpos hf hfit1
+    refine ⟨bW, ?_, ?_, ?_, ?_⟩
+    · unfold Ecbs.start_walk
+      conv => lhs; zeta
+      rw [← bind_assoc, hcopy, ok_bind, hplant, ok_bind, pure_eq_ok]
+    · rw [plant_open bPut 5 pk2, put_open b2 5 (by rw [out.szH]; decide)
+        (by rw [out.szD]; decide) t.n mv2 (by decide)]
+      exact open_some b2 5 (by rw [out.szD]; decide) out.held5
+    · rw [plant_open bPut 6 pk2, put_open b2 6 (by rw [out.szH]; decide)
+        (by rw [out.szD]; decide) t.n mv2 (by decide)]
+      exact open_some b2 6 (by rw [out.szD]; decide) out.held6
+    · have hops := plant_ops b2 2 (by rw [out.szH]; decide) (by rw [out.szD]; decide)
+        t.n mv2 pk2
+      rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
+          (peakBoard bPut pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
+        hops, out.ops]
+      simp [Array.size_mkArray]
+
 theorem demo_mul_cells : 13 * demo.cells = 26 := rfl
 theorem toy_mul_cells : 13 * toy.cells = 208 := rfl
 theorem hobby_mul_cells : 13 * hobby.cells = 663 := rfl

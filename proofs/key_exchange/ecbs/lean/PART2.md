@@ -795,14 +795,14 @@ Slot 0 is `op_mul` and slot 1 is `op_cube`. `Ecbs.mul` increments slot 0. `Ecbs.
 
 `zero_cell_at` now also returns `marker_lift` and `frobenius_point`, so the board `FformAt` describes is the board the emitted step lands on. `homes_zero_frame` is that cell for the homes layout and colour 0. `cell_walk_step` is the emitted `fformStep`, and `walk_zero_cubes` is the affine point. `FformZeroPack` peaked at 598828 kB after the two equations. `WalkFformStep` peaked at 490032 kB.
 
-`lift_frame` is homes 3 and 4 through `marker_lift`. `settle_frame` is those homes through a settle into home 1 or home 2. `lifted_across` returns `AcrossSeen`: the across cube, `hOn`, homes 3 and 4 with their held flags, and home 2 still `Z`. `across_base` reads homes 3 and 4 off that cube. `flag_frame` carries them through the bottom cube. `frame_of_seen` is that frame on the board `bZ = bottomFlag`. `ybench_seen` settles `Y` into home 1 and calls `lifted_across`. `ybench_comb_eq` is `frobenius_point` of the lifted board equal to that comb. `ybench_zero_frame` puts them together: on a `yBench` input, homes 3 and 4 survive the lift and `frobenius_fform_ybench`, with their values and held flags, and the output board is `FrameAt`. `bottomFlag_mon` is the marker flag on that comb. `ybench_zero_counts` is the counters on the same board: moves at most the settle's `2 * pegCount` plus one `cubeSpend`, slides at most `6 * n`, control the incoming control plus 6, marker `2`, slot 0 unchanged, and slot 1 plus 3. `FformFrob` peaked at 609108 kB before `AcrossSeen`, and this rebuild of `FformYZero` peaked at 619916 kB.
+`lift_frame` is homes 3 and 4 through `marker_lift`. `settle_frame` is those homes through a settle into home 1 or home 2. `lifted_across` returns `AcrossSeen`: the across cube, `hOn`, homes 3 and 4 with their held flags, and home 2 still `Z`. `across_base` reads homes 3 and 4 off that cube. `flag_frame` carries them through the bottom cube. `frame_of_seen` is that frame on the board `bZ = bottomFlag`. `ybench_seen` settles `Y` into home 1 and calls `lifted_across`. `ybench_comb_eq` is `frobenius_point` of the lifted board equal to that comb. `ybench_zero_frame` puts them together: on a `yBench` input, homes 3 and 4 survive the lift and `frobenius_fform_ybench`, with their values and held flags, and the output board is `FrameAt`. `bottomFlag_mon` is the marker flag on that comb. `ybench_zero_counts` is the counters on the same board: moves at most the settle's `2 * pegCount` plus one `cubeSpend`, slides at most `6 * n`, control the incoming control plus 6, marker `2`, slot 0 unchanged, and slot 1 plus 3. `ybench_zproj` is the `zBench` `ProjOn` of the cubed point, from `cube_point_inv`. `ybench_zero_cell_at` feeds those through `cell_big_room`, `cell_slide_room`, `comb_ctrl_fit`, and `fform_at_pack`. `FformYZero` peaked at 619916 kB. `FformYPack` peaked at 700124 kB.
 
 The nine cells, before `hframe` is deleted:
 
 | Layout | Zero | White | Red |
 | --- | --- | --- | --- |
 | homes | `homes_zero_frame` | missing | missing |
-| yBench | `ybench_zero_frame` | missing | missing |
+| yBench | `ybench_zero_cell_at` | missing | missing |
 | zBench | missing | missing | missing |
 
 `ProjLay` has only those three layouts. A white cell and a red cell are the same tail with the red flag `c = 2`.

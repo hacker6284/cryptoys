@@ -8,6 +8,7 @@
 -/
 import EcbsLink2.Link2.FformZZero
 import EcbsLink2.Link2.FformZeroAt
+import EcbsLink2.Link2.FformChord
 
 namespace EcbsLink2.Link2
 
@@ -17,6 +18,73 @@ open EcbsLink2.Spec
 
 attribute [local irreducible] fieldCube fieldMul Ecbs.frobenius_point Ecbs.marker_lift
   bottomFlag
+
+private theorem k_lt (t : Spec.Tier) (hsh : TierShape t) : t.k < t.n := by
+  have hgap : 0 < t.n - t.k := by
+    rw [hsh.gap]
+    exact Nat.mul_pos hsh.w0 hsh.r0
+  omega
+
+private theorem span3 (t : Spec.Tier) (sat : TierSat t) :
+    3 * (t.n - 1) < t.benchlen := by
+  have h := sat.cube_span
+  omega
+
+private theorem n_le_bench (t : Spec.Tier) (hOk : BoardOk t) (sat : TierSat t) :
+    t.n ≤ t.benchlen := by
+  have h := sat.cube_span
+  have hn := hOk.n_pos
+  omega
+
+/-- The cubed homes turn the run into `(baseX − x³) · Z³`. -/
+theorem cubed_run (t : Spec.Tier) (baseX px xP zP : List Nat)
+    (hsh : TierShape t) (hOk : BoardOk t) (sat : TierSat t)
+    (hpx : allTritList px) (hz : allTritList zP) (hbx : allTritList baseX)
+    (hXP : xP = fieldMul t.n t.k t.benchlen px zP) :
+    fformRun t.n t.k t.benchlen baseX (fieldCube t.n t.k t.benchlen zP)
+        (fieldCube t.n t.k t.benchlen xP) =
+      fieldMul t.n t.k t.benchlen
+        (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen px))
+        (fieldCube t.n t.k t.benchlen zP) := by
+  have hpos := hOk.n_pos
+  have hk := k_lt t hsh
+  have hb := n_le_bench t hOk sat
+  have h2 := sat.mul_span
+  have h3 := span3 t sat
+  have hcube := fieldCube_mul t.n t.k t.benchlen px zP hpos hk hb h2 h3 hpx hz
+  have hxT := fieldCube_trits t.n t.k t.benchlen px hpx h3 (Nat.le_of_lt hk)
+  have hzT := fieldCube_trits t.n t.k t.benchlen zP hz h3 (Nat.le_of_lt hk)
+  rw [hXP, hcube]
+  exact run_over_z t.n t.k t.benchlen (fieldCube t.n t.k t.benchlen px) baseX
+    (fieldCube t.n t.k t.benchlen zP) hb hxT hbx hzT
+
+/-- The cubed homes turn the rise into `(baseY − y³) · Z³`, red base included. -/
+theorem cubed_rise (t : Spec.Tier) (red : Bool) (baseY py yP zP : List Nat)
+    (hsh : TierShape t) (hOk : BoardOk t) (sat : TierSat t)
+    (hpy : allTritList py) (hz : allTritList zP) (hby : allTritList baseY)
+    (hYP : yP = fieldMul t.n t.k t.benchlen py zP) :
+    fformRise t.n t.k t.benchlen (if red then mirrorTrits baseY else baseY)
+        (fieldCube t.n t.k t.benchlen zP) (fieldCube t.n t.k t.benchlen yP) =
+      fieldMul t.n t.k t.benchlen
+        (fieldSub t.n (if red then mirrorTrits baseY else baseY)
+          (fieldCube t.n t.k t.benchlen py))
+        (fieldCube t.n t.k t.benchlen zP) := by
+  have hpos := hOk.n_pos
+  have hk := k_lt t hsh
+  have hb := n_le_bench t hOk sat
+  have h2 := sat.mul_span
+  have h3 := span3 t sat
+  have hcube := fieldCube_mul t.n t.k t.benchlen py zP hpos hk hb h2 h3 hpy hz
+  have hyT := fieldCube_trits t.n t.k t.benchlen py hpy h3 (Nat.le_of_lt hk)
+  have hzT := fieldCube_trits t.n t.k t.benchlen zP hz h3 (Nat.le_of_lt hk)
+  have hy2 : allTritList (if red then mirrorTrits baseY else baseY) := by
+    cases red
+    · simpa using hby
+    · simpa using mirror_trits baseY
+  rw [hYP, hcube]
+  exact rise_over_z t.n t.k t.benchlen (fieldCube t.n t.k t.benchlen py)
+    (if red then mirrorTrits baseY else baseY) (fieldCube t.n t.k t.benchlen zP)
+    hb hyT hy2 hzT
 
 private theorem drop_front (moves n cube d : Nat)
     (h : FitsLen (moves + 2 * n + cube + 2 * n + 3 * d)) :
@@ -100,6 +168,8 @@ theorem homes_layout_comb
     (hd1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = true)
     (hd2 : b.sudo_5Board_4held[2]'(by rw [hszD]; decide) = true)
     (hoff : b.sudo_5Board_8bench_on = false)
+    (hXP : xP = fieldMul t.n t.k t.benchlen px zP)
+    (hYP : yP = fieldMul t.n t.k t.benchlen py zP)
     (hpos : done < t.cells) :
     ∃ (bL bZ : Ecbs.Board)
       (moves slides ctrl c0 moves' slides' : Nat) (lane : List Nat),
@@ -125,7 +195,19 @@ theorem homes_layout_comb
       lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
       (∀ j, t.n ≤ j → ∀ hj : j < lane.length, lane[j] = 0) ∧
       bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-      bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+      bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+      fformRun t.n t.k t.benchlen baseX (fieldCube t.n t.k t.benchlen zP)
+          (fieldCube t.n t.k t.benchlen xP) =
+        fieldMul t.n t.k t.benchlen
+          (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen px))
+          (fieldCube t.n t.k t.benchlen zP) ∧
+      ∀ (red : Bool),
+        fformRise t.n t.k t.benchlen (if red then mirrorTrits baseY else baseY)
+            (fieldCube t.n t.k t.benchlen zP) (fieldCube t.n t.k t.benchlen yP) =
+          fieldMul t.n t.k t.benchlen
+            (fieldSub t.n (if red then mirrorTrits baseY else baseY)
+              (fieldCube t.n t.k t.benchlen py))
+            (fieldCube t.n t.k t.benchlen zP) := by
   have hAt0 := hAt
   rcases hAt with ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hscript, _, _, _, hrest⟩
   rcases hrest with ⟨moves, slides, ctrl, mark, mx, pk, peakS, hole, c1, c0,
@@ -186,12 +268,15 @@ theorem homes_layout_comb
   have hop0Z :=
     (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops[0]?) hZZ).trans hop0
   rcases hlane with ⟨lane, hbench, htake, hzero, hhome0, hhome1⟩
+  obtain ⟨_, _, _, _, hpxA, hpyA, _, _, hbxT, hbyT, _⟩ := hAt0
   exact ⟨bL, bZ, moves, slides, ctrl, c0,
     cubeMoves (upMv2 a + 2 * pegCount ((upLane t.n t.k t.benchlen yP).take t.n))
       zP t.n t.k t.benchlen,
     upSl a + 2 * pegCount ((upLane t.n t.k t.benchlen yP).take t.n),
     lane, hlift, hfrob, hmv, hsl, hcCtrl, hop0?, hfrZ, hmon, hmarkZ, hctrlZ,
-    hmvZ, hslZ, hop0Z, hleM, hleS, hbon, hto, hbench, htake, hzero, hhome0, hhome1⟩
+    hmvZ, hslZ, hop0Z, hleM, hleS, hbon, hto, hbench, htake, hzero, hhome0, hhome1,
+    cubed_run t baseX px xP zP hsh hOk sat hpxA hzT hbxT hXP,
+    fun (red : Bool) => cubed_rise t red baseY py yP zP hsh hOk sat hpyA hzT hbyT hYP⟩
 
 /-- `yBench`. The frame and the counters are `ybench_zero_frame` and
     `ybench_zero_counts`. The cubed homes are the same comb. -/
@@ -215,6 +300,8 @@ theorem ybench_layout_comb
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < ys.length, ys[j] = 0)
     (hfitY : FitsLen ys.length)
+    (hXP : xP = fieldMul t.n t.k t.benchlen px zP)
+    (hYP : yP = fieldMul t.n t.k t.benchlen py zP)
     (hpos : done < t.cells) :
     ∃ (bL bZ : Ecbs.Board)
       (moves slides ctrl c0 moves' slides' : Nat) (lane : List Nat),
@@ -240,7 +327,19 @@ theorem ybench_layout_comb
       lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
       (∀ j, t.n ≤ j → ∀ hj : j < lane.length, lane[j] = 0) ∧
       bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-      bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+      bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+      fformRun t.n t.k t.benchlen baseX (fieldCube t.n t.k t.benchlen zP)
+          (fieldCube t.n t.k t.benchlen xP) =
+        fieldMul t.n t.k t.benchlen
+          (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen px))
+          (fieldCube t.n t.k t.benchlen zP) ∧
+      ∀ (red : Bool),
+        fformRise t.n t.k t.benchlen (if red then mirrorTrits baseY else baseY)
+            (fieldCube t.n t.k t.benchlen zP) (fieldCube t.n t.k t.benchlen yP) =
+          fieldMul t.n t.k t.benchlen
+            (fieldSub t.n (if red then mirrorTrits baseY else baseY)
+              (fieldCube t.n t.k t.benchlen py))
+            (fieldCube t.n t.k t.benchlen zP) := by
   have hAt0 := hAt
   rcases hAt with ⟨hmk, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hscript, _, _, _, hrest⟩
   rcases hrest with ⟨moves0, slides0, ctrl0, mark, mx0, pk, peakS, hole, c10, c00,
@@ -274,9 +373,12 @@ theorem ybench_layout_comb
   have hleM' := peg_bound moves' moves (pegCount (ys.take t.n))
     (cubeCharge t.n t.benchlen) t.n (t.benchlen - t.n) hpegN hleM
   rcases hlane with ⟨lane, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩
+  obtain ⟨_, _, _, _, hpxA, hpyA, _, _, hbxT, hbyT, _⟩ := hAt0
   exact ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane,
     hlift, hfrob, hmv, hsl, hc0, hop0in, hfr, hmon, hmark', hctrl', hmv', hsl',
-    hop0', hleM', hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩
+    hop0', hleM', hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1,
+    cubed_run t baseX px xP zP hsh hOk sat hpxA hzT hbxT hXP,
+    fun (red : Bool) => cubed_rise t red baseY py yP zP hsh hOk sat hpyA hzT hbyT hYP⟩
 
 /-- `zBench`. The same frame, counters, and cubed homes, with the settle
     aimed at home 2. -/
@@ -300,6 +402,8 @@ theorem zbench_layout_comb
     (hnle : t.n ≤ ys.length)
     (hzero : ∀ j, t.n ≤ j → ∀ hj : j < ys.length, ys[j] = 0)
     (hfitY : FitsLen ys.length)
+    (hXP : xP = fieldMul t.n t.k t.benchlen px zP)
+    (hYP : yP = fieldMul t.n t.k t.benchlen py zP)
     (hpos : done < t.cells) :
     ∃ (bL bZ : Ecbs.Board)
       (moves slides ctrl c0 moves' slides' : Nat) (lane : List Nat),
@@ -325,7 +429,19 @@ theorem zbench_layout_comb
       lane.take t.n = fieldCube t.n t.k t.benchlen zP ∧
       (∀ j, t.n ≤ j → ∀ hj : j < lane.length, lane[j] = 0) ∧
       bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
-      bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
+      bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) ∧
+      fformRun t.n t.k t.benchlen baseX (fieldCube t.n t.k t.benchlen zP)
+          (fieldCube t.n t.k t.benchlen xP) =
+        fieldMul t.n t.k t.benchlen
+          (fieldSub t.n baseX (fieldCube t.n t.k t.benchlen px))
+          (fieldCube t.n t.k t.benchlen zP) ∧
+      ∀ (red : Bool),
+        fformRise t.n t.k t.benchlen (if red then mirrorTrits baseY else baseY)
+            (fieldCube t.n t.k t.benchlen zP) (fieldCube t.n t.k t.benchlen yP) =
+          fieldMul t.n t.k t.benchlen
+            (fieldSub t.n (if red then mirrorTrits baseY else baseY)
+              (fieldCube t.n t.k t.benchlen py))
+            (fieldCube t.n t.k t.benchlen zP) := by
   have hAt0 := hAt
   rcases hAt with ⟨hmk, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hscript, _, _, _, hrest⟩
   rcases hrest with ⟨moves0, slides0, ctrl0, mark, mx0, pk, peakS, hole, c10, c00,
@@ -359,8 +475,11 @@ theorem zbench_layout_comb
   have hleM' := peg_bound moves' moves (pegCount (ys.take t.n))
     (cubeCharge t.n t.benchlen) t.n (t.benchlen - t.n) hpegN hleM
   rcases hlane with ⟨lane, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩
+  obtain ⟨_, _, _, _, hpxA, hpyA, _, _, hbxT, hbyT, _⟩ := hAt0
   exact ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane,
     hlift, hfrob, hmv, hsl, hc0, hop0in, hfr, hmon, hmark', hctrl', hmv', hsl',
-    hop0', hleM', hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩
+    hop0', hleM', hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1,
+    cubed_run t baseX px xP zP hsh hOk sat hpxA hzT hbxT hXP,
+    fun (red : Bool) => cubed_rise t red baseY py yP zP hsh hOk sat hpyA hzT hbyT hYP⟩
 
 end EcbsLink2.Link2

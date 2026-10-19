@@ -128,23 +128,18 @@ theorem up_of_chord (n k bench : Nat) (x y x2 y2 z g : List Nat)
     are the rise and the run of the cubed homes. -/
 theorem oncomb_chord
     (t : Spec.Tier) (bZ : Ecbs.Board) (red : Bool)
-    (baseX baseY px py xP yP zP ax' ay' : List Nat)
+    (baseX baseY px py ax' ay' : List Nat)
     (moves' slides' ctrl' cMul c1 c : Nat)
     (o : OnComb t bZ red baseX baseY moves' slides' ctrl' cMul c1)
     (hsh : TierShape t) (sat : TierSat t)
     (hpos : 0 < t.n) (hnb : t.n ≤ t.benchlen)
-    (hpxT : allTritList px) (hpyT : allTritList py) (hzT : allTritList zP)
+    (hpxT : allTritList px) (hpyT : allTritList py) (hzT : allTritList o.zP)
     (hbxT : allTritList baseX) (hbyT : allTritList baseY)
-    (hpxL : px.length = t.n) (hpyL : py.length = t.n) (hzL : zP.length = t.n)
+    (hpxL : px.length = t.n) (hpyL : py.length = t.n) (hzL : o.zP.length = t.n)
     (hbxL : baseX.length = t.n) (hbyL : baseY.length = t.n)
-    (hXP : xP = fieldMul t.n t.k t.benchlen px zP)
-    (hYP : yP = fieldMul t.n t.k t.benchlen py zP)
-    (hz : o.z = fieldCube t.n t.k t.benchlen zP)
-    (hv : o.v = fformRun t.n t.k t.benchlen baseX (fieldCube t.n t.k t.benchlen zP)
-      (fieldCube t.n t.k t.benchlen xP))
-    (hu : o.u = fformRise t.n t.k t.benchlen
-      (if red then mirrorTrits baseY else baseY) (fieldCube t.n t.k t.benchlen zP)
-      (fieldCube t.n t.k t.benchlen yP))
+    (hXP : o.xP = fieldMul t.n t.k t.benchlen px o.zP)
+    (hYP : o.yP = fieldMul t.n t.k t.benchlen py o.zP)
+    (hz : o.z = fieldCube t.n t.k t.benchlen o.zP)
     (hc : c = 1 ∨ c = 2) (hred : red = decide (c = 2))
     (hwalk : walkStep t.n t.k t.benchlen (baseX, baseY) true (px, py) c =
       some (true, (ax', ay'))) :
@@ -152,6 +147,11 @@ theorem oncomb_chord
   let n := t.n
   let k := t.k
   let bench := t.benchlen
+  let xP := o.xP
+  let yP := o.yP
+  let zP := o.zP
+  have hv := o.hv
+  have hu := o.hu
   have hk : k < n := by
     have hgap : 0 < n - k := by
       rw [show n - k = t.n - t.k from rfl, hsh.gap]
@@ -173,10 +173,12 @@ theorem oncomb_chord
   have hxL := fieldCube_length n k bench px hnb
   have hyL := fieldCube_length n k bench py hnb
   have hzL' := fieldCube_length n k bench zP hnb
+  have hXP' : xP = fieldMul n k bench px zP := hXP
+  have hYP' : yP = fieldMul n k bench py zP := hYP
   have hcubeX : fieldCube n k bench xP = fieldMul n k bench x z := by
-    rw [hXP, fieldCube_mul n k bench px zP hpos hk hnb h2 h3span hpxT hzT]
+    rw [hXP', fieldCube_mul n k bench px zP hpos hk hnb h2 h3span hpxT hzT]
   have hcubeY : fieldCube n k bench yP = fieldMul n k bench y z := by
-    rw [hYP, fieldCube_mul n k bench py zP hpos hk hnb h2 h3span hpyT hzT]
+    rw [hYP', fieldCube_mul n k bench py zP hpos hk hnb h2 h3span hpyT hzT]
   have hv' : o.v = fformRun n k bench baseX z (fieldMul n k bench x z) := by
     rw [hv, hcubeX]
   have hu' : o.u = fformRise n k bench yB z (fieldMul n k bench y z) := by

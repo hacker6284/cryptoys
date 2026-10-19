@@ -104,6 +104,14 @@ structure OnComb (t : Spec.Tier) (bZ : Ecbs.Board) (red : Bool)
   hne : fformBottom t.n t.k t.benchlen v z ≠ List.replicate t.n 0
   hinv : ∃ w, w.length = t.n ∧ allTritList w ∧
     fieldMul t.n t.k t.benchlen (fformBottom t.n t.k t.benchlen v z) w = onePeg t.n
+  xP : List Nat
+  yP : List Nat
+  zP : List Nat
+  hv : v = fformRun t.n t.k t.benchlen baseX
+    (fieldCube t.n t.k t.benchlen zP) (fieldCube t.n t.k t.benchlen xP)
+  hu : u = fformRise t.n t.k t.benchlen
+    (if red then mirrorTrits baseY else baseY)
+    (fieldCube t.n t.k t.benchlen zP) (fieldCube t.n t.k t.benchlen yP)
 
 private theorem same_nat (a b : Nat) (p : Int)
     (h1 : p = Int.ofNat a) (h2 : p = Int.ofNat b) : a = b :=
@@ -259,7 +267,7 @@ theorem live_any
   rcases hrest with ⟨moves0, slides0, ctrl0, _, _, _, _, _, c1, c00,
       hmv0, hsl0, hc00, _, _, _, _, _, _, hop1?, hop0?,
       _, hc1, hfitMul, _, _, hmvLe, hslLe, hcLe⟩
-  rcases hproj with ⟨xP, yP, zP, lay, hxL, hyL, hzL, hxT, hyT, hzT, _, _, _,
+  rcases hproj with ⟨xP, yP, zP, lay, hxL, hyL, hzL, hxT, hyT, hzT, hXP, hYP, _,
       h0, hlay, _⟩
   have hspan := span2 t.n t.benchlen t.combgap sat.cube_span
   have hnb : t.n ≤ t.benchlen := tw.nLe
@@ -276,9 +284,9 @@ theorem live_any
     have hd2i := idx_at b.sudo_5Board_4held 2 true hszD (by decide) hd2
     obtain ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane, hlift, hfrob,
         hmv, hsl, hc, hopIn0, hfr, hmon, hmark, hctrl, hmv', hsl', hop0',
-        hleM, hleS, hbon, hto, hbench, htake, hzero, hhome0, hhome1⟩ :=
+        hleM, hleS, hbon, hto, hbench, htake, hzero, hhome0, hhome1, _, _⟩ :=
       homes_layout_comb t b baseX baseY px py xP yP zP done hAt0 hsh hOk sat
-        hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i h2i hd0 hd1i hd2i hoff hpos
+        hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i h2i hd0 hd1i hd2i hoff hXP hYP hpos
     let o := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon hto hbench
       htake hzero hhome0 hhome1
@@ -295,10 +303,10 @@ theorem live_any
     have hd2i := idx_at b.sudo_5Board_4held 2 true hszD (by decide) hd2
     obtain ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane, hlift, hfrob,
         hmv, hsl, hc, hopIn0, hfr, hmon, hmark, hctrl, hmv', hsl', hop0',
-        hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩ :=
+        hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1, _, _⟩ :=
       ybench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h2i hd0 hd1i hd2i hon hto hbench
-        htake hnle hzero (hfitY ys hbench) hpos
+        htake hnle hzero (hfitY ys hbench) hXP hYP hpos
     let o := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
       htakeZ hzeroZ hhome0 hhome1
@@ -315,10 +323,10 @@ theorem live_any
     have hd2i := idx_at b.sudo_5Board_4held 2 false hszD (by decide) hd2
     obtain ⟨bL, bZ, moves, slides, ctrl, c0, moves', slides', lane, hlift, hfrob,
         hmv, hsl, hc, hopIn0, hfr, hmon, hmark, hctrl, hmv', hsl', hop0',
-        hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1⟩ :=
+        hleM, hleS, hbon, htoZ, hbenchZ, htakeZ, hzeroZ, hhome0, hhome1, _, _⟩ :=
       zbench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i hd0 hd1i hd2i hon hto hbench
-        htake hnle hzero (hfitY ys hbench) hpos
+        htake hnle hzero (hfitY ys hbench) hXP hYP hpos
     let o := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
       htakeZ hzeroZ hhome0 hhome1

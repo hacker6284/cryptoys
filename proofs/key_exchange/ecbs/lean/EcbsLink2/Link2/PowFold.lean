@@ -615,7 +615,13 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
         (bS.sudo_5Board_4held[up]?) = some true ∧
         bS.sudo_5Board_6marker = Int.ofNat 1 ∧
         bS.sudo_5Board_9marker_on = true ∧
-        (bS.sudo_5Board_4home[src]?) = some (embed factor) := by
+        (bS.sudo_5Board_4home[src]?) = some (embed factor) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 4) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx 2) ∧
+        (bS.sudo_5Board_4held[spare]?) = some false ∧
+        (∀ i, i ≠ up → i ≠ spare →
+          (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?) ∧
+          (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) := by
   obtain ⟨hlift, hcube⟩ := pow_cube_seated b up acc w h r n k moves hole bench peak peakS cOps cg
       ctrl mx script m hmk hoff hm hc hx hs hposS hfitLift hfitCube hops hop1 hfops hF hHome hHF
       hArr h7 hp hpeak hn0 hn hlenx hfn hmoves hbl hcg hspan h3 hfm hhole hxsT hw0 hh0 hrR hrP
@@ -806,8 +812,19 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
       (by simpa [cube] using hpegP)
       (by simpa [htake, cube, mvP] using hfitSet)
       (by simpa [htake, cube] using hfitSl2)
-  rcases hdig with ⟨bS, hrun, hhome, hoffS, hheldS, hmarkS, hflagS, _hctrlS, hkeep, _, _, _, _, _, _, _⟩
-  refine ⟨bS, ?_, hhome, hoffS, hheldS, hmarkS, hflagS, ?_⟩
+  rcases hdig with ⟨bS, hrun, hhome, hoffS, hheldS, hmarkS, hflagS, hctrlS, hkeep, hheldK, hspS,
+      _hmvD, _hslD, _hopsD, _hpkD, hmxD⟩
+  have hctrl4 : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 4) := by
+    simpa [show (ctrl + 2) + 2 = ctrl + 4 by omega] using hctrlS
+  have hmx2 : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx 2) := by
+    have hm : max (max mx 1) (0 + 2) = max mx 2 := by
+      simp only [Nat.zero_add]
+      by_cases h1 : mx ≤ 1
+      · rw [Nat.max_eq_right h1, Nat.max_eq_right (by decide : (1 : Nat) ≤ 2),
+          Nat.max_eq_right (Nat.le_trans h1 (by decide : (1 : Nat) ≤ 2))]
+      · rw [Nat.max_eq_left (by omega : 1 ≤ mx)]
+    simpa [hm] using hmxD
+  refine ⟨bS, ?_, hhome, hoffS, hheldS, hmarkS, hflagS, ?_, hctrl4, hmx2, hspS, ?_⟩
   · rw [hlift, ok_bind, hcube, ok_bind, hcopy, ok_bind]
     exact hrun
   · rw [hkeep src hsrcU hsrcS]
@@ -817,5 +834,19 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
     simpa [bC] using
       powCube_home_some b up ctrl mx src acc n k moves hole bench peak peakS cOps hops hF hHome
         (embed factor) hsrcU (by rw [Array.getElem?_eq_getElem hHomeSrc]; exact congrArg some hsrcArr)
+  · intro i hiu his
+    refine ⟨?_, ?_⟩
+    · rw [hkeep i hiu his]
+      simp only [bP]
+      rw [place_home_eq, Array.getElem?_set_ne _ ⟨spare, hHomeSp⟩ (embed factor) his.symm]
+      simp only [bC]
+      rw [powCube_home_arr b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome]
+      rw [Array.getElem?_set_ne _ ⟨up, hHome⟩ (#[] : Array Int) hiu.symm]
+    · rw [hheldK i hiu his]
+      simp only [bP]
+      rw [place_held_eq, Array.getElem?_set_ne _ ⟨spare, hHeldSp⟩ true his.symm]
+      simp only [bC]
+      rw [powCube_held_arr b up ctrl mx acc n k moves hole bench peak peakS cOps hops hF hHome]
+      rw [Array.getElem?_set_ne _ ⟨up, hF⟩ false hiu.symm]
 
 end EcbsLink2.Link2

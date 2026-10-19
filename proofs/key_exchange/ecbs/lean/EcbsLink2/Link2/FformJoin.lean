@@ -9,6 +9,12 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+private theorem add_move_le (moves mv nocopy n bench : Nat)
+    (hnoc : nocopy ≤ moves + stepBudget n bench)
+    (hmv : mv ≤ nocopy + 16 * stepBudget n bench) :
+    mv ≤ moves + 24 * stepBudget n bench := by
+  omega
+
 /-- `F·v`, the across, the mirrored rise product, the up, and `clear`.
     The bench on entry holds `fformBottom` and is aimed at the bottom.
     The gap holds `F`. Homes 0 and 2 are Spec's across and bottom.
@@ -96,10 +102,16 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
       b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
       (∃ moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps',
-        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps') ∧
+        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps' ∧
+        cOps' = cOps + 4 ∧
+        ctrl' = ctrl + 8 ∧
+        moves' ≤ moves + 16 * stepBudget n bench ∧
+        slides' ≤ slides + 12 * n) ∧
       ((1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) →
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
-          b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) := by
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) ∧
+      b'.sudo_5Board_9marker_on = true ∧
+      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) := by
   obtain ⟨bA, laneA, hA⟩ := fform_across_step b f v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h7 h7H hvH hvA huH huA hemptyB hxH hxA hyH hyA hfH hfA hsH
@@ -124,7 +136,7 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
       rw [List.length_take, Nat.min_eq_left hnle] at hp
       omega)
   obtain ⟨b', lane', htail, h0, h2, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
-      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge, hops1⟩ :=
+      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge, hops1, hmon, hH0⟩ :=
     fform_up_clear b bA laneA f u y2 v z x2 red
       (m + 2) (ctrl + 4) (max (max mx (m + 2)) (m + 3)) script (cOps + 2)
       n k w h r
@@ -137,9 +149,26 @@ theorem fform_suffix (b : Ecbs.Board) (red : Bool)
       peak peakS bench hA h7 h7H hscript hbound hfitM hfitC hfops hn hops
       hfEq hf hBigU hSlU hbl hn0 hnb hlenf hlenu hleny hpeak7 hpeakS7 hspan
       hfT hu hy2 hfi hw0 hh0 hrR hrP hnE hkLe hgapE hw hh hr hk hsm hnsm hfitB
+  obtain ⟨mv, sl, ct, mk, mx', pk, ps, ho, cops, ch, hopEq, hctrlEq, hmvLe, hslLe⟩ := hcharge
+  have hmvS : mv ≤ moves + 16 * stepBudget n bench := by
+    have hnoc := nocopyCharge_le n k moves bench f v lane false hnle
+    have hkeep := keepCharge_le n k (nocopyCharge n k moves bench f v lane false) bench x2
+      (fformBottom n k bench v z) (fieldMul n k bench f v) false
+      (fieldMul_len n k bench f v hnb)
+      (by unfold fformBottom; exact fieldMul_len n k bench v _ hnb) hnb
+    have hstep : 10 * stepBudget n bench ≤ 16 * stepBudget n bench := by
+      unfold stepBudget; omega
+    omega
+  have hslS : sl ≤ slides + 12 * n := by
+    have hp := pegCount_le (lane.take n)
+    rw [List.length_take, Nat.min_eq_left hnle] at hp
+    omega
   refine ⟨b', lane', ?_, h0, h2, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
-      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge, hops1⟩
+      h3a, h3h, h4a, h4h, htier', hszH', hszD',
+      ⟨mv, sl, ct, mk, mx', pk, ps, ho, cops, ch, ?_, ?_, hmvS, hslS⟩, hops1, hmon, hH0⟩
   · rw [← bind_assoc, hA.mul_do, ok_bind, htail]
+  · omega
+  · omega
 
 /-- The success tail of `fform_add`, from the new bottom through `clear`.
     On entry the bench holds `F` and is aimed at the gap, and the bottom holds
@@ -229,10 +258,16 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
       b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
       (∃ moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps',
-        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps') ∧
+        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps' ∧
+        cOps' = cOps + 5 ∧
+        ctrl' = ctrl + 10 ∧
+        moves' ≤ moves + 24 * stepBudget n bench ∧
+        slides' ≤ slides + 16 * n) ∧
       ((1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) →
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
-          b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) := by
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) ∧
+      b'.sudo_5Board_9marker_on = true ∧
+      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) := by
   have hpeg : FitsLen (2 * pegCount (lane.take n)) :=
     fits_le hBig (by
       have hp := pegCount_le (lane.take n)
@@ -363,7 +398,7 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       rw [List.length_take, Nat.min_eq_left hnle] at hp
       omega)
   obtain ⟨b', lane', hsuf, hAcross, hBotH, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
-      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge, hops1⟩ :=
+      h3a, h3h, h4a, h4h, htier', hszH', hszD', hcharge, hops1, hmon, hH0⟩ :=
     fform_suffix b1 red f v z x2 u y2 lane1
       (m + 1) (ctrl + 2) (max mx (m + 2)) script (cOps + 1) n k w h r
       (nocopyCharge n k moves bench v (fieldMul n k bench (fieldMul n k bench v v) z) lane false)
@@ -390,16 +425,30 @@ theorem fform_add_point (b : Ecbs.Board) (red : Bool)
       (by rw [s1.tier]; exact hw) (by rw [s1.tier]; exact hh)
       (by rw [s1.tier]; exact hr) (by rw [s1.tier]; exact hk)
       hsm hnsm hfitB
+  obtain ⟨mv, sl, ct, mk, mx', pk', ps, ho, cops, ch, hopEq, hctrlEq, hmvLe, hslLe⟩ := hcharge
+  have hmvA : mv ≤ moves + 24 * stepBudget n bench :=
+    add_move_le moves mv
+      (nocopyCharge n k moves bench v (fieldMul n k bench (fieldMul n k bench v v) z) lane false)
+      n bench
+      (nocopyCharge_le n k moves bench v
+        (fieldMul n k bench (fieldMul n k bench v v) z) lane false hnle)
+      hmvLe
+  have hslA : sl ≤ slides + 16 * n := by
+    have hp := pegCount_le (lane.take n)
+    rw [List.length_take, Nat.min_eq_left hnle] at hp
+    omega
   refine ⟨b', lane', ?_, hAcross, hBotH, hb, ht, hg, hon', hto', h1, h2h, hnle', hzero',
       h3a, h3h, h4a, h4h, htier'.trans s1.tier, hszH'.trans s1.homeSz, hszD'.trans s1.heldSz,
-      hcharge, by
+      ⟨mv, sl, ct, mk, mx', pk', ps, ho, cops, ch, ?_, ?_, hmvA, hslA⟩, by
         intro h1
         have h11 : 1 < b1.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
           rw [s1.opsSz]; exact h1
         rw [hops1 h11, Array.getElem?_eq_getElem h11, s1.ops1 h1,
-          Array.getElem?_eq_getElem h1]⟩
+          Array.getElem?_eq_getElem h1], hmon, hH0⟩
   · have hmul : Ecbs.mul b Ecbs.bottom Ecbs.across Ecbs.bottom false false false = .ok b1 := by
       rw [fform_consts.2.2.1, fform_consts.1, s1.mul_ok]
     rw [hmul, ok_bind, hsuf]
+  · omega
+  · omega
 
 end EcbsLink2.Link2

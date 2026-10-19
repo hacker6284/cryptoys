@@ -83,10 +83,16 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size ∧
       b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size ∧
       (∃ moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps',
-        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps') ∧
+        TailCharge b' moves' slides' ctrl' mark' mx' pk' peakS' hole' cOps' ∧
+        cOps' = (cOps + 1) + 1 ∧
+        ctrl' = (ctrl + 2) + 2 ∧
+        moves' ≤ moves + 8 * stepBudget n bench ∧
+        slides' ≤ slides + 4 * n) ∧
       ((1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) →
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
-          b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) := by
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) ∧
+      b'.sudo_5Board_9marker_on = true ∧
+      (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) := by
   have h0d : (0 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h1d : (1 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h2d : (2 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
@@ -290,6 +296,23 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       (fformBottom n k bench v z) (mirrorTrits (fieldMul n k bench f u)) (! red) ≤
       nocopyCharge n k moves bench f u laneA true + stepBudget n bench := by
     simpa [moves3] using hck
+  have hmvLe : moves4 + pegCount f ≤ moves + 8 * stepBudget n bench := by
+    have h3 : moves4 + pegCount f ≤ moves + 3 * stepBudget n bench := by
+      show keepCharge n k (nocopyCharge n k moves bench f u laneA true) bench y2
+          (fformBottom n k bench v z) (mirrorTrits (fieldMul n k bench f u)) (! red) +
+          pegCount f ≤ moves + 3 * stepBudget n bench
+      unfold stepBudget at hcu hck' ⊢
+      omega
+    have h8 : 3 * stepBudget n bench ≤ 8 * stepBudget n bench := by
+      unfold stepBudget
+      omega
+    omega
+  have hslLe : slides3 ≤ slides + 4 * n := by
+    have hp := pegCount_le (laneA.take n)
+    have htake : (laneA.take n).length = n := by
+      rw [List.length_take, Nat.min_eq_left (by rw [hA.lane_len]; exact hnb)]
+    rw [htake] at hp
+    omega
   have hfitClear : FitsLen (moves4 + pegCount f) :=
     fits_le hBig (by
       show keepCharge n k (nocopyCharge n k moves bench f u laneA true) bench y2
@@ -372,7 +395,7 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
               rw [s4.opsSz]; exact hops3
             have h0 : b4.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hops4 =
                 Int.ofNat ((cOps + 1) + 1) := s4.ops0 hops4
-            simpa [bC] using h0 }⟩,
+            simpa [bC] using h0 }, rfl, rfl, hmvLe, hslLe⟩,
       by
         intro h1
         have h1A : 1 < bA.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -389,7 +412,20 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
               b4.sudo_5Board_4cost.sudo_5Costs_3ops[1]'h14 := by
             simp [bC]
           rw [h4eq, s4.ops1 h13, s3.ops1 h1A, hA.ops1 h1]
-        rw [Array.getElem?_eq_getElem hC, Array.getElem?_eq_getElem h1, hstep]⟩
+        rw [Array.getElem?_eq_getElem hC, Array.getElem?_eq_getElem h1, hstep],
+      by simpa [bC] using s4.mon,
+      by
+        intro h
+        have h0d3 : 0 < b3.sudo_5Board_4held.size := by rw [s3.heldSz]; exact h0d
+        have hH03 : b3.sudo_5Board_4held[0] = true := by
+          have hs := s3.stayH 0 (by decide) h0d h0d3
+          rw [if_pos rfl] at hs
+          exact hs
+        have h0d4 : 0 < b4.sudo_5Board_4held.size := by rw [s4.heldSz]; exact h0d3
+        have hH04 : b4.sudo_5Board_4held[0] = true :=
+          (s4.stayH 0 (by decide) h0d3 h0d4).trans hH03
+        have hne : (5 : Nat) ≠ 0 := by decide
+        simpa [bC, Array.getElem_set_ne, hne] using hH04⟩
   · have hUp := fform_consts.2.1
     have hBot := fform_consts.2.2.1
     have hBu := fform_consts.2.2.2.2.1

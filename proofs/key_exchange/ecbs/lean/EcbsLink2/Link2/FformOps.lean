@@ -45,7 +45,7 @@ theorem cell_cube_slot (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
     (hop : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (cOps1 : Int)) :
     ∃ (b' : Ecbs.Board) (lane' : List Nat),
       b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (cOps1 : Int) := by
-  obtain ⟨b', lane', _hdo, _hcell, hslot⟩ :=
+  obtain ⟨b', lane', _hdo, _hcell, hslot, _hmon, _hH0, _hcount⟩ :=
     cell_on_add b lane n k bench u v z x2 y2 script w h r
       m ctrl mx cOps moves slides hole peak peakS red x3 yUp s
       hbound hfitM6 hfitC6 hfops6 hf hBig hSlide hw0 hh0 hrR hrP hnE hkLe hgapN

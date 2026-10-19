@@ -131,7 +131,7 @@ theorem fform_add_on_proj (b : Ecbs.Board) (red : Bool)
         b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? =
           b.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) := by
   obtain ⟨b', lane', hdo, h0, h2, hbench, htake, hheld, hon, hto, h1, h2h, hnle', hzero,
-      h3a, h3h, h4a, h4h, htier, hszH, hszD, hcharge, hops1⟩ :=
+      h3a, h3h, h4a, h4h, htier, hszH, hszD, hcharge, hops1, _hmon, _hH0⟩ :=
     fform_add_on_f b red v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       h7 h7H hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH
@@ -143,7 +143,8 @@ theorem fform_add_on_proj (b : Ecbs.Board) (red : Bool)
   have htake' : lane'.take n = addUp n k bench red y2 u v z := by
     simpa [addUp] using htake
   obtain ⟨h0', h2', hy'⟩ := add_board_proj n k bench x2 u v z x3 yUp red y2 b' lane' h0 h2 htake' hx hy
+  obtain ⟨mv, sl, ct, mk, mx', pk', ps, ho, cops, ch, _, _, _, _⟩ := hcharge
   exact ⟨b', lane', hdo, h0', h2', hbench, hy', hheld, hon, hto, h1, h2h, hnle', hzero,
-      h3a, h3h, h4a, h4h, htier, hszH, hszD, hcharge, hops1⟩
+      h3a, h3h, h4a, h4h, htier, hszH, hszD, ⟨mv, sl, ct, mk, mx', pk', ps, ho, cops, ch⟩, hops1⟩
 
 end EcbsLink2.Link2

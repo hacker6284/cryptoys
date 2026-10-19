@@ -77,6 +77,40 @@ private theorem group_in (moves pre c n d : Nat)
     (h : moves ≤ pre + c + 2 * n + 3 * d) :
     moves ≤ pre + (c + 2 * n + 3 * d) := by omega
 
+/-- A bench settle spends `2 * n` before the comb. Two cube spends and `4 * n` still sit inside eight steps. -/
+private theorem settle_move_room (n bench : Nat) :
+    2 * (cubeCharge n bench + 2 * n + 3 * (bench - n)) + 4 * n ≤
+      8 * stepBudget n bench := by
+  unfold cubeCharge stepBudget
+  generalize hd : bench - n = d
+  have h6 : 6 * n ≤ 8 * (n * (n + 1)) := by
+    simpa [Nat.mul_assoc] using six_le_cube n
+  have h8 : 8 * n ≤ 8 * (n * (n + 1)) := by
+    have hone : 1 ≤ n + 1 := by omega
+    have hmul : n * 1 ≤ n * (n + 1) := Nat.mul_le_mul_left n hone
+    simpa [Nat.mul_assoc] using Nat.mul_le_mul_left 8 hmul
+  have hmain : 24 * n + 18 * d ≤ 16 * n + 8 * (n * (n + 1)) + 24 * d := by
+    omega
+  have hL : 2 * (8 * n + 6 * d + 2 * n + 3 * d) + 4 * n = 24 * n + 18 * d := by omega
+  have hR : 8 * (2 * n + n * (n + 1) + 3 * d) =
+      16 * n + 8 * (n * (n + 1)) + 24 * d := by omega
+  rw [hL, hR]
+  exact hmain
+
+private theorem group_settle (moves pre c n d : Nat)
+    (h : moves ≤ pre + 2 * n + c + 2 * n + 3 * d) :
+    moves ≤ pre + (2 * n + (c + 2 * n + 3 * d)) := by omega
+
+private theorem settle_in_cube (n spend step : Nat)
+    (h : spend + 2 * n ≤ 8 * step) : 2 * n + spend ≤ 8 * step := by omega
+
+private theorem next_shape (moves' spend n pre budget : Nat)
+    (h : moves' + (2 * n + spend) + 0 ≤ pre + budget) :
+    moves' + spend + 2 * n ≤ pre + budget := by omega
+
+private theorem room_of_settle (n spend step : Nat)
+    (h : 2 * spend + 4 * n ≤ 8 * step) : 2 * (2 * n + spend) + 0 ≤ 8 * step := by omega
+
 private theorem wide_n (n bench tn tb B : Nat) (hn : n = tn) (hb : bench = tb)
     (h : 32 * stepBudget tn tb ≤ B) : 32 * stepBudget n bench ≤ B := by
   subst hn hb
@@ -144,23 +178,23 @@ private theorem ctrl_step (ctrl' pre i S : Nat)
   omega
 
 private theorem live_slides (slides' slides pre n : Nat)
-    (h1 : slides' ≤ slides + 16 * n) (h2 : slides ≤ pre + 4 * n) :
-    slides' ≤ pre + 20 * n := by omega
+    (h1 : slides' ≤ slides + 16 * n) (h2 : slides ≤ pre + 6 * n) :
+    slides' ≤ pre + 22 * n := by omega
 
 private theorem slides_tn (slides' pre n tn : Nat) (heq : n = tn)
-    (h : slides' ≤ pre + 20 * n) : slides' ≤ pre + 20 * tn := by
+    (h : slides' ≤ pre + 22 * n) : slides' ≤ pre + 22 * tn := by
   subst heq
   exact h
 
-private theorem twenty_le (n S : Nat) (h : 32 * n ≤ S) : 20 * n ≤ S := by omega
+private theorem twenty_le (n S : Nat) (h : 32 * n ≤ S) : 22 * n ≤ S := by omega
 
 private theorem slide_step (slides' pre i n S : Nat)
-    (hs : slides' ≤ pre + 20 * n) (hprev : pre ≤ i * S) (h20 : 20 * n ≤ S) :
+    (hs : slides' ≤ pre + 22 * n) (hprev : pre ≤ i * S) (h22 : 22 * n ≤ S) :
     slides' ≤ (i + 1) * S := by
-  have hsum := ledger_next i S (20 * n) pre hprev h20
+  have hsum := ledger_next i S (22 * n) pre hprev h22
   omega
 
-private theorem slide_pad (slides' pre n : Nat) (h : slides' ≤ pre + 20 * n) :
+private theorem slide_pad (slides' pre n : Nat) (h : slides' ≤ pre + 22 * n) :
     slides' + 6 * n ≤ pre + 32 * n := by omega
 
 private theorem slide_shape (slides' n pre wide : Nat)
@@ -324,8 +358,8 @@ theorem live_cell_at
     (hopIn : 1 < b11.sudo_5Board_4cost.sudo_5Costs_3ops.size)
     (hop1 : b11.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some ((c1 + 3 : Nat) : Int))
     (hcOps : cOps = cMul + 7)
-    (hmvB : moves ≤ preMoves + cubeCharge n bench + 2 * n + 3 * (bench - n))
-    (hslB : slides ≤ preSlides + 4 * n)
+    (hmvB : moves ≤ preMoves + 2 * n + cubeCharge n bench + 2 * n + 3 * (bench - n))
+    (hslB : slides ≤ preSlides + 6 * n)
     (hctrlB : ctrl = preCtrl + 6)
     (hfitC1 : FitsLen (c1 + 3 * (t.cells - i)))
     (hfitMul : FitsLen (cMul + 13 * (t.cells - i)))
@@ -374,12 +408,13 @@ theorem live_cell_at
   let spend := cubeCharge n bench + 2 * n + 3 * (bench - n)
   let step := stepBudget n bench
   let B := walkCharge t + (6 * t.benchlen + 2 * t.n)
-  have hgroup := group_in moves preMoves (cubeCharge n bench) n (bench - n) hmvB
-  have hspent := live_spend moves' moves preMoves spend step hmvLeT hgroup
-  have h2 := two_spend_le n bench
-  have hnextM := live_next moves' preMoves spend (2 * n) step hspent h2
+  have hgroup := group_settle moves preMoves (cubeCharge n bench) n (bench - n) hmvB
+  have hspent := live_spend moves' moves preMoves (2 * n + spend) step hmvLeT hgroup
+  have h2 := settle_move_room n bench
+  have h2ok := room_of_settle n spend step h2
+  have hnextM := live_next moves' preMoves (2 * n + spend) 0 step hspent h2ok
   have hshape := move_shape moves' n (cubeCharge n bench) (bench - n) preMoves
-    (32 * step) hnextM
+    (32 * step) (next_shape moves' spend n preMoves (32 * step) hnextM)
   have hroom := cell_room32 t preMoves i tw hmvLe hpos hwide
   have hfitM : FitsLen (moves' + 2 * n + cubeCharge n bench + 2 * n +
       3 * (bench - n)) :=
@@ -391,10 +426,11 @@ theorem live_cell_at
   have hfitS : FitsLen (slides' + 2 * n + slideCharge n) := by
     rw [slideCharge]
     exact fit_slide _ preSlides n t.n hnk.symm hslideR hshS
-  have h8 := spend_of_room spend (2 * n) (8 * step) (cube_room_le n bench)
+  have h8 : 2 * n + spend ≤ 8 * step :=
+    settle_in_cube n spend step (cube_room_le n bench)
   have h32s := wide_n n bench t.n t.benchlen B hnk.symm hbb.symm hwide
-  have hunit := unit_le spend step B h8 h32s
-  have hmvLe' := move_step moves' preMoves i spend step B hspent hmvLe hunit
+  have hunit := unit_le (2 * n + spend) step B h8 h32s
+  have hmvLe' := move_step moves' preMoves i (2 * n + spend) step B hspent hmvLe hunit
   have h20 := twenty_le t.n (cellSlideCharge t + slideCharge t.n) h32
   have hslTn := slides_tn slides' preSlides n t.n hnk.symm hslN
   have hslLe' := slide_step slides' preSlides i t.n

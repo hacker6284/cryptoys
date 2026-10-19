@@ -119,6 +119,7 @@ import EcbsLink2.Link2.WalkFail
 import EcbsLink2.Link2.WalkCase
 import EcbsLink2.Link2.WalkFform
 import EcbsLink2.Link2.WalkScope
+import EcbsLink2.Link2.BasePointOf
 import EcbsLink2.Link2.WalkFformIdle
 import EcbsLink2.Link2.WalkFformNone
 import EcbsLink2.Link2.WalkRunStep
@@ -184,6 +185,7 @@ import EcbsLink2.Link2.FformSumAt
 import EcbsLink2.Link2.FformAddAt
 import EcbsLink2.Link2.FformAddSplit
 import EcbsLink2.Link2.FformAddCell
+import EcbsLink2.Link2.WalkFformCase
 import EcbsLink2.Link2.FformAtPack
 import EcbsLink2.Link2.FformZeroAt
 import EcbsLink2.Link2.FformZeroLay

@@ -1077,6 +1077,23 @@ theorem frobenius_fform_zbench
 
 
 
+/-- The across cube on a lifted homes board, together with the homes it does
+    not write. Home 2 stays `Z`. Homes 3 and 4 stay the base point. -/
+structure AcrossSeen
+    (b : Ecbs.Board) (x y z : List Nat)
+    (n k w h r bench cg pk peakS moves slides hole cOps ctrl mx script : Nat)
+    (tier : Spec.Tier) (baseX baseY : List Nat) : Type where
+  a : DownAcross b x y n k w h r bench cg pk moves slides hole cOps ctrl mx script
+  hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size
+  hOn : a.b1On = acrossBoard b x n k moves hole bench pk peakS cOps ctrl mx
+      hops a.h0D a.h0H
+  h3 : a.b1On.sudo_5Board_4home[3]'(by rw [a.hszHOn]; decide) = embed baseX
+  h4 : a.b1On.sudo_5Board_4home[4]'(by rw [a.hszHOn]; decide) = embed baseY
+  hH3 : a.b1On.sudo_5Board_4held[3]'(by rw [a.hszDOn]; decide) = true
+  hH4 : a.b1On.sudo_5Board_4held[4]'(by rw [a.hszDOn]; decide) = true
+  h2 : a.b1On.sudo_5Board_4home[2]'(by rw [a.hszHOn]; decide) = embed z
+  hH2 : a.b1On.sudo_5Board_4held[2]'(by rw [a.hszDOn]; decide) = true
+
 noncomputable def lifted_across
     (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY xP yP zP : List Nat)
     (fr : FrameAt b t baseX baseY)
@@ -1109,8 +1126,8 @@ noncomputable def lifted_across
     (hRoom : FitsLen (moves + cubeCharge t.n t.benchlen + 2 * t.n +
         3 * (t.benchlen - t.n)))
     (hSl : FitsLen (slides + slideCharge t.n)) :
-    DownAcross b xP yP t.n t.k t.w t.h t.r t.benchlen t.combgap pk moves slides hole
-      cOps ctrl mx t.script := by
+    AcrossSeen b xP yP zP t.n t.k t.w t.h t.r t.benchlen t.combgap pk peakS
+      moves slides hole cOps ctrl mx t.script t baseX baseY := by
   have hn0 : 0 < t.n := hOk.n_pos
   have hs1 : 1 < t.script := by have h := hsh.script_ge; omega
   have hspan : 3 * (t.n - 1) + t.combgap < t.benchlen := sat.cube_span
@@ -1218,6 +1235,32 @@ noncomputable def lifted_across
     have hget := at_eq hheld (by rw [a.hszDOn]; exact hi)
       (by rw [raw_held, Array.size_set, feed_held]; exact hiL)
     exact hget.trans (hAc.trans (fr.held4 (by rw [fr.szD]; exact hi)))
-  exact a
+  have hhomeK := across_kept b xP 2 (embed zP) t.n t.k moves hole t.benchlen pk peakS
+    cOps ctrl mx hops h0D h0H (by decide) h2H h2
+  have hheldK := across_kept_held b xP 2 t.n t.k moves hole t.benchlen pk peakS
+    cOps ctrl mx hops h0D h0H (by decide) h2D hd2
+  have hhome2? : a.b1On.sudo_5Board_4home[2]? = some (embed zP) :=
+    (congrArg (fun brd => brd.sudo_5Board_4home[2]?) hOn).trans hhomeK
+  have hheld2? : a.b1On.sudo_5Board_4held[2]? = some true :=
+    (congrArg (fun brd => brd.sudo_5Board_4held[2]?) hOn).trans hheldK
+  have h2On : a.b1On.sudo_5Board_4home[2]'(by rw [a.hszHOn]; decide) = embed zP := by
+    have hsz : 2 < a.b1On.sudo_5Board_4home.size := by rw [a.hszHOn]; decide
+    rw [Array.getElem?_eq_getElem hsz] at hhome2?
+    exact elem_cast _ 2 hsz (by rw [a.hszHOn]; decide) (Option.some.inj hhome2?)
+  have hH2On : a.b1On.sudo_5Board_4held[2]'(by rw [a.hszDOn]; decide) = true := by
+    have hsz : 2 < a.b1On.sudo_5Board_4held.size := by rw [a.hszDOn]; decide
+    rw [Array.getElem?_eq_getElem hsz] at hheld2?
+    exact elem_cast _ 2 hsz (by rw [a.hszDOn]; decide) (Option.some.inj hheld2?)
+  exact {
+    a
+    hops
+    hOn
+    h3 := h3On
+    h4 := h4On
+    hH3 := hH3On
+    hH4 := hH4On
+    h2 := h2On
+    hH2 := hH2On
+  }
 
 end EcbsLink2.Link2

@@ -101,7 +101,6 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
     (hf : FitsLen n) (hfitL : FitsLen lane.length)
     (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
     (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int))
-    (hpeak7 : 7 ≤ peak)
     (hpeg : FitsLen (2 * pegCount (lane.take n)))
     (hfitMs : FitsLen ((moves + pegCount y) + 2 * pegCount (lane.take n)))
     (hfitSs : FitsLen (slides + 2 * pegCount (lane.take n)))
@@ -123,7 +122,6 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
     (hnb : n ≤ bench)
     (hlen2 : y2.length = n) (hlenz : z.length = n)
     (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
-    (hpeakS7 : 7 ≤ peakS)
     (hspan : 2 * (n - 1) < bench)
     (hy2 : allTritList y2) (hz : allTritList z)
     (hfi : FitsLen (2 * (n - 1)))
@@ -182,10 +180,10 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
         b'.sudo_5Board_4home[seat]'hs = embed (lane.take n)) ∧
       (∀ hs : seat < b'.sudo_5Board_4held.size,
         b'.sudo_5Board_4held[seat]'hs = true) ∧
-      ∃ hole',
+      ∃ (hole' peak' strict' : Nat),
         BenchCarry b'
           (laneFold n (n - k) (school n y2 z (pref (mirrorTrits y) bench n) mirror))
-          n (cOps + 1) peak hole' peakS := by
+          n (cOps + 1) peak' hole' strict' := by
   let bM := mirrorHome b dst hH (embed (mirrorTrits y)) (moves + pegCount y)
   let feed := markerUpFeed bM m ctrl mx
   let hopsM : 0 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -232,16 +230,13 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
     hmovesU hslidesU hpeakU hpeg hfitMs hfitSs
   let bS := markerOn (settleBoard bU seat hHU hDU lane n mvM slides peak)
   have hinS : HomeIn bU seat := ⟨hHU, hDU⟩
-  have hcount : countHeld (bU.sudo_5Board_4held.set ⟨seat, hDU⟩ true) 7 ≤ 7 :=
-    countHeld_seven _
-  have hno : ¬ peak < countHeld (bU.sudo_5Board_4held.set ⟨seat, hDU⟩ true) 7 := by
-    omega
+  let peakIn := raisedPeak peak (countHeld (bU.sudo_5Board_4held.set ⟨seat, hDU⟩ true) 7)
   have hcostS0 : bS.sudo_5Board_4cost =
       (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_4cost := by
     dsimp [bS, markerOn]
-  have hpeakSboard : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
-    rw [hcostS0, settle_peak_eq bU seat hinS lane n mvM slides peak hpeakU, if_neg hno,
-      ofNat_eq_natCast]
+  have hpeakSboard : bS.sudo_5Board_4cost.sudo_5Costs_4peak = (peakIn : Int) := by
+    rw [hcostS0, settle_peak_eq bU seat hinS lane n mvM slides peak hpeakU]
+    simp [peakIn, raisedPeak, ofNat_eq_natCast]
   have hmovesS : bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mvS : Int) := by
     rw [hcostS0, settle_moves_eq bU seat hinS lane n mvM slides peak]
     dsimp [mvS, pegL]
@@ -373,10 +368,10 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
   obtain ⟨b', hok, hbench, hon, hto, hmk', htier', hszD, hempty, hszHome, hhomeK, hheldK,
       hix, hctrl, hmx, hopsEq, hmv, hsl, hpk, hst, hho, hsp⟩ :=
     run_else_lane bS dst first second (mirrorTrits y) y2 z
-      w h r n k mvS slS hole peak peakS bench mirror hoffS hblS hDD hHD hHeldD hHomeD
+      w h r n k mvS slS hole peakIn peakS bench mirror hoffS hblS hDD hHD hHeldD hHomeD
       hF' hHomeF' hHF' hArr' hS' hHomeS' hHS' hYs' hSpH' hSpHome' hSpE' h7S
       hneD1 hneD2 hne6D hne6F hne6S hpos hnb hnS (mirror_len y n hlen) hlen2 hlenz hf
-      hmovesS hslidesS hpeakSboard hpeak7 hstrictS hpeakS7 hspan (mirror_trits y) hy2 hfi
+      hmovesS hslidesS hpeakSboard hstrictS hspan (mirror_trits y) hy2 hfi
       hfitM hfitS hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap hwS hhS hrS hkS hsm hnsm hfitB hfold
   have hmU : bU.sudo_5Board_6marker = Int.ofNat (m + 1) := by
     simp [bU, bumpOp, feed, markerUpFeed]
@@ -546,7 +541,12 @@ theorem rise_on_board (b : Ecbs.Board) (dst first second seat : Nat)
             dsimp [bS, markerOn]]
       rw [settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
       exact hSpH
-    refine ⟨hole', hsz', hop', h6, hsp h6, hpeak7, hpk, hst, hhole', ?_, ?_, ?_, ?_⟩
+    refine ⟨hole',
+        sparePeak (bS.sudo_5Board_4held.set ⟨dst, hDD⟩ false)
+          (by rw [Array.size_set]; exact hSpH') peakIn,
+        spareStrict (bS.sudo_5Board_4held.set ⟨dst, hDD⟩ false)
+          (by rw [Array.size_set]; exact hSpH') peakS,
+        hsz', hop', h6, hsp h6, hpk, hst, hhole', ?_, ?_, ?_, ?_⟩
     · rw [hlenR]
       exact Nat.lt_of_lt_of_le hpos hnb
     · rw [hlenR]

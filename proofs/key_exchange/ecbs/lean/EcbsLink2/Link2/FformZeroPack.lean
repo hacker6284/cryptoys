@@ -11,6 +11,8 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
+attribute [local irreducible] bottomFlag Ecbs.frobenius_point Ecbs.marker_lift
+
 /-- One cell still to run, and the three cubes it spends. -/
 theorem zero_cell_cube_slack (c1 cells done : Nat)
     (h : FitsLen (c1 + 3 * (cells - done))) (hpos : done < cells) :
@@ -147,7 +149,7 @@ theorem zero_cell_at
       _, hscript, _, _, _, hrest⟩
   rcases hrest with ⟨moves, slides, ctrl, mark, mx, pk, peakS, hole, c1, cMul,
       hmv, hsl, hcCtrl, hmark, hmxEq, hpk, hstrict, hhole, hops, hop1?, hop0?,
-      hfitCtrl, hc1, hfitMul, hfitMv, hfitSl, hmvLe, hslLe, hcLe⟩
+      hfitCtrl, hc1, hfitMul, hfitMv, hfitSl, hmvLe, hslLe, hcLe, h5, h6, hopsN⟩
   have hpos : i < t.cells := by omega
   have hnb : t.n ≤ t.benchlen := tw.nLe
   have h3span : 3 * (t.n - 1) < t.benchlen := by
@@ -242,11 +244,26 @@ theorem zero_cell_at
     opsSz := hops0
     ops0 := hop0e
   }
+  obtain ⟨bLF, aF, hliftF, hflagF, _, h5F, h6F, hopsF⟩ :=
+    zero_comb_frame t b baseX baseY px py xP yP zP i hAt0 hsh hOk sat hs2
+      hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
+      moves slides ctrl mark mx pk peakS hole c1 hmv hsl hcCtrl hmark hmxEq hpk
+      hstrict hhole hops hop1 hfitCtrl hOps3 hRoom hSlF
+  have hbLF : bLF = bLc := Except.ok.inj (hliftF.symm.trans hliftC)
+  have hflagL : Ecbs.frobenius_point bLc = .ok (bottomFlag aF zP) := by
+    rw [← hbLF]
+    exact hflagF
+  have hbF : bZc = bottomFlag aF zP := Except.ok.inj (hfrobC.symm.trans hflagL)
+  have h5Z := (congrArg (fun brd => brd.sudo_5Board_4held[5]?) hbF).trans h5F
+  have h6Z := (congrArg (fun brd => brd.sudo_5Board_4held[6]?) hbF).trans h6F
+  have hopsNZ :=
+    (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops.size) hbF).trans hopsF
   have hAt' := fform_at_pack t bZc baseX baseY
     (fieldCube t.n t.k t.benchlen px) (fieldCube t.n t.k t.benchlen py) (i + 1)
     hmon hpxC hpyC hpxCT hpyCT hbx hby hbxT hbyT hH0 hscript hfrC hpC
     moves' slides' (ctrl + 6) 2 (max (max (max mx 1) 2) 3) pk' peakS' hole'
     (c1 + 3) cMul ch hsz1 hop1' hfitC hc1' hc0' hfitM' hfitS' hmvLe' hslLe' hcLe'
+    h5Z h6Z hopsNZ
   exact ⟨bLc, bZc, hliftC, hfrobC, hAt'⟩
 
 end EcbsLink2.Link2

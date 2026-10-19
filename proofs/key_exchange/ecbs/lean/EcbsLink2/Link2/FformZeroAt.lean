@@ -169,7 +169,10 @@ theorem zero_comb_frame
             pk moves slides hole cOps (c0 + 1) mx t.script),
       Ecbs.marker_lift b = .ok bL ∧
       Ecbs.frobenius_point bL = .ok (bottomFlag a zP) ∧
-      FrameAt (bottomFlag a zP) t baseX baseY := by
+      FrameAt (bottomFlag a zP) t baseX baseY ∧
+      (bottomFlag a zP).sudo_5Board_4held[5]? = some false ∧
+      (bottomFlag a zP).sudo_5Board_4held[6]? = some false ∧
+      (bottomFlag a zP).sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
   obtain ⟨bL, a, hlift, hhome?, hheld?⟩ :=
     fform_homes_across t b baseX baseY px py xP yP zP done hAt hsh hOk sat
       hxL hyL hxT hyT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff moves slides c0 mark mx
@@ -292,7 +295,23 @@ theorem zero_comb_frame
   have hfr := comb_frame t b bL (bottomFlag a zP) baseX baseY xP yP zP a c0 mark peakS
     (frame_of_at t b baseX baseY px py done hAt) hmkN hc0
     (FitsLen.of_le hCtrl (by omega)) hlift hopsL hOn rfl
-  exact ⟨bL, a, hlift, hflag, hfr⟩
+  obtain ⟨h5, h6, hopsN⟩ := fform_open t b baseX baseY px py done hAt
+  have h5L : bL.sudo_5Board_4held[5]? = some false := by
+    have hheld : bL.sudo_5Board_4held = b.sudo_5Board_4held := by rw [hbL]
+    rw [hheld]; exact h5
+  have h6L : bL.sudo_5Board_4held[6]? = some false := by
+    have hheld : bL.sudo_5Board_4held = b.sudo_5Board_4held := by rw [hbL]
+    rw [hheld]; exact h6
+  have hszL : bL.sudo_5Board_4held.size = 8 := by
+    have hheld : bL.sudo_5Board_4held = b.sudo_5Board_4held := by rw [hbL]
+    rw [hheld, hszD]
+  have hopsBN : bL.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+    have hopsA : bL.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops := by rw [hbL]
+    rw [hopsA]; exact hopsN
+  obtain ⟨h5F, h6F⟩ := comb_gap_spare a zP peakS hopsL hOn hszL h5L h6L
+  have hopsF := (comb_ops_len a zP peakS hopsL hOn).trans hopsBN
+  exact ⟨bL, a, hlift, hflag, hfr, h5F, h6F, hopsF⟩
 
 /-- `FrameAt` survives renaming the board. -/
 theorem frame_cast (t : Spec.Tier) (b1 b2 : Ecbs.Board) (baseX baseY : List Nat)
@@ -391,7 +410,7 @@ theorem zero_bZ_frame
         (∀ j, t.n ≤ j → ∀ hj : j < lane.length, lane[j] = 0) ∧
         bZ.sudo_5Board_4home[0]? = some (embed (fieldCube t.n t.k t.benchlen xP)) ∧
         bZ.sudo_5Board_4home[1]? = some (embed (fieldCube t.n t.k t.benchlen yP)) := by
-  obtain ⟨bL, a, hlift, hflag, hfr⟩ :=
+  obtain ⟨bL, a, hlift, hflag, hfr, _, _, _⟩ :=
     zero_comb_frame t b baseX baseY px py xP yP zP done hAt hsh hOk sat hs2
       hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
       moves slides c0 mark mx pk peakS hole cOps hmv hsl hc0 hmkN hmx hpk hstrict

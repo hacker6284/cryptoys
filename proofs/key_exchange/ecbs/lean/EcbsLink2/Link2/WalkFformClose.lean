@@ -83,7 +83,8 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
           some (embed (fieldCube t.n t.k t.benchlen yP)) →
         ∃ o : OnComb t bZ red baseX baseY moves' slides' (ctrl + 6) c0 c1,
           o.xP = xP ∧ o.yP = yP ∧ o.zP = zP ∧
-            o.z = fieldCube t.n t.k t.benchlen zP) :
+            o.z = fieldCube t.n t.k t.benchlen zP ∧
+              sb.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat o.c4)) :
     ∃ st : Ecbs.Board × Bool,
       FformInv t baseX baseY live0 acc0 cells t.cells st ∧
       FformAt t st.1 baseX baseY pxF pyF t.cells ∧
@@ -199,7 +200,8 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
           some (embed (fieldCube t.n t.k t.benchlen yP)) →
         ∃ o : OnComb t bZ red baseX baseY moves' slides' (ctrl + 6) c0 c1,
           o.xP = xP ∧ o.yP = yP ∧ o.zP = zP ∧
-            o.z = fieldCube t.n t.k t.benchlen zP) :
+            o.z = fieldCube t.n t.k t.benchlen zP ∧
+              sb.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat o.c4)) :
     ∃ bF pxF pyF xP yP zP, ∃ lay : ProjLay, ∃ ctrl,
       FformAt t bF baseX baseY pxF pyF t.cells ∧
       bF.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧

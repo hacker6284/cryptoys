@@ -67,6 +67,9 @@ structure AcrossBoard
   ops1 : ∀ h1 : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
     b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]'(by rw [opsSz]; exact h1) =
       b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'h1
+  ops4 : ∀ h4 : 4 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+    b'.sudo_5Board_4cost.sudo_5Costs_3ops[4]'(by rw [opsSz]; exact h4) =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[4]'h4
   heldSz : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size
   homeSz : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size
   emptyA : ∀ h : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0]'h = false
@@ -398,6 +401,11 @@ theorem fform_across_step (b : Ecbs.Board)
       have h11 : 1 < b1.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
         rw [s1.opsSz]; exact h1
       exact (s2.ops1 h11).trans (s1.ops1 h1)
+    ops4 := by
+      intro h4
+      have h41 : 4 < b1.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        rw [s1.opsSz]; exact h4
+      exact (s2.ops4 h41).trans (s1.ops4 h4)
     heldSz := s2.heldSz.trans s1.heldSz
     homeSz := s2.homeSz.trans s1.homeSz
     emptyA := fun _ => hemptyA

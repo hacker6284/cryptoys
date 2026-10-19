@@ -879,7 +879,9 @@ theorem ybench_zero_counts
       slides' ≤ slides + 6 * t.n ∧
       bZ.sudo_5Board_4held[5]? = some false ∧
       bZ.sudo_5Board_4held[6]? = some false ∧
-      bZ.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+      bZ.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 ∧
+      bZ.sudo_5Board_4cost.sudo_5Costs_3ops[4]? =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? := by
   let o := ybench_open t b bL bZ baseX baseY px py xP yP zP ys done hAt hsh hOk sat
     hxL hyL hzL hxT hyT hzT hszH hszD h0 h2 hd0 hd1 hd2 hon hto hbench htake hnle hzero
     hfitY hpos hlift hfrob
@@ -967,9 +969,25 @@ theorem ybench_zero_counts
   have h6Z := (congrArg (fun brd => brd.sudo_5Board_4held[6]?) o.hZ).trans h6F
   have hopsZ5 :=
     (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops.size) o.hZ).trans hopsF
+  obtain ⟨c4, hopIn4, _⟩ := fform_fadd t b baseX baseY px py done hAt
+  let bS4 := settleBoard o.bRec 1 o.pack.h1H o.pack.h1D ys t.n o.moves o.slides o.pk
+  have hopS4 : bS4.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat c4) := by
+    rw [settle_ops o.bRec 1 ⟨o.pack.h1H, o.pack.h1D⟩ ys t.n o.moves o.slides o.pk, o.hopsEq]
+    exact hopIn4
+  have h4S : 4 < bS4.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [settle_ops o.bRec 1 ⟨o.pack.h1H, o.pack.h1D⟩ ys t.n o.moves o.slides o.pk,
+      o.hopsEq, hopsN]
+    decide
+  have hflag4 := comb_ops4 a zP o.peakS (Int.ofNat c4) o.pack.seen.hops h4S
+    o.pack.seen.hOn hopS4
+  have hkeep4 : bZ.sudo_5Board_4cost.sudo_5Costs_3ops[4]? =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? :=
+    ((congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops[4]?) o.hZ).trans
+      hflag4).trans hopIn4.symm
   refine ⟨o.moves, o.slides, o.ctrl, o.mx, o.c1, o.c0, _, _, _, _, _,
       o.hmv, o.hsl, o.hc0, o.hmx, o.hop1, o.hop0, hmon, hH0, hmvZ, hslZ, hctrlZ,
-      hmarkZ, hmxZ, hpkZ, hstZ, hholeZ, ?_, hopZ, hop0Z, ?_, ?_, h5Z, h6Z, hopsZ5⟩
+      hmarkZ, hmxZ, hpkZ, hstZ, hholeZ, ?_, hopZ, hop0Z, ?_, ?_, h5Z, h6Z, hopsZ5,
+      hkeep4⟩
   · exact hopsZ
   · exact move_cast _ o.pack.movesS o.moves (pegCount (ys.take t.n))
       (cubeCharge t.n t.benchlen) t.n (t.benchlen - t.n) o.pack.hmovesS hleM

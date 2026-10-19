@@ -172,7 +172,9 @@ theorem zero_comb_frame
       FrameAt (bottomFlag a zP) t baseX baseY ∧
       (bottomFlag a zP).sudo_5Board_4held[5]? = some false ∧
       (bottomFlag a zP).sudo_5Board_4held[6]? = some false ∧
-      (bottomFlag a zP).sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+      (bottomFlag a zP).sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 ∧
+      (bottomFlag a zP).sudo_5Board_4cost.sudo_5Costs_3ops[4]? =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? := by
   obtain ⟨bL, a, hlift, hhome?, hheld?⟩ :=
     fform_homes_across t b baseX baseY px py xP yP zP done hAt hsh hOk sat
       hxL hyL hxT hyT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff moves slides c0 mark mx
@@ -311,7 +313,19 @@ theorem zero_comb_frame
     rw [hopsA]; exact hopsN
   obtain ⟨h5F, h6F⟩ := comb_gap_spare a zP peakS hopsL hOn hszL h5L h6L
   have hopsF := (comb_ops_len a zP peakS hopsL hOn).trans hopsBN
-  exact ⟨bL, a, hlift, hflag, hfr, h5F, h6F, hopsF⟩
+  obtain ⟨c4, hop4, _hc4⟩ := fform_fadd t b baseX baseY px py done hAt
+  have hopL : bL.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat c4) := by
+    have hArr : bL.sudo_5Board_4cost.sudo_5Costs_3ops =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops := by rw [hbL]
+    rw [hArr]
+    exact hop4
+  have h4L : 4 < bL.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hopsBN]
+    decide
+  have hflag4 := comb_ops4 a zP peakS (Int.ofNat c4) hopsL h4L hOn hopL
+  have hkeep : (bottomFlag a zP).sudo_5Board_4cost.sudo_5Costs_3ops[4]? =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? := hflag4.trans hop4.symm
+  exact ⟨bL, a, hlift, hflag, hfr, h5F, h6F, hopsF, hkeep⟩
 
 /-- `FrameAt` survives renaming the board. -/
 theorem frame_cast (t : Spec.Tier) (b1 b2 : Ecbs.Board) (baseX baseY : List Nat)

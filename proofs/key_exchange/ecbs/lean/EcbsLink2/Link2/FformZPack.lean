@@ -252,7 +252,8 @@ theorem zbench_zero_cell_at
       _, hscript, _, _, _, hrest⟩
   rcases hrest with ⟨moves0, slides0, ctrl0, mark, mx0, pk, peakS, hole, c10, c00,
       hmv0, hsl0, hc00, hmark, hmx0, hpk, hstrict, hhole, hops, hop1?, hop0?,
-      hfitCtrl, hc1, hfitMul, hfitMv, hfitSl, hmvLe, hslLe, hcLe, h5, h6, hopsN⟩
+      hfitCtrl, hc1, hfitMul, hfitMv, hfitSl, hmvLe, hslLe, hcLe, h5, h6, hopsN,
+      ⟨c4, hop4, hc4⟩⟩
   have hpegN := peg_le ys t.n hnle
   obtain ⟨hpeg, hfitMvS, hfitSlS, hRoom, hSl⟩ :=
     z_room moves0 slides0 (pegCount (ys.take t.n)) t.n
@@ -282,7 +283,7 @@ theorem zbench_zero_cell_at
     htake hnle hzero hfitY hpos hlift hfrob
   obtain ⟨moves, slides, ctrl, mx, c1, c0, moves', slides', pk', peakS', hole',
       hmv, hsl, hc0, hmx, hopIn, hop0in, hmonC, hH0, hmv', hsl', hctrl', hmark', hmx',
-      hpk', hst', hhole', hsz1, hop1', hop0', hleM, hleS, h5Z, h6Z, hopsNZ⟩ :=
+      hpk', hst', hhole', hsz1, hop1', hop0', hleM, hleS, h5Z, h6Z, hopsNZ, hop4Z⟩ :=
     zbench_zero_counts t b bL bZ baseX baseY px py xP yP zP ys i hAt0
       hsh hOk sat hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto
       hbench htake hnle hzero hfitY hpos hlift hfrob
@@ -392,7 +393,7 @@ theorem zbench_zero_cell_at
     hmonC hpxC hpyC hpxCT hpyCT hbx hby hbxT hbyT hH0 hscript hfr hp
     moves' slides' (ctrl + 6) 2 (max (max (max mx 1) 2) 3) pk' peakS' hole'
     (c1 + 3) c0 ch hsz1 hop1' hfitC hc1' hc0' hfitM' hfitS' hmvLe' hslLe' hcLe'
-    h5Z h6Z hopsNZ
+    h5Z h6Z hopsNZ c4 (hop4Z.trans hop4) (fadd_slack_keep c4 t.cells i hc4 hpos)
   exact ⟨bL, bZ, hlift, hfrob, hAt'⟩
 
 end EcbsLink2.Link2

@@ -37,7 +37,10 @@ theorem fform_at_pack (t : Spec.Tier) (b : Ecbs.Board)
     (hcLe : ctrl ≤ done * (cellCtrlCharge t + 4))
     (h5 : b.sudo_5Board_4held[5]? = some false)
     (h6 : b.sudo_5Board_4held[6]? = some false)
-    (hopsN : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5) :
+    (hopsN : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5)
+    (c4 : Nat)
+    (hop4 : b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat c4))
+    (hc4 : FitsLen (c4 + (t.cells - done))) :
     FformAt t b baseX baseY px py done := by
   refine ⟨hmk, fr.tier, hpx, hpy, hpxT, hpyT, hbx, hby, hbxT, hbyT,
       ?_, ?_, fr.home3, fr.home4, fr.held3, fr.held4, hheld0, hscript,
@@ -47,7 +50,7 @@ theorem fform_at_pack (t : Spec.Tier) (b : Ecbs.Board)
   · refine ⟨moves, slides, ctrl, mark, mx, pk, peakS, hole, c1, c0,
       ch.movesEq, ch.slidesEq, ch.ctrlEq, ch.markEq, ch.mxEq, ch.peakEq,
       ch.strictEq, ch.holeEq, hops1, hop1, ?_, hctrl, hc1, hc0, hmv, hsl,
-      hmvLe, hslLe, hcLe, h5, h6, hopsN⟩
+      hmvLe, hslLe, hcLe, h5, h6, hopsN, ⟨c4, hop4, hc4⟩⟩
     rw [Array.getElem?_eq_getElem ch.opsSz]
     exact congrArg some ch.ops0
 

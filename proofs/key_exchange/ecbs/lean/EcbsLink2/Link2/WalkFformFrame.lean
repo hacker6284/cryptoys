@@ -133,6 +133,7 @@ private theorem live_from_run
     (hYP : yP = fieldMul t.n t.k t.benchlen py zP)
     (hxPid : o.xP = xP) (hyPid : o.yP = yP) (hzPid : o.zP = zP)
     (hzC : o.z = fieldCube t.n t.k t.benchlen zP)
+    (hc4 : FitsLen (o.c4 + (t.cells - i)))
     (hpos : 0 < t.cells) (hi : i ≤ t.cells - 1) (hlen : cells.length = t.cells)
     (hc : cells[i]'(by omega) = c) (hc12 : c = 1 ∨ c = 2)
     (hred : red = decide (c = 2))
@@ -148,7 +149,7 @@ private theorem live_from_run
     close_live t b bZ red baseX baseY i moves slides ctrl c0 moves' slides' c1
       moves0 slides0 ctrl0 c00 o tw hposI hscript hbx hby hbxT hbyT
       hmv hsl hcCtrl hop0 hmv0 hsl0 hc0 hop00 hc1 hfitMul hmvLe hslLe hcLe
-      hleM hleS hwide h32 h46 hspan hnb
+      hleM hleS hwide h32 h46 hspan hnb hc4
   have hXPo : o.xP = fieldMul t.n t.k t.benchlen px o.zP := by
     rw [hxPid, hzPid, hXP]
   have hYPo : o.yP = fieldMul t.n t.k t.benchlen py o.zP := by
@@ -216,7 +217,8 @@ theorem live_fform_cell
         some (embed (fieldCube t.n t.k t.benchlen yP)) →
       ∃ o : OnComb t bZ red baseX baseY moves' slides' (ctrl + 6) c0 c1,
         o.xP = xP ∧ o.yP = yP ∧ o.zP = zP ∧
-          o.z = fieldCube t.n t.k t.benchlen zP) :
+          o.z = fieldCube t.n t.k t.benchlen zP ∧
+            b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat o.c4)) :
     ∃ sb',
       fformStep (embed cells) (Int.ofNat (t.cells - 1)) (Int.ofNat i, (b, true)) =
         (if i = t.cells - 1 then .ok (SudoRt.Flow.brk (Int.ofNat i, (sb', true)))
@@ -249,15 +251,17 @@ theorem live_fform_cell
         hleM, hleS, hbon, hto, hbench, htake, hzero, hhome0, hhome1, _, _⟩ :=
       homes_layout_comb t b baseX baseY px py xP yP zP i hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i h2i hd0 hd1i hd2i hoff hXP hYP hposI
-    obtain ⟨o, hxPid, hyPid, hzPid, hzC⟩ :=
+    obtain ⟨o, hxPid, hyPid, hzPid, hzC, hsrc⟩ :=
       run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
         hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon hto hbench
         htake hzero hhome0 hhome1
+    obtain ⟨cIn, hopIn, hcIn⟩ := fform_fadd t b baseX baseY px py i hAt0
+    have hc4 := slot_room o.c4 cIn t.cells i _ hsrc hopIn hcIn
     exact live_from_run t b bZ red baseX baseY px py ax' ay' i c cells
       moves slides ctrl c0 moves' slides' c1 moves0 slides0 ctrl0 c00 xP yP zP o bL
       tw hsh hOk sat hlift hfrob hmv hsl hcCtrl hopIn0 hmv0 hsl0 hc00 hop0?
       hc1 hfitMul hmvLe hslLe hcLe hleM hleS hwide h32 h46 hspan hnb hscript
-      hbx hby hbxT hbyT hpxL hpyL hpxT hpyT hzL hzT hXP hYP hxPid hyPid hzPid hzC
+      hbx hby hbxT hbyT hpxL hpyL hpxT hpyT hzL hzT hXP hYP hxPid hyPid hzPid hzC hc4
       hpos hi hlen hc hc12 hred hwalk
   | yBench =>
     rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, hd1, h2, hd2⟩
@@ -270,15 +274,17 @@ theorem live_fform_cell
       ybench_layout_comb t b baseX baseY px py xP yP zP ys i hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h2i hd0 hd1i hd2i hon hto hbench
         htake hnle hzero (hfitY ys hbench) hXP hYP hposI
-    obtain ⟨o, hxPid, hyPid, hzPid, hzC⟩ :=
+    obtain ⟨o, hxPid, hyPid, hzPid, hzC, hsrc⟩ :=
       run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
         hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
         htakeZ hzeroZ hhome0 hhome1
+    obtain ⟨cIn, hopIn, hcIn⟩ := fform_fadd t b baseX baseY px py i hAt0
+    have hc4 := slot_room o.c4 cIn t.cells i _ hsrc hopIn hcIn
     exact live_from_run t b bZ red baseX baseY px py ax' ay' i c cells
       moves slides ctrl c0 moves' slides' c1 moves0 slides0 ctrl0 c00 xP yP zP o bL
       tw hsh hOk sat hlift hfrob hmv hsl hcCtrl hopIn0 hmv0 hsl0 hc00 hop0?
       hc1 hfitMul hmvLe hslLe hcLe hleM hleS hwide h32 h46 hspan hnb hscript
-      hbx hby hbxT hbyT hpxL hpyL hpxT hpyT hzL hzT hXP hYP hxPid hyPid hzPid hzC
+      hbx hby hbxT hbyT hpxL hpyL hpxT hpyT hzL hzT hXP hYP hxPid hyPid hzPid hzC hc4
       hpos hi hlen hc hc12 hred hwalk
   | zBench =>
     rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, h1, hd1, hd2⟩
@@ -291,15 +297,17 @@ theorem live_fform_cell
       zbench_layout_comb t b baseX baseY px py xP yP zP ys i hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i hd0 hd1i hd2i hon hto hbench
         htake hnle hzero (hfitY ys hbench) hXP hYP hposI
-    obtain ⟨o, hxPid, hyPid, hzPid, hzC⟩ :=
+    obtain ⟨o, hxPid, hyPid, hzPid, hzC, hsrc⟩ :=
       run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
         hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
         htakeZ hzeroZ hhome0 hhome1
+    obtain ⟨cIn, hopIn, hcIn⟩ := fform_fadd t b baseX baseY px py i hAt0
+    have hc4 := slot_room o.c4 cIn t.cells i _ hsrc hopIn hcIn
     exact live_from_run t b bZ red baseX baseY px py ax' ay' i c cells
       moves slides ctrl c0 moves' slides' c1 moves0 slides0 ctrl0 c00 xP yP zP o bL
       tw hsh hOk sat hlift hfrob hmv hsl hcCtrl hopIn0 hmv0 hsl0 hc00 hop0?
       hc1 hfitMul hmvLe hslLe hcLe hleM hleS hwide h32 h46 hspan hnb hscript
-      hbx hby hbxT hbyT hpxL hpyL hpxT hpyT hzL hzT hXP hYP hxPid hyPid hzPid hzC
+      hbx hby hbxT hbyT hpxL hpyL hpxT hpyT hzL hzT hXP hYP hxPid hyPid hzPid hzC hc4
       hpos hi hlen hc hc12 hred hwalk
 
 /-- One cell. Colour 0 cubes. White and red add, with `red = (c = 2)`. -/
@@ -343,7 +351,8 @@ theorem fform_frame
         some (embed (fieldCube t.n t.k t.benchlen yP)) →
       ∃ o : OnComb t bZ red baseX baseY moves' slides' (ctrl + 6) c0 c1,
         o.xP = xP ∧ o.yP = yP ∧ o.zP = zP ∧
-          o.z = fieldCube t.n t.k t.benchlen zP) :
+          o.z = fieldCube t.n t.k t.benchlen zP ∧
+            b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat o.c4)) :
     ∃ sb',
       fformStep (embed cells) (Int.ofNat (t.cells - 1)) (Int.ofNat i, (b, true)) =
         (if i = t.cells - 1 then .ok (SudoRt.Flow.brk (Int.ofNat i, (sb', true)))

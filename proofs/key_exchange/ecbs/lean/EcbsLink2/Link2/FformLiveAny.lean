@@ -113,10 +113,20 @@ structure OnComb (t : Spec.Tier) (bZ : Ecbs.Board) (red : Bool)
     (if red then mirrorTrits baseY else baseY)
     (fieldCube t.n t.k t.benchlen zP) (fieldCube t.n t.k t.benchlen yP)
   hopsN : b11.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
+  c4 : Nat
+  hop4 : b11.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat (c4 + 1))
 
 private theorem same_nat (a b : Nat) (p : Int)
     (h1 : p = Int.ofNat a) (h2 : p = Int.ofNat b) : a = b :=
   Int.ofNat.inj (by simpa [ofNat_eq_natCast] using h1.symm.trans h2)
+
+theorem slot_room (c4 cIn cells done : Nat) (slot : Option Int)
+    (h4 : slot = some (Int.ofNat c4)) (hIn : slot = some (Int.ofNat cIn))
+    (hc : FitsLen (cIn + (cells - done))) :
+    FitsLen (c4 + (cells - done)) := by
+  have he : c4 = cIn :=
+    Int.ofNat.inj (by simpa [ofNat_eq_natCast] using Option.some.inj (h4.symm.trans hIn))
+  simpa [he] using hc
 
 private theorem span2 (n bench gap : Nat) (h : 3 * (n - 1) + gap < bench) :
     2 * (n - 1) < bench := by
@@ -151,7 +161,8 @@ private theorem live_on
       walkCharge t + (6 * t.benchlen + 2 * t.n))
     (h32 : 32 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
-    (hspan : 2 * (t.n - 1) < t.benchlen) (hnb : t.n ≤ t.benchlen) :
+    (hspan : 2 * (t.n - 1) < t.benchlen) (hnb : t.n ≤ t.benchlen)
+    (hc4 : FitsLen (o.c4 + (t.cells - done))) :
     ∃ b',
       Ecbs.fform_add bZ red = .ok (true, b') ∧
       FformAt t b' baseX baseY o.x3 o.yUp (done + 1) := by
@@ -165,6 +176,7 @@ private theorem live_on
     hscript o.hpx o.hpy o.hpxT o.hpyT hbx hby hbxT hbyT o.hx2 o.hy2 o.htier
     o.hszH o.hszD rfl rfl rfl o.hopIn o.hop1 o.hcOps hleM hleS rfl hfitC1
     hfitMul hmvLe hslLe hcLe hwide h32 h46 hspan hnb o.hne o.hinv o.hopsN
+    o.c4 o.hop4 hc4
 
 theorem close_live
     (t : Spec.Tier) (b bZ : Ecbs.Board) (red : Bool)
@@ -195,7 +207,8 @@ theorem close_live
       walkCharge t + (6 * t.benchlen + 2 * t.n))
     (h32 : 32 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
-    (hspan : 2 * (t.n - 1) < t.benchlen) (hnb : t.n ≤ t.benchlen) :
+    (hspan : 2 * (t.n - 1) < t.benchlen) (hnb : t.n ≤ t.benchlen)
+    (hc4 : FitsLen (o.c4 + (t.cells - done))) :
     ∃ bZ' b' x3 yUp,
       bZ' = bZ ∧
       Ecbs.fform_add bZ red = .ok (true, b') ∧
@@ -218,7 +231,7 @@ theorem close_live
   obtain ⟨b', hadd, hAt'⟩ :=
     live_on t bZ red baseX baseY done moves slides ctrl c0 moves' slides' c1 o
       tw hpos hscript hbx hby hbxT hbyT hc1 hfitMul' hmvLe' hslLe' hcLe'
-      hleM hleS hwide h32 h46 hspan hnb
+      hleM hleS hwide h32 h46 hspan hnb hc4
   exact ⟨bZ, b', o.x3, o.yUp, rfl, hadd, hAt', rfl, rfl⟩
 
 /-- White or red, on homes, `yBench`, or `zBench`. The layout picks the comb
@@ -259,7 +272,8 @@ theorem live_any
         some (embed (fieldCube t.n t.k t.benchlen yP)) →
       ∃ o : OnComb t bZ red baseX baseY moves' slides' (ctrl + 6) c0 c1,
         o.xP = xP ∧ o.yP = yP ∧ o.zP = zP ∧
-          o.z = fieldCube t.n t.k t.benchlen zP) :
+          o.z = fieldCube t.n t.k t.benchlen zP ∧
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat o.c4)) :
     ∃ bL bZ b' x3 yUp,
       Ecbs.marker_lift b = .ok bL ∧
       Ecbs.frobenius_point bL = .ok bZ ∧
@@ -291,14 +305,16 @@ theorem live_any
         hleM, hleS, hbon, hto, hbench, htake, hzero, hhome0, hhome1, _, _⟩ :=
       homes_layout_comb t b baseX baseY px py xP yP zP done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i h2i hd0 hd1i hd2i hoff hXP hYP hpos
-    obtain ⟨o, _, _, _, _⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
+    obtain ⟨cIn, hopIn, hcIn⟩ := fform_fadd t b baseX baseY px py done hAt0
+    obtain ⟨o, _, _, _, _, hsrc⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon hto hbench
       htake hzero hhome0 hhome1
+    have hc4 := slot_room o.c4 cIn t.cells done _ hsrc hopIn hcIn
     obtain ⟨_, b', x3, yUp, _, hadd, hAt', _, _⟩ :=
       close_live t b bZ red baseX baseY done moves slides ctrl c0 moves' slides'
         c1 moves0 slides0 ctrl0 c00 o tw hpos hscript hbx hby hbxT hbyT
         hmv hsl hc hopIn0 hmv0 hsl0 hc00 hop0? hc1 hfitMul hmvLe hslLe hcLe
-        hleM hleS hwide h32 h46 hspan hnb
+        hleM hleS hwide h32 h46 hspan hnb hc4
     exact ⟨bL, bZ, b', x3, yUp, hlift, hfrob, hadd, hAt'⟩
   | yBench =>
     rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, hd1, h2, hd2⟩
@@ -311,14 +327,16 @@ theorem live_any
       ybench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h2i hd0 hd1i hd2i hon hto hbench
         htake hnle hzero (hfitY ys hbench) hXP hYP hpos
-    obtain ⟨o, _, _, _, _⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
+    obtain ⟨cIn, hopIn, hcIn⟩ := fform_fadd t b baseX baseY px py done hAt0
+    obtain ⟨o, _, _, _, _, hsrc⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
       htakeZ hzeroZ hhome0 hhome1
+    have hc4 := slot_room o.c4 cIn t.cells done _ hsrc hopIn hcIn
     obtain ⟨_, b', x3, yUp, _, hadd, hAt', _, _⟩ :=
       close_live t b bZ red baseX baseY done moves slides ctrl c0 moves' slides'
         c1 moves0 slides0 ctrl0 c00 o tw hpos hscript hbx hby hbxT hbyT
         hmv hsl hc hopIn0 hmv0 hsl0 hc00 hop0? hc1 hfitMul hmvLe hslLe hcLe
-        hleM hleS hwide h32 h46 hspan hnb
+        hleM hleS hwide h32 h46 hspan hnb hc4
     exact ⟨bL, bZ, b', x3, yUp, hlift, hfrob, hadd, hAt'⟩
   | zBench =>
     rcases hlay with ⟨hon, hto, ⟨ys, hbench, hnle, htake, hzero⟩, h1, hd1, hd2⟩
@@ -331,14 +349,16 @@ theorem live_any
       zbench_layout_comb t b baseX baseY px py xP yP zP ys done hAt0 hsh hOk sat
         hxL hyL hzL hxT hyT hzT hszH hszD h0i h1i hd0 hd1i hd2i hon hto hbench
         htake hnle hzero (hfitY ys hbench) hXP hYP hpos
-    obtain ⟨o, _, _, _, _⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
+    obtain ⟨cIn, hopIn, hcIn⟩ := fform_fadd t b baseX baseY px py done hAt0
+    obtain ⟨o, _, _, _, _, hsrc⟩ := run bZ xP yP zP moves slides ctrl c0 moves' slides' c1 lane
       hfr hmon hmark hctrl hmv' hsl' hop0' hop1? hleM hleS hbon htoZ hbenchZ
       htakeZ hzeroZ hhome0 hhome1
+    have hc4 := slot_room o.c4 cIn t.cells done _ hsrc hopIn hcIn
     obtain ⟨_, b', x3, yUp, _, hadd, hAt', _, _⟩ :=
       close_live t b bZ red baseX baseY done moves slides ctrl c0 moves' slides'
         c1 moves0 slides0 ctrl0 c00 o tw hpos hscript hbx hby hbxT hbyT
         hmv hsl hc hopIn0 hmv0 hsl0 hc00 hop0? hc1 hfitMul hmvLe hslLe hcLe
-        hleM hleS hwide h32 h46 hspan hnb
+        hleM hleS hwide h32 h46 hspan hnb hc4
     exact ⟨bL, bZ, b', x3, yUp, hlift, hfrob, hadd, hAt'⟩
 
 end EcbsLink2.Link2

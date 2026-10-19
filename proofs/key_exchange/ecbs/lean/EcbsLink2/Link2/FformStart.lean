@@ -200,6 +200,12 @@ private theorem zero_ops0 :
   rw [Array.getElem?_eq_getElem h0]
   simp [Array.getElem_mkArray]
 
+private theorem zero_ops4 :
+    (Array.mkArray 5 (0 : Int))[4]? = some (Int.ofNat 0) := by
+  have h4 : 4 < (Array.mkArray 5 (0 : Int)).size := by simp [Array.size_mkArray]
+  rw [Array.getElem?_eq_getElem h4]
+  simp [Array.getElem_mkArray]
+
 /-- `start_walk` copies the base point and plants the bottom peg. Neither
     write touches the ops array, so slot 0 stays the zero the fresh board
     was given. -/
@@ -385,6 +391,88 @@ theorem serious_cube_fit : FitsLen (3 * serious.cells) := by
   rw [serious_cube_cells]
   unfold FitsLen i64MaxNat
   exact ble_le _ _ rfl
+
+/-- `start_walk` leaves slot 4 at the zero the fresh board was given.
+    `op_fadd` is the only writer of that slot, and the opening copy does not call it. -/
+theorem start_walk_fadd (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
+    (mv pk : Nat) (lay : InLay t b x y mv pk) (red : Bool)
+    (hx : x.length = t.n) (hy : y.length = t.n)
+    (hpos : 0 < t.n) (hyt : allTritList y) (hf : FitsLen t.n)
+    (hfitx : FitsLen (mv + pegCount x))
+    (hfity : FitsLen (mv + pegCount x + pegCount y))
+    (hfit1 : FitsLen (mv + pegCount x + pegCount y + 1)) :
+    ∃ bW, Ecbs.start_walk b red = .ok bW ∧
+      bW.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat 0) := by
+  let mv2 := mv + pegCount x + pegCount y
+  cases red
+  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+      white_copy_kept t b x y mv pk lay hx hy hf hfitx hfity
+    let bW := peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
+      (by rw [out.szD]; decide) t.n mv2) pk2
+    have hplant := finish_walk t b2 x y y mv2 pk2 out hpos hf hfit1
+    refine ⟨bW, ?_, ?_⟩
+    · unfold Ecbs.start_walk
+      conv => lhs; zeta
+      rw [← bind_assoc, hcopy, ok_bind, hplant, ok_bind, pure_eq_ok]
+    · have hops := plant_ops b2 2 (by rw [out.szH]; decide) (by rw [out.szD]; decide)
+        t.n mv2 pk2
+      rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
+          (peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
+            (by rw [out.szD]; decide) t.n mv2) pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
+        hops, out.ops]
+      exact zero_ops4
+  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+      red_copy_kept t b x y mv pk lay hx hy hpos hyt hf hfitx hfity
+    let bW := peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
+      (by rw [out.szD]; decide) t.n mv2) pk2
+    have hplant := finish_walk t b2 x (mirrorTrits y) y mv2 pk2 out hpos hf hfit1
+    refine ⟨bW, ?_, ?_⟩
+    · unfold Ecbs.start_walk
+      conv => lhs; zeta
+      rw [← bind_assoc, hcopy, ok_bind, hplant, ok_bind, pure_eq_ok]
+    · have hops := plant_ops b2 2 (by rw [out.szH]; decide) (by rw [out.szD]; decide)
+        t.n mv2 pk2
+      rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
+          (peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
+            (by rw [out.szD]; decide) t.n mv2) pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
+        hops, out.ops]
+      exact zero_ops4
+
+theorem demo_fadd_cells : demo.cells = 2 := rfl
+theorem toy_fadd_cells : toy.cells = 16 := rfl
+theorem hobby_fadd_cells : hobby.cells = 51 := rfl
+theorem serious_fadd_cells : serious.cells = 162 := rfl
+
+theorem demo_fadd_fit : FitsLen demo.cells := by
+  rw [demo_fadd_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+theorem toy_fadd_fit : FitsLen toy.cells := by
+  rw [toy_fadd_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+theorem hobby_fadd_fit : FitsLen hobby.cells := by
+  rw [hobby_fadd_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+theorem serious_fadd_fit : FitsLen serious.cells := by
+  rw [serious_fadd_cells]
+  unfold FitsLen i64MaxNat
+  exact ble_le _ _ rfl
+
+/-- The opening `op_fadd` counter is 0, and every shipped tier leaves room for
+    one bump in each cell of the key. -/
+theorem start_walk_fadd_room (t : Spec.Tier)
+    (h : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
+    FitsLen (0 + (t.cells - 0)) := by
+  rcases h with rfl | rfl | rfl | rfl
+  · simpa using demo_fadd_fit
+  · simpa using toy_fadd_fit
+  · simpa using hobby_fadd_fit
+  · simpa using serious_fadd_fit
 
 /-- The opening cube counter is 0, and every shipped tier leaves room for
     three cubes in each cell of the key. -/

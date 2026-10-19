@@ -149,7 +149,8 @@ theorem zero_cell_at
       _, hscript, _, _, _, hrest⟩
   rcases hrest with ⟨moves, slides, ctrl, mark, mx, pk, peakS, hole, c1, cMul,
       hmv, hsl, hcCtrl, hmark, hmxEq, hpk, hstrict, hhole, hops, hop1?, hop0?,
-      hfitCtrl, hc1, hfitMul, hfitMv, hfitSl, hmvLe, hslLe, hcLe, h5, h6, hopsN⟩
+      hfitCtrl, hc1, hfitMul, hfitMv, hfitSl, hmvLe, hslLe, hcLe, h5, h6, hopsN,
+      ⟨c4, hop4, hc4⟩⟩
   have hpos : i < t.cells := by omega
   have hnb : t.n ≤ t.benchlen := tw.nLe
   have h3span : 3 * (t.n - 1) < t.benchlen := by
@@ -244,7 +245,7 @@ theorem zero_cell_at
     opsSz := hops0
     ops0 := hop0e
   }
-  obtain ⟨bLF, aF, hliftF, hflagF, _, h5F, h6F, hopsF⟩ :=
+  obtain ⟨bLF, aF, hliftF, hflagF, _, h5F, h6F, hopsF, hop4F⟩ :=
     zero_comb_frame t b baseX baseY px py xP yP zP i hAt0 hsh hOk sat hs2
       hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 h2 hd0 hd1 hd2 hoff
       moves slides ctrl mark mx pk peakS hole c1 hmv hsl hcCtrl hmark hmxEq hpk
@@ -258,12 +259,16 @@ theorem zero_cell_at
   have h6Z := (congrArg (fun brd => brd.sudo_5Board_4held[6]?) hbF).trans h6F
   have hopsNZ :=
     (congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops.size) hbF).trans hopsF
+  have hop4Z : bZc.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat c4) :=
+    ((congrArg (fun brd => brd.sudo_5Board_4cost.sudo_5Costs_3ops[4]?) hbF).trans hop4F).trans
+      hop4
+  have hc4' : FitsLen (c4 + (t.cells - (i + 1))) := fadd_slack_keep c4 t.cells i hc4 hpos
   have hAt' := fform_at_pack t bZc baseX baseY
     (fieldCube t.n t.k t.benchlen px) (fieldCube t.n t.k t.benchlen py) (i + 1)
     hmon hpxC hpyC hpxCT hpyCT hbx hby hbxT hbyT hH0 hscript hfrC hpC
     moves' slides' (ctrl + 6) 2 (max (max (max mx 1) 2) 3) pk' peakS' hole'
     (c1 + 3) cMul ch hsz1 hop1' hfitC hc1' hc0' hfitM' hfitS' hmvLe' hslLe' hcLe'
-    h5Z h6Z hopsNZ
+    h5Z h6Z hopsNZ c4 hop4Z hc4'
   exact ⟨bLc, bZc, hliftC, hfrobC, hAt'⟩
 
 end EcbsLink2.Link2

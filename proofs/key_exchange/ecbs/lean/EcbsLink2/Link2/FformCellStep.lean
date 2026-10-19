@@ -95,7 +95,10 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
         slides' ≤ slides + 16 * n) ∧
       (∀ h6 : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
-        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+      ((4 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) →
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[4]? =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[4]?) := by
   obtain ⟨_, hvH⟩ := read_some b.sudo_5Board_4held 0 s.held0
   obtain ⟨_, hvA⟩ := read_some b.sudo_5Board_4home 0 s.home0
   obtain ⟨_, huH⟩ := read_some b.sudo_5Board_4held 1 s.held1
@@ -110,7 +113,8 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
   obtain ⟨_, hsH⟩ := read_some b.sudo_5Board_4held 6 s.held6
   obtain ⟨hops, hop0⟩ := read_some b.sudo_5Board_4cost.sudo_5Costs_3ops 0 s.ops0
   obtain ⟨b', lane', hdo, h0, h2, hbench, htake, hheld, hon, hto, h1, h2h, hnle, hzero,
-      h3a, h3h, h4a, h4h, htier, hszH, hszD, hcharge, hslot, hmon, hH0, h6, hopsSz⟩ :=
+      h3a, h3h, h4a, h4h, htier, hszH, hszD, hcharge, hslot, hmon, hH0, h6, hopsSz,
+      hop4⟩ :=
     fform_add_on_f b red v z x2 u y2 lane
       m ctrl mx script cOps n k w h r moves slides hole peak peakS bench
       s.held7 s.home7 hvH hvA huH huA hzH hzA hxH hxA hyH hyA hgH hsH
@@ -146,7 +150,7 @@ theorem cell_on_add (b : Ecbs.Board) (lane : List Nat) (n k bench : Nat)
     charge := by
       obtain ⟨mv, sl, ct, mk, mx', pk', ps, ho, cops, ch, _, _, _, _⟩ := hcharge
       exact ⟨mv, sl, ct, mk, mx', pk', ps, ho, cops, ch⟩
-  }, hslot, hmon, hH0, hcharge, h6, hopsSz⟩
+  }, hslot, hmon, hH0, hcharge, h6, hopsSz, hop4⟩
 
 /-- `CellAt` is `ProjOn` in the `yBench` layout: `X = x₃·Z₃` in home 0,
     `Z₃` in home 2, and `Y = y₃·Z₃` on the bench aimed at home 1. -/

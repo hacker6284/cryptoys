@@ -163,7 +163,74 @@ def FformAt (t : Spec.Tier) (b : Ecbs.Board)
     ctrl ≤ done * (cellCtrlCharge t + 4) ∧
     b.sudo_5Board_4held[5]? = some false ∧
     b.sudo_5Board_4held[6]? = some false ∧
-    b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
+    b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 ∧
+    ∃ c4, b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat c4) ∧
+      FitsLen (c4 + (t.cells - done))
+
+/-- One live cell spends one `op_fadd`. The room that remains covers the cells after it. -/
+theorem fadd_slack_step (c4 cells done : Nat)
+    (h : FitsLen (c4 + (cells - done))) (hpos : done < cells) :
+    FitsLen ((c4 + 1) + (cells - (done + 1))) := by
+  have hsplit : c4 + (cells - done) = (c4 + 1) + (cells - (done + 1)) := by
+    omega
+  simpa [hsplit] using h
+
+/-- A zero cell does not spend `op_fadd`. The room shrinks by the cell just passed. -/
+theorem fadd_slack_keep (c4 cells done : Nat)
+    (h : FitsLen (c4 + (cells - done))) (hpos : done < cells) :
+    FitsLen (c4 + (cells - (done + 1))) :=
+  FitsLen.of_le h (by omega)
+
+/-- One cell still to run leaves room for the single `op_fadd` bump. -/
+theorem fadd_one (c4 cells done : Nat)
+    (h : FitsLen (c4 + (cells - done))) (hpos : done < cells) :
+    FitsLen (c4 + 1) :=
+  FitsLen.of_le h (by
+    have hone : 1 ≤ cells - done := by omega
+    omega)
+
+/-- Slot 4 holds `ofNat c4` and one more fits, so `atL`, `addI 1`, and `putL`
+    succeed and write `ofNat (c4 + 1)`. -/
+theorem fadd_bump (ops : Array Int) (c4 : Nat)
+    (hopsN : ops.size = 5)
+    (hop : ops[4]? = some (Int.ofNat c4))
+    (hfit : FitsLen (c4 + 1)) :
+    ∃ ops',
+      SudoRt.atL ops Ecbs.op_fadd = .ok (Int.ofNat c4) ∧
+      SudoRt.addI (Int.ofNat c4) (1 : Int) = .ok (Int.ofNat (c4 + 1)) ∧
+      SudoRt.putL ops Ecbs.op_fadd (Int.ofNat (c4 + 1)) = .ok ops' ∧
+      ops'[4]? = some (Int.ofNat (c4 + 1)) ∧
+      ops'.size = 5 := by
+  have h4 : 4 < ops.size := by rw [hopsN]; decide
+  have hAt := atL_ofNat ops 4 h4
+  have hget := Array.getElem?_eq_getElem h4
+  rw [hop] at hget
+  have hv : ops[4] = Int.ofNat c4 := Option.some.inj hget.symm
+  have hopF : Ecbs.op_fadd = Int.ofNat 4 := by
+    unfold Ecbs.op_fadd
+    rfl
+  refine ⟨ops.set ⟨4, h4⟩ (Int.ofNat (c4 + 1)), ?_, addI_ofNat_one c4 hfit, ?_, ?_, ?_⟩
+  · rw [hopF, hAt]
+    exact congrArg Except.ok hv
+  · rw [hopF]
+    exact putL_ofNat ops 4 (Int.ofNat (c4 + 1)) h4
+  · have hlt : 4 < (ops.set ⟨4, h4⟩ (Int.ofNat (c4 + 1))).size := by
+      rw [Array.size_set]; exact h4
+    rw [Array.getElem?_eq_getElem hlt]
+    simp [Array.getElem_set]
+  · rw [Array.size_set, hopsN]
+
+/-- Slot 4 is the `op_fadd` counter, with room for one bump in each cell still to run. -/
+theorem fform_fadd (t : Spec.Tier) (b : Ecbs.Board)
+    (baseX baseY px py : List Nat) (done : Nat)
+    (hAt : FformAt t b baseX baseY px py done) :
+    ∃ c4, b.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat c4) ∧
+      FitsLen (c4 + (t.cells - done)) := by
+  rcases hAt with ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hrest⟩
+  rcases hrest with ⟨_, _, _, _, _, _, _, _, _, _,
+      _, _, _, _, _, _, _, _, _, _, _,
+      _, _, _, _, _, _, _, _, _, _, _, hfadd⟩
+  exact hfadd
 
 /-- Gap and spare are empty, and the ops array is the length `new_board` emits. -/
 theorem fform_open (t : Spec.Tier) (b : Ecbs.Board)
@@ -175,7 +242,7 @@ theorem fform_open (t : Spec.Tier) (b : Ecbs.Board)
   rcases hAt with ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hrest⟩
   rcases hrest with ⟨_, _, _, _, _, _, _, _, _, _,
       _, _, _, _, _, _, _, _, _, _, _,
-      _, _, _, _, _, _, _, _, h5, h6, hopsN⟩
+      _, _, _, _, _, _, _, _, h5, h6, hopsN, _⟩
   exact ⟨h5, h6, hopsN⟩
 
 /-- What stays true at index `i`. At `toN + 1` the frame is the point the

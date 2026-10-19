@@ -95,7 +95,10 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
       (∀ h0 : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = true) ∧
       (∀ h6 : 6 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[6] = false) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
-        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
+      ((4 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) →
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops[4]? =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops[4]?) := by
   have h0d : (0 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h1d : (1 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
   have h2d : (2 : Nat) < bA.sudo_5Board_4held.size := by rw [hA.heldSz]; omega
@@ -436,7 +439,24 @@ theorem fform_up_clear (b bA : Ecbs.Board) (laneA f u y2 v z x2 : List Nat) (red
         have hne : (5 : Nat) ≠ 6 := by decide
         simpa [bC, Array.getElem_set_ne, hne] using hsHeld4,
       by
-        simpa [bC] using s4.opsSz.trans (s3.opsSz.trans hA.opsSz)⟩
+        simpa [bC] using s4.opsSz.trans (s3.opsSz.trans hA.opsSz),
+      by
+        intro h4
+        have h4A : 4 < bA.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [hA.opsSz]; exact h4
+        have h43 : 4 < b3.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [s3.opsSz]; exact h4A
+        have h44 : 4 < b4.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          rw [s4.opsSz]; exact h43
+        have hC : 4 < bC.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          simpa [bC] using h44
+        have hstep : bC.sudo_5Board_4cost.sudo_5Costs_3ops[4]'hC =
+            b.sudo_5Board_4cost.sudo_5Costs_3ops[4]'h4 := by
+          have hread : bC.sudo_5Board_4cost.sudo_5Costs_3ops[4]'hC =
+              b4.sudo_5Board_4cost.sudo_5Costs_3ops[4]'h44 := by
+            simp [bC]
+          rw [hread, s4.ops4 h43, s3.ops4 h4A, hA.ops4 h4]
+        rw [Array.getElem?_eq_getElem hC, Array.getElem?_eq_getElem h4, hstep]⟩
   · have hUp := fform_consts.2.1
     have hBot := fform_consts.2.2.1
     have hBu := fform_consts.2.2.2.2.1

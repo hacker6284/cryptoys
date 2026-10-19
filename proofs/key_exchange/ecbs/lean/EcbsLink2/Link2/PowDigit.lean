@@ -195,7 +195,14 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
       bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 2) ∧
       (∀ i, i ≠ up → i ≠ spare → (bS.sudo_5Board_4home[i]?) = (b.sudo_5Board_4home[i]?)) ∧
       (∀ i, i ≠ up → i ≠ spare → (bS.sudo_5Board_4held[i]?) = (b.sudo_5Board_4held[i]?)) ∧
-      (bS.sudo_5Board_4held[spare]?) = some false := by
+      (bS.sudo_5Board_4held[spare]?) = some false ∧
+      bS.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (moves + 2 * pegCount (lane.take n) + schoolMoves cube factor n n +
+          foldCharge n (n - k) (school n cube factor (List.replicate bench 0) false) +
+          pegCount cube + 2 * pegCount (fieldMul n k bench cube factor)) ∧
+      bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + 2 * pegCount (lane.take n) +
+          2 * pegCount (fieldMul n k bench cube factor)) := by
   have hmul := pow_mul_live b up spare lane cube factor w h r n k moves slides peak peakS cOps
       m ctrl mx script bench hole hmk hon hto hH hD h7 hempty hbench hn hpos hnle hzero hf hfitL
       hmoves hslides hpeak hpeg hfitMv hfitSl hops hop0 hfops hm hc hx hscript hbound hfitMk hfitC
@@ -334,7 +341,7 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
   rw [hset]
   let bS := settleBoard bC up hHn hDn prod n mvC (slides + 2 * pegCount (lane.take n))
       (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))
-  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, rfl, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show bS.sudo_5Board_4home =
         bC.sudo_5Board_4home.set ⟨up, hHn⟩ (embed (prod.take n)) from
       settle_home_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
@@ -406,5 +413,11 @@ theorem pow_digit_home (b : Ecbs.Board) (up spare : Nat) (lane cube factor acc r
       strictBoard, mulAimed]
     rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hSready)]
     simp [Array.getElem_set]
+  · rw [settle_moves_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    simp [mvC, mvW, sch, hprodTake]
+  · rw [settle_slides_eq bC up ⟨hHn, hDn⟩ prod n mvC (slides + 2 * pegCount (lane.take n))
+        (raisedPeak pk (countHeld bLive.sudo_5Board_4held 7))]
+    simp [hprodTake]
 
 end EcbsLink2.Link2

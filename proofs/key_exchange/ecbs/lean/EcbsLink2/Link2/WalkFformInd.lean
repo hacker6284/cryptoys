@@ -159,7 +159,23 @@ def FformAt (t : Spec.Tier) (b : Ecbs.Board)
     FitsLen (slides + 2 * t.n + slideCharge t.n) ∧
     moves ≤ done * (walkCharge t + (6 * t.benchlen + 2 * t.n)) ∧
     slides ≤ done * (cellSlideCharge t + slideCharge t.n) ∧
-    ctrl ≤ done * (cellCtrlCharge t + 4)
+    ctrl ≤ done * (cellCtrlCharge t + 4) ∧
+    b.sudo_5Board_4held[5]? = some false ∧
+    b.sudo_5Board_4held[6]? = some false ∧
+    b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
+
+/-- Gap and spare are empty, and the ops array is the length `new_board` emits. -/
+theorem fform_open (t : Spec.Tier) (b : Ecbs.Board)
+    (baseX baseY px py : List Nat) (done : Nat)
+    (hAt : FformAt t b baseX baseY px py done) :
+    b.sudo_5Board_4held[5]? = some false ∧
+      b.sudo_5Board_4held[6]? = some false ∧
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+  rcases hAt with ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hrest⟩
+  rcases hrest with ⟨_, _, _, _, _, _, _, _, _, _,
+      _, _, _, _, _, _, _, _, _, _, _,
+      _, _, _, _, _, _, _, _, h5, h6, hopsN⟩
+  exact ⟨h5, h6, hopsN⟩
 
 /-- What stays true at index `i`. At `toN + 1` the frame is the point the
     whole suffix reached. -/

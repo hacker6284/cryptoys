@@ -1,8 +1,9 @@
 /-
   One digit of the root power, starting from a seated marker.
-  `marker_lift` sets the index to `-1`. Digit `0` then cubes and settles,
-  and the up home is `powStep` on that digit. The list step is what the
-  power loop folds into `rootY_digits`.
+  `marker_lift` sets the index to `-1`. Digit `0` then cubes and settles.
+  A red or white digit cubes, copies the factor, and settles through
+  `pow_digit_home`. Either way the up home is `powStep`. The list step
+  `foldl_pow_succ` is what folds those digits into `rootY_digits`.
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.PowZero
@@ -521,7 +522,7 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
     (hHomeSrc : src < b.sudo_5Board_4home.size)
     (hsrcHeld : b.sudo_5Board_4held[src] = true)
     (hsrcArr : b.sudo_5Board_4home[src] = embed factor)
-    (hne : up ≠ spare) (hsrcU : src ≠ up)
+    (hne : up ≠ spare) (hsrcU : src ≠ up) (hsrcS : src ≠ spare)
     (hn0 : 0 < n)
     (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
     (hlenx : acc.length = n) (hfacLen : factor.length = n)
@@ -581,7 +582,9 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
         (bS.sudo_5Board_4home[up]?) = some (embed (powStep n k bench rhs acc d)) ∧
         bS.sudo_5Board_8bench_on = false ∧
         (bS.sudo_5Board_4held[up]?) = some true ∧
-        bS.sudo_5Board_6marker = Int.ofNat 1 := by
+        bS.sudo_5Board_6marker = Int.ofNat 1 ∧
+        bS.sudo_5Board_9marker_on = true ∧
+        (bS.sudo_5Board_4home[src]?) = some (embed factor) := by
   obtain ⟨hlift, hcube⟩ := pow_cube_seated b up acc w h r n k moves hole bench peak peakS cOps cg
       ctrl mx script m hmk hoff hm hc hx hs hposS hfitLift hfitCube hops hop1 hfops hF hHome hHF
       hArr h7 hp hpeak hn0 hn hlenx hfn hmoves hbl hcg hspan h3 hfm hhole hxsT hw0 hh0 hrR hrP
@@ -772,9 +775,16 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
       (by simpa [cube] using hpegP)
       (by simpa [htake, cube, mvP] using hfitSet)
       (by simpa [htake, cube] using hfitSl2)
-  rcases hdig with ⟨bS, hrun, hhome, hoffS, hheldS, hmarkS⟩
-  refine ⟨bS, ?_, hhome, hoffS, hheldS, hmarkS⟩
+  rcases hdig with ⟨bS, hrun, hhome, hoffS, hheldS, hmarkS, hflagS, hkeep⟩
+  refine ⟨bS, ?_, hhome, hoffS, hheldS, hmarkS, hflagS, ?_⟩
   · rw [hlift, ok_bind, hcube, ok_bind, hcopy, ok_bind]
     exact hrun
+  · rw [hkeep src hsrcU hsrcS]
+    simp only [bP]
+    rw [place_home_eq]
+    rw [Array.getElem?_set_ne _ ⟨spare, hHomeSp⟩ (embed factor) hsrcS.symm]
+    simpa [bC] using
+      powCube_home_some b up ctrl mx src acc n k moves hole bench peak peakS cOps hops hF hHome
+        (embed factor) hsrcU (by rw [Array.getElem?_eq_getElem hHomeSrc]; exact congrArg some hsrcArr)
 
 end EcbsLink2.Link2

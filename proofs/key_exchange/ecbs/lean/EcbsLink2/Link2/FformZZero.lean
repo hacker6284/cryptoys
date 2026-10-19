@@ -703,4 +703,45 @@ theorem zbench_zero_counts
   · exact slide_cast _ o.pack.slidesS o.slides (pegCount (ys.take t.n)) t.n
       o.pack.hslidesS hpegN hleS
 
+/-- Held 1 and 2 on the comb a `zBench` cell leaves. Home 1 keeps the cubed up,
+    and the bottom cube clears home 2. -/
+theorem zbench_held12
+    (t : Spec.Tier) (b bL bZ : Ecbs.Board)
+    (baseX baseY px py xP yP zP ys : List Nat) (done : Nat)
+    (hAt : FformAt t b baseX baseY px py done)
+    (hsh : TierShape t) (hOk : BoardOk t) (sat : TierSat t)
+    (hxL : xP.length = t.n) (hyL : yP.length = t.n) (hzL : zP.length = t.n)
+    (hxT : allTritList xP) (hyT : allTritList yP) (hzT : allTritList zP)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (h0 : b.sudo_5Board_4home[0]'(by rw [hszH]; decide) = embed xP)
+    (h1 : b.sudo_5Board_4home[1]'(by rw [hszH]; decide) = embed yP)
+    (hd0 : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = true)
+    (hd1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = true)
+    (hd2 : b.sudo_5Board_4held[2]'(by rw [hszD]; decide) = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = (2 : Int))
+    (hbench : b.sudo_5Board_5bench = embed ys)
+    (htake : ys.take t.n = zP)
+    (hnle : t.n ≤ ys.length)
+    (hzero : ∀ i, t.n ≤ i → ∀ hi : i < ys.length, ys[i] = 0)
+    (hcap : ys.length ≤ t.benchlen)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
+    (hpos : done < t.cells)
+    (hlift : Ecbs.marker_lift b = .ok bL)
+    (hfrob : Ecbs.frobenius_point bL = .ok bZ) :
+    (∀ h : 1 < bZ.sudo_5Board_4held.size, bZ.sudo_5Board_4held[1] = true) ∧
+      (∀ h : 2 < bZ.sudo_5Board_4held.size, bZ.sudo_5Board_4held[2] = false) := by
+  let o := zbench_open t b bL bZ baseX baseY px py xP yP zP ys done hAt hsh hOk sat
+    hxL hyL hzL hxT hyT hzT hszH hszD h0 h1 hd0 hd1 hd2 hon hto hbench htake hnle hzero
+    hcap hship hpos hlift hfrob
+  refine ⟨?_, ?_⟩
+  · intro h
+    have harr := congrArg (fun brd => brd.sudo_5Board_4held) o.hZ
+    exact (at_eq harr h (by rw [bottomFlag_szD o.pack.seen.a zP]; decide)).trans
+      (bottomFlag_held1 o.pack.seen.a zP)
+  · intro h
+    have harr := congrArg (fun brd => brd.sudo_5Board_4held) o.hZ
+    exact (at_eq harr h (by rw [bottomFlag_szD o.pack.seen.a zP]; decide)).trans
+      (bottomFlag_held2 o.pack.seen.a zP)
+
 end EcbsLink2.Link2

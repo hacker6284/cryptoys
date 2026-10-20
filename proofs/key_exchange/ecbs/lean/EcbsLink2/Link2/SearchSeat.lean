@@ -254,6 +254,272 @@ theorem search_ready (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat 
     (basisPeg_length t.n j) hax haxD (strip_len t.n (two_le t.n hn3))
     hbx hbxD (basisPeg_length t.n j) hleft hM hS hC hOp
 
+private theorem gap_plant (n bench : Nat) :
+    gapCap n bench + 1 + n ≤ plantRoom n bench := by
+  unfold gapCap sideCap plantRoom
+  omega
+
+private theorem ready_move (mv0 mv n bench k left : Nat) (hk : 0 < k) (hl : left ≤ k)
+    (hm : mv ≤ mv0 + gapCap n bench + 1 + n + powMove n bench * (n - 1)) :
+    mv + searchMove n bench * left ≤ mv0 + perHole n bench * k := by
+  let A := plantRoom n bench + powMove n bench * n
+  let S := searchMove n bench
+  have hper : perHole n bench = A + S := by
+    simp [perHole, powMove, searchMove, plantRoom, A, S]
+  have hpow : powMove n bench * (n - 1) ≤ powMove n bench * n :=
+    Nat.mul_le_mul_left _ (Nat.sub_le n 1)
+  have hgap : gapCap n bench + 1 + n + powMove n bench * (n - 1) ≤ A := by
+    exact Nat.le_trans
+      (Nat.add_le_add_right (gap_plant n bench) (powMove n bench * (n - 1)))
+      (Nat.add_le_add_left hpow (plantRoom n bench))
+  have hS : S * left ≤ S * k := Nat.mul_le_mul_left _ hl
+  have hAk : A ≤ A * k := by
+    simpa [Nat.mul_one] using Nat.mul_le_mul_left A (Nat.succ_le_of_lt hk)
+  have hjoin : A + S * left ≤ (A + S) * k := by
+    simpa [Nat.add_mul] using Nat.add_le_add hAk hS
+  have hinner : gapCap n bench + 1 + n + powMove n bench * (n - 1) + S * left ≤
+      (A + S) * k :=
+    Nat.le_trans (Nat.add_le_add_right hgap (S * left)) hjoin
+  have hmv1 := Nat.add_le_add_right hm (S * left)
+  have hassoc : mv0 + gapCap n bench + 1 + n + powMove n bench * (n - 1) + S * left =
+      mv0 + (gapCap n bench + 1 + n + powMove n bench * (n - 1) + S * left) := by
+    simp [Nat.add_assoc]
+  have hlift : mv0 + (gapCap n bench + 1 + n + powMove n bench * (n - 1) + S * left) ≤
+      mv0 + perHole n bench * k := by
+    rw [hper]
+    exact Nat.add_le_add_left hinner mv0
+  exact Nat.le_trans hmv1 (by rw [hassoc]; exact hlift)
+
+private theorem k_le_mul (k : Nat) : k ≤ 4 * k := by
+  have h : k * 1 ≤ k * 4 := Nat.mul_le_mul_left k (by decide : (1 : Nat) ≤ 4)
+  simpa [Nat.mul_one, Nat.mul_comm] using h
+
+private theorem ready_ctrl (base ctrl n k left : Nat) (hk : 0 < k) (hl : left ≤ k)
+    (hc : ctrl ≤ base + powCtrl * (n - 1)) :
+    ctrl + left ≤ base + perCtrl n * k := by
+  unfold powCtrl at hc
+  unfold perCtrl
+  have h4 : 4 * (n - 1) ≤ 4 * n := Nat.mul_le_mul_left 4 (Nat.sub_le n 1)
+  have hnk : 4 * n ≤ 4 * n * k := by
+    simpa [Nat.mul_one] using Nat.mul_le_mul_left (4 * n) (Nat.succ_le_of_lt hk)
+  have hck : k ≤ 4 * k := k_le_mul k
+  have hleft : left ≤ k := hl
+  have hsum : 4 * (n - 1) + left ≤ 4 * n * k + 4 * k :=
+    Nat.le_trans (Nat.add_le_add h4 hleft)
+      (Nat.add_le_add hnk (Nat.le_trans (Nat.le_refl k) hck))
+  have hdist : 4 * n * k + 4 * k = (4 * n + 4) * k :=
+    (Nat.add_mul (4 * n) 4 k).symm
+  have h1 : ctrl + left ≤ base + 4 * (n - 1) + left := Nat.add_le_add_right hc left
+  have h2 : base + 4 * (n - 1) + left = base + (4 * (n - 1) + left) := Nat.add_assoc _ _ _
+  have h3 : base + (4 * (n - 1) + left) ≤ base + (4 * n + 4) * k := by
+    rw [← hdist]
+    exact Nat.add_le_add_left hsum base
+  exact Nat.le_trans h1 (by rw [h2]; exact h3)
+
+private theorem ready_op (o cOp n k left : Nat) (hn : 0 < n) (hk : 0 < k) (hl : left ≤ k)
+    (hc : cOp ≤ o + 2 + (n - 1)) :
+    cOp + left ≤ o + perOp n * k := by
+  unfold perOp
+  have hcancel : (n - 1) + 1 = n := Nat.sub_add_cancel (Nat.succ_le_of_lt hn)
+  have htwo : 2 + (n - 1) = n + 1 := by
+    calc
+      2 + (n - 1) = 1 + 1 + (n - 1) := rfl
+      _ = 1 + (1 + (n - 1)) := Nat.add_assoc 1 1 (n - 1)
+      _ = 1 + ((n - 1) + 1) := by rw [Nat.add_comm 1 (n - 1)]
+      _ = 1 + n := by rw [hcancel]
+      _ = n + 1 := Nat.add_comm 1 n
+  have hk1 : (k - 1) + 1 = k := Nat.sub_add_cancel (Nat.succ_le_of_lt hk)
+  have hsplit : (n + 2) * k = (n + 2) + (n + 2) * (k - 1) := by
+    have h := Nat.mul_add (n + 2) 1 (k - 1)
+    have hcomm : 1 + (k - 1) = (k - 1) + 1 := Nat.add_comm _ _
+    rw [hcomm, hk1, Nat.mul_one] at h
+    exact h
+  have hone : (1 : Nat) ≤ n + 2 := Nat.succ_le_succ (Nat.zero_le (n + 1))
+  have htail : k - 1 ≤ (n + 2) * (k - 1) := by
+    simpa [Nat.one_mul] using Nat.mul_le_mul_right (k - 1) hone
+  have hnum : n + 1 + k ≤ (n + 2) * k := by
+    have hEq : (n + 2) + (k - 1) = n + 1 + k := by
+      calc
+        (n + 2) + (k - 1) = n + (2 + (k - 1)) := Nat.add_assoc n 2 (k - 1)
+        _ = n + (1 + 1 + (k - 1)) := rfl
+        _ = n + (1 + (1 + (k - 1))) := by rw [Nat.add_assoc 1 1 (k - 1)]
+        _ = n + (1 + ((k - 1) + 1)) := by rw [Nat.add_comm 1 (k - 1)]
+        _ = n + (1 + k) := by rw [hk1]
+        _ = n + 1 + k := (Nat.add_assoc n 1 k).symm
+    rw [← hEq, hsplit]
+    exact Nat.add_le_add_left htail (n + 2)
+  have hleft : n + 1 + left ≤ n + 1 + k := Nat.add_le_add_left hl _
+  have hsum : 2 + (n - 1) + left ≤ (n + 2) * k := by
+    rw [htwo]
+    exact Nat.le_trans hleft hnum
+  have h1 : cOp + left ≤ o + 2 + (n - 1) + left := Nat.add_le_add_right hc left
+  have h2 : o + 2 + (n - 1) + left = o + (2 + (n - 1) + left) := by
+    simp [Nat.add_assoc]
+  exact Nat.le_trans h1 (by rw [h2]; exact Nat.add_le_add_left hsum o)
+
+private theorem ready_slide (sl0 sl n k left : Nat) (hn : 0 < n) (hk : 0 < k) (hl : left ≤ k)
+    (hs : sl ≤ sl0 + 6 * n + (4 * n) * (n - 1)) :
+    sl + (2 * n) * left ≤ sl0 + (4 * n * n + 6 * n) * k := by
+  have hcancel : (n - 1) + 1 = n := Nat.sub_add_cancel (Nat.succ_le_of_lt hn)
+  have h4 : (4 * n) * (n - 1) + 4 * n = (4 * n) * n := by
+    have h := Nat.mul_add (4 * n) (n - 1) 1
+    rw [hcancel, Nat.mul_one] at h
+    exact h.symm
+  have hsq : (4 * n) * n = 4 * (n * n) := Nat.mul_assoc 4 n n
+  have h6n : 4 * n + 2 * n = 6 * n := by
+    rw [← Nat.add_mul]
+  have hpiece : (4 * n) * (n - 1) + 6 * n = 4 * (n * n) + 2 * n := by
+    have h := congrArg (fun z => z + 2 * n) h4
+    rw [hsq] at h
+    calc
+      (4 * n) * (n - 1) + 6 * n = (4 * n) * (n - 1) + (4 * n + 2 * n) := by rw [← h6n]
+      _ = (4 * n) * (n - 1) + 4 * n + 2 * n := by rw [← Nat.add_assoc]
+      _ = 4 * (n * n) + 2 * n := h
+  have hk1 : 1 ≤ k := Nat.succ_le_of_lt hk
+  have hnn : 4 * (n * n) ≤ 4 * (n * n) * k := by
+    simpa [Nat.mul_one] using Nat.mul_le_mul_left (4 * (n * n)) hk1
+  have h2k : 2 ≤ 2 * k := by
+    simpa [Nat.mul_one] using Nat.mul_le_mul_left 2 hk1
+  have hthree : k + 1 ≤ 3 * k := by
+    have hstep : k + 1 ≤ k + 2 * k :=
+      Nat.add_le_add_left (Nat.le_trans (by decide : (1 : Nat) ≤ 2) h2k) k
+    have hsum : k + 2 * k = 3 * k := by
+      simpa [Nat.one_mul, Nat.add_comm] using (Nat.add_mul 2 1 k).symm
+    rw [hsum] at hstep
+    exact hstep
+  have h6 : 2 * n * (3 * k) = 6 * n * k := by
+    calc
+      2 * n * (3 * k) = 2 * (n * (3 * k)) := Nat.mul_assoc 2 n (3 * k)
+      _ = 2 * (n * 3 * k) := by rw [Nat.mul_assoc n 3 k]
+      _ = 2 * (3 * n * k) := by rw [Nat.mul_comm n 3]
+      _ = 2 * (3 * (n * k)) := by rw [Nat.mul_assoc 3 n k]
+      _ = (2 * 3) * (n * k) := (Nat.mul_assoc 2 3 (n * k)).symm
+      _ = 6 * (n * k) := rfl
+      _ = 6 * n * k := (Nat.mul_assoc 6 n k).symm
+  have hlin : 2 * n * (left + 1) ≤ 6 * n * k := by
+    have hL : left + 1 ≤ 3 * k := Nat.le_trans (Nat.add_le_add_right hl 1) hthree
+    have hM : 2 * n * (left + 1) ≤ 2 * n * (3 * k) := Nat.mul_le_mul_left _ hL
+    rw [h6] at hM
+    exact hM
+  have hcoeff : 4 * (n * n) + 2 * n * (left + 1) ≤ 4 * (n * n) * k + 6 * n * k :=
+    Nat.add_le_add hnn hlin
+  have hdist : 4 * (n * n) * k + 6 * n * k = (4 * (n * n) + 6 * n) * k := by
+    rw [Nat.add_mul, Nat.mul_comm (4 * (n * n)) k, Nat.mul_comm (6 * n) k]
+  have hpoly : 4 * n * n + 6 * n = 4 * (n * n) + 6 * n := by rw [Nat.mul_assoc]
+  have h1 : sl + (2 * n) * left ≤ sl0 + 6 * n + (4 * n) * (n - 1) + (2 * n) * left :=
+    Nat.add_le_add_right hs _
+  have h2 : sl0 + 6 * n + (4 * n) * (n - 1) + (2 * n) * left =
+      sl0 + ((4 * n) * (n - 1) + 6 * n + (2 * n) * left) := by
+    simp [Nat.add_assoc, Nat.add_left_comm, Nat.add_comm]
+  have h3 : (4 * n) * (n - 1) + 6 * n + (2 * n) * left =
+      4 * (n * n) + (2 * n) * (left + 1) := by
+    rw [hpiece]
+    have hmul := Nat.mul_add (2 * n) left 1
+    rw [Nat.mul_one] at hmul
+    calc
+      4 * (n * n) + 2 * n + (2 * n) * left
+          = 4 * (n * n) + ((2 * n) * left + 2 * n) := by
+            rw [Nat.add_assoc, Nat.add_comm (2 * n) ((2 * n) * left), ← Nat.add_assoc]
+      _ = 4 * (n * n) + (2 * n) * (left + 1) := by rw [← hmul]
+  have h4 : sl0 + (4 * (n * n) + 2 * n * (left + 1)) ≤
+      sl0 + (4 * (n * n) + 6 * n) * k := by
+    rw [← hdist]
+    exact Nat.add_le_add_left hcoeff sl0
+  rw [hpoly]
+  exact Nat.le_trans h1 (by rw [h2, h3]; exact h4)
+
+/-- After the root power on a planted strip, across is the strip and the base
+    home is the planted peg. `left` hit tests still fit inside the holes left. -/
+theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
+    (hp : PlantAt b0 t holesLeft)
+    (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)
+    (j : Nat) (hj0 : 0 < j) (hj : j < t.n) (hn3 : 3 ≤ t.n)
+    (mv0 sl0 c0 : Nat)
+    (hmv0 : b0.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv0)
+    (hsl0 : b0.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl0)
+    (hc0 : b0.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t))
+    (left : Nat) (hleft : 0 < left) (hleftH : left ≤ holesLeft) :
+    ∃ b',
+      (do
+          let b ← (do
+            let b ← (do
+              let b ← (do
+                let b ← (do
+                  let x ← SudoRt.filledL (Int.ofNat t.n) (0 : Int)
+                  let x ← SudoRt.putL x (Int.ofNat j) (1 : Int)
+                  let b ← Ecbs.put b0 Ecbs.base_across x
+                  Ecbs.curve_side b Ecbs.base_across Ecbs.bottom)
+                let b ← Ecbs.mul b Ecbs.gap Ecbs.bottom Ecbs.bottom true false false
+                Ecbs.settle b)
+              Ecbs.white0 b Ecbs.up)
+            let strip ← emittedStrip t.n
+            let b ← Ecbs.put b Ecbs.across strip
+            pure ({ b with sudo_5Board_9marker_on := true }))
+          powRun b (rootDigits t.n)) = .ok b' ∧
+        SearchAt b' t (basisPeg t.n j) (rootY t.n t.k t.benchlen (basisPeg t.n j))
+          (curveSide t.n t.k t.benchlen (basisPeg t.n j))
+          (fieldMul t.n t.k t.benchlen
+            (curveSide t.n t.k t.benchlen (basisPeg t.n j))
+            (curveSide t.n t.k t.benchlen (basisPeg t.n j)))
+          (rootStrip t.n) (basisPeg t.n j) left := by
+  obtain ⟨bS, o0, o1, hstrip, s⟩ :=
+    search_strip_at b0 t holesLeft hp hOk hsh sat j hj0 hj mv0 sl0 c0 hmv0 hsl0 hc0
+  rcases hp.moves with ⟨mvP, hmvP, hfitM⟩
+  have hmvSame : mvP = mv0 := Int.ofNat.inj (hmvP.symm.trans hmv0)
+  have hmvB : FitsLen (mv0 + perHole t.n t.benchlen * holesLeft) := by
+    simpa [hmvSame] using hfitM
+  rcases hp.slides with ⟨slP, hslP, hfitS⟩
+  have hslSame : slP = sl0 := Int.ofNat.inj (hslP.symm.trans hsl0)
+  have hslB : FitsLen (sl0 + perSlide t.n * holesLeft) := by
+    simpa [hslSame] using hfitS
+  rcases hp.ctrl with ⟨cP, hcP, hfitC⟩
+  have hcSame : cP = c0 + tierR t := Int.ofNat.inj (hcP.symm.trans hc0)
+  have hcB : FitsLen (c0 + tierR t + perCtrl t.n * holesLeft) := by
+    simpa [hcSame, Nat.add_assoc] using hfitC
+  obtain ⟨b', hpow, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE⟩ :=
+    pow_from_strip_at bS t j mv0 sl0 c0 o0 o1 holesLeft s hOk hsh sat hn3
+      hp.holesPos hmvB hslB hcB
+  rcases hmvE with ⟨mv, hmv, hmvLe⟩
+  have hM : ∀ moves, b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves →
+      FitsLen (moves + searchMove t.n t.benchlen * left) := by
+    intro moves hmoves
+    have hsame : moves = mv := Int.ofNat.inj (hmoves.symm.trans hmv)
+    rw [hsame]
+    exact FitsLen.of_le hmvB
+      (ready_move mv0 mv t.n t.benchlen holesLeft left hp.holesPos hleftH hmvLe)
+  refine ⟨b', ?_, ?_⟩
+  · rw [hstrip, ok_bind]
+    exact hpow
+  · exact search_of_pow b' t (basisPeg t.n j) (rootStrip t.n) (basisPeg t.n j) left hPow
+      (basisPeg_length t.n j) hax haxD (strip_len t.n (two_le t.n hn3))
+      hbx hbxD (basisPeg_length t.n j) hleft hM
+      (by
+        intro slides hsl0b
+        rcases hslE with ⟨sl, hsl, hslLe⟩
+        have hsame : slides = sl := Int.ofNat.inj (hsl0b.symm.trans hsl)
+        rw [hsame]
+        exact FitsLen.of_le hslB
+          (by simpa [searchSlide, powSlide, perSlide] using
+            ready_slide sl0 sl t.n holesLeft left hOk.n_pos hp.holesPos hleftH hslLe))
+      (by
+        intro c hc
+        rcases hcE with ⟨ctrl, hctrl, hctrlLe⟩
+        have hsame : c = ctrl := Int.ofNat.inj (hc.symm.trans hctrl)
+        rw [hsame]
+        exact FitsLen.of_le hcB
+          (by simpa [Nat.add_assoc] using
+            ready_ctrl (c0 + tierR t) ctrl t.n holesLeft left hp.holesPos hleftH hctrlLe))
+      (by
+        intro c hc
+        rcases hopE with ⟨cOp, hop, hopLe⟩
+        have hslot : some (Int.ofNat c) = some (Int.ofNat cOp) := hc.symm.trans hop
+        have hsame : c = cOp := by
+          injection hslot with hEq
+          exact Int.ofNat.inj hEq
+        rw [hsame]
+        exact FitsLen.of_le s.opsRoom
+          (ready_op o0 cOp t.n holesLeft left hOk.n_pos hp.holesPos hleftH hopLe))
+
 /-- One planted hole, after the root power. A hit stops; a miss is the next hole. -/
 theorem search_plant_step (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)
     (j : Nat) (hj0 : 0 < j) (hj : j < t.n) (hn3 : 3 ≤ t.n)

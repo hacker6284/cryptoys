@@ -13,6 +13,7 @@ import EcbsLink2.Link2.WalkSeat
 import EcbsLink2.Link2.WalkBound
 import EcbsLink2.Link2.CofactorRoom
 import EcbsLink2.Link2.Loop
+import EcbsLink2.Link2.PointBack
 
 namespace EcbsLink2.Link2
 
@@ -293,6 +294,56 @@ private theorem lay_after (b : Board) (baseX baseY : List Nat) (ctrl : Nat)
   moves := lay.moves
   slides := lay.slides
   peak := lay.peak
+
+/-- `LastLay` is what `point_back` reads. The clear and the two moves still
+    need their rooms. -/
+theorem point_back_of_lay (b : Board) (px py baseX baseY : List Nat)
+    (lay : LastLay b baseX baseY)
+    (h0a : b.sudo_5Board_4home[0]'(by rw [lay.szH]; decide) = embed px)
+    (h1a : b.sudo_5Board_4home[1]'(by rw [lay.szH]; decide) = embed py)
+    (hfpx : FitsLen px.length) (hfpy : FitsLen py.length)
+    (hfbx : FitsLen baseX.length) (hfby : FitsLen baseY.length)
+    (hcx : ∀ (mv : Nat), b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) →
+      FitsLen (mv + pegCount baseX))
+    (hcy : ∀ (mv : Nat), b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) →
+      FitsLen (mv + pegCount baseX + pegCount baseY))
+    (h2px : FitsLen (2 * pegCount px)) (h2py : FitsLen (2 * pegCount py))
+    (hm1 : ∀ (mv : Nat), b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) →
+      FitsLen (mv + pegCount baseX + pegCount baseY + 2 * pegCount px))
+    (hs1 : ∀ (sl : Nat), b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) →
+      FitsLen (sl + 2 * pegCount px))
+    (hm2 : ∀ (mv : Nat), b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) →
+      FitsLen (mv + pegCount baseX + pegCount baseY + 2 * pegCount px + 2 * pegCount py))
+    (hs2 : ∀ (sl : Nat), b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) →
+      FitsLen (sl + 2 * pegCount px + 2 * pegCount py)) :
+    ∃ b',
+      (do
+          let b ← clear b base_across
+          let b ← clear b base_up
+          let b ← move_band b base_across across
+          move_band b base_up up) = .ok b' ∧
+      (∀ h : 3 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[3] = embed px) ∧
+      (∀ h : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4] = embed py) ∧
+      (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = (#[] : Array Int)) ∧
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = (#[] : Array Int)) := by
+  obtain ⟨mv, hmv⟩ := lay.moves
+  obtain ⟨sl, hsl⟩ := lay.slides
+  obtain ⟨pk, hpk⟩ := lay.peak
+  have hmvI : b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) := by
+    simpa [ofNat_eq_natCast] using hmv
+  have hslI : b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) := by
+    simpa [ofNat_eq_natCast] using hsl
+  have hpkI : b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) := by
+    simpa [ofNat_eq_natCast] using hpk
+  obtain ⟨b', hdo, h3, h4, h0, h1, _, _, _, _⟩ :=
+    point_back b px py baseX baseY mv sl pk lay.bench lay.szH lay.szD
+      (lay.held0 (by rw [lay.szD]; decide)) h0a
+      (lay.held1 (by rw [lay.szD]; decide)) h1a
+      (lay.held3 (by rw [lay.szD]; decide)) (lay.home3 (by rw [lay.szH]; decide))
+      (lay.held4 (by rw [lay.szD]; decide)) (lay.home4 (by rw [lay.szH]; decide))
+      hmvI hslI hpkI hfpx hfpy hfbx hfby (hcx mv hmvI) (hcy mv hmvI) h2px h2py
+      (hm1 mv hmvI) (hs1 sl hslI) (hm2 mv hmvI) (hs2 sl hslI)
+  exact ⟨b', hdo, h3, h4, h0, h1⟩
 
 private theorem point_eq (ax ay px py : List Nat)
     (h : (true, (ax, ay)) = (true, (px, py))) : ax = px ∧ ay = py := by

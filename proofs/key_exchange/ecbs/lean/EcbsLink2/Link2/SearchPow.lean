@@ -357,7 +357,7 @@ theorem pow_from_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sa
     rw [hred] at hPow
     exact hPow
   have hstep := pow_step_at bP t side acc 2 tail hPow2 (Or.inr (Or.inr rfl))
-  obtain ⟨b1, hrunP, hAt, _⟩ := hstep
+  obtain ⟨b1, hrunP, hAt, _, _⟩ := hstep
   have hrun := digit_same b cPh hlift hself 2 powGap
   have hrunB : powDigitRun b 2 powGap = .ok b1 := by
     have hif : (if (2 : Nat) = 2 then powGap else powBottom) = powGap := by simp

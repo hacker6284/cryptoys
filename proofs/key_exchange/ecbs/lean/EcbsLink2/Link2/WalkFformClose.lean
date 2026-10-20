@@ -4,6 +4,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.WalkFformFrame
+import EcbsLink2.Link2.FieldOk
 
 namespace EcbsLink2.Link2
 
@@ -56,6 +57,7 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
     (h32 : 32 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
     (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
+    (hF : FieldOk t)
     (run : ∀ (i : Nat) (sb : Ecbs.Board) (ax ay : List Nat),
       FformAt t sb baseX baseY ax ay i →
       ∀ (red : Bool) (bZ : Ecbs.Board) (xP yP zP : List Nat)
@@ -92,7 +94,15 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
       SudoRt.runLoopOn (Int.ofNat start, (b, true))
         (fuelRange (Int.ofNat start) (Int.ofNat (t.cells - 1)))
         (fformStep (embed cells) (Int.ofNat (t.cells - 1))) chordAfter (fun r => pure r) =
-        chordAfter (Int.ofNat (t.cells - 1), st) := by
+        chordAfter (Int.ofNat (t.cells - 1), st) ∧
+      (∀ px0, allTritList (affineRun t.n t.k t.benchlen baseX px0) →
+        (affineRun t.n t.k t.benchlen baseX px0).length = t.n →
+        ¬ RunNonUnit t.n t.k t.benchlen baseX px0) := by
+  have hrunField : ∀ px0,
+      allTritList (affineRun t.n t.k t.benchlen baseX px0) →
+      (affineRun t.n t.k t.benchlen baseX px0).length = t.n →
+      ¬ RunNonUnit t.n t.k t.benchlen baseX px0 :=
+    fun px0 ht hlenR => runNonUnit_field t hF baseX px0 ht hlenR
   let toN := t.cells - 1
   have hto : toN + 1 = t.cells := by omega
   have h0 : FformInv t baseX baseY live0 acc0 cells start (b, true) :=
@@ -149,7 +159,7 @@ theorem walk_fform_from (t : Spec.Tier) (b : Ecbs.Board)
   have hAtF' : FformAt t st.1 baseX baseY pxF pyF t.cells := by
     rw [← hpx, ← hpy]
     exact hAtF
-  exact ⟨st, hInvC, hAtF', hfull, heq⟩
+  exact ⟨st, hInvC, hAtF', hfull, heq, hrunField⟩
 
 /-- Closing the live loop. The frame's marker is a natural and one more
     control step fits, so the suffix is `.ok ((true, true), …)`. -/
@@ -172,6 +182,7 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
     (h32 : 32 * t.n ≤ cellSlideCharge t + slideCharge t.n)
     (h46 : 46 ≤ cellCtrlCharge t + 4)
     (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
+    (hF : FieldOk t)
     (run : ∀ (i : Nat) (sb : Ecbs.Board) (ax ay : List Nat),
       FformAt t sb baseX baseY ax ay i →
       ∀ (red : Bool) (bZ : Ecbs.Board) (xP yP zP : List Nat)
@@ -247,10 +258,10 @@ theorem walk_fform_close (t : Spec.Tier) (b : Ecbs.Board)
             (∀ h : 1 < bF.sudo_5Board_4home.size, bF.sudo_5Board_4home[1] = embed yP) ∧
             (∀ h : 1 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[1] = true) ∧
             (∀ h : 2 < bF.sudo_5Board_4held.size, bF.sudo_5Board_4held[2] = false)) := by
-  obtain ⟨st, hI, hAtF, hrun, hloop⟩ :=
+  obtain ⟨st, hI, hAtF, hrun, hloop, _hrunField⟩ :=
     walk_fform_from t b baseX baseY px py pxF pyF live0 acc0 start cells
       hAt hlen hpos hstart hspec hfull hsh hOk sat tw h8 h12 hwide h32 h46
-      hship run
+      hship hF run
   have hlive : st.2 = true := hI.1
   cases st with
   | mk bF slive =>

@@ -178,4 +178,59 @@ theorem up_by_gap (b : Board) (py g yP lane : List Nat)
       hops ⟨h0H, h0D⟩ h1D h1H, ?_, rfl, hpre, hlen, htail⟩
   simpa [up, gap] using hmul
 
+private theorem get_congr {α : Type} {a b : Array α} (h : a = b) (i : Nat) (ha : i < a.size) :
+    a[i] = b[i]'(h ▸ ha) := by
+  cases h
+  rfl
+
+private theorem kept_set {α : Type} (a : Array α) (i j : Nat) (hi : i < a.size) (v x : α)
+    (hj : j < a.size) (hne : i ≠ j) (h : a[j]'hj = x)
+    (hk : j < (a.set ⟨i, hi⟩ v).size) : (a.set ⟨i, hi⟩ v)[j]'hk = x := by
+  rw [Array.getElem_set_ne]
+  · exact h
+  · exact hne
+
+/-- Settle the bench aimed at up. Home 1 becomes the prefix. Home 0 stays. -/
+theorem settle_up (b : Board) (px py lane : List Nat) (n moves slides peak : Nat)
+    (h1H : 1 < b.sudo_5Board_4home.size) (h1D : 1 < b.sudo_5Board_4held.size)
+    (h0H : 0 < b.sudo_5Board_4home.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = up)
+    (hempty : b.sudo_5Board_4held[1] = false)
+    (hbench : b.sudo_5Board_5bench = embed lane)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hpos : 0 < lane.length) (hnle : n ≤ lane.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen lane.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (lane.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (lane.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (lane.take n)))
+    (hpre : lane.take n = py)
+    (h0a : b.sudo_5Board_4home[0] = embed px) :
+    ∃ b',
+      settle b = .ok b' ∧
+      (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed px) ∧
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed py) := by
+  have hto1 : b.sudo_5Board_8bench_to = ((1 : Nat) : Int) := by simpa [up] using hto
+  have hset := settle_refines b 1 lane n moves slides peak h1H h1D h7 hon hto1 hempty
+    hbench hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
+  let bS := settleBoard b 1 h1H h1D lane n moves slides peak
+  have hhome := settle_home_eq b 1 ⟨h1H, h1D⟩ lane n moves slides peak
+  refine ⟨bS, by simpa [up] using hset, ?_, ?_⟩
+  · intro h0
+    have hget := get_congr hhome 0 h0
+    have hset0 : (b.sudo_5Board_4home.set ⟨1, h1H⟩ (embed (lane.take n)))[0]'(hhome ▸ h0) =
+        embed px := by
+      exact kept_set _ 1 0 h1H _ _ h0H (by decide) h0a (hhome ▸ h0)
+    exact hget.trans hset0
+  · intro h1
+    have hget := get_congr hhome 1 h1
+    refine hget.trans ?_
+    rw [Array.getElem_set]
+    simp [hpre]
+
 end EcbsLink2.Link2

@@ -139,7 +139,9 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
         bS.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
         FitsLen (mv + 2 * t.n + 1) ∧
         bS.sudo_5Board_4home.size = 8 ∧
-        bS.sudo_5Board_4held.size = 8 := by
+        bS.sudo_5Board_4held.size = 8 ∧
+        (∀ h : 1 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[1] = false) ∧
+        (∀ h : 5 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[5] = false) := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hxt : allTritList x := basisPeg_trits t.n j
@@ -148,7 +150,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     rwa [hx] at h
   obtain ⟨bC, hdo, honC, htoC, hbenchC, htakeC, hlenC, hzeroC, hmkC, hszHC, hszDC,
       hheld2C, _hhome2C, hheld3C, hhome3C, hheld6C, hmovC, hslC, hpkE, hpsE, hholeE,
-      htierC, hopsC, hop0C⟩ := search_cube t hOk hsh sat j hj
+      htierC, hopsC, hop0C, hheld1C, hheld5C⟩ := search_cube t hOk hsh sat j hj
   obtain ⟨pk, hpk⟩ := hpkE
   obtain ⟨ps, hps⟩ := hpsE
   obtain ⟨holeN, hhole⟩ := hholeE
@@ -264,7 +266,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
   have hmvSle : mvS + 2 * n + 1 ≤
       mv + 2 * pegCount (lane.take n) + n + n * (n + 1) + 3 * (bench - n) + 2 * n + 2 * n + 1 :=
     close_room mvS mv (pegCount (lane.take n)) n bench hmvInner
-  refine ⟨bS, mvS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, mvS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hdo, ok_bind, hokM, ok_bind]
     exact hokS
   · intro h
@@ -291,6 +293,18 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
   · exact fit (mvS + 2 * n + 1) (Nat.le_trans hmvSle hroom.2.2.2.2.2.2.1)
   · rw [hszHS, hszHM, hszHC]
   · rw [hszDS, hszDM, hszDC]
+  · intro h
+    have h1C : 1 < bC.sudo_5Board_4held.size := by rw [hszDC]; decide
+    have h1M : 1 < bM.sudo_5Board_4held.size := by rw [hszDM, hszDC]; decide
+    have hM := hheldPM 1 h1C h1M (by decide) (by decide)
+    have hS := hheldPS 1 h1M h (by decide)
+    exact hS.trans (hM.trans (hheld1C h1C))
+  · intro h
+    have h5C : 5 < bC.sudo_5Board_4held.size := by rw [hszDC]; decide
+    have h5M : 5 < bM.sudo_5Board_4held.size := by rw [hszDM, hszDC]; decide
+    have hM := hheldPM 5 h5C h5M (by decide) (by decide)
+    have hS := hheldPS 5 h5M h (by decide)
+    exact hS.trans (hM.trans (hheld5C h5C))
 
 /-- The planted copy, cubed and closed, is `curveSide`. -/
 theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)
@@ -321,7 +335,7 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
   have hmulL : (fieldMul t.n t.k t.benchlen x x).length = t.n :=
     fieldMul_length t.n t.k t.benchlen x x hnle
   obtain ⟨bS, mv, hdo, hhome2, hheld2, hhome6, hheld6, _, _, hoff, htier, hmov,
-      hfit, hszH, hszD⟩ := search_square t hOk hsh sat j hj
+      hfit, hszH, hszD, _, _⟩ := search_square t hOk hsh sat j hj
   have h2H : 2 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2D : 2 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
   have h6H : 6 < bS.sudo_5Board_4home.size := by rw [hszH]; decide

@@ -110,6 +110,16 @@ theorem side_held6 (t : Spec.Tier) (x : List Nat)
     (searchSideBoard t x).sudo_5Board_4held[6] = false := by
   simp [searchSideBoard, putAcross, built_held_arr, Array.getElem_set, Array.getElem_mkArray]
 
+theorem side_held1 (t : Spec.Tier) (x : List Nat)
+    (h : 1 < (searchSideBoard t x).sudo_5Board_4held.size) :
+    (searchSideBoard t x).sudo_5Board_4held[1] = false := by
+  simp [searchSideBoard, putAcross, built_held_arr, Array.getElem_set, Array.getElem_mkArray]
+
+theorem side_held5 (t : Spec.Tier) (x : List Nat)
+    (h : 5 < (searchSideBoard t x).sudo_5Board_4held.size) :
+    (searchSideBoard t x).sudo_5Board_4held[5] = false := by
+  simp [searchSideBoard, putAcross, built_held_arr, Array.getElem_set, Array.getElem_mkArray]
+
 theorem side_moves (t : Spec.Tier) (x : List Nat) :
     (searchSideBoard t x).sudo_5Board_4cost.sudo_5Costs_5moves =
       ((pegCount x + pegCount x : Nat) : Int) := by
@@ -244,7 +254,9 @@ theorem search_cube (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
         b'.sudo_5Board_1t = embTier t ∧
         0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size ∧
         (∀ h : 0 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
-          b'.sudo_5Board_4cost.sudo_5Costs_3ops[0] = 0) := by
+          b'.sudo_5Board_4cost.sudo_5Costs_3ops[0] = 0) ∧
+        (∀ h : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1] = false) ∧
+        (∀ h : 5 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[5] = false) := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hxt : allTritList x := basisPeg_trits t.n j
@@ -311,7 +323,7 @@ theorem search_cube (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
     rw [laneFold_length t.n (t.n - t.k) (combStrip t.n t.benchlen x) (by rwa [hstrip])]
     exact hstrip
   refine ⟨b', ?_, hon, hto, ?_, ?_, hlenL, ?_, hmk', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ⟨_, hpeakOut⟩, ⟨_, hstrict'⟩, ⟨_, hhole'⟩, ?_, ?_, ?_⟩
+      ⟨_, hpeakOut⟩, ⟨_, hstrict'⟩, ⟨_, hhole'⟩, ?_, ?_, ?_, ?_, ?_⟩
   · have hputS : Ecbs.put (builtBoard t) ((searchBase : Nat) : Int) (embed x) =
         .ok (putAcross t x) := by
       simpa [searchBase] using hput
@@ -360,5 +372,15 @@ theorem search_cube (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
       have hb : 0 < (Array.mkArray 5 0).size := by simp [Array.size_mkArray]
       exact cell_eq_of (side_ops t x) (hb := hb) (by simp [Array.getElem_mkArray])
     simpa [Array.getElem_set, hne] using hget.trans h0
+  · intro h
+    have hget := get_eq_of_array hheld 1 h
+    have hne : (2 : Nat) ≠ 1 := by decide
+    have h1b : 1 < b.sudo_5Board_4held.size := by rw [side_szD]; decide
+    simpa [Array.getElem_set, hne] using hget.trans (side_held1 t x h1b)
+  · intro h
+    have hget := get_eq_of_array hheld 5 h
+    have hne : (2 : Nat) ≠ 5 := by decide
+    have h5b : 5 < b.sudo_5Board_4held.size := by rw [side_szD]; decide
+    simpa [Array.getElem_set, hne] using hget.trans (side_held5 t x h5b)
 
 end EcbsLink2.Link2

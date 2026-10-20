@@ -101,4 +101,81 @@ theorem across_by_gap (b : Board) (px xP g : List Nat)
   · simpa [across] using
       mul_no_to b 0 0 g xP n k moves hole bench peak peakS cOps hops h0D h0H
 
+/-- Gap times up, after the across bench has been settled. The new bench is
+    aimed at up and its prefix is the other affine coordinate. -/
+theorem up_by_gap (b : Board) (py g yP lane : List Nat)
+    (w h r n k moves slides hole bench peak peakS cOps : Nat)
+    (hmk : b.sudo_5Board_9marker_on = false)
+    (hon : b.sudo_5Board_8bench_on = true)
+    (hto : b.sudo_5Board_8bench_to = across)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h7 : 7 ≤ b.sudo_5Board_4held.size)
+    (hempty : b.sudo_5Board_4held[0] = false)
+    (hbench : b.sudo_5Board_5bench = embed lane)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hn0 : 0 < n) (hgap0 : 0 < n - k)
+    (hpos : 0 < lane.length) (hnle : n ≤ lane.length)
+    (hzero : ∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i] = 0)
+    (hf : FitsLen n) (hfitL : FitsLen lane.length)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hpeg : FitsLen (2 * pegCount (lane.take n)))
+    (hfitM : FitsLen (moves + 2 * pegCount (lane.take n)))
+    (hfitS : FitsLen (slides + 2 * pegCount (lane.take n)))
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hop0 : b.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hops) = (cOps : Int))
+    (hfops : FitsLen (cOps + 1))
+    (hbl : b.sudo_5Board_1t.sudo_4Tier_8benchlen = Int.ofNat bench)
+    (h5D : 5 < b.sudo_5Board_4held.size) (h5H : 5 < b.sudo_5Board_4home.size)
+    (h5t : b.sudo_5Board_4held[5] = true)
+    (h5a : b.sudo_5Board_4home[5] = embed g)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size)
+    (h1t : b.sudo_5Board_4held[1] = true)
+    (h1a : b.sudo_5Board_4home[1] = embed yP)
+    (hgL : g.length = n) (hyL : yP.length = n)
+    (hspan : 2 * (n - 1) < bench)
+    (hgT : allTritList g)
+    (hfi : FitsLen (2 * (n - 1)))
+    (hfm : FitsLen (moves + 2 * pegCount (lane.take n) + n * (n + 1)))
+    (shape : BoardShape w h r n k)
+    (hwF : b.sudo_5Board_1t.sudo_4Tier_1w = Int.ofNat w)
+    (hhF : b.sudo_5Board_1t.sudo_4Tier_1h = Int.ofNat h)
+    (hrF : b.sudo_5Board_1t.sudo_4Tier_1r = Int.ofNat r)
+    (hkF : b.sudo_5Board_1t.sudo_4Tier_1k = Int.ofNat k)
+    (hHole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat hole)
+    (hpeakS : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (peakS : Int))
+    (hsm : w ≤ 1000000 ∧ h ≤ 1000000 ∧ r ≤ 1000000 ∧ bench ≤ 1000001)
+    (hnsm : n ≤ 1000000)
+    (hfitB : FitsLen bench)
+    (hfold : FitsLen (moves + 2 * pegCount (lane.take n) + n * (n + 1) +
+      3 * (bench - n)))
+    (hb : n ≤ bench)
+    (hclear : fieldMul n k bench g yP = py) :
+    let lane2 := laneFold n (n - k) (school n g yP (List.replicate bench 0) false)
+    ∃ b2,
+      mul b up gap up false false false =
+        .ok (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+          hops ⟨h0H, h0D⟩ h1D h1H) ∧
+      b2 = mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H ∧
+      lane2.take n = py ∧
+      lane2.length = bench ∧
+      (∀ i, n ≤ i → ∀ hi : i < lane2.length, lane2[i] = 0) := by
+  have hne : (5 : Nat) ≠ 1 := by decide
+  have hneF : (0 : Nat) ≠ 5 := by decide
+  have hneS : (0 : Nat) ≠ 1 := by decide
+  have hto0 : b.sudo_5Board_8bench_to = ((0 : Nat) : Int) := by simpa [across] using hto
+  have hmul := mul_aim_eq b 1 5 1 0 g yP lane w h r n k moves slides hole bench peak peakS cOps
+    hmk hon hto0 h0H h0D h7 hempty hbench hn hn0 hpos hnle hzero hf hfitL hmoves hslides hpeak
+    hpeg hfitM hfitS hops hop0 hfops hbl h5D h5H h5t h5a h1D h1H h1t h1a hne hneF hneS
+    hgL hyL hspan hgT hfi hfm shape hwF hhF hrF hkF hHole hpeakS hsm hnsm hfitB hfold
+  let lane2 := laneFold n (n - k) (school n g yP (List.replicate bench 0) false)
+  have hpre : lane2.take n = py := (mul_no_prefix n k bench g yP).trans hclear
+  have hlen := fold_len n k bench g yP hb
+  have htail := high_tail n k bench g yP hn0 hgap0 hb
+  refine ⟨mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+      hops ⟨h0H, h0D⟩ h1D h1H, ?_, rfl, hpre, hlen, htail⟩
+  simpa [up, gap] using hmul
+
 end EcbsLink2.Link2

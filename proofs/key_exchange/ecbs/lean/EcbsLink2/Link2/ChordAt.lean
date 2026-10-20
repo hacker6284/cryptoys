@@ -175,4 +175,195 @@ theorem walk_chord_at_red (b : Board) (t : Spec.Tier) (x y : List Nat)
   · simpa using hx0
   · simpa using hy1
 
+theorem frame_flag (b : Board) (t : Spec.Tier) (h : FrameAt b t) :
+    FrameAt (chordFlag b) t where
+  hlad := by simpa [chordFlag] using h.hlad
+  hl0 := by simpa [chordFlag] using h.hl0
+  hnr := by simpa [chordFlag] using h.hnr
+  hpark := by simpa [chordFlag] using h.hpark
+  hfrom := by simpa [chordFlag] using h.hfrom
+  hridx := by simpa [chordFlag] using h.hridx
+  htally := by simpa [chordFlag] using h.htally
+  ht0 := by simpa [chordFlag] using h.ht0
+  hrow := by simpa [chordFlag] using h.hrow
+
+/-- Turning the walk flag on leaves the frame and the seated homes. -/
+theorem chord_flag_at (b : Board) (t : Spec.Tier) (x y : List Nat) (moves peak : Nat)
+    (hAt : ChordAt b t x y moves peak) :
+    ChordAt (chordFlag b) t x y moves peak where
+  frame := frame_flag b t hAt.frame
+  szH := by simpa [chordFlag] using hAt.szH
+  szD := by simpa [chordFlag] using hAt.szD
+  bench := by simpa [chordFlag] using hAt.bench
+  marker := by simpa [chordFlag] using hAt.marker
+  tier := by simpa [chordFlag] using hAt.tier
+  tierN := by simpa [chordFlag] using hAt.tierN
+  hmoves := by simpa [chordFlag] using hAt.hmoves
+  hpeak := by simpa [chordFlag] using hAt.hpeak
+  held0 := by simpa [chordFlag] using hAt.held0
+  held1 := by simpa [chordFlag] using hAt.held1
+  held2 := by simpa [chordFlag] using hAt.held2
+  held5 := by simpa [chordFlag] using hAt.held5
+  held6 := by simpa [chordFlag] using hAt.held6
+  held3 := by simpa [chordFlag] using hAt.held3
+  home3 := by simpa [chordFlag] using hAt.home3
+  held4 := by simpa [chordFlag] using hAt.held4
+  home4 := by simpa [chordFlag] using hAt.home4
+
+/-- Empty cells, then one nonzero cell, then a nonempty tail. The loop from
+    the flagged board is the loop at the copied board. The length is the
+    list's, not `t.cells`. -/
+theorem chord_reach (bf b2 : Board) (zs rest : List Nat) (c : Nat)
+    (hz : ∀ z ∈ zs, z = 0) (hc : c = 1 ∨ c = 2)
+    (hcells : 0 < (zs ++ (c :: rest)).length)
+    (hfit : FitsLen (zs ++ (c :: rest)).length)
+    (hrest : 0 < rest.length)
+    (hml : Ecbs.marker_lift bf = .ok bf)
+    (hcopy :
+      (do
+          let board ← Ecbs.copy_band bf Ecbs.across Ecbs.base_across false
+          Ecbs.copy_band board Ecbs.up Ecbs.base_up
+            (SudoRt.SEq.beq (Int.ofNat c) (2 : Int))) = .ok b2) :
+    let cells := zs ++ (c :: rest)
+    let k := zs.length + 1
+    let toN := cells.length - 1
+    SudoRt.runLoopOn (Int.ofNat 0, (bf, false))
+        (fuelRange (Int.ofNat 0) (Int.ofNat toN))
+        (chordStep (embed cells) (Int.ofNat toN)) chordAfter (fun r => pure r) =
+      SudoRt.runLoopOn (Int.ofNat k, (b2, true))
+        (fuelRange (Int.ofNat k) (Int.ofNat toN))
+        (chordStep (embed cells) (Int.ofNat toN)) chordAfter (fun r => pure r) := by
+  intro cells k toN
+  have hto : toN + 1 = cells.length := by
+    have hpos : 0 < cells.length := hcells
+    omega
+  have hk : k ≤ toN := by
+    have hlen : cells.length = zs.length + (rest.length + 1) := by
+      simp [cells, List.length_append]
+    omega
+  have hlenC : cells.length = toN + 1 := hto.symm
+  let Inv : Nat → Board × Bool → Prop := fun i st =>
+    if i ≤ zs.length then st = (bf, false) else st = (b2, true)
+  have h0 : Inv 0 (bf, false) := by simp [Inv]
+  have hstep : ∀ i s, 0 ≤ i → i < k → Inv i s →
+      ∃ s', Inv (i + 1) s' ∧
+        chordStep (embed cells) (Int.ofNat toN) (Int.ofNat i, s) =
+          .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), s')) := by
+    intro i st _hi hlt hI
+    have hiTo : i ≤ toN := by omega
+    have hfiti : FitsLen (i + 1) := by
+      apply FitsLen.of_le hfit
+      have hto' : toN + 1 = (zs ++ (c :: rest)).length := by simpa [cells] using hto
+      omega
+    have hne : i ≠ toN := by omega
+    by_cases hzero : i < zs.length
+    · have hI0 : st = (bf, false) := by
+        have hle : i ≤ zs.length := by omega
+        simpa [Inv, hle] using hI
+      have hcell : cells[i]'(by rw [hlenC]; omega) = 0 := by
+        have hiL : i < zs.length := hzero
+        have hlenI : i < (zs ++ (c :: rest)).length := by
+          simp [List.length_append]
+          omega
+        have hget := List.getElem_append_left (bs := c :: rest) hiL (h' := hlenI)
+        have hz0 : zs[i]'hiL = 0 := hz _ (List.getElem_mem _)
+        simpa [cells] using hget.trans hz0
+      have hst := chordStep_zero cells i toN bf bf hiTo hlenC hcell hml hfiti
+      refine ⟨(bf, false), ?_, ?_⟩
+      · have hle : i + 1 ≤ zs.length := by omega
+        simp [Inv, hle]
+      · rw [hI0, hst, if_neg hne]
+    · have hI0 : st = (bf, false) := by
+        have hle : i ≤ zs.length := by omega
+        simpa [Inv, hle] using hI
+      have hcell : cells[i]'(by rw [hlenC]; omega) = c := by
+        have hiR : zs.length ≤ i := by omega
+        have hlenI : i < (zs ++ (c :: rest)).length := by
+          simp [List.length_append]
+          omega
+        have hget := List.getElem_append_right (bs := c :: rest) hiR (h₂ := hlenI)
+        have h0i : i - zs.length = 0 := by omega
+        have hhead : (c :: rest)[i - zs.length]'(by
+            have hlenR : 0 < (c :: rest).length := by simp
+            omega) = c := by simp [h0i]
+        simpa [cells] using hget.trans hhead
+      have hc0 : c ≠ 0 := by rcases hc with rfl | rfl <;> decide
+      have hc2 : c ≤ 2 := by rcases hc with rfl | rfl <;> decide
+      have hst := chordStep_fresh cells i toN c bf bf b2 hiTo hlenC hcell hc0 hc2
+        hml hcopy hfiti
+      refine ⟨(b2, true), ?_, ?_⟩
+      · have hgt : ¬ i + 1 ≤ zs.length := by omega
+        simp [Inv, hgt]
+      · rw [hI0, hst, if_neg hne]
+  obtain ⟨sK, hIK, heq⟩ := asc_resume
+    (chordStep (embed cells) (Int.ofNat toN)) chordAfter (fun r => pure r)
+    Inv 0 k toN (bf, false) (Nat.zero_le _) hk h0 hstep
+  have hgt : ¬ k ≤ zs.length := by simp [k]
+  have hsK : sK = (b2, true) := by simpa [Inv, hgt] using hIK
+  simpa [hsK] using heq
+
+private theorem chord_from_zero (b : Board) (cells : List Nat)
+    (hpos : 0 < cells.length) (hfit : FitsLen cells.length) :
+    Ecbs.walk_chord b (embed cells) =
+      SudoRt.runLoopOn (Int.ofNat 0, (chordFlag b, false))
+        (fuelRange (Int.ofNat 0) (Int.ofNat (cells.length - 1)))
+        (chordStep (embed cells) (Int.ofNat (cells.length - 1)))
+        chordAfter (fun r => pure r) := by
+  rw [walk_chord_eq]
+  unfold walkChordGo
+  rw [listLen_embed, subI_ofNat_one cells.length hpos hfit, ok_bind]
+  dsimp only
+  rw [except_bind_pure]
+  rw [show (0 : Int) = Int.ofNat 0 from rfl]
+
+/-- A white opening on a `ChordAt` board, with cells still to run. The emitted
+    walk from the start is the loop at the copied point. -/
+theorem walk_chord_at_reach_white (b : Board) (t : Spec.Tier) (x y : List Nat)
+    (moves peak : Nat) (zs rest : List Nat) (acc : List Nat × List Nat)
+    (hAt : ChordAt b t x y moves peak)
+    (hx : x.length = t.n) (hy : y.length = t.n)
+    (hz : ∀ z ∈ zs, z = 0)
+    (hf : FitsLen t.n)
+    (hfitx : FitsLen (moves + pegCount x))
+    (hfity : FitsLen (moves + pegCount x + pegCount y))
+    (hfit : FitsLen (zs ++ (1 :: rest)).length)
+    (hrest : 0 < rest.length) :
+    ∃ b2,
+      (∀ h : 0 < b2.sudo_5Board_4home.size, b2.sudo_5Board_4home[0] = embed x) ∧
+      (∀ h : 1 < b2.sudo_5Board_4home.size, b2.sudo_5Board_4home[1] = embed y) ∧
+      b2.sudo_5Board_6marker = -1 ∧
+      let cells := zs ++ (1 :: rest)
+      let k := zs.length + 1
+      let toN := cells.length - 1
+      Ecbs.walk_chord b (embed cells) =
+        SudoRt.runLoopOn (Int.ofNat k, (b2, true))
+          (fuelRange (Int.ofNat k) (Int.ofNat toN))
+          (chordStep (embed cells) (Int.ofNat toN)) chordAfter (fun r => pure r) ∧
+      walkRun t.n t.k t.benchlen (x, y) false acc (zs ++ [1]) = some (true, (x, y)) := by
+  let bf := chordFlag b
+  have hAtF := chord_flag_at b t x y moves peak hAt
+  have hlift := marker_lift_down bf hAtF.marker
+  obtain ⟨b2, _mv2, _pk2, hdo, hx0, hy1, _hmv, _hpk, _hsum, hmark, _hst, _hho, _hctrl, _hsl,
+      _hstep⟩ :=
+    chord_fresh_white_down bf x y t.n moves peak hAtF.szH hAtF.szD hx hy hf hfitx hfity
+      hAtF.tierN hAtF.hmoves hAtF.hpeak hAtF.marker hAtF.held0 hAtF.held1
+      hAtF.held3 hAtF.home3 hAtF.held4 hAtF.home4
+  have hcopy : (do
+      let board ← Ecbs.copy_band bf Ecbs.across Ecbs.base_across false
+      Ecbs.copy_band board Ecbs.up Ecbs.base_up false) = .ok b2 := by
+    rw [hlift, ok_bind] at hdo
+    exact hdo
+  have hbeq : SudoRt.SEq.beq (Int.ofNat 1) (2 : Int) = false := by decide
+  have hreach := chord_reach bf b2 zs rest 1 hz (Or.inl rfl)
+      (by simp [List.length_append]; omega) hfit hrest hlift (by simpa [hbeq] using hcopy)
+  have hpos : 0 < (zs ++ (1 :: rest)).length := by
+    simp [List.length_append]; omega
+  have hloop := chord_from_zero b (zs ++ (1 :: rest)) hpos hfit
+  refine ⟨b2, hx0, hy1, hmark, ?_, ?_⟩
+  · simpa [bf] using hloop.trans hreach
+  · have hwhite := walk_chord_at_white b t x y moves peak zs acc hAt hx hy hz hf hfitx hfity
+      (FitsLen.of_le hfit (by simp [List.length_append]))
+    obtain ⟨_, _, _, _, hrun⟩ := hwhite
+    exact hrun
+
 end EcbsLink2.Link2

@@ -14,21 +14,21 @@ open MegaDreifach.Link2
 open EcbsLink2.Spec
 
 /-- Cells in the cofactor walk `[1, 2, 1, 2]`. -/
-def cofactorCells : Nat := 4
+def cofactorSpan : Nat := 4
 
 private theorem fits_ble (n : Nat) (h : n ≤ 9223372036854775807) : FitsLen n := by
   simpa [FitsLen, i64MaxNat] using h
 
 private theorem demo_cofactor_num :
-    perHole demo.n demo.benchlen * demo.n + walkCharge demo * cofactorCells
+    perHole demo.n demo.benchlen * demo.n + walkCharge demo * cofactorSpan
       ≤ 9223372036854775807 ∧
-    perSlide demo.n * demo.n + cellSlideCharge demo * cofactorCells
+    perSlide demo.n * demo.n + cellSlideCharge demo * cofactorSpan
       ≤ 9223372036854775807 ∧
-    tierR demo + perCtrl demo.n * demo.n + cellCtrlCharge demo * cofactorCells
+    tierR demo + perCtrl demo.n * demo.n + cellCtrlCharge demo * cofactorSpan
       ≤ 9223372036854775807 ∧
-    perOp demo.n * demo.n + cellOpsCharge demo * cofactorCells
+    perOp demo.n * demo.n + cellOpsCharge demo * cofactorSpan
       ≤ 9223372036854775807 := by
-  unfold cofactorCells perHole plantRoom perSlide perCtrl perOp
+  unfold cofactorSpan perHole plantRoom perSlide perCtrl perOp
     walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
   simp only [tierR, demo_rungs, rowRoom, tallyOrigin]
@@ -39,23 +39,23 @@ private theorem demo_cofactor_num :
 
 /-- Demo's search budget plus four cofactor cells fits an i64. -/
 theorem demo_cofactor_room :
-    FitsLen (perHole demo.n demo.benchlen * demo.n + walkCharge demo * cofactorCells) ∧
-    FitsLen (perSlide demo.n * demo.n + cellSlideCharge demo * cofactorCells) ∧
-    FitsLen (tierR demo + perCtrl demo.n * demo.n + cellCtrlCharge demo * cofactorCells) ∧
-    FitsLen (perOp demo.n * demo.n + cellOpsCharge demo * cofactorCells) := by
+    FitsLen (perHole demo.n demo.benchlen * demo.n + walkCharge demo * cofactorSpan) ∧
+    FitsLen (perSlide demo.n * demo.n + cellSlideCharge demo * cofactorSpan) ∧
+    FitsLen (tierR demo + perCtrl demo.n * demo.n + cellCtrlCharge demo * cofactorSpan) ∧
+    FitsLen (perOp demo.n * demo.n + cellOpsCharge demo * cofactorSpan) := by
   exact ⟨fits_ble _ demo_cofactor_num.1, fits_ble _ demo_cofactor_num.2.1,
     fits_ble _ demo_cofactor_num.2.2.1, fits_ble _ demo_cofactor_num.2.2.2⟩
 
 private theorem toy_cofactor_num :
-    perHole toy.n toy.benchlen * toy.n + walkCharge toy * cofactorCells
+    perHole toy.n toy.benchlen * toy.n + walkCharge toy * cofactorSpan
       ≤ 9223372036854775807 ∧
-    perSlide toy.n * toy.n + cellSlideCharge toy * cofactorCells
+    perSlide toy.n * toy.n + cellSlideCharge toy * cofactorSpan
       ≤ 9223372036854775807 ∧
-    tierR toy + perCtrl toy.n * toy.n + cellCtrlCharge toy * cofactorCells
+    tierR toy + perCtrl toy.n * toy.n + cellCtrlCharge toy * cofactorSpan
       ≤ 9223372036854775807 ∧
-    perOp toy.n * toy.n + cellOpsCharge toy * cofactorCells
+    perOp toy.n * toy.n + cellOpsCharge toy * cofactorSpan
       ≤ 9223372036854775807 := by
-  unfold cofactorCells perHole plantRoom perSlide perCtrl perOp
+  unfold cofactorSpan perHole plantRoom perSlide perCtrl perOp
     walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
   simp only [tierR, toy_rungs, rowRoom, tallyOrigin]
@@ -66,23 +66,23 @@ private theorem toy_cofactor_num :
 
 /-- Toy's search budget plus four cofactor cells fits an i64. -/
 theorem toy_cofactor_room :
-    FitsLen (perHole toy.n toy.benchlen * toy.n + walkCharge toy * cofactorCells) ∧
-    FitsLen (perSlide toy.n * toy.n + cellSlideCharge toy * cofactorCells) ∧
-    FitsLen (tierR toy + perCtrl toy.n * toy.n + cellCtrlCharge toy * cofactorCells) ∧
-    FitsLen (perOp toy.n * toy.n + cellOpsCharge toy * cofactorCells) := by
+    FitsLen (perHole toy.n toy.benchlen * toy.n + walkCharge toy * cofactorSpan) ∧
+    FitsLen (perSlide toy.n * toy.n + cellSlideCharge toy * cofactorSpan) ∧
+    FitsLen (tierR toy + perCtrl toy.n * toy.n + cellCtrlCharge toy * cofactorSpan) ∧
+    FitsLen (perOp toy.n * toy.n + cellOpsCharge toy * cofactorSpan) := by
   exact ⟨fits_ble _ toy_cofactor_num.1, fits_ble _ toy_cofactor_num.2.1,
     fits_ble _ toy_cofactor_num.2.2.1, fits_ble _ toy_cofactor_num.2.2.2⟩
 
 private theorem hobby_cofactor_num :
-    perHole hobby.n hobby.benchlen * hobby.n + walkCharge hobby * cofactorCells
+    perHole hobby.n hobby.benchlen * hobby.n + walkCharge hobby * cofactorSpan
       ≤ 9223372036854775807 ∧
-    perSlide hobby.n * hobby.n + cellSlideCharge hobby * cofactorCells
+    perSlide hobby.n * hobby.n + cellSlideCharge hobby * cofactorSpan
       ≤ 9223372036854775807 ∧
-    tierR hobby + perCtrl hobby.n * hobby.n + cellCtrlCharge hobby * cofactorCells
+    tierR hobby + perCtrl hobby.n * hobby.n + cellCtrlCharge hobby * cofactorSpan
       ≤ 9223372036854775807 ∧
-    perOp hobby.n * hobby.n + cellOpsCharge hobby * cofactorCells
+    perOp hobby.n * hobby.n + cellOpsCharge hobby * cofactorSpan
       ≤ 9223372036854775807 := by
-  unfold cofactorCells perHole plantRoom perSlide perCtrl perOp
+  unfold cofactorSpan perHole plantRoom perSlide perCtrl perOp
     walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
   simp only [tierR, hobby_rungs, rowRoom, tallyOrigin]
@@ -93,23 +93,23 @@ private theorem hobby_cofactor_num :
 
 /-- Hobby's search budget plus four cofactor cells fits an i64. -/
 theorem hobby_cofactor_room :
-    FitsLen (perHole hobby.n hobby.benchlen * hobby.n + walkCharge hobby * cofactorCells) ∧
-    FitsLen (perSlide hobby.n * hobby.n + cellSlideCharge hobby * cofactorCells) ∧
-    FitsLen (tierR hobby + perCtrl hobby.n * hobby.n + cellCtrlCharge hobby * cofactorCells) ∧
-    FitsLen (perOp hobby.n * hobby.n + cellOpsCharge hobby * cofactorCells) := by
+    FitsLen (perHole hobby.n hobby.benchlen * hobby.n + walkCharge hobby * cofactorSpan) ∧
+    FitsLen (perSlide hobby.n * hobby.n + cellSlideCharge hobby * cofactorSpan) ∧
+    FitsLen (tierR hobby + perCtrl hobby.n * hobby.n + cellCtrlCharge hobby * cofactorSpan) ∧
+    FitsLen (perOp hobby.n * hobby.n + cellOpsCharge hobby * cofactorSpan) := by
   exact ⟨fits_ble _ hobby_cofactor_num.1, fits_ble _ hobby_cofactor_num.2.1,
     fits_ble _ hobby_cofactor_num.2.2.1, fits_ble _ hobby_cofactor_num.2.2.2⟩
 
 private theorem serious_cofactor_num :
-    perHole serious.n serious.benchlen * serious.n + walkCharge serious * cofactorCells
+    perHole serious.n serious.benchlen * serious.n + walkCharge serious * cofactorSpan
       ≤ 9223372036854775807 ∧
-    perSlide serious.n * serious.n + cellSlideCharge serious * cofactorCells
+    perSlide serious.n * serious.n + cellSlideCharge serious * cofactorSpan
       ≤ 9223372036854775807 ∧
-    tierR serious + perCtrl serious.n * serious.n + cellCtrlCharge serious * cofactorCells
+    tierR serious + perCtrl serious.n * serious.n + cellCtrlCharge serious * cofactorSpan
       ≤ 9223372036854775807 ∧
-    perOp serious.n * serious.n + cellOpsCharge serious * cofactorCells
+    perOp serious.n * serious.n + cellOpsCharge serious * cofactorSpan
       ≤ 9223372036854775807 := by
-  unfold cofactorCells perHole plantRoom perSlide perCtrl perOp
+  unfold cofactorSpan perHole plantRoom perSlide perCtrl perOp
     walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
   simp only [tierR, serious_rungs, rowRoom, tallyOrigin]
@@ -121,11 +121,11 @@ private theorem serious_cofactor_num :
 /-- Serious's search budget plus four cofactor cells fits an i64. -/
 theorem serious_cofactor_room :
     FitsLen (perHole serious.n serious.benchlen * serious.n +
-        walkCharge serious * cofactorCells) ∧
-    FitsLen (perSlide serious.n * serious.n + cellSlideCharge serious * cofactorCells) ∧
+        walkCharge serious * cofactorSpan) ∧
+    FitsLen (perSlide serious.n * serious.n + cellSlideCharge serious * cofactorSpan) ∧
     FitsLen (tierR serious + perCtrl serious.n * serious.n +
-        cellCtrlCharge serious * cofactorCells) ∧
-    FitsLen (perOp serious.n * serious.n + cellOpsCharge serious * cofactorCells) := by
+        cellCtrlCharge serious * cofactorSpan) ∧
+    FitsLen (perOp serious.n * serious.n + cellOpsCharge serious * cofactorSpan) := by
   exact ⟨fits_ble _ serious_cofactor_num.1, fits_ble _ serious_cofactor_num.2.1,
     fits_ble _ serious_cofactor_num.2.2.1, fits_ble _ serious_cofactor_num.2.2.2⟩
 

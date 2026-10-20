@@ -1,5 +1,5 @@
 /-
-  The board a chord walk starts from. `FrameAt` is the painted ladder, the
+  The board a chord walk starts from. `PaintFrame` is the painted ladder, the
   tally, and the park fields a `RunFrame` reads. `ChordAt` adds the seated
   homes. The cell list is arbitrary: `FitsLen` of its length replaces
   `cells.length = t.cells`, and `ChordAt` replaces a fresh `baseBoard`.
@@ -18,7 +18,7 @@ open EcbsLink2.Spec
 
 /-- The control frame `RunFrame` keeps: the painted ladder, the tally, and
     the park fields. -/
-structure FrameAt (b : Board) (t : Spec.Tier) : Prop where
+structure PaintFrame (b : Board) (t : Spec.Tier) : Prop where
   hlad : b.sudo_5Board_6ladder = embed (tierClimb t)
   hl0 : b.sudo_5Board_7ladder0 = Int.ofNat (t.script + 2)
   hnr : b.sudo_5Board_6nrungs = Int.ofNat (tierR t)
@@ -30,10 +30,10 @@ structure FrameAt (b : Board) (t : Spec.Tier) : Prop where
   hrow : b.sudo_5Board_3row = embed (paintedRow t)
 
 /-- Homes 3 and 4 hold the base point, the accumulator homes are empty, and
-    the control frame is `FrameAt`. This is the board before the first live
+    the control frame is `PaintFrame`. This is the board before the first live
     cell, so home 0 is not yet the accumulator of a `RunFrame`. -/
 structure ChordAt (b : Board) (t : Spec.Tier) (x y : List Nat) (moves peak : Nat) : Prop where
-  frame : FrameAt b t
+  frame : PaintFrame b t
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   bench : b.sudo_5Board_8bench_on = false
@@ -52,7 +52,7 @@ structure ChordAt (b : Board) (t : Spec.Tier) (x y : List Nat) (moves peak : Nat
   held4 : b.sudo_5Board_4held[4]'(by rw [szD]; decide) = true
   home4 : b.sudo_5Board_4home[4]'(by rw [szH]; decide) = embed y
 
-theorem built_frame (t : Spec.Tier) : FrameAt (builtBoard t) t where
+theorem built_frame (t : Spec.Tier) : PaintFrame (builtBoard t) t where
   hlad := built_ladder_eq t
   hl0 := built_l0_eq t
   hnr := built_nr_eq t
@@ -63,10 +63,10 @@ theorem built_frame (t : Spec.Tier) : FrameAt (builtBoard t) t where
   ht0 := built_t0_eq t
   hrow := built_row_eq t
 
-/-- A step that keeps `FrameScalar`, and the painted row, keeps `FrameAt`. -/
-theorem frame_scalar (b0 b : Board) (t : Spec.Tier) (h : FrameAt b0 t)
+/-- A step that keeps `FrameScalar`, and the painted row, keeps `PaintFrame`. -/
+theorem frame_scalar (b0 b : Board) (t : Spec.Tier) (h : PaintFrame b0 t)
     (s : FrameScalar b0 b) (hrow : b.sudo_5Board_3row = b0.sudo_5Board_3row) :
-    FrameAt b t where
+    PaintFrame b t where
   hlad := s.ladder.trans h.hlad
   hl0 := s.l0.trans h.hl0
   hnr := s.nr.trans h.hnr
@@ -79,8 +79,8 @@ theorem frame_scalar (b0 b : Board) (t : Spec.Tier) (h : FrameAt b0 t)
 
 theorem frame_place (b : Board) (t : Spec.Tier) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
-    (xs : List Nat) (moves peak : Nat) (h : FrameAt b t) :
-    FrameAt (placeBoard b home hH hD xs moves peak) t where
+    (xs : List Nat) (moves peak : Nat) (h : PaintFrame b t) :
+    PaintFrame (placeBoard b home hH hD xs moves peak) t where
   hlad := (place_ladder b home hH hD xs moves peak).trans h.hlad
   hl0 := (place_l0 b home hH hD xs moves peak).trans h.hl0
   hnr := (place_nr b home hH hD xs moves peak).trans h.hnr
@@ -91,7 +91,7 @@ theorem frame_place (b : Board) (t : Spec.Tier) (home : Nat)
   ht0 := (place_t0 b home hH hD xs moves peak).trans h.ht0
   hrow := (place_row b home hH hD xs moves peak).trans h.hrow
 
-theorem base_frame (t : Spec.Tier) (x y : List Nat) : FrameAt (baseBoard t x y) t where
+theorem base_frame (t : Spec.Tier) (x y : List Nat) : PaintFrame (baseBoard t x y) t where
   hlad := by simpa [baseBoard, putAcross] using built_ladder_eq t
   hl0 := by simpa [baseBoard, putAcross] using built_l0_eq t
   hnr := by simpa [baseBoard, putAcross] using built_nr_eq t
@@ -190,8 +190,8 @@ theorem walk_chord_at_red (b : Board) (t : Spec.Tier) (x y : List Nat)
   · simpa using hx0
   · simpa using hy1
 
-theorem frame_flag (b : Board) (t : Spec.Tier) (h : FrameAt b t) :
-    FrameAt (chordFlag b) t where
+theorem frame_flag (b : Board) (t : Spec.Tier) (h : PaintFrame b t) :
+    PaintFrame (chordFlag b) t where
   hlad := by simpa [chordFlag] using h.hlad
   hl0 := by simpa [chordFlag] using h.hl0
   hnr := by simpa [chordFlag] using h.hnr

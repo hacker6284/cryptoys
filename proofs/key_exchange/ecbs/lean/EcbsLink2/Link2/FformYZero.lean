@@ -111,7 +111,7 @@ private theorem settle_read_held (b : Ecbs.Board) (home i : Nat)
 
 /-- Settling a bench into `home` writes that home. Homes 3 and 4 stay when
     `home` is 1 or 2, and so do their held flags. The tier stays. -/
-theorem settle_frame (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY ys : List Nat)
+theorem fform_settle_frame (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY ys : List Nat)
     (fr : FrameAt b t baseX baseY) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (n moves slides pk : Nat) (h3 : home ≠ 3) (h4 : home ≠ 4) :
@@ -388,7 +388,7 @@ noncomputable def ybench_seen
     YSeen t b baseX baseY xP yP zP ys moves slides pk peakS hole cOps ctrl mx := by
   have h1H : 1 < b.sudo_5Board_4home.size := by rw [fr.szH]; decide
   have h1D : 1 < b.sudo_5Board_4held.size := by rw [fr.szD]; decide
-  have frS := settle_frame t b baseX baseY ys fr 1 h1H h1D t.n moves slides pk
+  have frS := fform_settle_frame t b baseX baseY ys fr 1 h1H h1D t.n moves slides pk
     (by decide) (by decide)
   let bS := settleBoard b 1 h1H h1D ys t.n moves slides pk
   let movesS := moves + 2 * pegCount (ys.take t.n)

@@ -354,7 +354,7 @@ theorem v2_slide_room (slides n k bench : Nat) (x x2 y z lane : List Nat)
 
 /-- A bench settle of `2 · n` in front of the comb, then twenty-four step budgets.
     Toy, Hobby, and Serious keep that inside one cell of move charge. Demo does not. -/
-theorem toy_seat_move :
+theorem toy_wide_move :
     2 * toy.n + cubeCharge toy.n toy.benchlen + 2 * toy.n +
       3 * (toy.benchlen - toy.n) + 24 * stepBudget toy.n toy.benchlen ≤
       walkCharge toy + (6 * toy.benchlen + 2 * toy.n) := by
@@ -365,7 +365,7 @@ theorem toy_seat_move :
   rw [hL, hR, toy_walk]
   exact ble_le _ _ rfl
 
-theorem hobby_seat_move :
+theorem hobby_wide_move :
     2 * hobby.n + cubeCharge hobby.n hobby.benchlen + 2 * hobby.n +
       3 * (hobby.benchlen - hobby.n) + 24 * stepBudget hobby.n hobby.benchlen ≤
       walkCharge hobby + (6 * hobby.benchlen + 2 * hobby.n) := by
@@ -376,7 +376,7 @@ theorem hobby_seat_move :
   rw [hL, hR, hobby_walk]
   exact ble_le _ _ rfl
 
-theorem serious_seat_move :
+theorem serious_wide_move :
     2 * serious.n + cubeCharge serious.n serious.benchlen + 2 * serious.n +
       3 * (serious.benchlen - serious.n) +
       24 * stepBudget serious.n serious.benchlen ≤

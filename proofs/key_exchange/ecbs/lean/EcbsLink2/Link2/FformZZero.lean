@@ -97,7 +97,7 @@ noncomputable def zbench_seen
     ZSeen t b baseX baseY xP yP zP ys moves slides pk peakS hole cOps ctrl mx := by
   have h2H : 2 < b.sudo_5Board_4home.size := by rw [fr.szH]; decide
   have h2D : 2 < b.sudo_5Board_4held.size := by rw [fr.szD]; decide
-  have frS := settle_frame t b baseX baseY ys fr 2 h2H h2D t.n moves slides pk
+  have frS := fform_settle_frame t b baseX baseY ys fr 2 h2H h2D t.n moves slides pk
     (by decide) (by decide)
   let bS := settleBoard b 2 h2H h2D ys t.n moves slides pk
   let movesS := moves + 2 * pegCount (ys.take t.n)

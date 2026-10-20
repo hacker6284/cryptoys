@@ -13,10 +13,10 @@ open MegaDreifach.Link2
 open Ecbs
 
 theorem frame_clear (b : Board) (t : Spec.Tier) (home : Nat) (xs : List Nat) (moves : Nat)
-    (h : FrameAt b t)
+    (h : PaintFrame b t)
     (hH : home < b.sudo_5Board_4home.size)
     (hD : home < b.sudo_5Board_4held.size) :
-    FrameAt
+    PaintFrame
       { b with
         sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ #[]
         sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ false
@@ -33,13 +33,13 @@ theorem frame_clear (b : Board) (t : Spec.Tier) (home : Nat) (xs : List Nat) (mo
   hrow := by simpa using h.hrow
 
 private theorem frame_core (b : Board) (t : Spec.Tier) (dst src : Nat)
-    (h : FrameAt b t)
+    (h : PaintFrame b t)
     (hSrcH : src < b.sudo_5Board_4home.size)
     (hSrcD : src < b.sudo_5Board_4held.size)
     (hDstH : dst < b.sudo_5Board_4home.size)
     (hDstD : dst < b.sudo_5Board_4held.size)
     (xs : List Nat) (mv sl : Nat) :
-    FrameAt (moveBandCore b dst src hSrcH hSrcD hDstH hDstD xs mv sl) t := by
+    PaintFrame (moveBandCore b dst src hSrcH hSrcD hDstH hDstD xs mv sl) t := by
   unfold moveBandCore
   dsimp
   exact
@@ -54,13 +54,13 @@ private theorem frame_core (b : Board) (t : Spec.Tier) (dst src : Nat)
       hrow := by simpa using h.hrow }
 
 theorem frame_band (b : Board) (t : Spec.Tier) (dst src : Nat)
-    (h : FrameAt b t)
+    (h : PaintFrame b t)
     (hSrcH : src < b.sudo_5Board_4home.size)
     (hSrcD : src < b.sudo_5Board_4held.size)
     (hDstH : dst < b.sudo_5Board_4home.size)
     (hDstD : dst < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves slides peak : Nat) :
-    FrameAt (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak) t := by
+    PaintFrame (moveBandBoard b dst src hSrcH hSrcD hDstH hDstD xs moves slides peak) t := by
   unfold moveBandBoard
   dsimp
   have hcore := frame_core b t dst src h hSrcH hSrcD hDstH hDstD xs

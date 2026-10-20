@@ -76,7 +76,8 @@ def SuffixInv (t : Spec.Tier) (baseX baseY : List Nat) (live0 : Bool)
         st.1.sudo_5Board_6marker = Int.ofNat m ∧
         st.1.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
         FitsLen (ctrl + 1) ∧
-        LastLay st.1 baseX baseY)
+        LastLay st.1 baseX baseY (suffixMoveCap t mv0 toN)
+          (suffixSlideCap t sl0 toN))
 
 private theorem take_succ_cell (cells : List Nat) (i : Nat) (hi : i < cells.length) :
     cells.take (i + 1) = cells.take i ++ [cells[i]] := by
@@ -144,7 +145,8 @@ private theorem suffix_span_step (t : Spec.Tier) (b : Ecbs.Board)
           b'.sudo_5Board_6marker = Int.ofNat m ∧
           b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
           FitsLen (ctrl + 1) ∧
-          LastLay b' baseX baseY) := by
+          LastLay b' baseX baseY (suffixMoveCap t mv0 toN)
+            (suffixSlideCap t sl0 toN)) := by
   obtain ⟨fr, hmk, hY, hA, hf4, hf1, hst, hho, hm, hs, hc0, ho, hyB, htriB, hyA, htriA⟩ := hAt
   have hleft : 0 < toN - i + 1 := Nat.succ_pos (toN - i)
   have hsum : i + (toN - i + 1) = toN + 1 := by

@@ -276,12 +276,12 @@ private theorem cont_from (k toN : Nat) (b b' : Board) (cells : List Nat)
   rw [hfuel, runLoopOn_succ, hstep]
 
 private theorem lay_after (b : Board) (baseX baseY : List Nat) (ctrl : Nat)
-    (lay : LastLay b baseX baseY) :
+    {capM capS : Nat} (lay : LastLay b baseX baseY capM capS) :
     LastLay { b with
         sudo_5Board_6marker := -1
         sudo_5Board_4cost := { b.sudo_5Board_4cost with
           sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) }
-        sudo_5Board_9marker_on := false } baseX baseY where
+        sudo_5Board_9marker_on := false } baseX baseY capM capS where
   bench := lay.bench
   szH := lay.szH
   szD := lay.szD
@@ -295,27 +295,87 @@ private theorem lay_after (b : Board) (baseX baseY : List Nat) (ctrl : Nat)
   slides := lay.slides
   peak := lay.peak
 
-/-- `LastLay` is what `point_back` reads. The clear and the two moves still
-    need their rooms. -/
-theorem point_back_of_lay (b : Board) (px py baseX baseY : List Nat)
-    (lay : LastLay b baseX baseY)
+private theorem span_succ : (cofactorSpan - 1) + 1 = cofactorSpan :=
+  Nat.sub_add_cancel (by unfold cofactorSpan; decide)
+
+/-- The suffix budget, once `mv0` is the search-and-seat counter, sits inside
+    `cofactor_suffix_room`. One `walkCharge` covers the cubes. -/
+private theorem suffix_move_in (t : Spec.Tier) (mv0 : Nat)
+    (hmv0 : mv0 ≤ perHole t.n t.benchlen * t.n + 5 * t.n)
+    (hov : (6 * t.benchlen + 2 * t.n) * cofactorSpan ≤ walkCharge t) :
+    suffixMoveCap t mv0 (cofactorSpan - 1) ≤
+      perHole t.n t.benchlen * t.n + 5 * t.n +
+        walkCharge t * (cofactorSpan + 1) := by
+  unfold suffixMoveCap
+  rw [span_succ]
+  generalize wEq : walkCharge t = w at hov ⊢
+  generalize oEq : 6 * t.benchlen + 2 * t.n = o at hov ⊢
+  clear wEq oEq
+  have hover : cofactorSpan * o ≤ w := by
+    rw [Nat.mul_comm]
+    exact hov
+  have hmul : cofactorSpan * (w + o) ≤ w * (cofactorSpan + 1) := by
+    rw [Nat.mul_add]
+    have hleft : cofactorSpan * w + cofactorSpan * o ≤ cofactorSpan * w + w :=
+      Nat.add_le_add_left hover _
+    have hright : cofactorSpan * w + w = w * (cofactorSpan + 1) := by
+      rw [← Nat.succ_mul, Nat.mul_comm]
+    exact Nat.le_trans hleft (Nat.le_of_eq hright)
+  exact Nat.add_le_add hmv0 hmul
+
+private theorem suffix_slide_in (t : Spec.Tier) (sl0 : Nat)
+    (hsl0 : sl0 ≤ perSlide t.n * t.n + 2 * t.n)
+    (hov : 4 * t.n * cofactorSpan ≤ cellSlideCharge t) :
+    suffixSlideCap t sl0 (cofactorSpan - 1) ≤
+      perSlide t.n * t.n + 2 * t.n +
+        cellSlideCharge t * (cofactorSpan + 1) := by
+  unfold suffixSlideCap
+  rw [span_succ]
+  generalize cEq : cellSlideCharge t = c at hov ⊢
+  generalize oEq : 4 * t.n = o at hov ⊢
+  clear cEq oEq
+  have hover : cofactorSpan * o ≤ c := by
+    rw [Nat.mul_comm]
+    exact hov
+  have hmul : cofactorSpan * (c + o) ≤ c * (cofactorSpan + 1) := by
+    rw [Nat.mul_add]
+    have hleft : cofactorSpan * c + cofactorSpan * o ≤ cofactorSpan * c + c :=
+      Nat.add_le_add_left hover _
+    have hright : cofactorSpan * c + c = c * (cofactorSpan + 1) := by
+      rw [← Nat.succ_mul, Nat.mul_comm]
+    exact Nat.le_trans hleft (Nat.le_of_eq hright)
+  exact Nat.add_le_add hsl0 hmul
+
+/-- Two clears and two moves, measured against `6 · n` and `4 · n`. -/
+private theorem back_move_le (mv a b c d n : Nat)
+    (ha : a ≤ n) (hb : b ≤ n) (hc : c ≤ n) (hd : d ≤ n) :
+    mv + a ≤ mv + 6 * n ∧
+    mv + a + b ≤ mv + 6 * n ∧
+    mv + a + b + 2 * c ≤ mv + 6 * n ∧
+    mv + a + b + 2 * c + 2 * d ≤ mv + 6 * n ∧
+    2 * c ≤ mv + 6 * n ∧
+    2 * d ≤ mv + 6 * n ∧
+    n ≤ mv + 6 * n := by
+  omega
+
+private theorem back_slide_le (sl c d n : Nat) (hc : c ≤ n) (hd : d ≤ n) :
+    sl + 2 * c ≤ sl + 4 * n ∧
+    sl + 2 * c + 2 * d ≤ sl + 4 * n := by
+  omega
+
+/-- `LastLay` carries the suffix budget. The four pegs of the move back are
+    `cofactor_back_room`, checked per tier by `Nat.le_of_ble_eq_true`. -/
+theorem point_back_of_lay (t : Spec.Tier) (b : Board) (px py baseX baseY : List Nat)
+    (mv0 sl0 : Nat)
+    (lay : LastLay b baseX baseY (suffixMoveCap t mv0 (cofactorSpan - 1))
+      (suffixSlideCap t sl0 (cofactorSpan - 1)))
     (h0a : b.sudo_5Board_4home[0]'(by rw [lay.szH]; decide) = embed px)
     (h1a : b.sudo_5Board_4home[1]'(by rw [lay.szH]; decide) = embed py)
-    (hfpx : FitsLen px.length) (hfpy : FitsLen py.length)
-    (hfbx : FitsLen baseX.length) (hfby : FitsLen baseY.length)
-    (hcx : ∀ (mv : Nat), b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) →
-      FitsLen (mv + pegCount baseX))
-    (hcy : ∀ (mv : Nat), b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) →
-      FitsLen (mv + pegCount baseX + pegCount baseY))
-    (h2px : FitsLen (2 * pegCount px)) (h2py : FitsLen (2 * pegCount py))
-    (hm1 : ∀ (mv : Nat), b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) →
-      FitsLen (mv + pegCount baseX + pegCount baseY + 2 * pegCount px))
-    (hs1 : ∀ (sl : Nat), b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) →
-      FitsLen (sl + 2 * pegCount px))
-    (hm2 : ∀ (mv : Nat), b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) →
-      FitsLen (mv + pegCount baseX + pegCount baseY + 2 * pegCount px + 2 * pegCount py))
-    (hs2 : ∀ (sl : Nat), b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) →
-      FitsLen (sl + 2 * pegCount px + 2 * pegCount py)) :
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
+    (hpx : px.length = t.n) (hpy : py.length = t.n)
+    (hbx : baseX.length = t.n) (hby : baseY.length = t.n)
+    (hmv0 : mv0 ≤ perHole t.n t.benchlen * t.n + 5 * t.n)
+    (hsl0 : sl0 ≤ perSlide t.n * t.n + 2 * t.n) :
     ∃ b',
       (do
           let b ← clear b base_across
@@ -326,8 +386,16 @@ theorem point_back_of_lay (b : Board) (px py baseX baseY : List Nat)
       (∀ h : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4] = embed py) ∧
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = (#[] : Array Int)) ∧
       (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = (#[] : Array Int)) := by
-  obtain ⟨mv, hmv⟩ := lay.moves
-  obtain ⟨sl, hsl⟩ := lay.slides
+  have hroom := cofactor_suffix_room t hship
+  have hback := cofactor_back_room t hship
+  let roomM := perHole t.n t.benchlen * t.n + 5 * t.n +
+    walkCharge t * (cofactorSpan + 1)
+  let roomS := perSlide t.n * t.n + 2 * t.n +
+    cellSlideCharge t * (cofactorSpan + 1)
+  have hcapM := suffix_move_in t mv0 hmv0 hroom.2.2.2.2.1
+  have hcapS := suffix_slide_in t sl0 hsl0 hroom.2.2.2.2.2.1
+  obtain ⟨mv, hmv, hleM⟩ := lay.moves
+  obtain ⟨sl, hsl, hleS⟩ := lay.slides
   obtain ⟨pk, hpk⟩ := lay.peak
   have hmvI : b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) := by
     simpa [ofNat_eq_natCast] using hmv
@@ -335,14 +403,39 @@ theorem point_back_of_lay (b : Board) (px py baseX baseY : List Nat)
     simpa [ofNat_eq_natCast] using hsl
   have hpkI : b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) := by
     simpa [ofNat_eq_natCast] using hpk
+  have hpegX : pegCount baseX ≤ t.n := by rw [← hbx]; exact pegCount_le baseX
+  have hpegY : pegCount baseY ≤ t.n := by rw [← hby]; exact pegCount_le baseY
+  have hpegPx : pegCount px ≤ t.n := by rw [← hpx]; exact pegCount_le px
+  have hpegPy : pegCount py ≤ t.n := by rw [← hpy]; exact pegCount_le py
+  have hmv6 : mv + 6 * t.n ≤ roomM + 6 * t.n :=
+    Nat.add_le_add_right (Nat.le_trans hleM hcapM) _
+  have hfit6 : FitsLen (mv + 6 * t.n) :=
+    FitsLen.of_le hback.1 (by simpa [roomM] using hmv6)
+  have hparts := back_move_le mv (pegCount baseX) (pegCount baseY)
+    (pegCount px) (pegCount py) t.n hpegX hpegY hpegPx hpegPy
+  have hsl4 : sl + 4 * t.n ≤ roomS + 4 * t.n :=
+    Nat.add_le_add_right (Nat.le_trans hleS hcapS) _
+  have hfit4 : FitsLen (sl + 4 * t.n) :=
+    FitsLen.of_le hback.2 (by simpa [roomS] using hsl4)
+  have hslides := back_slide_le sl (pegCount px) (pegCount py) t.n hpegPx hpegPy
+  have hfitN : FitsLen t.n := FitsLen.of_le hfit6 hparts.2.2.2.2.2.2
   obtain ⟨b', hdo, h3, h4, h0, h1, _, _, _, _⟩ :=
     point_back b px py baseX baseY mv sl pk lay.bench lay.szH lay.szD
       (lay.held0 (by rw [lay.szD]; decide)) h0a
       (lay.held1 (by rw [lay.szD]; decide)) h1a
       (lay.held3 (by rw [lay.szD]; decide)) (lay.home3 (by rw [lay.szH]; decide))
       (lay.held4 (by rw [lay.szD]; decide)) (lay.home4 (by rw [lay.szH]; decide))
-      hmvI hslI hpkI hfpx hfpy hfbx hfby (hcx mv hmvI) (hcy mv hmvI) h2px h2py
-      (hm1 mv hmvI) (hs1 sl hslI) (hm2 mv hmvI) (hs2 sl hslI)
+      hmvI hslI hpkI
+      (by rw [hpx]; exact hfitN) (by rw [hpy]; exact hfitN)
+      (by rw [hbx]; exact hfitN) (by rw [hby]; exact hfitN)
+      (FitsLen.of_le hfit6 hparts.1)
+      (FitsLen.of_le hfit6 hparts.2.1)
+      (FitsLen.of_le hfit6 hparts.2.2.2.2.1)
+      (FitsLen.of_le hfit6 hparts.2.2.2.2.2.1)
+      (FitsLen.of_le hfit6 hparts.2.2.1)
+      (FitsLen.of_le hfit4 hslides.1)
+      (FitsLen.of_le hfit6 hparts.2.2.2.1)
+      (FitsLen.of_le hfit4 hslides.2)
   exact ⟨b', hdo, h3, h4, h0, h1⟩
 
 private theorem point_eq (ax ay px py : List Nat)
@@ -380,7 +473,8 @@ theorem cofactor_tail (t : Spec.Tier) (b2 : Board) (x y px py : List Nat)
         .ok ((true, true), b') ∧
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed px) ∧
       (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed py) ∧
-      LastLay b' x y := by
+      LastLay b' x y (suffixMoveCap t mv0 (cofactorSpan - 1))
+        (suffixSlideCap t sl0 (cofactorSpan - 1)) := by
   have hpre := cofactor_open_run t.n t.k t.benchlen x y
   have hi1 : 1 < cofactorCells.length := by simp [cofactorCells]
   have hc1 : cofactorCells[1]'hi1 = 1 ∨ cofactorCells[1]'hi1 = 2 :=

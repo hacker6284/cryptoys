@@ -343,6 +343,66 @@ private theorem base_next (base done cap spent now next : Nat)
   have h : (done + 1) * cap = done * cap + cap := by rw [Nat.succ_mul]
   omega
 
+/-- Moves through cell `done`, charged as `(done + 1)` suffix steps above `mv0`. -/
+def suffixMoveCap (t : Spec.Tier) (mv0 done : Nat) : Nat :=
+  mv0 + (done + 1) * (walkCharge t + (6 * t.benchlen + 2 * t.n))
+
+/-- Slides through cell `done`, charged the same way. -/
+def suffixSlideCap (t : Spec.Tier) (sl0 done : Nat) : Nat :=
+  sl0 + (done + 1) * (cellSlideCharge t + 4 * t.n)
+
+/-- The cubed frame plus one chord is one suffix step. -/
+private theorem move_cap_le (t : Spec.Tier) (mv0 done toN mv mvF : Nat)
+    (hn : t.n ≤ t.benchlen)
+    (hm : mv ≤ mv0 + done * (walkCharge t + (6 * t.benchlen + 2 * t.n)))
+    (hmvF : mvF ≤ mv + cubeCharge t.n t.benchlen)
+    (hdone : done = toN) :
+    mvF + walkCharge t ≤ suffixMoveCap t mv0 toN := by
+  have hcube : cubeCharge t.n t.benchlen = 6 * t.benchlen + 2 * t.n := cube_over _ _ hn
+  have hmvF' : mvF ≤ mv + (6 * t.benchlen + 2 * t.n) := by
+    rw [← hcube]
+    exact hmvF
+  have hstep : mvF + walkCharge t ≤
+      mv + (walkCharge t + (6 * t.benchlen + 2 * t.n)) := by
+    generalize wEq : walkCharge t = w
+    generalize oEq : 6 * t.benchlen + 2 * t.n = o
+    have hmv : mvF ≤ mv + o := by
+      rw [← oEq]
+      exact hmvF'
+    clear wEq oEq
+    calc
+      mvF + w ≤ (mv + o) + w := Nat.add_le_add_right hmv _
+      _ = mv + (w + o) := by rw [Nat.add_assoc, Nat.add_comm o w]
+  have hbase := base_next mv0 done (walkCharge t + (6 * t.benchlen + 2 * t.n))
+    (walkCharge t + (6 * t.benchlen + 2 * t.n)) mv (mvF + walkCharge t)
+    hm hstep (Nat.le_refl _)
+  rw [hdone] at hbase
+  rw [suffixMoveCap]
+  exact hbase
+
+/-- The cube's slides plus one chord slide charge are one suffix step. -/
+private theorem slide_cap_le (t : Spec.Tier) (sl0 done toN sl slF : Nat)
+    (hs : sl ≤ sl0 + done * (cellSlideCharge t + 4 * t.n))
+    (hslF : slF ≤ sl + 4 * t.n)
+    (hdone : done = toN) :
+    slF + cellSlideCharge t ≤ suffixSlideCap t sl0 toN := by
+  have hstep : slF + cellSlideCharge t ≤ sl + (cellSlideCharge t + 4 * t.n) := by
+    generalize cEq : cellSlideCharge t = c
+    generalize oEq : 4 * t.n = o
+    have hsl : slF ≤ sl + o := by
+      rw [← oEq]
+      exact hslF
+    clear cEq oEq
+    calc
+      slF + c ≤ (sl + o) + c := Nat.add_le_add_right hsl _
+      _ = sl + (c + o) := by rw [Nat.add_assoc, Nat.add_comm o c]
+  have hbase := base_next sl0 done (cellSlideCharge t + 4 * t.n)
+    (cellSlideCharge t + 4 * t.n) sl (slF + cellSlideCharge t)
+    hs hstep (Nat.le_refl _)
+  rw [hdone] at hbase
+  rw [suffixSlideCap]
+  exact hbase
+
 private theorem cell_eq (cells : List Nat) (i : Nat) (h1 h2 : i < cells.length) :
     cells[i]'h1 = cells[i]'h2 := rfl
 
@@ -386,8 +446,10 @@ private theorem chord_y_len (n k bench : Nat) (slope dx y : List Nat) :
   simpa [chordY3] using fieldSub_length n (fieldMul n k bench slope dx) y
 
 /-- What the last cell leaves besides the new point: the bench is off, the base
-    homes are still seated, and the three counters are naturals. -/
-structure LastLay (b : Ecbs.Board) (baseX baseY : List Nat) : Prop where
+    homes are still seated, and the counters are naturals under the suffix
+    budget `moveCap` and `slideCap`. -/
+structure LastLay (b : Ecbs.Board) (baseX baseY : List Nat)
+    (moveCap slideCap : Nat) : Prop where
   bench : b.sudo_5Board_8bench_on = false
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
@@ -397,9 +459,33 @@ structure LastLay (b : Ecbs.Board) (baseX baseY : List Nat) : Prop where
   held3 : ∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true
   home4 : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = embed baseY
   held4 : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = true
-  moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv
-  slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl
+  moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧ mv ≤ moveCap
+  slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+    sl ≤ slideCap
   peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
+
+/-- A larger budget still covers the same counters. -/
+theorem LastLay.mono {b : Ecbs.Board} {baseX baseY : List Nat}
+    {capM capS capM' capS' : Nat}
+    (hM : capM ≤ capM') (hS : capS ≤ capS')
+    (lay : LastLay b baseX baseY capM capS) :
+    LastLay b baseX baseY capM' capS' where
+  bench := lay.bench
+  szH := lay.szH
+  szD := lay.szD
+  held0 := lay.held0
+  held1 := lay.held1
+  home3 := lay.home3
+  held3 := lay.held3
+  home4 := lay.home4
+  held4 := lay.held4
+  moves := (by
+    obtain ⟨mv, hmv, hle⟩ := lay.moves
+    exact ⟨mv, hmv, Nat.le_trans hle hM⟩)
+  slides := (by
+    obtain ⟨sl, hsl, hle⟩ := lay.slides
+    exact ⟨sl, hsl, Nat.le_trans hle hS⟩)
+  peak := lay.peak
 
 /-- The last live cell. The chord rooms are one charge on the cubed frame. -/
 private theorem suffix_live_last (cells : List Nat) (i toN c : Nat)
@@ -439,7 +525,8 @@ private theorem suffix_live_last (cells : List Nat) (i toN c : Nat)
         b'.sudo_5Board_6marker = Int.ofNat m ∧
         b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
         FitsLen (ctrl + 1) ∧
-      LastLay b' baseX baseY := by
+      LastLay b' baseX baseY (fr.moves + walkCharge t)
+        (fr.slides + cellSlideCharge t) := by
   have hMoveR : FitsLen (liveMoveRoom t fr.moves baseX accX) := by
     apply FitsLen.of_le hMove
     exact live_move_le t fr.moves baseX accX fr.lenX fr.lenA
@@ -464,11 +551,28 @@ private theorem suffix_live_last (cells : List Nat) (i toN c : Nat)
   have hcOpen : cells[i]'(by omega) = c := (cell_eq cells i hiLen (by omega)).trans hcAt
   have hstep := chordStep_open cells i toN c b0 b bF b' (Nat.le_of_eq hi) hlen hcOpen hc0 hc2
     hml hfrob hadd hfiti
-  obtain ⟨bud, hL, _, _, _, _⟩ := _hbud
-  obtain ⟨mvL, hmvL, _⟩ := _pack.moves
-  obtain ⟨slL, hslL⟩ := _pack.slides
+  obtain ⟨bud, hL, _, hmoveEq, _, _⟩ := _hbud
+  obtain ⟨mvL, hmvL, hmvLe⟩ := hL.movesLe
+  obtain ⟨slL, hslL, hslLe⟩ := _sl
   obtain ⟨pkL, hpkL⟩ := _pack.peak
-  have hlay : LastLay b' baseX baseY :=
+  have hlive := live_move_le t fr.moves baseX accX fr.lenX fr.lenA
+  have hmvCap : mvL ≤ fr.moves + walkCharge t := by
+    have hcomm : checkMoveCap bud + 2 * t.n + tailMoveCap t.n t.benchlen =
+        checkMoveCap bud + tailMoveCap t.n t.benchlen + 2 * t.n := by
+      rw [Nat.add_right_comm]
+    have hroom : checkMoveCap bud + tailMoveCap t.n t.benchlen + 2 * t.n =
+        liveMoveRoom t fr.moves baseX accX + 2 * t.n := by
+      rw [hmoveEq]
+    calc
+      mvL ≤ checkMoveCap bud + 2 * t.n + tailMoveCap t.n t.benchlen := hmvLe
+      _ = liveMoveRoom t fr.moves baseX accX + 2 * t.n := by rw [hcomm, hroom]
+      _ ≤ fr.moves + cellMoveCharge t + 2 * t.n := Nat.add_le_add_right hlive _
+      _ = fr.moves + walkCharge t := by rw [Nat.add_assoc, walkCharge_split]
+  have hslCap : slL ≤ fr.slides + cellSlideCharge t := by
+    rw [live_slide_eq] at hslLe
+    exact hslLe
+  have hlay : LastLay b' baseX baseY (fr.moves + walkCharge t)
+      (fr.slides + cellSlideCharge t) :=
     { bench := _pack.benchOff
       szH := _pack.szH
       szD := _pack.szD
@@ -478,8 +582,8 @@ private theorem suffix_live_last (cells : List Nat) (i toN c : Nat)
       held3 := hL.held3
       home4 := hL.home4
       held4 := hL.held4
-      moves := ⟨mvL, hmvL⟩
-      slides := ⟨slL, hslL⟩
+      moves := ⟨mvL, hmvL, hmvCap⟩
+      slides := ⟨slL, hslL, hslCap⟩
       peak := ⟨pkL, hpkL⟩ }
   obtain ⟨m, c, hm, hc, hfit⟩ := hlift
   exact ⟨b', _, _, by simpa [hi] using hstep, by simpa [← hcAt] using hwalk, hx0, hy1,
@@ -611,7 +715,8 @@ theorem suffix_chord_add (t : Spec.Tier) (b : Ecbs.Board)
           b'.sudo_5Board_6marker = Int.ofNat m ∧
           b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
           FitsLen (ctrl + 1) ∧
-          LastLay b' baseX baseY) := by
+          LastLay b' baseX baseY (suffixMoveCap t mv0 toN)
+            (suffixSlideCap t sl0 toN)) := by
   have hMrel : FitsLen (fr.moves + walkCharge t * left) := by
     simpa [Nat.mul_comm] using
       budget_mul len done left mv0 fr.moves (walkCharge t) (6 * t.benchlen + 2 * t.n)
@@ -677,7 +782,17 @@ theorem suffix_chord_add (t : Spec.Tier) (b : Ecbs.Board)
         base_next op0 done _ _ fr.opsCap frF.opsCap ho hstepO (Nat.le_refl _),
         fieldCube_length t.n t.k t.benchlen accY hn,
         cube_trits t sat hsh accY htriA⟩
-    · intro _hlast
+    · intro hlastZ
+      have hdoneT : done = toN := hdone.trans hlastZ
+      have hmoveCap := move_cap_le t mv0 done toN fr.moves frF.moves hn hm hmvF hdoneT
+      have hleM : frF.moves ≤ suffixMoveCap t mv0 toN :=
+        Nat.le_trans (Nat.le_add_right frF.moves (walkCharge t)) hmoveCap
+      have hsl4 : frF.slides ≤ fr.slides + 4 * t.n := by
+        rw [slide_over_eq] at hslF
+        exact hslF
+      have hslideCap := slide_cap_le t sl0 done toN fr.slides frF.slides hs hsl4 hdoneT
+      have hleS : frF.slides ≤ suffixSlideCap t sl0 toN :=
+        Nat.le_trans (Nat.le_add_right frF.slides (cellSlideCharge t)) hslideCap
       refine ⟨?_, ?_, ?_⟩
       · intro _h0
         exact frF.home0
@@ -693,8 +808,8 @@ theorem suffix_chord_add (t : Spec.Tier) (b : Ecbs.Board)
             held3 := fun _ => frF.held3
             home4 := fun _ => by simpa [hy4F] using frF.home4
             held4 := fun _ => by simpa [hf4F] using frF.held4
-            moves := ⟨frF.moves, frF.hmoves⟩
-            slides := ⟨frF.slides, frF.hslides⟩
+            moves := ⟨frF.moves, frF.hmoves, hleM⟩
+            slides := ⟨frF.slides, frF.hslides, hleS⟩
             peak := ⟨frF.peak, frF.hpeak⟩ }⟩
   · have hcLive : c = 1 ∨ c = 2 := by
       have hle := hcLe
@@ -732,8 +847,16 @@ theorem suffix_chord_add (t : Spec.Tier) (b : Ecbs.Board)
           accX accY inv frF hOk sat hR hsh hmkF hcLive hy4F hy1F hf4F hf1F
           hyB hyCube htriB htriCube rfl rfl hacc hMove1 hSlide1 hCtrl1 hOps1
           hMark hMarkFit hhoF hlast hlen hiLen hcAt hz hcLe hml hfrob hfiti
+      have hdoneT : done = toN := hdone.trans hlast
+      have hmoveCap := move_cap_le t mv0 done toN fr.moves frF.moves hn hm hmvF hdoneT
+      have hsl4 : frF.slides ≤ fr.slides + 4 * t.n := by
+        rw [slide_over_eq] at hslF
+        exact hslF
+      have hslideCap := slide_cap_le t sl0 done toN fr.slides frF.slides hs hsl4 hdoneT
+      obtain ⟨m, cctrl, hm, hc, hfit, hlay⟩ := hlift
       refine ⟨b', ax', ay', by simpa [hlast] using hstep, hwalk,
-        fun hlt => absurd hlast (by omega), fun _ => ⟨hx0, hy1, hlift⟩⟩
+        fun hlt => absurd hlast (by omega),
+        fun _ => ⟨hx0, hy1, ⟨m, cctrl, hm, hc, hfit, hlay.mono hmoveCap hslideCap⟩⟩⟩
     · have hlt : i < toN := by omega
       have hge : 2 ≤ left := by omega
       have hfuel : 1 ≤ left - 1 := by

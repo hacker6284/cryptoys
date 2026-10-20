@@ -324,4 +324,72 @@ theorem cofactor_suffix_room (t : Spec.Tier)
       serious_suffix_num.2.2.2.2.1, serious_suffix_num.2.2.2.2.2.1,
       serious_suffix_num.2.2.2.2.2.2.1, serious_suffix_num.2.2.2.2.2.2.2⟩
 
+private theorem demo_back_num :
+    perHole demo.n demo.benchlen * demo.n + 5 * demo.n +
+        walkCharge demo * (cofactorSpan + 1) + 6 * demo.n ≤ 9223372036854775807 ∧
+    perSlide demo.n * demo.n + 2 * demo.n +
+        cellSlideCharge demo * (cofactorSpan + 1) + 4 * demo.n ≤ 9223372036854775807 := by
+  unfold cofactorSpan perHole plantRoom perSlide
+    walkCharge cellMoveCharge cellSlideCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  simp only [tierR, demo_rungs, rowRoom, tallyOrigin]
+  rw [show demo.n = 7 from rfl, show demo.benchlen = 20 from rfl,
+    show demo.control = 16 from rfl, show demo.script = 5 from rfl]
+  exact ⟨Nat.le_of_ble_eq_true rfl, Nat.le_of_ble_eq_true rfl⟩
+
+private theorem toy_back_num :
+    perHole toy.n toy.benchlen * toy.n + 5 * toy.n +
+        walkCharge toy * (cofactorSpan + 1) + 6 * toy.n ≤ 9223372036854775807 ∧
+    perSlide toy.n * toy.n + 2 * toy.n +
+        cellSlideCharge toy * (cofactorSpan + 1) + 4 * toy.n ≤ 9223372036854775807 := by
+  unfold cofactorSpan perHole plantRoom perSlide
+    walkCharge cellMoveCharge cellSlideCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  simp only [tierR, toy_rungs, rowRoom, tallyOrigin]
+  rw [show toy.n = 23 from rfl, show toy.benchlen = 72 from rfl,
+    show toy.control = 40 from rfl, show toy.script = 15 from rfl]
+  exact ⟨Nat.le_of_ble_eq_true rfl, Nat.le_of_ble_eq_true rfl⟩
+
+private theorem hobby_back_num :
+    perHole hobby.n hobby.benchlen * hobby.n + 5 * hobby.n +
+        walkCharge hobby * (cofactorSpan + 1) + 6 * hobby.n ≤ 9223372036854775807 ∧
+    perSlide hobby.n * hobby.n + 2 * hobby.n +
+        cellSlideCharge hobby * (cofactorSpan + 1) + 4 * hobby.n ≤ 9223372036854775807 := by
+  unfold cofactorSpan perHole plantRoom perSlide
+    walkCharge cellMoveCharge cellSlideCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  simp only [tierR, hobby_rungs, rowRoom, tallyOrigin]
+  rw [show hobby.n = 59 from rfl, show hobby.benchlen = 180 from rfl,
+    show hobby.control = 80 from rfl, show hobby.script = 15 from rfl]
+  exact ⟨Nat.le_of_ble_eq_true rfl, Nat.le_of_ble_eq_true rfl⟩
+
+private theorem serious_back_num :
+    perHole serious.n serious.benchlen * serious.n + 5 * serious.n +
+        walkCharge serious * (cofactorSpan + 1) + 6 * serious.n ≤ 9223372036854775807 ∧
+    perSlide serious.n * serious.n + 2 * serious.n +
+        cellSlideCharge serious * (cofactorSpan + 1) + 4 * serious.n
+        ≤ 9223372036854775807 := by
+  unfold cofactorSpan perHole plantRoom perSlide
+    walkCharge cellMoveCharge cellSlideCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  simp only [tierR, serious_rungs, rowRoom, tallyOrigin]
+  rw [show serious.n = 179 from rfl, show serious.benchlen = 540 from rfl,
+    show serious.control = 200 from rfl, show serious.script = 15 from rfl]
+  exact ⟨Nat.le_of_ble_eq_true rfl, Nat.le_of_ble_eq_true rfl⟩
+
+/-- The suffix room plus the four pegs of the move back: two clears (`≤ n`
+    each) and two `move_band`s (`≤ 2 · n` each). That is `6 · n` moves and
+    `4 · n` slides. Each tier is a `Nat.ble` comparison. -/
+theorem cofactor_back_room (t : Spec.Tier)
+    (h : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
+    FitsLen (perHole t.n t.benchlen * t.n + 5 * t.n +
+        walkCharge t * (cofactorSpan + 1) + 6 * t.n) ∧
+    FitsLen (perSlide t.n * t.n + 2 * t.n +
+        cellSlideCharge t * (cofactorSpan + 1) + 4 * t.n) := by
+  rcases h with rfl | rfl | rfl | rfl
+  · exact ⟨fits_ble _ demo_back_num.1, fits_ble _ demo_back_num.2⟩
+  · exact ⟨fits_ble _ toy_back_num.1, fits_ble _ toy_back_num.2⟩
+  · exact ⟨fits_ble _ hobby_back_num.1, fits_ble _ hobby_back_num.2⟩
+  · exact ⟨fits_ble _ serious_back_num.1, fits_ble _ serious_back_num.2⟩
+
 end EcbsLink2.Link2

@@ -77,7 +77,8 @@ def SuffixInv (t : Spec.Tier) (baseX baseY : List Nat) (live0 : Bool)
         st.1.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
         FitsLen (ctrl + 1) ∧
         LastLay st.1 baseX baseY (suffixMoveCap t mv0 toN)
-          (suffixSlideCap t sl0 toN))
+          (suffixSlideCap t sl0 toN) ∧
+        st.1.sudo_5Board_1t = embTier t)
 
 private theorem take_succ_cell (cells : List Nat) (i : Nat) (hi : i < cells.length) :
     cells.take (i + 1) = cells.take i ++ [cells[i]] := by
@@ -146,7 +147,8 @@ private theorem suffix_span_step (t : Spec.Tier) (b : Ecbs.Board)
           b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
           FitsLen (ctrl + 1) ∧
           LastLay b' baseX baseY (suffixMoveCap t mv0 toN)
-            (suffixSlideCap t sl0 toN)) := by
+            (suffixSlideCap t sl0 toN) ∧
+          b'.sudo_5Board_1t = embTier t) := by
   obtain ⟨fr, hmk, hY, hA, hf4, hf1, hst, hho, hm, hs, hc0, ho, hyB, htriB, hyA, htriA⟩ := hAt
   have hleft : 0 < toN - i + 1 := Nat.succ_pos (toN - i)
   have hsum : i + (toN - i + 1) = toN + 1 := by
@@ -311,7 +313,7 @@ theorem suffix_fresh (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
         st.1.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
         FitsLen (ctrl + 1) := by
     intro hgt
-    obtain ⟨hx, hy, ⟨m, c, hm, hc, hfit, _⟩⟩ := hhome hgt
+    obtain ⟨hx, hy, ⟨m, c, hm, hc, hfit, _, _⟩⟩ := hhome hgt
     exact ⟨hx, hy, ⟨m, c, hm, hc, hfit⟩⟩
   refine ⟨hlive, ax, ay, hrun, ?_, hhome'⟩
   intro hle

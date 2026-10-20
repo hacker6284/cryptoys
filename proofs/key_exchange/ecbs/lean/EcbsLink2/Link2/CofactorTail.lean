@@ -474,7 +474,8 @@ theorem cofactor_tail (t : Spec.Tier) (b2 : Board) (x y px py : List Nat)
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed px) ∧
       (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed py) ∧
       LastLay b' x y (suffixMoveCap t mv0 (cofactorSpan - 1))
-        (suffixSlideCap t sl0 (cofactorSpan - 1)) := by
+        (suffixSlideCap t sl0 (cofactorSpan - 1)) ∧
+      b'.sudo_5Board_1t = embTier t := by
   have hpre := cofactor_open_run t.n t.k t.benchlen x y
   have hi1 : 1 < cofactorCells.length := by simp [cofactorCells]
   have hc1 : cofactorCells[1]'hi1 = 1 ∨ cofactorCells[1]'hi1 = 2 :=
@@ -552,7 +553,7 @@ theorem cofactor_tail (t : Spec.Tier) (b2 : Board) (x y px py : List Nat)
           (ax, ay) cofactorCells i (true, (px, py)) hi (cofactor_colour i hi hnz) hrun hgo)
   obtain ⟨hlive, ax, ay, hrun, _hspan, hhome⟩ := hI
   have hto : cofactorSpan - 1 = 3 := by simp [cofactorSpan]
-  obtain ⟨hxF, hyF, ⟨m, c, hm, hc, hfit, hlay⟩⟩ := hhome (by simp [cofactorSpan])
+  obtain ⟨hxF, hyF, ⟨m, c, hm, hc, hfit, hlay, htier⟩⟩ := hhome (by simp [cofactorSpan])
   have htakeF : cofactorCells.take cofactorSpan = cofactorCells := by
     simp [cofactorSpan, cofactorCells]
   have hrunP : walkRun t.n t.k t.benchlen (x, y) false (whiteHole0 t.n, whiteHole0 t.n)
@@ -570,7 +571,16 @@ theorem cofactor_tail (t : Spec.Tier) (b2 : Board) (x y px py : List Nat)
             (chordStep (embed cofactorCells) (Int.ofNat 3)) chordAfter (fun r => pure r) =
           chordAfter (Int.ofNat 3, (sb, true)) := by
       simpa [hto] using heq
-    refine ⟨_, (hjoin.trans hmid).trans hch, ?_, ?_, lay_after sb x y c hlay⟩
+    let bW :=
+      { sb with
+        sudo_5Board_6marker := -1
+        sudo_5Board_4cost := { sb.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := Int.ofNat (c + 1) }
+        sudo_5Board_9marker_on := false }
+    have htierW : bW.sudo_5Board_1t = embTier t := by
+      have hsame : bW.sudo_5Board_1t = sb.sudo_5Board_1t := rfl
+      exact hsame.trans htier
+    refine ⟨bW, (hjoin.trans hmid).trans hch, ?_, ?_, lay_after sb x y c hlay, htierW⟩
     · intro h
       simpa [hp.1] using hxF (by simpa using h)
     · intro h

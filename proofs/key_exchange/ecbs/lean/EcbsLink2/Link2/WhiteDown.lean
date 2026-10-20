@@ -122,12 +122,14 @@ theorem white_down_spanAt (t : Spec.Tier) (b : Board) (x y : List Nat) (mv pk : 
     (hctrlLe : ctrl ≤ tierR t + perCtrl t.n * t.n)
     (hopsLe : ops0 ≤ perOp t.n * t.n)
     (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
-    ∃ (b2 : Board) (mv2 : Nat),
+    ∃ (b2 : Board) (mv2 pk2 : Nat) (out : OutLay t b2 x y y mv2 pk2),
       (do
           let board ← marker_lift (chordFlag b)
           let board ← copy_band board across base_across false
           copy_band board up base_up false) = .ok b2 ∧
       mv2 = mv + pegCount x + pegCount y ∧
+      out.sl0 = sl ∧ out.ctrl0 = ctrl ∧ out.ops0 = ops0 ∧
+      out.strict0 = strict ∧ out.hole0 = hole ∧
       SpanAt t b2 x y x y 1 mv sl ctrl ops0 ∧
       FitsLen (mv + walkCharge t * (cofactorSpan + 1)) ∧
       FitsLen (sl + cellSlideCharge t * (cofactorSpan + 1)) ∧
@@ -194,6 +196,9 @@ theorem white_down_spanAt (t : Spec.Tier) (b : Board) (x y : List Nat) (mv pk : 
       by rw [hhole0, hholeEq]; exact hholeB,
       by rw [hctrl0, hctrlEq]; exact hctrlPos,
       hx, htriX, hy, htriY, hy, htriY⟩
-  refine ⟨b2, mv2, hdo, rfl, Or.inr hdown, hMove, hSlideR, hCtrlR, hOpsR⟩
+  refine ⟨b2, mv2, pk2, out, hdo, rfl,
+    hsl0.trans hslEq, hctrl0.trans hctrlEq, hops0.trans hopsEq,
+    hstrict0.trans hstrictEq, hhole0.trans hholeEq,
+    Or.inr hdown, hMove, hSlideR, hCtrlR, hOpsR⟩
 
 end EcbsLink2.Link2

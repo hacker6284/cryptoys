@@ -282,3 +282,4 @@ import EcbsLink2.Link2.FinishAffine
 import EcbsLink2.Link2.FinishRun
 import EcbsLink2.Link2.FinishInvert
 import EcbsLink2.Link2.FinishClear
+import EcbsLink2.Link2.BasePointRun

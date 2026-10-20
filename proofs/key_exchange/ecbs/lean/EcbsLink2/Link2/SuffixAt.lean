@@ -526,7 +526,8 @@ private theorem suffix_live_last (cells : List Nat) (i toN c : Nat)
         b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
         FitsLen (ctrl + 1) ∧
       LastLay b' baseX baseY (fr.moves + walkCharge t)
-        (fr.slides + cellSlideCharge t) := by
+        (fr.slides + cellSlideCharge t) ∧
+      b'.sudo_5Board_1t = embTier t := by
   have hMoveR : FitsLen (liveMoveRoom t fr.moves baseX accX) := by
     apply FitsLen.of_le hMove
     exact live_move_le t fr.moves baseX accX fr.lenX fr.lenA
@@ -587,7 +588,7 @@ private theorem suffix_live_last (cells : List Nat) (i toN c : Nat)
       peak := ⟨pkL, hpkL⟩ }
   obtain ⟨m, c, hm, hc, hfit⟩ := hlift
   exact ⟨b', _, _, by simpa [hi] using hstep, by simpa [← hcAt] using hwalk, hx0, hy1,
-    ⟨m, c, hm, hc, hfit, hlay⟩⟩
+    ⟨m, c, hm, hc, hfit, hlay, hL.tier⟩⟩
 
 /-- A live cell with another cell after it. `fuel + 1` charges are the cells
     still left, including this one. -/
@@ -716,7 +717,8 @@ theorem suffix_chord_add (t : Spec.Tier) (b : Ecbs.Board)
           b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
           FitsLen (ctrl + 1) ∧
           LastLay b' baseX baseY (suffixMoveCap t mv0 toN)
-            (suffixSlideCap t sl0 toN)) := by
+            (suffixSlideCap t sl0 toN) ∧
+          b'.sudo_5Board_1t = embTier t) := by
   have hMrel : FitsLen (fr.moves + walkCharge t * left) := by
     simpa [Nat.mul_comm] using
       budget_mul len done left mv0 fr.moves (walkCharge t) (6 * t.benchlen + 2 * t.n)
@@ -810,7 +812,7 @@ theorem suffix_chord_add (t : Spec.Tier) (b : Ecbs.Board)
             held4 := fun _ => by simpa [hf4F] using frF.held4
             moves := ⟨frF.moves, frF.hmoves, hleM⟩
             slides := ⟨frF.slides, frF.hslides, hleS⟩
-            peak := ⟨frF.peak, frF.hpeak⟩ }⟩
+            peak := ⟨frF.peak, frF.hpeak⟩ }, frF.tier⟩
   · have hcLive : c = 1 ∨ c = 2 := by
       have hle := hcLe
       omega
@@ -853,10 +855,11 @@ theorem suffix_chord_add (t : Spec.Tier) (b : Ecbs.Board)
         rw [slide_over_eq] at hslF
         exact hslF
       have hslideCap := slide_cap_le t sl0 done toN fr.slides frF.slides hs hsl4 hdoneT
-      obtain ⟨m, cctrl, hm, hc, hfit, hlay⟩ := hlift
+      obtain ⟨m, cctrl, hm, hc, hfit, hlay, htier⟩ := hlift
       refine ⟨b', ax', ay', by simpa [hlast] using hstep, hwalk,
         fun hlt => absurd hlast (by omega),
-        fun _ => ⟨hx0, hy1, ⟨m, cctrl, hm, hc, hfit, hlay.mono hmoveCap hslideCap⟩⟩⟩
+        fun _ => ⟨hx0, hy1, ⟨m, cctrl, hm, hc, hfit,
+          hlay.mono hmoveCap hslideCap, htier⟩⟩⟩
     · have hlt : i < toN := by omega
       have hge : 2 ≤ left := by omega
       have hfuel : 1 ≤ left - 1 := by

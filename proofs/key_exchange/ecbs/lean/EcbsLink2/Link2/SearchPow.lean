@@ -96,6 +96,21 @@ private theorem ops_fit (c k : Nat) (hc : c ≤ 1000000) (hk : k ≤ 1000000) :
 private theorem six (sl n : Nat) (h : sl ≤ 4 * n + 2 * n) : sl ≤ 6 * n := by
   omega
 
+private theorem spend_add (mv mv' p cap : Nat) (h : mv' ≤ mv + p) (hc : mv ≤ cap) :
+    mv' ≤ cap + p := by omega
+
+private theorem tail_len (n : Nat) (ds : List Nat)
+    (h : rootDigits n = 2 :: ds) (hlen : (rootDigits n).length = n - 1) :
+    ds.length + 1 = n - 1 := by
+  have hcons : (2 :: ds).length = ds.length + 1 := by simp
+  rw [← hcons, ← h]
+  exact hlen
+
+private theorem strip_len (n : Nat) (hn : 2 ≤ n) : (rootStrip n).length = n := by
+  rw [rootStrip_eq n hn]
+  simp [rootDigits, List.length_append, List.length_map, List.length_range]
+  omega
+
 theorem tierR_pos (t : Spec.Tier) (hn : 3 ≤ t.n) : 0 < tierR t := by
   unfold tierR
   have h : 1 < t.n - 1 := by omega
@@ -255,7 +270,19 @@ theorem pow_from_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sa
             pure ({ b with sudo_5Board_9marker_on := true }))
           powRun b (rootDigits t.n)) = .ok b' ∧
         PowAt b' t (curveSide t.n t.k t.benchlen (basisPeg t.n j))
-          (rootY t.n t.k t.benchlen (basisPeg t.n j)) [] := by
+          (rootY t.n t.k t.benchlen (basisPeg t.n j)) [] ∧
+        b'.sudo_5Board_4home[0]? = some (embed (rootStrip t.n)) ∧
+        b'.sudo_5Board_4held[0]? = some true ∧
+        b'.sudo_5Board_4home[3]? = some (embed (basisPeg t.n j)) ∧
+        b'.sudo_5Board_4held[3]? = some true ∧
+        (∃ mv, b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
+          mv ≤ gapCap t.n t.benchlen + 1 + t.n + powMove t.n t.benchlen * (t.n - 1)) ∧
+        (∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+          sl ≤ 6 * t.n + powSlide t.n * (t.n - 1)) ∧
+        (∃ c, b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+          c ≤ tierR t - 1 + powCtrl * (t.n - 1)) ∧
+        (∃ c0, b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) ∧
+          c0 ≤ 2 + (t.n - 1)) := by
   obtain ⟨b, hdo, s⟩ := search_strip t hOk hsh sat j hj0 hj
   let x := basisPeg t.n j
   let side := curveSide t.n t.k t.benchlen x
@@ -357,7 +384,7 @@ theorem pow_from_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sa
     rw [hred] at hPow
     exact hPow
   have hstep := pow_step_at bP t side acc 2 tail hPow2 (Or.inr (Or.inr rfl))
-  obtain ⟨b1, hrunP, hAt, _, _⟩ := hstep
+  obtain ⟨b1, hrunP, hAt, hk1, hsp1⟩ := hstep
   have hrun := digit_same b cPh hlift hself 2 powGap
   have hrunB : powDigitRun b 2 powGap = .ok b1 := by
     have hif : (if (2 : Nat) = 2 then powGap else powBottom) = powGap := by simp
@@ -366,8 +393,24 @@ theorem pow_from_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sa
   have hmem : ∀ e, e ∈ tail → e = 0 ∨ e = 1 ∨ e = 2 := by
     intro e he
     exact rootDigits_trit t.n e (List.mem_of_mem_tail he)
-  obtain ⟨b', hr, hEnd⟩ := pow_fold b1 t side (powStep t.n t.k t.benchlen side acc 2) tail hAt hmem
-  refine ⟨b', ?_, ?_⟩
+  obtain ⟨b', hr, hEnd, hk2, hsp2⟩ :=
+    pow_fold b1 t side (powStep t.n t.k t.benchlen side acc 2) tail hAt hmem
+  have hdigits : tail.length + 1 = t.n - 1 := tail_len t.n tail hred hlenD
+  have hcount : CounterLe bP b' (powMove t.n t.benchlen * (t.n - 1))
+      (powSlide t.n * (t.n - 1)) (powCtrl * (t.n - 1)) (t.n - 1) := by
+    simpa [hdigits] using counterLe_pow t.n t.benchlen tail.length hsp1 hsp2
+  have hkeep : ∀ i, i ≠ powUp → i ≠ powSpare →
+      b'.sudo_5Board_4home[i]? = b.sudo_5Board_4home[i]? ∧
+      b'.sudo_5Board_4held[i]? = b.sudo_5Board_4held[i]? := by
+    intro i hu hs
+    obtain ⟨hhome1, hheld1⟩ := hk1 i hu hs
+    obtain ⟨hhome2, hheld2⟩ := hk2 i hu hs
+    have hhomeP : bP.sudo_5Board_4home[i]? = b.sudo_5Board_4home[i]? := by
+      simp [bP, coldPhantom]
+    have hheldP : bP.sudo_5Board_4held[i]? = b.sudo_5Board_4held[i]? := by
+      simp [bP, coldPhantom]
+    exact ⟨hhome2.trans (hhome1.trans hhomeP), hheld2.trans (hheld1.trans hheldP)⟩
+  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hdo, ok_bind, hred]
     simp only [powRun, if_true, hrunB, ok_bind]
     exact hr
@@ -377,5 +420,30 @@ theorem pow_from_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sa
     have hEnd' : PowAt b' t side (rootY t.n t.k t.benchlen x) [] :=
       hacc ▸ hEnd
     simpa [side, x] using hEnd'
+  · exact (hkeep 0 (by decide) (by decide)).1.trans
+      (home_some b 0 (embed (rootStrip t.n)) s.szH (by decide)
+        (by intro h; simpa using s.axHome h))
+  · exact (hkeep 0 (by decide) (by decide)).2.trans
+      (held_some b 0 true s.szD (by decide) (by intro h; simpa using s.axHeld h))
+  · exact (hkeep 3 (by decide) (by decide)).1.trans
+      (home_some b 3 (embed x) s.szH (by decide) (by intro h; simpa [x] using s.baseHome h))
+  · exact (hkeep 3 (by decide) (by decide)).2.trans
+      (held_some b 3 true s.szD (by decide) (by intro h; simpa using s.baseHeld h))
+  · have hmvP : bP.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv := by
+      simpa [bP, coldPhantom] using hmv
+    obtain ⟨mv', hmv', hle⟩ := hcount.moves mv hmvP
+    exact ⟨mv', hmv', spend_add mv mv' _ _ hle hmvLe⟩
+  · have hslP : bP.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl := by
+      simpa [bP, coldPhantom] using hsl
+    obtain ⟨sl', hsl', hle⟩ := hcount.slides sl hslP
+    exact ⟨sl', hsl', spend_add sl sl' _ _ hle (six sl t.n hslLe)⟩
+  · have hcP : bP.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat cPh := by
+      simp [bP, coldPhantom]
+    obtain ⟨c', hc', hle⟩ := hcount.ctrl cPh hcP
+    exact ⟨c', hc', hle⟩
+  · have hopP : bP.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat 2) := by
+      simpa [bP, coldPhantom] using slot_some b 0 2 s.opsSz (by decide) s.ops0
+    obtain ⟨c0', hc0', hle⟩ := hcount.ops0 2 hopP
+    exact ⟨c0', hc0', hle⟩
 
 end EcbsLink2.Link2

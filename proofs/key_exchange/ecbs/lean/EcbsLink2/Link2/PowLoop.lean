@@ -289,6 +289,112 @@ theorem cube_peg_le (n k bench : Nat) (acc : List Nat) :
     exact List.length_take_le _ _
   exact Nat.le_trans (pegCount_le _) hlen
 
+private theorem two_peg_slide (n peg : Nat) (hp : peg ≤ n) : 2 * peg ≤ powSlide n := by
+  unfold powSlide
+  have h2 : 2 * peg ≤ 2 * n := Nat.mul_le_mul_left _ hp
+  omega
+
+/-- Moves, slides, control, and ops slot 0 grow by at most these amounts. -/
+structure CounterLe (b b' : Ecbs.Board) (mvAdd slAdd cAdd opAdd : Nat) : Prop where
+  moves : ∀ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv →
+    ∃ mv', b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv' ∧ mv' ≤ mv + mvAdd
+  slides : ∀ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl →
+    ∃ sl', b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl' ∧ sl' ≤ sl + slAdd
+  ctrl : ∀ c, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c →
+    ∃ c', b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c' ∧ c' ≤ c + cAdd
+  ops0 : ∀ c0, b.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) →
+    ∃ c0', b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0') ∧
+      c0' ≤ c0 + opAdd
+
+private theorem chain_le (x y z a b : Nat) (h1 : y ≤ x + a) (h2 : z ≤ y + b) :
+    z ≤ x + (a + b) := by omega
+
+private theorem add_le_add_left_le (a s p : Nat) (h : s ≤ p) : a + s ≤ a + p :=
+  Nat.add_le_add_left h a
+
+private theorem ctrl_step_zero (c : Nat) : c + 2 ≤ c + powCtrl := by
+  unfold powCtrl
+  omega
+
+private theorem ctrl_step_live (c : Nat) : c + 4 ≤ c + powCtrl := by
+  unfold powCtrl
+  omega
+
+private theorem mul_step (p k : Nat) : p + p * k = p * (k + 1) := by
+  rw [Nat.mul_succ, Nat.add_comm]
+
+private theorem one_step (k : Nat) : 1 + k = k + 1 := by omega
+
+theorem counterLe_refl (b : Ecbs.Board) : CounterLe b b 0 0 0 0 where
+  moves := by
+    intro mv h
+    exact ⟨mv, h, Nat.le_refl _⟩
+  slides := by
+    intro sl h
+    exact ⟨sl, h, Nat.le_refl _⟩
+  ctrl := by
+    intro c h
+    exact ⟨c, h, Nat.le_refl _⟩
+  ops0 := by
+    intro c0 h
+    exact ⟨c0, h, Nat.le_refl _⟩
+
+theorem counterLe_trans {b b1 b' : Ecbs.Board} {m1 s1 c1 o1 m2 s2 c2 o2 : Nat}
+    (h1 : CounterLe b b1 m1 s1 c1 o1) (h2 : CounterLe b1 b' m2 s2 c2 o2) :
+    CounterLe b b' (m1 + m2) (s1 + s2) (c1 + c2) (o1 + o2) where
+  moves := by
+    intro mv hmv
+    obtain ⟨mv1, hmv1, hle1⟩ := h1.moves mv hmv
+    obtain ⟨mv', hmv', hle2⟩ := h2.moves mv1 hmv1
+    exact ⟨mv', hmv', chain_le mv mv1 mv' m1 m2 hle1 hle2⟩
+  slides := by
+    intro sl hsl
+    obtain ⟨sl1, hsl1, hle1⟩ := h1.slides sl hsl
+    obtain ⟨sl', hsl', hle2⟩ := h2.slides sl1 hsl1
+    exact ⟨sl', hsl', chain_le sl sl1 sl' s1 s2 hle1 hle2⟩
+  ctrl := by
+    intro c hc
+    obtain ⟨c1', hc1, hle1⟩ := h1.ctrl c hc
+    obtain ⟨c', hc', hle2⟩ := h2.ctrl c1' hc1
+    exact ⟨c', hc', chain_le c c1' c' c1 c2 hle1 hle2⟩
+  ops0 := by
+    intro c0 hc0
+    obtain ⟨c01, hc01, hle1⟩ := h1.ops0 c0 hc0
+    obtain ⟨c0', hc0', hle2⟩ := h2.ops0 c01 hc01
+    exact ⟨c0', hc0', chain_le c0 c01 c0' o1 o2 hle1 hle2⟩
+
+theorem counterLe_pow {b b1 b' : Ecbs.Board} (n bench k : Nat)
+    (h1 : CounterLe b b1 (powMove n bench) (powSlide n) powCtrl 1)
+    (h2 : CounterLe b1 b' (powMove n bench * k) (powSlide n * k) (powCtrl * k) k) :
+    CounterLe b b' (powMove n bench * (k + 1)) (powSlide n * (k + 1))
+      (powCtrl * (k + 1)) (k + 1) := by
+  have h := counterLe_trans h1 h2
+  have hm : powMove n bench + powMove n bench * k = powMove n bench * (k + 1) := mul_step _ _
+  have hs : powSlide n + powSlide n * k = powSlide n * (k + 1) := mul_step _ _
+  have hcEq : powCtrl + powCtrl * k = powCtrl * (k + 1) := mul_step _ _
+  have ho : 1 + k = k + 1 := one_step k
+  refine
+    { moves := by
+        intro mv hmv
+        obtain ⟨mv', hmv', hle⟩ := h.moves mv hmv
+        rw [hm] at hle
+        exact ⟨mv', hmv', hle⟩
+      slides := by
+        intro sl hsl
+        obtain ⟨sl', hsl', hle⟩ := h.slides sl hsl
+        rw [hs] at hle
+        exact ⟨sl', hsl', hle⟩
+      ctrl := by
+        intro c hc
+        obtain ⟨c', hc', hle⟩ := h.ctrl c hc
+        rw [hcEq] at hle
+        exact ⟨c', hc', hle⟩
+      ops0 := by
+        intro c0 hc0
+        obtain ⟨c0', hc0', hle⟩ := h.ops0 c0 hc0
+        rw [ho] at hle
+        exact ⟨c0', hc0', hle⟩ }
+
 /-- Digit 0. The up home becomes the cube, which is `powStep` on digit 0,
     and one unit of each budget is spent. -/
 theorem pow_zero_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : List Nat)
@@ -298,9 +404,7 @@ theorem pow_zero_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : 
       (∀ i, i ≠ powUp → i ≠ powSpare →
         b'.sudo_5Board_4home[i]? = b.sudo_5Board_4home[i]? ∧
         b'.sudo_5Board_4held[i]? = b.sudo_5Board_4held[i]?) ∧
-      (∀ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv →
-        ∃ mv', b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv' ∧
-          mv' ≤ mv + powMove t.n t.benchlen) := by
+      CounterLe b b' (powMove t.n t.benchlen) (powSlide t.n) powCtrl 1 := by
   obtain ⟨moves, slides, ctrl, mark, mx, pk, ps, hole, c0, c1, hmv, hsl, hc, hm, hmark,
       hmx, hpk, hps, hhole, hsz, hop0, hop1, hfitM, hfitS, hfitC, hfit0, hfit1⟩ := h.pack
   have hlen : (0 :: ds).length = ds.length + 1 := by simp
@@ -429,12 +533,34 @@ theorem pow_zero_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : 
     · exact (room_ops c1 ds.length (by simpa [hlen] using hfit1)).2
   · intro i hu _
     exact ⟨hhomeK i hu, hheldK i hu⟩
-  · intro mv0 hmv0
-    have hsame : mv0 = moves :=
-      Int.ofNat.inj (hmv0.symm.trans hmv)
-    refine ⟨cubeMoves moves acc t.n t.k t.benchlen + 2 * pegCount (fieldCube t.n t.k t.benchlen acc),
-      hmvS, ?_⟩
-    simpa [hsame] using zero_delta_le t.n t.benchlen moves t.k acc
+  · refine
+      { moves := ?_
+        slides := ?_
+        ctrl := ?_
+        ops0 := ?_ }
+    · intro mv0 hmv0
+      have hsame : mv0 = moves := Int.ofNat.inj (hmv0.symm.trans hmv)
+      refine ⟨cubeMoves moves acc t.n t.k t.benchlen +
+          2 * pegCount (fieldCube t.n t.k t.benchlen acc), hmvS, ?_⟩
+      simpa [hsame] using zero_delta_le t.n t.benchlen moves t.k acc
+    · intro sl0 hsl0
+      have hsame : sl0 = slides := Int.ofNat.inj (hsl0.symm.trans hsl)
+      refine ⟨slides + 2 * pegCount (fieldCube t.n t.k t.benchlen acc), hslS, ?_⟩
+      simpa [hsame] using
+        add_le_add_left_le slides _ _
+          (two_peg_slide t.n _ (cube_peg_le t.n t.k t.benchlen acc))
+    · intro cIn hcIn
+      have hsame : cIn = ctrl := Int.ofNat.inj (hcIn.symm.trans hc)
+      refine ⟨ctrl + 2, hctrl, ?_⟩
+      simpa [hsame] using ctrl_step_zero ctrl
+    · intro c0in hc0in
+      have hslot : some (Int.ofNat c0in) = some (Int.ofNat c0) := hc0in.symm.trans hop0
+      have hsame : c0in = c0 := by
+        injection hslot with hEq
+        exact Int.ofNat.inj hEq
+      refine ⟨c0, (hopK 0 (by decide)).trans hop0, ?_⟩
+      rw [hsame]
+      exact Nat.le_succ c0
 
 /-- Moves one live root digit adds: the cube, the copy, the schoolbook, and the settles. -/
 def liveMove (n k bench moves : Nat) (acc factor : List Nat) : Nat :=
@@ -583,9 +709,7 @@ theorem pow_live_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat)
       (∀ i, i ≠ powUp → i ≠ powSpare →
         b'.sudo_5Board_4home[i]? = b.sudo_5Board_4home[i]? ∧
         b'.sudo_5Board_4held[i]? = b.sudo_5Board_4held[i]?) ∧
-      (∀ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv →
-        ∃ mv', b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv' ∧
-          mv' ≤ mv + powMove t.n t.benchlen) := by
+      CounterLe b b' (powMove t.n t.benchlen) (powSlide t.n) powCtrl 1 := by
   obtain ⟨moves, slides, ctrl, mark, mx, pk, ps, hole, c0, c1, hmv, hsl, hc, hm, hmark,
       hmx, hpk, hps, hhole, hsz, hop0, hop1, hfitM, hfitS, hfitC, hfit0, hfit1⟩ := h.pack
   have hlen : (d :: ds).length = ds.length + 1 := by simp
@@ -765,12 +889,41 @@ theorem pow_live_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat)
     · rw [hszS]; exact hsz
   · intro i hu hs
     exact hkeep i hu hs
-  · intro mv0 hmv0
-    have hsame : mv0 = moves :=
-      Int.ofNat.inj (hmv0.symm.trans hmv)
-    refine ⟨liveMove t.n t.k t.benchlen moves acc factor,
-      by simpa [liveMove] using hmvS, ?_⟩
-    simpa [hsame] using live_delta_le t.n t.k t.benchlen moves acc factor hnb hfacLen
+  · refine
+      { moves := ?_
+        slides := ?_
+        ctrl := ?_
+        ops0 := ?_ }
+    · intro mv0 hmv0
+      have hsame : mv0 = moves := Int.ofNat.inj (hmv0.symm.trans hmv)
+      refine ⟨liveMove t.n t.k t.benchlen moves acc factor,
+        by simpa [liveMove] using hmvS, ?_⟩
+      simpa [hsame] using live_delta_le t.n t.k t.benchlen moves acc factor hnb hfacLen
+    · intro sl0 hsl0
+      have hsame : sl0 = slides := Int.ofNat.inj (hsl0.symm.trans hsl)
+      have hslLive : bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+          Int.ofNat (slides + liveSlide t.n t.k t.benchlen acc factor) := by
+        have heq : slides + 2 * pegCount (fieldCube t.n t.k t.benchlen acc) +
+            2 * pegCount (fieldMul t.n t.k t.benchlen (fieldCube t.n t.k t.benchlen acc) factor) =
+            slides + liveSlide t.n t.k t.benchlen acc factor := by
+          rw [liveSlide, Nat.add_assoc]
+        rw [← heq]
+        exact hslS
+      refine ⟨slides + liveSlide t.n t.k t.benchlen acc factor, hslLive, ?_⟩
+      simpa [hsame] using
+        add_le_add_left_le slides _ _ (live_slide_le t.n t.k t.benchlen acc factor hnb)
+    · intro cIn hcIn
+      have hsame : cIn = ctrl := Int.ofNat.inj (hcIn.symm.trans hc)
+      refine ⟨ctrl + 4, hctrlS, ?_⟩
+      simpa [hsame] using ctrl_step_live ctrl
+    · intro c0in hc0in
+      have hslot : some (Int.ofNat c0in) = some (Int.ofNat c0) := hc0in.symm.trans hop0
+      have hsame : c0in = c0 := by
+        injection hslot with hEq
+        exact Int.ofNat.inj hEq
+      refine ⟨c0 + 1, hop0S, ?_⟩
+      rw [hsame]
+      exact Nat.le_refl _
 
 /-- One digit, red, white, or empty. The up home becomes `powStep`, and the
     budget that remains covers `ds`. -/
@@ -783,9 +936,7 @@ theorem pow_step_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat)
       (∀ i, i ≠ powUp → i ≠ powSpare →
         b'.sudo_5Board_4home[i]? = b.sudo_5Board_4home[i]? ∧
         b'.sudo_5Board_4held[i]? = b.sudo_5Board_4held[i]?) ∧
-      (∀ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv →
-        ∃ mv', b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv' ∧
-          mv' ≤ mv + powMove t.n t.benchlen) := by
+      CounterLe b b' (powMove t.n t.benchlen) (powSlide t.n) powCtrl 1 := by
   rcases hd with hd0 | hd1 | hd2
   · obtain ⟨b', hr, hAt, hk, hsp⟩ := pow_zero_at b t rhs acc ds (by simpa [hd0] using h)
     refine ⟨b', ?_, ?_, ?_, ?_⟩
@@ -826,22 +977,37 @@ theorem pow_fold (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : Lis
     (h : PowAt b t rhs acc ds)
     (hdig : ∀ e, e ∈ ds → e = 0 ∨ e = 1 ∨ e = 2) :
     ∃ b', powRun b ds = .ok b' ∧
-      PowAt b' t rhs (ds.foldl (powStep t.n t.k t.benchlen rhs) acc) [] := by
+      PowAt b' t rhs (ds.foldl (powStep t.n t.k t.benchlen rhs) acc) [] ∧
+      (∀ i, i ≠ powUp → i ≠ powSpare →
+        b'.sudo_5Board_4home[i]? = b.sudo_5Board_4home[i]? ∧
+        b'.sudo_5Board_4held[i]? = b.sudo_5Board_4held[i]?) ∧
+      CounterLe b b' (powMove t.n t.benchlen * ds.length) (powSlide t.n * ds.length)
+        (powCtrl * ds.length) ds.length := by
   induction ds generalizing b acc with
   | nil =>
-    refine ⟨b, rfl, ?_⟩
-    simpa using h
+    refine ⟨b, rfl, ?_, ?_, ?_⟩
+    · simpa using h
+    · intro _ _ _
+      exact ⟨rfl, rfl⟩
+    · exact counterLe_refl b
   | cons d ds ih =>
     have hd := hdig d (List.mem_cons_self d ds)
-    obtain ⟨b1, hr, hAt, _, _⟩ := pow_step_at b t rhs acc d ds h hd
+    obtain ⟨b1, hr, hAt, hk, hsp⟩ := pow_step_at b t rhs acc d ds h hd
     have hmem : ∀ e, e ∈ ds → e = 0 ∨ e = 1 ∨ e = 2 := by
       intro e he
       exact hdig e (List.mem_cons_of_mem d he)
-    obtain ⟨b', hr2, hEnd⟩ := ih b1 (powStep t.n t.k t.benchlen rhs acc d) hAt hmem
-    refine ⟨b', ?_, ?_⟩
+    obtain ⟨b', hr2, hEnd, hk2, hsp2⟩ :=
+      ih b1 (powStep t.n t.k t.benchlen rhs acc d) hAt hmem
+    refine ⟨b', ?_, ?_, ?_, ?_⟩
     · rw [powRun, hr, ok_bind]
       exact hr2
     · simpa [List.foldl_cons] using hEnd
+    · intro i hu hs
+      obtain ⟨hhome1, hheld1⟩ := hk i hu hs
+      obtain ⟨hhome2, hheld2⟩ := hk2 i hu hs
+      exact ⟨hhome2.trans hhome1, hheld2.trans hheld1⟩
+    · have hlen : (d :: ds).length = ds.length + 1 := by simp
+      simpa [hlen] using counterLe_pow t.n t.benchlen ds.length hsp hsp2
 
 theorem rootDigits_length (n : Nat) : (rootDigits n).length = n - 1 := by
   unfold rootDigits
@@ -858,7 +1024,7 @@ theorem pow_root (b : Ecbs.Board) (t : Spec.Tier) (x : List Nat)
     (h : PowAt b t (curveSide t.n t.k t.benchlen x) (whiteHole0 t.n) (rootDigits t.n)) :
     ∃ b', powRun b (rootDigits t.n) = .ok b' ∧
       PowAt b' t (curveSide t.n t.k t.benchlen x) (rootY t.n t.k t.benchlen x) [] := by
-  obtain ⟨b', hr, hAt⟩ := pow_fold b t (curveSide t.n t.k t.benchlen x) (whiteHole0 t.n)
+  obtain ⟨b', hr, hAt, _, _⟩ := pow_fold b t (curveSide t.n t.k t.benchlen x) (whiteHole0 t.n)
       (rootDigits t.n) h (fun e he => rootDigits_trit t.n e he)
   refine ⟨b', hr, ?_⟩
   simpa [rootY_digits] using hAt

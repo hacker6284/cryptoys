@@ -49,6 +49,8 @@ structure UpAt (b : Ecbs.Board) (t : Spec.Tier) (j : Nat) : Prop where
   axHome : ∀ h : 0 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[0] = (#[] : Array Int)
   axHeld : ∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0] = false
   spareOff : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = false
+  buOff : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = false
+  buHome : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = (#[] : Array Int)
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t)
@@ -147,6 +149,14 @@ theorem search_up (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : T
         intro h
         have hne : (1 : Nat) ≠ 6 := by decide
         simp [b', peakBoard, whitePut, Array.getElem_set, hne, g.spareOff]
+      buOff := by
+        intro h
+        have hne : (1 : Nat) ≠ 4 := by decide
+        simp [b', peakBoard, whitePut, Array.getElem_set, hne, g.buOff]
+      buHome := by
+        intro h
+        have hne : (1 : Nat) ≠ 4 := by decide
+        simp [b', peakBoard, whitePut, Array.getElem_set, hne, g.buHome]
       szH := by simp [b', peakBoard, whitePut, Array.size_set, g.szH]
       szD := by simp [b', peakBoard, whitePut, Array.size_set, g.szD]
       ctrl := by simp [b', peakBoard, whitePut, g.ctrl]
@@ -216,6 +226,8 @@ structure UpKeep (b : Ecbs.Board) (t : Spec.Tier)
   axHome : ∀ h : 0 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[0] = (#[] : Array Int)
   axHeld : ∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0] = false
   spareOff : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = false
+  buOff : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = false
+  buHome : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = (#[] : Array Int)
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t)
@@ -325,6 +337,14 @@ theorem search_up_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         intro h
         have hne : (1 : Nat) ≠ 6 := by decide
         simp [b', peakBoard, whitePut, Array.getElem_set, hne, g.spareOff]
+      buOff := by
+        intro h
+        have hne : (1 : Nat) ≠ 4 := by decide
+        simp [b', peakBoard, whitePut, Array.getElem_set, hne, g.buOff]
+      buHome := by
+        intro h
+        have hne : (1 : Nat) ≠ 4 := by decide
+        simp [b', peakBoard, whitePut, Array.getElem_set, hne, g.buHome]
       szH := by simp [b', peakBoard, whitePut, Array.size_set, g.szH]
       szD := by simp [b', peakBoard, whitePut, Array.size_set, g.szD]
       ctrl := by simp [b', peakBoard, whitePut, g.ctrl]

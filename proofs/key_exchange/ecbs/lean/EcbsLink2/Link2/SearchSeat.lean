@@ -205,7 +205,7 @@ theorem search_ready (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat 
             (curveSide t.n t.k t.benchlen (basisPeg t.n j)))
           (rootStrip t.n) (basisPeg t.n j) left := by
   obtain ⟨bS, hstrip, s⟩ := search_strip t hOk hsh sat j hj0 hj
-  obtain ⟨b', hpow, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE⟩ :=
+  obtain ⟨b', hpow, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE, hbuH, hbu⟩ :=
     pow_from_strip bS t j hOk hsh sat s hn3
   rcases hmvE with ⟨mv, hmv, hmvLe⟩
   rcases hslE with ⟨sl, hsl, hslLe⟩
@@ -252,7 +252,7 @@ theorem search_ready (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat 
     exact hpow
   exact search_of_pow b' t (basisPeg t.n j) (rootStrip t.n) (basisPeg t.n j) left hPow
     (basisPeg_length t.n j) hax haxD (strip_len t.n (two_le t.n hn3))
-    hbx hbxD (basisPeg_length t.n j) hleft hM hS hC hOp
+    hbx hbxD (basisPeg_length t.n j) hleft hM hS hC hOp hbu hbuH
 
 private theorem gap_plant (n bench : Nat) :
     gapCap n bench + 1 + n ≤ plantRoom n bench := by
@@ -500,7 +500,7 @@ theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   have hcB : FitsLen (c0 + tierR t + perCtrl t.n * holesLeft) := by
     simpa [hcSame, Nat.add_assoc] using hfitC
   obtain ⟨b', hpow, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE, hop1E, hopSz,
-      hszH, hszD⟩ :=
+      hszH, hszD, hbuH, hbu⟩ :=
     pow_from_strip_at bS t j mv0 sl0 c0 o0 o1 holesLeft s hOk hsh sat hn3
       hp.holesPos hmvB hslB hcB
   rcases hmvE with ⟨mv, hmv, hmvLe⟩
@@ -543,6 +543,7 @@ theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         rw [hsame]
         exact FitsLen.of_le s.opsRoom
           (ready_op o0 cOp t.n holesLeft left hOk.n_pos hp.holesPos hleftH hopLe))
+      hbu hbuH
   · exact
       { szH := hszH
         szD := hszD

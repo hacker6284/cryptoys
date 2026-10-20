@@ -69,6 +69,9 @@ theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) (holesLeft : Nat)
   spareOff := by
     rw [built_held_blank]
     simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
+  buOff := by
+    rw [built_held_blank]
+    simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
   axHome := by
     rw [built_home_blank]
     simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
@@ -76,6 +79,9 @@ theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) (holesLeft : Nat)
     rw [built_home_blank]
     simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
   gapHome := by
+    rw [built_home_blank]
+    simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
+  buHome := by
     rw [built_home_blank]
     simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
   moves := by

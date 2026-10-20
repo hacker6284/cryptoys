@@ -154,7 +154,9 @@ theorem miss_drop (b : Ecbs.Board)
       bM.sudo_5Board_4cost.sudo_5Costs_5moves =
         Int.ofNat (moves + pegCount gapXs + pegCount side + pegCount y +
           pegCount ax + pegCount bx) ∧
-      bM.sudo_5Board_4held[6]? = b.sudo_5Board_4held[6]? := by
+      bM.sudo_5Board_4held[6]? = b.sudo_5Board_4held[6]? ∧
+      bM.sudo_5Board_4held[4]? = b.sudo_5Board_4held[4]? ∧
+      bM.sudo_5Board_4home[4]? = b.sudo_5Board_4home[4]? := by
   obtain ⟨h1, h2, h3, h4⟩ := fit_prefix moves (pegCount gapXs) (pegCount side)
     (pegCount y) (pegCount ax) (pegCount bx) hfit
   obtain ⟨b1, hc1, k1, hmv1, hgapE, hgapF, hH1, hD1⟩ :=
@@ -202,7 +204,7 @@ theorem miss_drop (b : Ecbs.Board)
     clear_one b4 searchBase bx
       (moves + pegCount gapXs + pegCount side + pegCount y + pegCount ax)
       hbx4 hbxD4 hmv4 hfb hfit
-  refine ⟨b5, ?_, ?_, ?_, hmv5, ?_⟩
+  refine ⟨b5, ?_, ?_, ?_, hmv5, ?_, ?_, ?_⟩
   · unfold searchMiss
     rw [hc1, ok_bind, hc2, ok_bind, hc3, ok_bind, hc4, ok_bind, hc5]
   · exact
@@ -221,6 +223,14 @@ theorem miss_drop (b : Ecbs.Board)
       ((hD4 6 (by decide)).trans
         ((hD3 6 (by decide)).trans
           ((hD2 6 (by decide)).trans (hD1 6 (by decide)))))
+  · exact (hD5 4 (by decide)).trans
+      ((hD4 4 (by decide)).trans
+        ((hD3 4 (by decide)).trans
+          ((hD2 4 (by decide)).trans (hD1 4 (by decide)))))
+  · exact (hH5 4 (by decide)).trans
+      ((hH4 4 (by decide)).trans
+        ((hH3 4 (by decide)).trans
+          ((hH2 4 (by decide)).trans (hH1 4 (by decide)))))
 
 private theorem gap_in_plant (n bench : Nat) :
     gapCap n bench + 1 + n ≤ plantRoom n bench := by
@@ -414,7 +424,7 @@ theorem miss_plantAt (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
     simpa [y, hAt.yIs] using hhit.upHome
   have hlenSq : (fieldMul t.n t.k t.benchlen y y).length = t.n :=
     fieldMul_length t.n t.k t.benchlen y y hnb
-  obtain ⟨bM, hdrop, hmissAt, hk, hmvM, hspM⟩ :=
+  obtain ⟨bM, hdrop, hmissAt, hk, hmvM, hspM, hbuD, hbuH⟩ :=
     miss_drop bC (fieldMul t.n t.k t.benchlen y y) side y ax bx movesS
       hgap hhit.gapHeld hbot hhit.botHeld hup hhit.upHeld
       hhit.axHome hhit.axHeld hhit.bxHome hhit.bxHeld
@@ -501,6 +511,8 @@ theorem miss_plantAt (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         upOff := hmissAt.upHeld
         gapOff := hmissAt.gapHeld
         spareOff := hspM.trans hkeep.spare
+        buOff := hbuD.trans hhit.buOff
+        buHome := hbuH.trans hhit.buHome
         axHome := hmissAt.axHome
         upHome := hmissAt.upHome
         gapHome := hmissAt.gapHome

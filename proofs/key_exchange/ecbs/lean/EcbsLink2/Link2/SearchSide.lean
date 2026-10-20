@@ -214,7 +214,9 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
         (∃ holeN, bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN) ∧
         mv + 2 * t.n + 1 ≤ sideCap t.n t.benchlen ∧
         (∀ h : 0 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[0] = false) ∧
-        (∀ h : 0 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[0] = (#[] : Array Int)) := by
+        (∀ h : 0 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[0] = (#[] : Array Int)) ∧
+        (∀ h : 4 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[4] = false) ∧
+        (∀ h : 4 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[4] = (#[] : Array Int)) := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hxt : allTritList x := basisPeg_trits t.n j
@@ -224,7 +226,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
   obtain ⟨bC, hdo, honC, htoC, hbenchC, htakeC, hlenC, hzeroC, hmkC, hszHC, hszDC,
       hheld2C, _hhome2C, hheld3C, hhome3C, hheld6C, hmovC, hslC, hpkE, hpsE, hholeE,
       htierC, hopsC, hop0C, hheld1C, hheld5C, hmarkC, hctrlC, hmxC, hopSzC, hop1C,
-      hhome1C, hhome5C, hheld0C, hhome0C⟩ :=
+      hhome1C, hhome5C, hheld0C, hhome0C, hheld4C, hhome4C⟩ :=
     search_cube t hOk hsh sat j hj
   obtain ⟨pk, hpk⟩ := hpkE
   obtain ⟨ps, hps⟩ := hpsE
@@ -353,7 +355,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
       mv + 2 * pegCount (lane.take n) + n + n * (n + 1) + 3 * (bench - n) + 2 * n + 2 * n + 1 :=
     close_room mvS mv (pegCount (lane.take n)) n bench hmvInner
   refine ⟨bS, mvS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hdo, ok_bind, hokM, ok_bind]
     exact hokS
   · intro h
@@ -450,6 +452,18 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     have hM := hhomeP 0 h0C h0M (by decide) (by decide)
     have hS := hhomePS 0 h0M h (by decide)
     exact hS.trans (hM.trans (hhome0C h0C))
+  · intro h
+    have h4C : 4 < bC.sudo_5Board_4held.size := by rw [hszDC]; decide
+    have h4M : 4 < bM.sudo_5Board_4held.size := by rw [hszDM, hszDC]; decide
+    have hM := hheldPM 4 h4C h4M (by decide) (by decide)
+    have hS := hheldPS 4 h4M h (by decide)
+    exact hS.trans (hM.trans (hheld4C h4C))
+  · intro h
+    have h4C : 4 < bC.sudo_5Board_4home.size := by rw [hszHC]; decide
+    have h4M : 4 < bM.sudo_5Board_4home.size := by rw [hszHM, hszHC]; decide
+    have hM := hhomeP 4 h4C h4M (by decide) (by decide)
+    have hS := hhomePS 4 h4M h (by decide)
+    exact hS.trans (hM.trans (hhome4C h4C))
 
 /-- The board `curve_side` leaves for one search hole: curve side in the bottom,
     the planted peg still in base-across, up and the gap empty, marker down,
@@ -472,6 +486,8 @@ structure SideAt (b : Ecbs.Board) (t : Spec.Tier) (j : Nat) : Prop where
   gapHome : ∀ h : 5 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[5] = (#[] : Array Int)
   gapHeld : ∀ h : 5 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[5] = false
   spareOff : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = false
+  buOff : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = false
+  buHome : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = (#[] : Array Int)
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t)
@@ -516,7 +532,7 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
     fieldMul_length t.n t.k t.benchlen x x hnle
   obtain ⟨bS, mv, hdo, hhome2, hheld2, hhome6, hheld6, hhome3, hheld3, hoff, htier, hmov,
       hfit, hszH, hszD, hheld1, hheld5, hmk, hmark, hctrl, hmx, hopSz, hop0, hop1,
-      hhome1, hhome5, hslE, hpkE, hstrictE, hholeE, hcap, hheld0, hhome0⟩ :=
+      hhome1, hhome5, hslE, hpkE, hstrictE, hholeE, hcap, hheld0, hhome0, hheld4, hhome4⟩ :=
     search_square t hOk hsh sat j hj
   have h2H : 2 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2D : 2 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -575,6 +591,14 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
           intro h
           exact (hk.held 5 (by decide) h5D h).trans (hheld5 h5D)
         spareOff := hk.spareHeld
+        buOff := by
+          intro h
+          have h4S : 4 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
+          exact (hk.held 4 (by decide) h4S h).trans (hheld4 h4S)
+        buHome := by
+          intro h
+          have h4S : 4 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
+          exact (hk.home 4 (by decide) (by decide) h4S h).trans (hhome4 h4S)
         szH := hk.szH.trans hszH
         szD := hk.szD.trans hszD
         ctrl := hk.ctrl.trans hctrl
@@ -625,6 +649,8 @@ structure SquareKeep (b : Ecbs.Board) (t : Spec.Tier) (j o0 o1 holesLeft : Nat) 
   baseHeld : ∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true
   gapHeld : ∀ h : 5 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[5] = false
   spareHeld : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = true
+  buOff : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = false
+  buHome : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = (#[] : Array Int)
   peak : ∃ (pk : Nat), b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
   strict : ∃ (ps : Nat), b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps
   hole : ∃ (holeN : Nat), b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN
@@ -901,6 +927,18 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
           exact (hheldPS 5 hM h (by decide)).trans
             ((hheldPM 5 hC hM (by decide) (by decide)).trans (cu.held5 hC))
         spareHeld := hheld6S
+        buOff := by
+          intro h
+          have hC : 4 < bC.sudo_5Board_4held.size := by rw [cu.szD]; decide
+          have hM : 4 < bM.sudo_5Board_4held.size := by rw [hszDM]; exact hC
+          exact (hheldPS 4 hM h (by decide)).trans
+            ((hheldPM 4 hC hM (by decide) (by decide)).trans (cu.held4 hC))
+        buHome := by
+          intro h
+          have hC : 4 < bC.sudo_5Board_4home.size := by rw [cu.szH]; decide
+          have hM : 4 < bM.sudo_5Board_4home.size := by rw [hszHM]; exact hC
+          exact (hhomePS 4 hM h (by decide)).trans
+            ((hhomeP 4 hC hM (by decide) (by decide)).trans (cu.home4 hC))
         peak := hpeakS
         strict := by
           rcases hstrictM with ⟨psM, hpsM⟩

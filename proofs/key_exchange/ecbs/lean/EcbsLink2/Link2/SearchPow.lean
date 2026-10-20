@@ -270,7 +270,9 @@ theorem pow_from_strip (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
         (∃ c, b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
           c ≤ tierR t + powCtrl * (t.n - 1)) ∧
         (∃ c0, b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) ∧
-          c0 ≤ 2 + (t.n - 1)) := by
+          c0 ≤ 2 + (t.n - 1)) ∧
+        b'.sudo_5Board_4home[4]? = some (#[] : Array Int) ∧
+        b'.sudo_5Board_4held[4]? = some false := by
   let x := basisPeg t.n j
   let side := curveSide t.n t.k t.benchlen x
   let acc := whiteHole0 t.n
@@ -397,7 +399,7 @@ theorem pow_from_strip (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
     have hheldP : bP.sudo_5Board_4held[i]? = b.sudo_5Board_4held[i]? := by
       simp [bP, coldPhantom]
     exact ⟨hhome2.trans (hhome1.trans hhomeP), hheld2.trans (hheld1.trans hheldP)⟩
-  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hred]
     simp only [powRun, if_true, hrunB, ok_bind]
     exact hr
@@ -432,6 +434,12 @@ theorem pow_from_strip (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
       simpa [bP, coldPhantom] using slot_some b 0 2 s.opsSz (by decide) s.ops0
     obtain ⟨c0', hc0', hle⟩ := hcount.ops0 2 hopP
     exact ⟨c0', hc0', hle⟩
+  · exact (hkeep 4 (by decide) (by decide)).1.trans
+      (home_some b 4 (#[] : Array Int) s.szH (by decide)
+        (by intro h; simpa using s.buHome h))
+  · exact (hkeep 4 (by decide) (by decide)).2.trans
+      (held_some b 4 false s.szD (by decide)
+        (by intro h; simpa using s.buOff h))
 
 private theorem mul_ge (p k : Nat) (hk : 0 < k) : p ≤ p * k := by
   simpa [Nat.mul_one] using Nat.mul_le_mul_left p (Nat.succ_le_of_lt hk)
@@ -564,7 +572,9 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
           c1 ≤ o1 + 1 + (t.n - 1)) ∧
         b'.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 ∧
         b'.sudo_5Board_4home.size = 8 ∧
-        b'.sudo_5Board_4held.size = 8 := by
+        b'.sudo_5Board_4held.size = 8 ∧
+        b'.sudo_5Board_4home[4]? = some (#[] : Array Int) ∧
+        b'.sudo_5Board_4held[4]? = some false := by
   let x := basisPeg t.n j
   let side := curveSide t.n t.k t.benchlen x
   let acc := whiteHole0 t.n
@@ -711,7 +721,7 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
     have heq := (hkeep i hne1 hne6).1
     rw [← heq] at hnone
     exact Nat.not_lt.mpr (Array.getElem?_eq_none_iff.mp hnone)
-  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hred]
     simp only [powRun, if_true, hrunB, ok_bind]
     exact hr
@@ -793,5 +803,11 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
       exact Nat.not_lt.mpr (Array.getElem?_eq_none_iff.mp hnone)
     exact seven_eight _ (held_lt 7 (by decide) (by decide) (by decide))
       (held_ge 8 (by decide))
+  · exact (hkeep 4 (by decide) (by decide)).1.trans
+      (home_some b 4 (#[] : Array Int) s.szH (by decide)
+        (by intro h; simpa using s.buHome h))
+  · exact (hkeep 4 (by decide) (by decide)).2.trans
+      (held_some b 4 false s.szD (by decide)
+        (by intro h; simpa using s.buOff h))
 
 end EcbsLink2.Link2

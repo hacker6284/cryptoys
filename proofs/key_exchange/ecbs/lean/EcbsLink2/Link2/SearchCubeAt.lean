@@ -259,6 +259,8 @@ structure CubeAt (b : Ecbs.Board) (t : Spec.Tier) (j mv0 sl0 c0 holesLeft : Nat)
   home5 : ∀ h : 5 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[5] = (#[] : Array Int)
   held0 : ∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0] = false
   home0 : ∀ h : 0 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[0] = (#[] : Array Int)
+  held4 : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = false
+  home4 : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = (#[] : Array Int)
 
 private theorem set_true_id (a : Array Bool) (i : Nat) (hi : i < a.size) (ht : a[i] = true) :
     a.set ⟨i, hi⟩ true = a := by
@@ -338,6 +340,8 @@ structure CopyAt (b : Ecbs.Board) (t : Spec.Tier) (j mv0 sl0 c0 holesLeft : Nat)
   home0 : b.sudo_5Board_4home[0]? = some (#[] : Array Int)
   home1 : b.sudo_5Board_4home[1]? = some (#[] : Array Int)
   home5 : b.sudo_5Board_4home[5]? = some (#[] : Array Int)
+  held4 : b.sudo_5Board_4held[4]? = some false
+  home4 : b.sudo_5Board_4home[4]? = some (#[] : Array Int)
 
 private theorem op_one_le (o n k : Nat) (hk : 0 < k) :
     o + 1 ≤ o + perOp n * k := by
@@ -531,7 +535,9 @@ theorem copy_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
       held6 := stayH 6 (by decide) (by decide) hp.spareOff
       home0 := stayA 0 (by decide) (by decide) hp.axHome
       home1 := stayA 1 (by decide) (by decide) hp.upHome
-      home5 := stayA 5 (by decide) (by decide) hp.gapHome }
+      home5 := stayA 5 (by decide) (by decide) hp.gapHome
+      held4 := stayH 4 (by decide) (by decide) hp.buOff
+      home4 := stayA 4 (by decide) (by decide) hp.buHome }
 
 /-- Plant the basis peg, copy it into the bottom, and cube that copy.
     Moves come back as `mv0` plus `cubeMoves` of the two copies. Slides stay
@@ -728,7 +734,20 @@ theorem search_cube_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
           rw [eq_idx hhome 0, Array.getElem?_set_ne _ ⟨2, hHome⟩ (#[] : Array Int)
             (by decide : (2 : Nat) ≠ 0)]
           exact c.home0
-        exact of_some _ 0 _ h? h }
+        exact of_some _ 0 _ h? h
+      held4 := by
+        intro h
+        have h? : bK.sudo_5Board_4held[4]? = some false := by
+          rw [eq_idx hheld 4, Array.getElem?_set_ne _ ⟨2, hF⟩ false (by decide : (2 : Nat) ≠ 4)]
+          exact c.held4
+        exact of_some _ 4 false h? h
+      home4 := by
+        intro h
+        have h? : bK.sudo_5Board_4home[4]? = some (#[] : Array Int) := by
+          rw [eq_idx hhome 4, Array.getElem?_set_ne _ ⟨2, hHome⟩ (#[] : Array Int)
+            (by decide : (2 : Nat) ≠ 4)]
+          exact c.home4
+        exact of_some _ 4 _ h? h }
 
 end EcbsLink2.Link2
 

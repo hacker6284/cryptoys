@@ -80,6 +80,8 @@ structure StripAt (b : Ecbs.Board) (t : Spec.Tier) (j : Nat) : Prop where
     b.sudo_5Board_4home[3] = embed (basisPeg t.n j)
   baseHeld : ∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true
   spareOff : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = false
+  buOff : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = false
+  buHome : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = (#[] : Array Int)
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t)
@@ -205,6 +207,16 @@ theorem search_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat 
         have hH := place_held_eq b0 0 h0H h0D (rootStrip t.n) mv pk
         have hne : (0 : Nat) ≠ 6 := by decide
         simp [b', bP, hH, Array.getElem_set, hne, u.spareOff]
+      buOff := by
+        intro h
+        have hH := place_held_eq b0 0 h0H h0D (rootStrip t.n) mv pk
+        have hne : (0 : Nat) ≠ 4 := by decide
+        simp [b', bP, hH, Array.getElem_set, hne, u.buOff]
+      buHome := by
+        intro h
+        have hH := place_home_eq b0 0 h0H h0D (rootStrip t.n) mv pk
+        have hne : (0 : Nat) ≠ 4 := by decide
+        simp [b', bP, hH, Array.getElem_set, hne, u.buHome]
       szH := by
         simp [b', bP, place_home_eq b0 0 h0H h0D (rootStrip t.n) mv pk, Array.size_set, u.szH]
       szD := by
@@ -288,6 +300,8 @@ structure StripKeep (b : Ecbs.Board) (t : Spec.Tier)
     b.sudo_5Board_4home[3] = embed (basisPeg t.n j)
   baseHeld : ∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true
   spareOff : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = false
+  buOff : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = false
+  buHome : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = (#[] : Array Int)
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t)
@@ -429,6 +443,16 @@ theorem search_strip_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         have hH := place_held_eq bU 0 h0H h0D (rootStrip t.n) mv pk
         have hne : (0 : Nat) ≠ 6 := by decide
         simp [b', bP, hH, Array.getElem_set, hne, u.spareOff]
+      buOff := by
+        intro h
+        have hH := place_held_eq bU 0 h0H h0D (rootStrip t.n) mv pk
+        have hne : (0 : Nat) ≠ 4 := by decide
+        simp [b', bP, hH, Array.getElem_set, hne, u.buOff]
+      buHome := by
+        intro h
+        have hH := place_home_eq bU 0 h0H h0D (rootStrip t.n) mv pk
+        have hne : (0 : Nat) ≠ 4 := by decide
+        simp [b', bP, hH, Array.getElem_set, hne, u.buHome]
       szH := by
         simp [b', bP, place_home_eq bU 0 h0H h0D (rootStrip t.n) mv pk, Array.size_set, u.szH]
       szD := by

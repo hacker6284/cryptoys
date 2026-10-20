@@ -179,7 +179,9 @@ theorem search_of_pow (b : Ecbs.Board) (t : Spec.Tier) (x ax bx : List Nat) (lef
     (hC : ∀ ctrl, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl →
       FitsLen (ctrl + left))
     (hOp : ∀ c0, b.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) →
-      FitsLen (c0 + left)) :
+      FitsLen (c0 + left))
+    (hbu : b.sudo_5Board_4held[4]? = some false)
+    (hbuH : b.sudo_5Board_4home[4]? = some (#[] : Array Int)) :
     SearchAt b t x (rootY t.n t.k t.benchlen x) (curveSide t.n t.k t.benchlen x)
       (fieldMul t.n t.k t.benchlen (curveSide t.n t.k t.benchlen x)
         (curveSide t.n t.k t.benchlen x)) ax bx left where
@@ -213,6 +215,8 @@ theorem search_of_pow (b : Ecbs.Board) (t : Spec.Tier) (x ax bx : List Nat) (lef
   bxHome := hbx
   bxHeld := hbxD
   spareOff := h.spareOff
+  buOff := hbu
+  buHome := hbuH
   homeWide := h.homeWide
   pack := by
     obtain ⟨moves, slides, ctrl, mark, _, pk, ps, hole, c0, _, hmv, hsl, hc, hm, _, _,

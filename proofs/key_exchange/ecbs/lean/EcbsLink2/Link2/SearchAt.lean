@@ -88,6 +88,8 @@ structure SearchAt (b : Ecbs.Board) (t : Spec.Tier) (x y side gapXs ax bx : List
   bxHome : b.sudo_5Board_4home[searchBase]? = some (embed bx)
   bxHeld : b.sudo_5Board_4held[searchBase]? = some true
   spareOff : b.sudo_5Board_4held[searchSpare]? = some false
+  buOff : b.sudo_5Board_4held[4]? = some false
+  buHome : b.sudo_5Board_4home[4]? = some (#[] : Array Int)
   homeWide : searchSpare < b.sudo_5Board_4home.size
   pack :
     ∃ (moves slides ctrl mark pk ps hole c0 : Nat),
@@ -124,6 +126,8 @@ structure HitAt (b : Ecbs.Board) (t : Spec.Tier) (x ax bx : List Nat) : Prop whe
   axHeld : b.sudo_5Board_4held[searchAcross]? = some true
   bxHome : b.sudo_5Board_4home[searchBase]? = some (embed bx)
   bxHeld : b.sudo_5Board_4held[searchBase]? = some true
+  buOff : b.sudo_5Board_4held[4]? = some false
+  buHome : b.sudo_5Board_4home[4]? = some (#[] : Array Int)
 
 /-- The five homes the miss branch empties. -/
 structure MissAt (b : Ecbs.Board) : Prop where
@@ -221,7 +225,9 @@ theorem search_prepared (b : Ecbs.Board) (t : Spec.Tier)
           bC.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c + 1)) ∧
         bC.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
         bC.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
-          b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+          b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+        bC.sudo_5Board_4home[4]? = some (#[] : Array Int) ∧
+        bC.sudo_5Board_4held[4]? = some false := by
   obtain ⟨moves, slides, ctrl, mark, pk, ps, hole, c0, hmv, hsl, hc, hm, hpk, hps, hhole,
       hops0, hop0, hleft, hfitM, _hfitS, hfitC, _hfit0⟩ := h.pack
   have hG := some_idx _ _ _ h.gapHome
@@ -322,7 +328,9 @@ theorem search_prepared (b : Ecbs.Board) (t : Spec.Tier)
       by simp [bC, bF, bL, Array.size_set],
       ⟨ctrl, hc, by simp [bC, bF, bL]⟩,
       by simp [bC, bF, bL],
-      by simp [bC, bF, bL]⟩
+      by simp [bC, bF, bL],
+      hkeepH (j := 4) (by decide) h.buHome,
+      hkeepD (j := 4) (by decide) h.buOff⟩
 
 private theorem search_room (n bench moves left pegG pegY : Nat)
     (hleft : 0 < left) (hg : pegG ≤ n) (hy : pegY ≤ n)
@@ -425,7 +433,7 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
   obtain ⟨bC, moves, slides, pk, ps, hole, c0, movesC, hpre, hmv, hsl, hpk, hps, hhole, hop0,
       hflag, hoff, _hmark, hup, hupd, hbot, hbotd, _hgapH, hgapD, hax, haxd, hbx, hbxd, hsp,
       hmvC, hmovesC, htierC, hslC, hpkC, hpsC, hholeC, hopC, hwide, hspS, h7,
-      hleft, hfitM, hfitS, hfit0, hszHC, hszDC, hctrlStep, hopsBC, hmxBC⟩ :=
+      hleft, hfitM, hfitS, hfit0, hszHC, hszDC, hctrlStep, hopsBC, hmxBC, hbu, hbuD⟩ :=
     search_prepared b t x y side gapXs ax bx left h
   have hn0 : 0 < t.n := h.nPos
   have hnb : t.n ≤ t.benchlen := mul_span_n t.n t.benchlen hn0 h.sat.mul_span
@@ -820,7 +828,24 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
           rw [_hheldM]
           rw [Array.getElem?_set_ne _ _ _ (by decide : (6 : Nat) ≠ searchBase)]
           rw [Array.getElem?_set_ne _ _ _ (by decide : (6 : Nat) ≠ searchBase)]
-          exact hbxd }
+          exact hbxd
+        buOff := by
+          rw [settle_held_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul]
+          rw [Array.getElem?_set_ne _ ⟨searchGap, hGD⟩ true (by decide : searchGap ≠ 4)]
+          rw [_hheldM]
+          rw [Array.getElem?_set_ne _ _ _ (by decide : (6 : Nat) ≠ 4)]
+          rw [Array.getElem?_set_ne _ _ _ (by decide : (6 : Nat) ≠ 4)]
+          exact hbuD
+        buHome := by
+          rw [show bS.sudo_5Board_4home =
+              bM.sudo_5Board_4home.set ⟨searchGap, hGH⟩ (embed (lane.take t.n)) from
+            settle_home_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul]
+          rw [Array.getElem?_set_ne _ ⟨searchGap, hGH⟩ _ (by decide : searchGap ≠ 4)]
+          have h4 : 4 < bC.sudo_5Board_4home.size := some_idx _ _ _ hbu
+          have h4' : 4 < bM.sudo_5Board_4home.size := by rw [hszHM]; exact h4
+          have hget := hhomeM 4 h4 h4' (by decide)
+          rw [Array.getElem?_eq_getElem h4', hget]
+          exact congrArg some (some_get _ _ _ hbu) }
   · rcases hctrlStep with ⟨ctrl0, hctrl0, hctrlC⟩
     refine
       { marker := by

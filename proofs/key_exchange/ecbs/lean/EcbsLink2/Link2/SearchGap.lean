@@ -119,6 +119,8 @@ structure GapAt (b : Ecbs.Board) (t : Spec.Tier) (j : Nat) : Prop where
         (curveSide t.n t.k t.benchlen (basisPeg t.n j)))
   gapHeld : ∀ h : 5 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[5] = true
   spareOff : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = false
+  buOff : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = false
+  buHome : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = (#[] : Array Int)
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t)
@@ -333,6 +335,19 @@ theorem search_gap (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : 
         have hS := settle_held_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM sl pkM
         have hne : (5 : Nat) ≠ 6 := by decide
         simp [b', hS, Array.getElem_set, hne, hheldM]
+      buOff := by
+        intro h
+        have hS := settle_held_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM sl pkM
+        have hne : (5 : Nat) ≠ 4 := by decide
+        simp [b', hS, Array.getElem_set, hne, hheldM, s.buOff]
+      buHome := by
+        intro h
+        have hS := settle_home_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM sl pkM
+        have hne : (5 : Nat) ≠ 4 := by decide
+        have h4H : 4 < b0.sudo_5Board_4home.size := by rw [s.szH]; decide
+        have h4M : 4 < bM.sudo_5Board_4home.size := by rw [hszHM, s.szH]; decide
+        have hM := hhomeM 4 h4H h4M (by decide)
+        simp [b', hS, Array.getElem_set, hne, hM, s.buHome]
       szH := by
         rw [settle_home_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM sl pkM, Array.size_set, hszHM]
         exact s.szH
@@ -521,6 +536,8 @@ structure GapKeep (b : Ecbs.Board) (t : Spec.Tier)
         (curveSide t.n t.k t.benchlen (basisPeg t.n j)))
   gapHeld : ∀ h : 5 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[5] = true
   spareOff : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = false
+  buOff : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = false
+  buHome : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = (#[] : Array Int)
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t)
@@ -644,6 +661,15 @@ theorem search_gap_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
     intro h
     have h0S : 0 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
     exact (hk.home 0 (by decide) (by decide) h0S h).trans (sk.axHome h0S)
+  have buOffW : ∀ h : 4 < bW.sudo_5Board_4held.size, bW.sudo_5Board_4held[4] = false := by
+    intro h
+    have h4S : 4 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
+    exact (hk.held 4 (by decide) h4S h).trans (sk.buOff h4S)
+  have buHomeW : ∀ h : 4 < bW.sudo_5Board_4home.size,
+      bW.sudo_5Board_4home[4] = (#[] : Array Int) := by
+    intro h
+    have h4S : 4 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
+    exact (hk.home 4 (by decide) (by decide) h4S h).trans (sk.buHome h4S)
   have baseHeldW : ∀ h : 3 < bW.sudo_5Board_4held.size, bW.sudo_5Board_4held[3] = true := by
     intro h
     have h3S : 3 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -832,6 +858,19 @@ theorem search_gap_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         have hS := settle_held_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM slS pkM
         have hne : (5 : Nat) ≠ 6 := by decide
         simp [b', hS, Array.getElem_set, hne, hheldM]
+      buOff := by
+        intro h
+        have hS := settle_held_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM slS pkM
+        have hne : (5 : Nat) ≠ 4 := by decide
+        simp [b', hS, Array.getElem_set, hne, hheldM, buOffW]
+      buHome := by
+        intro h
+        have hS := settle_home_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM slS pkM
+        have hne : (5 : Nat) ≠ 4 := by decide
+        have h4W : 4 < bW.sudo_5Board_4home.size := by rw [hszHW]; decide
+        have h4M : 4 < bM.sudo_5Board_4home.size := by rw [hszHM, hszHW]; decide
+        have hM := hhomeM 4 h4W h4M (by decide)
+        simp [b', hS, Array.getElem_set, hne, hM, buHomeW]
       szH := by
         rw [settle_home_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM slS pkM, Array.size_set, hszHM]
         exact hszHW

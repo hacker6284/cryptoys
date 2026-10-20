@@ -51,9 +51,11 @@ structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat) : Prop wher
   upOff : b.sudo_5Board_4held[1]? = some false
   gapOff : b.sudo_5Board_4held[5]? = some false
   spareOff : b.sudo_5Board_4held[6]? = some false
+  buOff : b.sudo_5Board_4held[4]? = some false
   axHome : b.sudo_5Board_4home[0]? = some (#[] : Array Int)
   upHome : b.sudo_5Board_4home[1]? = some (#[] : Array Int)
   gapHome : b.sudo_5Board_4home[5]? = some (#[] : Array Int)
+  buHome : b.sudo_5Board_4home[4]? = some (#[] : Array Int)
   marker : b.sudo_5Board_6marker = -1
   markerOn : b.sudo_5Board_9marker_on = false
   benchOff : b.sudo_5Board_8bench_on = false

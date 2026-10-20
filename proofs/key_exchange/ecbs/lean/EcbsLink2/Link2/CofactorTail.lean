@@ -274,6 +274,26 @@ private theorem cont_from (k toN : Nat) (b b' : Board) (cells : List Nat)
     omega
   rw [hfuel, runLoopOn_succ, hstep]
 
+private theorem lay_after (b : Board) (baseX baseY : List Nat) (ctrl : Nat)
+    (lay : LastLay b baseX baseY) :
+    LastLay { b with
+        sudo_5Board_6marker := -1
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) }
+        sudo_5Board_9marker_on := false } baseX baseY where
+  bench := lay.bench
+  szH := lay.szH
+  szD := lay.szD
+  held0 := lay.held0
+  held1 := lay.held1
+  home3 := lay.home3
+  held3 := lay.held3
+  home4 := lay.home4
+  held4 := lay.held4
+  moves := lay.moves
+  slides := lay.slides
+  peak := lay.peak
+
 private theorem point_eq (ax ay px py : List Nat)
     (h : (true, (ax, ay)) = (true, (px, py))) : ax = px ∧ ay = py := by
   cases h
@@ -308,7 +328,8 @@ theorem cofactor_tail (t : Spec.Tier) (b2 : Board) (x y px py : List Nat)
           (chordStep (embed cofactorCells) (Int.ofNat 3)) chordAfter (fun r => pure r) =
         .ok ((true, true), b') ∧
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed px) ∧
-      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed py) := by
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed py) ∧
+      LastLay b' x y := by
   have hpre := cofactor_open_run t.n t.k t.benchlen x y
   have hi1 : 1 < cofactorCells.length := by simp [cofactorCells]
   have hc1 : cofactorCells[1]'hi1 = 1 ∨ cofactorCells[1]'hi1 = 2 :=
@@ -386,7 +407,7 @@ theorem cofactor_tail (t : Spec.Tier) (b2 : Board) (x y px py : List Nat)
           (ax, ay) cofactorCells i (true, (px, py)) hi (cofactor_colour i hi hnz) hrun hgo)
   obtain ⟨hlive, ax, ay, hrun, _hspan, hhome⟩ := hI
   have hto : cofactorSpan - 1 = 3 := by simp [cofactorSpan]
-  obtain ⟨hxF, hyF, ⟨m, c, hm, hc, hfit⟩⟩ := hhome (by simp [cofactorSpan])
+  obtain ⟨hxF, hyF, ⟨m, c, hm, hc, hfit, hlay⟩⟩ := hhome (by simp [cofactorSpan])
   have htakeF : cofactorCells.take cofactorSpan = cofactorCells := by
     simp [cofactorSpan, cofactorCells]
   have hrunP : walkRun t.n t.k t.benchlen (x, y) false (whiteHole0 t.n, whiteHole0 t.n)
@@ -404,7 +425,7 @@ theorem cofactor_tail (t : Spec.Tier) (b2 : Board) (x y px py : List Nat)
             (chordStep (embed cofactorCells) (Int.ofNat 3)) chordAfter (fun r => pure r) =
           chordAfter (Int.ofNat 3, (sb, true)) := by
       simpa [hto] using heq
-    refine ⟨_, (hjoin.trans hmid).trans hch, ?_, ?_⟩
+    refine ⟨_, (hjoin.trans hmid).trans hch, ?_, ?_, lay_after sb x y c hlay⟩
     · intro h
       simpa [hp.1] using hxF (by simpa using h)
     · intro h

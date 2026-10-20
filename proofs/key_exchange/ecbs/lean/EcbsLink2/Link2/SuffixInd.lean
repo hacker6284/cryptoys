@@ -75,7 +75,8 @@ def SuffixInv (t : Spec.Tier) (baseX baseY : List Nat) (live0 : Bool)
       ∃ m ctrl,
         st.1.sudo_5Board_6marker = Int.ofNat m ∧
         st.1.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
-        FitsLen (ctrl + 1))
+        FitsLen (ctrl + 1) ∧
+        LastLay st.1 baseX baseY)
 
 private theorem take_succ_cell (cells : List Nat) (i : Nat) (hi : i < cells.length) :
     cells.take (i + 1) = cells.take i ++ [cells[i]] := by
@@ -142,7 +143,8 @@ private theorem suffix_span_step (t : Spec.Tier) (b : Ecbs.Board)
         ∃ m ctrl,
           b'.sudo_5Board_6marker = Int.ofNat m ∧
           b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
-          FitsLen (ctrl + 1)) := by
+          FitsLen (ctrl + 1) ∧
+          LastLay b' baseX baseY) := by
   obtain ⟨fr, hmk, hY, hA, hf4, hf1, hst, hho, hm, hs, hc0, ho, hyB, htriB, hyA, htriA⟩ := hAt
   have hleft : 0 < toN - i + 1 := Nat.succ_pos (toN - i)
   have hsum : i + (toN - i + 1) = toN + 1 := by
@@ -299,7 +301,17 @@ theorem suffix_fresh (t : Spec.Tier) (tw : TierWalk t) (b : Ecbs.Board)
     (by simp [walkRun]) hc2 (fun i hi _ hnz ax ay hrun => hready i hi hnz ax ay hrun)
   refine ⟨st, ?_, heq⟩
   obtain ⟨hlive, ax, ay, hrun, _hspan, hhome⟩ := hI
-  refine ⟨hlive, ax, ay, hrun, ?_, hhome⟩
+  have hhome' : t.cells - 1 < t.cells →
+      (∀ h : 0 < st.1.sudo_5Board_4home.size, st.1.sudo_5Board_4home[0] = embed ax) ∧
+      (∀ h : 1 < st.1.sudo_5Board_4home.size, st.1.sudo_5Board_4home[1] = embed ay) ∧
+      ∃ m ctrl,
+        st.1.sudo_5Board_6marker = Int.ofNat m ∧
+        st.1.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
+        FitsLen (ctrl + 1) := by
+    intro hgt
+    obtain ⟨hx, hy, ⟨m, c, hm, hc, hfit, _⟩⟩ := hhome hgt
+    exact ⟨hx, hy, ⟨m, c, hm, hc, hfit⟩⟩
+  refine ⟨hlive, ax, ay, hrun, ?_, hhome'⟩
   intro hle
   exact absurd hle (Nat.not_le.mpr (Nat.pred_lt (Nat.ne_of_gt hpos)))
 

@@ -385,6 +385,22 @@ private theorem chord_y_len (n k bench : Nat) (slope dx y : List Nat) :
     (chordY3 n k bench slope dx y).length = n := by
   simpa [chordY3] using fieldSub_length n (fieldMul n k bench slope dx) y
 
+/-- What the last cell leaves besides the new point: the bench is off, the base
+    homes are still seated, and the three counters are naturals. -/
+structure LastLay (b : Ecbs.Board) (baseX baseY : List Nat) : Prop where
+  bench : b.sudo_5Board_8bench_on = false
+  szH : b.sudo_5Board_4home.size = 8
+  szD : b.sudo_5Board_4held.size = 8
+  held0 : ∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0] = true
+  held1 : ∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = true
+  home3 : ∀ h : 3 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[3] = embed baseX
+  held3 : ∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true
+  home4 : ∀ h : 4 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[4] = embed baseY
+  held4 : ∀ h : 4 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[4] = true
+  moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv
+  slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl
+  peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
+
 /-- The last live cell. The chord rooms are one charge on the cubed frame. -/
 private theorem suffix_live_last (cells : List Nat) (i toN c : Nat)
     (b0 b bF : Ecbs.Board) (t : Spec.Tier)
@@ -422,7 +438,8 @@ private theorem suffix_live_last (cells : List Nat) (i toN c : Nat)
       ∃ m ctrl,
         b'.sudo_5Board_6marker = Int.ofNat m ∧
         b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
-        FitsLen (ctrl + 1) := by
+        FitsLen (ctrl + 1) ∧
+      LastLay b' baseX baseY := by
   have hMoveR : FitsLen (liveMoveRoom t fr.moves baseX accX) := by
     apply FitsLen.of_le hMove
     exact live_move_le t fr.moves baseX accX fr.lenX fr.lenA
@@ -447,7 +464,26 @@ private theorem suffix_live_last (cells : List Nat) (i toN c : Nat)
   have hcOpen : cells[i]'(by omega) = c := (cell_eq cells i hiLen (by omega)).trans hcAt
   have hstep := chordStep_open cells i toN c b0 b bF b' (Nat.le_of_eq hi) hlen hcOpen hc0 hc2
     hml hfrob hadd hfiti
-  exact ⟨b', _, _, by simpa [hi] using hstep, by simpa [← hcAt] using hwalk, hx0, hy1, hlift⟩
+  obtain ⟨bud, hL, _, _, _, _⟩ := _hbud
+  obtain ⟨mvL, hmvL, _⟩ := _pack.moves
+  obtain ⟨slL, hslL⟩ := _pack.slides
+  obtain ⟨pkL, hpkL⟩ := _pack.peak
+  have hlay : LastLay b' baseX baseY :=
+    { bench := _pack.benchOff
+      szH := _pack.szH
+      szD := _pack.szD
+      held0 := _pack.held0
+      held1 := _pack.held1
+      home3 := hL.home3
+      held3 := hL.held3
+      home4 := hL.home4
+      held4 := hL.held4
+      moves := ⟨mvL, hmvL⟩
+      slides := ⟨slL, hslL⟩
+      peak := ⟨pkL, hpkL⟩ }
+  obtain ⟨m, c, hm, hc, hfit⟩ := hlift
+  exact ⟨b', _, _, by simpa [hi] using hstep, by simpa [← hcAt] using hwalk, hx0, hy1,
+    ⟨m, c, hm, hc, hfit, hlay⟩⟩
 
 /-- A live cell with another cell after it. `fuel + 1` charges are the cells
     still left, including this one. -/
@@ -574,7 +610,8 @@ theorem suffix_chord_add (t : Spec.Tier) (b : Ecbs.Board)
         ∃ m ctrl,
           b'.sudo_5Board_6marker = Int.ofNat m ∧
           b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl ∧
-          FitsLen (ctrl + 1)) := by
+          FitsLen (ctrl + 1) ∧
+          LastLay b' baseX baseY) := by
   have hMrel : FitsLen (fr.moves + walkCharge t * left) := by
     simpa [Nat.mul_comm] using
       budget_mul len done left mv0 fr.moves (walkCharge t) (6 * t.benchlen + 2 * t.n)
@@ -646,7 +683,19 @@ theorem suffix_chord_add (t : Spec.Tier) (b : Ecbs.Board)
         exact frF.home0
       · intro _h1
         simpa [hy1F] using frF.home1
-      · exact ⟨frF.mark, frF.ctrl, frF.hmark, frF.hctrl, frF.fitCtrl⟩
+      · exact ⟨frF.mark, frF.ctrl, frF.hmark, frF.hctrl, frF.fitCtrl,
+          { bench := frF.bench
+            szH := frF.szH
+            szD := frF.szD
+            held0 := fun _ => frF.held0
+            held1 := fun _ => by simpa [hf1F] using frF.held1
+            home3 := fun _ => frF.home3
+            held3 := fun _ => frF.held3
+            home4 := fun _ => by simpa [hy4F] using frF.home4
+            held4 := fun _ => by simpa [hf4F] using frF.held4
+            moves := ⟨frF.moves, frF.hmoves⟩
+            slides := ⟨frF.slides, frF.hslides⟩
+            peak := ⟨frF.peak, frF.hpeak⟩ }⟩
   · have hcLive : c = 1 ∨ c = 2 := by
       have hle := hcLe
       omega

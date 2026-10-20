@@ -371,7 +371,7 @@ theorem pow_from_strip (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
     rw [hred] at hPow
     exact hPow
   have hstep := pow_step_at bP t side acc 2 tail hPow2 (Or.inr (Or.inr rfl))
-  obtain ⟨b1, hrunP, hAt, hk1, hsp1⟩ := hstep
+  obtain ⟨b1, hrunP, hAt, hk1, hsp1, _hctrl1⟩ := hstep
   have hrun := digit_same b cPh hlift hself 2 powGap
   have hrunB : powDigitRun b 2 powGap = .ok b1 := by
     have hif : (if (2 : Nat) = 2 then powGap else powBottom) = powGap := by simp
@@ -426,7 +426,7 @@ theorem pow_from_strip (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
     exact ⟨sl', hsl', spend_add sl sl' _ _ hle (six sl t.n hslLe)⟩
   · have hcP : bP.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat cPh := by
       simp [bP, coldPhantom]
-    obtain ⟨c', hc', hle⟩ := hcount.ctrl cPh hcP
+    obtain ⟨c', hc', _, hle⟩ := hcount.ctrl cPh hcP
     exact ⟨c', hc', ctrl_pad c' (tierR t) (t.n - 1) (by simpa [powCtrl, cPh] using hle)⟩
   · have hopP : bP.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat 2) := by
       simpa [bP, coldPhantom] using slot_some b 0 2 s.opsSz (by decide) s.ops0
@@ -556,6 +556,7 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
         (∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
           sl ≤ sl0 + 6 * t.n + powSlide t.n * (t.n - 1)) ∧
         (∃ c, b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+          c0 + tierR t ≤ c ∧
           c ≤ c0 + tierR t + powCtrl * (t.n - 1)) ∧
         (∃ cOp, b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat cOp) ∧
           cOp ≤ o0 + 2 + (t.n - 1)) ∧
@@ -666,7 +667,7 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
     rw [hred] at hPow
     exact hPow
   have hstep := pow_step_at bP t side acc 2 tail hPow2 (Or.inr (Or.inr rfl))
-  obtain ⟨b1, hrunP, hAt, hk1, hsp1⟩ := hstep
+  obtain ⟨b1, hrunP, hAt, hk1, hsp1, _hctrl1⟩ := hstep
   have hrun := digit_same b cPh hlift hself 2 powGap
   have hrunB : powDigitRun b 2 powGap = .ok b1 := by
     have hif : (if (2 : Nat) = 2 then powGap else powBottom) = powGap := by simp
@@ -737,8 +738,22 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
     exact ⟨sl', hsl', spend_add sl sl' _ _ hle hslLe⟩
   · have hcP : bP.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat cPh := by
       simp [bP, coldPhantom, ofNat_eq_natCast]
-    obtain ⟨c', hc', hle⟩ := hcount.ctrl cPh hcP
+    obtain ⟨c', hc', _, hle⟩ := hcount.ctrl cPh hcP
+    obtain ⟨cDig, hcDig, hc1⟩ := _hctrl1
+    have hdig : cDig = cPh := Int.ofNat.inj (hcDig.symm.trans hcP)
+    have hb1 : b1.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (cPh + 4) := by
+      have hif : (if (2 : Nat) = 0 then 2 else 4) = 4 := by decide
+      simpa [hdig, hif] using hc1
+    obtain ⟨cTail, hcTail, hge, _⟩ := hsp2.ctrl (cPh + 4) hb1
+    have hfinal : c' = cTail := Int.ofNat.inj (hc'.symm.trans hcTail)
     exact ⟨c', hc', by
+      have h3 : cPh + 4 = base + 3 := by
+        have hback : cPh + 1 = base := hcPh
+        omega
+      have hlo : base ≤ c' := by
+        have hge' : cPh + 4 ≤ c' := by rw [hfinal]; exact hge
+        omega
+      exact hlo, by
       have hpad := ctrl_pad c' base (t.n - 1) (by
         simpa [powCtrl, cPh, base] using hle)
       simpa [base, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using hpad⟩

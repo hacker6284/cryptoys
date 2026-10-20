@@ -388,7 +388,9 @@ theorem miss_plantAt (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
           let r ← searchCheck b
           searchMiss r.2) = .ok bM ∧
         MissAt bM ∧
-        PlantAt bM t (holesLeft - 1) := by
+        PlantAt bM t (holesLeft - 1) ∧
+        ∃ c0', bM.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+          Int.ofNat (c0' + tierR t) := by
   have hleft1 : (1 : Nat) ≤ holesLeft := Nat.le_of_lt hnext
   obtain ⟨bR, o0, o1, hready, hAt, hseat⟩ :=
     search_ready_at b0 t holesLeft hp hOk hsh sat j hj0 hj hn3 mv0 sl0 c0
@@ -419,7 +421,7 @@ theorem miss_plantAt (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
       hmvS (by rw [hlenSq]; exact hfn) (by rw [hAt.sideLen]; exact hfn)
       (by rw [hAt.yLen]; exact hfn) (by rw [hAt.axLen]; exact hfn)
       (by rw [hAt.bxLen]; exact hfn) hfit
-  refine ⟨bM, ?_, hmissAt, ?_⟩
+  refine ⟨bM, ?_, hmissAt, ?_, ?_⟩
   · rw [hready, ok_bind]
     have hck' : searchCheck bR = .ok (false, bC) := by simpa [hfalse] using hck
     rw [hck', ok_bind]
@@ -449,7 +451,7 @@ theorem miss_plantAt (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
       simpa [hslP0] using hfitS
     have hslideF : bM.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl2 :=
       hk.slides.trans hsl2
-    rcases hseat.ctrl with ⟨cR, hcR, hcLe⟩
+    rcases hseat.ctrl with ⟨cR, hcR, hlo, hcLe⟩
     rcases hkeep.ctrl with ⟨cIn, hcIn, hcOut⟩
     have hcSame : cIn = cR := Int.ofNat.inj (hcIn.symm.trans hcR)
     have hcFin : cIn + 1 ≤ (c0 + tierR t) + perCtrl t.n := by
@@ -527,5 +529,20 @@ theorem miss_plantAt (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
           room_drop o0 (cOp0 + 1) (perOp t.n) holesLeft hnext hseat.ops0Room hopFin⟩
         ops1 := ⟨c1, fun _ => slot_nat _ 1 c1 hop1F h1M,
           room_drop o1 c1 (perOp t.n) holesLeft hnext hseat.ops1Room hop1Fin⟩ }
+  · rcases hseat.ctrl with ⟨cR, hcR, hlo, _⟩
+    rcases hkeep.ctrl with ⟨cIn, hcIn, hcOut⟩
+    have hcSame : cIn = cR := Int.ofNat.inj (hcIn.symm.trans hcR)
+    have hctrlF : bM.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (cIn + 1) :=
+      hk.ctrl.trans hcOut
+    have hge : tierR t ≤ cIn + 1 := by
+      have hstep : cR ≤ cIn + 1 := by
+        rw [hcSame]
+        exact Nat.le_succ _
+      exact Nat.le_trans (Nat.le_add_left (tierR t) c0) (Nat.le_trans hlo hstep)
+    have hsplit : (cIn + 1) - tierR t + tierR t = cIn + 1 :=
+      Nat.sub_add_cancel hge
+    exact ⟨(cIn + 1) - tierR t, by
+      rw [hsplit]
+      exact hctrlF⟩
 
 end EcbsLink2.Link2

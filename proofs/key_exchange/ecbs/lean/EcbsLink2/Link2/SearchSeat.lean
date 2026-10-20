@@ -440,6 +440,7 @@ structure SeatKeep (b : Ecbs.Board) (t : Spec.Tier)
   slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
     sl ≤ sl0 + 6 * t.n + powSlide t.n * (t.n - 1)
   ctrl : ∃ c, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+    base ≤ c ∧
     c ≤ base + powCtrl * (t.n - 1)
   ops0 : ∃ c, b.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c) ∧
     c ≤ o0 + 2 + (t.n - 1)
@@ -526,7 +527,7 @@ theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
             ready_slide sl0 sl t.n holesLeft left hOk.n_pos hp.holesPos hleftH hslLe))
       (by
         intro c hc
-        rcases hcE with ⟨ctrl, hctrl, hctrlLe⟩
+        rcases hcE with ⟨ctrl, hctrl, _, hctrlLe⟩
         have hsame : c = ctrl := Int.ofNat.inj (hc.symm.trans hctrl)
         rw [hsame]
         exact FitsLen.of_le hcB

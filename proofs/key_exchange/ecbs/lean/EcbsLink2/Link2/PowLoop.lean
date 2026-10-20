@@ -305,6 +305,9 @@ structure CounterLe (b b' : Ecbs.Board) (mvAdd slAdd cAdd opAdd : Nat) : Prop wh
   ops0 : ∀ c0, b.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) →
     ∃ c0', b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0') ∧
       c0' ≤ c0 + opAdd
+  ops1 : ∀ c1, b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (Int.ofNat c1) →
+    ∃ c1', b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (Int.ofNat c1') ∧
+      c1' ≤ c1 + opAdd
 
 private theorem chain_le (x y z a b : Nat) (h1 : y ≤ x + a) (h2 : z ≤ y + b) :
     z ≤ x + (a + b) := by omega
@@ -338,6 +341,9 @@ theorem counterLe_refl (b : Ecbs.Board) : CounterLe b b 0 0 0 0 where
   ops0 := by
     intro c0 h
     exact ⟨c0, h, Nat.le_refl _⟩
+  ops1 := by
+    intro c1 h
+    exact ⟨c1, h, Nat.le_refl _⟩
 
 theorem counterLe_trans {b b1 b' : Ecbs.Board} {m1 s1 c1 o1 m2 s2 c2 o2 : Nat}
     (h1 : CounterLe b b1 m1 s1 c1 o1) (h2 : CounterLe b1 b' m2 s2 c2 o2) :
@@ -362,6 +368,11 @@ theorem counterLe_trans {b b1 b' : Ecbs.Board} {m1 s1 c1 o1 m2 s2 c2 o2 : Nat}
     obtain ⟨c01, hc01, hle1⟩ := h1.ops0 c0 hc0
     obtain ⟨c0', hc0', hle2⟩ := h2.ops0 c01 hc01
     exact ⟨c0', hc0', chain_le c0 c01 c0' o1 o2 hle1 hle2⟩
+  ops1 := by
+    intro c1a hc1
+    obtain ⟨c11, hc11, hle1⟩ := h1.ops1 c1a hc1
+    obtain ⟨c1', hc1', hle2⟩ := h2.ops1 c11 hc11
+    exact ⟨c1', hc1', chain_le c1a c11 c1' o1 o2 hle1 hle2⟩
 
 theorem counterLe_pow {b b1 b' : Ecbs.Board} (n bench k : Nat)
     (h1 : CounterLe b b1 (powMove n bench) (powSlide n) powCtrl 1)
@@ -393,7 +404,12 @@ theorem counterLe_pow {b b1 b' : Ecbs.Board} (n bench k : Nat)
         intro c0 hc0
         obtain ⟨c0', hc0', hle⟩ := h.ops0 c0 hc0
         rw [ho] at hle
-        exact ⟨c0', hc0', hle⟩ }
+        exact ⟨c0', hc0', hle⟩
+      ops1 := by
+        intro c1a hc1
+        obtain ⟨c1', hc1', hle⟩ := h.ops1 c1a hc1
+        rw [ho] at hle
+        exact ⟨c1', hc1', hle⟩ }
 
 /-- Digit 0. The up home becomes the cube, which is `powStep` on digit 0,
     and one unit of each budget is spent. -/
@@ -537,7 +553,8 @@ theorem pow_zero_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : 
       { moves := ?_
         slides := ?_
         ctrl := ?_
-        ops0 := ?_ }
+        ops0 := ?_
+        ops1 := ?_ }
     · intro mv0 hmv0
       have hsame : mv0 = moves := Int.ofNat.inj (hmv0.symm.trans hmv)
       refine ⟨cubeMoves moves acc t.n t.k t.benchlen +
@@ -561,6 +578,14 @@ theorem pow_zero_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : 
       refine ⟨c0, (hopK 0 (by decide)).trans hop0, ?_⟩
       rw [hsame]
       exact Nat.le_succ c0
+    · intro c1in hc1in
+      have hslot : some (Int.ofNat c1in) = some (Int.ofNat c1) := hc1in.symm.trans hop1
+      have hsame : c1in = c1 := by
+        injection hslot with hEq
+        exact Int.ofNat.inj hEq
+      refine ⟨c1 + 1, hop1S, ?_⟩
+      rw [hsame]
+      exact Nat.le_refl _
 
 /-- Moves one live root digit adds: the cube, the copy, the schoolbook, and the settles. -/
 def liveMove (n k bench moves : Nat) (acc factor : List Nat) : Nat :=
@@ -893,7 +918,8 @@ theorem pow_live_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat)
       { moves := ?_
         slides := ?_
         ctrl := ?_
-        ops0 := ?_ }
+        ops0 := ?_
+        ops1 := ?_ }
     · intro mv0 hmv0
       have hsame : mv0 = moves := Int.ofNat.inj (hmv0.symm.trans hmv)
       refine ⟨liveMove t.n t.k t.benchlen moves acc factor,
@@ -922,6 +948,14 @@ theorem pow_live_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat)
         injection hslot with hEq
         exact Int.ofNat.inj hEq
       refine ⟨c0 + 1, hop0S, ?_⟩
+      rw [hsame]
+      exact Nat.le_refl _
+    · intro c1in hc1in
+      have hslot : some (Int.ofNat c1in) = some (Int.ofNat c1) := hc1in.symm.trans hop1
+      have hsame : c1in = c1 := by
+        injection hslot with hEq
+        exact Int.ofNat.inj hEq
+      refine ⟨c1 + 1, hop1S, ?_⟩
       rw [hsame]
       exact Nat.le_refl _
 

@@ -428,6 +428,27 @@ private theorem ready_slide (sl0 sl n k left : Nat) (hn : 0 < n) (hk : 0 < k) (h
   rw [hpoly]
   exact Nat.le_trans h1 (by rw [h2, h3]; exact h4)
 
+/-- Counters on the board the hit test reads, measured from the plant. -/
+structure SeatKeep (b : Ecbs.Board) (t : Spec.Tier)
+    (mv0 sl0 base o0 o1 holesLeft : Nat) : Prop where
+  szH : b.sudo_5Board_4home.size = 8
+  szD : b.sudo_5Board_4held.size = 8
+  opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
+  moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
+    mv ≤ mv0 + gapCap t.n t.benchlen + 1 + t.n +
+      powMove t.n t.benchlen * (t.n - 1)
+  slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+    sl ≤ sl0 + 6 * t.n + powSlide t.n * (t.n - 1)
+  ctrl : ∃ c, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+    c ≤ base + powCtrl * (t.n - 1)
+  ops0 : ∃ c, b.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c) ∧
+    c ≤ o0 + 2 + (t.n - 1)
+  ops1 : ∃ c, b.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (Int.ofNat c) ∧
+    c ≤ o1 + 1 + (t.n - 1)
+  ops0Room : FitsLen (o0 + perOp t.n * holesLeft)
+  ops1Room : FitsLen (o1 + perOp t.n * holesLeft)
+  mx : ∃ mxN, b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mxN
+
 /-- After the root power on a planted strip, across is the strip and the base
     home is the planted peg. `left` hit tests still fit inside the holes left. -/
 theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
@@ -439,7 +460,7 @@ theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
     (hsl0 : b0.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl0)
     (hc0 : b0.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t))
     (left : Nat) (hleft : 0 < left) (hleftH : left ≤ holesLeft) :
-    ∃ b',
+    ∃ (b' : Ecbs.Board) (o0 o1 : Nat),
       (do
           let b ← (do
             let b ← (do
@@ -461,7 +482,8 @@ theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
           (fieldMul t.n t.k t.benchlen
             (curveSide t.n t.k t.benchlen (basisPeg t.n j))
             (curveSide t.n t.k t.benchlen (basisPeg t.n j)))
-          (rootStrip t.n) (basisPeg t.n j) left := by
+          (rootStrip t.n) (basisPeg t.n j) left ∧
+        SeatKeep b' t mv0 sl0 (c0 + tierR t) o0 o1 holesLeft := by
   obtain ⟨bS, o0, o1, hstrip, s⟩ :=
     search_strip_at b0 t holesLeft hp hOk hsh sat j hj0 hj mv0 sl0 c0 hmv0 hsl0 hc0
   rcases hp.moves with ⟨mvP, hmvP, hfitM⟩
@@ -476,7 +498,8 @@ theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   have hcSame : cP = c0 + tierR t := Int.ofNat.inj (hcP.symm.trans hc0)
   have hcB : FitsLen (c0 + tierR t + perCtrl t.n * holesLeft) := by
     simpa [hcSame, Nat.add_assoc] using hfitC
-  obtain ⟨b', hpow, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE, _, _⟩ :=
+  obtain ⟨b', hpow, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE, hop1E, hopSz,
+      hszH, hszD⟩ :=
     pow_from_strip_at bS t j mv0 sl0 c0 o0 o1 holesLeft s hOk hsh sat hn3
       hp.holesPos hmvB hslB hcB
   rcases hmvE with ⟨mv, hmv, hmvLe⟩
@@ -487,7 +510,7 @@ theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
     rw [hsame]
     exact FitsLen.of_le hmvB
       (ready_move mv0 mv t.n t.benchlen holesLeft left hp.holesPos hleftH hmvLe)
-  refine ⟨b', ?_, ?_⟩
+  refine ⟨b', o0, o1, ?_, ?_, ?_⟩
   · rw [hstrip, ok_bind]
     exact hpow
   · exact search_of_pow b' t (basisPeg t.n j) (rootStrip t.n) (basisPeg t.n j) left hPow
@@ -519,6 +542,21 @@ theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         rw [hsame]
         exact FitsLen.of_le s.opsRoom
           (ready_op o0 cOp t.n holesLeft left hOk.n_pos hp.holesPos hleftH hopLe))
+  · exact
+      { szH := hszH
+        szD := hszD
+        opsSz := hopSz
+        moves := ⟨mv, hmv, hmvLe⟩
+        slides := hslE
+        ctrl := hcE
+        ops0 := hopE
+        ops1 := hop1E
+        ops0Room := s.opsRoom
+        ops1Room := s.ops1Room
+        mx := by
+          obtain ⟨_, _, _, _, mxN, _, _, _, _, _, _, _, _, _, _, hmx, _, _, _, _, _, _, _, _, _, _, _⟩ :=
+            hPow.pack
+          exact ⟨mxN, hmx⟩ }
 
 /-- One planted hole, after the root power. A hit stops; a miss is the next hole. -/
 theorem search_plant_step (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)

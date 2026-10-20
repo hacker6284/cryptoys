@@ -366,6 +366,22 @@ private theorem search_spent_le (n bench moves left pegG pegY sch fold pegSq peg
   apply FitsLen.of_le h
   omega
 
+/-- One hit test, including the five clears a miss runs, stays inside `searchMove`. -/
+private theorem one_check_spent (moves n bench pegG pegY sch fold pegSq pegSide pegUp
+    pegAx pegBx : Nat)
+    (hnb : n ≤ bench)
+    (hg : pegG ≤ n) (hy : pegY ≤ n) (hsq : pegSq ≤ n)
+    (hside : pegSide ≤ n) (hup : pegUp ≤ n) (hax : pegAx ≤ n) (hbx : pegBx ≤ n)
+    (hsch : sch ≤ n * n + n) (hfold : fold ≤ 3 * (bench - n)) :
+    moves + pegG + pegY + sch + fold + 2 * pegSq + pegSq + pegSide + pegUp + pegAx + pegBx ≤
+      moves + (n * n + 8 * n + 6 * bench) := by
+  have hfoldN : fold + 3 * n ≤ 3 * bench := by
+    have h3 : 3 * (bench - n) + 3 * n = 3 * ((bench - n) + n) := by
+      rw [← Nat.mul_add]
+    rw [Nat.sub_add_cancel hnb] at h3
+    omega
+  omega
+
 /-- Fields the hit test keeps, counted from the board it was given. -/
 structure CheckKeep (b b0 : Ecbs.Board) (n : Nat) : Prop where
   marker : b.sudo_5Board_6marker = -1
@@ -401,7 +417,11 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
       b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat movesS ∧
       FitsLen (movesS + pegCount (fieldMul t.n t.k t.benchlen y y) + pegCount side +
         pegCount y + pegCount ax + pegCount bx) ∧
-      CheckKeep b' b t.n := by
+      CheckKeep b' b t.n ∧
+      ∃ moves0, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves0 ∧
+        movesS + pegCount (fieldMul t.n t.k t.benchlen y y) + pegCount side +
+          pegCount y + pegCount ax + pegCount bx ≤
+          moves0 + searchMove t.n t.benchlen := by
   obtain ⟨bC, moves, slides, pk, ps, hole, c0, movesC, hpre, hmv, hsl, hpk, hps, hhole, hop0,
       hflag, hoff, _hmark, hup, hupd, hbot, hbotd, _hgapH, hgapD, hax, haxd, hbx, hbxd, hsp,
       hmvC, hmovesC, htierC, hslC, hpkC, hpsC, hholeC, hopC, hwide, hspS, h7,
@@ -636,7 +656,19 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
       hleft hnb hg hy hprod hsideP hy haxP hbxP hschN hfoldN hfitM
     simp only [movesS]
     exact hraw
-  refine ⟨bS, rootHit t.n t.k t.benchlen x, movesS, ?_, rfl, ?_, hmvS, hfitTail, ?_⟩
+  have hspent : movesS + pegCount (fieldMul t.n t.k t.benchlen y y) + pegCount side +
+      pegCount y + pegCount ax + pegCount bx ≤ moves + searchMove t.n t.benchlen := by
+    have hsideP := peg_len t.n side h.sideLen
+    have haxP := peg_len t.n ax h.axLen
+    have hbxP := peg_len t.n bx h.bxLen
+    simp only [movesS, searchMove]
+    exact one_check_spent moves t.n t.benchlen (pegCount gapXs) (pegCount y)
+      (schoolMoves y y t.n t.n)
+      (foldCharge t.n (t.n - t.k) (school t.n y y (List.replicate t.benchlen 0) false))
+      (pegCount (fieldMul t.n t.k t.benchlen y y))
+      (pegCount side) (pegCount y) (pegCount ax) (pegCount bx)
+      hnb hg hy hprod hsideP hy haxP hbxP hschN hfoldN
+  refine ⟨bS, rootHit t.n t.k t.benchlen x, movesS, ?_, rfl, ?_, hmvS, hfitTail, ?_, ?_⟩
   · have htail :
         (do
             let b ← Ecbs.marker_lift b
@@ -855,6 +887,7 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
         peak := ⟨_, settle_peak_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul hpkN⟩
         strict := ⟨_, (settle_strict_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul).trans _hstM⟩
         hole := ⟨_, (settle_hole_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul).trans _hholeM⟩ }
+  · exact ⟨moves, hmv, hspent⟩
 
 /-- One held home, emptied. Every other home and flag stays. -/
 private theorem clear_next (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
@@ -994,7 +1027,7 @@ theorem search_hit_at (b : Ecbs.Board) (t : Spec.Tier)
     (h : SearchAt b t x y side gapXs ax bx left)
     (hh : rootHit t.n t.k t.benchlen x = true) :
     ∃ b', searchCheck b = .ok (true, b') ∧ HitAt b' t x ax bx := by
-  obtain ⟨b', bit, _, hck, hbit, hhit, _, _, _⟩ :=
+  obtain ⟨b', bit, _, hck, hbit, hhit, _, _, _, _⟩ :=
     search_check_at b t x y side gapXs ax bx left h
   have htrue : bit = true := by rw [hbit, hh]
   refine ⟨b', ?_, hhit⟩
@@ -1010,7 +1043,7 @@ theorem search_miss_at (b : Ecbs.Board) (t : Spec.Tier)
       HitAt b' t x ax bx ∧
       searchMiss b' = .ok bM ∧
       MissAt bM := by
-  obtain ⟨b', bit, movesS, hck, hbit, hhit, hmv, hfit, _⟩ :=
+  obtain ⟨b', bit, movesS, hck, hbit, hhit, hmv, hfit, _, _⟩ :=
     search_check_at b t x y side gapXs ax bx left h
   have hfalse : bit = false := by rw [hbit, hh]
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hleft0, hfitM0, _, _, _⟩ :=

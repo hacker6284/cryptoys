@@ -559,6 +559,9 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
           c ≤ c0 + tierR t + powCtrl * (t.n - 1)) ∧
         (∃ cOp, b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat cOp) ∧
           cOp ≤ o0 + 2 + (t.n - 1)) ∧
+        (∃ c1, b'.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (Int.ofNat c1) ∧
+          c1 ≤ o1 + 1 + (t.n - 1)) ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 ∧
         b'.sudo_5Board_4home.size = 8 ∧
         b'.sudo_5Board_4held.size = 8 := by
   let x := basisPeg t.n j
@@ -707,7 +710,7 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
     have heq := (hkeep i hne1 hne6).1
     rw [← heq] at hnone
     exact Nat.not_lt.mpr (Array.getElem?_eq_none_iff.mp hnone)
-  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hred]
     simp only [powRun, if_true, hrunB, ok_bind]
     exact hr
@@ -743,6 +746,13 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
       simpa [bP, coldPhantom, oS0] using slot_some b 0 oS0 s.opsSz (by decide) s.ops0
     obtain ⟨cOp', hcOp', hle⟩ := hcount.ops0 oS0 hopP
     exact ⟨cOp', hcOp', by simpa [oS0, Nat.add_assoc] using hle⟩
+  · have hop1P : bP.sudo_5Board_4cost.sudo_5Costs_3ops[1]? = some (Int.ofNat oS1) := by
+      simpa [bP, coldPhantom, oS1] using slot_some b 1 oS1 s.opsSz (by decide) s.ops1
+    obtain ⟨c1', hc1', hle⟩ := hcount.ops1 oS1 hop1P
+    exact ⟨c1', hc1', by simpa [oS1, Nat.add_assoc] using hle⟩
+  · obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hsz, _, _, _, _, _, _, _⟩ :=
+      hEnd.pack
+    exact hsz
   · exact seven_eight _ (slot_lt 7 (by decide) (by decide) (by decide))
       (slot_ge 8 (by decide))
   · have held_lt (i : Nat) (hi : i < 8) (hne1 : i ≠ powUp) (hne6 : i ≠ powSpare) :

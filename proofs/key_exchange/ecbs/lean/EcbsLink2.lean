@@ -109,6 +109,7 @@ import EcbsLink2.Link2.OpenBoard
 import EcbsLink2.Link2.WalkPrefix
 import EcbsLink2.Link2.SeatDown
 import EcbsLink2.Link2.SeatChord
+import EcbsLink2.Link2.ChordAt
 import EcbsLink2.Link2.WalkJoin
 import EcbsLink2.Link2.CopyKeep
 import EcbsLink2.Link2.CopySeat

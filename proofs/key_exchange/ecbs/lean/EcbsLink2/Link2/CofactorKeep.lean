@@ -87,7 +87,7 @@ theorem out_home_size
   rw [upFlag]
   exact up_board_home_size a
 
-theorem out_ops_size
+theorem cube_ops_size
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     (frobeniusOut a).sudo_5Board_4cost.sudo_5Costs_3ops.size =
       a.b1On.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -224,7 +224,7 @@ theorem ops_keep
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script)
     (j : Nat) (hj : j < a.b1On.sudo_5Board_4cost.sudo_5Costs_3ops.size) (ho : j ≠ 1) {v : Int}
     (h : a.b1On.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj = v) :
-    (frobeniusOut a).sudo_5Board_4cost.sudo_5Costs_3ops[j]'(by rw [out_ops_size a]; exact hj) = v := by
+    (frobeniusOut a).sudo_5Board_4cost.sudo_5Costs_3ops[j]'(by rw [cube_ops_size a]; exact hj) = v := by
   have hjF : j < (upFeed a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     rw [upFeed_ops a]; exact hj
   have hF : (upFeed a).sudo_5Board_4cost.sudo_5Costs_3ops[j]'hjF = v :=
@@ -256,7 +256,7 @@ theorem ops_keep
   have heqF := settle_ops (upFlag a) 1 ⟨upFlagH a, upFlag1 a⟩
       (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)
   have hjO : j < (frobeniusOut a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-    rw [out_ops_size a]; exact hj
+    rw [cube_ops_size a]; exact hj
   have hOut : (frobeniusOut a).sudo_5Board_4cost.sudo_5Costs_3ops =
       (upFlag a).sudo_5Board_4cost.sudo_5Costs_3ops := by
     rw [frobeniusOut]; exact heqF
@@ -570,9 +570,9 @@ theorem cube_keep_of
         (by rw [a.hszHOn]; exact (by decide : (3 : Nat) < 8)) h3h
     have hkeep := home_keep a 3 (by decide) (by decide) (by decide) h3i
     exact get_irrel _ 3 (by rw [out_home_size a]; exact (by decide : (3 : Nat) < 8)) h hkeep
-  · rw [out_ops_size a]; exact hopsB
+  · rw [cube_ops_size a]; exact hopsB
   · intro h
     have hop := ops_keep a 3 hopsB (by decide) (hopB hopsB)
-    exact get_irrel _ 3 (by rw [out_ops_size a]; exact hopsB) h hop
+    exact get_irrel _ 3 (by rw [cube_ops_size a]; exact hopsB) h hop
 
 end EcbsLink2.Link2

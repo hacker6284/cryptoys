@@ -8,6 +8,7 @@
 import EcbsLink2.Link2.SearchAt
 import EcbsLink2.Link2.ChordUp
 import EcbsLink2.Link2.WalkChord
+import EcbsLink2.Link2.WalkLoop
 
 namespace EcbsLink2.Link2
 
@@ -391,5 +392,69 @@ theorem cofactor_white (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
   simpa [hbx, hy] using
     walkStep_fresh_white t.n t.k t.benchlen (bx, rootY t.n t.k t.benchlen x)
       (whiteHole0 t.n, whiteHole0 t.n)
+
+/-- The walk turns the marker flag on, then the first cofactor cell (white,
+    accumulator empty) copies the seated root. The loop continues at cell 1. -/
+theorem cofactor_chord_open (b : Board) (x y : List Nat) (n moves peak : Nat)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (hx : x.length = n) (hy : y.length = n)
+    (hf : FitsLen n)
+    (hfitx : FitsLen (moves + pegCount x))
+    (hfity : FitsLen (moves + pegCount x + pegCount y))
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hm : b.sudo_5Board_6marker = -1)
+    (h0 : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = false)
+    (h1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = false)
+    (h3t : b.sudo_5Board_4held[3]'(by rw [hszD]; decide) = true)
+    (h3a : b.sudo_5Board_4home[3]'(by rw [hszH]; decide) = embed x)
+    (h4t : b.sudo_5Board_4held[4]'(by rw [hszD]; decide) = true)
+    (h4a : b.sudo_5Board_4home[4]'(by rw [hszH]; decide) = embed y) :
+    ∃ b2,
+      chordStep (embed cofactorCells) (Int.ofNat 3)
+          (Int.ofNat 0, (chordFlag b, false)) =
+        .ok (SudoRt.Flow.cont (Int.ofNat 1, (b2, true))) ∧
+      (∀ h0 : 0 < b2.sudo_5Board_4home.size, b2.sudo_5Board_4home[0] = embed x) ∧
+      (∀ h1 : 1 < b2.sudo_5Board_4home.size, b2.sudo_5Board_4home[1] = embed y) := by
+  let bF := chordFlag b
+  have hmF : bF.sudo_5Board_6marker = -1 := by simp [chordFlag, bF, hm]
+  have hlift := marker_lift_down bF hmF
+  have hszHF : bF.sudo_5Board_4home.size = 8 := by simp [chordFlag, bF, hszH]
+  have hszDF : bF.sudo_5Board_4held.size = 8 := by simp [chordFlag, bF, hszD]
+  have hnF : bF.sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by simp [chordFlag, bF, hn]
+  have hmvF : bF.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) := by
+    simpa [chordFlag, bF, ofNat_eq_natCast] using hmoves
+  have hpkF : bF.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    simpa [chordFlag, bF, ofNat_eq_natCast] using hpeak
+  have h0F : bF.sudo_5Board_4held[0]'(by rw [hszDF]; decide) = false := by
+    simpa [chordFlag, bF] using h0
+  have h1F : bF.sudo_5Board_4held[1]'(by rw [hszDF]; decide) = false := by
+    simpa [chordFlag, bF] using h1
+  have h3tF : bF.sudo_5Board_4held[3]'(by rw [hszDF]; decide) = true := by
+    simpa [chordFlag, bF] using h3t
+  have h3aF : bF.sudo_5Board_4home[3]'(by rw [hszHF]; decide) = embed x := by
+    simpa [chordFlag, bF] using h3a
+  have h4tF : bF.sudo_5Board_4held[4]'(by rw [hszDF]; decide) = true := by
+    simpa [chordFlag, bF] using h4t
+  have h4aF : bF.sudo_5Board_4home[4]'(by rw [hszHF]; decide) = embed y := by
+    simpa [chordFlag, bF] using h4a
+  obtain ⟨b2, _, _, hcopy, hx0, hy1, _, _, _, _, _⟩ :=
+    chord_fresh_white_down bF x y n moves peak hszHF hszDF hx hy hf hfitx hfity
+      hnF hmvF hpkF hmF h0F h1F h3tF h3aF h4tF h4aF
+  have htail : (do
+      let board ← copy_band bF across base_across false
+      copy_band board up base_up false) = .ok b2 := by
+    rw [hlift, ok_bind] at hcopy
+    exact hcopy
+  have hbeq : SudoRt.SEq.beq (Int.ofNat 1) (2 : Int) = false := by decide
+  have hstep := chordStep_fresh cofactorCells 0 3 1 bF bF b2
+      (by decide) (by simp [cofactorCells]) (by simp [cofactorCells])
+      (by decide) (by decide) hlift
+      (by simpa [hbeq] using htail)
+      (fits_small (by decide))
+  refine ⟨b2, ?_, hx0, hy1⟩
+  rw [hstep]
+  simp [if_neg (by decide : ¬ (0 = 3))]
 
 end EcbsLink2.Link2

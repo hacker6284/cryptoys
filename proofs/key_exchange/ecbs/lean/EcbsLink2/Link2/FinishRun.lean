@@ -233,4 +233,29 @@ theorem settle_up (b : Board) (px py lane : List Nat) (n moves slides peak : Nat
     rw [Array.getElem_set]
     simp [hpre]
 
+/-- `clear` of one held home leaves every other home. -/
+theorem clear_kept (b : Board) (home j : Nat) (xs px : List Nat) (moves : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (hj : j < b.sudo_5Board_4home.size)
+    (hheld : b.sudo_5Board_4held[home] = true)
+    (harr : b.sudo_5Board_4home[home] = embed xs)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
+    (hf : FitsLen xs.length) (hfit : FitsLen (moves + pegCount xs))
+    (hne : home ≠ j)
+    (hkeep : b.sudo_5Board_4home[j] = embed px) :
+    ∃ b',
+      clear b (home : Int) = .ok b' ∧
+      (∀ h : j < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[j] = embed px) := by
+  have hcl := clear_held_refines b home xs moves hH hD hheld harr hmoves hf hfit
+  let b' := { b with
+    sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ #[]
+    sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ false
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_5moves := Int.ofNat (moves + pegCount xs) } }
+  refine ⟨b', hcl, ?_⟩
+  intro hk
+  have harrEq : b'.sudo_5Board_4home = b.sudo_5Board_4home.set ⟨home, hH⟩ #[] := rfl
+  have hget := get_congr harrEq j hk
+  exact hget.trans (kept_set _ home j hH _ _ hj hne hkeep _)
+
 end EcbsLink2.Link2

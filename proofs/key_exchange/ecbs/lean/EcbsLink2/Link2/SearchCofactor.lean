@@ -9,6 +9,7 @@ import EcbsLink2.Link2.SearchAt
 import EcbsLink2.Link2.ChordUp
 import EcbsLink2.Link2.WalkChord
 import EcbsLink2.Link2.WalkLoop
+import EcbsLink2.Link2.FrameKeep
 
 namespace EcbsLink2.Link2
 
@@ -51,6 +52,9 @@ private theorem keepH (b : Board) (i j : Nat) (v : Array Int)
 theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
     (moves slides peak : Nat)
     (h : HitAt b t x ax bx)
+    (hframe : FrameAt b t)
+    (htier : b.sudo_5Board_1t = embTier t)
+    (hspare : b.sudo_5Board_4held[searchSpare]? = some false)
     (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
     (hm : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
     (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
@@ -90,7 +94,14 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
       bS.sudo_5Board_6marker = -1 ∧
       bS.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) ∧
       bS.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat
-        (slides + 2 * pegCount (rootY t.n t.k t.benchlen x)) := by
+        (slides + 2 * pegCount (rootY t.n t.k t.benchlen x)) ∧
+      FrameAt bS t ∧
+      bS.sudo_5Board_1t = embTier t ∧
+      bS.sudo_5Board_8bench_on = false ∧
+      bS.sudo_5Board_4held[searchBottom]? = some false ∧
+      bS.sudo_5Board_4held[searchGap]? = some false ∧
+      bS.sudo_5Board_4held[searchSpare]? = some false ∧
+      bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
   let y := rootY t.n t.k t.benchlen x
   let side := curveSide t.n t.k t.benchlen x
   let gapXs := fieldMul t.n t.k t.benchlen y y
@@ -130,6 +141,8 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
     sudo_5Board_4held := b.sudo_5Board_4held.set ⟨searchGap, hGD⟩ false
     sudo_5Board_4cost := { b.sudo_5Board_4cost with
       sudo_5Costs_5moves := Int.ofNat (moves + pegCount gapXs) } }
+  have hfr1 : FrameAt b1 t := by
+    simpa [b1] using frame_clear b t searchGap gapXs moves hframe hG hGD
   have hB1 : searchBottom < b1.sudo_5Board_4home.size := by
     simp only [b1, Array.size_set]; exact hB
   have hBD1 : searchBottom < b1.sudo_5Board_4held.size := by
@@ -150,6 +163,9 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
     sudo_5Board_4held := b1.sudo_5Board_4held.set ⟨searchBottom, hBD1⟩ false
     sudo_5Board_4cost := { b1.sudo_5Board_4cost with
       sudo_5Costs_5moves := Int.ofNat (moves + pegCount gapXs + pegCount side) } }
+  have hfr2 : FrameAt b2 t := by
+    simpa [b2] using
+      frame_clear b1 t searchBottom side (moves + pegCount gapXs) hfr1 hB1 hBD1
   have hA2 : searchAcross < b2.sudo_5Board_4home.size := by
     simp only [b2, b1, Array.size_set]; exact hA
   have hAD2 : searchAcross < b2.sudo_5Board_4held.size := by
@@ -177,6 +193,9 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
     sudo_5Board_4cost := { b2.sudo_5Board_4cost with
       sudo_5Costs_5moves :=
         Int.ofNat (moves + pegCount gapXs + pegCount side + pegCount ax) } }
+  have hfr3 : FrameAt b3 t := by
+    simpa [b3] using frame_clear b2 t searchAcross ax
+      (moves + pegCount gapXs + pegCount side) hfr2 hA2 hAD2
   have hmv3 : b3.sudo_5Board_4cost.sudo_5Costs_5moves =
       Int.ofNat (moves + pegCount gapXs + pegCount side + pegCount ax) := by
     simp [b3]
@@ -272,7 +291,11 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
     rw [hA', ok_bind]
     simpa [bS, mv3] using hmove
   obtain ⟨pkS, hpkS⟩ := moveBand_peak_nat b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak hpk3
-  refine ⟨bS, mv3 + 2 * pegCount y, pkS, hseat, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  have hfrS : FrameAt bS t := by
+    simpa [bS, mv3] using
+      frame_band b3 t 4 searchUp hfr3 h1H h1D h4H h4D y mv3 slides peak
+  refine ⟨bS, mv3 + 2 * pegCount y, pkS, hseat, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [moveBand_home b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak]
     simp [Array.size_set, hszH3]
   · rw [moveBand_held b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak]
@@ -307,12 +330,52 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
   · rw [moveBand_tier b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak]
     exact hn3
   · exact moveBand_slides b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak
+  · exact hfrS
+  · rw [moveBand_tier b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak]
+    simp [b3, b2, b1, htier]
+  · rw [moveBand_on b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak]
+    exact hoff3
+  · rw [moveBand_held b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak]
+    rw [Array.getElem?_set_ne _ _ _ (by decide : (4 : Nat) ≠ searchBottom)]
+    rw [Array.getElem?_set_ne _ _ _ (by decide : searchUp ≠ searchBottom)]
+    simp only [b3]
+    rw [Array.getElem?_set_ne _ ⟨searchAcross, hAD2⟩ false
+      (by decide : searchAcross ≠ searchBottom)]
+    simp only [b2]
+    rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hBD1)]
+    simp [Array.getElem_set]
+  · rw [moveBand_held b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak]
+    rw [Array.getElem?_set_ne _ _ _ (by decide : (4 : Nat) ≠ searchGap)]
+    rw [Array.getElem?_set_ne _ _ _ (by decide : searchUp ≠ searchGap)]
+    simp only [b3, b2]
+    rw [Array.getElem?_set_ne _ ⟨searchAcross, hAD2⟩ false
+      (by decide : searchAcross ≠ searchGap)]
+    rw [Array.getElem?_set_ne _ ⟨searchBottom, hBD1⟩ false
+      (by decide : searchBottom ≠ searchGap)]
+    simp only [b1]
+    rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hGD)]
+    simp [Array.getElem_set]
+  · rw [moveBand_held b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak]
+    rw [Array.getElem?_set_ne _ _ _ (by decide : (4 : Nat) ≠ searchSpare)]
+    rw [Array.getElem?_set_ne _ _ _ (by decide : searchUp ≠ searchSpare)]
+    simp only [b3, b2, b1]
+    rw [Array.getElem?_set_ne _ ⟨searchAcross, hAD2⟩ false
+      (by decide : searchAcross ≠ searchSpare)]
+    rw [Array.getElem?_set_ne _ ⟨searchBottom, hBD1⟩ false
+      (by decide : searchBottom ≠ searchSpare)]
+    rw [Array.getElem?_set_ne _ ⟨searchGap, hGD⟩ false
+      (by decide : searchGap ≠ searchSpare)]
+    exact hspare
+  · rw [moveBand_ctrl b3 4 searchUp h1H h1D h4H h4D y mv3 slides peak]
 
 /-- That seated root is the white opening `chord_fresh_white_down` copies.
     Across and up receive the base point, and `walkStep` on colour 1 is that copy. -/
 theorem cofactor_white (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
     (moves slides peak : Nat)
     (h : HitAt b t x ax bx)
+    (hframe : FrameAt b t)
+    (htier : b.sudo_5Board_1t = embTier t)
+    (hspare : b.sudo_5Board_4held[searchSpare]? = some false)
     (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
     (hm : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
     (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
@@ -353,8 +416,8 @@ theorem cofactor_white (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
       2 * pegCount (rootY t.n t.k t.benchlen x)) :=
     FitsLen.of_le hfit (by omega)
   obtain ⟨bS, mvS, pkS, hseat, hszHS, hszDS, h0, h1, h3t, h3a, h4t, h4a, hmvS, hmvEq,
-      hpkS, hmarkS, hnS, _hslS⟩ :=
-    cofactor_seat b t x ax bx moves slides peak h hszH hszD hm hsl hpk hmark hn
+      hpkS, hmarkS, hnS, _hslS, _hfr, _ht, _hoff, _h2, _h5, _h6, _hctrl⟩ :=
+    cofactor_seat b t x ax bx moves slides peak h hframe htier hspare hszH hszD hm hsl hpk hmark hn
       hy hside hgapL haxL hf hfit2 hfitSeat hfitS
   have h0e : bS.sudo_5Board_4held[0]'(by rw [hszDS]; decide) = false := by
     rw [Array.getElem?_eq_getElem (by rw [hszDS]; decide)] at h0

@@ -6,6 +6,9 @@
 -/
 import EcbsLink2.Link2.FrobeniusRead
 import EcbsLink2.Link2.EntryInv
+import EcbsLink2.Link2.WalkCopy
+import EcbsLink2.Link2.WalkLoop
+import EcbsLink2.Link2.OpenBoard
 import EcbsLink2.Link2.Basic
 
 namespace EcbsLink2.Link2
@@ -115,5 +118,196 @@ theorem cofactor_frobenius (b : Board) (t : Spec.Tier) (x y : List Nat)
   exact frobenius_affine_marker a hyt hy hn0 hs1 hfitU hfitC hspan h3 hnFit hbenchFit
     hlenL hnb hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsh.small hsh.n_small
     hpeg hfitM hfitS
+
+private theorem proj_twice {α : Type} (proj : Board → α)
+    (hkeep : ∀ (b : Board) (home : Nat)
+      (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+      (xs : List Nat) (moves peak : Nat),
+      proj (placeBoard b home hH hD xs moves peak) = proj b)
+    (b : Board) (x y : List Nat)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (moves peak : Nat)
+    (h1H : 1 < (placeBoard b 0 h0H h0D x moves peak).sudo_5Board_4home.size)
+    (h1D : 1 < (placeBoard b 0 h0H h0D x moves peak).sudo_5Board_4held.size)
+    (mv1 pk1 : Nat) :
+    proj (placeBoard (placeBoard b 0 h0H h0D x moves peak) 1 h1H h1D y mv1 pk1) = proj b :=
+  (hkeep _ 1 h1H h1D y mv1 pk1).trans (hkeep b 0 h0H h0D x moves peak)
+
+/-- The seated root, flag turned on, then the white copy. Across and up hold the
+    root, the marker stays `-1`, and the flag stays on. -/
+theorem cofactor_copied (b : Board) (x y : List Nat) (n moves peak : Nat)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (hx : x.length = n) (hy : y.length = n)
+    (hf : FitsLen n)
+    (hfitx : FitsLen (moves + pegCount x))
+    (hfity : FitsLen (moves + pegCount x + pegCount y))
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
+    (hm : b.sudo_5Board_6marker = -1)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (h0 : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = false)
+    (h1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = false)
+    (h3t : b.sudo_5Board_4held[3]'(by rw [hszD]; decide) = true)
+    (h3a : b.sudo_5Board_4home[3]'(by rw [hszH]; decide) = embed x)
+    (h4t : b.sudo_5Board_4held[4]'(by rw [hszD]; decide) = true)
+    (h4a : b.sudo_5Board_4home[4]'(by rw [hszH]; decide) = embed y) :
+    ∃ b2 mv2 pk2,
+      (do
+          let board ← copy_band (chordFlag b) across base_across false
+          copy_band board up base_up false) = .ok b2 ∧
+      b2.sudo_5Board_9marker_on = true ∧
+      b2.sudo_5Board_8bench_on = false ∧
+      b2.sudo_5Board_6marker = -1 ∧
+      b2.sudo_5Board_4home.size = 8 ∧
+      b2.sudo_5Board_4held.size = 8 ∧
+      (∀ h : 0 < b2.sudo_5Board_4home.size, b2.sudo_5Board_4home[0] = embed x) ∧
+      (∀ h : 1 < b2.sudo_5Board_4home.size, b2.sudo_5Board_4home[1] = embed y) ∧
+      (∀ h : 0 < b2.sudo_5Board_4held.size, b2.sudo_5Board_4held[0] = true) ∧
+      (∀ h : 1 < b2.sudo_5Board_4held.size, b2.sudo_5Board_4held[1] = true) ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv2 ∧
+      mv2 = moves + pegCount x + pegCount y ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk2 ∧
+      b2.sudo_5Board_1t = b.sudo_5Board_1t ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      b2.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+  let bF := chordFlag b
+  have hszHF : bF.sudo_5Board_4home.size = 8 := by simp [chordFlag, bF, hszH]
+  have hszDF : bF.sudo_5Board_4held.size = 8 := by simp [chordFlag, bF, hszD]
+  have hmF : bF.sudo_5Board_6marker = -1 := by simp [chordFlag, bF, hm]
+  have hoffF : bF.sudo_5Board_8bench_on = false := by simp [chordFlag, bF, hoff]
+  have hmkF : bF.sudo_5Board_9marker_on = true := by simp [chordFlag, bF]
+  obtain ⟨b2, mv2, pk2, hcopy, hszH2, hszD2, hx0, hy1, h0t, h1t, _hx3, _hy4, hmv, hpk, hsum,
+      hmark, _hst, _hho, _hctrl, _hsl⟩ :=
+    walk_copy_white bF x y n moves peak hszHF hszDF hx hy hf hfitx hfity
+      (by simp [chordFlag, bF, hn])
+      (by simpa [chordFlag, bF, ofNat_eq_natCast] using hmoves)
+      (by simpa [chordFlag, bF, ofNat_eq_natCast] using hpeak)
+      (by simpa [chordFlag, bF] using h0) (by simpa [chordFlag, bF] using h1)
+      (by simpa [chordFlag, bF] using h3t) (by simpa [chordFlag, bF] using h3a)
+      (by simpa [chordFlag, bF] using h4t) (by simpa [chordFlag, bF] using h4a)
+  -- homes 3 and 4 stay the root; the copy writes 0 and 1.
+  have h0H : 0 < bF.sudo_5Board_4home.size := by rw [hszHF]; decide
+  have h0D : 0 < bF.sudo_5Board_4held.size := by rw [hszDF]; decide
+  have h1H : 1 < bF.sudo_5Board_4home.size := by rw [hszHF]; decide
+  have h1D : 1 < bF.sudo_5Board_4held.size := by rw [hszDF]; decide
+  have h3H : 3 < bF.sudo_5Board_4home.size := by rw [hszHF]; decide
+  have h3D : 3 < bF.sudo_5Board_4held.size := by rw [hszDF]; decide
+  have h4H : 4 < bF.sudo_5Board_4home.size := by rw [hszHF]; decide
+  have h4D : 4 < bF.sudo_5Board_4held.size := by rw [hszDF]; decide
+  have h7 : 7 ≤ bF.sudo_5Board_4held.size := by rw [hszDF]; decide
+  have hmvI : bF.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) := by
+    simpa [chordFlag, bF, ofNat_eq_natCast] using hmoves
+  have hpkI : bF.sudo_5Board_4cost.sudo_5Costs_4peak = (peak : Int) := by
+    simpa [chordFlag, bF, ofNat_eq_natCast] using hpeak
+  have hcopy1 := copy_band_refines bF 0 3 x moves peak h0H h0D h3H h3D h7
+      (by simpa [chordFlag, bF] using h3t) (by simpa [chordFlag, bF] using h3a)
+      (by simpa [chordFlag, bF] using h0)
+      (by simpa [chordFlag, bF, hx] using hn) (by simpa [hx] using hf)
+      hmvI hpkI hfitx
+  let b1 := placeBoard bF 0 h0H h0D x moves peak
+  have hszD1 : b1.sudo_5Board_4held.size = 8 := by rw [place_held_eq, Array.size_set, hszDF]
+  have hszH1 : b1.sudo_5Board_4home.size = 8 := by rw [place_home_eq, Array.size_set, hszHF]
+  have h1D1 : 1 < b1.sudo_5Board_4held.size := by rw [hszD1]; decide
+  have h1H1 : 1 < b1.sudo_5Board_4home.size := by rw [hszH1]; decide
+  have h4D1 : 4 < b1.sudo_5Board_4held.size := by rw [hszD1]; decide
+  have h4H1 : 4 < b1.sudo_5Board_4home.size := by rw [hszH1]; decide
+  have h7_1 : 7 ≤ b1.sudo_5Board_4held.size := by rw [hszD1]; decide
+  have hempty1 : b1.sudo_5Board_4held[1] = false := by
+    have hget := get_eq_of_array (place_held_eq bF 0 h0H h0D x moves peak) 1 h1D1
+    simp only [Array.getElem_set, (by decide : (0 : Nat) ≠ 1)] at hget
+    exact hget.trans (by simpa [chordFlag, bF] using h1)
+  have h4t1 : b1.sudo_5Board_4held[4] = true := by
+    have hget := get_eq_of_array (place_held_eq bF 0 h0H h0D x moves peak) 4 h4D1
+    simp only [Array.getElem_set, (by decide : (0 : Nat) ≠ 4)] at hget
+    exact hget.trans (by simpa [chordFlag, bF] using h4t)
+  have h4a1 : b1.sudo_5Board_4home[4] = embed y := by
+    have hget := get_eq_of_array (place_home_eq bF 0 h0H h0D x moves peak) 4 h4H1
+    simp only [Array.getElem_set, (by decide : (0 : Nat) ≠ 4)] at hget
+    exact hget.trans (by simpa [chordFlag, bF] using h4a)
+  let mv1 := moves + pegCount x
+  let pk1 := if peak < countHeld (bF.sudo_5Board_4held.set ⟨0, h0D⟩ true) 7
+      then countHeld (bF.sudo_5Board_4held.set ⟨0, h0D⟩ true) 7 else peak
+  have hmv1 : b1.sudo_5Board_4cost.sudo_5Costs_5moves = (mv1 : Int) := by
+    rw [place_moves_eq]; exact ofNat_eq_natCast _
+  have hpk1 : b1.sudo_5Board_4cost.sudo_5Costs_4peak = (pk1 : Int) := by
+    rw [place_peak_nat bF 0 h0H h0D x moves peak hpkI]
+    exact ofNat_eq_natCast _
+  have hcopy2 := copy_band_refines b1 1 4 y mv1 pk1 h1H1 h1D1 h4H1 h4D1 h7_1
+      h4t1 h4a1 hempty1
+      (by rw [place_tier_eq, show bF.sudo_5Board_1t = b.sudo_5Board_1t from by simp [chordFlag, bF], hn, hy])
+      (by simpa [hy] using hf) hmv1 hpk1 hfity
+  let bP := placeBoard b1 1 h1H1 h1D1 y mv1 pk1
+  have hP : (do
+      let board ← copy_band bF across base_across false
+      copy_band board up base_up false) = .ok bP := by
+    rw [show across = ((0 : Nat) : Int) from rfl, show base_across = ((3 : Nat) : Int) from rfl,
+        show up = ((1 : Nat) : Int) from rfl, show base_up = ((4 : Nat) : Int) from rfl,
+        hcopy1, ok_bind]
+    simpa [b1, bP] using hcopy2
+  have hb : b2 = bP := by
+    have h := hcopy.symm.trans (by simpa [bF] using hP)
+    injection h
+  have hflag : bP.sudo_5Board_9marker_on = true := by
+    rw [proj_twice (fun b => b.sudo_5Board_9marker_on) place_flag bF x y h0H h0D moves peak
+      h1H1 h1D1 mv1 pk1]
+    exact hmkF
+  have hbench : bP.sudo_5Board_8bench_on = false := by
+    rw [proj_twice (fun b => b.sudo_5Board_8bench_on) place_bench bF x y h0H h0D moves peak
+      h1H1 h1D1 mv1 pk1]
+    exact hoffF
+  have htier : bP.sudo_5Board_1t = b.sudo_5Board_1t := by
+    rw [proj_twice (fun b => b.sudo_5Board_1t) place_tier_eq bF x y h0H h0D moves peak
+      h1H1 h1D1 mv1 pk1]
+    simp [chordFlag, bF]
+  have hctrlP : bP.sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      b.sudo_5Board_4cost.sudo_5Costs_4ctrl := by
+    rw [proj_twice (fun b => b.sudo_5Board_4cost.sudo_5Costs_4ctrl) place_ctrl_eq
+      bF x y h0H h0D moves peak h1H1 h1D1 mv1 pk1]
+    simp [chordFlag, bF]
+  have hslP : bP.sudo_5Board_4cost.sudo_5Costs_6slides =
+      b.sudo_5Board_4cost.sudo_5Costs_6slides := by
+    rw [proj_twice (fun b => b.sudo_5Board_4cost.sudo_5Costs_6slides) place_slides_eq
+      bF x y h0H h0D moves peak h1H1 h1D1 mv1 pk1]
+    simp [chordFlag, bF]
+  have hopsP : bP.sudo_5Board_4cost.sudo_5Costs_3ops =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops := by
+    rw [proj_twice (fun b => b.sudo_5Board_4cost.sudo_5Costs_3ops) place_ops_eq
+      bF x y h0H h0D moves peak h1H1 h1D1 mv1 pk1]
+    simp [chordFlag, bF]
+  have hmxP : bP.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+    rw [proj_twice (fun b => b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) place_mx_eq
+      bF x y h0H h0D moves peak h1H1 h1D1 mv1 pk1]
+    simp [chordFlag, bF]
+  have hstP : bP.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+    rw [proj_twice (fun b => b.sudo_5Board_4cost.sudo_5Costs_11peak_strict) place_strict_eq
+      bF x y h0H h0D moves peak h1H1 h1D1 mv1 pk1]
+    simp [chordFlag, bF]
+  have hhoP : bP.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+    rw [proj_twice (fun b => b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) place_hole_eq
+      bF x y h0H h0D moves peak h1H1 h1D1 mv1 pk1]
+    simp [chordFlag, bF]
+  refine ⟨b2, mv2, pk2, by simpa [bF] using hcopy, ?_, ?_, ?_, hszH2, hszD2, hx0, hy1, h0t, h1t,
+      hmv, hsum, hpk, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [hb]; exact hflag
+  · rw [hb]; exact hbench
+  · exact hmark.trans hmF
+  · rw [hb]; exact htier
+  · rw [hb]; exact hctrlP
+  · rw [hb]; exact hslP
+  · rw [hb]; exact hopsP
+  · rw [hb]; exact hmxP
+  · rw [hb]; exact hstP
+  · rw [hb]; exact hhoP
 
 end EcbsLink2.Link2

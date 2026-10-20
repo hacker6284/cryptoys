@@ -15,7 +15,7 @@ open EcbsLink2.Spec
 def evenDigit (i : Nat) : Nat := if i % 2 = 0 then 2 else 0
 
 /-- The strip after painting the first `m` holes, the rest still empty. -/
-def paint (n m : Nat) : List Nat :=
+private def paint (n m : Nat) : List Nat :=
   (List.range m).map evenDigit ++ List.replicate (n - m) 0
 
 def rootStrip (n : Nat) : List Nat :=

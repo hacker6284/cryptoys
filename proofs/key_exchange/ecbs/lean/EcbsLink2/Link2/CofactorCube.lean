@@ -310,4 +310,69 @@ theorem cofactor_copied (b : Board) (x y : List Nat) (n moves peak : Nat)
   · rw [hb]; exact hstP
   · rw [hb]; exact hhoP
 
+/-- The seated root, copied, then cubed. Across and up become the field cubes. -/
+theorem cofactor_copied_frobenius (b : Board) (t : Spec.Tier) (x y : List Nat)
+    (moves slides pk peakS holeN cOps ctrl mx : Nat)
+    (hsh : TierShape t) (sat : TierSat t)
+    (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
+    (hops : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hx : x.length = t.n) (hy : y.length = t.n)
+    (hxt : allTritList x) (hyt : allTritList y)
+    (hoff : b.sudo_5Board_8bench_on = false)
+    (hmark : b.sudo_5Board_6marker = -1)
+    (hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat ctrl)
+    (hmx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx)
+    (hT : b.sudo_5Board_1t = embTier t)
+    (hop1 : b.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hops = (cOps : Int))
+    (hfitC : FitsLen (cOps + 2))
+    (hfitD : FitsLen (ctrl + 1))
+    (hfitU : FitsLen ((ctrl + 1) + 2))
+    (h0 : b.sudo_5Board_4held[0]'(by rw [hszD]; decide) = false)
+    (h1 : b.sudo_5Board_4held[1]'(by rw [hszD]; decide) = false)
+    (h3t : b.sudo_5Board_4held[3]'(by rw [hszD]; decide) = true)
+    (h3a : b.sudo_5Board_4home[3]'(by rw [hszH]; decide) = embed x)
+    (h4t : b.sudo_5Board_4held[4]'(by rw [hszD]; decide) = true)
+    (h4a : b.sudo_5Board_4home[4]'(by rw [hszH]; decide) = embed y)
+    (hmoves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves)
+    (hslides : b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides)
+    (hpeak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk)
+    (hstrict : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat peakS)
+    (hhole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN)
+    (hf : FitsLen t.n)
+    (hfitx : FitsLen (moves + pegCount x))
+    (hfity : FitsLen (moves + pegCount x + pegCount y))
+    (hMv : FitsLen (moves + pegCount x + pegCount y + 8 * t.n + 6 * (t.benchlen - t.n)))
+    (hSl : FitsLen (slides + 4 * t.n)) :
+    ∃ b2 bF,
+      (do
+          let board ← copy_band (chordFlag b) across base_across false
+          copy_band board up base_up false) = .ok b2 ∧
+      frobenius_affine b2 = .ok bF ∧
+      (∀ h0 : 0 < bF.sudo_5Board_4home.size,
+        bF.sudo_5Board_4home[0] = embed (fieldCube t.n t.k t.benchlen x)) ∧
+      (∀ h1 : 1 < bF.sudo_5Board_4home.size,
+        bF.sudo_5Board_4home[1] = embed (fieldCube t.n t.k t.benchlen y)) := by
+  obtain ⟨b2, mv2, pk2, hcopy, hmk, hoff2, hmark2, hszH2, hszD2, hx0, hy1, h0t, h1t,
+      hmv, hsum, hpk2, htier, hctrl, hsl2, hops2, hmx2, hst, hho⟩ :=
+    cofactor_copied b x y t.n moves pk hszH hszD hx hy hf hfitx hfity
+      (by simp [hT, embTier]) hmoves hpeak hmark hoff h0 h1 h3t h3a h4t h4a
+  have hopsB : 1 < b2.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [hops2]; exact hops
+  have hopB : b2.sudo_5Board_4cost.sudo_5Costs_3ops[1]'hopsB = (cOps : Int) := by
+    have hget := get_eq_of_array hops2.symm 1 hops
+    simpa [hopsB] using hget.symm.trans hop1
+  have h0e : b2.sudo_5Board_4held[0]'(by rw [hszD2]; decide) = true := h0t _
+  have h1e : b2.sudo_5Board_4held[1]'(by rw [hszD2]; decide) = true := h1t _
+  have hx0e : b2.sudo_5Board_4home[0]'(by rw [hszH2]; decide) = embed x := hx0 _
+  have hy1e : b2.sudo_5Board_4home[1]'(by rw [hszH2]; decide) = embed y := hy1 _
+  have hMv2 : FitsLen (mv2 + 8 * t.n + 6 * (t.benchlen - t.n)) := by
+    rw [hsum]; exact hMv
+  obtain ⟨bF, hfrob, _, _, hxF, hyF⟩ :=
+    cofactor_frobenius b2 t x y mv2 slides pk2 peakS holeN cOps ctrl mx hsh sat
+      hszH2 hszD2 hopsB hx hy hxt hyt hmk hoff2 hmark2
+      (hctrl.trans hc) (hmx2.trans hmx) (htier.trans hT) hopB hfitC hfitD hfitU
+      h0e hx0e h1e hy1e hmv (hsl2.trans hslides) hpk2 (hst.trans hstrict)
+      (hho.trans hhole) hMv2 hSl
+  exact ⟨b2, bF, hcopy, hfrob, hxF, hyF⟩
+
 end EcbsLink2.Link2

@@ -778,4 +778,135 @@ theorem pow_step_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat)
       rw [hd2, if_pos rfl]
     simpa [hif] using hr
 
+/-- The emitted power loop, one digit at a time. -/
+def powRun : Ecbs.Board → List Nat → Except SudoRt.Trap Ecbs.Board
+  | b, [] => .ok b
+  | b, d :: ds => do
+      let b ← powDigitRun b d (if d = 2 then powGap else powBottom)
+      powRun b ds
+
+/-- Folding the digits that remain leaves `foldl powStep` on the up home. -/
+theorem pow_fold (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : List Nat)
+    (h : PowAt b t rhs acc ds)
+    (hdig : ∀ e, e ∈ ds → e = 0 ∨ e = 1 ∨ e = 2) :
+    ∃ b', powRun b ds = .ok b' ∧
+      PowAt b' t rhs (ds.foldl (powStep t.n t.k t.benchlen rhs) acc) [] := by
+  induction ds generalizing b acc with
+  | nil =>
+    refine ⟨b, rfl, ?_⟩
+    simpa using h
+  | cons d ds ih =>
+    have hd := hdig d (List.mem_cons_self d ds)
+    obtain ⟨b1, hr, hAt⟩ := pow_step_at b t rhs acc d ds h hd
+    have hmem : ∀ e, e ∈ ds → e = 0 ∨ e = 1 ∨ e = 2 := by
+      intro e he
+      exact hdig e (List.mem_cons_of_mem d he)
+    obtain ⟨b', hr2, hEnd⟩ := ih b1 (powStep t.n t.k t.benchlen rhs acc d) hAt hmem
+    refine ⟨b', ?_, ?_⟩
+    · rw [powRun, hr, ok_bind]
+      exact hr2
+    · simpa [List.foldl_cons] using hEnd
+
+theorem rootDigits_length (n : Nat) : (rootDigits n).length = n - 1 := by
+  unfold rootDigits
+  simp
+
+theorem rootDigits_trit (n d : Nat) (hd : d ∈ rootDigits n) :
+    d = 0 ∨ d = 1 ∨ d = 2 := by
+  unfold rootDigits at hd
+  obtain ⟨i, _, rfl⟩ := List.mem_map.mp hd
+  exact rootDigit_cases n i
+
+/-- The whole root power. The up home is `rootY`. -/
+theorem pow_root (b : Ecbs.Board) (t : Spec.Tier) (x : List Nat)
+    (h : PowAt b t (curveSide t.n t.k t.benchlen x) (whiteHole0 t.n) (rootDigits t.n)) :
+    ∃ b', powRun b (rootDigits t.n) = .ok b' ∧
+      PowAt b' t (curveSide t.n t.k t.benchlen x) (rootY t.n t.k t.benchlen x) [] := by
+  obtain ⟨b', hr, hAt⟩ := pow_fold b t (curveSide t.n t.k t.benchlen x) (whiteHole0 t.n)
+      (rootDigits t.n) h (fun e he => rootDigits_trit t.n e he)
+  refine ⟨b', hr, ?_⟩
+  simpa [rootY_digits] using hAt
+
+/-- The numeric room a fresh power loop needs: one budget per root digit,
+    and a script the seated marker does not meet. -/
+structure PowRoom (t : Spec.Tier) : Prop where
+  moves : FitsLen (powMove t.n t.benchlen * (t.n - 1))
+  slides : FitsLen (powSlide t.n * (t.n - 1))
+  ctrl : FitsLen (powCtrl * (t.n - 1))
+  ops : FitsLen (t.n - 1)
+  nPos : 0 < t.n
+  script : 1 < t.script
+
+theorem demo_pow_room : PowRoom demo where
+  moves := by
+    unfold FitsLen powMove demo i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  slides := by
+    unfold FitsLen powSlide demo i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  ctrl := by
+    unfold FitsLen powCtrl demo i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  ops := by
+    unfold FitsLen demo i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  nPos := by decide
+  script := demo_pow_script
+
+theorem toy_pow_room : PowRoom toy where
+  moves := by
+    unfold FitsLen powMove toy i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  slides := by
+    unfold FitsLen powSlide toy i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  ctrl := by
+    unfold FitsLen powCtrl toy i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  ops := by
+    unfold FitsLen toy i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  nPos := by decide
+  script := toy_pow_script
+
+theorem hobby_pow_room : PowRoom hobby where
+  moves := by
+    unfold FitsLen powMove hobby i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  slides := by
+    unfold FitsLen powSlide hobby i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  ctrl := by
+    unfold FitsLen powCtrl hobby i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  ops := by
+    unfold FitsLen hobby i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  nPos := by decide
+  script := hobby_pow_script
+
+theorem serious_pow_room : PowRoom serious where
+  moves := by
+    unfold FitsLen powMove serious i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  slides := by
+    unfold FitsLen powSlide serious i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  ctrl := by
+    unfold FitsLen powCtrl serious i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  ops := by
+    unfold FitsLen serious i64MaxNat
+    exact Nat.le_of_ble_eq_true rfl
+  nPos := by decide
+  script := serious_pow_script
+
+theorem pow_room (t : Spec.Tier) (h : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious) :
+    PowRoom t := by
+  rcases h with rfl | rfl | rfl | rfl
+  · exact demo_pow_room
+  · exact toy_pow_room
+  · exact hobby_pow_room
+  · exact serious_pow_room
+
 end EcbsLink2.Link2

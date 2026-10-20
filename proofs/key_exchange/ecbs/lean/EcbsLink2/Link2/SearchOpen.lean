@@ -13,8 +13,15 @@ open MegaDreifach.Link2
 open Ecbs
 open EcbsLink2.Spec
 
-/-- `builtBoard` can plant the first hole. -/
-theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) : PlantAt (builtBoard t) t where
+/-- `builtBoard` can plant a hole while `holesLeft` holes remain, once those
+    budgets fit. The four shipped tiers discharge the budgets below. -/
+theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) (holesLeft : Nat)
+    (hpos : 0 < holesLeft)
+    (hmov : FitsLen (perHole t.n t.benchlen * holesLeft))
+    (hslide : FitsLen (perSlide t.n * holesLeft))
+    (hctrl : FitsLen (tierR t + perCtrl t.n * holesLeft)) :
+    PlantAt (builtBoard t) t holesLeft where
+  holesPos := hpos
   tier := built_tier t
   szH := by rw [built_home_blank]; simp [Array.size_mkArray]
   szD := by rw [built_held_blank]; simp [Array.size_mkArray]
@@ -47,21 +54,11 @@ theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) : PlantAt (builtBoard t)
     simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
   moves := by
     refine ⟨0, by rw [built_moves0]; rfl, ?_⟩
-    have hle : 0 + plantRoom t.n t.benchlen ≤
-        2 * (t.n * (t.n + 1)) + 12 * t.benchlen + 24 * t.n + 8 := by
-      unfold plantRoom
-      omega
-    exact curveLayFit t.n t.benchlen (0 + plantRoom t.n t.benchlen)
-      hsh.n_small hsh.small.2.2.2 hle
+    simpa [Nat.zero_add] using hmov
   slides := by
     refine ⟨0, by rw [built_slides0]; rfl, ?_⟩
-    have hle : 0 + plantRoom t.n t.benchlen ≤
-        2 * (t.n * (t.n + 1)) + 12 * t.benchlen + 24 * t.n + 8 := by
-      unfold plantRoom
-      omega
-    exact curveLayFit t.n t.benchlen (0 + plantRoom t.n t.benchlen)
-      hsh.n_small hsh.small.2.2.2 hle
-  ctrl := ⟨tierR t, built_ctrl_eq t⟩
+    simpa [Nat.zero_add] using hslide
+  ctrl := ⟨tierR t, built_ctrl_eq t, hctrl⟩
   peak := ⟨1, by rw [built_peak1]; rfl⟩
   strict := ⟨0, by rw [built_strict]; rfl⟩
   hole := ⟨0, by rw [built_hole]; rfl⟩
@@ -84,6 +81,95 @@ theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) : PlantAt (builtBoard t)
   marker := built_marker_down t
   markerOn := built_flag_off t
   benchOff := built_bench_off t
+
+theorem demo_move_budget : FitsLen (perHole demo.n demo.benchlen * demo.n) := by
+  unfold FitsLen perHole plantRoom i64MaxNat demo
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem demo_slide_budget : FitsLen (perSlide demo.n * demo.n) := by
+  unfold FitsLen perSlide i64MaxNat demo
+  exact Nat.le_of_ble_eq_true rfl
+
+private theorem add_cap (c n p : Nat) (hc : c ≤ n - 1) : c + p ≤ (n - 1) + p :=
+  Nat.add_le_add_right hc p
+
+theorem demo_ctrl_num : (demo.n - 1) + perCtrl demo.n * demo.n ≤ 9223372036854775807 := by
+  unfold perCtrl demo
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem demo_ctrl_budget : FitsLen (tierR demo + perCtrl demo.n * demo.n) := by
+  have hlen : tierR demo ≤ demo.n - 1 := by
+    simpa [tierR] using rungList_length_le (demo.n - 1)
+  unfold FitsLen i64MaxNat
+  exact Nat.le_trans (add_cap _ demo.n _ hlen) demo_ctrl_num
+
+theorem toy_move_budget : FitsLen (perHole toy.n toy.benchlen * toy.n) := by
+  unfold FitsLen perHole plantRoom i64MaxNat toy
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem toy_slide_budget : FitsLen (perSlide toy.n * toy.n) := by
+  unfold FitsLen perSlide i64MaxNat toy
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem toy_ctrl_num : (toy.n - 1) + perCtrl toy.n * toy.n ≤ 9223372036854775807 := by
+  unfold perCtrl toy
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem toy_ctrl_budget : FitsLen (tierR toy + perCtrl toy.n * toy.n) := by
+  have hlen : tierR toy ≤ toy.n - 1 := by
+    simpa [tierR] using rungList_length_le (toy.n - 1)
+  unfold FitsLen i64MaxNat
+  exact Nat.le_trans (add_cap _ toy.n _ hlen) toy_ctrl_num
+
+theorem hobby_move_budget : FitsLen (perHole hobby.n hobby.benchlen * hobby.n) := by
+  unfold FitsLen perHole plantRoom i64MaxNat hobby
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem hobby_slide_budget : FitsLen (perSlide hobby.n * hobby.n) := by
+  unfold FitsLen perSlide i64MaxNat hobby
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem hobby_ctrl_num : (hobby.n - 1) + perCtrl hobby.n * hobby.n ≤ 9223372036854775807 := by
+  unfold perCtrl hobby
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem hobby_ctrl_budget : FitsLen (tierR hobby + perCtrl hobby.n * hobby.n) := by
+  have hlen : tierR hobby ≤ hobby.n - 1 := by
+    simpa [tierR] using rungList_length_le (hobby.n - 1)
+  unfold FitsLen i64MaxNat
+  exact Nat.le_trans (add_cap _ hobby.n _ hlen) hobby_ctrl_num
+
+theorem serious_move_budget : FitsLen (perHole serious.n serious.benchlen * serious.n) := by
+  unfold FitsLen perHole plantRoom i64MaxNat serious
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem serious_slide_budget : FitsLen (perSlide serious.n * serious.n) := by
+  unfold FitsLen perSlide i64MaxNat serious
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem serious_ctrl_num : (serious.n - 1) + perCtrl serious.n * serious.n ≤ 9223372036854775807 := by
+  unfold perCtrl serious
+  exact Nat.le_of_ble_eq_true rfl
+
+theorem serious_ctrl_budget : FitsLen (tierR serious + perCtrl serious.n * serious.n) := by
+  have hlen : tierR serious ≤ serious.n - 1 := by
+    simpa [tierR] using rungList_length_le (serious.n - 1)
+  unfold FitsLen i64MaxNat
+  exact Nat.le_trans (add_cap _ serious.n _ hlen) serious_ctrl_num
+
+theorem demo_fresh : PlantAt (builtBoard demo) demo demo.n :=
+  fresh_plant demo demo_shape demo.n (by decide) demo_move_budget demo_slide_budget demo_ctrl_budget
+
+theorem toy_fresh : PlantAt (builtBoard toy) toy toy.n :=
+  fresh_plant toy toy_shape toy.n (by decide) toy_move_budget toy_slide_budget toy_ctrl_budget
+
+theorem hobby_fresh : PlantAt (builtBoard hobby) hobby hobby.n :=
+  fresh_plant hobby hobby_shape hobby.n (by decide) hobby_move_budget hobby_slide_budget
+    hobby_ctrl_budget
+
+theorem serious_fresh : PlantAt (builtBoard serious) serious serious.n :=
+  fresh_plant serious serious_shape serious.n (by decide) serious_move_budget
+    serious_slide_budget serious_ctrl_budget
 
 /-- The fresh hole misses. `searchRoot` moves one hole on. -/
 theorem search_miss_first (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)

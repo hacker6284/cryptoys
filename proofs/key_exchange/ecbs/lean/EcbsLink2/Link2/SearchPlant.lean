@@ -22,9 +22,21 @@ open EcbsLink2.Spec
 def plantRoom (n bench : Nat) : Nat :=
   2 * (n * (n + 1)) + 12 * bench + 24 * n + 8
 
-/-- The board a hole can plant into. The first hole's `builtBoard` is one;
-    a miss of an earlier hole is another. -/
-structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) : Prop where
+/-- Moves one planted hole can add: the curve side, the root power, and the hit test. -/
+def perHole (n bench : Nat) : Nat :=
+  plantRoom n bench + (n * n + 6 * n + 6 * bench) * n + (n * n + 8 * n + 6 * bench)
+
+/-- Slides one planted hole can add. -/
+def perSlide (n : Nat) : Nat :=
+  4 * n * n + 6 * n
+
+/-- Control steps one planted hole can add. -/
+def perCtrl (n : Nat) : Nat :=
+  4 * n + 4
+
+/-- The board a hole can plant into. `holesLeft` is how many holes may still
+    run, counting this one. Counters keep `FitsLen (c + perHole * holesLeft)`. -/
+structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat) : Prop where
   tier : b.sudo_5Board_1t = embTier t
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
@@ -40,11 +52,13 @@ structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) : Prop where
   marker : b.sudo_5Board_6marker = -1
   markerOn : b.sudo_5Board_9marker_on = false
   benchOff : b.sudo_5Board_8bench_on = false
+  holesPos : 0 < holesLeft
   moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
-    FitsLen (mv + plantRoom t.n t.benchlen)
+    FitsLen (mv + perHole t.n t.benchlen * holesLeft)
   slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
-    FitsLen (sl + plantRoom t.n t.benchlen)
-  ctrl : ∃ c, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c
+    FitsLen (sl + perSlide t.n * holesLeft)
+  ctrl : ∃ c, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+    FitsLen (c + perCtrl t.n * holesLeft)
   peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
   strict : ∃ ps, b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps
   hole : ∃ holeN, b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN
@@ -60,6 +74,19 @@ structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) : Prop where
 private theorem two_n_room (n bench : Nat) : 2 * n ≤ plantRoom n bench := by
   unfold plantRoom
   omega
+
+private theorem perHole_ge (n bench : Nat) : plantRoom n bench ≤ perHole n bench := by
+  unfold perHole
+  omega
+
+private theorem room_mul (a p k : Nat) (hk : 0 < k) (ha : a ≤ p) : a ≤ p * k := by
+  have hmul : p * 1 ≤ p * k := Nat.mul_le_mul_left p hk
+  have hp : p ≤ p * k := by simpa [Nat.mul_one] using hmul
+  exact Nat.le_trans ha hp
+
+private theorem two_in_budget (n bench k : Nat) (hk : 0 < k) :
+    2 * n ≤ perHole n bench * k :=
+  room_mul _ _ _ hk (Nat.le_trans (two_n_room n bench) (perHole_ge n bench))
 
 private theorem some_idx {α : Type} (a : Array α) (i : Nat) (v : α)
     (h : a[i]? = some v) : i < a.size := by
@@ -117,7 +144,8 @@ private theorem do_copy (b : Ecbs.Board) (n j : Nat) :
     (fun b => Ecbs.copy_band b Ecbs.bottom Ecbs.base_across false)
 
 /-- Plant `basisPeg` into an empty base home. The bottom stays empty. -/
-theorem search_plant (b : Ecbs.Board) (t : Spec.Tier) (h : PlantAt b t)
+theorem search_plant (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
+    (h : PlantAt b t holesLeft)
     (j : Nat) (hj : j < t.n) :
     ∃ b',
       (do
@@ -146,7 +174,7 @@ theorem search_plant (b : Ecbs.Board) (t : Spec.Tier) (h : PlantAt b t)
     rw [h.tier, hx]
     simp [embTier, ofNat_eq_natCast]
   have h2 : FitsLen (mv + 2 * t.n) :=
-    FitsLen.of_le hfit (Nat.add_le_add_left (two_n_room t.n t.benchlen) mv)
+    FitsLen.of_le hfit (Nat.add_le_add_left (two_in_budget t.n t.benchlen holesLeft h.holesPos) mv)
   have hfn : FitsLen t.n :=
     FitsLen.of_le h2 (Nat.le_trans (n_le_two t.n) (n_le_add mv (2 * t.n)))
   have hput := put_refines b 3 x mv pk hH hD h7 hempty hn (by rw [hx]; exact hfn)
@@ -168,11 +196,12 @@ theorem search_plant (b : Ecbs.Board) (t : Spec.Tier) (h : PlantAt b t)
   · refine ⟨mv + pegCount x, place_moves_eq b 3 hH hD x mv pk, ?_⟩
     exact FitsLen.of_le hfit
       (Nat.le_trans (peg_plus mv (pegCount x) t.n hpeg)
-        (Nat.add_le_add_left (two_n_room t.n t.benchlen) mv))
+        (Nat.add_le_add_left (two_in_budget t.n t.benchlen holesLeft h.holesPos) mv))
   · exact ⟨_, place_peak_nat b 3 hH hD x mv pk hpk⟩
 
 /-- Copy the planted peg into the empty bottom. -/
-theorem search_copy (b : Ecbs.Board) (t : Spec.Tier) (h : PlantAt b t)
+theorem search_copy (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
+    (h : PlantAt b t holesLeft)
     (j : Nat) (hj : j < t.n) :
     ∃ bP bC,
       (do
@@ -193,7 +222,7 @@ theorem search_copy (b : Ecbs.Board) (t : Spec.Tier) (h : PlantAt b t)
           FitsLen mv) ∧
         (∃ pk, bC.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) := by
   obtain ⟨bP, hplant, hhome, hheld, hbot, htier, hszH, hszD, hmvE, hpkE⟩ :=
-    search_plant b t h j hj
+    search_plant b t holesLeft h j hj
   rcases hmvE with ⟨mv, hmv, hfit⟩
   rcases hpkE with ⟨pk, hpk⟩
   let x := basisPeg t.n j

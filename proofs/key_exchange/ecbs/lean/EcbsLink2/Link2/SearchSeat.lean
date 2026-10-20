@@ -476,7 +476,7 @@ theorem search_ready_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   have hcSame : cP = c0 + tierR t := Int.ofNat.inj (hcP.symm.trans hc0)
   have hcB : FitsLen (c0 + tierR t + perCtrl t.n * holesLeft) := by
     simpa [hcSame, Nat.add_assoc] using hfitC
-  obtain ⟨b', hpow, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE⟩ :=
+  obtain ⟨b', hpow, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE, _, _⟩ :=
     pow_from_strip_at bS t j mv0 sl0 c0 o0 o1 holesLeft s hOk hsh sat hn3
       hp.holesPos hmvB hslB hcB
   rcases hmvE with ⟨mv, hmv, hmvLe⟩

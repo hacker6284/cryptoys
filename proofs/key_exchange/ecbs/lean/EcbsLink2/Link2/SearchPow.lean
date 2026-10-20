@@ -515,6 +515,9 @@ private theorem op_pow_room (o n k : Nat) (hk : 0 < k) :
   rw [hassoc]
   exact Nat.add_le_add_left hsum _
 
+private theorem seven_eight (s : Nat) (h1 : 7 < s) (h2 : ¬ 8 < s) : s = 8 := by
+  omega
+
 private theorem op1_pow_room (o n k : Nat) (hk : 0 < k) :
     o + 1 + (n - 1) ≤ o + perOp n * k := by
   unfold perOp
@@ -555,7 +558,9 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
         (∃ c, b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
           c ≤ c0 + tierR t + powCtrl * (t.n - 1)) ∧
         (∃ cOp, b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat cOp) ∧
-          cOp ≤ o0 + 2 + (t.n - 1)) := by
+          cOp ≤ o0 + 2 + (t.n - 1)) ∧
+        b'.sudo_5Board_4home.size = 8 ∧
+        b'.sudo_5Board_4held.size = 8 := by
   let x := basisPeg t.n j
   let side := curveSide t.n t.k t.benchlen x
   let acc := whiteHole0 t.n
@@ -681,7 +686,28 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
     obtain ⟨hhome2, hheld2⟩ := hk2 i hu hs
     exact ⟨hhome2.trans (hhome1.trans (by simp [bP, coldPhantom])),
       hheld2.trans (hheld1.trans (by simp [bP, coldPhantom]))⟩
-  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  have slot_lt (i : Nat) (hi : i < 8) (hne1 : i ≠ powUp) (hne6 : i ≠ powSpare) :
+      i < b'.sudo_5Board_4home.size := by
+    have hsome : b.sudo_5Board_4home[i]? =
+        some (b.sudo_5Board_4home[i]'(by rw [s.szH]; exact hi)) :=
+      Array.getElem?_eq_getElem _
+    have heq := (hkeep i hne1 hne6).1
+    rw [← heq] at hsome
+    exact (Array.getElem?_eq_some_iff.mp hsome).1
+  have slot_ge (i : Nat) (hi : 8 ≤ i) : ¬ i < b'.sudo_5Board_4home.size := by
+    have hnone : b.sudo_5Board_4home[i]? = none := by
+      rw [Array.getElem?_eq_none_iff, s.szH]
+      exact hi
+    have hne1 : i ≠ powUp := by
+      intro h
+      exact Nat.not_le_of_lt (by decide : powUp < 8) (by rw [← h]; exact hi)
+    have hne6 : i ≠ powSpare := by
+      intro h
+      exact Nat.not_le_of_lt (by decide : powSpare < 8) (by rw [← h]; exact hi)
+    have heq := (hkeep i hne1 hne6).1
+    rw [← heq] at hnone
+    exact Nat.not_lt.mpr (Array.getElem?_eq_none_iff.mp hnone)
+  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hred]
     simp only [powRun, if_true, hrunB, ok_bind]
     exact hr
@@ -717,5 +743,30 @@ theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
       simpa [bP, coldPhantom, oS0] using slot_some b 0 oS0 s.opsSz (by decide) s.ops0
     obtain ⟨cOp', hcOp', hle⟩ := hcount.ops0 oS0 hopP
     exact ⟨cOp', hcOp', by simpa [oS0, Nat.add_assoc] using hle⟩
+  · exact seven_eight _ (slot_lt 7 (by decide) (by decide) (by decide))
+      (slot_ge 8 (by decide))
+  · have held_lt (i : Nat) (hi : i < 8) (hne1 : i ≠ powUp) (hne6 : i ≠ powSpare) :
+        i < b'.sudo_5Board_4held.size := by
+      have hsome : b.sudo_5Board_4held[i]? =
+          some (b.sudo_5Board_4held[i]'(by rw [s.szD]; exact hi)) :=
+        Array.getElem?_eq_getElem _
+      have heq := (hkeep i hne1 hne6).2
+      rw [← heq] at hsome
+      exact (Array.getElem?_eq_some_iff.mp hsome).1
+    have held_ge (i : Nat) (hi : 8 ≤ i) : ¬ i < b'.sudo_5Board_4held.size := by
+      have hnone : b.sudo_5Board_4held[i]? = none := by
+        rw [Array.getElem?_eq_none_iff, s.szD]
+        exact hi
+      have hne1 : i ≠ powUp := by
+        intro h
+        exact Nat.not_le_of_lt (by decide : powUp < 8) (by rw [← h]; exact hi)
+      have hne6 : i ≠ powSpare := by
+        intro h
+        exact Nat.not_le_of_lt (by decide : powSpare < 8) (by rw [← h]; exact hi)
+      have heq := (hkeep i hne1 hne6).2
+      rw [← heq] at hnone
+      exact Nat.not_lt.mpr (Array.getElem?_eq_none_iff.mp hnone)
+    exact seven_eight _ (held_lt 7 (by decide) (by decide) (by decide))
+      (held_ge 8 (by decide))
 
 end EcbsLink2.Link2

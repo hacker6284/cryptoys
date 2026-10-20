@@ -146,7 +146,7 @@ private theorem tierR_small (t : Spec.Tier) (hn : t.n ≤ 1000000) : tierR t ≤
   exact Nat.le_trans (by simpa [tierR] using hlen) (Nat.le_trans (Nat.sub_le _ _) hn)
 
 private theorem ctrl_cap (r n : Nat) (hr : r ≤ 1000000) (hn : n ≤ 1000000) :
-    r - 1 + 4 * (n - 1) ≤ 5000000 := by omega
+    r + 4 * (n - 1) ≤ 5000000 := by omega
 
 private theorem ctrl_room (c left cap : Nat) (hc : c ≤ cap) (hl : left ≤ 1000000)
     (hcap : cap ≤ 5000000) : c + left ≤ 6000000 := by omega
@@ -204,8 +204,9 @@ theorem search_ready (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat 
             (curveSide t.n t.k t.benchlen (basisPeg t.n j))
             (curveSide t.n t.k t.benchlen (basisPeg t.n j)))
           (rootStrip t.n) (basisPeg t.n j) left := by
-  obtain ⟨b', hdo, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE⟩ :=
-    pow_from_strip t hOk hsh sat j hj0 hj hn3
+  obtain ⟨bS, hstrip, s⟩ := search_strip t hOk hsh sat j hj0 hj
+  obtain ⟨b', hpow, hPow, hax, haxD, hbx, hbxD, hmvE, hslE, hcE, hopE⟩ :=
+    pow_from_strip bS t j hOk hsh sat s hn3
   rcases hmvE with ⟨mv, hmv, hmvLe⟩
   rcases hslE with ⟨sl, hsl, hslLe⟩
   rcases hcE with ⟨ctrl, hctrl, hctrlLe⟩
@@ -246,7 +247,9 @@ theorem search_ready (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat 
     rw [hsame]
     exact ops_search_fit c0 left (Nat.le_trans hopLe (ops_cap t.n hn))
       (Nat.le_trans hleftN hn)
-  refine ⟨b', hdo, ?_⟩
+  refine ⟨b', ?_, ?_⟩
+  · rw [hstrip, ok_bind]
+    exact hpow
   exact search_of_pow b' t (basisPeg t.n j) (rootStrip t.n) (basisPeg t.n j) left hPow
     (basisPeg_length t.n j) hax haxD (strip_len t.n (two_le t.n hn3))
     hbx hbxD (basisPeg_length t.n j) hleft hM hS hC hOp

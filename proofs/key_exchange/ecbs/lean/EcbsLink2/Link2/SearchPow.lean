@@ -99,6 +99,9 @@ private theorem six (sl n : Nat) (h : sl ≤ 4 * n + 2 * n) : sl ≤ 6 * n := by
 private theorem spend_add (mv mv' p cap : Nat) (h : mv' ≤ mv + p) (hc : mv ≤ cap) :
     mv' ≤ cap + p := by omega
 
+private theorem ctrl_pad (c r k : Nat) (h : c ≤ r - 1 + 4 * k) : c ≤ r + 4 * k := by
+  omega
+
 private theorem tail_len (n : Nat) (ds : List Nat)
     (h : rootDigits n = 2 :: ds) (hlen : (rootDigits n).length = n - 1) :
     ds.length + 1 = n - 1 := by
@@ -248,27 +251,12 @@ private theorem held_some (b : Ecbs.Board) (i : Nat) (v : Bool)
   rw [Array.getElem?_eq_getElem h]
   exact congrArg some (hv h)
 
-/-- The cold first digit, then the remaining root digits. The up home is `rootY`. -/
-theorem pow_from_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)
-    (j : Nat) (hj0 : 0 < j) (hj : j < t.n) (hn3 : 3 ≤ t.n) :
+/-- The root power on the strip board. The up home is `rootY`. -/
+theorem pow_from_strip (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
+    (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t) (s : StripAt b t j)
+    (hn3 : 3 ≤ t.n) :
     ∃ b',
-      (do
-          let b ← (do
-            let b ← (do
-              let b ← (do
-                let b ← (do
-                  let b ← Ecbs.new_board (embTier t)
-                  let x ← SudoRt.filledL (Int.ofNat t.n) (0 : Int)
-                  let x ← SudoRt.putL x (Int.ofNat j) (1 : Int)
-                  let b ← Ecbs.put b Ecbs.base_across x
-                  Ecbs.curve_side b Ecbs.base_across Ecbs.bottom)
-                let b ← Ecbs.mul b Ecbs.gap Ecbs.bottom Ecbs.bottom true false false
-                Ecbs.settle b)
-              Ecbs.white0 b Ecbs.up)
-            let strip ← emittedStrip t.n
-            let b ← Ecbs.put b Ecbs.across strip
-            pure ({ b with sudo_5Board_9marker_on := true }))
-          powRun b (rootDigits t.n)) = .ok b' ∧
+      powRun b (rootDigits t.n) = .ok b' ∧
         PowAt b' t (curveSide t.n t.k t.benchlen (basisPeg t.n j))
           (rootY t.n t.k t.benchlen (basisPeg t.n j)) [] ∧
         b'.sudo_5Board_4home[0]? = some (embed (rootStrip t.n)) ∧
@@ -280,10 +268,9 @@ theorem pow_from_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sa
         (∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
           sl ≤ 6 * t.n + powSlide t.n * (t.n - 1)) ∧
         (∃ c, b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
-          c ≤ tierR t - 1 + powCtrl * (t.n - 1)) ∧
+          c ≤ tierR t + powCtrl * (t.n - 1)) ∧
         (∃ c0, b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat c0) ∧
           c0 ≤ 2 + (t.n - 1)) := by
-  obtain ⟨b, hdo, s⟩ := search_strip t hOk hsh sat j hj0 hj
   let x := basisPeg t.n j
   let side := curveSide t.n t.k t.benchlen x
   let acc := whiteHole0 t.n
@@ -411,7 +398,7 @@ theorem pow_from_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sa
       simp [bP, coldPhantom]
     exact ⟨hhome2.trans (hhome1.trans hhomeP), hheld2.trans (hheld1.trans hheldP)⟩
   refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-  · rw [hdo, ok_bind, hred]
+  · rw [hred]
     simp only [powRun, if_true, hrunB, ok_bind]
     exact hr
   · have hacc : tail.foldl (powStep t.n t.k t.benchlen side) (powStep t.n t.k t.benchlen side acc 2) =
@@ -440,7 +427,7 @@ theorem pow_from_strip (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sa
   · have hcP : bP.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat cPh := by
       simp [bP, coldPhantom]
     obtain ⟨c', hc', hle⟩ := hcount.ctrl cPh hcP
-    exact ⟨c', hc', hle⟩
+    exact ⟨c', hc', ctrl_pad c' (tierR t) (t.n - 1) (by simpa [powCtrl, cPh] using hle)⟩
   · have hopP : bP.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat 2) := by
       simpa [bP, coldPhantom] using slot_some b 0 2 s.opsSz (by decide) s.ops0
     obtain ⟨c0', hc0', hle⟩ := hcount.ops0 2 hopP

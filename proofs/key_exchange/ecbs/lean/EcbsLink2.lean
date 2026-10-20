@@ -146,6 +146,7 @@ import EcbsLink2.Link2.SearchSeat
 import EcbsLink2.Link2.SearchOpen
 import EcbsLink2.Link2.SearchMiss
 import EcbsLink2.Link2.SearchGo
+import EcbsLink2.Link2.SearchCofactor
 import EcbsLink2.Link2.SearchCubeOn
 import EcbsLink2.Link2.RootHit
 import EcbsLink2.Link2.WalkKeyDemo

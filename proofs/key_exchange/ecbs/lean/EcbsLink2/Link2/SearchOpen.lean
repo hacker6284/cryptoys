@@ -24,6 +24,27 @@ theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) : PlantAt (builtBoard t)
   botOff := by
     rw [built_held_blank]
     simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
+  axOff := by
+    rw [built_held_blank]
+    simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
+  upOff := by
+    rw [built_held_blank]
+    simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
+  gapOff := by
+    rw [built_held_blank]
+    simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
+  spareOff := by
+    rw [built_held_blank]
+    simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
+  axHome := by
+    rw [built_home_blank]
+    simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
+  upHome := by
+    rw [built_home_blank]
+    simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
+  gapHome := by
+    rw [built_home_blank]
+    simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
   moves := by
     refine ⟨0, by rw [built_moves0]; rfl, ?_⟩
     have hle : 0 + plantRoom t.n t.benchlen ≤

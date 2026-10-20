@@ -82,7 +82,8 @@ theorem across_by_gap (b : Board) (px xP g : List Nat)
       lane.take n = px ∧
       lane.length = bench ∧
       (∀ i, n ≤ i → ∀ hi : i < lane.length, lane[i] = 0) ∧
-      b1.sudo_5Board_9marker_on = false := by
+      b1.sudo_5Board_9marker_on = false ∧
+      b1 = mulNoOffBoard b 0 0 g xP n k moves hole bench peak peakS cOps hops h0D h0H := by
   have hne : (5 : Nat) ≠ 0 := by decide
   have hmul := mul_no_eq b 0 5 0 g xP w h r n k moves hole bench peak peakS cOps
     hmk hoff hops hop0 hfops hbl h5D h5H h5t h5a h0D h0H h0t h0a h7 hne hn0 hn
@@ -96,7 +97,7 @@ theorem across_by_gap (b : Board) (px xP g : List Nat)
   let b1 := mulNoOffBoard b 0 0 g xP n k moves hole bench peak peakS cOps hops h0D h0H
   refine ⟨b1, ?_, mul_no_on b 0 0 g xP n k moves hole bench peak peakS cOps hops h0D h0H,
     ?_, mul_no_bench b 0 0 g xP n k moves hole bench peak peakS cOps hops h0D h0H,
-    hpx, hlen, htail, rfl⟩
+    hpx, hlen, htail, rfl, rfl⟩
   · simpa [across, gap] using hmul
   · simpa [across] using
       mul_no_to b 0 0 g xP n k moves hole bench peak peakS cOps hops h0D h0H
@@ -213,6 +214,7 @@ theorem settle_up (b : Board) (px py lane : List Nat) (n moves slides peak : Nat
     (h0a : b.sudo_5Board_4home[0] = embed px) :
     ∃ b',
       settle b = .ok b' ∧
+      b' = settleBoard b 1 h1H h1D lane n moves slides peak ∧
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed px) ∧
       (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed py) := by
   have hto1 : b.sudo_5Board_8bench_to = ((1 : Nat) : Int) := by simpa [up] using hto
@@ -220,7 +222,7 @@ theorem settle_up (b : Board) (px py lane : List Nat) (n moves slides peak : Nat
     hbench hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
   let bS := settleBoard b 1 h1H h1D lane n moves slides peak
   have hhome := settle_home_eq b 1 ⟨h1H, h1D⟩ lane n moves slides peak
-  refine ⟨bS, by simpa [up] using hset, ?_, ?_⟩
+  refine ⟨bS, by simpa [up] using hset, rfl, ?_, ?_⟩
   · intro h0
     have hget := get_congr hhome 0 h0
     have hset0 : (b.sudo_5Board_4home.set ⟨1, h1H⟩ (embed (lane.take n)))[0]'(hhome ▸ h0) =
@@ -245,6 +247,11 @@ theorem clear_kept (b : Board) (home j : Nat) (xs px : List Nat) (moves : Nat)
     (hkeep : b.sudo_5Board_4home[j] = embed px) :
     ∃ b',
       clear b (home : Int) = .ok b' ∧
+      b' = { b with
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ #[]
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ false
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_5moves := Int.ofNat (moves + pegCount xs) } } ∧
       (∀ h : j < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[j] = embed px) := by
   have hcl := clear_held_refines b home xs moves hH hD hheld harr hmoves hf hfit
   let b' := { b with
@@ -252,7 +259,7 @@ theorem clear_kept (b : Board) (home j : Nat) (xs px : List Nat) (moves : Nat)
     sudo_5Board_4held := b.sudo_5Board_4held.set ⟨home, hD⟩ false
     sudo_5Board_4cost := { b.sudo_5Board_4cost with
       sudo_5Costs_5moves := Int.ofNat (moves + pegCount xs) } }
-  refine ⟨b', hcl, ?_⟩
+  refine ⟨b', hcl, rfl, ?_⟩
   intro hk
   have harrEq : b'.sudo_5Board_4home = b.sudo_5Board_4home.set ⟨home, hH⟩ #[] := rfl
   have hget := get_congr harrEq j hk

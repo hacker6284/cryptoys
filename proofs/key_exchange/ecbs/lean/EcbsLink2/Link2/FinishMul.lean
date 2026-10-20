@@ -290,4 +290,187 @@ theorem mul_aim_eq (b : Ecbs.Board) (dst first second aim : Nat)
   unfold mulAimBoard
   rfl
 
+theorem some_get {α : Type} (a : Array α) (i : Nat) (v : α)
+    (h : a[i]? = some v) (hlt : i < a.size) : a[i]'hlt = v := by
+  have heq := Array.getElem?_eq_getElem hlt
+  rw [h] at heq
+  exact Option.some.inj heq.symm
+
+/-- Home `home` of a settle is the bench prefix. Stated with `getElem?`
+    so the array equality is not rewritten under a dependent index. -/
+theorem settle_slot? (b : Ecbs.Board) (home : Nat) (xs : List Nat)
+    (n moves slides peak : Nat)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size) :
+    (settleBoard b home hH hD xs n moves slides peak).sudo_5Board_4home[home]? =
+      some (embed (xs.take n)) := by
+  rw [settle_home_eq b home ⟨hH, hD⟩ xs n moves slides peak]
+  rw [Array.getElem?_set_eq]
+
+/-- `finish`'s second multiply settles the across bench, then clears the up.
+    Home 0 stays that settled prefix. -/
+theorem aim_across? (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_4home[0]? =
+      some (embed (lane.take n)) := by
+  unfold mulAimBoard
+  rw [mul_no_home]
+  rw [Array.getElem?_set_ne _ _ _ (by decide : (1 : Nat) ≠ 0)]
+  exact settle_slot? b 0 lane n moves slides peak h0H h0D
+
+/-- The up home is the multiply's second operand, so the multiply clears it. -/
+theorem aim_up_off? (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_4held[1]? = some false := by
+  unfold mulAimBoard
+  rw [mul_no_held]
+  rw [Array.getElem?_set_eq]
+
+theorem aim_home_size (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_4home.size =
+      b.sudo_5Board_4home.size := by
+  unfold mulAimBoard
+  rw [mul_no_home, Array.size_set,
+    settle_home_eq b 0 ⟨h0H, h0D⟩ lane n moves slides peak, Array.size_set]
+
+theorem aim_held_size (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_4held.size =
+      b.sudo_5Board_4held.size := by
+  unfold mulAimBoard
+  rw [mul_no_held, Array.size_set,
+    settle_held_eq b 0 ⟨h0H, h0D⟩ lane n moves slides peak, Array.size_set]
+
+theorem aim_on (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_8bench_on = true := by
+  unfold mulAimBoard
+  rw [mul_no_on]
+
+theorem aim_to (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_8bench_to = (1 : Int) := by
+  unfold mulAimBoard
+  rw [mul_no_to]
+  rfl
+
+theorem aim_bench (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_5bench =
+      embed (laneFold n (n - k) (school n g yP (List.replicate bench 0) false)) := by
+  unfold mulAimBoard
+  rw [mul_no_bench]
+
+theorem aim_moves (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_4cost.sudo_5Costs_5moves =
+      Int.ofNat (mulMovesNo (moves + 2 * pegCount (lane.take n)) g yP n k bench) := by
+  unfold mulAimBoard
+  rw [mul_no_moves]
+
+theorem aim_slides (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_4cost.sudo_5Costs_6slides =
+      Int.ofNat (slides + 2 * pegCount (lane.take n)) := by
+  unfold mulAimBoard
+  rw [mul_no_slides, settle_slides_eq b 0 ⟨h0H, h0D⟩ lane n moves slides peak]
+
+theorem aim_peak (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_4cost.sudo_5Costs_4peak =
+      Int.ofNat (raisedPeak
+        (raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨0, h0D⟩ true) 7))
+        (countHeld ((settleBoard b 0 h0H h0D lane n moves slides peak).sudo_5Board_4held.set
+          ⟨1, settle_other_held b 0 1 ⟨h0H, h0D⟩ lane n moves slides peak h1D⟩ false) 7)) := by
+  unfold mulAimBoard
+  rw [mul_no_peak]
+
+/-- A home other than the settled across and the cleared up is unchanged. -/
+theorem aim_keep_home? (b : Ecbs.Board) (g yP lane : List Nat) (v : Array Int)
+    (n k moves slides hole bench peak peakS cOps j : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size)
+    (hne0 : j ≠ 0) (hne1 : j ≠ 1)
+    (hv : b.sudo_5Board_4home[j]? = some v) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_4home[j]? = some v := by
+  unfold mulAimBoard
+  rw [mul_no_home]
+  rw [Array.getElem?_set_ne _ _ _ hne1.symm]
+  rw [settle_home_eq b 0 ⟨h0H, h0D⟩ lane n moves slides peak]
+  rw [Array.getElem?_set_ne _ _ _ hne0.symm]
+  exact hv
+
+/-- A held flag other than the settled across and the cleared up is unchanged. -/
+theorem aim_keep_held? (b : Ecbs.Board) (g yP lane : List Nat) (flag : Bool)
+    (n k moves slides hole bench peak peakS cOps j : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size)
+    (hne0 : j ≠ 0) (hne1 : j ≠ 1)
+    (hv : b.sudo_5Board_4held[j]? = some flag) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_4held[j]? = some flag := by
+  unfold mulAimBoard
+  rw [mul_no_held]
+  rw [Array.getElem?_set_ne _ _ _ hne1.symm]
+  rw [settle_held_eq b 0 ⟨h0H, h0D⟩ lane n moves slides peak]
+  rw [Array.getElem?_set_ne _ _ _ hne0.symm]
+  exact hv
+
+theorem aim_n (b : Ecbs.Board) (g yP lane : List Nat)
+    (n k moves slides hole bench peak peakS cOps : Nat)
+    (hops : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (h0H : 0 < b.sudo_5Board_4home.size) (h0D : 0 < b.sudo_5Board_4held.size)
+    (h1D : 1 < b.sudo_5Board_4held.size) (h1H : 1 < b.sudo_5Board_4home.size)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int)) :
+    (mulAimBoard b 1 1 0 g yP lane n k moves slides hole bench peak peakS cOps
+        hops ⟨h0H, h0D⟩ h1D h1H).sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
+  unfold mulAimBoard
+  rw [show (mulNoOffBoard _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).sudo_5Board_1t =
+      (settleBoard b 0 h0H h0D lane n moves slides peak).sudo_5Board_1t from rfl,
+    settle_tier_eq b 0 ⟨h0H, h0D⟩ lane n moves slides peak, hn]
+
 end EcbsLink2.Link2

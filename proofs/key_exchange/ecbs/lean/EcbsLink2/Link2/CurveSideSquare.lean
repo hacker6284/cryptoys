@@ -478,7 +478,7 @@ theorem curve_side_square (b : Ecbs.Board) (cubeDst src : Nat) (lane x : List Na
     rw [hmvS, htakeP]
     exact (ofNat_eq_natCast mvC).symm
   have hmulLen : (fieldMul n k bench x x).length = n := prod_len n k bench x hnbench
-  obtain ⟨bW, hclose, hside, _⟩ := curve_side_of_cube bS cubeDst 6 x n k bench mvC
+  obtain ⟨bW, hclose, hside, _, _⟩ := curve_side_of_cube bS cubeDst 6 x n k bench mvC
     hdstH hdstD h6Hs h6Ds hdst6.symm hdst6
     (hheldC hdstD) (hhomeC hdstH) (hheld6 h6Ds) (hhome6 h6Hs)
     hnS hlenx hn0 hxsT hmC hfitClose hoffS hcubeLen hmulLen htC htM

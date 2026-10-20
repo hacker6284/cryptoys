@@ -156,7 +156,9 @@ theorem curve_side_close (b : Ecbs.Board) (dst spare : Nat)
         (∀ h : dst < bW.sudo_5Board_4home.size,
           bW.sudo_5Board_4home[dst] =
             embed (fieldAdd n (fieldAdd n x3 (mirrorTrits x2)) (whiteHole0 n))) ∧
-        CloseKeep b bW dst spare := by
+        CloseKeep b bW dst spare ∧
+        bW.sudo_5Board_4cost.sudo_5Costs_5moves =
+          Int.ofNat (moves + 2 * pegCount x2 + 1) := by
   have hlenS : (fieldAdd n x3 (mirrorTrits x2)).length = n := field_len _ _ _
   have htS : allTritList (fieldAdd n x3 (mirrorTrits x2)) := fieldAdd_trits _ _ _
   have hfitA : FitsLen (moves + n) := FitsLen.of_le hfit (by omega)
@@ -214,7 +216,7 @@ theorem curve_side_close (b : Ecbs.Board) (dst spare : Nat)
     exact FitsLen.of_le hfit (by omega)
   have hwhite := white0_held b2 dst sum mv2 hdstH hdstD hheld2 hhome2 h0 hc0 hmv2 hfitW
   let bW := addBoard b2 dst hdstH (embed (sum.set 0 (tritAdd (sum[0]'h0) 1))) (mv2 + 1)
-  refine ⟨bW, ?_, ?_, ?_⟩
+  refine ⟨bW, ?_, ?_, ?_, ?_⟩
   · rw [hadd, ok_bind]
     have hclear' : clear b1 (spare : Int) = .ok b2 := by
       simpa [b2, mv2, b1] using hclear
@@ -254,6 +256,10 @@ theorem curve_side_close (b : Ecbs.Board) (dst spare : Nat)
     · simp [bW, b2, b1, addBoard, withMoves]
     · simp [bW, b2, b1, addBoard, withMoves]
     · exact ⟨mv2 + 1, by simp [bW, addBoard, withMoves, ofNat_eq_natCast]⟩
+  · have hmvEq : mv2 + 1 = moves + 2 * pegCount x2 + 1 := by
+      dsimp [mv2, mv1]
+      omega
+    simp [bW, addBoard, withMoves, ofNat_eq_natCast, hmvEq]
 
 /-- Seated `x³` and `x²` close to the curve side. -/
 theorem curve_side_of_cube (b : Ecbs.Board) (dst spare : Nat)
@@ -284,12 +290,14 @@ theorem curve_side_of_cube (b : Ecbs.Board) (dst spare : Nat)
           white0 b (dst : Int)) = .ok bW ∧
         (∀ h : dst < bW.sudo_5Board_4home.size,
           bW.sudo_5Board_4home[dst] = embed (curveSide n k bench x)) ∧
-        CloseKeep b bW dst spare := by
-  obtain ⟨bW, hrun, hhome, hkeep⟩ := curve_side_close b dst spare
+        CloseKeep b bW dst spare ∧
+        bW.sudo_5Board_4cost.sudo_5Costs_5moves =
+          Int.ofNat (moves + 2 * pegCount (fieldMul n k bench x x) + 1) := by
+  obtain ⟨bW, hrun, hhome, hkeep, hmv⟩ := curve_side_close b dst spare
     (fieldCube n k bench x) (fieldMul n k bench x x) n moves
     hHd hDd hHs hDs hne hne' hheldD harrD hheldS harrS hn hcube hmul hpos
     htC htM hm hfit hbench
-  refine ⟨bW, hrun, ?_, hkeep⟩
+  refine ⟨bW, hrun, ?_, hkeep, hmv⟩
   rw [curveSide]
   exact hhome
 

@@ -102,6 +102,29 @@ private theorem close_room (mvS mv pegL n bench : Nat)
       mv + 2 * pegL + n + n * (n + 1) + 3 * (bench - n) + 2 * n + 2 * n + 1 := by
   omega
 
+/-- Moves `curve_side` can spend on one planted peg: the cube, the spare square,
+    and the mirror-add that writes the curve side. -/
+def sideCap (n bench : Nat) : Nat :=
+  n * (n + 1) + 11 * n + 6 * (bench - n) + 1
+
+private theorem side_cap_le (mv pegL pegX n bench : Nat)
+    (hmv : mv ≤ pegX + pegX + 2 * n + 3 * (bench - n))
+    (hL : pegL ≤ n) (hX : pegX ≤ n) :
+    mv + 2 * pegL + n + n * (n + 1) + 3 * (bench - n) + 2 * n + 2 * n + 1 ≤
+      sideCap n bench := by
+  unfold sideCap
+  omega
+
+private theorem close_under_cap (mv peg n bench : Nat)
+    (hpeg : peg ≤ n) (h : mv + 2 * n + 1 ≤ sideCap n bench) :
+    mv + 2 * peg + 1 ≤ sideCap n bench := by
+  omega
+
+private theorem four_n (a b n : Nat) (ha : a ≤ n) (hb : b ≤ n) :
+    (0 + 2 * a) + 2 * b ≤ 4 * n := by
+  have h := two_pegs a b n ha hb
+  omega
+
 private theorem sq_trits (n k bench : Nat) (x : List Nat)
     (hx : x.length = n) (hspan : 3 * (n - 1) < bench) (hn : n ≤ bench) :
     allTritList (fieldMul n k bench x x) := by
@@ -153,10 +176,11 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
           bS.sudo_5Board_4cost.sudo_5Costs_3ops[1] = 1) ∧
         (∀ h : 1 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[1] = (#[] : Array Int)) ∧
         (∀ h : 5 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[5] = (#[] : Array Int)) ∧
-        (∃ sl, bS.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl) ∧
+        (∃ sl, bS.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧ sl ≤ 4 * t.n) ∧
         (∃ pk, bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
         (∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
-        (∃ holeN, bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN) := by
+        (∃ holeN, bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN) ∧
+        mv + 2 * t.n + 1 ≤ sideCap t.n t.benchlen := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hxt : allTritList x := basisPeg_trits t.n j
@@ -286,7 +310,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
       mv + 2 * pegCount (lane.take n) + n + n * (n + 1) + 3 * (bench - n) + 2 * n + 2 * n + 1 :=
     close_room mvS mv (pegCount (lane.take n)) n bench hmvInner
   refine ⟨bS, mvS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hdo, ok_bind, hokM, ok_bind]
     exact hokS
   · intro h
@@ -360,12 +384,16 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     have hM := hhomeP 5 h5C h5M (by decide) (by decide)
     have hS := hhomePS 5 h5M h (by decide)
     exact hS.trans (hM.trans (hhome5C h5C))
-  · exact ⟨_, hslS⟩
+  · refine ⟨(0 + 2 * pegCount (lane.take n)) + 2 * pegCount (laneS.take n), hslS, ?_⟩
+    simpa [n] using four_n (pegCount (lane.take n)) (pegCount (laneS.take n)) n hpegL hpegS
   · exact hpeakS
   · rcases _hstrictM with ⟨psM, hpsM⟩
     exact ⟨psM, hstrictS.trans hpsM⟩
   · rcases _hholeM with ⟨holeM, hholeM⟩
     exact ⟨holeM, hholeS.trans hholeM⟩
+  · simpa [n, bench] using
+      Nat.le_trans hmvSle (side_cap_le mv (pegCount (lane.take n)) (pegCount x) n bench
+        hmvLe hpegL hpeg)
 
 /-- The board `curve_side` leaves for one search hole: curve side in the bottom,
     the planted peg still in base-across, up and the gap empty, marker down,
@@ -395,8 +423,9 @@ structure SideAt (b : Ecbs.Board) (t : Spec.Tier) (j : Nat) : Prop where
     b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = 1
   ops1 : ∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
     b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = 1
-  moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int)
-  slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl
+  moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
+    mv ≤ sideCap t.n t.benchlen
+  slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧ sl ≤ 4 * t.n
   peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
   strict : ∃ ps, b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps
   hole : ∃ holeN, b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN
@@ -429,7 +458,7 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
     fieldMul_length t.n t.k t.benchlen x x hnle
   obtain ⟨bS, mv, hdo, hhome2, hheld2, hhome6, hheld6, hhome3, hheld3, hoff, htier, hmov,
       hfit, hszH, hszD, hheld1, hheld5, hmk, hmark, hctrl, hmx, hopSz, hop0, hop1,
-      hhome1, hhome5, hslE, hpkE, hstrictE, hholeE⟩ :=
+      hhome1, hhome5, hslE, hpkE, hstrictE, hholeE, hcap⟩ :=
     search_square t hOk hsh sat j hj
   have h2H : 2 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2D : 2 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -437,7 +466,7 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
   have h6D : 6 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
   have hn : bS.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) := by
     rw [htier]; exact ofNat_eq_natCast _
-  obtain ⟨bW, hrun, hhome, hk⟩ := curve_side_of_cube bS 2 6 x t.n t.k t.benchlen mv
+  obtain ⟨bW, hrun, hhome, hk, hmvW⟩ := curve_side_of_cube bS 2 6 x t.n t.k t.benchlen mv
     h2H h2D h6H h6D (by decide) (by decide)
     (hheld2 h2D) (by simpa [x] using hhome2 h2H) (hheld6 h6D) (by simpa [x] using hhome6 h6H)
     hn hx hOk.n_pos hxt hmov hfit hoff hcubeL hmulL hcubeT hmulT
@@ -496,10 +525,15 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
           have hS : 1 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
             rw [← hk.ops]; exact h
           simpa [hk.ops] using hop1 hS
-        moves := hk.moves
+        moves := by
+          have hpegM : pegCount (fieldMul t.n t.k t.benchlen x x) ≤ t.n := by
+            have h := pegCount_le (fieldMul t.n t.k t.benchlen x x)
+            rwa [hmulL] at h
+          exact ⟨mv + 2 * pegCount (fieldMul t.n t.k t.benchlen x x) + 1, hmvW,
+            close_under_cap mv _ t.n t.benchlen hpegM hcap⟩
         slides := by
-          rcases hslE with ⟨sl, hsl⟩
-          exact ⟨sl, hk.slides.trans hsl⟩
+          rcases hslE with ⟨sl, hsl, hle⟩
+          exact ⟨sl, hk.slides.trans hsl, hle⟩
         peak := by
           rcases hpkE with ⟨pk, hpk⟩
           exact ⟨pk, hk.peak.trans hpk⟩

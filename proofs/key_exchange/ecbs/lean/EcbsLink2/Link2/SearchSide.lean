@@ -152,7 +152,11 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
         (∀ h : 1 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size,
           bS.sudo_5Board_4cost.sudo_5Costs_3ops[1] = 1) ∧
         (∀ h : 1 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[1] = (#[] : Array Int)) ∧
-        (∀ h : 5 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[5] = (#[] : Array Int)) := by
+        (∀ h : 5 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[5] = (#[] : Array Int)) ∧
+        (∃ sl, bS.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl) ∧
+        (∃ pk, bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
+        (∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
+        (∃ holeN, bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN) := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hxt : allTritList x := basisPeg_trits t.n j
@@ -223,7 +227,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     hsh.small hsh.n_small
   obtain ⟨bM, hokM, honM, htoM, htakeM, hhome2M, hbenchM, hhighM, hmovM, hslM, htM,
       hheld6M, hheld2M, hheldPM, hhomeP, hszHM, hszDM, hpkM, hmkM, hmarkM, hctrlM,
-      hmxM, hopsM⟩ := hmul
+      hmxM, hopsM, _hstrictM, _hholeM⟩ := hmul
   obtain ⟨pkM, hpkM⟩ := hpkM
   let laneS := laneFold n (n - k) (school n x x (List.replicate bench 0) false)
   have hlenS : laneS.length = bench := by
@@ -272,7 +276,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
           (Nat.le_trans (four_in_room mv (pegCount (lane.take n)) n bench) hroom.2.2.2.2.2.1)))
       (by simpa [laneS] using htakeM)
   obtain ⟨bS, hokS, hoffS, hhome6S, hheld6S, hhomePS, hheldPS, hmovS, htS, hszHS, hszDS,
-      hmkS, hmarkS, hctrlS, hmxS, hopsS, hslS⟩ := hset
+      hmkS, hmarkS, hctrlS, hmxS, hopsS, hslS, hpeakS, hstrictS, hholeS⟩ := hset
   let mvS := mvM + 2 * pegCount (laneS.take n)
   have hmvInner : mvS ≤
       mv + 2 * pegCount (lane.take n) + n + n * (n + 1) + 3 * (bench - n) + 2 * n := by
@@ -282,7 +286,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
       mv + 2 * pegCount (lane.take n) + n + n * (n + 1) + 3 * (bench - n) + 2 * n + 2 * n + 1 :=
     close_room mvS mv (pegCount (lane.take n)) n bench hmvInner
   refine ⟨bS, mvS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hdo, ok_bind, hokM, ok_bind]
     exact hokS
   · intro h
@@ -356,6 +360,12 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     have hM := hhomeP 5 h5C h5M (by decide) (by decide)
     have hS := hhomePS 5 h5M h (by decide)
     exact hS.trans (hM.trans (hhome5C h5C))
+  · exact ⟨_, hslS⟩
+  · exact hpeakS
+  · rcases _hstrictM with ⟨psM, hpsM⟩
+    exact ⟨psM, hstrictS.trans hpsM⟩
+  · rcases _hholeM with ⟨holeM, hholeM⟩
+    exact ⟨holeM, hholeS.trans hholeM⟩
 
 /-- The board `curve_side` leaves for one search hole: curve side in the bottom,
     the planted peg still in base-across, up and the gap empty, marker down,
@@ -386,6 +396,10 @@ structure SideAt (b : Ecbs.Board) (t : Spec.Tier) (j : Nat) : Prop where
   ops1 : ∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
     b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = 1
   moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int)
+  slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl
+  peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
+  strict : ∃ ps, b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps
+  hole : ∃ holeN, b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN
 
 /-- The planted copy, cubed and closed, is `curveSide`, with the ledger `SideAt`. -/
 theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)
@@ -415,7 +429,7 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
     fieldMul_length t.n t.k t.benchlen x x hnle
   obtain ⟨bS, mv, hdo, hhome2, hheld2, hhome6, hheld6, hhome3, hheld3, hoff, htier, hmov,
       hfit, hszH, hszD, hheld1, hheld5, hmk, hmark, hctrl, hmx, hopSz, hop0, hop1,
-      hhome1, hhome5⟩ :=
+      hhome1, hhome5, hslE, hpkE, hstrictE, hholeE⟩ :=
     search_square t hOk hsh sat j hj
   have h2H : 2 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2D : 2 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -482,6 +496,18 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
           have hS : 1 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
             rw [← hk.ops]; exact h
           simpa [hk.ops] using hop1 hS
-        moves := hk.moves }
+        moves := hk.moves
+        slides := by
+          rcases hslE with ⟨sl, hsl⟩
+          exact ⟨sl, hk.slides.trans hsl⟩
+        peak := by
+          rcases hpkE with ⟨pk, hpk⟩
+          exact ⟨pk, hk.peak.trans hpk⟩
+        strict := by
+          rcases hstrictE with ⟨ps, hps⟩
+          exact ⟨ps, hk.strict.trans hps⟩
+        hole := by
+          rcases hholeE with ⟨holeN, hhole⟩
+          exact ⟨holeN, hk.hole.trans hhole⟩ }
 
 end EcbsLink2.Link2

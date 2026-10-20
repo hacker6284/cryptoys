@@ -126,6 +126,10 @@ structure CloseKeep (b bW : Ecbs.Board) (dst spare : Nat) : Prop where
   dstHeld : ∀ h : dst < bW.sudo_5Board_4held.size, bW.sudo_5Board_4held[dst] = true
   slides : bW.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides
   peak : bW.sudo_5Board_4cost.sudo_5Costs_4peak = b.sudo_5Board_4cost.sudo_5Costs_4peak
+  strict : bW.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict
+  hole : bW.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+    b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole
   moves : ∃ mv, bW.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int)
 
 /-- Mirror-add, clear the spare, then add one in hole 0. -/
@@ -222,7 +226,7 @@ theorem curve_side_close (b : Ecbs.Board) (dst spare : Nat)
       rw [hw]
       exact fieldAdd_white n sum hlenS hpos htS
     simp [bW, addBoard, withMoves, Array.getElem_set, hpoly]
-  · refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · simp [bW, b2, b1, addBoard, withMoves]
     · simp [bW, b2, b1, addBoard, withMoves]
     · simp [bW, b2, b1, addBoard, withMoves]
@@ -245,6 +249,8 @@ theorem curve_side_close (b : Ecbs.Board) (dst spare : Nat)
     · intro _
       have hneS : spare ≠ dst := hne
       simp [bW, b2, b1, addBoard, withMoves, Array.getElem_set, hneS, hheldD]
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · simp [bW, b2, b1, addBoard, withMoves]
     · simp [bW, b2, b1, addBoard, withMoves]
     · simp [bW, b2, b1, addBoard, withMoves]
     · exact ⟨mv2 + 1, by simp [bW, addBoard, withMoves, ofNat_eq_natCast]⟩

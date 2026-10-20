@@ -624,7 +624,9 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
         b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
       b'.sudo_5Board_4cost.sudo_5Costs_3ops =
-        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) := by
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨0, hops⟩ (Int.ofNat (cOps + 1)) ∧
+      (∃ ps, b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
+      (∃ holeN, b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN) := by
   have hpair := mul_settles_first b Ecbs.spare Ecbs.base_across Ecbs.base_across true
     2 lane n moves slides peak cOps hmk hon hto h2H h2D h7 hempty2 hbench hn hpos hnle hzero
     hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
@@ -706,7 +708,7 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
     simp [bS, settleBoard]
     split <;> simp [Array.size_set, h2H]
   refine ⟨b', ?_, hon', ?_, htake, ?_, hbench, hhigh, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [show Ecbs.spare = ((6 : Nat) : Int) from rfl,
       show Ecbs.base_across = ((3 : Nat) : Int) from rfl]
     exact hok
@@ -782,6 +784,8 @@ theorem curve_mul_spare (b : Ecbs.Board) (x lane : List Nat)
         b.sudo_5Board_4cost.sudo_5Costs_3ops := by
       simpa [bS] using settle_ops b 2 ⟨h2H, h2D⟩ lane n moves slides peak
     exact (ops_set_eq _ _ hopsEq hopsS _).trans (set0_irrel _ _ hops _)
+  · exact ⟨_, _hstrict⟩
+  · exact ⟨_, _hhole⟩
 
 /-- The explicit `settle` after the spare multiply. The square is on the bench,
     aimed at the empty spare, so the spare home becomes the length-`n` prefix. -/
@@ -824,11 +828,16 @@ theorem curve_settle_spare (b : Ecbs.Board) (lane sq : List Nat) (n moves slides
         b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
       b'.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops ∧
       b'.sudo_5Board_4cost.sudo_5Costs_6slides =
-        Int.ofNat (slides + 2 * pegCount (lane.take n)) := by
+        Int.ofNat (slides + 2 * pegCount (lane.take n)) ∧
+      (∃ pk, b'.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
   have hset := settle_refines b 6 lane n moves slides peak h6H h6D h7 hon hto hempty hbench
     hn hpos hnle hzero hf hfitL hmoves hslides hpeak hpeg hfitM hfitS
   let b' := settleBoard b 6 h6H h6D lane n moves slides peak
-  refine ⟨b', hset, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨b', hset, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · dsimp [b']
     unfold settleBoard
     split <;> rfl
@@ -883,6 +892,14 @@ theorem curve_settle_spare (b : Ecbs.Board) (lane sq : List Nat) (n moves slides
   · dsimp [b']
     unfold settleBoard
     split <;> simp [ofNat_eq_natCast]
+  · dsimp [b']
+    exact settle_slides_eq b 6 ⟨h6H, h6D⟩ lane n moves slides peak
+  · dsimp [b']
+    exact ⟨_, settle_peak_eq b 6 ⟨h6H, h6D⟩ lane n moves slides peak hpeak⟩
+  · dsimp [b']
+    exact settle_strict_eq b 6 ⟨h6H, h6D⟩ lane n moves slides peak
+  · dsimp [b']
+    exact settle_hole_eq b 6 ⟨h6H, h6D⟩ lane n moves slides peak
 
 /-- `bottom + mirror(spare)` after the square has been settled into the spare.
     The destination is `fieldAdd` of the cube and the flipped square. -/

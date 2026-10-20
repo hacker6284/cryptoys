@@ -134,6 +134,7 @@ import EcbsLink2.Link2.PowFold
 import EcbsLink2.Link2.PowLoop
 import EcbsLink2.Link2.SearchAt
 import EcbsLink2.Link2.SearchLoop
+import EcbsLink2.Link2.SearchPlant
 import EcbsLink2.Link2.RootHit
 import EcbsLink2.Link2.WalkKeyDemo
 import EcbsLink2.Link2.WalkFformIdle

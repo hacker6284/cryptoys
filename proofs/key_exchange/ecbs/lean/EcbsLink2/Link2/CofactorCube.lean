@@ -189,7 +189,7 @@ theorem cofactor_copied (b : Board) (x y : List Nat) (n moves peak : Nat)
   have hoffF : bF.sudo_5Board_8bench_on = false := by simp [chordFlag, bF, hoff]
   have hmkF : bF.sudo_5Board_9marker_on = true := by simp [chordFlag, bF]
   obtain ⟨b2, mv2, pk2, hcopy, hszH2, hszD2, hx0, hy1, h0t, h1t, _hx3, _hy4, hmv, hpk, hsum,
-      hmark, _hst, _hho, _hctrl, _hsl⟩ :=
+      hmark, _hst, _hho, _hctrl, _hsl, _, _⟩ :=
     walk_copy_white bF x y n moves peak hszHF hszDF hx hy hf hfitx hfity
       (by simp [chordFlag, bF, hn])
       (by simpa [chordFlag, bF, ofNat_eq_natCast] using hmoves)

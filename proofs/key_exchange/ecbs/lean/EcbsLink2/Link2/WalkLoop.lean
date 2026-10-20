@@ -524,7 +524,7 @@ theorem walk_chord_white_open (b : Ecbs.Board) (zs : List Nat) (x y : List Nat)
   have h4aL : (chordLift b ctrl).sudo_5Board_4home[4]'(by rw [hszHL]; decide) = embed y := by
     simpa [hhomeL] using h4a
   obtain ⟨b2, _mv2, _pk2, hcopy, _hszH2, _hszD2, hx0, hy1, _, _, _, _, _, _, _, hmarkB,
-      _hst, _hho, _hctrl, _hsl⟩ :=
+      _hst, _hho, _hctrl, _hsl, _, _⟩ :=
     walk_copy_white (chordLift b ctrl) x y n moves peak hszHL hszDL hx hy hf hfitx hfity
       hnL hmovesL hpeakL h0L h1L h3tL h3aL h4tL h4aL
   have hmark2 : b2.sudo_5Board_6marker = -1 := by

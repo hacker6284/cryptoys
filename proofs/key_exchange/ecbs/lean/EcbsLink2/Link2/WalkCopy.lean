@@ -6,9 +6,21 @@
 -/
 import EcbsLink2.Link2.Place
 import EcbsLink2.Link2.MulSettle
+import EcbsLink2.Link2.TailStay
 import EcbsLink2.SpecBase
 
 namespace EcbsLink2.Link2
+
+private theorem place_frame (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
+    (xs : List Nat) (moves peak : Nat) :
+    FrameScalar b (placeBoard b home hH hD xs moves peak) ∧
+      (placeBoard b home hH hD xs moves peak).sudo_5Board_3row = b.sudo_5Board_3row := by
+  unfold placeBoard
+  dsimp only
+  split
+  · exact ⟨{ ladder := rfl, l0 := rfl, nr := rfl, park := rfl, fromH := rfl, ridx := rfl, tlen := rfl, t0 := rfl, tmax := rfl }, rfl⟩
+  · exact ⟨{ ladder := rfl, l0 := rfl, nr := rfl, park := rfl, fromH := rfl, ridx := rfl, tlen := rfl, t0 := rfl, tmax := rfl }, rfl⟩
 
 open MegaDreifach.Link2
 open EcbsLink2.Spec
@@ -166,7 +178,9 @@ theorem walk_copy_white (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
       b2.sudo_5Board_4cost.sudo_5Costs_4ctrl =
         b.sudo_5Board_4cost.sudo_5Costs_4ctrl ∧
       b2.sudo_5Board_4cost.sudo_5Costs_6slides =
-        b.sudo_5Board_4cost.sudo_5Costs_6slides := by
+        b.sudo_5Board_4cost.sudo_5Costs_6slides ∧
+      FrameScalar b b2 ∧
+      b2.sudo_5Board_3row = b.sudo_5Board_3row := by
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
   have h1H : 1 < b.sudo_5Board_4home.size := by rw [hszH]; decide
@@ -230,7 +244,11 @@ theorem walk_copy_white (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
       (place_ctrl_eq b1 1 h1H1 h1D1 y mv1 pk1).trans
         (place_ctrl_eq b 0 h0H h0D x moves peak),
       (place_slides_eq b1 1 h1H1 h1D1 y mv1 pk1).trans
-        (place_slides_eq b 0 h0H h0D x moves peak)⟩
+        (place_slides_eq b 0 h0H h0D x moves peak),
+      FrameScalar.trans (place_frame b 0 h0H h0D x moves peak).1
+        (place_frame b1 1 h1H1 h1D1 y mv1 pk1).1,
+      ((place_frame b1 1 h1H1 h1D1 y mv1 pk1).2).trans
+        (place_frame b 0 h0H h0D x moves peak).2⟩
   · rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
         show Ecbs.base_across = ((3 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl,

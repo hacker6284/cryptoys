@@ -292,7 +292,7 @@ theorem walk_chord_white_down (b : Ecbs.Board) (zs : List Nat) (x y : List Nat)
   have h4aF : bf.sudo_5Board_4home[4]'(by rw [hszHF]; decide) = embed y := by
     simpa [bf, chordFlag] using h4a
   obtain ⟨b2, _mv, _pk, hcopy, _, _, hx0, hy1, _, _, _, _, _, _, _, hmark,
-      hst, hho, hctrl, hsl⟩ :=
+      hst, hho, hctrl, hsl, _, _⟩ :=
     walk_copy_white bf x y n moves peak hszHF hszDF hx hy hf hfitx hfity
       hnF hmovesF hpeakF h0F h1F h3tF h3aF h4tF h4aF
   have hmark2 : b2.sudo_5Board_6marker = -1 := by simpa [bf, chordFlag, hm] using hmark

@@ -119,7 +119,7 @@ theorem chord_fresh_white (b : Ecbs.Board) (x y : List Nat) (n moves peak marker
   have h4a' : b1.sudo_5Board_4home[4]'(by rw [hszH1]; decide) = embed y := by
     simpa [hhome] using h4a
   obtain ⟨b2, mv2, pk2, hcopy, _, _, hx0, hy1, _, _, _, _, hmv, hpk, hsum, hmark,
-      _hst, _hho, _hctrl, _hsl⟩ :=
+      _hst, _hho, _hctrl, _hsl, _, _⟩ :=
     walk_copy_white b1 x y n moves peak hszH1 hszD1 hx hy hf hfitx hfity
       hn1 hmoves1 hpeak1 h0' h1' h3t' h3a' h4t' h4a'
   refine ⟨b2, mv2, pk2, ?_, hx0, hy1, hmv, hpk, hsum, ?_, ?_⟩
@@ -247,7 +247,7 @@ theorem chord_fresh_white_down (b : Ecbs.Board) (x y : List Nat) (n moves peak :
       walkStep n 0 0 (x, y) false (x, y) 1 = some (true, (x, y)) := by
   have hlift := marker_lift_down b hm
   obtain ⟨b2, mv2, pk2, hcopy, _, _, hx0, hy1, _, _, _, _, hmv, hpk, hsum, hmark,
-      hst, hho, hctrl, hsl⟩ :=
+      hst, hho, hctrl, hsl, _, _⟩ :=
     walk_copy_white b x y n moves peak hszH hszD hx hy hf hfitx hfity
       hn hmoves hpeak h0 h1 h3t h3a h4t h4a
   refine ⟨b2, mv2, pk2, ?_, hx0, hy1, hmv, hpk, hsum, ?_, hst, hho, hctrl, hsl, ?_⟩

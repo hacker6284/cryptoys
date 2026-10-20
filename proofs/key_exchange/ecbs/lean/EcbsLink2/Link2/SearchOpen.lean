@@ -13,10 +13,36 @@ open MegaDreifach.Link2
 open Ecbs
 open EcbsLink2.Spec
 
+private theorem op_lay (n bench k : Nat) (hk : k ≤ n) :
+    perOp n * k ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 := by
+  unfold perOp
+  have hmul : (n + 2) * k ≤ (n + 2) * n := Nat.mul_le_mul_left _ hk
+  have hprod : (n + 2) * n = n * n + 2 * n := by rw [Nat.add_mul]
+  have hsucc : n * (n + 1) = n * n + n := Nat.mul_succ n n
+  have htwo : 2 * (n * (n + 1)) = 2 * (n * n) + 2 * n := by
+    rw [hsucc, Nat.mul_add]
+  have hsq : n * n ≤ 2 * (n * n) := by
+    simpa [Nat.one_mul] using
+      Nat.mul_le_mul_right (n * n) (by decide : (1 : Nat) ≤ 2)
+  have hmid : n * n + 2 * n ≤ 2 * (n * (n + 1)) := by
+    rw [htwo]
+    exact Nat.add_le_add_right hsq (2 * n)
+  have hleft : (n + 2) * n ≤ 2 * (n * (n + 1)) := by
+    rw [hprod]
+    exact hmid
+  have h1 : 2 * (n * (n + 1)) ≤ 2 * (n * (n + 1)) + 12 * bench :=
+    Nat.le_add_right _ _
+  have h2 : 2 * (n * (n + 1)) + 12 * bench ≤
+      2 * (n * (n + 1)) + 12 * bench + 24 * n := Nat.le_add_right _ _
+  have h3 : 2 * (n * (n + 1)) + 12 * bench + 24 * n ≤
+      2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 := Nat.le_add_right _ _
+  exact Nat.le_trans (Nat.le_trans hmul hleft) (Nat.le_trans h1 (Nat.le_trans h2 h3))
+
 /-- `builtBoard` can plant a hole while `holesLeft` holes remain, once those
     budgets fit. The four shipped tiers discharge the budgets below. -/
 theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) (holesLeft : Nat)
     (hpos : 0 < holesLeft)
+    (hleft : holesLeft ≤ t.n)
     (hmov : FitsLen (perHole t.n t.benchlen * holesLeft))
     (hslide : FitsLen (perSlide t.n * holesLeft))
     (hctrl : FitsLen (tierR t + perCtrl t.n * holesLeft)) :
@@ -69,15 +95,17 @@ theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) (holesLeft : Nat)
     · intro h
       have hb : 0 < (Array.mkArray 5 (0 : Int)).size := by simp [Array.size_mkArray]
       exact cell_eq_of (built_ops_arr t) (hb := hb) (by simp [Array.getElem_mkArray])
-    · have hle : 1 ≤ 2 * (t.n * (t.n + 1)) + 12 * t.benchlen + 24 * t.n + 8 := by omega
-      exact curveLayFit t.n t.benchlen 1 hsh.n_small hsh.small.2.2.2 hle
+    · simpa [Nat.zero_add] using
+        curveLayFit t.n t.benchlen (perOp t.n * holesLeft) hsh.n_small hsh.small.2.2.2
+          (op_lay t.n t.benchlen holesLeft hleft)
   ops1 := by
     refine ⟨0, ?_, ?_⟩
     · intro h
       have hb : 1 < (Array.mkArray 5 (0 : Int)).size := by simp [Array.size_mkArray]
       exact cell_eq_of (built_ops_arr t) (hb := hb) (by simp [Array.getElem_mkArray])
-    · have hle : 1 ≤ 2 * (t.n * (t.n + 1)) + 12 * t.benchlen + 24 * t.n + 8 := by omega
-      exact curveLayFit t.n t.benchlen 1 hsh.n_small hsh.small.2.2.2 hle
+    · simpa [Nat.zero_add] using
+        curveLayFit t.n t.benchlen (perOp t.n * holesLeft) hsh.n_small hsh.small.2.2.2
+          (op_lay t.n t.benchlen holesLeft hleft)
   marker := built_marker_down t
   markerOn := built_flag_off t
   benchOff := built_bench_off t
@@ -158,17 +186,19 @@ theorem serious_ctrl_budget : FitsLen (tierR serious + perCtrl serious.n * serio
   exact Nat.le_trans (add_cap _ serious.n _ hlen) serious_ctrl_num
 
 theorem demo_fresh : PlantAt (builtBoard demo) demo demo.n :=
-  fresh_plant demo demo_shape demo.n (by decide) demo_move_budget demo_slide_budget demo_ctrl_budget
+  fresh_plant demo demo_shape demo.n (by decide) (Nat.le_refl _) demo_move_budget demo_slide_budget
+    demo_ctrl_budget
 
 theorem toy_fresh : PlantAt (builtBoard toy) toy toy.n :=
-  fresh_plant toy toy_shape toy.n (by decide) toy_move_budget toy_slide_budget toy_ctrl_budget
+  fresh_plant toy toy_shape toy.n (by decide) (Nat.le_refl _) toy_move_budget toy_slide_budget
+    toy_ctrl_budget
 
 theorem hobby_fresh : PlantAt (builtBoard hobby) hobby hobby.n :=
-  fresh_plant hobby hobby_shape hobby.n (by decide) hobby_move_budget hobby_slide_budget
-    hobby_ctrl_budget
+  fresh_plant hobby hobby_shape hobby.n (by decide) (Nat.le_refl _) hobby_move_budget
+    hobby_slide_budget hobby_ctrl_budget
 
 theorem serious_fresh : PlantAt (builtBoard serious) serious serious.n :=
-  fresh_plant serious serious_shape serious.n (by decide) serious_move_budget
+  fresh_plant serious serious_shape serious.n (by decide) (Nat.le_refl _) serious_move_budget
     serious_slide_budget serious_ctrl_budget
 
 /-- The fresh hole misses. `searchRoot` moves one hole on. -/

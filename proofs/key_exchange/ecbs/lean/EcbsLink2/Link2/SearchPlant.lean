@@ -34,6 +34,11 @@ def perSlide (n : Nat) : Nat :=
 def perCtrl (n : Nat) : Nat :=
   4 * n + 4
 
+/-- Op-slot bumps one planted hole can add: the spare square, the gap square,
+    one bump on each root digit, and the hit-test square. -/
+def perOp (n : Nat) : Nat :=
+  n + 2
+
 /-- The board a hole can plant into. `holesLeft` is how many holes may still
     run, counting this one. Counters keep `FitsLen (c + perHole * holesLeft)`. -/
 structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat) : Prop where
@@ -66,10 +71,10 @@ structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat) : Prop wher
   opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
   ops0 : ∃ (c0 : Nat), (∀ h : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
       b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = (c0 : Int)) ∧
-    FitsLen (c0 + 1)
+    FitsLen (c0 + perOp t.n * holesLeft)
   ops1 : ∃ (c1 : Nat), (∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
       b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = (c1 : Int)) ∧
-    FitsLen (c1 + 1)
+    FitsLen (c1 + perOp t.n * holesLeft)
 
 private theorem two_n_room (n bench : Nat) : 2 * n ≤ plantRoom n bench := by
   unfold plantRoom

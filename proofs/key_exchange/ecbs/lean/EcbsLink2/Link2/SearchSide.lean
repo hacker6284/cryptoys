@@ -613,8 +613,9 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
 /-- Homes and op slots the gap square reads off the spare-square board.
     `o0` and `o1` are the plant's op counters. The spare multiply has bumped
     slot 0 once. -/
-structure SquareKeep (b : Ecbs.Board) (t : Spec.Tier) (j o0 o1 : Nat) : Prop where
+structure SquareKeep (b : Ecbs.Board) (t : Spec.Tier) (j o0 o1 holesLeft : Nat) : Prop where
   marker : b.sudo_5Board_6marker = -1
+  markerOn : b.sudo_5Board_9marker_on = false
   upHome : ∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = (#[] : Array Int)
   upHeld : ∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = false
   axHome : ∀ h : 0 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[0] = (#[] : Array Int)
@@ -633,6 +634,8 @@ structure SquareKeep (b : Ecbs.Board) (t : Spec.Tier) (j o0 o1 : Nat) : Prop whe
     b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = ((o0 + 1 : Nat) : Int)
   ops1 : ∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
     b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = ((o1 + 1 : Nat) : Int)
+  opsRoom : FitsLen (o0 + perOp t.n * holesLeft)
+  ops1Room : FitsLen (o1 + perOp t.n * holesLeft)
 
 /-- Spare square on the cube `search_cube_at` leaves. Moves stay under
     `mv0 + sideCap`, slides under `sl0 + 4 * n`, and control stays `c0 + tierR`. -/
@@ -672,7 +675,7 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         bS.sudo_5Board_4home.size = 8 ∧
         bS.sudo_5Board_4held.size = 8 ∧
         bS.sudo_5Board_1t = embTier t ∧
-        ∃ o0 o1, SquareKeep bS t j o0 o1 := by
+        ∃ o0 o1, SquareKeep bS t j o0 o1 holesLeft := by
   obtain ⟨bC, hcube, cu⟩ :=
     search_cube_at b0 t holesLeft hp hOk hsh sat j hj mv0 sl0 c0 hmv hsl0 hc0
   let x := basisPeg t.n j
@@ -733,8 +736,8 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   rcases cu.peak with ⟨pk, hpk⟩
   rcases cu.strict with ⟨ps, hps⟩
   rcases cu.hole with ⟨holeN, hhole⟩
-  rcases cu.ops0 with ⟨o0, ho0, hfo0⟩
-  rcases cu.ops1 with ⟨o1, ho1⟩
+  rcases cu.ops0 with ⟨o0, ho0, hfo0, hroom0⟩
+  rcases cu.ops1 with ⟨o1, ho1, hroom1⟩
   have hposC : 0 < lane.length := by rw [hlenC]; omega
   have h2H : 2 < bC.sudo_5Board_4home.size := by rw [cu.szH]; decide
   have h2D : 2 < bC.sudo_5Board_4held.size := by rw [cu.szD]; decide
@@ -854,6 +857,7 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   · refine ⟨o0, o1, ?_⟩
     refine
       { marker := by rw [hmarkS, hmarkM]; exact cu.marker
+        markerOn := by rw [hmkS]; exact hmkM
         upHome := by
           intro h
           have hC : 1 < bC.sudo_5Board_4home.size := by rw [cu.szH]; decide
@@ -926,7 +930,9 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
           have hget := get_eq_of_array hopsM 1 hM
           have hne : (0 : Nat) ≠ 1 := by decide
           simp [Array.getElem_set, hne] at hget
-          exact cell_eq_of hopsS (hget.trans (ho1 (by rw [cu.opsSz]; decide))) }
+          exact cell_eq_of hopsS (hget.trans (ho1 (by rw [cu.opsSz]; decide)))
+        opsRoom := hroom0
+        ops1Room := hroom1 }
 
 private theorem close_rel (mv0 mv peg n bench : Nat)
     (hpeg : peg ≤ n) (h : mv + 2 * n + 1 ≤ mv0 + sideCap n bench) :

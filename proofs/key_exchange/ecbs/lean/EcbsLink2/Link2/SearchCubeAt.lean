@@ -220,7 +220,7 @@ def cubeSpend (t : Spec.Tier) (j : Nat) : Nat :=
 attribute [irreducible] cubeLane cubeSpend
 
 /-- The board after cubing a planted peg. Counters are relative to the plant. -/
-structure CubeAt (b : Ecbs.Board) (t : Spec.Tier) (j mv0 sl0 c0 : Nat) : Prop where
+structure CubeAt (b : Ecbs.Board) (t : Spec.Tier) (j mv0 sl0 c0 holesLeft : Nat) : Prop where
   benchOn : b.sudo_5Board_8bench_on = true
   benchTo : b.sudo_5Board_8bench_to = Ecbs.bottom
   bench : b.sudo_5Board_5bench = embed (cubeLane t j)
@@ -245,14 +245,16 @@ structure CubeAt (b : Ecbs.Board) (t : Spec.Tier) (j mv0 sl0 c0 : Nat) : Prop wh
   opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
   ops0 : ∃ (o0 : Nat), (∀ h : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
       b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = (o0 : Int)) ∧
-    FitsLen (o0 + 1)
+    FitsLen (o0 + 1) ∧
+    FitsLen (o0 + perOp t.n * holesLeft)
   held1 : ∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = false
   held5 : ∀ h : 5 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[5] = false
   marker : b.sudo_5Board_6marker = -1
   ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t)
   mx : ∃ (mx : Nat), b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx
-  ops1 : ∃ (o1 : Nat), ∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
-    b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = ((o1 + 1 : Nat) : Int)
+  ops1 : ∃ (o1 : Nat), (∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = ((o1 + 1 : Nat) : Int)) ∧
+    FitsLen (o1 + perOp t.n * holesLeft)
   home1 : ∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = (#[] : Array Int)
   home5 : ∀ h : 5 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[5] = (#[] : Array Int)
   held0 : ∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0] = false
@@ -302,7 +304,7 @@ private theorem copy_peak_eq (b : Ecbs.Board)
   exact ofNat_eq_natCast _
 
 /-- Homes the cube does not rewrite, after the peg is planted and copied. -/
-structure CopyAt (b : Ecbs.Board) (t : Spec.Tier) (j mv0 sl0 c0 : Nat) : Prop where
+structure CopyAt (b : Ecbs.Board) (t : Spec.Tier) (j mv0 sl0 c0 holesLeft : Nat) : Prop where
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   home2 : b.sudo_5Board_4home[2]? = some (embed (basisPeg t.n j))
@@ -324,9 +326,11 @@ structure CopyAt (b : Ecbs.Board) (t : Spec.Tier) (j mv0 sl0 c0 : Nat) : Prop wh
   mx : ∃ (mx : Nat), b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx
   opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
   ops0 : ∃ (o0 : Nat), (∀ h : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
-      b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = (o0 : Int)) ∧ FitsLen (o0 + 1)
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = (o0 : Int)) ∧
+    FitsLen (o0 + 1) ∧ FitsLen (o0 + perOp t.n * holesLeft)
   ops1 : ∃ (o1 : Nat), (∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
-      b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = (o1 : Int)) ∧ FitsLen (o1 + 1)
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = (o1 : Int)) ∧
+    FitsLen (o1 + 1) ∧ FitsLen (o1 + perOp t.n * holesLeft)
   held0 : b.sudo_5Board_4held[0]? = some false
   held1 : b.sudo_5Board_4held[1]? = some false
   held5 : b.sudo_5Board_4held[5]? = some false
@@ -334,6 +338,18 @@ structure CopyAt (b : Ecbs.Board) (t : Spec.Tier) (j mv0 sl0 c0 : Nat) : Prop wh
   home0 : b.sudo_5Board_4home[0]? = some (#[] : Array Int)
   home1 : b.sudo_5Board_4home[1]? = some (#[] : Array Int)
   home5 : b.sudo_5Board_4home[5]? = some (#[] : Array Int)
+
+private theorem op_one_le (o n k : Nat) (hk : 0 < k) :
+    o + 1 ≤ o + perOp n * k := by
+  have hone : 1 ≤ perOp n := by
+    unfold perOp
+    exact Nat.le_trans (by decide : (1 : Nat) ≤ 2) (Nat.le_add_left 2 n)
+  have hk1 : 1 ≤ k := Nat.succ_le_of_lt hk
+  have hmul : 1 * k ≤ perOp n * k := Nat.mul_le_mul_right k hone
+  have h1 : 1 ≤ perOp n * k := by
+    rw [Nat.one_mul] at hmul
+    exact Nat.le_trans hk1 hmul
+  exact Nat.add_le_add_left h1 o
 
 theorem copy_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
     (hp : PlantAt b t holesLeft) (j : Nat) (hj : j < t.n)
@@ -347,7 +363,7 @@ theorem copy_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
           let x ← SudoRt.putL x (Int.ofNat j) (1 : Int)
           let b ← Ecbs.put b Ecbs.base_across x
           Ecbs.copy_band b Ecbs.bottom Ecbs.base_across false) = .ok bC ∧
-        CopyAt bC t j mv0 sl0 c0 := by
+        CopyAt bC t j mv0 sl0 c0 holesLeft := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hpeg := peg_le t.n x hx
@@ -359,8 +375,10 @@ theorem copy_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   rcases hp.strict with ⟨ps0, hps0⟩
   rcases hp.hole with ⟨hole0, hhole0⟩
   rcases hp.mx with ⟨mx0, hmx0⟩
-  rcases hp.ops0 with ⟨o0, ho0, hfo0⟩
-  rcases hp.ops1 with ⟨o1, ho1, hfo1⟩
+  rcases hp.ops0 with ⟨o0, ho0, hroom0⟩
+  rcases hp.ops1 with ⟨o1, ho1, hroom1⟩
+  have hfo0 : FitsLen (o0 + 1) := FitsLen.of_le hroom0 (op_one_le o0 t.n holesLeft hp.holesPos)
+  have hfo1 : FitsLen (o1 + 1) := FitsLen.of_le hroom1 (op_one_le o1 t.n holesLeft hp.holesPos)
   have hk := hp.holesPos
   have hH3 : 3 < b.sudo_5Board_4home.size := by rw [hp.szH]; decide
   have hD3 : 3 < b.sudo_5Board_4held.size := by rw [hp.szD]; decide
@@ -503,10 +521,10 @@ theorem copy_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
       opsSz := by simp only [bC, bP]; rw [place_ops_eq, place_ops_eq]; exact hp.opsSz
       ops0 := ⟨o0, fun h => cell_eq_of
         (by simp only [bC, bP]; rw [place_ops_eq, place_ops_eq])
-        (ho0 (by rw [hp.opsSz]; decide)), hfo0⟩
+        (ho0 (by rw [hp.opsSz]; decide)), hfo0, hroom0⟩
       ops1 := ⟨o1, fun h => cell_eq_of
         (by simp only [bC, bP]; rw [place_ops_eq, place_ops_eq])
-        (ho1 (by rw [hp.opsSz]; decide)), hfo1⟩
+        (ho1 (by rw [hp.opsSz]; decide)), hfo1, hroom1⟩
       held0 := stayH 0 (by decide) (by decide) hp.axOff
       held1 := stayH 1 (by decide) (by decide) hp.upOff
       held5 := stayH 5 (by decide) (by decide) hp.gapOff
@@ -533,7 +551,7 @@ theorem search_cube_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
           let b ← Ecbs.put b Ecbs.base_across x
           let b ← Ecbs.copy_band b Ecbs.bottom Ecbs.base_across false
           Ecbs.cube b Ecbs.bottom Ecbs.bottom) = .ok b' ∧
-        CubeAt b' t j mv0 sl0 c0 := by
+        CubeAt b' t j mv0 sl0 c0 holesLeft := by
   obtain ⟨bC, hdoC, c⟩ := copy_at b t holesLeft hp j hj mv0 sl0 c0 hmv hsl hc
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
@@ -549,8 +567,8 @@ theorem search_cube_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   rcases c.strict with ⟨ps0, hps⟩
   rcases c.hole with ⟨hole0, hhole⟩
   rcases c.mx with ⟨mx0, _hmx⟩
-  rcases c.ops0 with ⟨o0, ho0, hfo0⟩
-  rcases c.ops1 with ⟨o1, ho1, hfo1⟩
+  rcases c.ops0 with ⟨o0, ho0, hfo0, hroom0⟩
+  rcases c.ops1 with ⟨o1, ho1, hfo1, hroom1⟩
   have hops1 : 1 < bC.sudo_5Board_4cost.sudo_5Costs_3ops.size := by rw [c.opsSz]; decide
   have hop1 : bC.sudo_5Board_4cost.sudo_5Costs_3ops[1] = (o1 : Int) := ho1 hops1
   have h7 : 7 ≤ bC.sudo_5Board_4held.size := by rw [c.szD]; decide
@@ -663,7 +681,7 @@ theorem search_cube_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         have hne : (1 : Nat) ≠ 0 := by decide
         simp [Array.getElem_set, hne] at hget
         exact hget.trans (ho0 (by rw [c.opsSz]; decide)),
-        hfo0⟩
+        hfo0, hroom0⟩
       held1 := by
         intro h
         have h? : bK.sudo_5Board_4held[1]? = some false := by
@@ -682,7 +700,8 @@ theorem search_cube_at (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
       ops1 := ⟨o1, by
         intro h
         have hget := get_eq_of_array hops' 1 h
-        simpa [Array.getElem_set, ofNat_eq_natCast] using hget⟩
+        simpa [Array.getElem_set, ofNat_eq_natCast] using hget,
+        hroom1⟩
       home1 := by
         intro h
         have h? : bK.sudo_5Board_4home[1]? = some (#[] : Array Int) := by

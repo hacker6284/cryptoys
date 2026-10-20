@@ -30,9 +30,25 @@ structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) : Prop where
   szD : b.sudo_5Board_4held.size = 8
   baseOff : b.sudo_5Board_4held[3]? = some false
   botOff : b.sudo_5Board_4held[2]? = some false
+  marker : b.sudo_5Board_6marker = -1
+  markerOn : b.sudo_5Board_9marker_on = false
+  benchOff : b.sudo_5Board_8bench_on = false
   moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
     FitsLen (mv + plantRoom t.n t.benchlen)
+  slides : ∃ sl, b.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+    FitsLen (sl + plantRoom t.n t.benchlen)
+  ctrl : ∃ c, b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c
   peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
+  strict : ∃ ps, b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps
+  hole : ∃ holeN, b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN
+  mx : ∃ mxN, b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mxN
+  opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
+  ops0 : ∃ (c0 : Nat), (∀ h : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = (c0 : Int)) ∧
+    FitsLen (c0 + 1)
+  ops1 : ∃ (c1 : Nat), (∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = (c1 : Int)) ∧
+    FitsLen (c1 + 1)
 
 private theorem two_n_room (n bench : Nat) : 2 * n ≤ plantRoom n bench := by
   unfold plantRoom

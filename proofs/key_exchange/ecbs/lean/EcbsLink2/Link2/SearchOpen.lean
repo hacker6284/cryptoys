@@ -32,7 +32,37 @@ theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) : PlantAt (builtBoard t)
       omega
     exact curveLayFit t.n t.benchlen (0 + plantRoom t.n t.benchlen)
       hsh.n_small hsh.small.2.2.2 hle
+  slides := by
+    refine ⟨0, by rw [built_slides0]; rfl, ?_⟩
+    have hle : 0 + plantRoom t.n t.benchlen ≤
+        2 * (t.n * (t.n + 1)) + 12 * t.benchlen + 24 * t.n + 8 := by
+      unfold plantRoom
+      omega
+    exact curveLayFit t.n t.benchlen (0 + plantRoom t.n t.benchlen)
+      hsh.n_small hsh.small.2.2.2 hle
+  ctrl := ⟨tierR t, built_ctrl_eq t⟩
   peak := ⟨1, by rw [built_peak1]; rfl⟩
+  strict := ⟨0, by rw [built_strict]; rfl⟩
+  hole := ⟨0, by rw [built_hole]; rfl⟩
+  mx := ⟨0, by rw [built_mx0]; rfl⟩
+  opsSz := by rw [built_ops_arr]; simp [Array.size_mkArray]
+  ops0 := by
+    refine ⟨0, ?_, ?_⟩
+    · intro h
+      have hb : 0 < (Array.mkArray 5 (0 : Int)).size := by simp [Array.size_mkArray]
+      exact cell_eq_of (built_ops_arr t) (hb := hb) (by simp [Array.getElem_mkArray])
+    · have hle : 1 ≤ 2 * (t.n * (t.n + 1)) + 12 * t.benchlen + 24 * t.n + 8 := by omega
+      exact curveLayFit t.n t.benchlen 1 hsh.n_small hsh.small.2.2.2 hle
+  ops1 := by
+    refine ⟨0, ?_, ?_⟩
+    · intro h
+      have hb : 1 < (Array.mkArray 5 (0 : Int)).size := by simp [Array.size_mkArray]
+      exact cell_eq_of (built_ops_arr t) (hb := hb) (by simp [Array.getElem_mkArray])
+    · have hle : 1 ≤ 2 * (t.n * (t.n + 1)) + 12 * t.benchlen + 24 * t.n + 8 := by omega
+      exact curveLayFit t.n t.benchlen 1 hsh.n_small hsh.small.2.2.2 hle
+  marker := built_marker_down t
+  markerOn := built_flag_off t
+  benchOff := built_bench_off t
 
 /-- The fresh hole misses. `searchRoot` moves one hole on. -/
 theorem search_miss_first (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)

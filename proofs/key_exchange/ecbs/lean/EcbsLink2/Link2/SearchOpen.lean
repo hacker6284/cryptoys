@@ -26,9 +26,12 @@ theorem fresh_plant (t : Spec.Tier) (hsh : TierShape t) : PlantAt (builtBoard t)
     simp [Array.getElem?_eq_getElem, Array.getElem_mkArray]
   moves := by
     refine ⟨0, by rw [built_moves0]; rfl, ?_⟩
-    have hle : 0 + 2 * t.n ≤ 2 * (t.n * (t.n + 1)) + 12 * t.benchlen + 24 * t.n + 8 := by
+    have hle : 0 + plantRoom t.n t.benchlen ≤
+        2 * (t.n * (t.n + 1)) + 12 * t.benchlen + 24 * t.n + 8 := by
+      unfold plantRoom
       omega
-    exact curveLayFit t.n t.benchlen (0 + 2 * t.n) hsh.n_small hsh.small.2.2.2 hle
+    exact curveLayFit t.n t.benchlen (0 + plantRoom t.n t.benchlen)
+      hsh.n_small hsh.small.2.2.2 hle
   peak := ⟨1, by rw [built_peak1]; rfl⟩
 
 /-- The fresh hole misses. `searchRoot` moves one hole on. -/

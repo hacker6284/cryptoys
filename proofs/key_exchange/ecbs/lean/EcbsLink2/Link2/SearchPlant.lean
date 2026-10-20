@@ -17,6 +17,11 @@ open MegaDreifach.Link2
 open Ecbs
 open EcbsLink2.Spec
 
+/-- Room for the curve-side cube and the spare square, the same polynomial
+    `curveLayFit` uses. -/
+def plantRoom (n bench : Nat) : Nat :=
+  2 * (n * (n + 1)) + 12 * bench + 24 * n + 8
+
 /-- The board a hole can plant into. The first hole's `builtBoard` is one;
     a miss of an earlier hole is another. -/
 structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) : Prop where
@@ -26,8 +31,12 @@ structure PlantAt (b : Ecbs.Board) (t : Spec.Tier) : Prop where
   baseOff : b.sudo_5Board_4held[3]? = some false
   botOff : b.sudo_5Board_4held[2]? = some false
   moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
-    FitsLen (mv + 2 * t.n)
+    FitsLen (mv + plantRoom t.n t.benchlen)
   peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
+
+private theorem two_n_room (n bench : Nat) : 2 * n ≤ plantRoom n bench := by
+  unfold plantRoom
+  omega
 
 private theorem some_idx {α : Type} (a : Array α) (i : Nat) (v : α)
     (h : a[i]? = some v) : i < a.size := by
@@ -113,10 +122,12 @@ theorem search_plant (b : Ecbs.Board) (t : Spec.Tier) (h : PlantAt b t)
   have hn : b.sudo_5Board_1t.sudo_4Tier_1n = (x.length : Int) := by
     rw [h.tier, hx]
     simp [embTier, ofNat_eq_natCast]
+  have h2 : FitsLen (mv + 2 * t.n) :=
+    FitsLen.of_le hfit (Nat.add_le_add_left (two_n_room t.n t.benchlen) mv)
   have hfn : FitsLen t.n :=
-    FitsLen.of_le hfit (Nat.le_trans (n_le_two t.n) (n_le_add mv (2 * t.n)))
+    FitsLen.of_le h2 (Nat.le_trans (n_le_two t.n) (n_le_add mv (2 * t.n)))
   have hput := put_refines b 3 x mv pk hH hD h7 hempty hn (by rw [hx]; exact hfn)
-    hmv hpk (two_room mv _ t.n hpeg hfit)
+    hmv hpk (two_room mv _ t.n hpeg h2)
   let b' := placeBoard b 3 hH hD x mv pk
   refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [bind_assoc, basis_fill t.n j hj, ok_bind, ← searchBase_int]
@@ -132,7 +143,9 @@ theorem search_plant (b : Ecbs.Board) (t : Spec.Tier) (h : PlantAt b t)
   · rw [place_home_eq, Array.size_set]; exact h.szH
   · rw [place_held_eq, Array.size_set]; exact h.szD
   · refine ⟨mv + pegCount x, place_moves_eq b 3 hH hD x mv pk, ?_⟩
-    exact FitsLen.of_le hfit (peg_plus mv (pegCount x) t.n hpeg)
+    exact FitsLen.of_le hfit
+      (Nat.le_trans (peg_plus mv (pegCount x) t.n hpeg)
+        (Nat.add_le_add_left (two_n_room t.n t.benchlen) mv))
   · exact ⟨_, place_peak_nat b 3 hH hD x mv pk hpk⟩
 
 /-- Copy the planted peg into the empty bottom. -/

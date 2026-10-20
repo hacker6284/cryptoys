@@ -46,10 +46,15 @@ structure OpenLay (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat) where
   flag3 : Bool
   home3 : b.sudo_5Board_4home[3]'(by rw [szH]; decide) = embed base3
   held3 : b.sudo_5Board_4held[3]'(by rw [szD]; decide) = flag3
-  /-- Script marker index and its maximum. The climb does not write them. -/
+  /-- Script marker index and its maximum. The climb does not write them.
+      `markIx` is the index on the board. A chord cell stores `Int.ofNat mark`.
+      A walk that has not stepped the marker stores `-1`. `marker_step` does
+      not run while the marker is off, so the index stays at least `-1`. -/
   mark : Nat
+  markIx : Int := Int.ofNat mark
   mx : Nat
-  hmark : b.sudo_5Board_6marker = Int.ofNat mark
+  hmark : b.sudo_5Board_6marker = markIx
+  hlo : (-1 : Int) ≤ markIx
   hmx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx
   len : xs.length = t.n
   tri : allTritList xs
@@ -126,7 +131,7 @@ structure OpenMatch {b : Ecbs.Board} {t : Spec.Tier} {xs : List Nat}
   held1 : base.held1 = lay.flag1
   held4 : base.held4 = lay.flag4
   tierSnap : base.tierSnap = embTier t
-  markSnap : base.markSnap = Int.ofNat lay.mark
+  markSnap : base.markSnap = lay.markIx
   mxSnap : base.mxSnap = Int.ofNat lay.mx
   high0 : base.high0 = lay.high
   baseRow : base.baseRow = paintedRow t
@@ -983,11 +988,11 @@ theorem open_invGap (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
 /-- Counters and the quiet frame on the board the check leaves. Homes 0, 1, 2,
     4, and 5 are exported beside this. The move counter is the one
     `bench_read_and_clear` stores, already a natural in the frame above. -/
-structure RiseCarry (b : Ecbs.Board) (t : Spec.Tier) (mark mx : Nat) : Prop where
+structure RiseCarry (b : Ecbs.Board) (t : Spec.Tier) (ix : Int) (mx : Nat) : Prop where
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   tier : b.sudo_5Board_1t = embTier t
-  marker : b.sudo_5Board_6marker = Int.ofNat mark
+  marker : b.sudo_5Board_6marker = ix
   mx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mx
   benchOff : b.sudo_5Board_8bench_on = false
   held6 : b.sudo_5Board_4held[6]'(by rw [szD]; decide) = false
@@ -1116,7 +1121,7 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         bR.sudo_5Board_4home[4] = embed lay.side4) ∧
       (∀ h4 : 4 < bR.sudo_5Board_4held.size,
         bR.sudo_5Board_4held[4] = lay.flag4) ∧
-      RiseCarry bR t lay.mark lay.mx ∧
+      RiseCarry bR t lay.markIx lay.mx ∧
       CheckBound bR base ∧
       (∃ mv : Nat, bR.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
         mv + t.n ≤ checkMoveCap base) ∧
@@ -1565,7 +1570,7 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
       have htierR : bR.sudo_5Board_1t = embTier t := by
         have hRt : bR.sudo_5Board_1t = bM.sudo_5Board_1t := by simp [bR]
         rw [hRt, htM, hquietZ.tier, hm.tierSnap]
-      have hmarkR : bR.sudo_5Board_6marker = Int.ofNat lay.mark := by
+      have hmarkR : bR.sudo_5Board_6marker = lay.markIx := by
         have hRm : bR.sudo_5Board_6marker = bM.sudo_5Board_6marker := by simp [bR]
         rw [hRm, hixM, hquietZ.marker, hm.markSnap]
       have hmxR : bR.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
@@ -1610,7 +1615,7 @@ theorem open_check_mul (b : Ecbs.Board) (t : Spec.Tier) (xs : List Nat)
         have hcap := hmvBLe
         rw [← hmvSame, hm.n, hm.bench] at hcap
         omega
-      have hcarryR : RiseCarry bR t lay.mark lay.mx :=
+      have hcarryR : RiseCarry bR t lay.markIx lay.mx :=
         { szH := hszHR
           szD := hszDR
           tier := htierR
@@ -2038,7 +2043,7 @@ theorem open_checked (b : Ecbs.Board) (t : Spec.Tier) (xs ans : List Nat)
       (∀ h1 : 1 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[1] = lay.flag1) ∧
       (∀ h4 : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4] = embed lay.side4) ∧
       (∀ h4 : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4] = lay.flag4) ∧
-      RiseCarry b' t lay.mark lay.mx ∧
+      RiseCarry b' t lay.markIx lay.mx ∧
       CheckBound b' base ∧
       (∃ high : Nat,
         b'.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) ∧

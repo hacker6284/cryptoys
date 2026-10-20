@@ -280,3 +280,4 @@ import EcbsLink2.Link2.FinishBranch
 import EcbsLink2.Link2.FinishMul
 import EcbsLink2.Link2.FinishAffine
 import EcbsLink2.Link2.FinishRun
+import EcbsLink2.Link2.FinishInvert

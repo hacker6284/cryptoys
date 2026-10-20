@@ -518,6 +518,7 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
     (hChord : FitsLen (checkMoveCap bud + tailMoveCap bud.n bud.bench))
     (hChordS : FitsLen (checkSlideCap bud + tailSlideCap bud.n))
     (hMark : lay.mark + 3 < t.script) (hMarkF : FitsLen (lay.mark + 4))
+    (hix : lay.markIx = Int.ofNat lay.mark)
     (hCtrl : FitsLen (checkCtrlCap bud + 6))
     (hOps : FitsLen (checkOpsCap bud + 3))
     (hSlot3 : 3 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
@@ -624,7 +625,10 @@ theorem chord_add_point (b : Ecbs.Board) (red : Bool) (t : Spec.Tier)
         h5a := h5a
         h5t := h5t
         hoff := by simpa [bF, restoreMarker] using hcarry.benchOff
-        hm := by simpa [bF, restoreMarker] using hcarry.marker
+        hm := by
+          have hidx : bI.sudo_5Board_6marker = Int.ofNat lay.mark :=
+            hcarry.marker.trans hix
+          simpa [bF, restoreMarker] using hidx
         hc := by simpa [bF, restoreMarker, ofNat_eq_natCast] using hctrl
         hx := by simpa [bF, restoreMarker] using hcarry.mx
         hscript := by simp [bF, restoreMarker, hcarry.tier, embTier]

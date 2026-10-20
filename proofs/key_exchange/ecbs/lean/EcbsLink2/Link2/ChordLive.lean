@@ -199,7 +199,7 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
     FitsLen.of_le hCtrl (by unfold liveCtrlRoom; omega)
   obtain ⟨bA, hcopy, hflag, lay, bud, hmatch, hmov, hslay, hctrl, hcops, hops,
       hmark, hmx, hside1, hflag1, hside4, hflag4, hside0, hflag0, _hbase, _hflag3,
-      hszOps, hpeakLay, hholeLay⟩ :=
+      hszOps, hpeakLay, hholeLay, hix⟩ :=
     copy_add_open b t baseX accX fr hOk sat hM hS hO hTailM hTailS hCheck hCtrlC
   have hmkA : bA.sudo_5Board_9marker_on = true := hflag.trans hmk
   have hrunL : run.length = t.n := fieldSub_length t.n baseX accX
@@ -271,7 +271,7 @@ theorem chord_add_live (b : Ecbs.Board) (t : Spec.Tier)
       hyB hyA hpos htriY htriUp hmkA hriseL fr.lenA hyA hrunL hinvL hriseN
       htriX htriUp htriR htriI htriRise hfitN sat.mul_span
       hsh.w0 hsh.h0 hsh.rlt hsh.r0 hsh.n_eq hsh.k_le hsh.gap hsh.small hsh.n_small
-      hChord hChordS hMarkL hMarkL' hCtrlP hOpsP (hszOps ▸ fr.ops3)
+      hChord hChordS hMarkL hMarkL' hix hCtrlP hOpsP (hszOps ▸ fr.ops3)
       (by rw [hholeLay]; exact hholeFr)
   obtain ⟨_, b', htail, hx0, hy1, hwater, _hpack, hleft, hstrictIn, hslideOut,
       hholeIn, hflagOut⟩ := hand

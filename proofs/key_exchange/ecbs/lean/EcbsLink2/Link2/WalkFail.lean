@@ -403,7 +403,7 @@ theorem chord_add_trap (b : Ecbs.Board) (t : Spec.Tier) (baseX accX : List Nat)
     copy_rooms t b baseX accX fr hOk hMove hSlide hCtrl hOps
   obtain ⟨bA, hcopy, _hflag, lay, bud, hmatch, _hmv, _hsl, _hctrl, _hc, _ho,
       _hmk, _hmx, _hs1, _hf1, _hs4, _hf4, _hs0, _hf0, _hb3, _hf3, _hsz, _hp,
-      hholeLay⟩ :=
+      hholeLay, _hix⟩ :=
     copy_add_open b t baseX accX fr hOk sat hM hS hO hTailM hTailS hCheck hCtrlC
   have hhole' : lay.hole ≤ t.benchlen := by rw [hholeLay]; exact hhole
   let run := fieldSub t.n baseX accX

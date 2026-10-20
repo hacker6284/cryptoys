@@ -104,6 +104,30 @@ theorem rootHit_beq (n k bench : Nat) (x : List Nat) :
   unfold rootHit
   rfl
 
+/-- Fields the close does not write, besides the destination home and the spare. -/
+structure CloseKeep (b bW : Ecbs.Board) (dst spare : Nat) : Prop where
+  markerOn : bW.sudo_5Board_9marker_on = b.sudo_5Board_9marker_on
+  marker : bW.sudo_5Board_6marker = b.sudo_5Board_6marker
+  bench : bW.sudo_5Board_8bench_on = b.sudo_5Board_8bench_on
+  ctrl : bW.sudo_5Board_4cost.sudo_5Costs_4ctrl = b.sudo_5Board_4cost.sudo_5Costs_4ctrl
+  mx : bW.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+    b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max
+  ops : bW.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops
+  tier : bW.sudo_5Board_1t = b.sudo_5Board_1t
+  szH : bW.sudo_5Board_4home.size = b.sudo_5Board_4home.size
+  szD : bW.sudo_5Board_4held.size = b.sudo_5Board_4held.size
+  home : ∀ i, i ≠ dst → i ≠ spare →
+    ∀ (hi : i < b.sudo_5Board_4home.size) (hi' : i < bW.sudo_5Board_4home.size),
+      bW.sudo_5Board_4home[i] = b.sudo_5Board_4home[i]
+  held : ∀ i, i ≠ spare →
+    ∀ (hi : i < b.sudo_5Board_4held.size) (hi' : i < bW.sudo_5Board_4held.size),
+      bW.sudo_5Board_4held[i] = b.sudo_5Board_4held[i]
+  spareHeld : ∀ h : spare < bW.sudo_5Board_4held.size, bW.sudo_5Board_4held[spare] = false
+  dstHeld : ∀ h : dst < bW.sudo_5Board_4held.size, bW.sudo_5Board_4held[dst] = true
+  slides : bW.sudo_5Board_4cost.sudo_5Costs_6slides = b.sudo_5Board_4cost.sudo_5Costs_6slides
+  peak : bW.sudo_5Board_4cost.sudo_5Costs_4peak = b.sudo_5Board_4cost.sudo_5Costs_4peak
+  moves : ∃ mv, bW.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int)
+
 /-- Mirror-add, clear the spare, then add one in hole 0. -/
 theorem curve_side_close (b : Ecbs.Board) (dst spare : Nat)
     (x3 x2 : List Nat) (n moves : Nat)
@@ -127,7 +151,8 @@ theorem curve_side_close (b : Ecbs.Board) (dst spare : Nat)
           white0 b (dst : Int)) = .ok bW ∧
         (∀ h : dst < bW.sudo_5Board_4home.size,
           bW.sudo_5Board_4home[dst] =
-            embed (fieldAdd n (fieldAdd n x3 (mirrorTrits x2)) (whiteHole0 n))) := by
+            embed (fieldAdd n (fieldAdd n x3 (mirrorTrits x2)) (whiteHole0 n))) ∧
+        CloseKeep b bW dst spare := by
   have hlenS : (fieldAdd n x3 (mirrorTrits x2)).length = n := field_len _ _ _
   have htS : allTritList (fieldAdd n x3 (mirrorTrits x2)) := fieldAdd_trits _ _ _
   have hfitA : FitsLen (moves + n) := FitsLen.of_le hfit (by omega)
@@ -184,7 +209,8 @@ theorem curve_side_close (b : Ecbs.Board) (dst spare : Nat)
     have hle : pegCount x2 ≤ n := by rw [← hx2]; exact pegCount_le x2
     exact FitsLen.of_le hfit (by omega)
   have hwhite := white0_held b2 dst sum mv2 hdstH hdstD hheld2 hhome2 h0 hc0 hmv2 hfitW
-  refine ⟨addBoard b2 dst hdstH (embed (sum.set 0 (tritAdd (sum[0]'h0) 1))) (mv2 + 1), ?_, ?_⟩
+  let bW := addBoard b2 dst hdstH (embed (sum.set 0 (tritAdd (sum[0]'h0) 1))) (mv2 + 1)
+  refine ⟨bW, ?_, ?_, ?_⟩
   · rw [hadd, ok_bind]
     have hclear' : clear b1 (spare : Int) = .ok b2 := by
       simpa [b2, mv2, b1] using hclear
@@ -195,7 +221,33 @@ theorem curve_side_close (b : Ecbs.Board) (dst spare : Nat)
       have hw : whiteHole0 n = 1 :: List.replicate (n - 1) 0 := rfl
       rw [hw]
       exact fieldAdd_white n sum hlenS hpos htS
-    simp [addBoard, withMoves, Array.getElem_set, hpoly]
+    simp [bW, addBoard, withMoves, Array.getElem_set, hpoly]
+  · refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · simp [bW, b2, b1, addBoard, withMoves, Array.size_set]
+    · simp [bW, b2, b1, addBoard, withMoves, Array.size_set]
+    · intro i hd hs hi hi'
+      have hneD : dst ≠ i := Ne.symm hd
+      have hneS : spare ≠ i := Ne.symm hs
+      simp [bW, b2, b1, addBoard, withMoves, Array.getElem_set, hneD, hneS]
+    · intro i hs hi hi'
+      have hneS : spare ≠ i := Ne.symm hs
+      simp [bW, b2, b1, addBoard, withMoves, Array.getElem_set, hneS]
+    · intro _
+      have hneS : spare ≠ dst := hne
+      simp [bW, b2, b1, addBoard, withMoves, Array.getElem_set, hneS]
+    · intro _
+      have hneS : spare ≠ dst := hne
+      simp [bW, b2, b1, addBoard, withMoves, Array.getElem_set, hneS, hheldD]
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · simp [bW, b2, b1, addBoard, withMoves]
+    · exact ⟨mv2 + 1, by simp [bW, addBoard, withMoves, ofNat_eq_natCast]⟩
 
 /-- Seated `x³` and `x²` close to the curve side. -/
 theorem curve_side_of_cube (b : Ecbs.Board) (dst spare : Nat)
@@ -225,12 +277,13 @@ theorem curve_side_of_cube (b : Ecbs.Board) (dst spare : Nat)
           let b ← clear b (spare : Int)
           white0 b (dst : Int)) = .ok bW ∧
         (∀ h : dst < bW.sudo_5Board_4home.size,
-          bW.sudo_5Board_4home[dst] = embed (curveSide n k bench x)) := by
-  obtain ⟨bW, hrun, hhome⟩ := curve_side_close b dst spare
+          bW.sudo_5Board_4home[dst] = embed (curveSide n k bench x)) ∧
+        CloseKeep b bW dst spare := by
+  obtain ⟨bW, hrun, hhome, hkeep⟩ := curve_side_close b dst spare
     (fieldCube n k bench x) (fieldMul n k bench x x) n moves
     hHd hDd hHs hDs hne hne' hheldD harrD hheldS harrS hn hcube hmul hpos
     htC htM hm hfit hbench
-  refine ⟨bW, hrun, ?_⟩
+  refine ⟨bW, hrun, ?_, hkeep⟩
   rw [curveSide]
   exact hhome
 

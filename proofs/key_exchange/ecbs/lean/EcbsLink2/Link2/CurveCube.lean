@@ -215,7 +215,7 @@ theorem curve_cube_step (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
     simpa [mvS] using hbounds.1
   have hcube := curve_cube_bottom s x w h r n k mvS holeN bench pk peakS 0 cg (by simpa [s] using hmkS.trans hmk) (by simpa [s] using hoffS) hops1s hop1s (fit 1 hbounds.2.2.2.2.2.2) hfields.2.2.2.2.2.1 hfields.2.2.2.2.2.2 sat.cube_span h2Ds h2Hs hheld2s hhome2s h7s lay.board.n_pos (by rw [hfields.1]; exact ofNat_eq_natCast _) (by simpa [n] using hx) (fit n hbounds.2.2.2.2.1) hmvS hpkCube hstrictC hxt (fit (3 * (n - 1)) hbounds.2.2.2.1) (fit (mvS + 2 * n) (by simpa [mvS] using hbounds.2.1)) ⟨lay.w_pos, lay.h_pos, lay.r_lt, lay.r_pos, lay.n_eq, lay.k_le, lay.gap_eq⟩ hfields.2.2.1 hfields.2.2.2.1 hfields.2.2.2.2.1 hfields.2.1 hholeC lay.small hnsm (fit bench hbounds.2.2.2.2.2.1) (fit (mvS + 2 * n + 3 * (bench - n)) (by simpa [mvS] using hbounds.2.2.1))
   obtain ⟨bC, hok, honC, htoC, hbenchC, htakeC, hheldC, hhomeC, hmkC, hhigh, hmovC,
-      hpeakC, hslidesC, htC, hopsC, hstrictC', hholeC'⟩ := hcube
+      hpeakC, hslidesC, htC, hopsC, hstrictC', hholeC', _, _, _⟩ := hcube
   have hszHC : bC.sudo_5Board_4home.size = 8 := by
     rw [hhomeC, Array.size_set, hszHs]
   have hszDC : bC.sudo_5Board_4held.size = 8 := by

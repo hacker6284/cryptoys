@@ -201,7 +201,7 @@ theorem curve_spare_step (t : Spec.Tier) (lay : FieldLay t) (_sat : TierSat t)
       rw [show cLane.length = bench from by simpa [cLane, n, k, bench] using hlen]
       exact hfB) hmov hsl hpk hps hf2c hfMc hfSc hops0 (hop0 hops0) hf2 (by simpa [n] using hx) hxt (by rw [hT]; rfl) (by rw [hT]; rfl) (by rw [hT]; rfl) (by rw [hT]; rfl) (by rw [hT]; rfl) hhole lay.board.n_pos lay.mul_span hfSpan hfB hfC hfM hfFold ⟨lay.w_pos, lay.h_pos, lay.r_lt, lay.r_pos, lay.n_eq, lay.k_le, lay.gap_eq⟩ lay.small lay.n_small
   obtain ⟨bM, hmulOk, honM, htoM, htakeX, hhome2M, hbenchX, hhighX, hmovM, hslM, htM,
-      hh6M, hh2M, _hheldFr, hhomeFr, hszHM, hszDM, hpkEx⟩ := hmul
+      hh6M, hh2M, _hheldFr, hhomeFr, hszHM, hszDM, hpkEx, _, _, _, _, _⟩ := hmul
   obtain ⟨pkM, hpkM⟩ := hpkEx
   have h6HM : 6 < bM.sudo_5Board_4home.size := by rw [hszHM, hszH]; decide
   have h6DM : 6 < bM.sudo_5Board_4held.size := by rw [hszDM, hszD]; decide
@@ -240,7 +240,8 @@ theorem curve_spare_step (t : Spec.Tier) (lay : FieldLay t) (_sat : TierSat t)
       hmovMul hslMul hpkM
       hf2s hfSet hfSl
       htakeSq
-  obtain ⟨bS, hsetOk, _hoff, hhome6, hheld6S, hhomeK, hheldK, hmovS, htS, hszHS, hszDS⟩ := hset
+  obtain ⟨bS, hsetOk, _hoff, hhome6, hheld6S, hhomeK, hheldK, hmovS, htS, hszHS, hszDS,
+      _, _, _, _, _, _⟩ := hset
   have h2HS : 2 < bS.sudo_5Board_4home.size := by rw [hszHS, hszHM, hszH]; decide
   have h2DS : 2 < bS.sudo_5Board_4held.size := by rw [hszDS, hszDM, hszD]; decide
   have h5HS : 5 < bS.sudo_5Board_4home.size := by rw [hszHS, hszHM, hszH]; decide

@@ -141,7 +141,18 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
         bS.sudo_5Board_4home.size = 8 ∧
         bS.sudo_5Board_4held.size = 8 ∧
         (∀ h : 1 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[1] = false) ∧
-        (∀ h : 5 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[5] = false) := by
+        (∀ h : 5 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[5] = false) ∧
+        bS.sudo_5Board_9marker_on = false ∧
+        bS.sudo_5Board_6marker = -1 ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t) ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = 0 ∧
+        bS.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 ∧
+        (∀ h : 0 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+          bS.sudo_5Board_4cost.sudo_5Costs_3ops[0] = 1) ∧
+        (∀ h : 1 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+          bS.sudo_5Board_4cost.sudo_5Costs_3ops[1] = 1) ∧
+        (∀ h : 1 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[1] = (#[] : Array Int)) ∧
+        (∀ h : 5 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[5] = (#[] : Array Int)) := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hxt : allTritList x := basisPeg_trits t.n j
@@ -150,7 +161,9 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     rwa [hx] at h
   obtain ⟨bC, hdo, honC, htoC, hbenchC, htakeC, hlenC, hzeroC, hmkC, hszHC, hszDC,
       hheld2C, _hhome2C, hheld3C, hhome3C, hheld6C, hmovC, hslC, hpkE, hpsE, hholeE,
-      htierC, hopsC, hop0C, hheld1C, hheld5C⟩ := search_cube t hOk hsh sat j hj
+      htierC, hopsC, hop0C, hheld1C, hheld5C, hmarkC, hctrlC, hmxC, hopSzC, hop1C,
+      hhome1C, hhome5C⟩ :=
+    search_cube t hOk hsh sat j hj
   obtain ⟨pk, hpk⟩ := hpkE
   obtain ⟨ps, hps⟩ := hpsE
   obtain ⟨holeN, hhole⟩ := hholeE
@@ -209,7 +222,8 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     ⟨hsh.w0, hsh.h0, hsh.rlt, hsh.r0, hsh.n_eq, hsh.k_le, hsh.gap⟩
     hsh.small hsh.n_small
   obtain ⟨bM, hokM, honM, htoM, htakeM, hhome2M, hbenchM, hhighM, hmovM, hslM, htM,
-      hheld6M, hheld2M, hheldPM, hhomeP, hszHM, hszDM, hpkM⟩ := hmul
+      hheld6M, hheld2M, hheldPM, hhomeP, hszHM, hszDM, hpkM, hmkM, hmarkM, hctrlM,
+      hmxM, hopsM⟩ := hmul
   obtain ⟨pkM, hpkM⟩ := hpkM
   let laneS := laneFold n (n - k) (school n x x (List.replicate bench 0) false)
   have hlenS : laneS.length = bench := by
@@ -257,7 +271,8 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
         (Nat.le_trans (two_pegs _ _ _ hpegL hpegS)
           (Nat.le_trans (four_in_room mv (pegCount (lane.take n)) n bench) hroom.2.2.2.2.2.1)))
       (by simpa [laneS] using htakeM)
-  obtain ⟨bS, hokS, hoffS, hhome6S, hheld6S, hhomePS, hheldPS, hmovS, htS, hszHS, hszDS⟩ := hset
+  obtain ⟨bS, hokS, hoffS, hhome6S, hheld6S, hhomePS, hheldPS, hmovS, htS, hszHS, hszDS,
+      hmkS, hmarkS, hctrlS, hmxS, hopsS, hslS⟩ := hset
   let mvS := mvM + 2 * pegCount (laneS.take n)
   have hmvInner : mvS ≤
       mv + 2 * pegCount (lane.take n) + n + n * (n + 1) + 3 * (bench - n) + 2 * n := by
@@ -266,7 +281,8 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
   have hmvSle : mvS + 2 * n + 1 ≤
       mv + 2 * pegCount (lane.take n) + n + n * (n + 1) + 3 * (bench - n) + 2 * n + 2 * n + 1 :=
     close_room mvS mv (pegCount (lane.take n)) n bench hmvInner
-  refine ⟨bS, mvS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨bS, mvS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+      ?_, ?_, ?_, ?_, ?_⟩
   · rw [hdo, ok_bind, hokM, ok_bind]
     exact hokS
   · intro h
@@ -305,8 +321,73 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     have hM := hheldPM 5 h5C h5M (by decide) (by decide)
     have hS := hheldPS 5 h5M h (by decide)
     exact hS.trans (hM.trans (hheld5C h5C))
+  · rw [hmkS]; exact hmkM
+  · rw [hmarkS, hmarkM, hmarkC]
+  · rw [hctrlS, hctrlM, hctrlC]
+  · rw [hmxS, hmxM, hmxC]
+  · rw [hopsS, hopsM, Array.size_set]; exact hopSzC
+  · intro h
+    have hM : 0 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      have hsz := congrArg Array.size hopsS
+      rw [hsz] at h
+      exact h
+    have hget := get_eq_of_array hopsM 0 hM
+    simp [Array.getElem_set, Nat.zero_add, ofNat_eq_natCast] at hget
+    exact cell_eq_of hopsS hget
+  · intro h
+    have hM : 1 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+      have hsz := congrArg Array.size hopsS
+      rw [hsz] at h
+      exact h
+    have hget := get_eq_of_array hopsM 1 hM
+    have hne : (0 : Nat) ≠ 1 := by decide
+    simp [Array.getElem_set, hne] at hget
+    have h1C : 1 < bC.sudo_5Board_4cost.sudo_5Costs_3ops.size := by rw [hopSzC]; decide
+    exact cell_eq_of hopsS (hget.trans (hop1C h1C))
+  · intro h
+    have h1C : 1 < bC.sudo_5Board_4home.size := by rw [hszHC]; decide
+    have h1M : 1 < bM.sudo_5Board_4home.size := by rw [hszHM, hszHC]; decide
+    have hM := hhomeP 1 h1C h1M (by decide) (by decide)
+    have hS := hhomePS 1 h1M h (by decide)
+    exact hS.trans (hM.trans (hhome1C h1C))
+  · intro h
+    have h5C : 5 < bC.sudo_5Board_4home.size := by rw [hszHC]; decide
+    have h5M : 5 < bM.sudo_5Board_4home.size := by rw [hszHM, hszHC]; decide
+    have hM := hhomeP 5 h5C h5M (by decide) (by decide)
+    have hS := hhomePS 5 h5M h (by decide)
+    exact hS.trans (hM.trans (hhome5C h5C))
 
-/-- The planted copy, cubed and closed, is `curveSide`. -/
+/-- The board `curve_side` leaves for one search hole: curve side in the bottom,
+    the planted peg still in base-across, up and the gap empty, marker down,
+    bench off, and the op slots and counters the gap square reads. -/
+structure SideAt (b : Ecbs.Board) (t : Spec.Tier) (j : Nat) : Prop where
+  tier : b.sudo_5Board_1t = embTier t
+  markerOn : b.sudo_5Board_9marker_on = false
+  marker : b.sudo_5Board_6marker = -1
+  benchOff : b.sudo_5Board_8bench_on = false
+  botHome : ∀ h : 2 < b.sudo_5Board_4home.size,
+    b.sudo_5Board_4home[2] = embed (curveSide t.n t.k t.benchlen (basisPeg t.n j))
+  botHeld : ∀ h : 2 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[2] = true
+  baseHome : ∀ h : 3 < b.sudo_5Board_4home.size,
+    b.sudo_5Board_4home[3] = embed (basisPeg t.n j)
+  baseHeld : ∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true
+  upHome : ∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = (#[] : Array Int)
+  upHeld : ∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = false
+  gapHome : ∀ h : 5 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[5] = (#[] : Array Int)
+  gapHeld : ∀ h : 5 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[5] = false
+  spareOff : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = false
+  szH : b.sudo_5Board_4home.size = 8
+  szD : b.sudo_5Board_4held.size = 8
+  ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t)
+  mx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = 0
+  opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
+  ops0 : ∀ h : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+    b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = 1
+  ops1 : ∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+    b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = 1
+  moves : ∃ mv, b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int)
+
+/-- The planted copy, cubed and closed, is `curveSide`, with the ledger `SideAt`. -/
 theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)
     (j : Nat) (hj : j < t.n) :
     ∃ b',
@@ -316,9 +397,7 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
           let x ← SudoRt.putL x (Int.ofNat j) (1 : Int)
           let b ← Ecbs.put b Ecbs.base_across x
           Ecbs.curve_side b Ecbs.base_across Ecbs.bottom) = .ok b' ∧
-        (∀ h : 2 < b'.sudo_5Board_4home.size,
-          b'.sudo_5Board_4home[2] =
-            embed (curveSide t.n t.k t.benchlen (basisPeg t.n j))) := by
+        SideAt b' t j := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hxt : allTritList x := basisPeg_trits t.n j
@@ -334,23 +413,75 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
     fieldCube_length t.n t.k t.benchlen x hnle
   have hmulL : (fieldMul t.n t.k t.benchlen x x).length = t.n :=
     fieldMul_length t.n t.k t.benchlen x x hnle
-  obtain ⟨bS, mv, hdo, hhome2, hheld2, hhome6, hheld6, _, _, hoff, htier, hmov,
-      hfit, hszH, hszD, _, _⟩ := search_square t hOk hsh sat j hj
+  obtain ⟨bS, mv, hdo, hhome2, hheld2, hhome6, hheld6, hhome3, hheld3, hoff, htier, hmov,
+      hfit, hszH, hszD, hheld1, hheld5, hmk, hmark, hctrl, hmx, hopSz, hop0, hop1,
+      hhome1, hhome5⟩ :=
+    search_square t hOk hsh sat j hj
   have h2H : 2 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2D : 2 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
   have h6H : 6 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
   have h6D : 6 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
   have hn : bS.sudo_5Board_1t.sudo_4Tier_1n = (t.n : Int) := by
     rw [htier]; exact ofNat_eq_natCast _
-  obtain ⟨bW, hrun, hhome⟩ := curve_side_of_cube bS 2 6 x t.n t.k t.benchlen mv
+  obtain ⟨bW, hrun, hhome, hk⟩ := curve_side_of_cube bS 2 6 x t.n t.k t.benchlen mv
     h2H h2D h6H h6D (by decide) (by decide)
     (hheld2 h2D) (by simpa [x] using hhome2 h2H) (hheld6 h6D) (by simpa [x] using hhome6 h6H)
     hn hx hOk.n_pos hxt hmov hfit hoff hcubeL hmulL hcubeT hmulT
+  have h1S : 1 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
+  have h1D : 1 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
+  have h5S : 5 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
+  have h5D : 5 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
+  have h3S : 3 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
+  have h3D : 3 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
   refine ⟨bW, ?_, ?_⟩
   · rw [curve_do_split, hdo, ok_bind]
     simpa [show ((2 : Nat) : Int) = Ecbs.bottom from rfl,
       show ((6 : Nat) : Int) = Ecbs.spare from rfl] using hrun
-  · intro h
-    simpa [x] using hhome h
+  · refine
+      { tier := hk.tier.trans htier
+        markerOn := hk.markerOn.trans hmk
+        marker := hk.marker.trans hmark
+        benchOff := hk.bench.trans hoff
+        botHome := by
+          intro h
+          simpa [x] using hhome h
+        botHeld := hk.dstHeld
+        baseHome := by
+          intro h
+          have hpre := hk.home 3 (by decide) (by decide) h3S h
+          simpa [x] using hpre.trans (hhome3 h3S)
+        baseHeld := by
+          intro h
+          exact (hk.held 3 (by decide) h3D h).trans (hheld3 h3D)
+        upHome := by
+          intro h
+          exact (hk.home 1 (by decide) (by decide) h1S h).trans (hhome1 h1S)
+        upHeld := by
+          intro h
+          exact (hk.held 1 (by decide) h1D h).trans (hheld1 h1D)
+        gapHome := by
+          intro h
+          exact (hk.home 5 (by decide) (by decide) h5S h).trans (hhome5 h5S)
+        gapHeld := by
+          intro h
+          exact (hk.held 5 (by decide) h5D h).trans (hheld5 h5D)
+        spareOff := hk.spareHeld
+        szH := hk.szH.trans hszH
+        szD := hk.szD.trans hszD
+        ctrl := hk.ctrl.trans hctrl
+        mx := hk.mx.trans hmx
+        opsSz := by rw [hk.ops]; exact hopSz
+        ops0 := by
+          intro h
+          have hS : 0 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+            rw [← hk.ops]; exact h
+          have hget := hop0 hS
+          simpa [hk.ops] using hget
+        ops1 := by
+          intro h
+          have hS : 1 < bS.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+            rw [← hk.ops]; exact h
+          simpa [hk.ops] using hop1 hS
+        moves := hk.moves }
 
 end EcbsLink2.Link2

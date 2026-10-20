@@ -634,7 +634,20 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         mv ≤ mv0 + sideCap t.n t.benchlen ∧
         bS.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
         sl ≤ sl0 + 4 * t.n ∧
-        bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t) := by
+        bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t) ∧
+        bS.sudo_5Board_8bench_on = false ∧
+        FitsLen (mv + 2 * t.n + 1) ∧
+        mv + 2 * t.n + 1 ≤ mv0 + sideCap t.n t.benchlen ∧
+        (∀ h : 2 < bS.sudo_5Board_4home.size,
+          bS.sudo_5Board_4home[2] = embed (fieldCube t.n t.k t.benchlen (basisPeg t.n j))) ∧
+        (∀ h : 2 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[2] = true) ∧
+        (∀ h : 6 < bS.sudo_5Board_4home.size,
+          bS.sudo_5Board_4home[6] =
+            embed (fieldMul t.n t.k t.benchlen (basisPeg t.n j) (basisPeg t.n j))) ∧
+        (∀ h : 6 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[6] = true) ∧
+        bS.sudo_5Board_4home.size = 8 ∧
+        bS.sudo_5Board_4held.size = 8 ∧
+        bS.sudo_5Board_1t = embTier t := by
   obtain ⟨bC, hcube, cu⟩ :=
     search_cube_at b0 t holesLeft hp hOk hsh sat j hj mv0 sl0 c0 hmv hsl0 hc0
   let x := basisPeg t.n j
@@ -730,8 +743,8 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
       hroom.2.2.2.2.1)
     ⟨hsh.w0, hsh.h0, hsh.rlt, hsh.r0, hsh.n_eq, hsh.k_le, hsh.gap⟩
     hsh.small hsh.n_small
-  obtain ⟨bM, hokM, _honM, _htoM, htakeM, _hhome2M, hbenchM, hhighM, hmovM, hslM, _htM,
-      _hheld6M, _hheld2M, _hheldPM, _hhomeP, hszHM, hszDM, hpkM, _hmkM, _hmarkM, hctrlM,
+  obtain ⟨bM, hokM, honM, htoM, htakeM, hhome2M, hbenchM, hhighM, hmovM, hslM, htM,
+      hheld6M, hheld2M, hheldPM, hhomeP, hszHM, hszDM, hpkM, _hmkM, _hmarkM, hctrlM,
       _hmxM, _hopsM, _hstrictM, _hholeM⟩ := hmul
   obtain ⟨pkM, hpkM⟩ := hpkM
   let laneS := laneFold n (n - k) (school n x x (List.replicate bench 0) false)
@@ -756,9 +769,9 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
     exact mul_moves_cap (mv + 2 * pegCount (lane.take n)) x x n k bench hx
   have hset := curve_settle_spare bM laneS (fieldMul n k bench x x) n mvM
       (sl0 + 2 * pegCount (lane.take n)) pkM
-      h6HM h6DM (by rw [hszDM, cu.szD]; decide) _honM
-      (by rw [_htoM]; rfl) (_hheld6M h6DM)
-      (by simpa [laneS] using hbenchM) (by rw [_htM, cu.tier]; exact ofNat_eq_natCast _)
+      h6HM h6DM (by rw [hszDM, cu.szD]; decide) honM
+      (by rw [htoM]; rfl) (hheld6M h6DM)
+      (by simpa [laneS] using hbenchM) (by rw [htM, cu.tier]; exact ofNat_eq_natCast _)
       hposS (by rw [hlenS]; exact hnle) hzeroS
       (fit n (by simpa [n] using hroom.2.2.2.2.2.2.2.2.1))
       (fit laneS.length (by rw [hlenS]; exact (by simpa [bench] using hroom.2.2.2.2.2.2.2.2.2.1)))
@@ -771,7 +784,7 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
       (sfit ((sl0 + 2 * pegCount (lane.take n)) + 2 * pegCount (laneS.take n))
         (four_n sl0 (pegCount (lane.take n)) (pegCount (laneS.take n)) n hpegL hpegS))
       (by simpa [laneS] using htakeM)
-  obtain ⟨bS, hokS, _hoffS, _hhome6S, _hheld6S, _hhomePS, _hheldPS, hmovS, _htS, _hszHS, _hszDS,
+  obtain ⟨bS, hokS, hoffS, hhome6S, hheld6S, hhomePS, hheldPS, hmovS, htS, hszHS, hszDS,
       _hmkS, _hmarkS, hctrlS, _hmxS, _hopsS, hslS, _hpeakS, _hstrictS, _hholeS⟩ := hset
   let mvS := mvM + 2 * pegCount (laneS.take n)
   have hmvInner : mvS ≤
@@ -783,7 +796,10 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
     close_room mvS mv (pegCount (lane.take n)) n bench hmvInner
   have hcap := Nat.le_trans hmvSle (side_cap_le mv0 mv (pegCount (lane.take n)) (pegCount x) n bench
     hbase hpegL hpeg)
-  refine ⟨bS, mvS, (sl0 + 2 * pegCount (lane.take n)) + 2 * pegCount (laneS.take n), ?_, ?_, ?_, ?_, ?_, ?_⟩
+  have h2HM : 2 < bM.sudo_5Board_4home.size := by rw [hszHM, cu.szH]; decide
+  have h2DM : 2 < bM.sudo_5Board_4held.size := by rw [hszDM, cu.szD]; decide
+  refine ⟨bS, mvS, (sl0 + 2 * pegCount (lane.take n)) + 2 * pegCount (laneS.take n),
+      ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hcube, ok_bind, hokM, ok_bind]
     exact hokS
   · simpa [mvS, ofNat_eq_natCast] using hmovS
@@ -793,5 +809,116 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
       four_n sl0 (pegCount (lane.take n)) (pegCount (laneS.take n)) n hpegL hpegS
   · rw [hctrlS, hctrlM]
     exact cu.ctrl
+  · exact fit (mvS + 2 * n + 1) (Nat.le_trans hmvSle hroom.2.2.2.2.2.2.1)
+  · simpa [n, bench] using hcap
+  · intro h
+    have hget := hhomePS 2 h2HM h (by decide)
+    rw [hget, hhome2M h2HM, htakeC]
+  · intro h
+    have hget := hheldPS 2 h2DM h (by decide)
+    rw [hget]
+    exact hheld2M h2DM
+  · intro h
+    simpa [x] using hhome6S h
+  · intro h
+    exact hheld6S h
+  · rw [hszHS, hszHM]; exact cu.szH
+  · rw [hszDS, hszDM]; exact cu.szD
+  · rw [htS, htM]; exact cu.tier
+
+private theorem close_rel (mv0 mv peg n bench : Nat)
+    (hpeg : peg ≤ n) (h : mv + 2 * n + 1 ≤ mv0 + sideCap n bench) :
+    mv + 2 * peg + 1 ≤ mv0 + sideCap n bench := by
+  omega
+
+private theorem curve_from (b : Ecbs.Board) (n j : Nat) :
+    (do
+        let x ← SudoRt.filledL (Int.ofNat n) (0 : Int)
+        let x ← SudoRt.putL x (Int.ofNat j) (1 : Int)
+        let b ← Ecbs.put b Ecbs.base_across x
+        Ecbs.curve_side b Ecbs.base_across Ecbs.bottom) =
+      (((do
+          let x ← SudoRt.filledL (Int.ofNat n) (0 : Int)
+          let x ← SudoRt.putL x (Int.ofNat j) (1 : Int)
+          let b ← Ecbs.put b Ecbs.base_across x
+          let b ← Ecbs.copy_band b Ecbs.bottom Ecbs.base_across false
+          Ecbs.cube b Ecbs.bottom Ecbs.bottom) >>= fun b =>
+        (do
+          let b ← Ecbs.mul b Ecbs.spare Ecbs.base_across Ecbs.base_across true false false
+          Ecbs.settle b)) >>= fun b =>
+        (do
+          let b ← Ecbs.add b Ecbs.bottom Ecbs.spare true
+          let b ← Ecbs.clear b Ecbs.spare
+          Ecbs.white0 b Ecbs.bottom)) := by
+  unfold Ecbs.curve_side
+  simp only [bind_assoc, bind_pure]
+
+/-- Close the planted curve. Control stays `c0 + tierR`. The mirror-add spends
+    at most one peg on top of the square, still inside `mv0 + sideCap`. -/
+theorem search_side_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
+    (hp : PlantAt b0 t holesLeft)
+    (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t)
+    (j : Nat) (hj : j < t.n)
+    (mv0 sl0 c0 : Nat)
+    (hmv : b0.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv0)
+    (hsl0 : b0.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl0)
+    (hc0 : b0.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t)) :
+    ∃ (bW : Ecbs.Board) (mv sl : Nat),
+      (do
+          let x ← SudoRt.filledL (Int.ofNat t.n) (0 : Int)
+          let x ← SudoRt.putL x (Int.ofNat j) (1 : Int)
+          let b ← Ecbs.put b0 Ecbs.base_across x
+          Ecbs.curve_side b Ecbs.base_across Ecbs.bottom) = .ok bW ∧
+        bW.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
+        mv ≤ mv0 + sideCap t.n t.benchlen ∧
+        bW.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+        sl ≤ sl0 + 4 * t.n ∧
+        bW.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t) ∧
+        (∀ h : 2 < bW.sudo_5Board_4home.size,
+          bW.sudo_5Board_4home[2] =
+            embed (curveSide t.n t.k t.benchlen (basisPeg t.n j))) := by
+  let x := basisPeg t.n j
+  have hx : x.length = t.n := basisPeg_length t.n j
+  have hxt : allTritList x := basisPeg_trits t.n j
+  have hnle : t.n ≤ t.benchlen := by
+    have hsp := sat.cube_span
+    omega
+  have hspan : 3 * (t.n - 1) < t.benchlen :=
+    cube_span_le t.n t.benchlen t.combgap sat.cube_span
+  obtain ⟨bS, mv, sl, hdo, hmov, _hle, hsl, hsle, hctrl, hoff, hfit, hclose,
+      hhome2, hheld2, hhome6, hheld6, hszH, hszD, htier⟩ :=
+    search_square_at b0 t holesLeft hp hOk hsh sat j hj mv0 sl0 c0 hmv hsl0 hc0
+  have hcubeL : (fieldCube t.n t.k t.benchlen x).length = t.n :=
+    fieldCube_length t.n t.k t.benchlen x hnle
+  have hmulL : (fieldMul t.n t.k t.benchlen x x).length = t.n :=
+    fieldMul_length t.n t.k t.benchlen x x hnle
+  have hcubeT : allTritList (fieldCube t.n t.k t.benchlen x) :=
+    fieldCube_trits t.n t.k t.benchlen x hxt hspan hsh.k_le
+  have hmulT : allTritList (fieldMul t.n t.k t.benchlen x x) :=
+    sq_trits t.n t.k t.benchlen x hx hspan hnle
+  have h2H : 2 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
+  have h2D : 2 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
+  have h6H : 6 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
+  have h6D : 6 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
+  have hpegM : pegCount (fieldMul t.n t.k t.benchlen x x) ≤ t.n := by
+    have h := pegCount_le (fieldMul t.n t.k t.benchlen x x)
+    rwa [hmulL] at h
+  obtain ⟨bW, hrun, hhome, hk, hmvW⟩ := curve_side_of_cube bS 2 6 x t.n t.k t.benchlen mv
+    h2H h2D h6H h6D (by decide) (by decide)
+    (hheld2 h2D) (by simpa [x] using hhome2 h2H)
+    (hheld6 h6D) (by simpa [x] using hhome6 h6H)
+    (by rw [htier]; exact ofNat_eq_natCast _) hx hOk.n_pos hxt hmov hfit hoff
+    hcubeL hmulL hcubeT hmulT
+  refine ⟨bW, mv + 2 * pegCount (fieldMul t.n t.k t.benchlen x x) + 1, sl, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [curve_from b0 t.n j, hdo, ok_bind]
+    simpa [show ((2 : Nat) : Int) = Ecbs.bottom from rfl,
+      show ((6 : Nat) : Int) = Ecbs.spare from rfl] using hrun
+  · simpa [ofNat_eq_natCast] using hmvW
+  · exact close_rel mv0 mv _ t.n t.benchlen hpegM hclose
+  · rw [hk.slides]; exact hsl
+  · exact hsle
+  · rw [hk.ctrl]; exact hctrl
+  · intro h
+    simpa [x] using hhome h
 
 end EcbsLink2.Link2

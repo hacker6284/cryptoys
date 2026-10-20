@@ -5,6 +5,7 @@
   cube. `cells.length = t.cells` is the fresh key. Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.SuffixAt
+import EcbsLink2.Link2.CopyKeep
 import EcbsLink2.Link2.WalkInd
 
 namespace EcbsLink2.Link2
@@ -12,8 +13,9 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
-/-- The board after `done` cells, with the cubes charged on top of `mv0`. -/
-def SpanAt (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY accX accY : List Nat)
+/-- The board after `done` cells, once the marker is a natural. The cubes are
+    charged on top of `mv0`. -/
+def SpanFrame (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY accX accY : List Nat)
     (done mv0 sl0 ct0 op0 : Nat) : Prop :=
   ∃ fr : RunFrame b t baseX accX,
     b.sudo_5Board_9marker_on = true ∧
@@ -32,6 +34,33 @@ def SpanAt (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY accX accY : List Nat)
     accY.length = t.n ∧
     allTritList accY
 
+/-- The board `chord_fresh_white_down` leaves. The marker is still `-1`, homes
+    0 and 1 hold the copied point, and `done` charges of cube overhead sit on
+    top of `mv0`. -/
+def SpanDown (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY accX accY : List Nat)
+    (done mv0 sl0 ct0 op0 : Nat) : Prop :=
+  ∃ (mv pk : Nat) (out : OutLay t b accX accY baseY mv pk),
+    mv ≤ mv0 + done * (walkCharge t + (6 * t.benchlen + 2 * t.n)) ∧
+    out.sl0 ≤ sl0 + done * (cellSlideCharge t + 4 * t.n) ∧
+    out.ctrl0 ≤ ct0 + done * (cellCtrlCharge t + 4) ∧
+    out.ops0 ≤ op0 + done * (cellOpsCharge t + 2) ∧
+    out.strict0 ≤ 7 ∧
+    out.hole0 ≤ t.benchlen ∧
+    0 < out.ctrl0 ∧
+    baseX.length = t.n ∧
+    allTritList baseX ∧
+    baseY.length = t.n ∧
+    allTritList baseY ∧
+    accY.length = t.n ∧
+    allTritList accY
+
+/-- A suffix cell. The live frames are `SpanFrame`. The opening copy, marker
+    still `-1`, is `SpanDown`. -/
+def SpanAt (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY accX accY : List Nat)
+    (done mv0 sl0 ct0 op0 : Nat) : Prop :=
+  SpanFrame t b baseX baseY accX accY done mv0 sl0 ct0 op0 ∨
+    SpanDown t b baseX baseY accX accY done mv0 sl0 ct0 op0
+
 def SuffixInv (t : Spec.Tier) (baseX baseY : List Nat) (live0 : Bool)
     (acc0 : List Nat × List Nat) (cells : List Nat) (toN mv0 sl0 ct0 op0 : Nat)
     (i : Nat) (st : Ecbs.Board × Bool) : Prop :=
@@ -39,7 +68,7 @@ def SuffixInv (t : Spec.Tier) (baseX baseY : List Nat) (live0 : Bool)
   ∃ ax ay,
     walkRun t.n t.k t.benchlen (baseX, baseY) live0 acc0 (cells.take i) =
       some (true, (ax, ay)) ∧
-    (i ≤ toN → SpanAt t st.1 baseX baseY ax ay i mv0 sl0 ct0 op0) ∧
+    (i ≤ toN → SpanFrame t st.1 baseX baseY ax ay i mv0 sl0 ct0 op0) ∧
     (toN < i →
       (∀ h : 0 < st.1.sudo_5Board_4home.size, st.1.sudo_5Board_4home[0] = embed ax) ∧
       (∀ h : 1 < st.1.sudo_5Board_4home.size, st.1.sudo_5Board_4home[1] = embed ay) ∧
@@ -84,7 +113,7 @@ private theorem suffix_span_step (t : Spec.Tier) (b : Ecbs.Board)
     (baseX baseY accX accY : List Nat) (cells : List Nat)
     (len toN i mv0 sl0 ct0 op0 : Nat)
     (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t) (hsh : TierShape t)
-    (hAt : SpanAt t b baseX baseY accX accY i mv0 sl0 ct0 op0)
+    (hAt : SpanFrame t b baseX baseY accX accY i mv0 sl0 ct0 op0)
     (hn : t.n ≤ t.benchlen)
     (hmoveOver : (6 * t.benchlen + 2 * t.n) * len ≤ walkCharge t)
     (hslideOver : 4 * t.n * len ≤ cellSlideCharge t)
@@ -106,7 +135,7 @@ private theorem suffix_span_step (t : Spec.Tier) (b : Ecbs.Board)
           else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), (b', true)))) ∧
       walkStep t.n t.k t.benchlen (baseX, baseY) true (accX, accY) (cells[i]'hiLen) =
         some (true, (ax', ay')) ∧
-      (i < toN → SpanAt t b' baseX baseY ax' ay' (i + 1) mv0 sl0 ct0 op0) ∧
+      (i < toN → SpanFrame t b' baseX baseY ax' ay' (i + 1) mv0 sl0 ct0 op0) ∧
       (i = toN →
         (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = embed ax') ∧
         (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = embed ay') ∧
@@ -141,7 +170,7 @@ theorem suffix_walk (t : Spec.Tier) (b : Ecbs.Board)
     (baseX baseY accX accY : List Nat) (live0 : Bool) (acc0 : List Nat × List Nat)
     (cells : List Nat) (len start mv0 sl0 ct0 op0 : Nat)
     (hOk : BoardOk t) (sat : TierSat t) (hR : 0 < tierR t) (hsh : TierShape t)
-    (hAt : SpanAt t b baseX baseY accX accY start mv0 sl0 ct0 op0)
+    (hAt : SpanFrame t b baseX baseY accX accY start mv0 sl0 ct0 op0)
     (hn : t.n ≤ t.benchlen)
     (hmoveOver : (6 * t.benchlen + 2 * t.n) * len ≤ walkCharge t)
     (hslideOver : 4 * t.n * len ≤ cellSlideCharge t)
@@ -223,7 +252,7 @@ private theorem fresh_span (t : Spec.Tier) (b : Ecbs.Board) (baseX baseY accX ac
     (hm0 : fr.moves = 0) (hs0 : fr.slides = 0) (hc0 : fr.ctrl = 0) (ho0 : fr.opsCap = 0)
     (hyB : baseY.length = t.n) (htriY : allTritList baseY)
     (hyA : accY.length = t.n) (htriA : allTritList accY) :
-    SpanAt t b baseX baseY accX accY 0 0 0 0 0 := by
+    SpanFrame t b baseX baseY accX accY 0 0 0 0 0 := by
   refine ⟨fr, hmk, hY, hA, hf4, hf1, hst, hho, ?_, ?_, ?_, ?_, hyB, htriY, hyA, htriA⟩
   · simp [hm0]
   · simp [hs0]

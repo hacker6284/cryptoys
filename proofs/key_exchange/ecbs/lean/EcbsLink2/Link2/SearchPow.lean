@@ -433,4 +433,289 @@ theorem pow_from_strip (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
     obtain ⟨c0', hc0', hle⟩ := hcount.ops0 2 hopP
     exact ⟨c0', hc0', hle⟩
 
+private theorem mul_ge (p k : Nat) (hk : 0 < k) : p ≤ p * k := by
+  simpa [Nat.mul_one] using Nat.mul_le_mul_left p (Nat.succ_le_of_lt hk)
+
+private theorem gap_pow_under (n bench : Nat) :
+    gapCap n bench + 1 + n + powMove n bench * n ≤ perHole n bench := by
+  unfold gapCap sideCap powMove perHole plantRoom
+  omega
+
+private theorem move_pow_room (mv0 mv n bench k : Nat) (hk : 0 < k)
+    (hm : mv ≤ mv0 + gapCap n bench + 1 + n) :
+    mv + powMove n bench * (n - 1) ≤ mv0 + perHole n bench * k := by
+  have hpow : powMove n bench * (n - 1) ≤ powMove n bench * n :=
+    Nat.mul_le_mul_left _ (Nat.sub_le n 1)
+  have h1 := Nat.add_le_add_right hm (powMove n bench * (n - 1))
+  have h2 : mv0 + gapCap n bench + 1 + n + powMove n bench * (n - 1) ≤
+      mv0 + gapCap n bench + 1 + n + powMove n bench * n :=
+    Nat.add_le_add_left hpow _
+  have hassoc : mv0 + gapCap n bench + 1 + n + powMove n bench * n =
+      mv0 + (gapCap n bench + 1 + n + powMove n bench * n) := by
+    simp [Nat.add_assoc]
+  have h3 : mv0 + (gapCap n bench + 1 + n + powMove n bench * n) ≤
+      mv0 + perHole n bench :=
+    Nat.add_le_add_left (gap_pow_under n bench) mv0
+  have h2b : mv0 + gapCap n bench + 1 + n + powMove n bench * (n - 1) ≤
+      mv0 + perHole n bench := by
+    rw [hassoc] at h2
+    exact Nat.le_trans h2 h3
+  have h4 : mv0 + perHole n bench ≤ mv0 + perHole n bench * k :=
+    Nat.add_le_add_left (mul_ge _ _ hk) mv0
+  exact Nat.le_trans h1 (Nat.le_trans h2b h4)
+
+private theorem slide_pow_room (sl0 sl n k : Nat) (hk : 0 < k) (hs : sl ≤ sl0 + 6 * n) :
+    sl + powSlide n * (n - 1) ≤ sl0 + perSlide n * k := by
+  unfold powSlide perSlide
+  have hsub : (4 * n) * (n - 1) ≤ (4 * n) * n :=
+    Nat.mul_le_mul_left _ (Nat.sub_le n 1)
+  have hassoc : (4 * n) * n = 4 * (n * n) := Nat.mul_assoc 4 n n
+  have hpiece : 6 * n + (4 * n) * (n - 1) ≤ 4 * (n * n) + 6 * n := by
+    have hA : 6 * n + (4 * n) * (n - 1) ≤ 6 * n + 4 * (n * n) :=
+      Nat.add_le_add_left (by rw [← hassoc]; exact hsub) _
+    simpa [Nat.add_comm] using hA
+  have h1 : sl + (4 * n) * (n - 1) ≤ sl0 + 6 * n + (4 * n) * (n - 1) :=
+    Nat.add_le_add_right hs _
+  have h2 : sl0 + 6 * n + (4 * n) * (n - 1) = sl0 + (6 * n + (4 * n) * (n - 1)) :=
+    Nat.add_assoc _ _ _
+  have h3 : sl0 + (6 * n + (4 * n) * (n - 1)) ≤ sl0 + (4 * (n * n) + 6 * n) :=
+    Nat.add_le_add_left hpiece _
+  have h4 : 4 * (n * n) + 6 * n ≤ (4 * (n * n) + 6 * n) * k := mul_ge _ _ hk
+  have h5 : sl0 + (4 * (n * n) + 6 * n) ≤ sl0 + (4 * (n * n) + 6 * n) * k :=
+    Nat.add_le_add_left h4 _
+  have hper : 4 * n * n + 6 * n = 4 * (n * n) + 6 * n := by
+    rw [Nat.mul_assoc]
+  rw [hper]
+  exact Nat.le_trans h1 (by rw [h2]; exact Nat.le_trans h3 h5)
+
+private theorem ctrl_pow_room (base c n k : Nat) (hk : 0 < k) (_hpos : 0 < base)
+    (hc : c = base - 1) :
+    c + powCtrl * (n - 1) ≤ base + perCtrl n * k := by
+  unfold powCtrl perCtrl
+  have hsub : 4 * (n - 1) ≤ 4 * n := Nat.mul_le_mul_left 4 (Nat.sub_le n 1)
+  have hper : 4 * n ≤ 4 * n + 4 := Nat.le_add_right _ _
+  have hmul : 4 * n + 4 ≤ (4 * n + 4) * k := mul_ge _ _ hk
+  have h1 : c + 4 * (n - 1) ≤ base + 4 * (n - 1) := by
+    rw [hc]
+    exact Nat.add_le_add_right (Nat.sub_le base 1) _
+  have h2 : base + 4 * (n - 1) ≤ base + 4 * n := Nat.add_le_add_left hsub _
+  have h3 : base + 4 * n ≤ base + (4 * n + 4) := Nat.add_le_add_left hper _
+  have h4 : base + (4 * n + 4) ≤ base + (4 * n + 4) * k := Nat.add_le_add_left hmul _
+  exact Nat.le_trans h1 (Nat.le_trans h2 (Nat.le_trans h3 h4))
+
+private theorem op_pow_room (o n k : Nat) (hk : 0 < k) :
+    o + 2 + (n - 1) ≤ o + perOp n * k := by
+  unfold perOp
+  have hstep : 2 + (n - 1) ≤ 2 + n := Nat.add_le_add_left (Nat.sub_le n 1) _
+  have hcomm : 2 + n = n + 2 := Nat.add_comm _ _
+  have hmul : n + 2 ≤ (n + 2) * k := mul_ge _ _ hk
+  have hsum : 2 + (n - 1) ≤ (n + 2) * k :=
+    Nat.le_trans hstep (Nat.le_trans (Nat.le_of_eq hcomm) hmul)
+  have hassoc : o + 2 + (n - 1) = o + (2 + (n - 1)) := Nat.add_assoc _ _ _
+  rw [hassoc]
+  exact Nat.add_le_add_left hsum _
+
+private theorem op1_pow_room (o n k : Nat) (hk : 0 < k) :
+    o + 1 + (n - 1) ≤ o + perOp n * k := by
+  unfold perOp
+  have hstep : 1 + (n - 1) ≤ 1 + n := Nat.add_le_add_left (Nat.sub_le n 1) _
+  have hcomm : 1 + n = n + 1 := Nat.add_comm _ _
+  have hone : n + 1 ≤ n + 2 := Nat.le_succ _
+  have hmul : n + 2 ≤ (n + 2) * k := mul_ge _ _ hk
+  have hsum : 1 + (n - 1) ≤ (n + 2) * k :=
+    Nat.le_trans hstep (Nat.le_trans (by rw [hcomm]; exact hone) hmul)
+  have hassoc : o + 1 + (n - 1) = o + (1 + (n - 1)) := Nat.add_assoc _ _ _
+  rw [hassoc]
+  exact Nat.add_le_add_left hsum _
+
+/-- The root power on a planted strip. The phantom board, marker `0` and one
+    control step behind, is only the device that seats the first digit.
+    `powRun` is the real strip board. -/
+theorem pow_from_strip_at (b : Ecbs.Board) (t : Spec.Tier) (j : Nat)
+    (mv0 sl0 c0 o0 o1 holesLeft : Nat)
+    (s : StripKeep b t j mv0 sl0 c0 o0 o1 holesLeft)
+    (hOk : BoardOk t) (hsh : TierShape t) (sat : TierSat t) (hn3 : 3 ≤ t.n)
+    (hk : 0 < holesLeft)
+    (hmvB : FitsLen (mv0 + perHole t.n t.benchlen * holesLeft))
+    (hslB : FitsLen (sl0 + perSlide t.n * holesLeft))
+    (hcB : FitsLen (c0 + tierR t + perCtrl t.n * holesLeft)) :
+    ∃ b',
+      powRun b (rootDigits t.n) = .ok b' ∧
+        PowAt b' t (curveSide t.n t.k t.benchlen (basisPeg t.n j))
+          (rootY t.n t.k t.benchlen (basisPeg t.n j)) [] ∧
+        b'.sudo_5Board_4home[0]? = some (embed (rootStrip t.n)) ∧
+        b'.sudo_5Board_4held[0]? = some true ∧
+        b'.sudo_5Board_4home[3]? = some (embed (basisPeg t.n j)) ∧
+        b'.sudo_5Board_4held[3]? = some true ∧
+        (∃ mv, b'.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv ∧
+          mv ≤ mv0 + gapCap t.n t.benchlen + 1 + t.n +
+            powMove t.n t.benchlen * (t.n - 1)) ∧
+        (∃ sl, b'.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl ∧
+          sl ≤ sl0 + 6 * t.n + powSlide t.n * (t.n - 1)) ∧
+        (∃ c, b'.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c ∧
+          c ≤ c0 + tierR t + powCtrl * (t.n - 1)) ∧
+        (∃ cOp, b'.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat cOp) ∧
+          cOp ≤ o0 + 2 + (t.n - 1)) := by
+  let x := basisPeg t.n j
+  let side := curveSide t.n t.k t.benchlen x
+  let acc := whiteHole0 t.n
+  let base := c0 + tierR t
+  have hbase : 0 < base := Nat.lt_of_lt_of_le (tierR_pos t hn3) (Nat.le_add_left _ c0)
+  let cPh := base - 1
+  have hcPh : cPh + 1 = base := Nat.sub_add_cancel (Nat.succ_le_of_lt hbase)
+  have hm : b.sudo_5Board_6marker = -1 := s.marker
+  have hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (cPh + 1) := by
+    simpa [base, hcPh] using s.ctrl
+  have hfitC1 : FitsLen (cPh + 1) := by
+    have hle : cPh + 1 ≤ base + perCtrl t.n * holesLeft := by
+      rw [hcPh]
+      exact Nat.le_add_right _ _
+    exact FitsLen.of_le hcB (by simpa [base] using hle)
+  have hlift := cold_lift b cPh hm hc hfitC1
+  have hself := marker_lift_below b (by rw [hm]; decide)
+  let bP := coldPhantom b cPh
+  have hred := root_red t.n hn3
+  let tail := (rootDigits t.n).tail
+  have hlenD : (rootDigits t.n).length = t.n - 1 := rootDigits_length t.n
+  rcases s.moves with ⟨mv, hmv, hmvLe⟩
+  rcases s.slides with ⟨sl, hsl, hslLe⟩
+  rcases s.peak with ⟨pk, hpk⟩
+  rcases s.strict with ⟨ps, hps⟩
+  rcases s.hole with ⟨holeN, hhole⟩
+  rcases s.mx with ⟨mxN, hmx⟩
+  let oS0 := o0 + 2
+  let oS1 := o1 + 1
+  have hmvFit : FitsLen (mv + powMove t.n t.benchlen * (t.n - 1)) :=
+    FitsLen.of_le hmvB (move_pow_room mv0 mv t.n t.benchlen holesLeft hk hmvLe)
+  have hslFit : FitsLen (sl + powSlide t.n * (t.n - 1)) :=
+    FitsLen.of_le hslB (slide_pow_room sl0 sl t.n holesLeft hk hslLe)
+  have hcFit : FitsLen (cPh + powCtrl * (t.n - 1)) :=
+    FitsLen.of_le hcB (by
+      simpa [base] using ctrl_pow_room base cPh t.n holesLeft hk hbase rfl)
+  have hop0Fit : FitsLen (oS0 + (t.n - 1)) :=
+    FitsLen.of_le s.opsRoom (by
+      simpa [oS0, Nat.add_assoc] using op_pow_room o0 t.n holesLeft hk)
+  have hop1Fit : FitsLen (oS1 + (t.n - 1)) :=
+    FitsLen.of_le s.ops1Room (by
+      simpa [oS1, Nat.add_assoc] using op1_pow_room o1 t.n holesLeft hk)
+  have hPow : PowAt bP t side acc (rootDigits t.n) := {
+    tier := by simp [bP, coldPhantom, s.tier]
+    shape := hsh
+    sat := sat
+    markerOn := by simp [bP, coldPhantom, s.markerOn]
+    benchOff := by simp [bP, coldPhantom, s.benchOff]
+    accLen := white_len t.n hOk.n_pos
+    rhsLen := side_len t.n t.k t.benchlen x
+    nPos := hOk.n_pos
+    accT := white_trits t.n hOk.n_pos
+    rhsT := side_trits t.n t.k t.benchlen x
+    upHome := by
+      simpa [bP, coldPhantom, powUp, acc] using
+        home_some b powUp (embed acc) s.szH (by decide)
+          (by intro h; simpa [powUp, acc] using s.upHome h)
+    upHeld := by
+      simpa [bP, coldPhantom, powUp] using
+        held_some b powUp true s.szD (by decide) (by intro h; simpa [powUp] using s.upHeld h)
+    botHome := by
+      simpa [bP, coldPhantom, powBottom, side, x] using
+        home_some b powBottom (embed side) s.szH (by decide)
+          (by intro h; simpa [powBottom, side, x] using s.botHome h)
+    botHeld := by
+      simpa [bP, coldPhantom, powBottom] using
+        held_some b powBottom true s.szD (by decide)
+          (by intro h; simpa [powBottom] using s.botHeld h)
+    gapHome := by
+      simpa [bP, coldPhantom, powGap, side, x] using
+        home_some b powGap (embed (fieldMul t.n t.k t.benchlen side side)) s.szH (by decide)
+          (by intro h; simpa [powGap, side, x] using s.gapHome h)
+    gapHeld := by
+      simpa [bP, coldPhantom, powGap] using
+        held_some b powGap true s.szD (by decide) (by intro h; simpa [powGap] using s.gapHeld h)
+    spareOff := by
+      simpa [bP, coldPhantom, powSpare] using
+        held_some b powSpare false s.szD (by decide)
+          (by intro h; simpa [powSpare] using s.spareOff h)
+    homeWide := by simp [bP, coldPhantom, powSpare, s.szH]
+    pack := ⟨mv, sl, cPh, 0, mxN, pk, ps, holeN, oS0, oS1,
+      by simpa [bP, coldPhantom] using hmv,
+      by simpa [bP, coldPhantom] using hsl,
+      by simp [bP, coldPhantom, ofNat_eq_natCast],
+      by simp [bP, coldPhantom],
+      by decide,
+      by simpa [bP, coldPhantom] using hmx,
+      by simpa [bP, coldPhantom, ofNat_eq_natCast] using hpk,
+      by simpa [bP, coldPhantom] using hps,
+      by simpa [bP, coldPhantom] using hhole,
+      by simpa [bP, coldPhantom] using s.opsSz,
+      by simpa [bP, coldPhantom, oS0] using slot_some b 0 oS0 s.opsSz (by decide) s.ops0,
+      by simpa [bP, coldPhantom, oS1] using slot_some b 1 oS1 s.opsSz (by decide) s.ops1,
+      by simpa [hlenD] using hmvFit,
+      by simpa [hlenD] using hslFit,
+      by simpa [hlenD] using hcFit,
+      by simpa [hlenD] using hop0Fit,
+      by simpa [hlenD] using hop1Fit⟩ }
+  have hPow2 : PowAt bP t side acc (2 :: tail) := by
+    rw [hred] at hPow
+    exact hPow
+  have hstep := pow_step_at bP t side acc 2 tail hPow2 (Or.inr (Or.inr rfl))
+  obtain ⟨b1, hrunP, hAt, hk1, hsp1⟩ := hstep
+  have hrun := digit_same b cPh hlift hself 2 powGap
+  have hrunB : powDigitRun b 2 powGap = .ok b1 := by
+    have hif : (if (2 : Nat) = 2 then powGap else powBottom) = powGap := by simp
+    rw [hrun]
+    simpa [hif] using hrunP
+  have hmem : ∀ e, e ∈ tail → e = 0 ∨ e = 1 ∨ e = 2 := by
+    intro e he
+    exact rootDigits_trit t.n e (List.mem_of_mem_tail he)
+  obtain ⟨b', hr, hEnd, hk2, hsp2⟩ :=
+    pow_fold b1 t side (powStep t.n t.k t.benchlen side acc 2) tail hAt hmem
+  have hdigits : tail.length + 1 = t.n - 1 := tail_len t.n tail hred hlenD
+  have hcount : CounterLe bP b' (powMove t.n t.benchlen * (t.n - 1))
+      (powSlide t.n * (t.n - 1)) (powCtrl * (t.n - 1)) (t.n - 1) := by
+    simpa [hdigits] using counterLe_pow t.n t.benchlen tail.length hsp1 hsp2
+  have hkeep : ∀ i, i ≠ powUp → i ≠ powSpare →
+      b'.sudo_5Board_4home[i]? = b.sudo_5Board_4home[i]? ∧
+      b'.sudo_5Board_4held[i]? = b.sudo_5Board_4held[i]? := by
+    intro i hu hs
+    obtain ⟨hhome1, hheld1⟩ := hk1 i hu hs
+    obtain ⟨hhome2, hheld2⟩ := hk2 i hu hs
+    exact ⟨hhome2.trans (hhome1.trans (by simp [bP, coldPhantom])),
+      hheld2.trans (hheld1.trans (by simp [bP, coldPhantom]))⟩
+  refine ⟨b', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [hred]
+    simp only [powRun, if_true, hrunB, ok_bind]
+    exact hr
+  · have hacc : tail.foldl (powStep t.n t.k t.benchlen side) (powStep t.n t.k t.benchlen side acc 2) =
+        rootY t.n t.k t.benchlen x := by
+      rw [← List.foldl_cons, ← hred, rootY_digits]
+    exact (hacc ▸ hEnd)
+  · exact (hkeep 0 (by decide) (by decide)).1.trans
+      (home_some b 0 (embed (rootStrip t.n)) s.szH (by decide)
+        (by intro h; simpa using s.axHome h))
+  · exact (hkeep 0 (by decide) (by decide)).2.trans
+      (held_some b 0 true s.szD (by decide) (by intro h; simpa using s.axHeld h))
+  · exact (hkeep 3 (by decide) (by decide)).1.trans
+      (home_some b 3 (embed x) s.szH (by decide) (by intro h; simpa [x] using s.baseHome h))
+  · exact (hkeep 3 (by decide) (by decide)).2.trans
+      (held_some b 3 true s.szD (by decide) (by intro h; simpa using s.baseHeld h))
+  · have hmvP : bP.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv := by
+      simpa [bP, coldPhantom] using hmv
+    obtain ⟨mv', hmv', hle⟩ := hcount.moves mv hmvP
+    exact ⟨mv', hmv', spend_add mv mv' _ _ hle hmvLe⟩
+  · have hslP : bP.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl := by
+      simpa [bP, coldPhantom] using hsl
+    obtain ⟨sl', hsl', hle⟩ := hcount.slides sl hslP
+    exact ⟨sl', hsl', spend_add sl sl' _ _ hle hslLe⟩
+  · have hcP : bP.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat cPh := by
+      simp [bP, coldPhantom, ofNat_eq_natCast]
+    obtain ⟨c', hc', hle⟩ := hcount.ctrl cPh hcP
+    exact ⟨c', hc', by
+      have hpad := ctrl_pad c' base (t.n - 1) (by
+        simpa [powCtrl, cPh, base] using hle)
+      simpa [base, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using hpad⟩
+  · have hopP : bP.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat oS0) := by
+      simpa [bP, coldPhantom, oS0] using slot_some b 0 oS0 s.opsSz (by decide) s.ops0
+    obtain ⟨cOp', hcOp', hle⟩ := hcount.ops0 oS0 hopP
+    exact ⟨cOp', hcOp', by simpa [oS0, Nat.add_assoc] using hle⟩
+
 end EcbsLink2.Link2

@@ -7,6 +7,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.OpenBoard
+import EcbsLink2.Link2.TailStay
 import EcbsLink2.Link2.WalkPrefix
 
 namespace EcbsLink2.Link2
@@ -61,6 +62,20 @@ theorem built_frame (t : Spec.Tier) : FrameAt (builtBoard t) t where
   htally := built_tally0 t
   ht0 := built_t0_eq t
   hrow := built_row_eq t
+
+/-- A step that keeps `FrameScalar`, and the painted row, keeps `FrameAt`. -/
+theorem frame_scalar (b0 b : Board) (t : Spec.Tier) (h : FrameAt b0 t)
+    (s : FrameScalar b0 b) (hrow : b.sudo_5Board_3row = b0.sudo_5Board_3row) :
+    FrameAt b t where
+  hlad := s.ladder.trans h.hlad
+  hl0 := s.l0.trans h.hl0
+  hnr := s.nr.trans h.hnr
+  hpark := s.park.trans h.hpark
+  hfrom := s.fromH.trans h.hfrom
+  hridx := s.ridx.trans h.hridx
+  htally := s.tlen.trans h.htally
+  ht0 := s.t0.trans h.ht0
+  hrow := hrow.trans h.hrow
 
 theorem frame_place (b : Board) (t : Spec.Tier) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)

@@ -227,7 +227,9 @@ theorem search_prepared (b : Ecbs.Board) (t : Spec.Tier)
         bC.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
           b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
         bC.sudo_5Board_4home[4]? = some (#[] : Array Int) ∧
-        bC.sudo_5Board_4held[4]? = some false := by
+        bC.sudo_5Board_4held[4]? = some false ∧
+        FrameScalar b bC ∧
+        bC.sudo_5Board_3row = b.sudo_5Board_3row := by
   obtain ⟨moves, slides, ctrl, mark, pk, ps, hole, c0, hmv, hsl, hc, hm, hpk, hps, hhole,
       hops0, hop0, hleft, hfitM, _hfitS, hfitC, _hfit0⟩ := h.pack
   have hG := some_idx _ _ _ h.gapHome
@@ -330,7 +332,13 @@ theorem search_prepared (b : Ecbs.Board) (t : Spec.Tier)
       by simp [bC, bF, bL],
       by simp [bC, bF, bL],
       hkeepH (j := 4) (by decide) h.buHome,
-      hkeepD (j := 4) (by decide) h.buOff⟩
+      hkeepD (j := 4) (by decide) h.buOff,
+      { ladder := by simp [bC, bF, bL], l0 := by simp [bC, bF, bL],
+        nr := by simp [bC, bF, bL], park := by simp [bC, bF, bL],
+        fromH := by simp [bC, bF, bL], ridx := by simp [bC, bF, bL],
+        tlen := by simp [bC, bF, bL], t0 := by simp [bC, bF, bL],
+        tmax := by simp [bC, bF, bL] },
+      by simp [bC, bF, bL]⟩
 
 private theorem search_room (n bench moves left pegG pegY : Nat)
     (hleft : 0 < left) (hg : pegG ≤ n) (hy : pegY ≤ n)
@@ -412,6 +420,8 @@ structure CheckKeep (b b0 : Ecbs.Board) (n : Nat) : Prop where
   peak : ∃ pk, b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
   strict : ∃ ps, b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps
   hole : ∃ holeN, b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN
+  frame : FrameScalar b0 b
+  row : b.sudo_5Board_3row = b0.sudo_5Board_3row
 
 /-- One hole. The compare bit is `rootHit`, and the board it reads is `HitAt`.
     `movesS` still covers clearing the five homes a miss drops. -/
@@ -433,7 +443,8 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
   obtain ⟨bC, moves, slides, pk, ps, hole, c0, movesC, hpre, hmv, hsl, hpk, hps, hhole, hop0,
       hflag, hoff, _hmark, hup, hupd, hbot, hbotd, _hgapH, hgapD, hax, haxd, hbx, hbxd, hsp,
       hmvC, hmovesC, htierC, hslC, hpkC, hpsC, hholeC, hopC, hwide, hspS, h7,
-      hleft, hfitM, hfitS, hfit0, hszHC, hszDC, hctrlStep, hopsBC, hmxBC, hbu, hbuD⟩ :=
+      hleft, hfitM, hfitS, hfit0, hszHC, hszDC, hctrlStep, hopsBC, hmxBC, hbu, hbuD,
+      hfrC, hrowC⟩ :=
     search_prepared b t x y side gapXs ax bx left h
   have hn0 : 0 < t.n := h.nPos
   have hnb : t.n ≤ t.benchlen := mul_span_n t.n t.benchlen hn0 h.sat.mul_span
@@ -911,7 +922,13 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
           simp [Array.getElem_set]
         peak := ⟨_, settle_peak_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul hpkN⟩
         strict := ⟨_, (settle_strict_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul).trans _hstM⟩
-        hole := ⟨_, (settle_hole_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul).trans _hholeM⟩ }
+        hole := ⟨_, (settle_hole_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul).trans _hholeM⟩
+        frame :=
+          FrameScalar.trans (FrameScalar.trans hfrC _hfrM)
+            (settle_frame bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul)
+        row := by
+          rw [settle_row_stay bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul]
+          exact _hrowM.trans hrowC }
   · exact ⟨moves, hmv, hspent⟩
 
 /-- One held home, emptied. Every other home and flag stays. -/

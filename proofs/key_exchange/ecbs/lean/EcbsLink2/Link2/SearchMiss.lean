@@ -42,6 +42,15 @@ structure Kept (b0 b : Ecbs.Board) : Prop where
     b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict
   hole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
     b0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole
+  ladder : b.sudo_5Board_6ladder = b0.sudo_5Board_6ladder
+  l0 : b.sudo_5Board_7ladder0 = b0.sudo_5Board_7ladder0
+  nr : b.sudo_5Board_6nrungs = b0.sudo_5Board_6nrungs
+  park : b.sudo_5Board_9park_hole = b0.sudo_5Board_9park_hole
+  fromH : b.sudo_5Board_11parked_from = b0.sudo_5Board_11parked_from
+  ridx : b.sudo_5Board_8rung_idx = b0.sudo_5Board_8rung_idx
+  tlen : b.sudo_5Board_9tally_len = b0.sudo_5Board_9tally_len
+  t0 : b.sudo_5Board_6tally0 = b0.sudo_5Board_6tally0
+  row : b.sudo_5Board_3row = b0.sudo_5Board_3row
 
 private theorem kept_trans {b0 b1 b2 : Ecbs.Board} (h1 : Kept b0 b1) (h2 : Kept b1 b2) :
     Kept b0 b2 where
@@ -58,6 +67,15 @@ private theorem kept_trans {b0 b1 b2 : Ecbs.Board} (h1 : Kept b0 b1) (h2 : Kept 
   peak := h2.peak.trans h1.peak
   strict := h2.strict.trans h1.strict
   hole := h2.hole.trans h1.hole
+  ladder := h2.ladder.trans h1.ladder
+  l0 := h2.l0.trans h1.l0
+  nr := h2.nr.trans h1.nr
+  park := h2.park.trans h1.park
+  fromH := h2.fromH.trans h1.fromH
+  ridx := h2.ridx.trans h1.ridx
+  tlen := h2.tlen.trans h1.tlen
+  t0 := h2.t0.trans h1.t0
+  row := h2.row.trans h1.row
 
 /-- One held home, emptied. The other fields stay. -/
 private theorem clear_one (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
@@ -101,7 +119,16 @@ private theorem clear_one (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves :
         mx := by simp [b']
         peak := by simp [b']
         strict := by simp [b']
-        hole := by simp [b'] }
+        hole := by simp [b']
+        ladder := by simp [b']
+        l0 := by simp [b']
+        nr := by simp [b']
+        park := by simp [b']
+        fromH := by simp [b']
+        ridx := by simp [b']
+        tlen := by simp [b']
+        t0 := by simp [b']
+        row := by simp [b'] }
   · simp [b']
   · simp only [b']
     rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hH)]

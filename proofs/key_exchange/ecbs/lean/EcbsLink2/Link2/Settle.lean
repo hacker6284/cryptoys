@@ -5,6 +5,7 @@
 -/
 import EcbsLink2.Link2.Place
 import EcbsLink2.Link2.Lists
+import EcbsLink2.Link2.TailStay
 
 namespace EcbsLink2.Link2
 
@@ -608,6 +609,31 @@ theorem settle_tally_eq (b : Ecbs.Board) (home : Nat)
   by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
   · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
   · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+
+theorem settle_row_stay (b : Ecbs.Board) (home : Nat)
+    (hin : HomeIn b home)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_3row =
+      b.sudo_5Board_3row := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+
+/-- Settle writes the home, the moves, the slides, and sometimes the peak.
+    The ladder, the park, and the tally stay. -/
+theorem settle_frame (b : Ecbs.Board) (home : Nat)
+    (hin : HomeIn b home)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    FrameScalar b (settleBoard b home hin.hH hin.hD xs n moves slides peak) := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+    exact
+      { ladder := rfl, l0 := rfl, nr := rfl, park := rfl, fromH := rfl, ridx := rfl
+        tlen := rfl, t0 := rfl, tmax := rfl }
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+    exact
+      { ladder := rfl, l0 := rfl, nr := rfl, park := rfl, fromH := rfl, ridx := rfl
+        tlen := rfl, t0 := rfl, tmax := rfl }
 
 theorem settle_ctrl_eq (b : Ecbs.Board) (home : Nat)
     (hin : HomeIn b home)

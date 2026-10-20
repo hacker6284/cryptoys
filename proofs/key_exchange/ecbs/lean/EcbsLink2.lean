@@ -149,6 +149,8 @@ import EcbsLink2.Link2.SearchGo
 import EcbsLink2.Link2.SearchCofactor
 import EcbsLink2.Link2.CofactorKeep
 import EcbsLink2.Link2.CofactorCube
+import EcbsLink2.Link2.BasisRun
+import EcbsLink2.Link2.CofactorRed
 import EcbsLink2.Link2.SearchCubeOn
 import EcbsLink2.Link2.RootHit
 import EcbsLink2.Link2.WalkKeyDemo

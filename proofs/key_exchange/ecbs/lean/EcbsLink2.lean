@@ -278,3 +278,4 @@ import EcbsLink2.Link2.CofactorTail
 import EcbsLink2.Link2.PointBack
 import EcbsLink2.Link2.FinishBranch
 import EcbsLink2.Link2.FinishMul
+import EcbsLink2.Link2.FinishAffine

@@ -535,6 +535,11 @@ structure TierWalk (t : Spec.Tier) : Prop where
   roomS : FitsLen ((t.cells + 1) * cellSlideCharge t)
   roomC : FitsLen ((t.cells + 1) * cellCtrlCharge t)
   roomO : FitsLen ((t.cells + 1) * cellOpsCharge t)
+  /-- Moves already on the board, plus one charge per cell of a fresh key. -/
+  seatM : ∀ mv, mv ≤ 4 * t.n →
+    FitsLen (mv + walkCharge t * (t.cells + 1))
+  /-- Control already at `tierR`, plus one charge per cell of a fresh key. -/
+  seatC : FitsLen (tierR t + cellCtrlCharge t * (t.cells + 1))
   /-- After Frobenius the marker sits at 1, so the chord's `mark + 3 < script` is `4 < script`. -/
   scriptRoom : 4 < t.script
 
@@ -542,25 +547,40 @@ theorem demo_tier_walk : TierWalk Spec.demo := by
   have s := demo_walk_span
   have r := demo_walk_room
   exact ⟨s.2.2.2.2.2.2.1, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
-    r.1, r.2.1, r.2.2.1, r.2.2.2, s.2.2.2.2.2.2.2⟩
+    r.1, r.2.1, r.2.2.1, r.2.2.2, demo_seat_move, demo_seat_ctrl, s.2.2.2.2.2.2.2⟩
 
 theorem toy_tier_walk : TierWalk Spec.toy := by
   have s := toy_walk_span
   have r := toy_walk_room
   exact ⟨s.2.2.2.2.2.2.1, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
-    r.1, r.2.1, r.2.2.1, r.2.2.2, s.2.2.2.2.2.2.2⟩
+    r.1, r.2.1, r.2.2.1, r.2.2.2, toy_seat_move, toy_seat_ctrl, s.2.2.2.2.2.2.2⟩
 
 theorem hobby_tier_walk : TierWalk Spec.hobby := by
   have s := hobby_walk_span
   have r := hobby_walk_room
   exact ⟨s.2.2.2.2.2.2.1, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
-    r.1, r.2.1, r.2.2.1, r.2.2.2, s.2.2.2.2.2.2.2⟩
+    r.1, r.2.1, r.2.2.1, r.2.2.2, hobby_seat_move, hobby_seat_ctrl, s.2.2.2.2.2.2.2⟩
 
 theorem serious_tier_walk : TierWalk Spec.serious := by
   have s := serious_walk_span
   have r := serious_walk_room
   exact ⟨s.2.2.2.2.2.2.1, s.1, s.2.1, s.2.2.1, s.2.2.2.1, s.2.2.2.2.1, s.2.2.2.2.2.1,
-    r.1, r.2.1, r.2.2.1, r.2.2.2, s.2.2.2.2.2.2.2⟩
+    r.1, r.2.1, r.2.2.1, r.2.2.2, serious_seat_move, serious_seat_ctrl, s.2.2.2.2.2.2.2⟩
+
+/-- The fresh key's counters at `cellsLeft = t.cells + 1`. Slides and ops start
+    at zero, control starts at `tierR`, and the moves are at most four homes. -/
+theorem fresh_seat_budget (t : Spec.Tier) (tw : TierWalk t) (mv sl ops ctrl : Nat)
+    (hmv : mv ≤ 4 * t.n) (hsl : sl = 0) (hops : ops = 0) (hctrl : ctrl = tierR t) :
+    FitsLen (mv + walkCharge t * (t.cells + 1)) ∧
+      FitsLen (sl + cellSlideCharge t * (t.cells + 1)) ∧
+      FitsLen (ops + cellOpsCharge t * (t.cells + 1)) ∧
+      FitsLen (ctrl + cellCtrlCharge t * (t.cells + 1)) := by
+  refine ⟨tw.seatM mv hmv, ?_, ?_, ?_⟩
+  · have hS : FitsLen ((t.cells + 1) * cellSlideCharge t) := tw.roomS
+    simpa [hsl, Nat.mul_comm] using hS
+  · have hO : FitsLen ((t.cells + 1) * cellOpsCharge t) := tw.roomO
+    simpa [hops, Nat.mul_comm] using hO
+  · simpa [hctrl] using tw.seatC
 
 theorem tier_frob_fits (t : Spec.Tier) (tw : TierWalk t)
     (done left moves slides ctrl ops peakS hole : Nat)

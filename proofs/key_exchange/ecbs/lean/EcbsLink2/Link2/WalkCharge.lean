@@ -268,4 +268,80 @@ theorem serious_walk_room :
   refine ⟨fits_le _ (by decide), fits_le _ (by decide), fits_le _ (by decide),
     fits_le _ (by decide)⟩
 
+theorem demo_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.demo.n) :
+    FitsLen (mv + walkCharge Spec.demo * (Spec.demo.cells + 1)) := by
+  have hcap : 4 * Spec.demo.n + walkCharge Spec.demo * (Spec.demo.cells + 1) ≤
+      9223372036854775807 := by
+    unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
+    rw [demo_tierR, demo_row]
+    simp [Spec.demo]
+    decide
+  exact fits_le _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+
+theorem demo_seat_ctrl :
+    FitsLen (tierR Spec.demo + cellCtrlCharge Spec.demo * (Spec.demo.cells + 1)) := by
+  have hcap : tierR Spec.demo + cellCtrlCharge Spec.demo * (Spec.demo.cells + 1) ≤
+      9223372036854775807 := by
+    unfold cellCtrlCharge
+    rw [demo_tierR, demo_row]
+    simp [Spec.demo]
+  exact fits_le _ hcap
+
+theorem toy_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.toy.n) :
+    FitsLen (mv + walkCharge Spec.toy * (Spec.toy.cells + 1)) := by
+  have hcap : 4 * Spec.toy.n + walkCharge Spec.toy * (Spec.toy.cells + 1) ≤
+      9223372036854775807 := by
+    unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
+    rw [toy_tierR, toy_row]
+    simp [Spec.toy]
+    decide
+  exact fits_le _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+
+theorem toy_seat_ctrl :
+    FitsLen (tierR Spec.toy + cellCtrlCharge Spec.toy * (Spec.toy.cells + 1)) := by
+  have hcap : tierR Spec.toy + cellCtrlCharge Spec.toy * (Spec.toy.cells + 1) ≤
+      9223372036854775807 := by
+    unfold cellCtrlCharge
+    rw [toy_tierR, toy_row]
+    simp [Spec.toy]
+  exact fits_le _ hcap
+
+theorem hobby_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.hobby.n) :
+    FitsLen (mv + walkCharge Spec.hobby * (Spec.hobby.cells + 1)) := by
+  have hcap : 4 * Spec.hobby.n + walkCharge Spec.hobby * (Spec.hobby.cells + 1) ≤
+      9223372036854775807 := by
+    unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
+    rw [hobby_tierR, hobby_row]
+    simp [Spec.hobby]
+    decide
+  exact fits_le _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+
+theorem hobby_seat_ctrl :
+    FitsLen (tierR Spec.hobby + cellCtrlCharge Spec.hobby * (Spec.hobby.cells + 1)) := by
+  have hcap : tierR Spec.hobby + cellCtrlCharge Spec.hobby * (Spec.hobby.cells + 1) ≤
+      9223372036854775807 := by
+    unfold cellCtrlCharge
+    rw [hobby_tierR, hobby_row]
+    simp [Spec.hobby]
+  exact fits_le _ hcap
+
+theorem serious_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.serious.n) :
+    FitsLen (mv + walkCharge Spec.serious * (Spec.serious.cells + 1)) := by
+  have hcap : 4 * Spec.serious.n + walkCharge Spec.serious * (Spec.serious.cells + 1) ≤
+      9223372036854775807 := by
+    unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
+    rw [serious_tierR, serious_row]
+    simp [Spec.serious]
+    decide
+  exact fits_le _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+
+theorem serious_seat_ctrl :
+    FitsLen (tierR Spec.serious + cellCtrlCharge Spec.serious * (Spec.serious.cells + 1)) := by
+  have hcap : tierR Spec.serious + cellCtrlCharge Spec.serious * (Spec.serious.cells + 1) ≤
+      9223372036854775807 := by
+    unfold cellCtrlCharge
+    rw [serious_tierR, serious_row]
+    simp [Spec.serious]
+  exact fits_le _ hcap
+
 end EcbsLink2.Link2

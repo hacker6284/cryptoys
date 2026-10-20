@@ -11,64 +11,284 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
-/-- Marker seated one step early, so `marker_lift` returns the copied board. -/
-private def early (b : Ecbs.Board) (t : Spec.Tier) : Ecbs.Board :=
+/-- Marker seated one step early, so `marker_lift` returns the copied board.
+    `prev` is the control counter before that step. -/
+private def early (b : Ecbs.Board) (prev : Nat) : Ecbs.Board :=
   { b with
     sudo_5Board_6marker := 0
     sudo_5Board_4cost := { b.sudo_5Board_4cost with
-      sudo_5Costs_4ctrl := Int.ofNat (tierR t - 1) } }
+      sudo_5Costs_4ctrl := Int.ofNat prev } }
 
-private theorem early_szH (b : Ecbs.Board) (t : Spec.Tier) (h : b.sudo_5Board_4home.size = 8) :
-    (early b t).sudo_5Board_4home.size = 8 := by
+private theorem early_szH (b : Ecbs.Board) (prev : Nat) (h : b.sudo_5Board_4home.size = 8) :
+    (early b prev).sudo_5Board_4home.size = 8 := by
   simpa [early] using h
 
-private theorem early_szD (b : Ecbs.Board) (t : Spec.Tier) (h : b.sudo_5Board_4held.size = 8) :
-    (early b t).sudo_5Board_4held.size = 8 := by
+private theorem early_szD (b : Ecbs.Board) (prev : Nat) (h : b.sudo_5Board_4held.size = 8) :
+    (early b prev).sudo_5Board_4held.size = 8 := by
   simpa [early] using h
 
-private theorem early_marker (b : Ecbs.Board) (t : Spec.Tier) :
-    (early b t).sudo_5Board_6marker = 0 := by
+private theorem early_marker (b : Ecbs.Board) (prev : Nat) :
+    (early b prev).sudo_5Board_6marker = 0 := by
   simp [early]
 
-private theorem early_ctrl (b : Ecbs.Board) (t : Spec.Tier) :
-    (early b t).sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t - 1) := by
+private theorem early_ctrl (b : Ecbs.Board) (prev : Nat) :
+    (early b prev).sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat prev := by
   simp [early]
 
-private theorem early_ops (b : Ecbs.Board) (t : Spec.Tier)
-    (h : b.sudo_5Board_4cost.sudo_5Costs_3ops = Array.mkArray 5 0) :
-    (early b t).sudo_5Board_4cost.sudo_5Costs_3ops = Array.mkArray 5 0 := by
-  simpa [early] using h
-
-private theorem slot_zero {a : Array Int} (h : a = Array.mkArray 5 0) {i : Nat}
-    (hi : i < a.size) : a[i] = 0 := by
-  subst h
-  simp [Array.getElem_mkArray]
-
-private theorem lift_early (b : Ecbs.Board) (t : Spec.Tier) (hOk : BoardOk t) (hR : 0 < tierR t)
+private theorem lift_early (b : Ecbs.Board) (ctrl0 : Nat) (hpos : 0 < ctrl0)
     (hmark : b.sudo_5Board_6marker = -1)
-    (hctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t)) :
-    Ecbs.marker_lift (early b t) = .ok b := by
-  have hm0 : (early b t).sudo_5Board_6marker = Int.ofNat 0 := early_marker b t
-  have hc0 : (early b t).sudo_5Board_4cost.sudo_5Costs_4ctrl =
-      Int.ofNat (tierR t - 1) := early_ctrl b t
-  have hfit : FitsLen ((tierR t - 1) + 1) := by
-    have he : (tierR t - 1) + 1 = tierR t := by omega
-    simpa [he] using tierR_fit t hOk
-  rw [marker_lift_refines (early b t) 0 (tierR t - 1) hm0 hc0 hfit]
-  have hsum : (tierR t - 1) + 1 = tierR t := by omega
+    (hctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl0 : Int))
+    (hfit : FitsLen ctrl0) :
+    Ecbs.marker_lift (early b (ctrl0 - 1)) = .ok b := by
+  have hm0 : (early b (ctrl0 - 1)).sudo_5Board_6marker = Int.ofNat 0 :=
+    early_marker b (ctrl0 - 1)
+  have hc0 : (early b (ctrl0 - 1)).sudo_5Board_4cost.sudo_5Costs_4ctrl =
+      Int.ofNat (ctrl0 - 1) := early_ctrl b (ctrl0 - 1)
+  have hfit1 : FitsLen ((ctrl0 - 1) + 1) := by
+    have he : (ctrl0 - 1) + 1 = ctrl0 := Nat.sub_add_cancel hpos
+    simpa [he] using hfit
+  rw [marker_lift_refines (early b (ctrl0 - 1)) 0 (ctrl0 - 1) hm0 hc0 hfit1]
+  have hsum : (ctrl0 - 1) + 1 = ctrl0 := Nat.sub_add_cancel hpos
   simp [early, hsum]
   rw [← hmark]
-  have hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = ↑(tierR t) := by
+  have hc : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = ↑ctrl0 := by
     simpa [ofNat_eq_natCast] using hctrl
   rw [← hc]
 
-private theorem small_fit (n : Nat) (hn : n ≤ 10) : FitsLen n := by
-  unfold FitsLen i64MaxNat
+private theorem room_one (a c k : Nat) (hk : 0 < k) (h : FitsLen (a + c * k)) :
+    FitsLen (a + c) := by
+  apply FitsLen.of_le h
+  have hc : c * 1 ≤ c * k := Nat.mul_le_mul_left c hk
+  simpa using hc
+
+private theorem cube_in_walk (t : Spec.Tier) :
+    cubeCharge t.n t.benchlen + 3 * t.n ≤ walkCharge t := by
+  unfold walkCharge cellMoveCharge cubeCharge pegCharge
   omega
 
-/-- Frobenius of a copied board. The control frame is `OutLay`, which `place_*`
-    carried off the board the copy started from. -/
+private theorem slide_in_cell (t : Spec.Tier) :
+    slideCharge t.n ≤ cellSlideCharge t := by
+  unfold slideCharge cellSlideCharge tailSlideCap
+  omega
+
+private theorem ctrl_in_cell (t : Spec.Tier) : 4 ≤ cellCtrlCharge t := by
+  unfold cellCtrlCharge
+  omega
+
+private theorem ops_in_cell (t : Spec.Tier) : 3 ≤ cellOpsCharge t := by
+  unfold cellOpsCharge
+  omega
+
+/-- Frobenius of a copied board. The rooms are the counters already on the
+    board plus `cellsLeft` chord charges. The fresh key passes
+    `cellsLeft = t.cells + 1`. -/
 theorem seat_out (t : Spec.Tier) (b : Ecbs.Board) (x y1 y4 : List Nat) (mv pk : Nat)
+    (lay : OutLay t b x y1 y4 mv pk)
+    (cellsLeft : Nat) (hOk : BoardOk t) (sat : TierSat t) (hsh : TierShape t)
+    (hx : x.length = t.n) (hy1 : y1.length = t.n)
+    (htriX : allTritList x) (htri1 : allTritList y1)
+    (hleft : 0 < cellsLeft) (hctrlPos : 0 < lay.ctrl0)
+    (hstrict7 : lay.strict0 ≤ 7) (hholeB : lay.hole0 ≤ t.benchlen)
+    (hM : FitsLen (mv + walkCharge t * cellsLeft))
+    (hS : FitsLen (lay.sl0 + cellSlideCharge t * cellsLeft))
+    (hO : FitsLen (lay.ops0 + cellOpsCharge t * cellsLeft))
+    (hC : FitsLen (lay.ctrl0 + cellCtrlCharge t * cellsLeft)) :
+    ∃ bF, ∃ fr' : RunFrame bF t x (fieldCube t.n t.k t.benchlen x),
+      Ecbs.marker_lift b = .ok b ∧
+      Ecbs.frobenius_affine b = .ok bF ∧
+      bF.sudo_5Board_9marker_on = true ∧
+      fr'.y1 = fieldCube t.n t.k t.benchlen y1 ∧
+      fr'.y4 = y4 ∧
+      fr'.mark = 1 ∧
+      fr'.ctrl = lay.ctrl0 - 1 + 4 ∧
+      fr'.peakS ≤ 7 ∧
+      fr'.hole ≤ t.benchlen ∧
+      fr'.moves ≤ mv + cubeCharge t.n t.benchlen ∧
+      fr'.slides ≤ lay.sl0 + slideCharge t.n ∧
+      fr'.opsCap = lay.ops0 + 3 ∧
+      fr'.flag1 = true ∧
+      fr'.flag4 = true := by
+  have hi2 : 2 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [lay.opsSz]; decide
+  have hi3 : 3 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+    rw [lay.opsSz]; decide
+  obtain ⟨c2, hc2, hle2⟩ := lay.opsBound 2 hi2
+  obtain ⟨c3, hc3, hle3⟩ := lay.opsBound 3 hi3
+  let prev := lay.ctrl0 - 1
+  let eb := early b prev
+  have hszH := early_szH b prev lay.szH
+  have hszD := early_szD b prev lay.szD
+  let fr : RunFrame eb t x x :=
+    { szH := hszH
+      szD := hszD
+      bench := by simpa [eb, early] using lay.bench
+      held5 := by simpa [eb, early] using lay.held5
+      held6 := by simpa [eb, early] using lay.held6
+      held2 := by simpa [eb, early] using lay.held2
+      held0 := by simpa [eb, early] using lay.held0
+      home0 := by simpa [eb, early] using lay.home0
+      held3 := by simpa [eb, early] using lay.held3
+      home3 := by simpa [eb, early] using lay.home3
+      y1 := y1
+      y4 := y4
+      flag1 := true
+      flag4 := true
+      home1 := by simpa [eb, early] using lay.home1
+      held1 := by simpa [eb, early] using lay.held1
+      home4 := by simpa [eb, early] using lay.home4
+      held4 := by simpa [eb, early] using lay.held4
+      mark := 0
+      mx := lay.mx0
+      hmark := early_marker b prev
+      hmx := by simpa [eb, early, ofNat_eq_natCast] using lay.mx
+      lenX := hx
+      lenA := hx
+      triX := htriX
+      triA := htriX
+      tier := by simpa [eb, early] using lay.tier
+      moves := mv
+      slides := lay.sl0
+      peak := pk
+      ctrl := prev
+      high := lay.high0
+      cOps := c2
+      chordOps := c3
+      opsCap := lay.ops0 + 1
+      peakS := lay.strict0
+      hole := lay.hole0
+      hmoves := by simpa [eb, early] using lay.moves
+      hslides := by simpa [eb, early, ofNat_eq_natCast] using lay.slides
+      hpeak := by simpa [eb, early] using lay.peak
+      hctrl := early_ctrl b prev
+      hhigh := by simpa [eb, early, ofNat_eq_natCast] using lay.high
+      tmax := lay.tmax0
+      htally := by simpa [eb, early] using lay.tally
+      ht0 := by simpa [eb, early] using lay.t0
+      hrow := by simpa [eb, early] using lay.row
+      htmax := by simpa [eb, early, ofNat_eq_natCast] using lay.tmax
+      hStart := lay.hStart
+      hlad := by simpa [eb, early] using lay.ladder
+      hl0 := by simpa [eb, early] using lay.l0
+      hnr := by simpa [eb, early] using lay.nr
+      hpark := by simpa [eb, early] using lay.park
+      hfrom := by simpa [eb, early] using lay.parked
+      hridx := by simpa [eb, early] using lay.ridx
+      hstrict := by simpa [eb, early, ofNat_eq_natCast] using lay.strict
+      hhole := by simpa [eb, early, ofNat_eq_natCast] using lay.hole
+      ops2 := by
+        have hsz : (eb).sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+          simpa [eb, early] using lay.opsSz
+        rw [hsz]; decide
+      ops3 := by
+        have hsz : (eb).sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
+          simpa [eb, early] using lay.opsSz
+        rw [hsz]; decide
+      hop2 := by simpa [eb, early] using hc2
+      hop3 := by simpa [eb, early] using hc3
+      fitInv := by
+        have h1 := room_one lay.ops0 (cellOpsCharge t) cellsLeft hleft hO
+        apply FitsLen.of_le h1
+        have hle : c2 + 1 ≤ lay.ops0 + cellOpsCharge t := by
+          have h3 := ops_in_cell t
+          omega
+        omega
+      fitChord := by
+        have h1 := room_one lay.ops0 (cellOpsCharge t) cellsLeft hleft hO
+        apply FitsLen.of_le h1
+        have h3 := ops_in_cell t
+        omega
+      fitCtrl := by
+        have h1 := room_one lay.ctrl0 (cellCtrlCharge t) cellsLeft hleft hC
+        apply FitsLen.of_le h1
+        have he : prev + 1 = lay.ctrl0 := Nat.sub_add_cancel hctrlPos
+        have h4 := ctrl_in_cell t
+        omega
+      fitRoom := by
+        have h1 := room_one mv (walkCharge t) cellsLeft hleft hM
+        apply FitsLen.of_le h1
+        have hwalk : 3 * t.n ≤ walkCharge t := by
+          unfold walkCharge cellMoveCharge
+          omega
+        omega
+      opsRoom := by
+        intro i hi
+        have hiB : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+          simpa [eb, early] using hi
+        obtain ⟨c, hc, hle⟩ := lay.opsBound i hiB
+        refine ⟨c, by simpa [eb, early] using hc, ?_⟩
+        by_cases h2 : i = 2
+        · simp [h2]
+          omega
+        · by_cases h3 : i = 3
+          · simp [h2, h3]
+            omega
+          · simp [h2, h3]
+            omega }
+  have hMove : FitsLen (fr.moves + cubeCharge t.n t.benchlen + 3 * t.n) := by
+    have h1 := room_one mv (walkCharge t) cellsLeft hleft hM
+    apply FitsLen.of_le h1
+    rw [show fr.moves = mv from rfl]
+    have hcu := cube_in_walk t
+    omega
+  have hSlide : FitsLen (fr.slides + slideCharge t.n) := by
+    have h1 := room_one lay.sl0 (cellSlideCharge t) cellsLeft hleft hS
+    apply FitsLen.of_le h1
+    rw [show fr.slides = lay.sl0 from rfl]
+    have hslC := slide_in_cell t
+    omega
+  have hCtrl : FitsLen (fr.ctrl + 5) := by
+    have h1 := room_one lay.ctrl0 (cellCtrlCharge t) cellsLeft hleft hC
+    apply FitsLen.of_le h1
+    rw [show fr.ctrl = prev from rfl]
+    have he : prev + 5 = lay.ctrl0 + 4 := by
+      have hsub : prev + 1 = lay.ctrl0 := Nat.sub_add_cancel hctrlPos
+      omega
+    have h4 := ctrl_in_cell t
+    omega
+  have hOps : FitsLen (fr.opsCap + 2) := by
+    have h1 := room_one lay.ops0 (cellOpsCharge t) cellsLeft hleft hO
+    apply FitsLen.of_le h1
+    rw [show fr.opsCap = lay.ops0 + 1 from rfl]
+    have hop := ops_in_cell t
+    omega
+  obtain ⟨bL, bF, fr', hml, hfrob, hmk, hy1c, hy4c, hf1, hf4, hctrl, hmark,
+      _cOps, _chord, hmv, hsl, hops, hheld, ⟨occU, hocc, hpeak⟩, hhole, htopX, htopY⟩ :=
+    cell_run_frame eb t x x y4 y1 fr hOk sat hsh
+      (by simpa [eb, early] using lay.flag) rfl rfl rfl rfl hy1 htri1
+      hMove hSlide hCtrl hOps
+  have hfit0 : FitsLen lay.ctrl0 := by
+    have h1 := room_one lay.ctrl0 (cellCtrlCharge t) cellsLeft hleft hC
+    apply FitsLen.of_le h1
+    have h4 := ctrl_in_cell t
+    omega
+  have hlift := lift_early b lay.ctrl0 hctrlPos lay.marker lay.ctrl hfit0
+  have hbL : bL = b := Except.ok.inj (hml.symm.trans hlift)
+  have hst : fr'.peakS ≤ 7 := by
+    rw [hpeak]
+    exact strict_out_le fr.peakS (countHeld eb.sudo_5Board_4held 7) occU
+      hstrict7 (held_seven _) hocc
+  have hho : fr'.hole ≤ t.benchlen := by
+    rw [hhole]
+    exact hole_out_le fr.hole (topIdx (combStrip t.n t.benchlen x))
+      (topIdx (combStrip t.n t.benchlen y1)) t.benchlen hholeB htopX htopY
+  refine ⟨bF, fr', marker_lift_down b lay.marker, ?_, hmk, hy1c, hy4c, hmark, ?_,
+    hst, hho, ?_, ?_, ?_, hf1, hf4⟩
+  · rw [← hbL]
+    exact hfrob
+  · rw [hctrl, show fr.ctrl = prev from rfl]
+  · have hpre : fr.moves = mv := rfl
+    rw [hpre] at hmv
+    exact hmv
+  · have hpre : fr.slides = lay.sl0 := rfl
+    rw [hpre] at hsl
+    exact hsl
+  · have hpre : fr.opsCap = lay.ops0 + 1 := rfl
+    rw [hpre] at hops
+    omega
+
+/-- The fresh key: counters at zero except control `tierR`, and one charge per
+    cell of the key plus the opening cell. -/
+theorem seat_out_fresh (t : Spec.Tier) (b : Ecbs.Board) (x y1 y4 : List Nat) (mv pk : Nat)
     (lay : OutLay t b x y1 y4 mv pk)
     (tw : TierWalk t) (hOk : BoardOk t) (sat : TierSat t) (hsh : TierShape t)
     (hR : 0 < tierR t)
@@ -93,171 +313,20 @@ theorem seat_out (t : Spec.Tier) (b : Ecbs.Board) (x y1 y4 : List Nat) (mv pk : 
       fr'.opsCap = 3 ∧
       fr'.flag1 = true ∧
       fr'.flag4 = true := by
-  rcases hfresh with ⟨hsl0, hops0, hstrict0, hhole0, hmx0, htmax0, hctrl0, hhigh0⟩
-  let eb := early b t
-  have hszH := early_szH b t lay.szH
-  have hszD := early_szD b t lay.szD
-  let fr : RunFrame eb t x x :=
-    { szH := hszH
-      szD := hszD
-      bench := by simpa [eb, early] using lay.bench
-      held5 := by simpa [eb, early] using lay.held5
-      held6 := by simpa [eb, early] using lay.held6
-      held2 := by simpa [eb, early] using lay.held2
-      held0 := by simpa [eb, early] using lay.held0
-      home0 := by simpa [eb, early] using lay.home0
-      held3 := by simpa [eb, early] using lay.held3
-      home3 := by simpa [eb, early] using lay.home3
-      y1 := y1
-      y4 := y4
-      flag1 := true
-      flag4 := true
-      home1 := by simpa [eb, early] using lay.home1
-      held1 := by simpa [eb, early] using lay.held1
-      home4 := by simpa [eb, early] using lay.home4
-      held4 := by simpa [eb, early] using lay.held4
-      mark := 0
-      mx := 0
-      hmark := early_marker b t
-      hmx := by simpa [eb, early, hmx0, ofNat_eq_natCast] using lay.mx
-      lenX := hx
-      lenA := hx
-      triX := htriX
-      triA := htriX
-      tier := by simpa [eb, early] using lay.tier
-      moves := mv
-      slides := 0
-      peak := pk
-      ctrl := tierR t - 1
-      high := t.script + tierR t + 1
-      cOps := 0
-      chordOps := 0
-      opsCap := 1
-      peakS := 0
-      hole := 0
-      hmoves := by simpa [eb, early] using lay.moves
-      hslides := by simpa [eb, early, hsl0, ofNat_eq_natCast] using lay.slides
-      hpeak := by simpa [eb, early] using lay.peak
-      hctrl := early_ctrl b t
-      hhigh := by simpa [eb, early, hhigh0, ofNat_eq_natCast] using lay.high
-      tmax := 0
-      htally := by simpa [eb, early] using lay.tally
-      ht0 := by simpa [eb, early] using lay.t0
-      hrow := by simpa [eb, early] using lay.row
-      htmax := by simpa [eb, early, htmax0, ofNat_eq_natCast] using lay.tmax
-      hStart := Or.inl ⟨built_high_lt t, rfl⟩
-      hlad := by simpa [eb, early] using lay.ladder
-      hl0 := by simpa [eb, early] using lay.l0
-      hnr := by simpa [eb, early] using lay.nr
-      hpark := by simpa [eb, early] using lay.park
-      hfrom := by simpa [eb, early] using lay.parked
-      hridx := by simpa [eb, early] using lay.ridx
-      hstrict := by simpa [eb, early, hstrict0, ofNat_eq_natCast] using lay.strict
-      hhole := by simpa [eb, early, hhole0, ofNat_eq_natCast] using lay.hole
-      ops2 := by
-        have hsz : (eb).sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
-          simpa [eb, early] using lay.opsSz
-        rw [hsz]; decide
-      ops3 := by
-        have hsz : (eb).sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
-          simpa [eb, early] using lay.opsSz
-        rw [hsz]; decide
-      hop2 := by
-        have hi : 2 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-          rw [lay.opsSz]; decide
-        obtain ⟨c, hc, hle⟩ := lay.opsBound 2 hi
-        have hc0 : c = 0 := by rw [hops0] at hle; omega
-        simpa [eb, early, hc0] using hc
-      hop3 := by
-        have hi : 3 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-          rw [lay.opsSz]; decide
-        obtain ⟨c, hc, hle⟩ := lay.opsBound 3 hi
-        have hc0 : c = 0 := by rw [hops0] at hle; omega
-        simpa [eb, early, hc0] using hc
-      fitInv := small_fit 1 (by decide)
-      fitChord := small_fit 1 (by decide)
-      fitCtrl := by
-        have he : (tierR t - 1) + 1 = tierR t := by omega
-        simpa [he] using tierR_fit t hOk
-      fitRoom := by
-        apply FitsLen.of_le tw.roomM
-        have hone : 1 ≤ t.cells + 1 := by omega
-        have hwalk : 7 * t.n ≤ walkCharge t := by
-          unfold walkCharge cellMoveCharge
-          omega
-        have hmul : walkCharge t ≤ (t.cells + 1) * walkCharge t :=
-          Nat.le_mul_of_pos_left (walkCharge t) hone
-        omega
-      opsRoom := by
-        intro i hi
-        have hiB : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
-          simpa [eb, early] using hi
-        obtain ⟨c, hc, hle⟩ := lay.opsBound i hiB
-        have hc0 : c = 0 := by rw [hops0] at hle; omega
-        refine ⟨0, by simpa [eb, early, hc0] using hc, ?_⟩
-        by_cases h2 : i = 2
-        · simp [h2]
-        · by_cases h3 : i = 3
-          · simp [h2, h3]
-          · simp [h2, h3] }
-  have hgeom : ∀ m, m ≤ 15 * t.n + 6 * t.benchlen → FitsLen m := by
-    intro m hm
-    apply geomFit t.n t.benchlen m hsh.n_small hsh.small.2.2.2
+  rcases hfresh with ⟨hsl, hopsZ, hstrict, hhole, _, _, hctrlZ, _⟩
+  obtain ⟨hM, hS, hO, hC⟩ :=
+    fresh_seat_budget t tw mv lay.sl0 lay.ops0 lay.ctrl0 hmvN hsl hopsZ hctrlZ
+  obtain ⟨bF, fr', hml, hfrob, hmk, hy1c, hy4c, hmark, hctrlS, hst, hho, hmv, hslS, hopsS,
+      hf1, hf4⟩ :=
+    seat_out t b x y1 y4 mv pk lay (t.cells + 1) hOk sat hsh hx hy1 htriX htri1
+      (by omega) (by rw [hctrlZ]; exact hR) (by rw [hstrict]; decide)
+      (by rw [hhole]; exact Nat.zero_le _) hM hS hO hC
+  refine ⟨bF, fr', hml, hfrob, hmk, hy1c, hy4c, hmark, ?_, hst, hho, hmv, ?_, ?_, hf1, hf4⟩
+  · rw [hctrlS, hctrlZ]
+  · rw [hsl] at hslS
+    simpa [slideCharge] using hslS
+  · rw [hopsZ] at hopsS
     omega
-  have hMove : FitsLen (fr.moves + cubeCharge t.n t.benchlen + 3 * t.n) := by
-    apply hgeom
-    rw [show fr.moves = mv from rfl]
-    unfold cubeCharge
-    omega
-  have hSlide : FitsLen (fr.slides + slideCharge t.n) := by
-    apply hgeom
-    rw [show fr.slides = 0 from rfl, slideCharge, Nat.zero_add]
-    omega
-  have hCtrl : FitsLen (fr.ctrl + 5) := by
-    apply hgeom
-    rw [show fr.ctrl = tierR t - 1 from rfl]
-    have hlen := rungList_length_le (t.n - 1)
-    have hle : tierR t ≤ t.n := by
-      unfold tierR
-      exact Nat.le_trans hlen (Nat.sub_le _ _)
-    omega
-  have hOps : FitsLen (fr.opsCap + 2) := by
-    apply FitsLen.of_le tw.roomO
-    have ho : fr.opsCap = 1 := rfl
-    rw [ho]
-    exact Nat.le_trans (by decide) tw.sevenLe
-  obtain ⟨bL, bF, fr', hml, hfrob, hmk, hy1c, hy4c, hf1, hf4, hctrl, hmark,
-      _cOps, _chord, hmv, hsl, hops, hheld, ⟨occU, hocc, hpeak⟩, hhole, htopX, htopY⟩ :=
-    cell_run_frame eb t x x y4 y1 fr hOk sat hsh
-      (by simpa [eb, early] using lay.flag) rfl rfl rfl rfl hy1 htri1
-      hMove hSlide hCtrl hOps
-  have hctrlI : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t) := by
-    simpa [hctrl0, ofNat_eq_natCast] using lay.ctrl
-  have hlift := lift_early b t hOk hR lay.marker hctrlI
-  have hbL : bL = b := Except.ok.inj (hml.symm.trans hlift)
-  have hst : fr'.peakS ≤ 7 := by
-    rw [hpeak]
-    exact strict_out_le fr.peakS (countHeld eb.sudo_5Board_4held 7) occU
-      (by rw [show fr.peakS = 0 from rfl]; decide) hheld hocc
-  have hho : fr'.hole ≤ t.benchlen := by
-    rw [hhole]
-    exact hole_out_le fr.hole (topIdx (combStrip t.n t.benchlen x))
-      (topIdx (combStrip t.n t.benchlen y1)) t.benchlen
-      (by rw [show fr.hole = 0 from rfl]; exact Nat.zero_le _) htopX htopY
-  refine ⟨bF, fr', marker_lift_down b lay.marker, ?_, hmk, hy1c, hy4c, hmark, ?_,
-    hst, hho, ?_, ?_, ?_, hf1, hf4⟩
-  · rw [← hbL]
-    exact hfrob
-  · rw [hctrl, show fr.ctrl = tierR t - 1 from rfl]
-  · have hpre : fr.moves = mv := rfl
-    rw [hpre] at hmv
-    exact hmv
-  · have hpre : fr.slides = 0 := rfl
-    rw [hpre, slideCharge, Nat.zero_add] at hsl
-    exact hsl
-  · have hpre : fr.opsCap = 1 := rfl
-    rw [hpre] at hops
-    exact hops
 
 /-- The white copy of a board that already has `InLay`, then the seat. -/
 theorem seat_copy_white (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk : Nat)
@@ -289,7 +358,7 @@ theorem seat_copy_white (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk
       hmx0.trans hmx, htmax0.trans htmax, hctrl0.trans hctrlZ, hhigh0.trans hhigh⟩
   obtain ⟨bF, fr', _hlift, hfrob, hmk, hy1, hy4, _hmark, hctrlS, hst, hho, hmv, hsl, hops,
       hf1, hf4⟩ :=
-    seat_out t b2 x y y (mv + pegCount x + pegCount y) _pk2 out tw hOk sat hsh hR
+    seat_out_fresh t b2 x y y (mv + pegCount x + pegCount y) _pk2 out tw hOk sat hsh hR
       hx hy htriX htriY hmvN hcells hfreshOut
   refine ⟨b2, bF, fr', hcopy, hfrob, fr', hmk, hy4, hy1, hf4, hf1, hst, hho, ?_, ?_, ?_, ?_,
     hy, htriY, fieldCube_length t.n t.k t.benchlen y tw.nLe, ?_⟩
@@ -547,7 +616,7 @@ theorem seat_base_chord (t : Spec.Tier) (x y : List Nat) (c done left fuel : Nat
   obtain ⟨b2, pk2, out, hcopy, hfresh⟩ := base_copy_ready t x y hsh hR hx hy
   obtain ⟨bF, fr, _hlift, hfrob, hmk, hy1, hy4, hmark, hctrl, hst, hho, hmv, hsl, hops,
       hf1, hf4⟩ :=
-    seat_out t b2 x y y (pegCount x + pegCount y + pegCount x + pegCount y) pk2 out
+    seat_out_fresh t b2 x y y (pegCount x + pegCount y + pegCount x + pegCount y) pk2 out
       tw hOk sat hsh hR hx hy htriX htriY (by omega) hcells hfresh
   obtain ⟨b', x3, y3, hdemo, hwalk, hAt⟩ :=
     seat_cell_chord t bF x y y c done left fuel inv fr tw hOk sat hR hsh
@@ -580,7 +649,7 @@ theorem seat_base_last (t : Spec.Tier) (x y : List Nat) (c done left : Nat)
   obtain ⟨b2, pk2, out, hcopy, hfresh⟩ := base_copy_ready t x y hsh hR hx hy
   obtain ⟨bF, fr, _hlift, hfrob, hmk, hy1, hy4, hmark, hctrl, hst, hho, hmv, hsl, hops,
       hf1, hf4⟩ :=
-    seat_out t b2 x y y (pegCount x + pegCount y + pegCount x + pegCount y) pk2 out
+    seat_out_fresh t b2 x y y (pegCount x + pegCount y + pegCount x + pegCount y) pk2 out
       tw hOk sat hsh hR hx hy htriX htriY (by omega) hcells hfresh
   obtain ⟨b', x3, y3, hdemo, hwalk, hx0, hy0, _hlift⟩ :=
     seat_cell_last t bF x y y c done left inv fr tw hOk sat hR hsh

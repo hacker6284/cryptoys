@@ -357,7 +357,7 @@ theorem land_seat (t : Spec.Tier) (b2 : Ecbs.Board)
   have hfitk := step_fit t tw k (by omega)
   obtain ⟨bF, fr, hml, hfrob, hmk, hy1, hy4, hmark, hctrl, hst, hho, hmv, hsl, hops,
       hf1, hf4⟩ :=
-    seat_out t b2 x up y mv pk out tw hOk sat hsh hR hx hup htriX htriUp hmvN
+    seat_out_fresh t b2 x up y mv pk out tw hOk sat hsh hR hx hup htriX htriUp hmvN
       (by omega : 0 < t.cells) hfresh
   by_cases hzero : cells[k]'hiK = 0
   · have hwalk := walkStep_cube t.n t.k t.benchlen (x, y) (x, up)
@@ -464,7 +464,7 @@ theorem suffix_is_fail (t : Spec.Tier) (b2 : Ecbs.Board)
       exact hcAt
     obtain ⟨bF, fr, hml, hfrob, _hmk, _hy1, _hy4, _hmark, hctrl, _hst, hho, hmv, hsl, hops,
         _hf1, _hf4⟩ :=
-      seat_out t b2 x up y mv pk out tw hOk sat hsh hR hx hup htriX htriUp hmvN
+      seat_out_fresh t b2 x up y mv pk out tw hOk sat hsh hR hx hup htriX htriUp hmvN
         (by omega : 0 < t.cells) hfresh
     have hmvP : fr.moves ≤ pegCount x + pegCount y + pegCount x + pegCount y +
         cubeCharge t.n t.benchlen := by

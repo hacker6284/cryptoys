@@ -328,7 +328,7 @@ private theorem seat_suffix (t : Spec.Tier) (b2 : Ecbs.Board)
   have hfitk := step_fit t tw k (by omega)
   obtain ⟨bF, fr, hml, hfrob, hmk, hy1, hy4, hmark, hctrl, hst, hho, hmv, hsl, hops,
       hf1, hf4⟩ :=
-    seat_out t b2 x up y mv pk out tw hOk sat hsh hR hx hup htriX htriUp hmvN
+    seat_out_fresh t b2 x up y mv pk out tw hOk sat hsh hR hx hup htriX htriUp hmvN
       (by omega : 0 < t.cells) hfresh
   have hc2all := walkRun_cells_le t.n t.k t.benchlen (x, y) false acc cells
     (true, (px, py)) h

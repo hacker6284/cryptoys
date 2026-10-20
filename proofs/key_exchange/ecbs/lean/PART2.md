@@ -836,9 +836,10 @@ The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `mak
 
 ## Scope that stays in the PR body
 
-- The root strip is `rootDigits` with the last hole empty (`root_strip_loop`).
+- The root strip is `rootDigits` with the last hole empty (`root_strip_loop`). The root digits fold to `rootY` (`pow_root`).
 - Once `x³` and `x²` are seated, `curve_side_close` writes `curveSide`. Settling the cube bench writes the cube into the home (`cube_bench_settles`). The hit compare is `rootHit` (`root_hit_cmp`).
-- `base_point_of_spec` still takes the seated-homes premise. The square multiply, the power loop, and the search loop are not yet tied to those lemmas.
+- One search hole is `SearchAt`: lift, flag off, clear the gap, square the up into it, settle, then `root_hit_cmp`. `search_step_at` is the hit (`HitAt`) and the miss (`MissAt`, five clears). `search_hole` is that branch on `basisPeg`, matched to `searchRoot_hit` and `searchRoot_miss`. `searchRoot_first` is the first hit. `searchRoot_misses` is `none`, and `search_refuse` is assert 963. `basePoint_of_root` and `basePoint_none` are the spec. `search_of_pow` is the board `pow_root` leaves, read as `SearchAt`. `search_plant` writes `basisPeg` into base-across on `new_board`.
+- `base_point_of_spec` still takes the seated-homes premise. The planted peg is not yet `curve_side`, the gap square, `white0`, the strip, and the power, so the emitted search loop is not yet `searchRoot` on the card. The cofactor walk and the other six exports are still open. `RunNonUnit` is still the open cell.
 - Demo `walk_key` is `walk_chord` after the two base puts (`walk_key_demo_chord`). `WalkKeyNonUnit` is the open cell on Toy, Hobby, and Serious. The point equality, the counters, and the other six exports are still open.
 - Success-branch reachability is not proved for Toy, Hobby, or Serious.
 - SPEC.md gives the Hobby and Serious base points only as hashes.

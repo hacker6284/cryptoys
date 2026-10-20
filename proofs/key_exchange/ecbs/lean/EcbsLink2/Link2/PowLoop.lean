@@ -154,6 +154,7 @@ structure PowAt (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : List
     some (embed (fieldMul t.n t.k t.benchlen rhs rhs))
   gapHeld : b.sudo_5Board_4held[powGap]? = some true
   spareOff : b.sudo_5Board_4held[powSpare]? = some false
+  homeWide : powSpare < b.sudo_5Board_4home.size
   pack :
     ∃ (moves slides ctrl mark mx pk ps hole c0 c1 : Nat),
       b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves ∧
@@ -199,6 +200,26 @@ private theorem some_get {α : Type} (a : Array α) (i : Nat) (v : α)
   rw [Array.getElem?_eq_getElem (some_idx a i v h)] at h
   injection h
 
+/-- Two arrays that agree off one index, and both store something there, have one length. -/
+private theorem size_of_slot {α : Type} (a b : Array α) (i : Nat) (v w : α)
+    (ha : a[i]? = some v) (hb : b[i]? = some w)
+    (hk : ∀ j, j ≠ i → a[j]? = b[j]?) : a.size = b.size := by
+  have hai : i < a.size := some_idx a i v ha
+  have hbi : i < b.size := some_idx b i w hb
+  have hle : a.size ≤ b.size := by
+    have hnone : a[b.size]? = none := by
+      rw [hk b.size (by omega : b.size ≠ i)]
+      rw [Array.getElem?_eq_none_iff]
+      exact Nat.le_refl _
+    exact Array.getElem?_eq_none_iff.mp hnone
+  have hge : b.size ≤ a.size := by
+    have hnone : b[a.size]? = none := by
+      rw [← hk a.size (by omega : a.size ≠ i)]
+      rw [Array.getElem?_eq_none_iff]
+      exact Nat.le_refl _
+    exact Array.getElem?_eq_none_iff.mp hnone
+  omega
+
 /-- A new counter that still fits inside `moves + per` keeps a `FitsLen`,
     and so does that counter plus `per` for every digit still waiting. -/
 theorem room_abs (moves new per k : Nat)
@@ -211,6 +232,12 @@ theorem room_abs (moves new per k : Nat)
   · have hmul : per * (k + 1) = per + per * k := by
       rw [Nat.mul_succ, Nat.add_comm]
     omega
+
+theorem fit_le_move (moves n bench k new : Nat)
+    (h : FitsLen (moves + powMove n bench * (k + 1)))
+    (hs : new ≤ moves + powMove n bench) :
+    FitsLen new :=
+  (room_abs moves new (powMove n bench) k h hs).1
 
 theorem fit_of_pow (moves n bench k bound : Nat)
     (h : FitsLen (moves + powMove n bench * (k + 1)))
@@ -375,6 +402,11 @@ theorem pow_zero_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : 
         spareOff := by
           have hs := hheldK powSpare (by decide)
           simpa [powSpare] using hs.trans h.spareOff
+        homeWide := by
+          have hszHome := size_of_slot bS.sudo_5Board_4home b.sudo_5Board_4home powUp
+              (embed (powStep t.n t.k t.benchlen rhs acc 0)) (embed acc) hhome h.upHome hhomeK
+          rw [hszHome]
+          exact h.homeWide
         pack := ?_ }
     rcases hpkS with ⟨pk', hpk'⟩
     rcases hpsS with ⟨ps', hps'⟩
@@ -389,5 +421,361 @@ theorem pow_zero_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : 
     · exact (room_ctrl ctrl 2 ds.length hcR (by unfold powCtrl; decide)).2
     · exact room_ops_keep c0 ds.length (by simpa [hlen] using hfit0)
     · exact (room_ops c1 ds.length (by simpa [hlen] using hfit1)).2
+
+/-- Moves one live root digit adds: the cube, the copy, the schoolbook, and the settles. -/
+def liveMove (n k bench moves : Nat) (acc factor : List Nat) : Nat :=
+  cubeMoves moves acc n k bench + pegCount factor +
+    2 * pegCount (fieldCube n k bench acc) +
+    schoolMoves (fieldCube n k bench acc) factor n n +
+    foldCharge n (n - k) (school n (fieldCube n k bench acc) factor
+      (List.replicate bench 0) false) +
+    pegCount (fieldCube n k bench acc) +
+    2 * pegCount (fieldMul n k bench (fieldCube n k bench acc) factor)
+
+/-- Slides one live root digit adds: the cube settle and the product settle. -/
+def liveSlide (n k bench : Nat) (acc factor : List Nat) : Nat :=
+  2 * pegCount (fieldCube n k bench acc) +
+    2 * pegCount (fieldMul n k bench (fieldCube n k bench acc) factor)
+
+theorem pow_ge_span2 (n bench : Nat) : 2 * (n - 1) ≤ powMove n bench := by
+  unfold powMove
+  omega
+
+theorem prod_peg_le (n k bench : Nat) (cube factor : List Nat) (hn : n ≤ bench) :
+    pegCount (fieldMul n k bench cube factor) ≤ n := by
+  have hlen := fieldMul_length n k bench cube factor hn
+  exact Nat.le_trans (pegCount_le _) (Nat.le_of_eq hlen)
+
+private theorem fac_peg_le (n : Nat) (factor : List Nat) (hf : factor.length = n) :
+    pegCount factor ≤ n :=
+  Nat.le_trans (pegCount_le _) (Nat.le_of_eq hf)
+
+theorem live_copy_le (n k bench moves : Nat) (acc factor : List Nat)
+    (hf : factor.length = n) :
+    cubeMoves moves acc n k bench + pegCount factor ≤ moves + powMove n bench := by
+  have hc := cubeMoves_le moves acc n k bench
+  have hfac := fac_peg_le n factor hf
+  unfold powMove
+  omega
+
+theorem live_mid_le (n k bench moves : Nat) (acc factor : List Nat)
+    (hf : factor.length = n) :
+    cubeMoves moves acc n k bench + pegCount factor +
+      2 * pegCount (fieldCube n k bench acc) ≤ moves + powMove n bench := by
+  have hc := cubeMoves_le moves acc n k bench
+  have hfac := fac_peg_le n factor hf
+  have hcube := cube_peg_le n k bench acc
+  unfold powMove
+  omega
+
+theorem live_fold_le (n k bench moves : Nat) (acc factor : List Nat)
+    (hf : factor.length = n) :
+    cubeMoves moves acc n k bench + pegCount factor +
+      2 * pegCount (fieldCube n k bench acc) + n * (n + 1) + 3 * (bench - n) ≤
+        moves + powMove n bench := by
+  have hc := cubeMoves_le moves acc n k bench
+  have hfac := fac_peg_le n factor hf
+  have hcube := cube_peg_le n k bench acc
+  have hsq : n * (n + 1) = n * n + n := by rw [Nat.mul_succ]
+  unfold powMove
+  rw [hsq]
+  omega
+
+theorem live_clear_le (n k bench moves : Nat) (acc factor : List Nat)
+    (hn : n ≤ bench) (hf : factor.length = n) :
+    cubeMoves moves acc n k bench + pegCount factor +
+      2 * pegCount (fieldCube n k bench acc) +
+      schoolMoves (fieldCube n k bench acc) factor n n +
+      foldCharge n (n - k) (school n (fieldCube n k bench acc) factor
+        (List.replicate bench 0) false) +
+      pegCount (fieldCube n k bench acc) ≤ moves + powMove n bench := by
+  have hc := cubeMoves_le moves acc n k bench
+  have hfac := fac_peg_le n factor hf
+  have hcube := cube_peg_le n k bench acc
+  have hsch := schoolMoves_bound (fieldCube n k bench acc) factor n
+  have hfold := foldCharge_bound n (n - k)
+      (school n (fieldCube n k bench acc) factor (List.replicate bench 0) false)
+  have hlenS : (school n (fieldCube n k bench acc) factor
+      (List.replicate bench 0) false).length = bench := by
+    simpa [List.length_replicate] using
+      school_length (fieldCube n k bench acc) factor (List.replicate bench 0) false n
+  rw [hlenS] at hfold
+  have hsq : n * (n + 1) = n * n + n := by rw [Nat.mul_succ]
+  rw [hsq] at hsch
+  unfold powMove
+  omega
+
+theorem live_delta_le (n k bench moves : Nat) (acc factor : List Nat)
+    (hn : n ≤ bench) (hf : factor.length = n) :
+    liveMove n k bench moves acc factor ≤ moves + powMove n bench := by
+  have hc := cubeMoves_le moves acc n k bench
+  have hfac := fac_peg_le n factor hf
+  have hcube := cube_peg_le n k bench acc
+  have hprod := prod_peg_le n k bench (fieldCube n k bench acc) factor hn
+  have hsch := schoolMoves_bound (fieldCube n k bench acc) factor n
+  have hfold := foldCharge_bound n (n - k)
+      (school n (fieldCube n k bench acc) factor (List.replicate bench 0) false)
+  have hlenS : (school n (fieldCube n k bench acc) factor
+      (List.replicate bench 0) false).length = bench := by
+    simpa [List.length_replicate] using
+      school_length (fieldCube n k bench acc) factor (List.replicate bench 0) false n
+  rw [hlenS] at hfold
+  have hsq : n * (n + 1) = n * n + n := by rw [Nat.mul_succ]
+  rw [hsq] at hsch
+  unfold liveMove powMove
+  omega
+
+theorem cube_slide_le (n k bench : Nat) (acc : List Nat) :
+    2 * pegCount (fieldCube n k bench acc) ≤ powSlide n := by
+  have hcube := cube_peg_le n k bench acc
+  unfold powSlide
+  omega
+
+theorem live_slide_le (n k bench : Nat) (acc factor : List Nat) (hn : n ≤ bench) :
+    liveSlide n k bench acc factor ≤ powSlide n := by
+  have hcube := cube_peg_le n k bench acc
+  have hprod := prod_peg_le n k bench (fieldCube n k bench acc) factor hn
+  unfold liveSlide powSlide
+  omega
+
+theorem powStep_len (n k bench : Nat) (rhs acc : List Nat) (d : Nat) (hn : n ≤ bench) :
+    (powStep n k bench rhs acc d).length = n := by
+  rw [powStep_branch]
+  by_cases h2 : d = 2
+  · simpa [h2] using fieldMul_length n k bench (fieldCube n k bench acc)
+      (fieldMul n k bench rhs rhs) hn
+  · by_cases h1 : d = 1
+    · simpa [h2, h1] using fieldMul_length n k bench (fieldCube n k bench acc) rhs hn
+    · simp [h2, h1]
+      rw [← cube_off_prefix n k bench acc, List.length_take]
+      have hsch : (combStrip n bench acc).length = bench := combStrip_length _ _ _
+      have hlane := laneFold_length n (n - k) (combStrip n bench acc)
+        (by rw [hsch]; exact hn)
+      rw [hlane, hsch, Nat.min_eq_left hn]
+
+/-- A red or white digit. The up home becomes `powStep`, and one unit of each
+    budget is spent. `src` is the gap on red and the bottom on white. -/
+theorem pow_live_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat)
+    (d src : Nat) (factor : List Nat) (ds : List Nat)
+    (h : PowAt b t rhs acc (d :: ds))
+    (hd : (d = 2 ∧ factor = fieldMul t.n t.k t.benchlen rhs rhs) ∨
+      (d = 1 ∧ factor = rhs))
+    (hsrc : src = if d = 2 then powGap else powBottom)
+    (hhome : b.sudo_5Board_4home[src]? = some (embed factor))
+    (hheld : b.sudo_5Board_4held[src]? = some true)
+    (hfacLen : factor.length = t.n) :
+    ∃ b', powDigitRun b d src = .ok b' ∧
+      PowAt b' t rhs (powStep t.n t.k t.benchlen rhs acc d) ds := by
+  obtain ⟨moves, slides, ctrl, mark, mx, pk, ps, hole, c0, c1, hmv, hsl, hc, hm, hmark,
+      hmx, hpk, hps, hhole, hsz, hop0, hop1, hfitM, hfitS, hfitC, hfit0, hfit1⟩ := h.pack
+  have hlen : (d :: ds).length = ds.length + 1 := by simp
+  have hn0 : 0 < t.n := h.nPos
+  have hnb : t.n ≤ t.benchlen := mul_span_n t.n t.benchlen hn0 h.sat.mul_span
+  have hspan3 : 3 * (t.n - 1) < t.benchlen :=
+    cube_span_le t.n t.benchlen t.combgap h.sat.cube_span
+  have hscript := script_one t h.shape
+  have hmov : FitsLen (moves + powMove t.n t.benchlen * (ds.length + 1)) := by
+    simpa [hlen] using hfitM
+  have hslR : FitsLen (slides + powSlide t.n * (ds.length + 1)) := by
+    simpa [hlen] using hfitS
+  have hcR : FitsLen (ctrl + powCtrl * (ds.length + 1)) := by
+    simpa [hlen] using hfitC
+  have hUp : powUp < b.sudo_5Board_4home.size := some_idx _ _ _ h.upHome
+  have hUpD : powUp < b.sudo_5Board_4held.size := some_idx _ _ _ h.upHeld
+  have hSpare : powSpare < b.sudo_5Board_4held.size := some_idx _ _ _ h.spareOff
+  have hHomeSpare : powSpare < b.sudo_5Board_4home.size := h.homeWide
+  have h7 : 7 ≤ b.sudo_5Board_4held.size := by
+    unfold powSpare at hSpare
+    omega
+  have hSrc : src < b.sudo_5Board_4held.size := some_idx _ _ _ hheld
+  have hHomeSrc : src < b.sudo_5Board_4home.size := some_idx _ _ _ hhome
+  have hsrcU : src ≠ powUp := by
+    rcases hd with ⟨hd2, _⟩ | ⟨hd1, _⟩
+    · rw [hsrc, if_pos hd2]; decide
+    · have hne2 : ¬ d = 2 := by rw [hd1]; decide
+      rw [hsrc, if_neg hne2]; decide
+  have hsrcS : src ≠ powSpare := by
+    rcases hd with ⟨hd2, _⟩ | ⟨hd1, _⟩
+    · rw [hsrc, if_pos hd2]; decide
+    · have hne2 : ¬ d = 2 := by rw [hd1]; decide
+      rw [hsrc, if_neg hne2]; decide
+  have hcubeT := fieldCube_trits t.n t.k t.benchlen acc h.accT hspan3 h.shape.k_le
+  have hnew := live_delta_le t.n t.k t.benchlen moves acc factor hnb hfacLen
+  have hmovePair := room_abs moves (liveMove t.n t.k t.benchlen moves acc factor)
+      (powMove t.n t.benchlen) ds.length hmov hnew
+  have hslidePair := room_slide slides (liveSlide t.n t.k t.benchlen acc factor)
+      t.n ds.length hslR (live_slide_le t.n t.k t.benchlen acc factor hnb)
+  have hlive := pow_live_seated b powUp powSpare src acc rhs factor d
+      t.w t.h t.r t.n t.k moves slides hole t.benchlen pk ps c1 c0 t.combgap
+      ctrl mx t.script mark
+      h.markerOn h.benchOff hm hc hmx
+      (by simpa [h.tier, embTier])
+      (by omega : 0 < t.script) hscript
+      (room_ctrl ctrl 1 ds.length hcR (by unfold powCtrl; decide)).1
+      (room_ctrl ctrl 2 ds.length hcR (by unfold powCtrl; decide)).1
+      (room_ctrl ctrl 4 ds.length hcR (by unfold powCtrl; decide)).1
+      (by rw [hsz]; decide) (by
+        have h1 : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by rw [hsz]; decide
+        rw [Array.getElem?_eq_getElem h1] at hop1
+        injection hop1)
+      (room_ops c1 ds.length (by simpa [hlen] using hfit1)).1
+      (by rw [hsz]; decide) (by
+        have h0 : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by rw [hsz]; decide
+        rw [Array.getElem?_eq_getElem h0] at hop0
+        injection hop0)
+      (room_ops c0 ds.length (by simpa [hlen] using hfit0)).1
+      hUpD hUp (some_get _ _ _ h.upHeld) (some_get _ _ _ h.upHome) h7
+      (by simpa [ofNat_eq_natCast] using hps) (by simpa [ofNat_eq_natCast] using hpk)
+      hSpare hHomeSpare (some_get _ _ _ h.spareOff)
+      hSrc hHomeSrc (some_get _ _ _ hheld) (some_get _ _ _ hhome)
+      (by decide) hsrcU hsrcS
+      hn0 (by simpa [h.tier, embTier]) h.accLen hfacLen
+      (fit_of_pow moves t.n t.benchlen ds.length t.n hmov (pow_ge_n _ _))
+      (by simpa [ofNat_eq_natCast] using hmv) hsl
+      (by simpa [h.tier, embTier]) (by simpa [h.tier, embTier])
+      h.sat.cube_span h.sat.mul_span
+      (fit_of_pow moves t.n t.benchlen ds.length (3 * (t.n - 1)) hmov (pow_ge_span _ _))
+      (fit_of_pow moves t.n t.benchlen ds.length (2 * (t.n - 1)) hmov (pow_ge_span2 _ _))
+      (fit_add_pow moves t.n t.benchlen ds.length (2 * t.n) hmov (pow_ge_two _ _))
+      hhole h.accT hcubeT
+      h.shape.w0 h.shape.h0 h.shape.rlt h.shape.r0 h.shape.n_eq h.shape.k_le h.shape.gap
+      (by simpa [h.tier, embTier]) (by simpa [h.tier, embTier])
+      (by simpa [h.tier, embTier]) (by simpa [h.tier, embTier])
+      h.shape.small h.shape.n_small
+      (fit_of_pow moves t.n t.benchlen ds.length t.benchlen hmov (pow_ge_bench _ _))
+      (by simpa [Nat.add_assoc] using
+        (fit_add_pow moves t.n t.benchlen ds.length (2 * t.n + 3 * (t.benchlen - t.n)) hmov
+          (pow_ge_fold _ _)))
+      (fit_le_move moves t.n t.benchlen ds.length
+        (cubeMoves moves acc t.n t.k t.benchlen + pegCount factor) hmov
+        (live_copy_le _ _ _ _ _ _ hfacLen))
+      (fit_of_pow moves t.n t.benchlen ds.length
+        (2 * pegCount (fieldCube t.n t.k t.benchlen acc)) hmov
+        (pow_ge_two_peg _ _ _ (cube_peg_le _ _ _ _)))
+      (fit_le_move moves t.n t.benchlen ds.length
+        (cubeMoves moves acc t.n t.k t.benchlen + pegCount factor +
+          2 * pegCount (fieldCube t.n t.k t.benchlen acc)) hmov
+        (live_mid_le _ _ _ _ _ _ hfacLen))
+      (room_slide slides (2 * pegCount (fieldCube t.n t.k t.benchlen acc)) t.n ds.length hslR
+        (cube_slide_le _ _ _ _)).1
+      (fit_le_move moves t.n t.benchlen ds.length
+        (cubeMoves moves acc t.n t.k t.benchlen + pegCount factor +
+          2 * pegCount (fieldCube t.n t.k t.benchlen acc) + t.n * (t.n + 1) +
+          3 * (t.benchlen - t.n)) hmov
+        (live_fold_le _ _ _ _ _ _ hfacLen))
+      hd
+      (fit_le_move moves t.n t.benchlen ds.length
+        (cubeMoves moves acc t.n t.k t.benchlen + pegCount factor +
+          2 * pegCount (fieldCube t.n t.k t.benchlen acc) +
+          schoolMoves (fieldCube t.n t.k t.benchlen acc) factor t.n t.n +
+          foldCharge t.n (t.n - t.k) (school t.n (fieldCube t.n t.k t.benchlen acc) factor
+            (List.replicate t.benchlen 0) false) +
+          pegCount (fieldCube t.n t.k t.benchlen acc)) hmov
+        (live_clear_le _ _ _ _ _ _ hnb hfacLen))
+      (fit_of_pow moves t.n t.benchlen ds.length
+        (2 * pegCount (fieldMul t.n t.k t.benchlen (fieldCube t.n t.k t.benchlen acc) factor))
+        hmov (pow_ge_two_peg _ _ _ (prod_peg_le _ _ _ _ _ hnb)))
+      hmovePair.1
+      (by simpa [liveSlide, Nat.add_assoc] using hslidePair.1)
+  rcases hlive with ⟨bS, hrun, hhomeS, hoff, hheldS, hmarkS, hflag, hfacS, hctrlS, hmxS, hspS,
+      hkeep, hholeS, hpsS, hpkS, htierS, hmvS, hslS, hszS, hop0S, hop1S, hopK, hszHome⟩
+  have hpowLen := powStep_len t.n t.k t.benchlen rhs acc d hnb
+  refine ⟨bS, ?_, ?_⟩
+  · have hd0 : ¬ d = 0 := by
+      rcases hd with ⟨hd2, _⟩ | ⟨hd1, _⟩
+      · rw [hd2]; decide
+      · rw [hd1]; decide
+    unfold powDigitRun
+    split
+    · next hEq => exact (hd0 hEq).elim
+    · simp only [powUp, powSpare]
+      exact hrun
+  · refine
+      { tier := htierS.trans h.tier
+        shape := h.shape
+        sat := h.sat
+        markerOn := hflag
+        benchOff := hoff
+        accLen := hpowLen
+        rhsLen := h.rhsLen
+        nPos := h.nPos
+        accT := powStep_trits t.n t.k t.benchlen rhs acc d h.accT h.shape.k_le hspan3 hnb h.rhsLen
+        rhsT := h.rhsT
+        upHome := by simpa [powUp] using hhomeS
+        upHeld := by simpa [powUp] using hheldS
+        botHome := by
+          have hbot := (hkeep powBottom (by decide) (by decide)).1
+          simpa [powBottom] using hbot.trans h.botHome
+        botHeld := by
+          have hb := (hkeep powBottom (by decide) (by decide)).2
+          simpa [powBottom] using hb.trans h.botHeld
+        gapHome := by
+          have hg := (hkeep powGap (by decide) (by decide)).1
+          simpa [powGap] using hg.trans h.gapHome
+        gapHeld := by
+          have hg := (hkeep powGap (by decide) (by decide)).2
+          simpa [powGap] using hg.trans h.gapHeld
+        spareOff := by simpa [powSpare] using hspS
+        homeWide := by
+          rw [hszHome]
+          exact h.homeWide
+        pack := ?_ }
+    rcases hholeS with ⟨hole', hhole'⟩
+    rcases hpsS with ⟨ps', hps'⟩
+    rcases hpkS with ⟨pk', hpk'⟩
+    have hmvN : bS.sudo_5Board_4cost.sudo_5Costs_5moves =
+        Int.ofNat (liveMove t.n t.k t.benchlen moves acc factor) := by
+      simpa [liveMove] using hmvS
+    have hslN : bS.sudo_5Board_4cost.sudo_5Costs_6slides =
+        Int.ofNat (slides + liveSlide t.n t.k t.benchlen acc factor) := by
+      have heq : slides + 2 * pegCount (fieldCube t.n t.k t.benchlen acc) +
+          2 * pegCount (fieldMul t.n t.k t.benchlen (fieldCube t.n t.k t.benchlen acc) factor) =
+          slides + liveSlide t.n t.k t.benchlen acc factor := by
+        rw [liveSlide, Nat.add_assoc]
+      rw [← heq]
+      exact hslS
+    refine ⟨liveMove t.n t.k t.benchlen moves acc factor,
+      slides + liveSlide t.n t.k t.benchlen acc factor, ctrl + 4, 1, max mx 2, pk', ps',
+      hole', c0 + 1, c1 + 1,
+      hmvN, hslN, hctrlS, hmarkS, by decide, hmxS, hpk', hps', hhole', ?_, hop0S, hop1S,
+      hmovePair.2, hslidePair.2,
+      (room_ctrl ctrl 4 ds.length hcR (by unfold powCtrl; decide)).2,
+      (room_ops c0 ds.length (by simpa [hlen] using hfit0)).2,
+      (room_ops c1 ds.length (by simpa [hlen] using hfit1)).2⟩
+    · rw [hszS]; exact hsz
+
+/-- One digit, red, white, or empty. The up home becomes `powStep`, and the
+    budget that remains covers `ds`. -/
+theorem pow_step_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat)
+    (d : Nat) (ds : List Nat)
+    (h : PowAt b t rhs acc (d :: ds))
+    (hd : d = 0 ∨ d = 1 ∨ d = 2) :
+    ∃ b', powDigitRun b d (if d = 2 then powGap else powBottom) = .ok b' ∧
+      PowAt b' t rhs (powStep t.n t.k t.benchlen rhs acc d) ds := by
+  rcases hd with hd0 | hd1 | hd2
+  · obtain ⟨b', hr, hAt⟩ := pow_zero_at b t rhs acc ds (by simpa [hd0] using h)
+    refine ⟨b', ?_, ?_⟩
+    · simpa [hd0] using hr
+    · simpa [hd0] using hAt
+  · obtain ⟨b', hr, hAt⟩ := pow_live_at b t rhs acc d powBottom rhs ds
+        (by simpa [hd1] using h) (Or.inr ⟨hd1, rfl⟩)
+        (by rw [hd1, if_neg (by decide : ¬ (1 = 2))])
+        (by simpa [hd1] using h.botHome) (by simpa [hd1] using h.botHeld) h.rhsLen
+    refine ⟨b', ?_, hAt⟩
+    have hif : (if d = 2 then powGap else powBottom) = powBottom := by
+      rw [hd1, if_neg (by decide : ¬ (1 = 2))]
+    simpa [hif] using hr
+  · have hnb : t.n ≤ t.benchlen := mul_span_n t.n t.benchlen h.nPos h.sat.mul_span
+    have hfacLen : (fieldMul t.n t.k t.benchlen rhs rhs).length = t.n :=
+      fieldMul_length t.n t.k t.benchlen rhs rhs hnb
+    obtain ⟨b', hr, hAt⟩ := pow_live_at b t rhs acc d powGap
+        (fieldMul t.n t.k t.benchlen rhs rhs) ds
+        (by simpa [hd2] using h) (Or.inl ⟨hd2, rfl⟩)
+        (by rw [hd2, if_pos rfl])
+        (by simpa [hd2] using h.gapHome) (by simpa [hd2] using h.gapHeld) hfacLen
+    refine ⟨b', ?_, hAt⟩
+    have hif : (if d = 2 then powGap else powBottom) = powGap := by
+      rw [hd2, if_pos rfl]
+    simpa [hif] using hr
 
 end EcbsLink2.Link2

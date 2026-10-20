@@ -138,6 +138,7 @@ import EcbsLink2.Link2.SearchPlant
 import EcbsLink2.Link2.SearchCube
 import EcbsLink2.Link2.SearchSide
 import EcbsLink2.Link2.SearchGap
+import EcbsLink2.Link2.SearchUp
 import EcbsLink2.Link2.RootHit
 import EcbsLink2.Link2.WalkKeyDemo
 import EcbsLink2.Link2.WalkFformIdle

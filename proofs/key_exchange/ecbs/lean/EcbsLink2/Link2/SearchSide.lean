@@ -57,10 +57,10 @@ private theorem mul_moves_cap (moves : Nat) (xs ys : List Nat) (n k bench : Nat)
   dsimp only [mulMoves]
   omega
 
-private theorem side_le (mv pegL pegX n bench : Nat)
-    (hm : mv ≤ pegX + pegX + 2 * n + 3 * (bench - n))
+private theorem side_le (mv0 mv pegL pegX n bench : Nat)
+    (hm : mv ≤ mv0 + pegX + pegX + 2 * n + 3 * (bench - n))
     (hX : pegX ≤ n) (hL : pegL ≤ n) :
-    let bound := 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8
+    let bound := mv0 + 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8
     2 * pegL ≤ bound ∧
     mv + 2 * pegL ≤ bound ∧
     mv + 2 * pegL + pegX ≤ bound ∧
@@ -107,11 +107,11 @@ private theorem close_room (mvS mv pegL n bench : Nat)
 def sideCap (n bench : Nat) : Nat :=
   n * (n + 1) + 11 * n + 6 * (bench - n) + 1
 
-private theorem side_cap_le (mv pegL pegX n bench : Nat)
-    (hmv : mv ≤ pegX + pegX + 2 * n + 3 * (bench - n))
+private theorem side_cap_le (mv0 mv pegL pegX n bench : Nat)
+    (hmv : mv ≤ mv0 + pegX + pegX + 2 * n + 3 * (bench - n))
     (hL : pegL ≤ n) (hX : pegX ≤ n) :
     mv + 2 * pegL + n + n * (n + 1) + 3 * (bench - n) + 2 * n + 2 * n + 1 ≤
-      sideCap n bench := by
+      mv0 + sideCap n bench := by
   unfold sideCap
   omega
 
@@ -120,8 +120,8 @@ private theorem close_under_cap (mv peg n bench : Nat)
     mv + 2 * peg + 1 ≤ sideCap n bench := by
   omega
 
-private theorem four_n (a b n : Nat) (ha : a ≤ n) (hb : b ≤ n) :
-    (0 + 2 * a) + 2 * b ≤ 4 * n := by
+private theorem four_n (sl0 a b n : Nat) (ha : a ≤ n) (hb : b ≤ n) :
+    (sl0 + 2 * a) + 2 * b ≤ sl0 + 4 * n := by
   have h := two_pegs a b n ha hb
   omega
 
@@ -204,9 +204,13 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
   let mv := cubeMoves (pegCount x + pegCount x) x n k bench
   have hmvLe := cubeMoves_le (pegCount x + pegCount x) x n k bench
   have hpegL : pegCount (lane.take n) ≤ n := pegCount_take_le lane n
-  have hroom := side_le mv (pegCount (lane.take n)) (pegCount x) n bench hmvLe hpeg hpegL
-  have fit (m : Nat) (hm : m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8) : FitsLen m :=
-    curveLayFit n bench m hsh.n_small hsh.small.2.2.2 hm
+  have hmv0 : mv ≤ 0 + pegCount x + pegCount x + 2 * n + 3 * (bench - n) := by
+    simpa [mv, Nat.zero_add] using hmvLe
+  have hroom := side_le 0 mv (pegCount (lane.take n)) (pegCount x) n bench hmv0 hpeg hpegL
+  have fit (m : Nat) (hm : m ≤ 0 + 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8) : FitsLen m := by
+    have hpoly : m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 := by
+      simpa [Nat.zero_add] using hm
+    exact curveLayFit n bench m hsh.n_small hsh.small.2.2.2 hpoly
   have hnle : n ≤ bench := by
     have hsp := sat.cube_span
     omega
@@ -387,15 +391,16 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     have hS := hhomePS 5 h5M h (by decide)
     exact hS.trans (hM.trans (hhome5C h5C))
   · refine ⟨(0 + 2 * pegCount (lane.take n)) + 2 * pegCount (laneS.take n), hslS, ?_⟩
-    simpa [n] using four_n (pegCount (lane.take n)) (pegCount (laneS.take n)) n hpegL hpegS
+    simpa [n, Nat.zero_add] using
+      four_n 0 (pegCount (lane.take n)) (pegCount (laneS.take n)) n hpegL hpegS
   · exact hpeakS
   · rcases _hstrictM with ⟨psM, hpsM⟩
     exact ⟨psM, hstrictS.trans hpsM⟩
   · rcases _hholeM with ⟨holeM, hholeM⟩
     exact ⟨holeM, hholeS.trans hholeM⟩
-  · simpa [n, bench] using
-      Nat.le_trans hmvSle (side_cap_le mv (pegCount (lane.take n)) (pegCount x) n bench
-        hmvLe hpegL hpeg)
+  · simpa [n, bench, Nat.zero_add] using
+      Nat.le_trans hmvSle (side_cap_le 0 mv (pegCount (lane.take n)) (pegCount x) n bench
+        hmv0 hpegL hpeg)
   · intro h
     have h0C : 0 < bC.sudo_5Board_4held.size := by rw [hszDC]; decide
     have h0M : 0 < bM.sudo_5Board_4held.size := by rw [hszDM, hszDC]; decide

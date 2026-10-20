@@ -140,6 +140,7 @@ import EcbsLink2.Link2.SearchSide
 import EcbsLink2.Link2.SearchGap
 import EcbsLink2.Link2.SearchUp
 import EcbsLink2.Link2.SearchStrip
+import EcbsLink2.Link2.SearchPow
 import EcbsLink2.Link2.RootHit
 import EcbsLink2.Link2.WalkKeyDemo
 import EcbsLink2.Link2.WalkFformIdle

@@ -653,7 +653,8 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
         (bS.sudo_5Board_4cost.sudo_5Costs_3ops[1]?) = some (Int.ofNat (cOps + 1)) ∧
         (∀ j, j ≠ 0 → j ≠ 1 →
           (bS.sudo_5Board_4cost.sudo_5Costs_3ops[j]?) =
-            (b.sudo_5Board_4cost.sudo_5Costs_3ops[j]?)) := by
+            (b.sudo_5Board_4cost.sudo_5Costs_3ops[j]?)) ∧
+        bS.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
   obtain ⟨hlift, hcube⟩ := pow_cube_seated b up acc w h r n k moves hole bench peak peakS cOps cg
       ctrl mx script m hmk hoff hm hc hx hs hposS hfitLift hfitCube hops hop1 hfops hF hHome hHF
       hArr h7 hp hpeak hn0 hn hlenx hfn hmoves hbl hcg hspan h3 hfm hhole hxsT hw0 hh0 hrR hrP
@@ -845,7 +846,7 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
       (by simpa [htake, cube, mvP] using hfitSet)
       (by simpa [htake, cube] using hfitSl2)
   rcases hdig with ⟨bS, hrun, hhome, hoffS, hheldS, hmarkS, hflagS, hctrlS, hkeep, hheldK, hspS,
-      hmvD, hslD, hopsD, hpkD, hmxD, hholeD, hpsD, htierD⟩
+      hmvD, hslD, hopsD, hpkD, hmxD, hholeD, hpsD, htierD, hszHomeD⟩
   have hctrl4 : bS.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (ctrl + 4) := by
     simpa [show (ctrl + 2) + 2 = ctrl + 4 by omega] using hctrlS
   have hmx2 : bS.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat (max mx 2) := by
@@ -902,8 +903,14 @@ theorem pow_live_seated (b : Ecbs.Board) (up spare src : Nat) (acc rhs factor : 
     simp only [bC]
     rw [powCube_ops_arr]
     exact Array.getElem?_set_ne _ ⟨1, hops⟩ _ (by intro h; exact hj1 h.symm)
+  have hszHome : bS.sudo_5Board_4home.size = b.sudo_5Board_4home.size := by
+    rw [hszHomeD]
+    simp only [bP]
+    rw [place_home_eq, Array.size_set]
+    simp only [bC]
+    rw [powCube_home_arr, Array.size_set]
   refine ⟨bS, ?_, hhome, hoffS, hheldS, hmarkS, hflagS, ?_, hctrl4, hmx2, hspS, ?_,
-      hholeD, hpsD, hpkD, htierD.trans htierP, hmvS, hslS, hszS, hop0S, hop1S, hopK⟩
+      hholeD, hpsD, hpkD, htierD.trans htierP, hmvS, hslS, hszS, hop0S, hop1S, hopK, hszHome⟩
   · rw [hlift, ok_bind, hcube, ok_bind, hcopy, ok_bind]
     exact hrun
   · rw [hkeep src hsrcU hsrcS]

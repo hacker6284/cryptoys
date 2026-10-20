@@ -201,12 +201,15 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
   let k := t.k
   let bench := t.benchlen
   let lane := laneFold n (n - k) (combStrip n bench x)
-  let mv := cubeMoves (pegCount x + pegCount x) x n k bench
+  let mv0 : Nat := 0
+  let mv := mv0 + cubeMoves (pegCount x + pegCount x) x n k bench
   have hmvLe := cubeMoves_le (pegCount x + pegCount x) x n k bench
   have hpegL : pegCount (lane.take n) ≤ n := pegCount_take_le lane n
-  have hmv0 : mv ≤ 0 + pegCount x + pegCount x + 2 * n + 3 * (bench - n) := by
-    simpa [mv, Nat.zero_add] using hmvLe
-  have hroom := side_le 0 mv (pegCount (lane.take n)) (pegCount x) n bench hmv0 hpeg hpegL
+  have hmvBase : mv ≤ mv0 + pegCount x + pegCount x + 2 * n + 3 * (bench - n) := by
+    have hinc : cubeMoves (pegCount x + pegCount x) x n k bench ≤
+        pegCount x + pegCount x + 2 * n + 3 * (bench - n) := hmvLe
+    simpa [mv, mv0, Nat.zero_add] using Nat.add_le_add_left hinc mv0
+  have hroom := side_le mv0 mv (pegCount (lane.take n)) (pegCount x) n bench hmvBase hpeg hpegL
   have fit (m : Nat) (hm : m ≤ 0 + 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8) : FitsLen m := by
     have hpoly : m ≤ 2 * (n * (n + 1)) + 12 * bench + 24 * n + 8 := by
       simpa [Nat.zero_add] using hm
@@ -232,13 +235,15 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     rw [hslC]; exact (ofNat_eq_natCast 0).symm
   have hpsI : bC.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) := by
     rw [hps]; exact ofNat_eq_natCast _
+  have hmovI : bC.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv := by
+    simpa [mv, mv0, Nat.zero_add, x] using hmovC
   have hmul := curve_mul_spare bC x lane t.w t.h t.r n k mv 0 holeN bench pk ps 0
     hmkC honC hto2 h2H h2D h3H h3D h6H h6D (by rw [hszDC]; decide)
     (hheld2C h2D) (hheld3C h3D) (hhome3C h3H) (hheld6C h6D)
     (by simpa [lane] using hbenchC) hnC hposC (by rw [hlenC]; exact hnle)
     (by simpa [lane] using hzeroC)
     (fit n hroom.2.2.2.2.2.2.2.2.1) (fit lane.length (by rw [hlenC]; exact hroom.2.2.2.2.2.2.2.2.2.1))
-    hmovC hslI hpk hpsI
+    hmovI hslI hpk hpsI
     (fit (2 * pegCount (lane.take n)) hroom.1)
     (fit (mv + 2 * pegCount (lane.take n)) hroom.2.1)
     (fit (0 + 2 * pegCount (lane.take n)) (zero_two _ _ hroom.1))
@@ -398,9 +403,9 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
     exact ⟨psM, hstrictS.trans hpsM⟩
   · rcases _hholeM with ⟨holeM, hholeM⟩
     exact ⟨holeM, hholeS.trans hholeM⟩
-  · simpa [n, bench, Nat.zero_add] using
-      Nat.le_trans hmvSle (side_cap_le 0 mv (pegCount (lane.take n)) (pegCount x) n bench
-        hmv0 hpegL hpeg)
+  · simpa [mv0, n, bench, Nat.zero_add] using
+      Nat.le_trans hmvSle (side_cap_le mv0 mv (pegCount (lane.take n)) (pegCount x) n bench
+        hmvBase hpegL hpeg)
   · intro h
     have h0C : 0 < bC.sudo_5Board_4held.size := by rw [hszDC]; decide
     have h0M : 0 < bM.sudo_5Board_4held.size := by rw [hszDM, hszDC]; decide

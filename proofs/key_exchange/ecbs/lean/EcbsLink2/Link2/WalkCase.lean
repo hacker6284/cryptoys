@@ -326,6 +326,9 @@ theorem land_seat (t : Spec.Tier) (b2 : Ecbs.Board)
     (x y up : List Nat) (mv pk : Nat)
     (acc accI : List Nat × List Nat) (cells : List Nat) (k i : Nat)
     (out : OutLay t b2 x up y mv pk)
+    (hfresh : out.sl0 = 0 ∧ out.ops0 = 0 ∧ out.strict0 = 0 ∧ out.hole0 = 0 ∧
+      out.mx0 = 0 ∧ out.tmax0 = 0 ∧ out.ctrl0 = tierR t ∧
+      out.high0 = t.script + tierR t + 1)
     (tw : TierWalk t) (hOk : BoardOk t) (sat : TierSat t)
     (hR : 0 < tierR t) (hsh : TierShape t)
     (hx : x.length = t.n) (hy : y.length = t.n)
@@ -355,7 +358,7 @@ theorem land_seat (t : Spec.Tier) (b2 : Ecbs.Board)
   obtain ⟨bF, fr, hml, hfrob, hmk, hy1, hy4, hmark, hctrl, hst, hho, hmv, hsl, hops,
       hf1, hf4⟩ :=
     seat_out t b2 x up y mv pk out tw hOk sat hsh hR hx hup htriX htriUp hmvN
-      (by omega : 0 < t.cells)
+      (by omega : 0 < t.cells) hfresh
   by_cases hzero : cells[k]'hiK = 0
   · have hwalk := walkStep_cube t.n t.k t.benchlen (x, y) (x, up)
     have hstep0 := chordStep_cube cells k toN b2 b2 bF hkTo hlenC hzero hml hfrob hfitk
@@ -412,6 +415,9 @@ theorem suffix_is_fail (t : Spec.Tier) (b2 : Ecbs.Board)
     (x y up : List Nat) (mv pk : Nat)
     (acc accI : List Nat × List Nat) (cells : List Nat) (k i c : Nat)
     (out : OutLay t b2 x up y mv pk)
+    (hfresh : out.sl0 = 0 ∧ out.ops0 = 0 ∧ out.strict0 = 0 ∧ out.hole0 = 0 ∧
+      out.mx0 = 0 ∧ out.tmax0 = 0 ∧ out.ctrl0 = tierR t ∧
+      out.high0 = t.script + tierR t + 1)
     (tw : TierWalk t) (hOk : BoardOk t) (sat : TierSat t)
     (hR : 0 < tierR t) (hsh : TierShape t)
     (hx : x.length = t.n) (hy : y.length = t.n)
@@ -459,7 +465,7 @@ theorem suffix_is_fail (t : Spec.Tier) (b2 : Ecbs.Board)
     obtain ⟨bF, fr, hml, hfrob, _hmk, _hy1, _hy4, _hmark, hctrl, _hst, hho, hmv, hsl, hops,
         _hf1, _hf4⟩ :=
       seat_out t b2 x up y mv pk out tw hOk sat hsh hR hx hup htriX htriUp hmvN
-        (by omega : 0 < t.cells)
+        (by omega : 0 < t.cells) hfresh
     have hmvP : fr.moves ≤ pegCount x + pegCount y + pegCount x + pegCount y +
         cubeCharge t.n t.benchlen := by
       rw [hmvEq] at hmv
@@ -468,7 +474,7 @@ theorem suffix_is_fail (t : Spec.Tier) (b2 : Ecbs.Board)
       hctrl hops hmvP hsl hho hlen hkTo hk1 hcK hc hinvX
   · have hkLt : k < i := by omega
     obtain ⟨b', ax, ay, hstep, hAt, hrun1⟩ :=
-      land_seat t b2 x y up mv pk acc accI cells k i out tw hOk sat hR hsh
+      land_seat t b2 x y up mv pk acc accI cells k i out hfresh tw hOk sat hR hsh
         hx hy htriX htriY htriUp hup hmvEq hmvN hlen hkLt hi hk1 hpre hfull hc2
     have hcont := cont_from k (t.cells - 1) b2 b' cells (by omega) hstep
     obtain ⟨bI, axI, ayI, hAtI, hrunI, hloop⟩ :=
@@ -563,7 +569,7 @@ theorem walk_chord_none (t : Spec.Tier) (x y : List Nat)
     have hpy : pegCount y ≤ t.n := by rw [← hy]; exact pegCount_le y
     omega
   rcases hoc with rfl | rfl
-  · obtain ⟨b2, pk, out, _hcopy, hloop⟩ :=
+  · obtain ⟨b2, pk, out, hfresh, _hcopy, hloop⟩ :=
       walk_reach_white t x y zs rest tw hsh hR hx hy hz
         (by rw [← hcells]; exact hlen) hrest
     have hpreK : walkRun t.n t.k t.benchlen (x, y) false acc (cells.take k) =
@@ -583,12 +589,12 @@ theorem walk_chord_none (t : Spec.Tier) (x y : List Nat)
       exact hloop
     have hsuf := suffix_is_fail t b2 x y y
       (pegCount x + pegCount y + pegCount x + pegCount y) pk acc accI cells k i
-      (cells[i]'hi) out tw hOk sat hR hsh hx hy htriX htriY htriY hy rfl hmvN
+      (cells[i]'hi) out hfresh tw hOk sat hR hsh hx hy htriX htriY htriY hy rfl hmvN
       hlen hkLe hi hk1 hkTo hpreK hpreT rfl hcFail hinv hc2
     rcases hsuf with ⟨bA, hok⟩ | ⟨e, herr, hknd, hd⟩
     · exact Or.inl ⟨bA, hjoin.trans hok⟩
     · exact Or.inr ⟨e, hjoin.trans herr, hknd, hd⟩
-  · obtain ⟨b2, pk, out, _hcopy, hloop⟩ :=
+  · obtain ⟨b2, pk, out, hfresh, _hcopy, hloop⟩ :=
       walk_reach_red t x y zs rest tw hOk hsh hR hx hy htriY hz
         (by rw [← hcells]; exact hlen) hrest
     have hpreK : walkRun t.n t.k t.benchlen (x, y) false acc (cells.take k) =
@@ -608,7 +614,7 @@ theorem walk_chord_none (t : Spec.Tier) (x y : List Nat)
       exact hloop
     have hsuf := suffix_is_fail t b2 x y (mirrorTrits y)
       (pegCount x + pegCount y + pegCount x + pegCount y) pk acc accI cells k i
-      (cells[i]'hi) out tw hOk sat hR hsh hx hy htriX htriY
+      (cells[i]'hi) out hfresh tw hOk sat hR hsh hx hy htriX htriY
       (mirrorTrits_allTrit htriY) (by rw [mirror_length, hy]) rfl hmvN
       hlen hkLe hi hk1 hkTo hpreK hpreT rfl hcFail hinv hc2
     rcases hsuf with ⟨bA, hok⟩ | ⟨e, herr, hknd, hd⟩

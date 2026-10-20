@@ -270,7 +270,9 @@ theorem start_walk_at (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
     (hfit1 : FitsLen (mv + pegCount x + pegCount y + 1))
     (hsh : TierShape t) (hOk : BoardOk t) (sat : TierSat t)
     (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
-    (hmv0 : mv = 0) :
+    (hmv0 : mv = 0)
+    (hfresh : lay.sl0 = 0 ∧ lay.ops0 = 0 ∧ lay.strict0 = 0 ∧ lay.hole0 = 0 ∧
+      lay.mx0 = 0 ∧ lay.ctrl0 = tierR t) :
     ∃ bW, Ecbs.start_walk b red = .ok bW ∧ StartAt t bW x y red := by
   let mv2 := mv + pegCount x + pegCount y
   have hmvLe : mv2 + 1 ≤ 2 * t.n + 1 := by
@@ -280,10 +282,17 @@ theorem start_walk_at (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
     rw [hmv0]
     omega
   have hrooms := cell_room_le t hship
+  rcases hfresh with ⟨hsl0, hops0, hstrict0, hhole0, hmx0, hctrl0⟩
   cases red with
   | false =>
-    obtain ⟨b2, pk2, hcopy, out⟩ :=
+    obtain ⟨b2, pk2, out, hsl, hctrl, hopsC, hstrict, hhole, hmx, _, _, hcopy⟩ :=
       white_copy_kept t b x y mv pk lay hx hy hf hfitx hfity
+    have houtS : out.sl0 = 0 := hsl.trans hsl0
+    have houtC : out.ctrl0 = tierR t := hctrl.trans hctrl0
+    have houtM : out.mx0 = 0 := hmx.trans hmx0
+    have houtP : out.strict0 = 0 := hstrict.trans hstrict0
+    have houtH : out.hole0 = 0 := hhole.trans hhole0
+    have harr := ops_mk_of_zero b2 out.ops0 out.opsSz (hopsC.trans hops0) out.opsBound
     have h2H : 2 < b2.sudo_5Board_4home.size := by rw [out.szH]; decide
     have h2D : 2 < b2.sudo_5Board_4held.size := by rw [out.szD]; decide
     let bPut := whitePut b2 2 h2H h2D t.n mv2
@@ -293,7 +302,7 @@ theorem start_walk_at (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
     · unfold Ecbs.start_walk
       conv => lhs; zeta
       rw [← bind_assoc, hcopy, ok_bind, hplant, ok_bind, pure_eq_ok]
-    · have hops := ops_of_out b2 pk2 t.n mv2 h2H h2D out.ops
+    · have hops := ops_of_out b2 pk2 t.n mv2 h2H h2D harr
       have h0 : ∀ h : 0 < bW.sudo_5Board_4home.size, bW.sudo_5Board_4home[0] = embed x := by
         intro _
         simp only [bW, peakBoard]
@@ -337,12 +346,12 @@ theorem start_walk_at (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
       · refine ⟨mv2 + 1, tierR t, raisedPeak pk2 (countHeld bPut.sudo_5Board_4held 7),
           ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
         · simp only [bW, bPut, peakBoard, whitePut]
-        · simp only [bW, bPut, peakBoard, whitePut, out.slides]
-        · simp only [bW, bPut, peakBoard, whitePut, out.ctrl]
-        · simp only [bW, bPut, peakBoard, whitePut, out.mx]
+        · simp only [bW, bPut, peakBoard, whitePut, out.slides, houtS, ← ofNat_eq_natCast]; exact Int.ofNat_zero
+        · simp only [bW, bPut, peakBoard, whitePut, out.ctrl, houtC, ofNat_eq_natCast]
+        · simp only [bW, bPut, peakBoard, whitePut, out.mx, houtM, ← ofNat_eq_natCast]; exact Int.ofNat_zero
         · simp only [bW, peakBoard]
-        · simp only [bW, bPut, peakBoard, whitePut, out.strict]
-        · simp only [bW, bPut, peakBoard, whitePut, out.hole]
+        · simp only [bW, bPut, peakBoard, whitePut, out.strict, houtP, ← ofNat_eq_natCast]; exact Int.ofNat_zero
+        · simp only [bW, bPut, peakBoard, whitePut, out.hole, houtH, ← ofNat_eq_natCast]; exact Int.ofNat_zero
         · rw [hops]; exact zero_ops0
         · rw [hops]; exact zero_ops1
         · rw [hops]; simp [Array.size_mkArray]
@@ -368,8 +377,14 @@ theorem start_walk_at (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
         · exact open_move_le t (mv2 + 1) t.n hpos hmvLe rfl
         · exact open_ctrl_le t
   | true =>
-    obtain ⟨b2, pk2, hcopy, out⟩ :=
+    obtain ⟨b2, pk2, out, hsl, hctrl, hopsC, hstrict, hhole, hmx, _, _, hcopy⟩ :=
       red_copy_kept t b x y mv pk lay hx hy hpos hyt hf hfitx hfity
+    have houtS : out.sl0 = 0 := hsl.trans hsl0
+    have houtC : out.ctrl0 = tierR t := hctrl.trans hctrl0
+    have houtM : out.mx0 = 0 := hmx.trans hmx0
+    have houtP : out.strict0 = 0 := hstrict.trans hstrict0
+    have houtH : out.hole0 = 0 := hhole.trans hhole0
+    have harr := ops_mk_of_zero b2 out.ops0 out.opsSz (hopsC.trans hops0) out.opsBound
     have h2H : 2 < b2.sudo_5Board_4home.size := by rw [out.szH]; decide
     have h2D : 2 < b2.sudo_5Board_4held.size := by rw [out.szD]; decide
     have hseat : (mirrorTrits y).length = t.n := by
@@ -382,7 +397,7 @@ theorem start_walk_at (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
     · unfold Ecbs.start_walk
       conv => lhs; zeta
       rw [← bind_assoc, hcopy, ok_bind, hplant, ok_bind, pure_eq_ok]
-    · have hops := ops_of_out b2 pk2 t.n mv2 h2H h2D out.ops
+    · have hops := ops_of_out b2 pk2 t.n mv2 h2H h2D harr
       have h0 : ∀ h : 0 < bW.sudo_5Board_4home.size, bW.sudo_5Board_4home[0] = embed x := by
         intro _
         simp only [bW, peakBoard]
@@ -427,12 +442,12 @@ theorem start_walk_at (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
       · refine ⟨mv2 + 1, tierR t, raisedPeak pk2 (countHeld bPut.sudo_5Board_4held 7),
           ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
         · simp only [bW, bPut, peakBoard, whitePut]
-        · simp only [bW, bPut, peakBoard, whitePut, out.slides]
-        · simp only [bW, bPut, peakBoard, whitePut, out.ctrl]
-        · simp only [bW, bPut, peakBoard, whitePut, out.mx]
+        · simp only [bW, bPut, peakBoard, whitePut, out.slides, houtS, ← ofNat_eq_natCast]; exact Int.ofNat_zero
+        · simp only [bW, bPut, peakBoard, whitePut, out.ctrl, houtC, ofNat_eq_natCast]
+        · simp only [bW, bPut, peakBoard, whitePut, out.mx, houtM, ← ofNat_eq_natCast]; exact Int.ofNat_zero
         · simp only [bW, peakBoard]
-        · simp only [bW, bPut, peakBoard, whitePut, out.strict]
-        · simp only [bW, bPut, peakBoard, whitePut, out.hole]
+        · simp only [bW, bPut, peakBoard, whitePut, out.strict, houtP, ← ofNat_eq_natCast]; exact Int.ofNat_zero
+        · simp only [bW, bPut, peakBoard, whitePut, out.hole, houtH, ← ofNat_eq_natCast]; exact Int.ofNat_zero
         · rw [hops]; exact zero_ops0
         · rw [hops]; exact zero_ops1
         · rw [hops]; simp [Array.size_mkArray]

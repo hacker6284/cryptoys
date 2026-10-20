@@ -84,7 +84,7 @@ theorem start_walk_white (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
       bW.sudo_5Board_4cost.sudo_5Costs_5moves =
         Int.ofNat (mv + pegCount x + pegCount y + 1) := by
   let mv2 := mv + pegCount x + pegCount y
-  obtain ⟨b2, pk2, hcopy, out⟩ :=
+  obtain ⟨b2, pk2, out, _, _, _, _, _, _, _, _, hcopy⟩ :=
     white_copy_kept t b x y mv pk lay hx hy hf hfitx hfity
   have hplant := finish_walk t b2 x y y mv2 pk2 out hpos hf hfit1
   refine ⟨peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
@@ -147,7 +147,7 @@ theorem start_walk_red (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
       bW.sudo_5Board_4cost.sudo_5Costs_5moves =
         Int.ofNat (mv + pegCount x + pegCount y + 1) := by
   let mv2 := mv + pegCount x + pegCount y
-  obtain ⟨b2, pk2, hcopy, out⟩ :=
+  obtain ⟨b2, pk2, out, _, _, _, _, _, _, _, _, hcopy⟩ :=
     red_copy_kept t b x y mv pk lay hx hy hpos hyt hf hfitx hfity
   have hplant := finish_walk t b2 x (mirrorTrits y) y mv2 pk2 out hpos hf hfit1
   refine ⟨peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
@@ -215,16 +215,18 @@ theorem start_walk_ops0 (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
     (hpos : 0 < t.n) (hyt : allTritList y) (hf : FitsLen t.n)
     (hfitx : FitsLen (mv + pegCount x))
     (hfity : FitsLen (mv + pegCount x + pegCount y))
-    (hfit1 : FitsLen (mv + pegCount x + pegCount y + 1)) :
+    (hfit1 : FitsLen (mv + pegCount x + pegCount y + 1))
+    (hops0 : lay.ops0 = 0) :
     ∃ bW, Ecbs.start_walk b red = .ok bW ∧
       bW.sudo_5Board_4cost.sudo_5Costs_3ops[0]? = some (Int.ofNat 0) := by
   let mv2 := mv + pegCount x + pegCount y
   cases red
-  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+  · obtain ⟨b2, pk2, out, _, _, hopsC, _, _, _, _, _, hcopy⟩ :=
       white_copy_kept t b x y mv pk lay hx hy hf hfitx hfity
     let bW := peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
       (by rw [out.szD]; decide) t.n mv2) pk2
     have hplant := finish_walk t b2 x y y mv2 pk2 out hpos hf hfit1
+    have harr := ops_mk_of_zero b2 out.ops0 out.opsSz (hopsC.trans hops0) out.opsBound
     refine ⟨bW, ?_, ?_⟩
     · unfold Ecbs.start_walk
       conv => lhs; zeta
@@ -234,13 +236,14 @@ theorem start_walk_ops0 (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
       rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
           (peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
             (by rw [out.szD]; decide) t.n mv2) pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
-        hops, out.ops]
+        hops, harr]
       exact zero_ops0
-  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+  · obtain ⟨b2, pk2, out, _, _, hopsC, _, _, _, _, _, hcopy⟩ :=
       red_copy_kept t b x y mv pk lay hx hy hpos hyt hf hfitx hfity
     let bW := peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
       (by rw [out.szD]; decide) t.n mv2) pk2
     have hplant := finish_walk t b2 x (mirrorTrits y) y mv2 pk2 out hpos hf hfit1
+    have harr := ops_mk_of_zero b2 out.ops0 out.opsSz (hopsC.trans hops0) out.opsBound
     refine ⟨bW, ?_, ?_⟩
     · unfold Ecbs.start_walk
       conv => lhs; zeta
@@ -250,7 +253,7 @@ theorem start_walk_ops0 (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
       rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
           (peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
             (by rw [out.szD]; decide) t.n mv2) pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
-        hops, out.ops]
+        hops, harr]
       exact zero_ops0
 
 private theorem open_some (b : Ecbs.Board) (i : Nat)
@@ -285,7 +288,7 @@ theorem start_walk_open (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
       bW.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5 := by
   let mv2 := mv + pegCount x + pegCount y
   cases red
-  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+  · obtain ⟨b2, pk2, out, _, _, _, _, _, _, _, _, hcopy⟩ :=
       white_copy_kept t b x y mv pk lay hx hy hf hfitx hfity
     let bPut := whitePut b2 2 (by rw [out.szH]; decide) (by rw [out.szD]; decide) t.n mv2
     let bW := peakBoard bPut pk2
@@ -304,9 +307,9 @@ theorem start_walk_open (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
         t.n mv2 pk2
       rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
           (peakBoard bPut pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
-        hops, out.ops]
-      simp [Array.size_mkArray]
-  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+        hops]
+      exact out.opsSz
+  · obtain ⟨b2, pk2, out, _, _, _, _, _, _, _, _, hcopy⟩ :=
       red_copy_kept t b x y mv pk lay hx hy hpos hyt hf hfitx hfity
     let bPut := whitePut b2 2 (by rw [out.szH]; decide) (by rw [out.szD]; decide) t.n mv2
     let bW := peakBoard bPut pk2
@@ -325,8 +328,8 @@ theorem start_walk_open (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
         t.n mv2 pk2
       rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
           (peakBoard bPut pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
-        hops, out.ops]
-      simp [Array.size_mkArray]
+        hops]
+      exact out.opsSz
 
 theorem demo_mul_cells : 13 * demo.cells = 26 := rfl
 theorem toy_mul_cells : 13 * toy.cells = 208 := rfl
@@ -400,16 +403,18 @@ theorem start_walk_fadd (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
     (hpos : 0 < t.n) (hyt : allTritList y) (hf : FitsLen t.n)
     (hfitx : FitsLen (mv + pegCount x))
     (hfity : FitsLen (mv + pegCount x + pegCount y))
-    (hfit1 : FitsLen (mv + pegCount x + pegCount y + 1)) :
+    (hfit1 : FitsLen (mv + pegCount x + pegCount y + 1))
+    (hops0 : lay.ops0 = 0) :
     ∃ bW, Ecbs.start_walk b red = .ok bW ∧
       bW.sudo_5Board_4cost.sudo_5Costs_3ops[4]? = some (Int.ofNat 0) := by
   let mv2 := mv + pegCount x + pegCount y
   cases red
-  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+  · obtain ⟨b2, pk2, out, _, _, hopsC, _, _, _, _, _, hcopy⟩ :=
       white_copy_kept t b x y mv pk lay hx hy hf hfitx hfity
     let bW := peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
       (by rw [out.szD]; decide) t.n mv2) pk2
     have hplant := finish_walk t b2 x y y mv2 pk2 out hpos hf hfit1
+    have harr := ops_mk_of_zero b2 out.ops0 out.opsSz (hopsC.trans hops0) out.opsBound
     refine ⟨bW, ?_, ?_⟩
     · unfold Ecbs.start_walk
       conv => lhs; zeta
@@ -419,13 +424,14 @@ theorem start_walk_fadd (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
       rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
           (peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
             (by rw [out.szD]; decide) t.n mv2) pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
-        hops, out.ops]
+        hops, harr]
       exact zero_ops4
-  · obtain ⟨b2, pk2, hcopy, out⟩ :=
+  · obtain ⟨b2, pk2, out, _, _, hopsC, _, _, _, _, _, hcopy⟩ :=
       red_copy_kept t b x y mv pk lay hx hy hpos hyt hf hfitx hfity
     let bW := peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
       (by rw [out.szD]; decide) t.n mv2) pk2
     have hplant := finish_walk t b2 x (mirrorTrits y) y mv2 pk2 out hpos hf hfit1
+    have harr := ops_mk_of_zero b2 out.ops0 out.opsSz (hopsC.trans hops0) out.opsBound
     refine ⟨bW, ?_, ?_⟩
     · unfold Ecbs.start_walk
       conv => lhs; zeta
@@ -435,7 +441,7 @@ theorem start_walk_fadd (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat)
       rw [show bW.sudo_5Board_4cost.sudo_5Costs_3ops =
           (peakBoard (whitePut b2 2 (by rw [out.szH]; decide)
             (by rw [out.szD]; decide) t.n mv2) pk2).sudo_5Board_4cost.sudo_5Costs_3ops from rfl,
-        hops, out.ops]
+        hops, harr]
       exact zero_ops4
 
 theorem demo_fadd_cells : demo.cells = 2 := rfl

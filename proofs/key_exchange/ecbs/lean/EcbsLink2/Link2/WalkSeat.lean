@@ -295,6 +295,9 @@ private theorem seat_suffix (t : Spec.Tier) (b2 : Ecbs.Board)
     (x y up px py : List Nat) (mv pk : Nat)
     (acc : List Nat × List Nat) (cells : List Nat) (k : Nat)
     (out : OutLay t b2 x up y mv pk)
+    (hfresh : out.sl0 = 0 ∧ out.ops0 = 0 ∧ out.strict0 = 0 ∧ out.hole0 = 0 ∧
+      out.mx0 = 0 ∧ out.tmax0 = 0 ∧ out.ctrl0 = tierR t ∧
+      out.high0 = t.script + tierR t + 1)
     (tw : TierWalk t) (hOk : BoardOk t) (sat : TierSat t)
     (hR : 0 < tierR t) (hsh : TierShape t)
     (hx : x.length = t.n) (hy : y.length = t.n)
@@ -326,7 +329,7 @@ private theorem seat_suffix (t : Spec.Tier) (b2 : Ecbs.Board)
   obtain ⟨bF, fr, hml, hfrob, hmk, hy1, hy4, hmark, hctrl, hst, hho, hmv, hsl, hops,
       hf1, hf4⟩ :=
     seat_out t b2 x up y mv pk out tw hOk sat hsh hR hx hup htriX htriUp hmvN
-      (by omega : 0 < t.cells)
+      (by omega : 0 < t.cells) hfresh
   have hc2all := walkRun_cells_le t.n t.k t.benchlen (x, y) false acc cells
     (true, (px, py)) h
   by_cases hzero : cells[k] = 0
@@ -541,7 +544,7 @@ theorem walk_chord_success (t : Spec.Tier) (x y px py : List Nat)
     have hpreTake : cells.take k = zs ++ [c] := by
       simpa [heq, k] using take_open zs rest c
     rcases hc with rfl | rfl
-    · obtain ⟨b2, pk, out, _hcopy, hloop⟩ :=
+    · obtain ⟨b2, pk, out, hfresh, _hcopy, hloop⟩ :=
         walk_reach_white t x y zs rest tw hsh hR hx hy hz (by simpa [heq] using hlen) hposR
       have hpre : walkRun t.n t.k t.benchlen (x, y) false acc (cells.take k) =
           some (true, (x, y)) := by
@@ -552,7 +555,7 @@ theorem walk_chord_success (t : Spec.Tier) (x y px py : List Nat)
         omega
       obtain ⟨b', hrun, hx0, hy0⟩ :=
         seat_suffix t b2 x y y px py
-          (pegCount x + pegCount y + pegCount x + pegCount y) pk acc cells k out
+          (pegCount x + pegCount y + pegCount x + pegCount y) pk acc cells k out hfresh
           tw hOk sat hR hsh hx hy htriX htriY htriY hy rfl hmvN hlen hk hk1 hpre h
       refine ⟨b', ?_, hx0, hy0⟩
       have hloop' :
@@ -568,7 +571,7 @@ theorem walk_chord_success (t : Spec.Tier) (x y px py : List Nat)
         simp only [k]
         exact hloop
       exact hloop'.trans hrun
-    · obtain ⟨b2, pk, out, _hcopy, hloop⟩ :=
+    · obtain ⟨b2, pk, out, hfresh, _hcopy, hloop⟩ :=
         walk_reach_red t x y zs rest tw hOk hsh hR hx hy htriY hz
           (by simpa [heq] using hlen) hposR
       have hpre : walkRun t.n t.k t.benchlen (x, y) false acc (cells.take k) =
@@ -580,7 +583,7 @@ theorem walk_chord_success (t : Spec.Tier) (x y px py : List Nat)
         omega
       obtain ⟨b', hrun, hx0, hy0⟩ :=
         seat_suffix t b2 x y (mirrorTrits y) px py
-          (pegCount x + pegCount y + pegCount x + pegCount y) pk acc cells k out
+          (pegCount x + pegCount y + pegCount x + pegCount y) pk acc cells k out hfresh
           tw hOk sat hR hsh hx hy htriX htriY (mirrorTrits_allTrit htriY)
           (by rw [mirror_length, hy]) rfl hmvN hlen hk hk1 hpre h
       refine ⟨b', ?_, hx0, hy0⟩

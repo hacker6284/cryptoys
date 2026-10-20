@@ -16,21 +16,31 @@ attribute [local irreducible] placeBoard
 
 /-- What the board handed to the opening copy already has. `place` does not
     write these, apart from homes 0 and 1 and the move and peak counters. -/
-structure InLay (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk : Nat) : Prop where
+structure InLay (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk : Nat) : Type where
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   bench : b.sudo_5Board_8bench_on = false
   marker : b.sudo_5Board_6marker = -1
   flag : b.sudo_5Board_9marker_on = true
-  strict : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = 0
-  hole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = 0
-  slides : b.sudo_5Board_4cost.sudo_5Costs_6slides = 0
-  mx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = 0
-  ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t)
-  high : b.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-    Int.ofNat (t.script + tierR t + 1)
-  tmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = 0
-  ops : b.sudo_5Board_4cost.sudo_5Costs_3ops = Array.mkArray 5 0
+  strict0 : Nat
+  hole0 : Nat
+  sl0 : Nat
+  ctrl0 : Nat
+  mx0 : Nat
+  high0 : Nat
+  tmax0 : Nat
+  ops0 : Nat
+  strict : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (strict0 : Int)
+  hole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (hole0 : Int)
+  slides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl0 : Int)
+  mx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = (mx0 : Int)
+  ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl0 : Int)
+  high : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high0 : Int)
+  tmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax0 : Int)
+  opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
+  opsBound : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+    ∃ (c : Nat), b.sudo_5Board_4cost.sudo_5Costs_3ops[i]'hi = (c : Int) ∧ c ≤ ops0
+  hStart : (high0 < tallyOrigin t ∧ tmax0 = 0) ∨ tallyOrigin t ≤ high0
   tier : b.sudo_5Board_1t = embTier t
   row : b.sudo_5Board_3row = embed (paintedRow t)
   ladder : b.sudo_5Board_6ladder = embed (tierClimb t)
@@ -57,21 +67,31 @@ structure InLay (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk : Nat) 
 /-- The board after the two copies. Homes 0 and 1 hold the copied point.
     The control frame is the one `InLay` recorded. -/
 structure OutLay (t : Spec.Tier) (b : Ecbs.Board) (x y1 y4 : List Nat)
-    (mv pk : Nat) : Prop where
+    (mv pk : Nat) : Type where
   szH : b.sudo_5Board_4home.size = 8
   szD : b.sudo_5Board_4held.size = 8
   bench : b.sudo_5Board_8bench_on = false
   marker : b.sudo_5Board_6marker = -1
   flag : b.sudo_5Board_9marker_on = true
-  strict : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = 0
-  hole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = 0
-  slides : b.sudo_5Board_4cost.sudo_5Costs_6slides = 0
-  mx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = 0
-  ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t)
-  high : b.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-    Int.ofNat (t.script + tierR t + 1)
-  tmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = 0
-  ops : b.sudo_5Board_4cost.sudo_5Costs_3ops = Array.mkArray 5 0
+  strict0 : Nat
+  hole0 : Nat
+  sl0 : Nat
+  ctrl0 : Nat
+  mx0 : Nat
+  high0 : Nat
+  tmax0 : Nat
+  ops0 : Nat
+  strict : b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (strict0 : Int)
+  hole : b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (hole0 : Int)
+  slides : b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl0 : Int)
+  mx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = (mx0 : Int)
+  ctrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl0 : Int)
+  high : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high0 : Int)
+  tmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax0 : Int)
+  opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
+  opsBound : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+    ∃ (c : Nat), b.sudo_5Board_4cost.sudo_5Costs_3ops[i]'hi = (c : Int) ∧ c ≤ ops0
+  hStart : (high0 < tallyOrigin t ∧ tmax0 = 0) ∨ tallyOrigin t ≤ high0
   tier : b.sudo_5Board_1t = embTier t
   row : b.sudo_5Board_3row = embed (paintedRow t)
   ladder : b.sudo_5Board_6ladder = embed (tierClimb t)
@@ -95,6 +115,22 @@ structure OutLay (t : Spec.Tier) (b : Ecbs.Board) (x y1 y4 : List Nat)
   home4 : b.sudo_5Board_4home[4]'(by rw [szH]; decide) = embed y4
   moves : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv
   peak : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
+
+/-- Every slot is zero, so the ops array is the fresh `mkArray`. -/
+theorem ops_mk_of_zero (b : Ecbs.Board) (ops0 : Nat)
+    (hsz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5) (h0 : ops0 = 0)
+    (hb : ∀ i (hi : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size),
+      ∃ (c : Nat), b.sudo_5Board_4cost.sudo_5Costs_3ops[i]'hi = (c : Int) ∧ c ≤ ops0) :
+    b.sudo_5Board_4cost.sudo_5Costs_3ops = Array.mkArray 5 (0 : Int) := by
+  apply Array.ext
+  · rw [hsz, Array.size_mkArray]
+  · intro i hi _hi'
+    obtain ⟨c, hc, hle⟩ := hb i hi
+    have hc0 : c = 0 := by
+      cases h0
+      exact Nat.eq_zero_of_le_zero hle
+    rw [hc, hc0]
+    simp [Array.getElem_mkArray]
 
 private theorem keep2 {α : Type} (proj : Ecbs.Board → α)
     (hkeep : ∀ (b : Ecbs.Board) (home : Nat)
@@ -141,11 +177,14 @@ theorem white_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk
     (hf : FitsLen t.n)
     (hfitx : FitsLen (mv + pegCount x))
     (hfity : FitsLen (mv + pegCount x + pegCount y)) :
-    ∃ b2 pk2,
+    ∃ (b2 : Ecbs.Board) (pk2 : Nat)
+      (out : OutLay t b2 x y y (mv + pegCount x + pegCount y) pk2),
+      out.sl0 = lay.sl0 ∧ out.ctrl0 = lay.ctrl0 ∧ out.ops0 = lay.ops0 ∧
+        out.strict0 = lay.strict0 ∧ out.hole0 = lay.hole0 ∧ out.mx0 = lay.mx0 ∧
+        out.high0 = lay.high0 ∧ out.tmax0 = lay.tmax0 ∧
       (do
           let board ← Ecbs.copy_band b Ecbs.across Ecbs.base_across false
-          Ecbs.copy_band board Ecbs.up Ecbs.base_up false) = .ok b2 ∧
-      OutLay t b2 x y y (mv + pegCount x + pegCount y) pk2 := by
+          Ecbs.copy_band board Ecbs.up Ecbs.base_up false) = .ok b2 := by
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [lay.szH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [lay.szD]; decide
   have h3H : 3 < b.sudo_5Board_4home.size := by rw [lay.szH]; decide
@@ -193,13 +232,16 @@ theorem white_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk
     rw [place_home_eq, Array.size_set, hszH1]
   have hszD2 : b2.sudo_5Board_4held.size = 8 := by
     rw [place_held_eq, Array.size_set, hszD1]
-  refine ⟨b2, pk2, ?_, ?_⟩
-  · rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
+  have hdo :
+      (do
+          let board ← Ecbs.copy_band b Ecbs.across Ecbs.base_across false
+          Ecbs.copy_band board Ecbs.up Ecbs.base_up false) = .ok b2 := by
+    rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
         show Ecbs.base_across = ((3 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl,
         show Ecbs.base_up = ((4 : Nat) : Int) from rfl, hcopy1, ok_bind]
     simpa [b1, b2] using hcopy2
-  · exact
+  exact ⟨b2, pk2,
     { szH := hszH2
       szD := hszD2
       bench := (keep2 (fun b => b.sudo_5Board_8bench_on) place_bench b x y h0H h0D mv pk
@@ -208,6 +250,14 @@ theorem white_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk
         h1H1 h1D1 mv1 pk1).trans lay.marker
       flag := (keep2 (fun b => b.sudo_5Board_9marker_on) place_flag b x y h0H h0D mv pk
         h1H1 h1D1 mv1 pk1).trans lay.flag
+      strict0 := lay.strict0
+      hole0 := lay.hole0
+      sl0 := lay.sl0
+      ctrl0 := lay.ctrl0
+      mx0 := lay.mx0
+      high0 := lay.high0
+      tmax0 := lay.tmax0
+      ops0 := lay.ops0
       strict := (keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_11peak_strict) place_strict_eq
         b x y h0H h0D mv pk h1H1 h1D1 mv1 pk1).trans lay.strict
       hole := (keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) place_hole_eq
@@ -222,8 +272,17 @@ theorem white_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk
         b x y h0H h0D mv pk h1H1 h1D1 mv1 pk1).trans lay.high
       tmax := (keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_9tally_max) place_tmax
         b x y h0H h0D mv pk h1H1 h1D1 mv1 pk1).trans lay.tmax
-      ops := (keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_3ops) place_ops_eq
-        b x y h0H h0D mv pk h1H1 h1D1 mv1 pk1).trans lay.ops
+      opsSz := by
+        have harr := keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_3ops) place_ops_eq
+          b x y h0H h0D mv pk h1H1 h1D1 mv1 pk1
+        rw [harr]
+        exact lay.opsSz
+      opsBound := by
+        have harr := keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_3ops) place_ops_eq
+          b x y h0H h0D mv pk h1H1 h1D1 mv1 pk1
+        rw [harr]
+        exact lay.opsBound
+      hStart := lay.hStart
       tier := (keep2 (fun b => b.sudo_5Board_1t) place_tier b x y h0H h0D mv pk
         h1H1 h1D1 mv1 pk1).trans lay.tier
       row := (keep2 (fun b => b.sudo_5Board_3row) place_row b x y h0H h0D mv pk
@@ -306,7 +365,8 @@ theorem white_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk
       moves := by
         rw [place_moves_eq]
       peak := by
-        rw [place_peak_nat b1 1 h1H1 h1D1 y mv1 pk1 hpk1] }
+        rw [place_peak_nat b1 1 h1H1 h1D1 y mv1 pk1 hpk1] },
+    rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, hdo⟩
 
 /-- Two copies, the second mirrored. Home 1 is the negated base up.
     The move count matches the white copy because `pegCount_mirror` does. -/
@@ -317,11 +377,14 @@ theorem red_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk :
     (hf : FitsLen t.n)
     (hfitx : FitsLen (mv + pegCount x))
     (hfity : FitsLen (mv + pegCount x + pegCount y)) :
-    ∃ b2 pk2,
+    ∃ (b2 : Ecbs.Board) (pk2 : Nat)
+      (out : OutLay t b2 x (mirrorTrits y) y (mv + pegCount x + pegCount y) pk2),
+      out.sl0 = lay.sl0 ∧ out.ctrl0 = lay.ctrl0 ∧ out.ops0 = lay.ops0 ∧
+        out.strict0 = lay.strict0 ∧ out.hole0 = lay.hole0 ∧ out.mx0 = lay.mx0 ∧
+        out.high0 = lay.high0 ∧ out.tmax0 = lay.tmax0 ∧
       (do
           let board ← Ecbs.copy_band b Ecbs.across Ecbs.base_across false
-          Ecbs.copy_band board Ecbs.up Ecbs.base_up true) = .ok b2 ∧
-      OutLay t b2 x (mirrorTrits y) y (mv + pegCount x + pegCount y) pk2 := by
+          Ecbs.copy_band board Ecbs.up Ecbs.base_up true) = .ok b2 := by
   have h0H : 0 < b.sudo_5Board_4home.size := by rw [lay.szH]; decide
   have h0D : 0 < b.sudo_5Board_4held.size := by rw [lay.szD]; decide
   have h3H : 3 < b.sudo_5Board_4home.size := by rw [lay.szH]; decide
@@ -373,13 +436,16 @@ theorem red_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk :
     rw [place_home_eq, Array.size_set, hszH1]
   have hszD2 : b2.sudo_5Board_4held.size = 8 := by
     rw [place_held_eq, Array.size_set, hszD1]
-  refine ⟨b2, pk2, ?_, ?_⟩
-  · rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
+  have hdo :
+      (do
+          let board ← Ecbs.copy_band b Ecbs.across Ecbs.base_across false
+          Ecbs.copy_band board Ecbs.up Ecbs.base_up true) = .ok b2 := by
+    rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
         show Ecbs.base_across = ((3 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl,
         show Ecbs.base_up = ((4 : Nat) : Int) from rfl, hcopy1, ok_bind]
     simpa [b1, b2, up] using hcopy2
-  · exact
+  exact ⟨b2, pk2,
     { szH := hszH2
       szD := hszD2
       bench := (keep2 (fun b => b.sudo_5Board_8bench_on) place_bench b x up h0H h0D mv pk
@@ -388,6 +454,14 @@ theorem red_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk :
         h1H1 h1D1 mv1 pk1).trans lay.marker
       flag := (keep2 (fun b => b.sudo_5Board_9marker_on) place_flag b x up h0H h0D mv pk
         h1H1 h1D1 mv1 pk1).trans lay.flag
+      strict0 := lay.strict0
+      hole0 := lay.hole0
+      sl0 := lay.sl0
+      ctrl0 := lay.ctrl0
+      mx0 := lay.mx0
+      high0 := lay.high0
+      tmax0 := lay.tmax0
+      ops0 := lay.ops0
       strict := (keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_11peak_strict) place_strict_eq
         b x up h0H h0D mv pk h1H1 h1D1 mv1 pk1).trans lay.strict
       hole := (keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) place_hole_eq
@@ -402,8 +476,17 @@ theorem red_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk :
         b x up h0H h0D mv pk h1H1 h1D1 mv1 pk1).trans lay.high
       tmax := (keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_9tally_max) place_tmax
         b x up h0H h0D mv pk h1H1 h1D1 mv1 pk1).trans lay.tmax
-      ops := (keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_3ops) place_ops_eq
-        b x up h0H h0D mv pk h1H1 h1D1 mv1 pk1).trans lay.ops
+      opsSz := by
+        have harr := keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_3ops) place_ops_eq
+          b x up h0H h0D mv pk h1H1 h1D1 mv1 pk1
+        rw [harr]
+        exact lay.opsSz
+      opsBound := by
+        have harr := keep2 (fun b => b.sudo_5Board_4cost.sudo_5Costs_3ops) place_ops_eq
+          b x up h0H h0D mv pk h1H1 h1D1 mv1 pk1
+        rw [harr]
+        exact lay.opsBound
+      hStart := lay.hStart
       tier := (keep2 (fun b => b.sudo_5Board_1t) place_tier b x up h0H h0D mv pk
         h1H1 h1D1 mv1 pk1).trans lay.tier
       row := (keep2 (fun b => b.sudo_5Board_3row) place_row b x up h0H h0D mv pk
@@ -486,6 +569,7 @@ theorem red_copy_kept (t : Spec.Tier) (b : Ecbs.Board) (x y : List Nat) (mv pk :
       moves := by
         rw [place_moves_eq, hpegY]
       peak := by
-        rw [place_peak_nat b1 1 h1H1 h1D1 up mv1 pk1 hpk1] }
+        rw [place_peak_nat b1 1 h1H1 h1D1 up mv1 pk1 hpk1] },
+    rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, hdo⟩
 
 end EcbsLink2.Link2

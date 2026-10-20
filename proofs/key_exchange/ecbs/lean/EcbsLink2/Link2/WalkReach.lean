@@ -122,8 +122,11 @@ theorem walk_reach_white (t : Spec.Tier) (x y : List Nat) (zs rest : List Nat)
     (hx : x.length = t.n) (hy : y.length = t.n)
     (hz : ∀ z ∈ zs, z = 0)
     (hlen : (zs ++ (1 :: rest)).length = t.cells) (hrest : 0 < rest.length) :
-    ∃ b2 pk, ∃ _out : OutLay t b2 x y y
+    ∃ b2 pk, ∃ out : OutLay t b2 x y y
         (pegCount x + pegCount y + pegCount x + pegCount y) pk,
+      (out.sl0 = 0 ∧ out.ops0 = 0 ∧ out.strict0 = 0 ∧ out.hole0 = 0 ∧
+        out.mx0 = 0 ∧ out.tmax0 = 0 ∧ out.ctrl0 = tierR t ∧
+        out.high0 = t.script + tierR t + 1) ∧
       let cells := zs ++ (1 :: rest)
       let k := zs.length + 1
       let toN := t.cells - 1
@@ -149,9 +152,15 @@ theorem walk_reach_white (t : Spec.Tier) (x y : List Nat) (zs rest : List Nat)
     apply geomFit t.n t.benchlen _ hsh.n_small hsh.small.2.2.2
     omega
   let bf := chordFlag (baseBoard t x y)
-  obtain ⟨b2, _pk, hcopy, out⟩ :=
+  obtain ⟨b2, _pk, out, hsl0, hctrl0, hops0, hstrict0, hhole0, hmx0, hhigh0, htmax0, hcopy⟩ :=
     white_copy_kept t bf x y (pegCount x + pegCount y) 2 (base_in_lay t x y hR)
       hx hy hf hfitx hfity
+  rcases base_lay_fresh t x y hR with ⟨hsl, hopsZ, hstrict, hhole, hmx, htmax, hctrlZ, hhigh⟩
+  have hfresh : out.sl0 = 0 ∧ out.ops0 = 0 ∧ out.strict0 = 0 ∧ out.hole0 = 0 ∧
+      out.mx0 = 0 ∧ out.tmax0 = 0 ∧ out.ctrl0 = tierR t ∧
+      out.high0 = t.script + tierR t + 1 :=
+    ⟨hsl0.trans hsl, hops0.trans hopsZ, hstrict0.trans hstrict, hhole0.trans hhole,
+      hmx0.trans hmx, htmax0.trans htmax, hctrl0.trans hctrlZ, hhigh0.trans hhigh⟩
   have hbeq : SudoRt.SEq.beq (Int.ofNat 1) (2 : Int) = false := by
     rw [show (2 : Int) = Int.ofNat 2 from rfl, sEq_ofNat 1 2]
     decide
@@ -163,7 +172,7 @@ theorem walk_reach_white (t : Spec.Tier) (x y : List Nat) (zs rest : List Nat)
     simpa [hbeq] using hcopy
   have hml := marker_lift_down bf (base_in_lay t x y hR).marker
   have hloop := reach_copy t x y zs rest 1 b2 tw hz (Or.inl rfl) hlen hrest hml hcopyB
-  exact ⟨b2, _pk, out, hcopy, hloop⟩
+  exact ⟨b2, _pk, out, hfresh, hcopy, hloop⟩
 
 /-- Empty cells, then a red cell, then at least one more cell. Up on the
     copied board is the negated base up. -/
@@ -172,8 +181,11 @@ theorem walk_reach_red (t : Spec.Tier) (x y : List Nat) (zs rest : List Nat)
     (hx : x.length = t.n) (hy : y.length = t.n) (htriY : allTritList y)
     (hz : ∀ z ∈ zs, z = 0)
     (hlen : (zs ++ (2 :: rest)).length = t.cells) (hrest : 0 < rest.length) :
-    ∃ b2 pk, ∃ _out : OutLay t b2 x (mirrorTrits y) y
+    ∃ b2 pk, ∃ out : OutLay t b2 x (mirrorTrits y) y
         (pegCount x + pegCount y + pegCount x + pegCount y) pk,
+      (out.sl0 = 0 ∧ out.ops0 = 0 ∧ out.strict0 = 0 ∧ out.hole0 = 0 ∧
+        out.mx0 = 0 ∧ out.tmax0 = 0 ∧ out.ctrl0 = tierR t ∧
+        out.high0 = t.script + tierR t + 1) ∧
       let cells := zs ++ (2 :: rest)
       let k := zs.length + 1
       let toN := t.cells - 1
@@ -199,9 +211,15 @@ theorem walk_reach_red (t : Spec.Tier) (x y : List Nat) (zs rest : List Nat)
     apply geomFit t.n t.benchlen _ hsh.n_small hsh.small.2.2.2
     omega
   let bf := chordFlag (baseBoard t x y)
-  obtain ⟨b2, _pk, hcopy, out⟩ :=
+  obtain ⟨b2, _pk, out, hsl0, hctrl0, hops0, hstrict0, hhole0, hmx0, hhigh0, htmax0, hcopy⟩ :=
     red_copy_kept t bf x y (pegCount x + pegCount y) 2 (base_in_lay t x y hR)
       hx hy hOk.n_pos htriY hf hfitx hfity
+  rcases base_lay_fresh t x y hR with ⟨hsl, hopsZ, hstrict, hhole, hmx, htmax, hctrlZ, hhigh⟩
+  have hfresh : out.sl0 = 0 ∧ out.ops0 = 0 ∧ out.strict0 = 0 ∧ out.hole0 = 0 ∧
+      out.mx0 = 0 ∧ out.tmax0 = 0 ∧ out.ctrl0 = tierR t ∧
+      out.high0 = t.script + tierR t + 1 :=
+    ⟨hsl0.trans hsl, hops0.trans hopsZ, hstrict0.trans hstrict, hhole0.trans hhole,
+      hmx0.trans hmx, htmax0.trans htmax, hctrl0.trans hctrlZ, hhigh0.trans hhigh⟩
   have hbeq : SudoRt.SEq.beq (Int.ofNat 2) (2 : Int) = true := by
     rw [show (2 : Int) = Int.ofNat 2 from rfl, sEq_ofNat 2 2]
     decide
@@ -213,6 +231,6 @@ theorem walk_reach_red (t : Spec.Tier) (x y : List Nat) (zs rest : List Nat)
     simpa [hbeq] using hcopy
   have hml := marker_lift_down bf (base_in_lay t x y hR).marker
   have hloop := reach_copy t x y zs rest 2 b2 tw hz (Or.inr rfl) hlen hrest hml hcopyB
-  exact ⟨b2, _pk, out, hcopy, hloop⟩
+  exact ⟨b2, _pk, out, hfresh, hcopy, hloop⟩
 
 end EcbsLink2.Link2

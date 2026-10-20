@@ -110,6 +110,8 @@ structure GapAt (b : Ecbs.Board) (t : Spec.Tier) (j : Nat) : Prop where
   baseHeld : ∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true
   upHome : ∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = (#[] : Array Int)
   upHeld : ∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = false
+  axHome : ∀ h : 0 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[0] = (#[] : Array Int)
+  axHeld : ∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0] = false
   gapHome : ∀ h : 5 < b.sudo_5Board_4home.size,
     b.sudo_5Board_4home[5] =
       embed (fieldMul t.n t.k t.benchlen
@@ -305,6 +307,19 @@ theorem search_gap (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat : 
         have hS := settle_held_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM sl pkM
         have hne : (5 : Nat) ≠ 1 := by decide
         simp [b', hS, Array.getElem_set, hne, hheldM, s.upHeld]
+      axHome := by
+        intro h
+        have hS := settle_home_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM sl pkM
+        have hne : (5 : Nat) ≠ 0 := by decide
+        have h0H : 0 < b0.sudo_5Board_4home.size := by rw [s.szH]; decide
+        have h0M : 0 < bM.sudo_5Board_4home.size := by rw [hszHM, s.szH]; decide
+        have hM := hhomeM 0 h0H h0M (by decide)
+        simp [b', hS, Array.getElem_set, hne, hM, s.axHome]
+      axHeld := by
+        intro h
+        have hS := settle_held_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM sl pkM
+        have hne : (5 : Nat) ≠ 0 := by decide
+        simp [b', hS, Array.getElem_set, hne, hheldM, s.axHeld]
       gapHome := by
         intro h
         have hS := settle_home_eq bM 5 ⟨h5HM, h5DM⟩ lane n mvM sl pkM

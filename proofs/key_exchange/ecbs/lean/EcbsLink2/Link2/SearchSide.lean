@@ -180,7 +180,9 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
         (∃ pk, bS.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk) ∧
         (∃ ps, bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps) ∧
         (∃ holeN, bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN) ∧
-        mv + 2 * t.n + 1 ≤ sideCap t.n t.benchlen := by
+        mv + 2 * t.n + 1 ≤ sideCap t.n t.benchlen ∧
+        (∀ h : 0 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[0] = false) ∧
+        (∀ h : 0 < bS.sudo_5Board_4home.size, bS.sudo_5Board_4home[0] = (#[] : Array Int)) := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hxt : allTritList x := basisPeg_trits t.n j
@@ -190,7 +192,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
   obtain ⟨bC, hdo, honC, htoC, hbenchC, htakeC, hlenC, hzeroC, hmkC, hszHC, hszDC,
       hheld2C, _hhome2C, hheld3C, hhome3C, hheld6C, hmovC, hslC, hpkE, hpsE, hholeE,
       htierC, hopsC, hop0C, hheld1C, hheld5C, hmarkC, hctrlC, hmxC, hopSzC, hop1C,
-      hhome1C, hhome5C⟩ :=
+      hhome1C, hhome5C, hheld0C, hhome0C⟩ :=
     search_cube t hOk hsh sat j hj
   obtain ⟨pk, hpk⟩ := hpkE
   obtain ⟨ps, hps⟩ := hpsE
@@ -310,7 +312,7 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
       mv + 2 * pegCount (lane.take n) + n + n * (n + 1) + 3 * (bench - n) + 2 * n + 2 * n + 1 :=
     close_room mvS mv (pegCount (lane.take n)) n bench hmvInner
   refine ⟨bS, mvS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hdo, ok_bind, hokM, ok_bind]
     exact hokS
   · intro h
@@ -394,6 +396,18 @@ theorem search_square (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat
   · simpa [n, bench] using
       Nat.le_trans hmvSle (side_cap_le mv (pegCount (lane.take n)) (pegCount x) n bench
         hmvLe hpegL hpeg)
+  · intro h
+    have h0C : 0 < bC.sudo_5Board_4held.size := by rw [hszDC]; decide
+    have h0M : 0 < bM.sudo_5Board_4held.size := by rw [hszDM, hszDC]; decide
+    have hM := hheldPM 0 h0C h0M (by decide) (by decide)
+    have hS := hheldPS 0 h0M h (by decide)
+    exact hS.trans (hM.trans (hheld0C h0C))
+  · intro h
+    have h0C : 0 < bC.sudo_5Board_4home.size := by rw [hszHC]; decide
+    have h0M : 0 < bM.sudo_5Board_4home.size := by rw [hszHM, hszHC]; decide
+    have hM := hhomeP 0 h0C h0M (by decide) (by decide)
+    have hS := hhomePS 0 h0M h (by decide)
+    exact hS.trans (hM.trans (hhome0C h0C))
 
 /-- The board `curve_side` leaves for one search hole: curve side in the bottom,
     the planted peg still in base-across, up and the gap empty, marker down,
@@ -411,6 +425,8 @@ structure SideAt (b : Ecbs.Board) (t : Spec.Tier) (j : Nat) : Prop where
   baseHeld : ∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true
   upHome : ∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = (#[] : Array Int)
   upHeld : ∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = false
+  axHome : ∀ h : 0 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[0] = (#[] : Array Int)
+  axHeld : ∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0] = false
   gapHome : ∀ h : 5 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[5] = (#[] : Array Int)
   gapHeld : ∀ h : 5 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[5] = false
   spareOff : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = false
@@ -458,7 +474,7 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
     fieldMul_length t.n t.k t.benchlen x x hnle
   obtain ⟨bS, mv, hdo, hhome2, hheld2, hhome6, hheld6, hhome3, hheld3, hoff, htier, hmov,
       hfit, hszH, hszD, hheld1, hheld5, hmk, hmark, hctrl, hmx, hopSz, hop0, hop1,
-      hhome1, hhome5, hslE, hpkE, hstrictE, hholeE, hcap⟩ :=
+      hhome1, hhome5, hslE, hpkE, hstrictE, hholeE, hcap, hheld0, hhome0⟩ :=
     search_square t hOk hsh sat j hj
   have h2H : 2 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
   have h2D : 2 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
@@ -502,6 +518,14 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
         upHeld := by
           intro h
           exact (hk.held 1 (by decide) h1D h).trans (hheld1 h1D)
+        axHome := by
+          intro h
+          have h0S : 0 < bS.sudo_5Board_4home.size := by rw [hszH]; decide
+          exact (hk.home 0 (by decide) (by decide) h0S h).trans (hhome0 h0S)
+        axHeld := by
+          intro h
+          have h0D : 0 < bS.sudo_5Board_4held.size := by rw [hszD]; decide
+          exact (hk.held 0 (by decide) h0D h).trans (hheld0 h0D)
         gapHome := by
           intro h
           exact (hk.home 5 (by decide) (by decide) h5S h).trans (hhome5 h5S)

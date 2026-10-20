@@ -132,6 +132,16 @@ theorem side_mx (t : Spec.Tier) (x : List Nat) :
     (searchSideBoard t x).sudo_5Board_4cost.sudo_5Costs_17script_marker_max = 0 := by
   simp [searchSideBoard, putAcross, built_mx0]
 
+theorem side_held0 (t : Spec.Tier) (x : List Nat)
+    (h : 0 < (searchSideBoard t x).sudo_5Board_4held.size) :
+    (searchSideBoard t x).sudo_5Board_4held[0] = false := by
+  simp [searchSideBoard, putAcross, built_held_arr, Array.getElem_set, Array.getElem_mkArray]
+
+theorem side_home0 (t : Spec.Tier) (x : List Nat)
+    (h : 0 < (searchSideBoard t x).sudo_5Board_4home.size) :
+    (searchSideBoard t x).sudo_5Board_4home[0] = (#[] : Array Int) := by
+  simp [searchSideBoard, putAcross, built_home_blank, Array.getElem_set, Array.getElem_mkArray]
+
 theorem side_home1 (t : Spec.Tier) (x : List Nat)
     (h : 1 < (searchSideBoard t x).sudo_5Board_4home.size) :
     (searchSideBoard t x).sudo_5Board_4home[1] = (#[] : Array Int) := by
@@ -286,7 +296,9 @@ theorem search_cube (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
         (∀ h : 1 < b'.sudo_5Board_4cost.sudo_5Costs_3ops.size,
           b'.sudo_5Board_4cost.sudo_5Costs_3ops[1] = 1) ∧
         (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = (#[] : Array Int)) ∧
-        (∀ h : 5 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[5] = (#[] : Array Int)) := by
+        (∀ h : 5 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[5] = (#[] : Array Int)) ∧
+        (∀ h : 0 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[0] = false) ∧
+        (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = (#[] : Array Int)) := by
   let x := basisPeg t.n j
   have hx : x.length = t.n := basisPeg_length t.n j
   have hxt : allTritList x := basisPeg_trits t.n j
@@ -353,7 +365,8 @@ theorem search_cube (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
     rw [laneFold_length t.n (t.n - t.k) (combStrip t.n t.benchlen x) (by rwa [hstrip])]
     exact hstrip
   refine ⟨b', ?_, hon, hto, ?_, ?_, hlenL, ?_, hmk', ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ⟨_, hpeakOut⟩, ⟨_, hstrict'⟩, ⟨_, hhole'⟩, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ⟨_, hpeakOut⟩, ⟨_, hstrict'⟩, ⟨_, hhole'⟩, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
+      ?_, ?_⟩
   · have hputS : Ecbs.put (builtBoard t) ((searchBase : Nat) : Int) (embed x) =
         .ok (putAcross t x) := by
       simpa [searchBase] using hput
@@ -431,5 +444,15 @@ theorem search_cube (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
     have hne : (2 : Nat) ≠ 5 := by decide
     have h5b : 5 < b.sudo_5Board_4home.size := by rw [side_szH]; decide
     simpa [Array.getElem_set, hne] using hget.trans (side_home5 t x h5b)
+  · intro h
+    have hget := get_eq_of_array hheld 0 h
+    have hne : (2 : Nat) ≠ 0 := by decide
+    have h0b : 0 < b.sudo_5Board_4held.size := by rw [side_szD]; decide
+    simpa [Array.getElem_set, hne] using hget.trans (side_held0 t x h0b)
+  · intro h
+    have hget := get_eq_of_array hhome 0 h
+    have hne : (2 : Nat) ≠ 0 := by decide
+    have h0b : 0 < b.sudo_5Board_4home.size := by rw [side_szH]; decide
+    simpa [Array.getElem_set, hne] using hget.trans (side_home0 t x h0b)
 
 end EcbsLink2.Link2

@@ -610,6 +610,30 @@ theorem search_side (t : Spec.Tier) (hOk : BoardOk t) (hsh : TierShape t) (sat :
           rcases hholeE with ⟨holeN, hhole⟩
           exact ⟨holeN, hk.hole.trans hhole⟩ }
 
+/-- Homes and op slots the gap square reads off the spare-square board.
+    `o0` and `o1` are the plant's op counters. The spare multiply has bumped
+    slot 0 once. -/
+structure SquareKeep (b : Ecbs.Board) (t : Spec.Tier) (j o0 o1 : Nat) : Prop where
+  marker : b.sudo_5Board_6marker = -1
+  upHome : ∀ h : 1 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[1] = (#[] : Array Int)
+  upHeld : ∀ h : 1 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[1] = false
+  axHome : ∀ h : 0 < b.sudo_5Board_4home.size, b.sudo_5Board_4home[0] = (#[] : Array Int)
+  axHeld : ∀ h : 0 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[0] = false
+  baseHome : ∀ h : 3 < b.sudo_5Board_4home.size,
+    b.sudo_5Board_4home[3] = embed (basisPeg t.n j)
+  baseHeld : ∀ h : 3 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[3] = true
+  gapHeld : ∀ h : 5 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[5] = false
+  spareHeld : ∀ h : 6 < b.sudo_5Board_4held.size, b.sudo_5Board_4held[6] = true
+  peak : ∃ (pk : Nat), b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat pk
+  strict : ∃ (ps : Nat), b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = Int.ofNat ps
+  hole : ∃ (holeN : Nat), b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = Int.ofNat holeN
+  mx : ∃ (mxN : Nat), b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = Int.ofNat mxN
+  opsSz : b.sudo_5Board_4cost.sudo_5Costs_3ops.size = 5
+  ops0 : ∀ h : 0 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+    b.sudo_5Board_4cost.sudo_5Costs_3ops[0] = ((o0 + 1 : Nat) : Int)
+  ops1 : ∀ h : 1 < b.sudo_5Board_4cost.sudo_5Costs_3ops.size,
+    b.sudo_5Board_4cost.sudo_5Costs_3ops[1] = ((o1 + 1 : Nat) : Int)
+
 /-- Spare square on the cube `search_cube_at` leaves. Moves stay under
     `mv0 + sideCap`, slides under `sl0 + 4 * n`, and control stays `c0 + tierR`. -/
 theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
@@ -647,7 +671,8 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         (∀ h : 6 < bS.sudo_5Board_4held.size, bS.sudo_5Board_4held[6] = true) ∧
         bS.sudo_5Board_4home.size = 8 ∧
         bS.sudo_5Board_4held.size = 8 ∧
-        bS.sudo_5Board_1t = embTier t := by
+        bS.sudo_5Board_1t = embTier t ∧
+        ∃ o0 o1, SquareKeep bS t j o0 o1 := by
   obtain ⟨bC, hcube, cu⟩ :=
     search_cube_at b0 t holesLeft hp hOk hsh sat j hj mv0 sl0 c0 hmv hsl0 hc0
   let x := basisPeg t.n j
@@ -709,6 +734,7 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   rcases cu.strict with ⟨ps, hps⟩
   rcases cu.hole with ⟨holeN, hhole⟩
   rcases cu.ops0 with ⟨o0, ho0, hfo0⟩
+  rcases cu.ops1 with ⟨o1, ho1⟩
   have hposC : 0 < lane.length := by rw [hlenC]; omega
   have h2H : 2 < bC.sudo_5Board_4home.size := by rw [cu.szH]; decide
   have h2D : 2 < bC.sudo_5Board_4held.size := by rw [cu.szD]; decide
@@ -744,8 +770,8 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
     ⟨hsh.w0, hsh.h0, hsh.rlt, hsh.r0, hsh.n_eq, hsh.k_le, hsh.gap⟩
     hsh.small hsh.n_small
   obtain ⟨bM, hokM, honM, htoM, htakeM, hhome2M, hbenchM, hhighM, hmovM, hslM, htM,
-      hheld6M, hheld2M, hheldPM, hhomeP, hszHM, hszDM, hpkM, _hmkM, _hmarkM, hctrlM,
-      _hmxM, _hopsM, _hstrictM, _hholeM⟩ := hmul
+      hheld6M, hheld2M, hheldPM, hhomeP, hszHM, hszDM, hpkM, hmkM, hmarkM, hctrlM,
+      hmxM, hopsM, hstrictM, hholeM⟩ := hmul
   obtain ⟨pkM, hpkM⟩ := hpkM
   let laneS := laneFold n (n - k) (school n x x (List.replicate bench 0) false)
   have hlenS : laneS.length = bench := by
@@ -785,7 +811,7 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
         (four_n sl0 (pegCount (lane.take n)) (pegCount (laneS.take n)) n hpegL hpegS))
       (by simpa [laneS] using htakeM)
   obtain ⟨bS, hokS, hoffS, hhome6S, hheld6S, hhomePS, hheldPS, hmovS, htS, hszHS, hszDS,
-      _hmkS, _hmarkS, hctrlS, _hmxS, _hopsS, hslS, _hpeakS, _hstrictS, _hholeS⟩ := hset
+      hmkS, hmarkS, hctrlS, hmxS, hopsS, hslS, hpeakS, hstrictS, hholeS⟩ := hset
   let mvS := mvM + 2 * pegCount (laneS.take n)
   have hmvInner : mvS ≤
       mv + 2 * pegCount (lane.take n) + n + n * (n + 1) + 3 * (bench - n) + 2 * n := by
@@ -799,7 +825,7 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   have h2HM : 2 < bM.sudo_5Board_4home.size := by rw [hszHM, cu.szH]; decide
   have h2DM : 2 < bM.sudo_5Board_4held.size := by rw [hszDM, cu.szD]; decide
   refine ⟨bS, mvS, (sl0 + 2 * pegCount (lane.take n)) + 2 * pegCount (laneS.take n),
-      ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, hoffS, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hcube, ok_bind, hokM, ok_bind]
     exact hokS
   · simpa [mvS, ofNat_eq_natCast] using hmovS
@@ -825,6 +851,82 @@ theorem search_square_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   · rw [hszHS, hszHM]; exact cu.szH
   · rw [hszDS, hszDM]; exact cu.szD
   · rw [htS, htM]; exact cu.tier
+  · refine ⟨o0, o1, ?_⟩
+    refine
+      { marker := by rw [hmarkS, hmarkM]; exact cu.marker
+        upHome := by
+          intro h
+          have hC : 1 < bC.sudo_5Board_4home.size := by rw [cu.szH]; decide
+          have hM : 1 < bM.sudo_5Board_4home.size := by rw [hszHM]; exact hC
+          exact (hhomePS 1 hM h (by decide)).trans
+            ((hhomeP 1 hC hM (by decide) (by decide)).trans (cu.home1 hC))
+        upHeld := by
+          intro h
+          have hC : 1 < bC.sudo_5Board_4held.size := by rw [cu.szD]; decide
+          have hM : 1 < bM.sudo_5Board_4held.size := by rw [hszDM]; exact hC
+          exact (hheldPS 1 hM h (by decide)).trans
+            ((hheldPM 1 hC hM (by decide) (by decide)).trans (cu.held1 hC))
+        axHome := by
+          intro h
+          have hC : 0 < bC.sudo_5Board_4home.size := by rw [cu.szH]; decide
+          have hM : 0 < bM.sudo_5Board_4home.size := by rw [hszHM]; exact hC
+          exact (hhomePS 0 hM h (by decide)).trans
+            ((hhomeP 0 hC hM (by decide) (by decide)).trans (cu.home0 hC))
+        axHeld := by
+          intro h
+          have hC : 0 < bC.sudo_5Board_4held.size := by rw [cu.szD]; decide
+          have hM : 0 < bM.sudo_5Board_4held.size := by rw [hszDM]; exact hC
+          exact (hheldPS 0 hM h (by decide)).trans
+            ((hheldPM 0 hC hM (by decide) (by decide)).trans (cu.held0 hC))
+        baseHome := by
+          intro h
+          have hC : 3 < bC.sudo_5Board_4home.size := by rw [cu.szH]; decide
+          have hM : 3 < bM.sudo_5Board_4home.size := by rw [hszHM]; exact hC
+          exact (hhomePS 3 hM h (by decide)).trans
+            ((hhomeP 3 hC hM (by decide) (by decide)).trans (cu.home3 hC))
+        baseHeld := by
+          intro h
+          have hC : 3 < bC.sudo_5Board_4held.size := by rw [cu.szD]; decide
+          have hM : 3 < bM.sudo_5Board_4held.size := by rw [hszDM]; exact hC
+          exact (hheldPS 3 hM h (by decide)).trans
+            ((hheldPM 3 hC hM (by decide) (by decide)).trans (cu.held3 hC))
+        gapHeld := by
+          intro h
+          have hC : 5 < bC.sudo_5Board_4held.size := by rw [cu.szD]; decide
+          have hM : 5 < bM.sudo_5Board_4held.size := by rw [hszDM]; exact hC
+          exact (hheldPS 5 hM h (by decide)).trans
+            ((hheldPM 5 hC hM (by decide) (by decide)).trans (cu.held5 hC))
+        spareHeld := hheld6S
+        peak := hpeakS
+        strict := by
+          rcases hstrictM with ⟨psM, hpsM⟩
+          exact ⟨psM, hstrictS.trans hpsM⟩
+        hole := by
+          rcases hholeM with ⟨holeM, hholeEq⟩
+          exact ⟨holeM, hholeS.trans hholeEq⟩
+        mx := by
+          rcases cu.mx with ⟨mxN, hmx0⟩
+          exact ⟨mxN, (hmxS.trans hmxM).trans hmx0⟩
+        opsSz := by rw [hopsS, hopsM, Array.size_set]; exact cu.opsSz
+        ops0 := by
+          intro h
+          have hM : 0 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+            have hsz := congrArg Array.size hopsS
+            rw [hsz] at h
+            exact h
+          have hget := get_eq_of_array hopsM 0 hM
+          simp [Array.getElem_set, ofNat_eq_natCast] at hget
+          exact cell_eq_of hopsS hget
+        ops1 := by
+          intro h
+          have hM : 1 < bM.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+            have hsz := congrArg Array.size hopsS
+            rw [hsz] at h
+            exact h
+          have hget := get_eq_of_array hopsM 1 hM
+          have hne : (0 : Nat) ≠ 1 := by decide
+          simp [Array.getElem_set, hne] at hget
+          exact cell_eq_of hopsS (hget.trans (ho1 (by rw [cu.opsSz]; decide))) }
 
 private theorem close_rel (mv0 mv peg n bench : Nat)
     (hpeg : peg ≤ n) (h : mv + 2 * n + 1 ≤ mv0 + sideCap n bench) :
@@ -886,7 +988,7 @@ theorem search_side_at (b0 : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   have hspan : 3 * (t.n - 1) < t.benchlen :=
     cube_span_le t.n t.benchlen t.combgap sat.cube_span
   obtain ⟨bS, mv, sl, hdo, hmov, _hle, hsl, hsle, hctrl, hoff, hfit, hclose,
-      hhome2, hheld2, hhome6, hheld6, hszH, hszD, htier⟩ :=
+      hhome2, hheld2, hhome6, hheld6, hszH, hszD, htier, _keep⟩ :=
     search_square_at b0 t holesLeft hp hOk hsh sat j hj mv0 sl0 c0 hmv hsl0 hc0
   have hcubeL : (fieldCube t.n t.k t.benchlen x).length = t.n :=
     fieldCube_length t.n t.k t.benchlen x hnle

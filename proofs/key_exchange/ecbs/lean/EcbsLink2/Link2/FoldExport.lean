@@ -458,6 +458,175 @@ theorem foldRow_at (t : Ecbs.Tier) (x : List Nat) (b0 : Ecbs.Board)
     unfold foldColAfter
     rw [pure_eq_ok, hst, hpref, hw1, foldColAt_row, hmv, hw1]
 
+/-- The outer `fold_key` step: one source row, then the next index. -/
+def foldPairStep (t : Ecbs.Tier) (x : Array Int) (toV : Int)
+    (σ : Int × (Array Int × Ecbs.Board)) :
+    Except SudoRt.Trap
+      (SudoRt.Flow (Int × (Array Int × Ecbs.Board)) (Array Int × Ecbs.Board)) := do
+  let p := σ.1
+  let out := σ.2.1
+  let b := σ.2.2
+  if p > toV then
+    pure (SudoRt.Flow.brk (p, (out, b)))
+  else
+    match ← (do
+        let toC ← SudoRt.subI t.sudo_4Tier_1w (1 : Int)
+        let fuel := if (0 : Int) > toC then 1 else (toC - 0).natAbs + 1
+        SudoRt.runLoopOn (Int.ofNat 0, (out, b)) fuel
+          (foldColStep t x p toC) foldColAfter
+          (fun r => pure (SudoRt.Flow.ret r))) with
+    | .ret r => pure (SudoRt.Flow.ret r)
+    | .brk fs => pure (SudoRt.Flow.brk (p, fs))
+    | .cont fs => do
+        if p == toV then
+          pure (SudoRt.Flow.brk (p, fs))
+        else
+          let i' ← SudoRt.addI p (1 : Int)
+          pure (SudoRt.Flow.cont (i', fs))
+
+def foldTail (t : Ecbs.Tier) (σ : Int × (Array Int × Ecbs.Board)) :
+    Except SudoRt.Trap (Array Int × Ecbs.Board) := do
+  let out := σ.2.1
+  let b := σ.2.2
+  let m ← SudoRt.mulI t.sudo_4Tier_8keeprows t.sudo_4Tier_1w
+  let pref ← Ecbs.prefix out m
+  pure (pref, b)
+
+private theorem foldColAt_len (w src dst c : Nat) (x out : List Nat) :
+    (foldColAt w x src dst out c).length = out.length := by
+  induction c generalizing out with
+  | zero => simp [foldColAt]
+  | succ c ih =>
+    rw [foldColAt, dropCol_length, ih]
+
+private theorem foldColAt_trits (w src dst c n : Nat) (x out : List Nat)
+    (ho : out.length = n) (hjN : (dst + 1) * w ≤ n) (hc : c ≤ w)
+    (hot : ∀ i (hi : i < out.length), out[i] ≤ 2) :
+    ∀ i (hi : i < out.length),
+      (foldColAt w x src dst out c)[i]'(by rw [foldColAt_len]; exact hi) ≤ 2 := by
+  induction c generalizing out with
+  | zero =>
+    intro i hi
+    simp [foldColAt]
+    exact hot i hi
+  | succ c ih =>
+    intro i hi
+    have hprev : ∀ j (hj : j < out.length),
+        (foldColAt w x src dst out c)[j]'(by rw [foldColAt_len]; exact hj) ≤ 2 :=
+      ih out ho (by omega) hot
+    have hlen := foldColAt_len w src dst c x out
+    have hj : dst * w + c < (foldColAt w x src dst out c).length := by
+      rw [hlen, ho]
+      have hltw : dst * w + c < (dst + 1) * w := by
+        rw [Nat.succ_mul]
+        omega
+      exact Nat.lt_of_lt_of_le hltw hjN
+    have hhot : ∀ j (hj : j < (foldColAt w x src dst out c).length),
+        (foldColAt w x src dst out c)[j] ≤ 2 := by
+      intro j hj'
+      have hj0 : j < out.length := by rw [← hlen]; exact hj'
+      simpa [hlen] using hprev j hj0
+    simp only [foldColAt]
+    have hi' : i < (foldColAt w x src dst out c).length := by rw [hlen]; exact hi
+    exact dropCol_trits w src dst c x (foldColAt w x src dst out c) hj hhot i hi'
+
+private theorem row_room (w : Nat) (x srcs : List Nat) (mv0 len p mv : Nat)
+    (hmv : mv = mv0 + foldBumpRows w x srcs p) (hp : p < len)
+    (hroom : FitsLen (mv0 + len * w)) :
+    FitsLen (mv + w) := by
+  have hb := foldBumpRows_le w x srcs p
+  have hmul : (p + 1) * w ≤ len * w :=
+    Nat.mul_le_mul_right w (Nat.succ_le_of_lt hp)
+  have h1 : mv + w ≤ mv0 + p * w + w := by
+    rw [hmv]
+    exact Nat.add_le_add_right (Nat.add_le_add_left hb mv0) w
+  have h2 : mv0 + p * w + w = mv0 + (p + 1) * w := by
+    rw [Nat.succ_mul, Nat.add_assoc]
+  have h3 : mv0 + (p + 1) * w ≤ mv0 + len * w := Nat.add_le_add_left hmul mv0
+  exact FitsLen.of_le hroom (Nat.le_trans (by rw [← h2]; exact h1) h3)
+
+/-- Every source row. The list is `foldRows`, and moves grow by one per
+    nonzero cell. -/
+theorem foldPairs_at (t : Ecbs.Tier) (x : List Nat) (b0 : Ecbs.Board)
+    (srcs dsts : List Nat) (n w kr mv0 : Nat)
+    (htn : t.sudo_4Tier_1n = Int.ofNat n) (htw : t.sudo_4Tier_1w = Int.ofNat w)
+    (htk : t.sudo_4Tier_8keeprows = Int.ofNat kr)
+    (hsrcA : t.sudo_4Tier_7foldsrc = embed srcs)
+    (hdstA : t.sudo_4Tier_7folddst = embed dsts)
+    (hlen : srcs.length = dsts.length) (hpos : 0 < srcs.length)
+    (hx : x.length = n)
+    (hxt : ∀ i (hi : i < x.length), x[i] ≤ 2)
+    (hsw : ∀ i (hi : i < srcs.length), FitsLen (srcs[i] * w + w))
+    (hdw : ∀ i (hi : i < dsts.length), FitsLen (dsts[i] * w + w))
+    (hjD : ∀ i (hi : i < dsts.length), (dsts[i] + 1) * w ≤ n)
+    (hw : 0 < w) (hwFit : FitsLen w) (hlenFit : FitsLen srcs.length)
+    (hkeep : kr * w ≤ n) (hkeepFit : FitsLen (kr * w))
+    (hroom : FitsLen (mv0 + srcs.length * w)) :
+    (do
+        let toV ← SudoRt.subI (SudoRt.listLen (embed srcs)) (1 : Int)
+        let fuel := if (0 : Int) > toV then 1 else (toV - 0).natAbs + 1
+        SudoRt.runLoopOn (Int.ofNat 0, (embed x, withMoves b0 (Int.ofNat mv0))) fuel
+          (foldPairStep t (embed x) toV) (foldTail t) (fun r => pure r)) =
+      .ok (embed ((foldRows w x (srcs.zip dsts)).take (kr * w)),
+        withMoves b0 (Int.ofNat (mv0 + foldBumpRows w x srcs srcs.length))) := by
+  rw [listLen_embed, subI_ofNat_one _ hpos hlenFit, ok_bind, fuelRange_eq]
+  refine asc_goal
+      (fun p st => ∃ out mv,
+        st.1 = embed out ∧ st.2 = withMoves b0 (Int.ofNat mv) ∧
+        out = foldPairAt w x srcs dsts p ∧
+        mv = mv0 + foldBumpRows w x srcs p ∧
+        out.length = n ∧ (∀ i (hi : i < out.length), out[i] ≤ 2))
+      (Nat.zero_le (srcs.length - 1)) ?_ ?_ ?_
+  · refine ⟨x, mv0, rfl, rfl, rfl, by simp [foldBumpRows], hx, hxt⟩
+  · intro p st _ hp hI
+    have hlt : p < srcs.length := by omega
+    have hlt2 : p < dsts.length := by rw [← hlen]; exact hlt
+    obtain ⟨out, mv, harr, hb, hpref, hmv, hlenO, htrit⟩ := hI
+    have hrowR := row_room w x srcs mv0 srcs.length p mv hmv hlt hroom
+    have hrow := foldRow_at t x b0 srcs dsts p (srcs[p]) (dsts[p]) n w mv out
+      htn htw hsrcA hdstA hlt hlt2 rfl rfl hx hlenO hxt htrit
+      (hsw p hlt) (hdw p hlt2) (hjD p hlt2) hw hwFit hrowR
+    have hpair : st = (embed out, withMoves b0 (Int.ofNat mv)) := Prod.ext harr hb
+    refine ⟨(embed (dropRow w x (srcs[p]) (dsts[p]) out),
+        withMoves b0 (Int.ofNat (mv + foldBumpAt w x (srcs[p]) w))), ?_, ?_⟩
+    · refine ⟨dropRow w x (srcs[p]) (dsts[p]) out,
+        mv + foldBumpAt w x (srcs[p]) w, rfl, rfl, ?_, ?_, ?_, ?_⟩
+      · rw [foldPairAt, getD_of srcs p hlt, getD_of dsts p hlt2, hpref]
+      · rw [foldBumpRows, getD_of srcs p hlt, hmv, Nat.add_assoc]
+      · rw [← foldColAt_row, foldColAt_len, hlenO]
+      · intro i hi
+        have hlenR : (dropRow w x (srcs[p]) (dsts[p]) out).length = out.length := by
+          rw [← foldColAt_row, foldColAt_len]
+        have hi0 : i < out.length := by rw [hlenR] at hi; exact hi
+        have hle := foldColAt_trits w (srcs[p]) (dsts[p]) w n x out hlenO
+          (hjD p hlt2) (Nat.le_refl _) htrit i hi0
+        simpa [foldColAt_row] using hle
+    · rw [hpair]
+      unfold foldPairStep
+      conv => lhs; zeta
+      rw [htw]
+      have hng := not_gt_last hlt
+      rw [if_neg hng, hrow, ok_bind]
+      have hfi : FitsLen (p + 1) := FitsLen.of_le hlenFit (Nat.succ_le_of_lt hlt)
+      simpa using asc_tail (srcs.length - 1) p hfi
+        (embed (dropRow w x (srcs[p]) (dsts[p]) out),
+          withMoves b0 (Int.ofNat (mv + foldBumpAt w x (srcs[p]) w)))
+  · intro st hI
+    obtain ⟨out, mv, harr, hb, hpref, hmv, hlenO, _⟩ := hI
+    have hst : st = (embed out, withMoves b0 (Int.ofNat mv)) := Prod.ext harr hb
+    have hdone : srcs.length - 1 + 1 = srcs.length := by omega
+    unfold foldTail
+    conv => lhs; zeta
+    rw [htk, htw, hst, mulI_ofNat kr w hkeepFit, ok_bind]
+    rw [prefix_refines out (kr * w) (by rw [hlenO]; exact hkeep) hkeepFit, ok_bind, pure_eq_ok]
+    rw [hpref, hdone, foldPairAt_rows w x srcs dsts _ (Nat.le_refl _) hlen, hmv, hdone]
+    have hzip : (srcs.zip dsts).take srcs.length = srcs.zip dsts := by
+      have hzl : (srcs.zip dsts).length = srcs.length := by
+        rw [List.length_zip, hlen, Nat.min_self]
+      rw [← hzl]
+      exact List.take_length (srcs.zip dsts)
+    rw [hzip]
+
 end
 
 end EcbsLink2.Link2

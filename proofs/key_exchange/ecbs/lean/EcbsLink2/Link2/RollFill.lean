@@ -876,35 +876,97 @@ private theorem emitted_die
   unfold dieGo
   rfl
 
+/-- One emitted pair: the inlined face loop, then the index step. -/
+private def emitStep (faces : List Nat) (cells : Nat) (toV : Int)
+    (σ : Int × (Int × Array Int)) :
+    Except SudoRt.Trap
+      (SudoRt.Flow (Int × (Int × Array Int)) (Option Rolled)) := do
+  let pair := σ.1
+  let next := σ.2.1
+  let arr := σ.2.2
+  if pair > toV then
+    pure (SudoRt.Flow.brk (pair, (next, arr)))
+  else
+    match ← (do
+      let toV ← SudoRt.subI (SudoRt.listLen (embed faces)) (1 : Int)
+      let fuel := if next > toV then 1 else (toV - next).natAbs + 1
+      let r ← SudoRt.runLoopOn (next, ((0 : Int), next)) fuel
+        (faceStep (embed faces) toV) (genAfter (Int.ofNat cells) arr pair)
+        (fun r => pure (SudoRt.Flow.ret r))
+      pure r) with
+    | .ret r => pure (SudoRt.Flow.ret r)
+    | .brk fs => pure (SudoRt.Flow.brk (pair, fs))
+    | .cont fs => do
+        if pair == toV then
+          pure (SudoRt.Flow.brk (pair, fs))
+        else
+          let i' ← SudoRt.addI pair 1
+          pure (SudoRt.Flow.cont (i', fs))
+
 /-- One emitted pair, with the face loop inlined, is `pairBody`. -/
 private theorem pair_emit
     (faces : List Nat) (cells : Nat) (toV : Int)
     (σ : Int × (Int × Array Int)) :
-    (do
-        let pair := σ.1
-        let next := σ.2.1
-        let arr := σ.2.2
-        if pair > toV then
-          pure (SudoRt.Flow.brk (pair, (next, arr)))
-        else
-          match ← (do
-            let toV ← SudoRt.subI (SudoRt.listLen (embed faces)) (1 : Int)
-            let fuel := if next > toV then 1 else (toV - next).natAbs + 1
-            let r ← SudoRt.runLoopOn (next, ((0 : Int), next)) fuel
-              (faceStep (embed faces) toV) (genAfter (Int.ofNat cells) arr pair)
-              (fun r => pure (SudoRt.Flow.ret r))
-            pure r) with
-          | .ret r => pure (SudoRt.Flow.ret r)
-          | .brk fs => pure (SudoRt.Flow.brk (pair, fs))
-          | .cont fs => do
-              if pair == toV then
-                pure (SudoRt.Flow.brk (pair, fs))
-              else
-                let i' ← SudoRt.addI pair 1
-                pure (SudoRt.Flow.cont (i', fs))) =
-      pairBody faces cells toV σ := by
-  unfold pairBody
+    emitStep faces cells toV σ = pairBody faces cells toV σ := by
+  unfold emitStep pairBody
   conv => lhs; zeta
   rw [emitted_die]
+
+private theorem emitStep_fun (faces : List Nat) (cells : Nat) (toV : Int) :
+    emitStep faces cells toV = pairBody faces cells toV := by
+  funext σ
+  exact pair_emit faces cells toV σ
+
+/-- The emitted pair loop is `Spec.fill`, then the empty check. -/
+private theorem emitted_pairs
+    (faces : List Nat) (cells attempt next pair : Nat) (acc : List Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hlen : acc.length = cells) (hfitF : FitsLen faces.length)
+    (hfitC : FitsLen (cells + 1)) :
+    (do
+        let sum ← SudoRt.addI (Int.ofNat cells) (1 : Int)
+        let half ← SudoRt.divI sum (2 : Int)
+        let toV ← SudoRt.subI half (1 : Int)
+        let fuel :=
+          if Int.ofNat pair > toV then 1 else (toV - Int.ofNat pair).natAbs + 1
+        let r ← SudoRt.runLoopOn (Int.ofNat pair, (Int.ofNat next, embed acc)) fuel
+          (emitStep faces cells toV) (pairAfter (Int.ofNat attempt))
+          (fun r => pure (SudoRt.Flow.ret r))
+        pure r) =
+      filledEnd attempt (fill cells faces next pair acc) := by
+  simp only [bind_pure]
+  rw [addI_ofNat_one cells hfitC, ok_bind]
+  rw [show (2 : Int) = Int.ofNat 2 from rfl,
+    divI_ofNat (cells + 1) (by decide), ok_bind]
+  cases hhalf : (cells + 1) / 2 with
+  | zero =>
+    rw [show Int.ofNat 0 = (0 : Int) by rfl, subI_zero_one, ok_bind,
+      emitStep_fun faces cells (-1)]
+    have hgt : Int.ofNat pair > (-1 : Int) := by
+      have hz : (0 : Int) ≤ Int.ofNat pair := Int.ofNat_zero_le pair
+      omega
+    have hstep :
+        pairBody faces cells (-1) (Int.ofNat pair, (Int.ofNat next, embed acc)) =
+          .ok (SudoRt.Flow.brk (Int.ofNat pair, (Int.ofNat next, embed acc))) := by
+      unfold pairBody
+      conv => lhs; zeta
+      rw [if_pos hgt, pure_eq_ok]
+    rw [fuelRange_eq]
+    rw [asc_break (Int.ofNat pair) (-1) (Int.ofNat next, embed acc)
+      (pairBody faces cells (-1)) (pairAfter (Int.ofNat attempt))
+      (fun r => pure (SudoRt.Flow.ret r)) hgt hstep]
+    have hf : FitsLen acc.length := by
+      rw [hlen]
+      exact FitsLen.of_le hfitC (Nat.le_succ _)
+    rw [pairAfter_some attempt next acc hf pair,
+      fill_stop faces cells next pair acc (by rw [hhalf]; omega)]
+  | succ toN =>
+    have hfitH : FitsLen (toN + 1) := by
+      rw [← hhalf]
+      exact FitsLen.of_le hfitC (Nat.div_le_self _ _)
+    rw [subI_ofNat_one (toN + 1) (Nat.succ_pos _) hfitH, ok_bind]
+    have hsub : toN + 1 - 1 = toN := Nat.succ_sub_one toN
+    rw [hsub, emitStep_fun faces cells (Int.ofNat toN), fuelRange_eq]
+    exact fill_loop_at faces cells attempt toN pair next acc h9 hlen hfitF hfitC hhalf
 
 end EcbsLink2.Link2

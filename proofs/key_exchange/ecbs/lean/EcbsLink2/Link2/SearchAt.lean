@@ -155,6 +155,29 @@ def searchCheck (b : Ecbs.Board) : Except SudoRt.Trap (Bool × Ecbs.Board) :=
     let side ← Ecbs.value b ((searchBottom : Nat) : Int)
     pure (SudoRt.SEq.beq y2 side, b)
 
+/-- The hit test after the power. `j` is the search index and `miss` is the
+    hole the loop was already carrying. Neither is the power loop's own index. -/
+def searchTail {ρ : Type} (j miss : Int) (bb : Ecbs.Board) :
+    Except SudoRt.Trap (SudoRt.Flow (Ecbs.Board × Int) ρ) :=
+  do
+    let b ← Ecbs.marker_lift bb
+    let b := { b with sudo_5Board_9marker_on := false }
+    let b ← Ecbs.clear b Ecbs.gap
+    let b ← Ecbs.mul b Ecbs.gap Ecbs.up Ecbs.up true false false
+    let b ← Ecbs.settle b
+    let y2 ← Ecbs.value b Ecbs.gap
+    let side ← Ecbs.value b Ecbs.bottom
+    if SudoRt.SEq.beq y2 side then
+      pure (SudoRt.Flow.brk (b, j))
+    else
+      do
+        let b ← Ecbs.clear b Ecbs.gap
+        let b ← Ecbs.clear b Ecbs.bottom
+        let b ← Ecbs.clear b Ecbs.up
+        let b ← Ecbs.clear b Ecbs.across
+        let b ← Ecbs.clear b Ecbs.base_across
+        pure (SudoRt.Flow.cont (b, miss))
+
 /-- The five clears the miss branch runs before the next hole. -/
 def searchMiss (b : Ecbs.Board) : Except SudoRt.Trap Ecbs.Board :=
   do

@@ -40,12 +40,51 @@ def searchBody {ρ : Type} (b0 : Ecbs.Board) (t : Spec.Tier) (j : Nat) (found : 
     Except SudoRt.Trap (SudoRt.Flow (Ecbs.Board × Int) ρ) :=
   do
     let b ← searchReadyDo b0 t j
-    let r ← searchCheck b
-    if r.1 = true then
-      pure (SudoRt.Flow.brk (r.2, Int.ofNat j))
-    else
-      let b ← searchMiss r.2
-      pure (SudoRt.Flow.cont (b, found))
+    searchTail (Int.ofNat j) found b
+
+private theorem tail_assoc {α β γ : Type} (m : Except SudoRt.Trap α)
+    (f : α → Except SudoRt.Trap β) (g : β → Except SudoRt.Trap γ) :
+    (m >>= fun a => f a >>= g) = ((m >>= f) >>= g) := by
+  cases m <;> rfl
+
+/-- `searchTail` is the check, then the break or the five clears. -/
+theorem searchTail_check {ρ : Type} (b : Ecbs.Board) (j : Nat) (found : Int) :
+    searchTail (ρ := ρ) (Int.ofNat j) found b =
+      (searchCheck b >>= fun r =>
+        if r.1 = true then
+          pure (SudoRt.Flow.brk (r.2, Int.ofNat j))
+        else
+          searchMiss r.2 >>= fun b =>
+            pure (SudoRt.Flow.cont (b, found))) := by
+  unfold searchTail searchCheck searchMiss
+  simp only [searchGap_int, searchUp_int, searchBottom_int, searchAcross_int, searchBase_int]
+  cases hm : Ecbs.marker_lift b with
+  | error _ => simp [hm, error_bind]
+  | ok b1 =>
+    simp only [hm, ok_bind]
+    cases hc : Ecbs.clear { b1 with sudo_5Board_9marker_on := false } Ecbs.gap with
+    | error _ => simp [hc, error_bind]
+    | ok b2 =>
+      simp only [hc, ok_bind]
+      cases hmul : Ecbs.mul b2 Ecbs.gap Ecbs.up Ecbs.up true false false with
+      | error _ => simp [hmul, error_bind]
+      | ok b3 =>
+        simp only [hmul, ok_bind]
+        cases hs : Ecbs.settle b3 with
+        | error _ => simp [hs, error_bind]
+        | ok b4 =>
+          simp only [hs, ok_bind]
+          cases hy : Ecbs.value b4 Ecbs.gap with
+          | error _ => simp [hy, error_bind]
+          | ok y2 =>
+            simp only [hy, ok_bind]
+            cases hside : Ecbs.value b4 Ecbs.bottom with
+            | error _ => simp [hside, error_bind]
+            | ok sidev =>
+              simp only [hside, ok_bind, pure_eq_ok]
+              by_cases hb : SudoRt.SEq.beq y2 sidev = true
+              · simp only [hb, if_true, pure_eq_ok]
+              · simp only [if_neg hb, tail_assoc, ok_bind]
 
 /-- One index of the emitted search. The last index breaks; a hit breaks early.
     `ρ` matches the emitted loop: the card stamps `Int × Board`, and a proof
@@ -134,7 +173,9 @@ theorem search_step_miss (b0 : Ecbs.Board) (t : Spec.Tier)
     rw [hready, ok_bind, hck', ok_bind] at hdo
     exact hdo
   have hbody : searchBody (ρ := Empty) b0 t i 0 = .ok (SudoRt.Flow.cont (bM, 0)) := by
-    unfold searchBody searchReadyDo
+    unfold searchBody
+    simp only [searchTail_check]
+    unfold searchReadyDo
     rw [hready, ok_bind, hck', ok_bind]
     have hne : ¬ ((false : Bool) = true) := by decide
     rw [if_neg hne, hdrop, ok_bind, pure_eq_ok]
@@ -243,7 +284,9 @@ theorem search_step_hit (b0 : Ecbs.Board) (t : Spec.Tier)
   unfold searchStep
   have hng : ¬ (Int.ofNat i > Int.ofNat toN) := ofNat_not_gt hi
   rw [if_neg hng, nat_to]
-  unfold searchBody searchReadyDo
+  unfold searchBody
+  simp only [searchTail_check]
+  unfold searchReadyDo
   rw [hready, ok_bind, hck, ok_bind, if_pos rfl]
   refine ⟨bH, ?_, hhitAt⟩
   · simp only [ok_bind, pure_eq_ok]

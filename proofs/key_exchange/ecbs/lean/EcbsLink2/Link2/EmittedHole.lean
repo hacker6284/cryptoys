@@ -444,6 +444,15 @@ private theorem bind_pure {α : Type} (m : Except SudoRt.Trap α) :
     (m >>= fun x => pure x) = m := by
   cases m <;> rfl
 
+private theorem pow_eta {α : Type} (m : Except SudoRt.Trap Board) (ds : List Nat)
+    (f : Board → Board) (k : Board → Except SudoRt.Trap α) :
+    ((m >>= fun b => powRun (f b) ds) >>= k) =
+      (((m >>= fun b => pure (f b)) >>= fun b => powRun b ds) >>= k) := by
+  cases m with
+  | error _ => simp [error_bind]
+  | ok _ =>
+    simp only [ok_bind, pure_eq_ok]
+
 private theorem bind_assoc' {α β γ : Type} (m : Except SudoRt.Trap α)
     (f : α → Except SudoRt.Trap β) (g : β → Except SudoRt.Trap γ) :
     (m >>= fun a => f a >>= g) = ((m >>= f) >>= g) := by
@@ -604,5 +613,63 @@ theorem check_block (b : Board) (j found : Int) (jN : Nat) (hj : j = Int.ofNat j
               by_cases hb : SudoRt.SEq.beq y2 sidev = true
               · simp only [hb, if_true, pure_eq_ok]
               · simp only [if_neg hb, bind_assoc', ok_bind]
+
+/-- One emitted search index is `searchStep`. The board's `n` is `t.n`, and the
+    index is `Int.ofNat σ.1.toNat`. The power `after` is `searchTail` of that
+    outer index, so it does not read the power loop's own index. -/
+theorem emitted_hole_eq (t : Spec.Tier) (σ : Int × (Board × Int))
+    (x y side gapXs ax bx : List Nat) (left : Nat)
+    (hAt : SearchAt σ.2.1 t x y side gapXs ax bx left)
+    (h1 : (1 : Int) ≤ σ.1) (hn : σ.1 ≤ Int.ofNat (t.n - 1)) :
+    emittedHole σ.2.1.sudo_5Board_1t.sudo_4Tier_1n (Int.ofNat (t.n - 1)) σ =
+      searchStep (ρ := Int × Board) t (t.n - 1) σ := by
+  have hN : σ.2.1.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat t.n := by
+    rw [hAt.tier]
+    rfl
+  have hj : Int.ofNat σ.1.toNat = σ.1 := Int.toNat_of_nonneg (by omega)
+  have hfit : FitsLen t.n := fits_small hAt.shape.n_small
+  have hle : (1 : Int) ≤ Int.ofNat (t.n - 1) := by
+    calc (1 : Int) ≤ σ.1 := h1
+      _ ≤ Int.ofNat (t.n - 1) := hn
+  have hn2 : 2 ≤ t.n := by
+    have h1n : (1 : Nat) ≤ t.n - 1 := Int.ofNat_le.mp hle
+    omega
+  have hpair : σ = (Int.ofNat σ.1.toNat, σ.2) := by
+    cases σ with
+    | mk i rest =>
+      exact Prod.ext hj.symm rfl
+  rw [hN, hpair]
+  unfold emittedHole searchStep searchBody
+  dsimp only
+  have hng : ¬ Int.ofNat σ.1.toNat > Int.ofNat (t.n - 1) := by
+    rw [hj]
+    exact Int.not_lt.mpr hn
+  rw [if_neg hng, if_neg hng]
+  simp only [filledL_ofNat, ok_bind, bind_pure]
+  conv =>
+    lhs
+    pattern (SudoRt.subI (Int.ofNat t.n) (2 : Int) >>= fun toV =>
+      SudoRt.runLoopOn ((0 : Int), Array.mkArray t.n (0 : Int))
+        (fuelRange (0 : Int) toV) (emittedStripStep toV) _ _)
+    rw [strip_block t.n (Array.mkArray t.n (0 : Int)) _ _ hn2 hfit rfl]
+  rw [emittedStrip_val t.n hn2 hfit]
+  simp only [ok_bind]
+  conv =>
+    lhs
+    pattern (SudoRt.subI (Int.ofNat t.n) (2 : Int) >>= fun toV =>
+      SudoRt.runLoopOn ((0 : Int), _) (fuelRange (0 : Int) toV)
+        (emittedPowStep (embed (rootStrip t.n)) toV) _ _)
+    rw [pow_block (n := t.n) (strip := embed (rootStrip t.n))
+        (k := searchTail (Int.ofNat σ.1.toNat) σ.2.2)
+        (hn := hn2) (hfit := hfit) (hstrip := rfl) (haft := fun _ _ => rfl)]
+  unfold searchReadyDo
+  have hto : ∀ n : Nat, (Int.ofNat n).toNat = n := fun _ => rfl
+  simp only [hto, filledL_ofNat, emittedStrip_val t.n hn2 hfit, ok_bind, pure_eq_ok, bind_pure,
+    bind_assoc']
+  congr 1
+  · rw [pow_eta]
+    rfl
+  · funext fl
+    cases fl <;> rfl
 
 end EcbsLink2.Link2

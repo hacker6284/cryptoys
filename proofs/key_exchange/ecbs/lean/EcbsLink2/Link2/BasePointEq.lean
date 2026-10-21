@@ -4,6 +4,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.Basic
+import EcbsLink2.Link2.SearchAt
 import EcbsLink2.Link2.SearchCofactor
 import EcbsLink2.Link2.FinishBranch
 
@@ -245,38 +246,7 @@ def emittedHole (n toV : Int) (σ : Int × (Board × Int)) :
       let toV := _t1419
       let fuel : Nat := fuelRange _fromV toV
       let _init1433 := (_fromV, b)
-      let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1433 fuel (emittedPowStep strip toV) (fun σ =>
-    let b := σ.2
-    do
-      let _io1420 ← marker_lift b
-      let b := _io1420
-      let _t1421 := ({ b with sudo_5Board_9marker_on := false } : Board)
-      let b := _t1421
-      let _io1422 ← clear b gap
-      let b := _io1422
-      let _io1423 ← mul b gap up up true false false
-      let b := _io1423
-      let _io1424 ← settle b
-      let b := _io1424
-      let _t1425 ← value b gap
-      let _t1426 ← value b bottom
-      if (SudoRt.SEq.beq _t1425 _t1426) then
-        do
-          let found := j
-          pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (b, found))
-      else
-        do
-          let _io1428 ← clear b gap
-          let b := _io1428
-          let _io1429 ← clear b bottom
-          let b := _io1429
-          let _io1430 ← clear b up
-          let b := _io1430
-          let _io1431 ← clear b across
-          let b := _io1431
-          let _io1432 ← clear b base_across
-          let b := _io1432
-          pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (b, found))) (fun r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)))
+      let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1433 fuel (emittedPowStep strip toV) (fun σ => searchTail j found σ.2) (fun r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)))
       pure _out) (fun r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)))
   pure _out) : Except SudoRt.Trap (SudoRt.Flow _ ((Int) × (Board)))) with
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)
@@ -304,7 +274,7 @@ def basePointBlocks (b : Board) : Except SudoRt.Trap (Int × Board) :=
 
 theorem base_point_eq_blocks (b : Board) :
     base_point b = basePointBlocks b := by
-  unfold basePointBlocks emittedHole emittedStripStep emittedPowStep basePointAfter
+  unfold basePointBlocks emittedHole emittedStripStep emittedPowStep searchTail basePointAfter
   rfl
 
 private theorem except_bind_assoc {α β γ : Type} (m : Except SudoRt.Trap α)

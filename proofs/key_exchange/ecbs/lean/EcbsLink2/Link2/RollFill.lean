@@ -270,7 +270,7 @@ private def pairBody (faces : List Nat) (cells : Nat) (toV : Int)
           pure (SudoRt.Flow.cont (i', fs))
 
 /-- After every pair: an empty filling continues, any other returns the roll. -/
-private def pairAfter (attempt : Nat) (σ : Int × (Int × Array Int)) :
+private def pairAfter (rolls : Int) (σ : Int × (Int × Array Int)) :
     Except SudoRt.Trap (SudoRt.Flow Int (Option Rolled)) := do
   let next := σ.2.1
   let cells := σ.2.2
@@ -279,13 +279,13 @@ private def pairAfter (attempt : Nat) (σ : Int × (Int × Array Int)) :
     pure (SudoRt.Flow.ret (some {
       sudo_6Rolled_5cells := cells
       sudo_6Rolled_4used := next
-      sudo_6Rolled_5rolls := Int.ofNat attempt }))
+      sudo_6Rolled_5rolls := rolls }))
   else
     pure (SudoRt.Flow.cont next)
 
 private theorem pairAfter_some (attempt n : Nat) (cs : List Nat)
     (hf : FitsLen cs.length) (pair : Nat) :
-    pairAfter attempt (Int.ofNat pair, (Int.ofNat n, embed cs)) =
+    pairAfter (Int.ofNat attempt) (Int.ofNat pair, (Int.ofNat n, embed cs)) =
       filledEnd attempt (some (cs, n)) := by
   unfold pairAfter
   conv => lhs; zeta
@@ -380,7 +380,7 @@ private theorem fill_loop_at
     (hhalf : (cells + 1) / 2 = toN + 1) :
     SudoRt.runLoopOn (Int.ofNat pair, (Int.ofNat next, embed acc))
         (fuelRange (Int.ofNat pair) (Int.ofNat toN))
-        (pairBody faces cells (Int.ofNat toN)) (pairAfter attempt)
+        (pairBody faces cells (Int.ofNat toN)) (pairAfter (Int.ofNat attempt))
         (fun r => pure (SudoRt.Flow.ret r)) =
       filledEnd attempt (fill cells faces next pair acc) := by
   obtain ⟨k, hk⟩ : ∃ k, toN + 1 - pair = k := ⟨toN + 1 - pair, rfl⟩
@@ -397,7 +397,7 @@ private theorem fill_loop_at
       conv => lhs; zeta
       rw [if_pos hgt, pure_eq_ok]
     rw [asc_break (Int.ofNat pair) (Int.ofNat toN) (Int.ofNat next, embed acc)
-      (pairBody faces cells (Int.ofNat toN)) (pairAfter attempt)
+      (pairBody faces cells (Int.ofNat toN)) (pairAfter (Int.ofNat attempt))
       (fun r => pure (SudoRt.Flow.ret r)) hgt hstep]
     have hf : FitsLen acc.length := by
       rw [hlen]
@@ -436,7 +436,8 @@ private theorem fill_loop_at
         have hdone : (cells + 1) / 2 ≤ pair + 1 := by
           rw [hhalf, hlast]
           exact Nat.le_refl _
-        rw [show (pair : Int) = Int.ofNat pair from rfl,
+        rw [show (attempt : Int) = Int.ofNat attempt from rfl,
+          show (pair : Int) = Int.ofNat pair from rfl,
           show (n : Int) = Int.ofNat n from rfl,
           pairAfter_some attempt n (writePair cells acc pair f) hf pair,
           fill_step faces cells next pair f n acc hpair hread,
@@ -467,7 +468,7 @@ private theorem fill_from
         let fuel :=
           if Int.ofNat pair > toV then 1 else (toV - Int.ofNat pair).natAbs + 1
         let r ← SudoRt.runLoopOn (Int.ofNat pair, (Int.ofNat next, embed acc)) fuel
-          (pairBody faces cells toV) (pairAfter attempt)
+          (pairBody faces cells toV) (pairAfter (Int.ofNat attempt))
           (fun r => pure (SudoRt.Flow.ret r))
         pure r) =
       filledEnd attempt (fill cells faces next pair acc) := by
@@ -490,7 +491,7 @@ private theorem fill_from
       rw [if_pos hgt, pure_eq_ok]
     rw [fuelRange_eq]
     rw [asc_break (Int.ofNat pair) (-1) (Int.ofNat next, embed acc)
-      (pairBody faces cells (-1)) (pairAfter attempt)
+      (pairBody faces cells (-1)) (pairAfter (Int.ofNat attempt))
       (fun r => pure (SudoRt.Flow.ret r)) hgt hstep]
     have hf : FitsLen acc.length := by
       rw [hlen]
@@ -505,5 +506,253 @@ private theorem fill_from
     have hsub : toN + 1 - 1 = toN := Nat.succ_sub_one toN
     rw [hsub, fuelRange_eq]
     exact fill_loop_at faces cells attempt toN pair next acc h9 hlen hfitF hfitC hhalf
+
+private def rolledOf (got : Option (List Nat × Nat × Nat)) : Option Rolled :=
+  match got with
+  | none => none
+  | some (cs, used, rolls) => some {
+      sudo_6Rolled_5cells := embed cs
+      sudo_6Rolled_4used := Int.ofNat used
+      sudo_6Rolled_5rolls := Int.ofNat rolls }
+
+private theorem rollGo_stop (cells : Nat) (faces : List Nat) (attempt next : Nat)
+    (h : attempt > faces.length + 1) :
+    rollGo cells faces attempt next = none := by
+  conv => lhs; unfold rollGo
+  rw [if_pos h]
+
+private theorem rollGo_none (cells : Nat) (faces : List Nat) (attempt next : Nat)
+    (h : ¬ attempt > faces.length + 1)
+    (hf : fill cells faces next 0 (List.replicate cells 0) = none) :
+    rollGo cells faces attempt next = none := by
+  conv => lhs; unfold rollGo
+  rw [if_neg h, hf]
+
+private theorem rollGo_live (cells : Nat) (faces : List Nat)
+    (attempt next : Nat) (cs : List Nat) (n : Nat)
+    (h : ¬ attempt > faces.length + 1)
+    (hf : fill cells faces next 0 (List.replicate cells 0) = some (cs, n))
+    (hz : allZero cs = false) :
+    rollGo cells faces attempt next = some (cs, n, attempt) := by
+  conv => lhs; unfold rollGo
+  rw [if_neg h, hf]
+  dsimp
+  rw [if_neg (by rw [hz]; decide : ¬ (allZero cs = true))]
+
+private theorem rollGo_again (cells : Nat) (faces : List Nat)
+    (attempt next : Nat) (cs : List Nat) (n : Nat)
+    (h : ¬ attempt > faces.length + 1)
+    (hf : fill cells faces next 0 (List.replicate cells 0) = some (cs, n))
+    (hz : allZero cs = true) :
+    rollGo cells faces attempt next = rollGo cells faces (attempt + 1) n := by
+  conv => lhs; unfold rollGo
+  rw [if_neg h, hf]
+  dsimp
+  rw [if_pos hz]
+
+/-- One attempt: a fresh row of zeros, then the pair loop. -/
+private def attemptBody (faces : List Nat) (cells : Nat) (toV : Int)
+    (σ : Int × Int) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Int) (Option Rolled)) := do
+  let attempt := σ.1
+  let next := σ.2
+  if attempt > toV then
+    pure (SudoRt.Flow.brk (attempt, next))
+  else
+    match ← (do
+      let arr ← SudoRt.filledL (Int.ofNat cells) (0 : Int)
+      let sum ← SudoRt.addI (Int.ofNat cells) (1 : Int)
+      let half ← SudoRt.divI sum (2 : Int)
+      let toP ← SudoRt.subI half (1 : Int)
+      let fuel :=
+        if Int.ofNat 0 > toP then 1 else (toP - Int.ofNat 0).natAbs + 1
+      let r ← SudoRt.runLoopOn (Int.ofNat 0, (next, arr)) fuel
+        (pairBody faces cells toP) (pairAfter attempt)
+        (fun r => pure (SudoRt.Flow.ret r))
+      pure r) with
+    | .ret r => pure (SudoRt.Flow.ret r)
+    | .brk fs => pure (SudoRt.Flow.brk (attempt, fs))
+    | .cont fs => do
+        if attempt == toV then
+          pure (SudoRt.Flow.brk (attempt, fs))
+        else
+          let i' ← SudoRt.addI attempt 1
+          pure (SudoRt.Flow.cont (i', fs))
+
+private theorem attempt_step_at
+    (faces : List Nat) (cells lim attempt next : Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitF : FitsLen faces.length) (hfitC : FitsLen (cells + 1))
+    (hfitL : FitsLen (faces.length + 1)) (hle : attempt ≤ lim)
+    (hlim : faces.length + 1 = lim) :
+    attemptBody faces cells (Int.ofNat lim) (Int.ofNat attempt, Int.ofNat next) =
+      match fill cells faces next 0 (List.replicate cells 0) with
+      | none => .ok (SudoRt.Flow.ret (none : Option Rolled))
+      | some (cs, n) =>
+        if allZero cs then
+          if attempt = lim then
+            .ok (SudoRt.Flow.brk (Int.ofNat attempt, Int.ofNat n))
+          else
+            .ok (SudoRt.Flow.cont (Int.ofNat (attempt + 1), Int.ofNat n))
+        else
+          .ok (SudoRt.Flow.ret (some {
+            sudo_6Rolled_5cells := embed cs
+            sudo_6Rolled_4used := Int.ofNat n
+            sudo_6Rolled_5rolls := Int.ofNat attempt })) := by
+  unfold attemptBody
+  conv => lhs; zeta
+  have hng : ¬ Int.ofNat attempt > Int.ofNat lim := by
+    rw [ofNat_eq_natCast, ofNat_eq_natCast]
+    omega
+  rw [if_neg hng, filled_zero, ok_bind]
+  have hlen : (List.replicate cells 0).length = cells := List.length_replicate _ _
+  rw [fill_from faces cells attempt next 0 (List.replicate cells 0) h9 hlen hfitF hfitC]
+  cases hfill : fill cells faces next 0 (List.replicate cells 0) with
+  | none =>
+    dsimp [filledEnd]
+    rw [pure_eq_ok]
+  | some csn =>
+    rcases csn with ⟨cs, n⟩
+    dsimp [filledEnd]
+    by_cases hz : allZero cs = true
+    · rw [if_pos hz]
+      dsimp
+      rw [show (attempt : Int) = Int.ofNat attempt from rfl,
+        show (lim : Int) = Int.ofNat lim from rfl,
+        show (n : Int) = Int.ofNat n from rfl]
+      by_cases hlast : attempt = lim
+      · have hbeq : (Int.ofNat attempt == Int.ofNat lim) = true := by
+          subst hlast
+          simp [beq_int_iff]
+        rw [if_pos hbeq, pure_eq_ok, if_pos hlast, hz, if_pos rfl]
+      · have hfitA : FitsLen (attempt + 1) := by
+          have hlt : attempt < lim := Nat.lt_of_le_of_ne hle hlast
+          rw [← hlim] at hlt
+          exact FitsLen.of_le hfitL (Nat.succ_le_of_lt hlt)
+        have hne : Int.ofNat attempt ≠ Int.ofNat lim :=
+          fun h => hlast (Int.ofNat.inj h)
+        have hbeq : (Int.ofNat attempt == Int.ofNat lim) = false := by
+          cases hb : (Int.ofNat attempt == Int.ofNat lim) with
+          | false => rfl
+          | true => exact absurd ((beq_int_iff _ _).mp hb) hne
+        rw [if_neg (by rw [hbeq]; decide :
+          ¬ ((Int.ofNat attempt == Int.ofNat lim) = true))]
+        rw [addI_ofNat_one attempt hfitA, ok_bind, pure_eq_ok, if_neg hlast, hz]
+        rfl
+    · have hzf : allZero cs = false := by
+        cases h : allZero cs with
+        | false => rfl
+        | true => exact absurd h hz
+      rw [if_neg (by rw [hzf]; decide : ¬ (allZero cs = true))]
+      dsimp
+      rw [pure_eq_ok, hzf, if_neg (by decide : ¬ ((false : Bool) = true))]
+
+/-- Attempts `attempt .. faces.length + 1`. `lim` is `faces.length + 1`. -/
+private theorem roll_loop_at
+    (faces : List Nat) (cells lim attempt next : Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitF : FitsLen faces.length) (hfitC : FitsLen (cells + 1))
+    (hfitL : FitsLen (faces.length + 1))
+    (hlim : faces.length + 1 = lim) :
+    SudoRt.runLoopOn (Int.ofNat attempt, Int.ofNat next)
+        (fuelRange (Int.ofNat attempt) (Int.ofNat lim))
+        (attemptBody faces cells (Int.ofNat lim))
+        (fun _ => pure (none : Option Rolled))
+        (fun r => pure r) =
+      .ok (rolledOf (rollGo cells faces attempt next)) := by
+  obtain ⟨k, hk⟩ : ∃ k, lim + 1 - attempt = k := ⟨lim + 1 - attempt, rfl⟩
+  induction k generalizing attempt next with
+  | zero =>
+    have hge : lim + 1 ≤ attempt := Nat.le_of_sub_eq_zero hk
+    have hgt : Int.ofNat attempt > Int.ofNat lim :=
+      (Int.ofNat_lt).mpr (Nat.lt_of_lt_of_le (Nat.lt_succ_self lim) hge)
+    have hstep :
+        attemptBody faces cells (Int.ofNat lim)
+          (Int.ofNat attempt, Int.ofNat next) =
+          .ok (SudoRt.Flow.brk (Int.ofNat attempt, Int.ofNat next)) := by
+      unfold attemptBody
+      conv => lhs; zeta
+      rw [if_pos hgt, pure_eq_ok]
+    rw [asc_break (Int.ofNat attempt) (Int.ofNat lim) (Int.ofNat next)
+      (attemptBody faces cells (Int.ofNat lim))
+      (fun _ => pure (none : Option Rolled)) (fun r => pure r) hgt hstep]
+    rw [pure_eq_ok, rollGo_stop cells faces attempt next (by
+      rw [hlim]
+      omega)]
+    unfold rolledOf
+    rfl
+  | succ k ih =>
+    have hlt : attempt < lim + 1 := by
+      apply Nat.lt_of_not_le
+      intro hle
+      have hz : lim + 1 - attempt = 0 := Nat.sub_eq_zero_of_le hle
+      rw [hk] at hz
+      exact Nat.succ_ne_zero k hz
+    have hle : attempt ≤ lim := Nat.le_of_lt_succ hlt
+    have hstep := attempt_step_at faces cells lim attempt next h9 hfitF hfitC
+      hfitL hle hlim
+    rw [fuelRange_le hle, runLoopOn_succ, hstep]
+    cases hfill : fill cells faces next 0 (List.replicate cells 0) with
+    | none =>
+      dsimp
+      rw [pure_eq_ok,
+        rollGo_none cells faces attempt next (by rw [hlim]; omega) hfill]
+      unfold rolledOf
+      rfl
+    | some csn =>
+      rcases csn with ⟨cs, n⟩
+      dsimp
+      by_cases hz : allZero cs = true
+      · rw [if_pos hz]
+        by_cases hlast : attempt = lim
+        · rw [if_pos hlast]
+          dsimp
+          rw [pure_eq_ok, rollGo_again cells faces attempt next cs n
+            (by rw [hlim]; omega) hfill hz,
+            rollGo_stop cells faces (attempt + 1) n (by rw [hlim, hlast]; omega)]
+          unfold rolledOf
+          rfl
+        · rw [if_neg hlast]
+          dsimp
+          have hle1 : attempt + 1 ≤ lim :=
+            Nat.succ_le_of_lt (Nat.lt_of_le_of_ne hle hlast)
+          have hrest : lim - attempt =
+              fuelRange (Int.ofNat (attempt + 1)) (Int.ofNat lim) := by
+            rw [fuelRange_le hle1]
+            omega
+          rw [hrest, rollGo_again cells faces attempt next cs n
+            (by rw [hlim]; omega) hfill hz]
+          exact ih (attempt + 1) n (by omega)
+      · have hzf : allZero cs = false := by
+          cases h : allZero cs with
+          | false => rfl
+          | true => exact absurd h hz
+        rw [if_neg (by rw [hzf]; decide : ¬ (allZero cs = true))]
+        dsimp
+        rw [pure_eq_ok, rollGo_live cells faces attempt next cs n
+          (by rw [hlim]; omega) hfill hzf]
+        unfold rolledOf
+        rfl
+
+/-- The attempt loop is `Spec.rollKey`. No inversion. -/
+private theorem roll_from
+    (faces : List Nat) (cells : Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitC : FitsLen (cells + 1)) (hfitL : FitsLen (faces.length + 1)) :
+    (do
+        let lim ← SudoRt.addI (SudoRt.listLen (embed faces)) (1 : Int)
+        let fuel :=
+          if Int.ofNat 1 > lim then 1 else (lim - Int.ofNat 1).natAbs + 1
+        let r ← SudoRt.runLoopOn (Int.ofNat 1, Int.ofNat 0) fuel
+          (attemptBody faces cells lim)
+          (fun _ => pure (none : Option Rolled))
+          (fun r => pure r)
+        pure r) =
+      .ok (rolledOf (rollKey cells faces)) := by
+  simp only [bind_pure]
+  rw [listLen_embed, addI_ofNat_one faces.length hfitL, ok_bind, fuelRange_eq]
+  have hfitF : FitsLen faces.length := FitsLen.of_le hfitL (Nat.le_succ _)
+  rw [roll_loop_at faces cells (faces.length + 1) 1 0 h9 hfitF hfitC hfitL rfl]
+  rfl
 
 end EcbsLink2.Link2

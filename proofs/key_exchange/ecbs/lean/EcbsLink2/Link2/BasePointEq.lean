@@ -109,23 +109,16 @@ def basePointAfter (σ : Int × (Board × Int)) : Except SudoRt.Trap (Int × Boa
               let b := _io1478
               pure (found, b)
 
-/-- The emitted `base_point`. Fuel is `fuelRange`, and the join is `basePointAfter`. -/
-def basePointBlocks (b : Board) : Except SudoRt.Trap (Int × Board) :=
-  do
-    let n := ((b).sudo_5Board_1t).sudo_4Tier_1n
-    let found := (0 : Int)
-    let _t1435 ← SudoRt.subI n (1 : Int)
-    let _fromV := (1 : Int)
-    let _toV := _t1435
-    let fuel : Nat := fuelRange _fromV _toV
-    let _init1481 := (_fromV, (b, found))
-    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1481 fuel (fun σ =>
+/-- One index of the emitted search. `n` and `toV` are the bounds
+`base_point` closes over. -/
+def emittedHole (n toV : Int) (σ : Int × (Board × Int)) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × (Board × Int)) (Int × Board)) :=
     let j := σ.1
     let b := σ.2.1
     let _sp1479 := σ.2.2
     let found := _sp1479
     do
-      if j > _toV then
+      if j > toV then
         pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (j, (b, found)))
       else
         match ← ((do
@@ -148,14 +141,14 @@ def basePointBlocks (b : Board) : Except SudoRt.Trap (Int × Board) :=
   let strip := _t1392
   let _t1398 ← SudoRt.subI n (2 : Int)
   let _fromV := (0 : Int)
-  let _toV := _t1398
-  let fuel : Nat := fuelRange _fromV _toV
+  let toV := _t1398
+  let fuel : Nat := fuelRange _fromV toV
   let _init1434 := (_fromV, strip)
   let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1434 fuel (fun σ =>
     let i := σ.1
     let strip := σ.2
     do
-      if i > _toV then
+      if i > toV then
         pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, strip))
       else
         match ← ((do
@@ -172,7 +165,7 @@ def basePointBlocks (b : Board) : Except SudoRt.Trap (Int × Board) :=
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, _fs))
         | .cont _fs => do
-            if i == _toV then
+            if i == toV then
               pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, _fs))
             else do
               let i' ← SudoRt.addI i (1 : Int)
@@ -189,14 +182,14 @@ def basePointBlocks (b : Board) : Except SudoRt.Trap (Int × Board) :=
       let b := _t1403
       let _t1419 ← SudoRt.subI n (2 : Int)
       let _fromV := (0 : Int)
-      let _toV := _t1419
-      let fuel : Nat := fuelRange _fromV _toV
+      let toV := _t1419
+      let fuel : Nat := fuelRange _fromV toV
       let _init1433 := (_fromV, b)
       let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1433 fuel (fun σ =>
     let i := σ.1
     let b := σ.2
     do
-      if i > _toV then
+      if i > toV then
         pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, b))
       else
         match ← ((do
@@ -238,7 +231,7 @@ def basePointBlocks (b : Board) : Except SudoRt.Trap (Int × Board) :=
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, _fs))
         | .cont _fs => do
-            if i == _toV then
+            if i == toV then
               pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, _fs))
             else do
               let i' ← SudoRt.addI i (1 : Int)
@@ -279,16 +272,29 @@ def basePointBlocks (b : Board) : Except SudoRt.Trap (Int × Board) :=
         | .ret r => pure (SudoRt.Flow.ret (ρ := (Int) × (Board)) r)
         | .brk _fs => pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (j, _fs))
         | .cont _fs => do
-            if j == _toV then
+            if j == toV then
               pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (j, _fs))
             else do
               let i' ← SudoRt.addI j (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (i', _fs))) basePointAfter (fun r => pure r))
+              pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (i', _fs))
+
+/-- The emitted `base_point`. Fuel is `fuelRange`, the step is `emittedHole`,
+    and the join is `basePointAfter`. -/
+def basePointBlocks (b : Board) : Except SudoRt.Trap (Int × Board) :=
+  do
+    let n := ((b).sudo_5Board_1t).sudo_4Tier_1n
+    let found := (0 : Int)
+    let _t1435 ← SudoRt.subI n (1 : Int)
+    let _fromV := (1 : Int)
+    let _toV := _t1435
+    let fuel : Nat := fuelRange _fromV _toV
+    let _init1481 := (_fromV, (b, found))
+    let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1481 fuel (emittedHole n _toV) basePointAfter (fun r => pure r))
     pure _out
 
 theorem base_point_eq_blocks (b : Board) :
     base_point b = basePointBlocks b := by
-  unfold basePointBlocks basePointAfter
+  unfold basePointBlocks emittedHole basePointAfter
   rfl
 
 private theorem except_bind_assoc {α β γ : Type} (m : Except SudoRt.Trap α)

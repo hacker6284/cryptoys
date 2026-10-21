@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { applyLidMoves, lidMoves } from "./expand.js";
-import { diceFromSeed, regString } from "./trace.js";
+import { diceFromSeed, face, regString, rollDice } from "./trace.js";
 import { loadGenerated } from "./gen.test-helper.mjs";
 import { stubThree } from "../playroom/three-stub.mjs";
 
@@ -80,5 +80,40 @@ assert.equal(seeded.K, seeded.Kb);
 checkShow("seed cryptoys", seeded);
 assert.notDeepEqual(diceFromSeed("a"), diceFromSeed("b"), "different seeds, different dice");
 assert.deepEqual(diceFromSeed("x"), diceFromSeed("x"), "a seed always throws the same faces");
+// The demo's dice: a blank seed throws fresh faces each time, a seed repeats them.
+// Two blank-seed rolls are 1,320 fresh faces each; equal by chance with
+// probability (1/12)^240 · (1/6)^480 · (1/10)^600 per player, i.e. never.
+assert.notDeepEqual(rollDice(""), rollDice(""), "blank seed: fresh throws");
+assert.notDeepEqual(rollDice(), rollDice("  "), "blank seed: fresh throws");
+assert.deepEqual(rollDice("dbg"), rollDice("dbg"), "a seed repeats the throws");
+assert.deepEqual(rollDice(" dbg "), diceFromSeed("dbg"), "the seed is trimmed");
+// face(): rejection sampling at the boundary 2^32 - (2^32 mod sides).
+for (const sides of [6, 10, 12]) {
+    const limit = 2 ** 32 - (2 ** 32 % sides);
+    const feed = (xs) => { let i = 0; return () => xs[i++]; };
+    assert.equal(face(sides, feed([limit - 1])), (limit - 1) % sides, `d${sides}: last accepted value`);
+    assert.equal(face(sides, feed([limit, 7])), 7 % sides, `d${sides}: limit is rejected`);
+    assert.equal(face(sides, feed([2 ** 32 - 1, limit, 0])), 0, `d${sides}: top values rejected`);
+}
+// A rough frequency check: 50 fresh players (33,000 throws); every face near even.
+{
+    const counts = { 6: Array(6).fill(0), 10: Array(10).fill(0), 12: Array(12).fill(0) };
+    for (let k = 0; k < 50; k++) {
+        const { a } = rollDice("");
+        a.d6.forEach((f) => counts[6][f - 1]++);
+        a.d12.forEach((f) => counts[12][f - 1]++);
+        a.d10.forEach((f) => counts[10][f]++);
+    }
+    for (const [sides, c] of Object.entries(counts)) {
+        const total = c.reduce((x, y) => x + y, 0), even = total / sides;
+        c.forEach((n, f) => assert.ok(Math.abs(n - even) < 0.1 * even + 4 * Math.sqrt(even), `d${sides} face ${f}: ${n} of ${total}`));
+    }
+}
+{
+    const a = worker.answer({ op: "show", seed: "" }).show, b = worker.answer({ op: "show", seed: "" }).show;
+    assert.notEqual(a.A + a.B, b.A + b.B, "blank seed: a new exchange each roll");
+    const c = worker.answer({ op: "show", seed: "dbg" }).show, d = worker.answer({ op: "show", seed: "dbg" }).show;
+    assert.equal(c.A + c.B + c.K, d.A + d.B + d.K, "fixed seed: the same exchange");
+}
 
 console.log("bs expand tests ok");

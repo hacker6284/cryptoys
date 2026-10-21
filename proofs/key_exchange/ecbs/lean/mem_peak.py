@@ -22,7 +22,11 @@ PKG = Path(__file__).resolve().parent
 
 
 def toolchain_lean() -> Path:
-    lean = subprocess.check_output(["elan", "which", "lean"], text=True).strip()
+    # elan walks up from its cwd for lean-toolchain. The file is in this
+    # package; the checkout root has none, and lean-action sets no default.
+    lean = subprocess.check_output(
+        ["elan", "which", "lean"], cwd=PKG, text=True
+    ).strip()
     path = Path(lean)
     if not path.is_file():
         sys.exit(f"mem_peak: elan which lean returned {lean}, which is not a file")

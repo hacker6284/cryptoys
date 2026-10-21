@@ -15,11 +15,12 @@ every expected value from the curve alone, never from the board:
                generated tier()); PARI checks the tap is irreducible and l = #E/5 is prime
 
 Also checks that the JSON records the pinned sudocode commit and the current ecbs.sudo
-hash. Prints one line per check group; exits 1 on any mismatch. Needs cypari2.
+hash, and that ecbs.sudo's faces_exchange_demo_run<k>_<a|b>() literals (the trace tests'
+inputs) are inputs.json's Demo exchange faces. Prints one line per check group; exits 1 on any mismatch. Needs cypari2.
 
   python3 check_oracle.py > check_oracle_output.txt
 """
-import hashlib, json, os, sys
+import hashlib, json, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, "..", "..", "..", ".."))
@@ -107,6 +108,25 @@ def tier_checks(name, v):
     return ", ".join(f"{g} {a[1]}/{a[0]}" for g, a in counts.items())
 
 
+def faces_literals(sudo_path):
+    """ecbs.sudo's `func faces_exchange_demo_run<k>_<a|b>() -> List<int>` = [faces], by run."""
+    text = open(sudo_path).read()
+    pat = re.compile(r"func faces_exchange_demo_run(\d+)_([ab])\(\) -> List<int>\n\s+return \[([0-9, ]*)\]")
+    return {(int(k), side): [int(x) for x in body.split(",")] for k, side, body in pat.findall(text)}
+
+
+def check_faces_literals(sudo_path):
+    lits = faces_literals(sudo_path)
+    runs = json.load(open(os.path.join(HERE, "inputs.json")))["tiers"]["Demo"]["exchanges"]
+    check("faces literals", len(lits) == 2 * len(runs) and len(runs) > 0,
+          f"{len(lits)} faces_exchange_demo_* literals in ecbs.sudo for {len(runs)} Demo exchanges")
+    for k, run in enumerate(runs):
+        for side in "ab":
+            check("faces literals", lits.get((k, side)) == run[f"faces_{side}"],
+                  f"ecbs.sudo faces_exchange_demo_run{k}_{side} differs from inputs.json")
+    return len(runs)
+
+
 def main():
     path = os.path.join(HERE, "ecbs_vectors.json")
     doc = json.load(open(path))
@@ -117,6 +137,9 @@ def main():
           f"sudocode_commit {doc['sudocode_commit']} != pin {pin}")
     check("header", doc["sudo_sha256"] == sha, "sudo_sha256 is not the current ecbs.sudo")
     print(f"ecbs_vectors.json: sudocode {doc['sudocode_commit'][:7]}, tiers {', '.join(doc['tiers'])}")
+    before = len(failures)
+    n = check_faces_literals(os.path.join(ROOT, doc["source"]))
+    print(f"{'ok ' if len(failures) == before else 'BAD'} ecbs.sudo faces_exchange_demo_* literals: {n} exchanges, both players, = inputs.json")
     pc = pinned_checks()
     for name, (irr, prime, ldiv) in pc.items():
         check(name, irr, "pinned tap x^n - x^k - 1 not irreducible over GF(3)")

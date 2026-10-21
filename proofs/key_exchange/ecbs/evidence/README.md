@@ -36,6 +36,8 @@ The Phase-1 store-P measurement (P kept on the board between games, peak 9 bands
 
 ## Recorded results (ecbs.sudo sha256 `bd5c62ae…5e94`, sudocode 87aaaee, sudo tests 16/16)
 
+2026-10-16, #206: ecbs.sudo gains only non-exported trace code (the demo-only animation trace, inserted before the tests, plus its tests). Every line of the `bd5c62ae…5e94` file is in the new file unchanged, so the exported bodies are byte-identical and the results below stand. `card_sim_Demo` and `ecbs_vectors.json` were rerun at the new hash; the other results keep `bd5c62ae…5e94`.
+
 Rerun on 2026-10-05 at sudocode 87aaaee (pin bump for sudocode#18). The JS target is unchanged, so every number matches the 2026-10-04 record; only each JSON's sudocode commit moved.
 
 Rerun on 2026-10-04 after calling lost its let-go rules (nobody lets go, #175). Against the previous recorded results (sha `32ef2a04…413c`), the only number that changed is control-row moves per person, by the removed calling cursor's 4n + 2 (means 204 / 1,208 / 3,129 / 9,846; were 234 / 1,302 / 3,367 / 10,564). `cursor_steps` is gone, and `calling_check` reports `one_session_ok` (was `resume_every_hole`). Every other number is identical.

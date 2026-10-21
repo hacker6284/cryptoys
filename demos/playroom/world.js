@@ -324,7 +324,9 @@ export async function mountWorld(canvas) {
             color: 0x6a5e52,
             roughness: 0.96,
             metalness: 0,
-            side: THREE.DoubleSide,
+            // Normal faces down after rotation.x = +π/2, so FrontSide draws only the
+            // inward face: visible from inside, culled from above.
+            side: THREE.FrontSide,
         }),
     );
     ceiling.rotation.x = Math.PI / 2;

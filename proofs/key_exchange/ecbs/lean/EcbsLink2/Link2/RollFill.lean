@@ -969,4 +969,25 @@ private theorem emitted_pairs
     rw [hsub, emitStep_fun faces cells (Int.ofNat toN), fuelRange_eq]
     exact fill_loop_at faces cells attempt toN pair next acc h9 hlen hfitF hfitC hhalf
 
+/-- One emitted attempt fills a fresh zero row, then runs the pair loop. -/
+private theorem emitted_attempt
+    (faces : List Nat) (cells attempt next : Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitF : FitsLen faces.length) (hfitC : FitsLen (cells + 1)) :
+    (do
+        let arr ← SudoRt.filledL (Int.ofNat cells) (0 : Int)
+        let sum ← SudoRt.addI (Int.ofNat cells) (1 : Int)
+        let half ← SudoRt.divI sum (2 : Int)
+        let toV ← SudoRt.subI half (1 : Int)
+        let fuel :=
+          if Int.ofNat 0 > toV then 1 else (toV - Int.ofNat 0).natAbs + 1
+        let r ← SudoRt.runLoopOn (Int.ofNat 0, (Int.ofNat next, arr)) fuel
+          (emitStep faces cells toV) (pairAfter (Int.ofNat attempt))
+          (fun r => pure (SudoRt.Flow.ret r))
+        pure r) =
+      filledEnd attempt (fill cells faces next 0 (List.replicate cells 0)) := by
+  rw [filled_zero, ok_bind]
+  exact emitted_pairs faces cells attempt next 0 (List.replicate cells 0) h9
+    (List.length_replicate _ _) hfitF hfitC
+
 end EcbsLink2.Link2

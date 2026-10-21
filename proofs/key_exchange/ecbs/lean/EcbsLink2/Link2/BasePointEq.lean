@@ -562,15 +562,9 @@ private theorem back_hit (b : Board) (found : Int) :
       afterWalk b found := by
   rw [back_lets, walk_back]
 
-/-- The join with the seat packaged, and the emitted walk text left in place. -/
-def emittedJoin (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
+/-- The walk text after the first four `key_grid_moves`. -/
+def emittedTail (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
   do
-    let _as1437 ← SudoRt.sudoAssert (decide (found > (0 : Int))) 963
-    let b ← cofactorSeat b
-    let _t1442 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
-    let _t1443 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1442 } : Costs)
-    let _t1444 := ({ b with sudo_5Board_4cost := _t1443 } : Board)
-    let b := _t1444
     let wrwr := (#[(1 : Int), (2 : Int), (1 : Int), (2 : Int)] : Array (Int))
     if ((b).sudo_5Board_1t).sudo_4Tier_4demo then
       do
@@ -649,6 +643,17 @@ def emittedJoin (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
             let b := _io1478
             pure (found, b)
 
+/-- The join with the seat packaged, and the emitted walk text left in place. -/
+def emittedJoin (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
+  do
+    let _as1437 ← SudoRt.sudoAssert (decide (found > (0 : Int))) 963
+    let b ← cofactorSeat b
+    let _t1442 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
+    let _t1443 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1442 } : Costs)
+    let _t1444 := ({ b with sudo_5Board_4cost := _t1443 } : Board)
+    let b := _t1444
+    emittedTail b found
+
 /-- Four `key_grid_moves`, then the emitted `if`. That `if` is `afterWalk`. -/
 private theorem grid_then_back (b : Board) (found : Int) :
     (do
@@ -721,6 +726,27 @@ theorem base_point_after_seat (σ : Int × (Board × Int)) :
     rw [seat_hit]
   unfold emittedJoin
   rfl
+
+/-- The first four moves are `gridAdd`. The walk text is `emittedTail`. -/
+theorem emitted_join_grid (b : Board) (found : Int) :
+    emittedJoin b found =
+      (do
+          let _ ← SudoRt.sudoAssert (decide (found > (0 : Int))) 963
+          let b ← cofactorSeat b
+          let b ← gridAdd b
+          emittedTail b found) := by
+  unfold emittedJoin
+  cases hA : SudoRt.sudoAssert (decide (found > (0 : Int))) 963 with
+  | error _ =>
+    simp [hA, error_bind]
+  | ok _ =>
+    simp only [hA, ok_bind]
+    cases hS : cofactorSeat b with
+    | error _ =>
+      simp [hS, error_bind]
+    | ok b1 =>
+      simp only [hS, ok_bind]
+      rw [grid_prefix b1 (fun b => emittedTail b found)]
 
 /-- `gridAdd` adds four to `key_grid_moves` and leaves every other field. -/
 theorem gridAdd_key (b : Board) :

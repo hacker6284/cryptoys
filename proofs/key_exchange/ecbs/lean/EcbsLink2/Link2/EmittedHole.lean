@@ -440,6 +440,10 @@ private theorem bind_assoc {α β γ : Type} (m : Except SudoRt.Trap α)
     ((m >>= f) >>= g) = (m >>= fun a => f a >>= g) := by
   cases m <;> rfl
 
+private theorem bind_pure {α : Type} (m : Except SudoRt.Trap α) :
+    (m >>= fun x => pure x) = m := by
+  cases m <;> rfl
+
 private theorem bind_assoc' {α β γ : Type} (m : Except SudoRt.Trap α)
     (f : α → Except SudoRt.Trap β) (g : β → Except SudoRt.Trap γ) :
     (m >>= fun a => f a >>= g) = ((m >>= f) >>= g) := by
@@ -471,8 +475,7 @@ theorem strip_block {α : Type} (n : Nat) (strip0 : Array Int)
     (hn : 2 ≤ n) (hfit : FitsLen n) (h0 : strip0 = Array.mkArray n (0 : Int)) :
     (do
         let toV ← SudoRt.subI (Int.ofNat n) (2 : Int)
-        let fuel := fuelRange (0 : Int) toV
-        SudoRt.runLoopOn ((0 : Int), strip0) fuel (emittedStripStep toV)
+        SudoRt.runLoopOn ((0 : Int), strip0) (fuelRange (0 : Int) toV) (emittedStripStep toV)
           (fun σ => do
             let ix ← SudoRt.subI (Int.ofNat n) (2 : Int)
             let strip ← SudoRt.putL σ.2 ix (1 : Int)
@@ -524,19 +527,82 @@ theorem emitted_pow_loop {α : Type} (n : Nat) (strip : Array Int) (b : Board)
 
 /-- The emitted power loop, continuation included, is `powRun` of the root digits. -/
 theorem pow_block {α : Type} (n : Nat) (strip : Array Int) (b0 : Board)
+    (aft : Int × Board → Except SudoRt.Trap α)
     (k : Board → Except SudoRt.Trap α)
     (onRet : Int × Board → Except SudoRt.Trap α)
-    (hn : 2 ≤ n) (hfit : FitsLen n) (hstrip : strip = embed (rootStrip n)) :
+    (hn : 2 ≤ n) (hfit : FitsLen n) (hstrip : strip = embed (rootStrip n))
+    (haft : ∀ i bb, aft (i, bb) = k bb) :
     (do
         let toV ← SudoRt.subI (Int.ofNat n) (2 : Int)
-        let fuel := fuelRange (0 : Int) toV
-        SudoRt.runLoopOn ((0 : Int), b0) fuel (emittedPowStep strip toV)
-          (fun σ => k σ.2) onRet) =
+        SudoRt.runLoopOn ((0 : Int), b0) (fuelRange (0 : Int) toV) (emittedPowStep strip toV)
+          aft onRet) =
       (powRun b0 (rootDigits n) >>= k) := by
+  have haft' : aft = fun σ => k σ.2 := by
+    funext σ
+    cases σ with
+    | mk i bb =>
+      simpa using haft i bb
+  rw [haft']
   have hsub := subI_ofNat n 2 hfit (by omega)
   rw [show (2 : Int) = Int.ofNat 2 from rfl, hsub, ok_bind]
   rw [show (0 : Int) = Int.ofNat 0 from rfl]
-  dsimp only
   exact emitted_pow_loop n strip b0 k onRet hn hfit hstrip
+
+/-- The hit test and the five clears are `searchCheck`, then break or miss. -/
+theorem check_block (b : Board) (j found : Int) (jN : Nat) (hj : j = Int.ofNat jN) :
+    (do
+        let b ← marker_lift b
+        let b := { b with sudo_5Board_9marker_on := false }
+        let b ← clear b gap
+        let b ← mul b gap up up true false false
+        let b ← settle b
+        let y2 ← value b gap
+        let side ← value b bottom
+        if SudoRt.SEq.beq y2 side then
+          pure (SudoRt.Flow.brk (ρ := Int × Board) (b, j))
+        else
+          do
+            let b ← clear b gap
+            let b ← clear b bottom
+            let b ← clear b up
+            let b ← clear b across
+            let b ← clear b base_across
+            pure (SudoRt.Flow.cont (ρ := Int × Board) (b, found))) =
+      (searchCheck b >>= fun r =>
+        if r.1 = true then
+          pure (SudoRt.Flow.brk (ρ := Int × Board) (r.2, Int.ofNat jN))
+        else
+          searchMiss r.2 >>= fun b =>
+            pure (SudoRt.Flow.cont (ρ := Int × Board) (b, found))) := by
+  rw [hj]
+  unfold searchCheck searchMiss
+  simp only [searchGap_int, searchUp_int, searchBottom_int, searchAcross_int, searchBase_int]
+  cases hm : marker_lift b with
+  | error _ => simp [hm, error_bind]
+  | ok b1 =>
+    simp only [hm, ok_bind]
+    cases hc : clear { b1 with sudo_5Board_9marker_on := false } gap with
+    | error _ => simp [hc, error_bind]
+    | ok b2 =>
+      simp only [hc, ok_bind]
+      cases hmul : mul b2 gap up up true false false with
+      | error _ => simp [hmul, error_bind]
+      | ok b3 =>
+        simp only [hmul, ok_bind]
+        cases hs : settle b3 with
+        | error _ => simp [hs, error_bind]
+        | ok b4 =>
+          simp only [hs, ok_bind]
+          cases hy : value b4 gap with
+          | error _ => simp [hy, error_bind]
+          | ok y2 =>
+            simp only [hy, ok_bind]
+            cases hside : value b4 bottom with
+            | error _ => simp [hside, error_bind]
+            | ok sidev =>
+              simp only [hside, ok_bind, pure_eq_ok]
+              by_cases hb : SudoRt.SEq.beq y2 sidev = true
+              · simp only [hb, if_true, pure_eq_ok]
+              · simp only [if_neg hb, bind_assoc', ok_bind]
 
 end EcbsLink2.Link2

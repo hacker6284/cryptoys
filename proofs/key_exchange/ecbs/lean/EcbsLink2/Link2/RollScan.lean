@@ -195,4 +195,125 @@ theorem lay_die (cells : Nat) (acc : List Nat) (pair face : Nat)
     unfold writePair
     rw [if_neg h2]
 
+/-- After the scan: a blank face is `none`; a real face is `writePair`. -/
+def faceLayAfter (cells : Nat) (acc : List Nat) (pair : Nat)
+    (σ : Int × (Int × Int)) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Array Int) (Option Ecbs.Rolled)) := do
+  let face := σ.2.1
+  let next := σ.2.2
+  if SudoRt.SEq.beq face (0 : Int) then
+    pure (SudoRt.Flow.ret (none : Option Ecbs.Rolled))
+  else
+    let arr ← (do
+      let ix ← SudoRt.mulI (Int.ofNat 2) (Int.ofNat pair)
+      let d ← Ecbs.keypad_first face
+      let acc ← SudoRt.putL (embed acc) ix d
+      let j ← SudoRt.addI ix (1 : Int)
+      if decide (j < Int.ofNat cells) then
+        let d2 ← Ecbs.keypad_second face
+        SudoRt.putL acc j d2
+      else
+        pure acc)
+    pure (SudoRt.Flow.cont (next, arr))
+
+private theorem face_lay_step (faces : List Nat) (i k : Nat)
+    (hpos : 0 < faces.length) (hk : k ≤ faces.length - 1)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfit : FitsLen faces.length)
+    (st : Int × Int) (hst : st = (0, Int.ofNat k))
+    (hread : readFace faces i = readFace faces k) :
+    (∃ st', st' = (0, Int.ofNat (k + 1)) ∧
+        readFace faces i = readFace faces (k + 1) ∧
+        faceStep (embed faces) (Int.ofNat (faces.length - 1)) (Int.ofNat k, st) =
+          if k = faces.length - 1 then
+            .ok (SudoRt.Flow.brk (Int.ofNat k, st'))
+          else
+            .ok (SudoRt.Flow.cont (Int.ofNat (k + 1), st'))) ∨
+    (∃ f st', f ≠ 0 ∧ f ≤ 9 ∧ st' = (Int.ofNat f, Int.ofNat (k + 1)) ∧
+        readFace faces i = some (f, k + 1) ∧
+        faceStep (embed faces) (Int.ofNat (faces.length - 1)) (Int.ofNat k, st) =
+          .ok (SudoRt.Flow.brk (Int.ofNat k, st'))) := by
+  have hkf : k < faces.length := by
+    simpa [Nat.sub_add_cancel hpos] using Nat.lt_succ_of_le hk
+  have hfk : FitsLen (k + 1) := FitsLen.of_le hfit (Nat.succ_le_of_lt hkf)
+  rw [hst]
+  by_cases hz : faces[k] = 0
+  · have hbody := faceBody_zero faces k hkf hz hfk
+    refine Or.inl ⟨(0, Int.ofNat (k + 1)), rfl, ?_, ?_⟩
+    · rw [hread, readFace_zero hkf hz]
+    · unfold faceStep
+      conv => lhs; zeta
+      have hng : ¬ Int.ofNat k > Int.ofNat (faces.length - 1) := by
+        rw [ofNat_eq_natCast, ofNat_eq_natCast]
+        omega
+      rw [if_neg hng, hbody, ok_bind]
+      simpa using asc_tail (faces.length - 1) k hfk (0, Int.ofNat (k + 1))
+  · have hbody := faceBody_pos faces k hkf (h9 k hkf) hz hfk
+    refine Or.inr ⟨faces[k], (Int.ofNat (faces[k]), Int.ofNat (k + 1)), hz,
+      h9 k hkf, rfl, ?_, ?_⟩
+    · rw [hread, readFace_pos hkf hz]
+    · unfold faceStep
+      conv => lhs; zeta
+      have hng : ¬ Int.ofNat k > Int.ofNat (faces.length - 1) := by
+        rw [ofNat_eq_natCast, ofNat_eq_natCast]
+        omega
+      rw [if_neg hng, hbody, ok_bind]
+      simp [pure_eq_ok]
+
+theorem face_lay (faces : List Nat) (cells : Nat) (acc : List Nat) (pair i : Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hlen : acc.length = cells) (hix : 2 * pair < cells)
+    (hfit2 : FitsLen (2 * pair + 1)) (hfit : FitsLen faces.length)
+    (hi : i < faces.length) :
+    (do
+        let toV ← SudoRt.subI (Int.ofNat faces.length) (1 : Int)
+        let fuel := if Int.ofNat i > toV then 1 else (toV - Int.ofNat i).natAbs + 1
+        let r ← SudoRt.runLoopOn (Int.ofNat i, ((0 : Int), Int.ofNat i)) fuel
+          (faceStep (embed faces) toV) (faceLayAfter cells acc pair)
+          (fun r => pure (SudoRt.Flow.ret r))
+        pure r) =
+      match readFace faces i with
+      | none => .ok (SudoRt.Flow.ret (none : Option Ecbs.Rolled))
+      | some (f, n) =>
+        .ok (SudoRt.Flow.cont (Int.ofNat n, embed (writePair cells acc pair f))) := by
+  simp only [bind_pure]
+  have hle : i ≤ faces.length - 1 := by omega
+  rw [subI_ofNat_one _ (by omega : 0 < faces.length) hfit, ok_bind, fuelRange_eq]
+  refine asc_brk_goal
+      (fun k st => st = ((0 : Int), Int.ofNat k) ∧ readFace faces i = readFace faces k)
+      (fun k st => ∃ f, f ≠ 0 ∧ f ≤ 9 ∧ st = (Int.ofNat f, Int.ofNat (k + 1)) ∧
+        readFace faces i = some (f, k + 1))
+      hle ⟨rfl, rfl⟩ ?_ ?_
+  · intro k st _ hk hI
+    obtain ⟨hst, hread⟩ := hI
+    rcases face_lay_step faces i k (Nat.lt_of_le_of_lt (Nat.zero_le i) hi) hk h9 hfit
+      st hst hread with
+      ⟨st', hst', hread', hstep⟩ | ⟨f, st', hnz, h9f, hst', hread', hstep⟩
+    · exact Or.inl ⟨st', ⟨hst', hread'⟩, hstep⟩
+    · exact Or.inr ⟨st', ⟨f, hnz, h9f, hst', hread'⟩, hstep⟩
+  · intro j st _ _ hdone
+    cases hdone with
+    | inl hI =>
+      obtain ⟨hst, hread⟩ := hI
+      have hk : faces.length - 1 + 1 = faces.length := by omega
+      unfold faceLayAfter
+      conv => lhs; zeta
+      rw [hst]
+      dsimp
+      rw [sEq_int, decide_eq_true (by rfl : (0 : Int) = 0), if_pos rfl, pure_eq_ok,
+        hread, hk, readFace_ge (Nat.le_refl _)]
+    | inr hD =>
+      obtain ⟨f, hnz, h9f, hst, hread⟩ := hD
+      have h1 : 1 ≤ f := by omega
+      unfold faceLayAfter
+      conv => lhs; zeta
+      rw [hst]
+      have hbeq : SudoRt.SEq.beq (Int.ofNat f) (0 : Int) = false := by
+        rw [sEq_int]
+        exact decide_eq_false (by
+          intro h
+          exact hnz (Int.ofNat.inj (by simpa [ofNat_eq_natCast] using h)))
+      rw [if_neg (by rw [hbeq]; decide : ¬ (SudoRt.SEq.beq (Int.ofNat f) 0 = true))]
+      rw [lay_die cells acc pair f h1 h9f hlen hix hfit2, ok_bind, pure_eq_ok, hread]
+
 end EcbsLink2.Link2

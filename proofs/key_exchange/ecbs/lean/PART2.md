@@ -851,6 +851,84 @@ The eight exports `base_point_of`, `walk_key`, `exchange`, `receive_check`, `mak
 - Future work, not started: proving `fieldInv` is the true field inverse, so inverses could be checked as one-multiply certificates.
 - `walk_fform` is not stated for Demo. One live cell seats markers `0` through `14` (`fformScript`). `toy_script_fform`, `hobby_script_fform`, and `serious_script_fform` are `14 < script` by `decide`. `demo_not_fform` is the negation. The run is `DEMO_SCRIPT.md`. Demo exports go through `walk_chord`: `walk_and_finish_demo`.
 
+- `roll_key_refines` is `Ecbs.roll_key` = `rolledMatch` of `Spec.rollKey` when every face is at most 9 and both lengths fit an i64. `demo_roll_key`, `toy_roll_key`, `hobby_roll_key`, and `serious_roll_key` discharge the tier's cell count. The roll does not invert, so there is no `FieldOk` hypothesis. A face outside `0 .. 9` is assert 1216 and is outside the theorem. `exchange_card` is the card's sequence: length assert 1428, trit assert 1429, two publishes, then swap, curve, certify, rebuild, swap, compare, and the shared walk. A nonempty failure text returns that text. The copies sudoc pasted into the failing branch test the same text and return it. `receive_check_card` is the four verdicts. `checkedAt` names the peak, `subI` of the moves since the curve test, `tally_max`, and `control_highest`. The curve failure does not call `certificate`. `certificate_card` is the chord. An empty bottom returns false and does not invert. The other arm calls `invert_checked`. `make_certificate_card` is a fresh board, the two puts, and `certificate`: `none`, or `some` of `point_of`. `make_certificate_steps` writes that chord into the export. This is not the identity `π(C) − C`. `call_in_card` is `start_calling`, then `call_hole` on both destinations for holes `0` through `n − 1`. `callInAfter` writes `0` at the calling hole and adds one to `ctrl`. None of these four takes `FieldOk`: the inverse stays inside `invert_checked` and is not claimed. `lake build EcbsLink2` succeeded (315 modules, exit 0, 116s). `lake env lean Axioms.lean` printed `audited 20920` in 173s. The only axioms are `propext`, `Classical.choice`, and `Quot.sound`. No `sorryAx`, no `Lean.ofReduceBool`. The sampler recorded these VmHWM peaks during that build and the audit. Each one is under 2097152 kB. The highest is `Axioms.lean` at 1093776 kB.
+
+| File | VmHWM kB |
+| --- | ---: |
+| `Axioms.lean` | 1093776 |
+| `Frobenius.lean` | 995456 |
+| `FformYPack.lean` | 698728 |
+| `FformZPack.lean` | 698308 |
+| `FformZeroPack.lean` | 620232 |
+| `FformFrob.lean` | 613844 |
+| `FformYZero.lean` | 610728 |
+| `FformZeroAt.lean` | 602420 |
+| `FformZeroLay.lean` | 598788 |
+| `FformComb.lean` | 596164 |
+| `FformZZero.lean` | 595008 |
+| `FformLiveAny.lean` | 565548 |
+| `CurveAsm.lean` | 561608 |
+| `WalkCase.lean` | 557380 |
+| `WalkFformFrame.lean` | 553668 |
+| `FformLayout.lean` | 551568 |
+| `HitChord.lean` | 538544 |
+| `FformOpenAt.lean` | 527748 |
+| `WalkFformClose.lean` | 526388 |
+| `FformFrame.lean` | 514072 |
+| `FinishClear.lean` | 513924 |
+| `OnCombChord.lean` | 513052 |
+| `FformMarker.lean` | 512496 |
+| `EcbsLink2.lean` | 509432 |
+| `EmittedHole.lean` | 507532 |
+| `WalkFformZero.lean` | 504716 |
+| `BasePointEq.lean` | 503776 |
+| `FformLivePack.lean` | 503104 |
+| `WalkFformStep.lean` | 498708 |
+| `SearchCofactor.lean` | 493708 |
+| `FformZero.lean` | 485544 |
+| `SearchCubeOn.lean` | 480788 |
+| `FformZeroProj.lean` | 478824 |
+| `FinishRun.lean` | 476716 |
+| `FformCombLay.lean` | 470908 |
+| `FformCount.lean` | 468580 |
+| `FinishAffine.lean` | 467148 |
+| `SearchOpen.lean` | 466464 |
+| `FformOps.lean` | 465836 |
+| `FformAtPack.lean` | 462448 |
+| `WalkStep.lean` | 462392 |
+| `FformCellInv.lean` | 461564 |
+| `FformAddAt.lean` | 455784 |
+| `FformSumAt.lean` | 453100 |
+| `FformKept.lean` | 453004 |
+| `FformDen.lean` | 449192 |
+| `FformHold.lean` | 447488 |
+| `FformCharge.lean` | 446828 |
+| `FrameKeep.lean` | 446340 |
+| `WalkLast.lean` | 444984 |
+| `WalkFformIdle.lean` | 442036 |
+| `CurveCube.lean` | 389548 |
+| `FformOpsMul.lean` | 366736 |
+| `CurveSpare.lean` | 335496 |
+| `CurveSideSquare.lean` | 309956 |
+| `DemoField.lean` | 293060 |
+| `FformOpsChain.lean` | 278280 |
+| `CurveRun.lean` | 264968 |
+| `FformStart.lean` | 264600 |
+| `FinishInvert.lean` | 254268 |
+| `FinishMul.lean` | 249232 |
+| `BenchDown.lean` | 249156 |
+| `FformPoint.lean` | 240720 |
+| `BottomHomes.lean` | 226656 |
+| `BottomCube.lean` | 225828 |
+| `BottomField.lean` | 214784 |
+| `BottomOff.lean` | 210280 |
+| `BottomGlue.lean` | 208880 |
+| `WalkFformNone.lean` | 206640 |
+| `ExchangeExport.lean` | 203352 |
+| `CertExport.lean` | 196980 |
+| `ReceiveExport.lean` | 194476 |
+| `CallInExport.lean` | 192956 |
+
 ## Proof rules that worked
 
 - Restate the emitted stepper so the bridge is `rfl`. `markerOn` plus `@[simp] markerOn_flag` fixed the `noteBench_flag` goal that rejected a bare `rfl` on `{b with marker_on := true}`.

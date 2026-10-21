@@ -653,8 +653,40 @@ def emittedJoin (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
     let b := _t1444
     emittedTail b found
 
-/-- Four `key_grid_moves`, then the emitted `if`. That `if` is `afterWalk`. -/
-private theorem grid_then_back (b : Board) (found : Int) :
+/-- Four `key_grid_moves`, then the emitted finish `if`. -/
+def gridBlock (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
+  do
+    let m ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_14key_grid_moves (4 : Int)
+    let c := ({ b.sudo_5Board_4cost with
+      sudo_5Costs_14key_grid_moves := m } : Costs)
+    let b2 := ({ b with sudo_5Board_4cost := c } : Board)
+    let b := b2
+    if (!(b.sudo_5Board_1t.sudo_4Tier_4demo)) then
+      (do
+          let io ← finish b
+          let b := io
+          let io ← clear b base_across
+          let b := io
+          let io ← clear b base_up
+          let b := io
+          let io ← move_band b base_across across
+          let b := io
+          let io ← move_band b base_up up
+          let b := io
+          pure (found, b))
+    else
+      (do
+          let io ← clear b base_across
+          let b := io
+          let io ← clear b base_up
+          let b := io
+          let io ← move_band b base_across across
+          let b := io
+          let io ← move_band b base_up up
+          let b := io
+          pure (found, b))
+
+private theorem gridBlock_lhs (b : Board) (found : Int) :
     (do
         let m ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_14key_grid_moves (4 : Int)
         let c := ({ b.sudo_5Board_4cost with
@@ -685,9 +717,15 @@ private theorem grid_then_back (b : Board) (found : Int) :
               let io ← move_band b base_up up
               let b := io
               pure (found, b))) =
+      gridBlock b found := rfl
+
+/-- Four `key_grid_moves`, then the emitted `if`. That `if` is `afterWalk`. -/
+private theorem grid_then_back (b : Board) (found : Int) :
+    gridBlock b found =
       (do
           let b ← gridAdd b
           afterWalk b found) := by
+  unfold gridBlock
   rw [grid_prefix b (fun b =>
     if (!(b.sudo_5Board_1t.sudo_4Tier_4demo)) then
       (do
@@ -792,5 +830,127 @@ theorem fform_tail_finish (b : Board) (found : Int) (live ok : Bool)
     lhs
     pattern (gridAdd b >>= fun b' => afterWalk b' found)
     rw [grid_back_finish b found hdemo]
+
+section
+attribute [local irreducible] gridBlock
+
+/-- Demo: `walk_chord`, assert 972, four `key_grid_moves`, then `afterWalk`. -/
+theorem emitted_tail_demo (b : Board) (found : Int)
+    (hdemo : b.sudo_5Board_1t.sudo_4Tier_4demo = true) :
+    emittedTail b found = demoWalk b found := by
+  unfold emittedTail demoWalk cofactorWalkCells
+  rw [hdemo]
+  simp (config := { zeta := false }) only [if_true]
+  cases hW : walk_chord b cofactorWalkCells with
+  | error _ =>
+    unfold cofactorWalkCells at hW
+    rw [hW]
+    simp (config := { zeta := false }) only [error_bind]
+  | ok r =>
+    cases r with
+    | mk ret bw =>
+      cases ret with
+      | mk live ok =>
+        unfold cofactorWalkCells at hW
+        rw [hW]
+        simp (config := { zeta := false }) only [ok_bind]
+        conv =>
+          lhs
+          pattern (SudoRt.addI _ (4 : Int) >>= fun _ => _)
+          rw [gridBlock_lhs]
+        show (let b := bw; let _sudo_h0 := (live, ok);
+            do
+              let flag ← (if _sudo_h0.1 then (do pure _sudo_h0.2) else pure false)
+              let _ ← SudoRt.sudoAssert flag 972
+              gridBlock b found) =
+          (let b := bw; let _sudo_h0 := (live, ok);
+            do
+              let flag ← (if _sudo_h0.1 then (do pure _sudo_h0.2) else pure false)
+              let _ ← SudoRt.sudoAssert flag 972
+              let b ← gridAdd b
+              afterWalk b found)
+        dsimp only
+        rcases live with _ | _ <;> rcases ok with _ | _
+        · have hn : ¬ ((false : Bool) = true) := by decide
+          simp (config := { zeta := false }) only [if_neg hn, pure_bind, SudoRt.sudoAssert,
+            if_neg hn, SudoRt.fail, error_bind]
+        · have hn : ¬ ((false : Bool) = true) := by decide
+          simp (config := { zeta := false }) only [if_neg hn, pure_bind, SudoRt.sudoAssert,
+            if_neg hn, SudoRt.fail, error_bind]
+        · have hn : ¬ ((false : Bool) = true) := by decide
+          simp (config := { zeta := false }) only [if_pos trivial, pure_bind, SudoRt.sudoAssert,
+            if_neg hn, SudoRt.fail, error_bind]
+        · simp (config := { zeta := false }) only [if_pos trivial, pure_bind, SudoRt.sudoAssert,
+            if_pos trivial, pure_bind]
+          exact grid_then_back bw found
+
+/-- Toy, Hobby, and Serious: `walk_fform`, assert 975, four `key_grid_moves`,
+    then `afterWalk`. -/
+theorem emitted_tail_fform (b : Board) (found : Int)
+    (hdemo : b.sudo_5Board_1t.sudo_4Tier_4demo = false) :
+    emittedTail b found = fformWalk b found := by
+  unfold emittedTail fformWalk cofactorWalkCells
+  rw [hdemo]
+  have hnDemo : ¬ ((false : Bool) = true) := by decide
+  simp (config := { zeta := false }) only [if_neg hnDemo]
+  cases hW : walk_fform b cofactorWalkCells with
+  | error _ =>
+    unfold cofactorWalkCells at hW
+    rw [hW]
+    simp (config := { zeta := false }) only [error_bind]
+  | ok r =>
+    cases r with
+    | mk ret bw =>
+      cases ret with
+      | mk live ok =>
+        unfold cofactorWalkCells at hW
+        rw [hW]
+        simp (config := { zeta := false }) only [ok_bind]
+        conv =>
+          lhs
+          pattern (SudoRt.addI _ (4 : Int) >>= fun _ => _)
+          rw [gridBlock_lhs]
+        show (let b := bw; let _sudo_h0 := (live, ok);
+            do
+              let flag ← (if _sudo_h0.1 then (do pure _sudo_h0.2) else pure false)
+              let _ ← SudoRt.sudoAssert flag 975
+              gridBlock b found) =
+          (let b := bw; let _sudo_h0 := (live, ok);
+            do
+              let flag ← (if _sudo_h0.1 then (do pure _sudo_h0.2) else pure false)
+              let _ ← SudoRt.sudoAssert flag 975
+              let b ← gridAdd b
+              afterWalk b found)
+        dsimp only
+        rcases live with _ | _ <;> rcases ok with _ | _
+        · have hn : ¬ ((false : Bool) = true) := by decide
+          simp (config := { zeta := false }) only [if_neg hn, pure_bind, SudoRt.sudoAssert,
+            if_neg hn, SudoRt.fail, error_bind]
+        · have hn : ¬ ((false : Bool) = true) := by decide
+          simp (config := { zeta := false }) only [if_neg hn, pure_bind, SudoRt.sudoAssert,
+            if_neg hn, SudoRt.fail, error_bind]
+        · have hn : ¬ ((false : Bool) = true) := by decide
+          simp (config := { zeta := false }) only [if_pos trivial, pure_bind, SudoRt.sudoAssert,
+            if_neg hn, SudoRt.fail, error_bind]
+        · simp (config := { zeta := false }) only [if_pos trivial, pure_bind, SudoRt.sudoAssert,
+            if_pos trivial, pure_bind]
+          exact grid_then_back bw found
+
+/-- The walk text is the demo arm or the F-form arm. -/
+theorem emitted_tail_arm (b : Board) (found : Int) :
+    emittedTail b found =
+      (if b.sudo_5Board_1t.sudo_4Tier_4demo then
+        demoWalk b found
+      else
+        fformWalk b found) := by
+  cases hdemo : b.sudo_5Board_1t.sudo_4Tier_4demo with
+  | true =>
+    rw [if_pos (rfl : (true = true))]
+    exact emitted_tail_demo b found hdemo
+  | false =>
+    rw [if_neg (by decide : ¬ ((false : Bool) = true))]
+    exact emitted_tail_fform b found hdemo
+
+end
 
 end EcbsLink2.Link2

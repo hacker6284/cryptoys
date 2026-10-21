@@ -614,20 +614,13 @@ theorem check_block (b : Board) (j found : Int) (jN : Nat) (hj : j = Int.ofNat j
               · simp only [hb, if_true, pure_eq_ok]
               · simp only [if_neg hb, bind_assoc', ok_bind]
 
-/-- One emitted search index is `searchStep`. The board's `n` is `t.n`, and the
-    index is `Int.ofNat σ.1.toNat`. The power `after` is `searchTail` of that
-    outer index, so it does not read the power loop's own index. -/
-theorem emitted_hole_eq (t : Spec.Tier) (σ : Int × (Board × Int))
-    (x y side gapXs ax bx : List Nat) (left : Nat)
-    (hAt : SearchAt σ.2.1 t x y side gapXs ax bx left)
-    (h1 : (1 : Int) ≤ σ.1) (hn : σ.1 ≤ Int.ofNat (t.n - 1)) :
-    emittedHole σ.2.1.sudo_5Board_1t.sudo_4Tier_1n (Int.ofNat (t.n - 1)) σ =
+/-- One emitted search index is `searchStep` when the closed-over length is
+    `t.n` and the index lies in `1 … n − 1`. -/
+theorem emitted_hole_idx (t : Spec.Tier) (σ : Int × (Board × Int))
+    (hfit : FitsLen t.n) (h1 : (1 : Int) ≤ σ.1) (hn : σ.1 ≤ Int.ofNat (t.n - 1)) :
+    emittedHole (Int.ofNat t.n) (Int.ofNat (t.n - 1)) σ =
       searchStep (ρ := Int × Board) t (t.n - 1) σ := by
-  have hN : σ.2.1.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat t.n := by
-    rw [hAt.tier]
-    rfl
   have hj : Int.ofNat σ.1.toNat = σ.1 := Int.toNat_of_nonneg (by omega)
-  have hfit : FitsLen t.n := fits_small hAt.shape.n_small
   have hle : (1 : Int) ≤ Int.ofNat (t.n - 1) := by
     calc (1 : Int) ≤ σ.1 := h1
       _ ≤ Int.ofNat (t.n - 1) := hn
@@ -638,7 +631,7 @@ theorem emitted_hole_eq (t : Spec.Tier) (σ : Int × (Board × Int))
     cases σ with
     | mk i rest =>
       exact Prod.ext hj.symm rfl
-  rw [hN, hpair]
+  rw [hpair]
   unfold emittedHole searchStep searchBody
   dsimp only
   have hng : ¬ Int.ofNat σ.1.toNat > Int.ofNat (t.n - 1) := by
@@ -671,5 +664,103 @@ theorem emitted_hole_eq (t : Spec.Tier) (σ : Int × (Board × Int))
     rfl
   · funext fl
     cases fl <;> rfl
+
+/-- Reading `n` off a `SearchAt` board is `t.n`. -/
+theorem emitted_hole_eq (t : Spec.Tier) (σ : Int × (Board × Int))
+    (x y side gapXs ax bx : List Nat) (left : Nat)
+    (hAt : SearchAt σ.2.1 t x y side gapXs ax bx left)
+    (h1 : (1 : Int) ≤ σ.1) (hn : σ.1 ≤ Int.ofNat (t.n - 1)) :
+    emittedHole σ.2.1.sudo_5Board_1t.sudo_4Tier_1n (Int.ofNat (t.n - 1)) σ =
+      searchStep (ρ := Int × Board) t (t.n - 1) σ := by
+  have hN : σ.2.1.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat t.n := by
+    rw [hAt.tier]
+    rfl
+  rw [hN]
+  exact emitted_hole_idx t σ (fits_small hAt.shape.n_small) h1 hn
+
+/-- A step that continues advances the index by one, and the new index is
+    still at most `n − 1`. The length fits an i64, so `addI` is the successor. -/
+private theorem search_cont_index (t : Spec.Tier) (σ σ' : Int × (Board × Int))
+    (hfit : FitsLen t.n)
+    (h1 : (1 : Int) ≤ σ.1) (hn : σ.1 ≤ Int.ofNat (t.n - 1))
+    (h : searchStep (ρ := Int × Board) t (t.n - 1) σ = .ok (SudoRt.Flow.cont σ')) :
+    (1 : Int) ≤ σ'.1 ∧ σ'.1 ≤ Int.ofNat (t.n - 1) := by
+  unfold searchStep at h
+  have hng : ¬ σ.1 > Int.ofNat (t.n - 1) := Int.not_lt.mpr hn
+  rw [if_neg hng] at h
+  cases hb : searchBody (ρ := Int × Board) σ.2.1 t σ.1.toNat σ.2.2 with
+  | error _ =>
+    rw [hb, error_bind] at h
+    cases h
+  | ok fl =>
+    rw [hb, ok_bind] at h
+    cases fl with
+    | ret _ =>
+      simp [pure_eq_ok] at h
+    | brk _ =>
+      simp [pure_eq_ok] at h
+    | cont fs =>
+      simp only [pure_eq_ok] at h
+      have hj : Int.ofNat σ.1.toNat = σ.1 := Int.toNat_of_nonneg (by omega)
+      have hk : σ.1.toNat ≤ t.n - 1 :=
+        Int.ofNat_le.mp (by
+          rw [show (σ.1.toNat : Int) = σ.1 from hj]
+          exact hn)
+      have hone : (1 : Nat) ≤ σ.1.toNat :=
+        Int.ofNat_le.mp (by
+          rw [show (σ.1.toNat : Int) = σ.1 from hj]
+          exact h1)
+      have hpos : (1 : Nat) ≤ t.n :=
+        Nat.le_trans hone (Nat.le_trans hk (Nat.sub_le _ _))
+      have hsucc : σ.1.toNat + 1 ≤ t.n := by
+        have hsum : Nat.succ (t.n - 1) = t.n :=
+          (Nat.succ_eq_add_one _).trans (Nat.sub_add_cancel hpos)
+        have hstep : Nat.succ σ.1.toNat ≤ Nat.succ (t.n - 1) := Nat.succ_le_succ hk
+        rw [hsum] at hstep
+        exact Nat.succ_eq_add_one _ ▸ hstep
+      have hfi : FitsLen (σ.1.toNat + 1) := FitsLen.of_le hfit hsucc
+      rw [← hj] at h
+      rw [asc_tail (t.n - 1) σ.1.toNat hfi fs] at h
+      by_cases heq : σ.1.toNat = t.n - 1
+      · rw [if_pos heq] at h
+        cases h
+      · rw [if_neg heq] at h
+        cases h
+        refine ⟨Int.ofNat_le.mpr (Nat.le_trans hone (Nat.le_succ _)),
+          Int.ofNat_le.mpr (Nat.succ_le_of_lt (Nat.lt_of_le_of_ne hk heq))⟩
+
+/-- The emitted search loop is the `searchStep` loop. `n` is closed over from
+    the starting board. Every index the loop reaches lies in `1 … n − 1`. -/
+theorem blocks_search (b : Board) (t : Spec.Tier)
+    (hN : b.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat t.n)
+    (hfit : FitsLen t.n) (hn2 : 2 ≤ t.n) :
+    basePointBlocks b =
+      SudoRt.runLoopOn (ρ := Int × Board)
+        ((1 : Int), (b, (0 : Int)))
+        (fuelRange (1 : Int) (Int.ofNat (t.n - 1)))
+        (searchStep (ρ := Int × Board) t (t.n - 1))
+        basePointAfter
+        (fun r => pure r) := by
+  unfold basePointBlocks
+  dsimp only
+  rw [hN]
+  have hsub : SudoRt.subI (Int.ofNat t.n) (1 : Int) =
+      .ok (Int.ofNat (t.n - 1)) :=
+    subI_ofNat_one t.n (by omega) hfit
+  simp only [hsub, ok_bind, bind_pure]
+  have h1n : (1 : Nat) ≤ t.n - 1 := Nat.le_sub_of_add_le hn2
+  have hs0 : (1 : Int) ≤ (1 : Int) ∧ (1 : Int) ≤ Int.ofNat (t.n - 1) :=
+    ⟨by omega, Int.ofNat_le.mpr h1n⟩
+  exact runLoopOn_congr
+    (fun σ => (1 : Int) ≤ σ.1 ∧ σ.1 ≤ Int.ofNat (t.n - 1))
+    ((1 : Int), (b, (0 : Int))) hs0
+    (fuelRange (1 : Int) (Int.ofNat (t.n - 1)))
+    (emittedHole (Int.ofNat t.n) (Int.ofNat (t.n - 1)))
+    (searchStep (ρ := Int × Board) t (t.n - 1))
+    (fun s hs => emitted_hole_idx t s hfit hs.1 hs.2)
+    (fun s s' hs hstep =>
+      search_cont_index t s s' hfit hs.1 hs.2
+        ((emitted_hole_idx t s hfit hs.1 hs.2).symm.trans hstep))
+    basePointAfter (fun r => pure r)
 
 end EcbsLink2.Link2

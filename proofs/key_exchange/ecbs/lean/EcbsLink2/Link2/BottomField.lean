@@ -68,7 +68,7 @@ theorem pointFeed_ops
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
     1 < (pointFeed a).sudo_5Board_4cost.sudo_5Costs_3ops.size := flag_ops a
 
-private theorem cell_eq_of {α : Type} {a b : Array α} (h : a = b) {i : Nat}
+private theorem cell_eq_of_local {α : Type} {a b : Array α} (h : a = b) {i : Nat}
     {ha : i < a.size} {hb : i < b.size} {v : α}
     (hv : b[i]'hb = v) : a[i]'ha = v := by
   subst h
@@ -95,7 +95,7 @@ private theorem flag_op1
     rw [Array.size_set]; exact up_ops_lt a
   have hget := Array.getElem_set_eq (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops
     ⟨1, up_ops_lt a⟩ (Int.ofNat ((cOps + 1) + 1)) rfl hsz
-  exact (cell_eq_of harr hget).trans (congrArg Int.ofNat (by omega))
+  exact (cell_eq_of_local harr hget).trans (congrArg Int.ofNat (by omega))
 
 theorem pointFeed_op1
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :

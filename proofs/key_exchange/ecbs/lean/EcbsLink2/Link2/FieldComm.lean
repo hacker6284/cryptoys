@@ -35,14 +35,14 @@ theorem tritAdd_zero_left (a : Nat) (ha : a ≤ 2) : tritAdd 0 a = a := by
 theorem tritAdd_zero_right (a : Nat) (ha : a ≤ 2) : tritAdd a 0 = a := by
   simp [tritAdd]; omega
 
-private theorem tritAdd_le (a b : Nat) : tritAdd a b ≤ 2 := by
+private theorem tritAdd_le_local (a b : Nat) : tritAdd a b ≤ 2 := by
   simp [tritAdd]; omega
 
 private theorem trit_cycle (a b c : Nat) :
     tritAdd (tritAdd a b) c = tritAdd (tritAdd a c) b := by
   rw [tritAdd_assoc, tritAdd_comm b c, ← tritAdd_assoc]
 
-private theorem trit_diamond (a b c d : Nat) :
+private theorem trit_diamond_local (a b c d : Nat) :
     tritAdd (tritAdd a b) (tritAdd c d) = tritAdd (tritAdd a c) (tritAdd b d) := by
   rw [tritAdd_assoc, ← tritAdd_assoc b, tritAdd_comm b c, tritAdd_assoc, ← tritAdd_assoc]
 
@@ -58,7 +58,7 @@ theorem tritMul_comm (a b : Nat) (ha : a ≤ 2) (hb : b ≤ 2) : tritMul a b = t
   rcases ha3 with rfl | rfl | rfl <;> rcases hb3 with rfl | rfl | rfl <;>
     simp [tritMul, flipTrit]
 
-private theorem coeff_le {xs : List Nat} (h : allTritList xs) (i : Nat) : coeff xs i ≤ 2 := by
+private theorem coeff_le_local {xs : List Nat} (h : allTritList xs) (i : Nat) : coeff xs i ≤ 2 := by
   by_cases hi : i < xs.length
   · rw [coeff_eq_get xs i hi]
     exact h _ (List.getElem_mem hi)
@@ -66,17 +66,17 @@ private theorem coeff_le {xs : List Nat} (h : allTritList xs) (i : Nat) : coeff 
     rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (Nat.le_of_not_gt hi)]
     simp
 
-private theorem coeff_ge (xs : List Nat) (t : Nat) (h : xs.length ≤ t) : coeff xs t = 0 := by
+private theorem coeff_ge_local (xs : List Nat) (t : Nat) (h : xs.length ≤ t) : coeff xs t = 0 := by
   unfold coeff
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none h]
   simp
 
-private theorem coeff_replicate_zero (bench t : Nat) :
+private theorem coeff_replicate_zero_local (bench t : Nat) :
     coeff (List.replicate bench 0) t = 0 := by
   by_cases ht : t < bench
   · have hlen : t < (List.replicate bench 0).length := by simpa using ht
     rw [coeff_eq_get _ t hlen, List.getElem_replicate]
-  · exact coeff_ge _ t (by simpa using Nat.le_of_not_gt ht)
+  · exact coeff_ge_local _ t (by simpa using Nat.le_of_not_gt ht)
 
 private theorem list_set_ge {α : Type} (xs : List α) (i : Nat) (a : α) (h : xs.length ≤ i) :
     xs.set i a = xs := by
@@ -99,7 +99,7 @@ private theorem coeff_set_same (xs : List Nat) (i v : Nat) (hi : i < xs.length) 
   have hi' : i < (xs.set i v).length := by rw [List.length_set]; exact hi
   rw [coeff_eq_get _ i hi', List.getElem_set_self]
 
-private theorem coeff_set_ne (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
+private theorem coeff_set_ne_local (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
     coeff (xs.set i v) j = coeff xs j := by
   have hj' : j < (xs.set i v).length := by rw [List.length_set]; exact hj
   rw [coeff_eq_get _ j hj', List.getElem_set, if_neg hne, ← coeff_eq_get xs j hj]
@@ -149,19 +149,19 @@ private theorem schoolStep_coeff (a st : List Nat) (i j t : Nat) (mir : Bool)
         · have hne : i + j ≠ t := by
             intro h
             exact ht h.symm
-          rw [coeff_set_ne _ _ _ _ htl hne]
+          rw [coeff_set_ne_local _ _ _ _ htl hne]
           have hmiss : ¬ (t = i + j ∧ t < st.length) := by
             intro h
             exact ht h.1
           rw [if_neg hmiss]
         · have hlenS : (st.set (i + j) (tritAdd (coeff st (i + j)) (laidTrit (coeff a j) mir))).length =
               st.length := by rw [List.length_set]
-          rw [coeff_ge _ t (by rw [hlenS]; exact Nat.le_of_not_gt htl)]
+          rw [coeff_ge_local _ t (by rw [hlenS]; exact Nat.le_of_not_gt htl)]
           have hmiss : ¬ (t = i + j ∧ t < st.length) := by
             intro h
             exact htl h.2
           rw [if_neg hmiss]
-          exact (coeff_ge st t (Nat.le_of_not_gt htl)).symm
+          exact (coeff_ge_local st t (Nat.le_of_not_gt htl)).symm
     · rw [list_set_ge _ _ _ (Nat.le_of_not_gt hidx)]
       have hmiss : ¬ (t = i + j ∧ t < st.length) := by
         intro h
@@ -193,7 +193,7 @@ private theorem rowAt_coeff_go (a st : List Nat) (i k t : Nat) (mir : Bool)
       rw [ih]
       by_cases h : i ≤ t ∧ t - i < k ∧ t < st.length
       · rw [if_pos h]
-        exact tritAdd_le _ _
+        exact tritAdd_le_local _ _
       · rw [if_neg h]
         exact hc
     have hlen : (rowAt a i mir st k).length = st.length := rowAt_len a st i mir k
@@ -277,19 +277,19 @@ private theorem schoolAt_coeff (x y st : List Nat) (n i t : Nat)
     rw [hif, tritAdd_zero_right _ hc]
   · rw [if_neg hz, schoolRow_eq_rowAt, mir_of_false]
     rw [rowAt_coeff x st i n t (decide (coeff y i = 2)) hc]
-    have hlay := laid_tritMul (coeff y i) (coeff x (t - i)) (coeff_le hy i) hz
+    have hlay := laid_tritMul (coeff y i) (coeff x (t - i)) (coeff_le_local hy i) hz
     by_cases hcond : i ≤ t ∧ t - i < n ∧ t < st.length
     · rw [if_pos hcond, hlay, if_pos hcond]
     · rw [if_neg hcond, if_neg hcond, tritAdd_zero_right _ hc]
 
-private theorem schoolDown_len (first second : List Nat) (mirror : Bool) (n : Nat)
+private theorem schoolDown_len_local (first second : List Nat) (mirror : Bool) (n : Nat)
     (strip : List Nat) : ∀ k, (schoolDown first second mirror n strip k).length = strip.length
   | 0 => rfl
   | k + 1 => by
     rw [show schoolDown first second mirror n strip (k + 1) =
         schoolAt n first second mirror (n - (k + 1))
           (schoolDown first second mirror n strip k) from rfl,
-      schoolAt_len, schoolDown_len first second mirror n strip k]
+      schoolAt_len, schoolDown_len_local first second mirror n strip k]
 
 /-- Sum `f 0`, then `f 1`, through `f (n - 1)`, in GF(3). -/
 def tritSum (f : Nat → Nat) : Nat → Nat
@@ -301,7 +301,7 @@ private theorem tritSum_le (f : Nat → Nat) (n : Nat) : tritSum f n ≤ 2 := by
   | zero => simp [tritSum]
   | succ n ih =>
     rw [tritSum]
-    exact tritAdd_le _ _
+    exact tritAdd_le_local _ _
 
 private theorem tritSum_congr {f g : Nat → Nat} {n : Nat}
     (h : ∀ i, i < n → f i = g i) : tritSum f n = tritSum g n := by
@@ -373,7 +373,7 @@ private theorem tritSum_pointwise (f g : Nat → Nat) (n : Nat) :
   | zero => simp [tritSum, tritAdd]
   | succ n ih =>
     rw [tritSum, tritSum, tritSum, ih]
-    exact trit_diamond _ _ _ _
+    exact trit_diamond_local _ _ _ _
 
 private theorem tritSum_spike (n j v : Nat) (hj : j < n) (hv : v ≤ 2) :
     tritSum (fun i => if i = j then v else 0) n = v := by
@@ -417,7 +417,7 @@ private theorem boxTerm_le (x y : List Nat) (bound t i : Nat)
   unfold boxTerm
   by_cases h : i ≤ t ∧ t - i < bound
   · simp only [h, ite_true]
-    exact tritMul_le _ _ (coeff_le hy i) (coeff_le hx (t - i))
+    exact tritMul_le _ _ (coeff_le_local hy i) (coeff_le_local hx (t - i))
   · simp only [h, ite_false]
     omega
 
@@ -438,7 +438,7 @@ private theorem boxTerm_raise (x y : List Nat) (n t i : Nat) (hi : i < n)
     unfold boxTerm
     have hpos : n ≤ t ∧ i = t - n ∧ t - n < n := ⟨hnt, hiEq, hlt⟩
     rw [if_neg hnot, if_pos ⟨hle, hlt1⟩, hsub, if_pos hpos]
-    exact (tritAdd_zero_left _ (tritMul_le _ _ (coeff_le hy i) (coeff_le hx n))).symm
+    exact (tritAdd_zero_left _ (tritMul_le _ _ (coeff_le_local hy i) (coeff_le_local hx n))).symm
   · have hdelta :
         (if n ≤ t ∧ i = t - n ∧ t - n < n then tritMul (coeff y i) (coeff x n) else 0) = 0 := by
       rw [if_neg h]
@@ -466,7 +466,7 @@ private theorem tritSum_delta (x y : List Nat) (n t : Nat)
   by_cases h : n ≤ t ∧ t - n < n
   · rcases h with ⟨hnt, hlt⟩
     have hv : tritMul (coeff y (t - n)) (coeff x n) ≤ 2 :=
-      tritMul_le _ _ (coeff_le hy (t - n)) (coeff_le hx n)
+      tritMul_le _ _ (coeff_le_local hy (t - n)) (coeff_le_local hx n)
     have hspike := tritSum_spike n (t - n)
       (tritMul (coeff y (t - n)) (coeff x n)) hlt hv
     have hfun : tritSum (fun i =>
@@ -531,8 +531,8 @@ private theorem border_fresh_swap (x y : List Nat) (n t : Nat)
         unfold freshTerm boxTerm
         simp [hnt, hlt1]
       rw [hBxy, hByx, hFxy, hFyx,
-        tritMul_comm (coeff y (t - n)) (coeff x n) (coeff_le hy _) (coeff_le hx _),
-        tritMul_comm (coeff y n) (coeff x (t - n)) (coeff_le hy _) (coeff_le hx _)]
+        tritMul_comm (coeff y (t - n)) (coeff x n) (coeff_le_local hy _) (coeff_le_local hx _),
+        tritMul_comm (coeff y n) (coeff x (t - n)) (coeff_le_local hy _) (coeff_le_local hx _)]
       exact tritAdd_comm _ _
     · by_cases hmid : t - n < n + 1
       · have heq : t - n = n := by omega
@@ -549,9 +549,9 @@ private theorem border_fresh_swap (x y : List Nat) (n t : Nat)
           unfold freshTerm boxTerm
           simp [hnt, hmid]
         rw [hBxy, hByx, hFxy, hFyx, heq,
-          tritAdd_zero_left _ (tritMul_le _ _ (coeff_le hy n) (coeff_le hx n)),
-          tritAdd_zero_left _ (tritMul_le _ _ (coeff_le hx n) (coeff_le hy n))]
-        exact tritMul_comm (coeff y n) (coeff x n) (coeff_le hy n) (coeff_le hx n)
+          tritAdd_zero_left _ (tritMul_le _ _ (coeff_le_local hy n) (coeff_le_local hx n)),
+          tritAdd_zero_left _ (tritMul_le _ _ (coeff_le_local hx n) (coeff_le_local hy n))]
+        exact tritMul_comm (coeff y n) (coeff x n) (coeff_le_local hy n) (coeff_le_local hx n)
       · have hBxy : borderTerm x y n t = 0 := by
           unfold borderTerm
           simp [hnt, hlow]
@@ -632,7 +632,7 @@ private theorem schoolDown_coeff (x y : List Nat) (n bench t k : Nat)
   induction k with
   | zero =>
     rw [show schoolDown x y false n (List.replicate bench 0) 0 =
-        List.replicate bench 0 from rfl, tritSum, coeff_replicate_zero]
+        List.replicate bench 0 from rfl, tritSum, coeff_replicate_zero_local]
   | succ k ih =>
     have hk' : k ≤ n := Nat.le_of_succ_le hk
     have hrec : schoolDown x y false n (List.replicate bench 0) (k + 1) =
@@ -640,7 +640,7 @@ private theorem schoolDown_coeff (x y : List Nat) (n bench t k : Nat)
           (schoolDown x y false n (List.replicate bench 0) k) := rfl
     rw [hrec]
     have hlen : (schoolDown x y false n (List.replicate bench 0) k).length = bench := by
-      rw [schoolDown_len, List.length_replicate]
+      rw [schoolDown_len_local, List.length_replicate]
     have hc : coeff (schoolDown x y false n (List.replicate bench 0) k) t ≤ 2 := by
       rw [ih hk']
       exact tritSum_le _ _

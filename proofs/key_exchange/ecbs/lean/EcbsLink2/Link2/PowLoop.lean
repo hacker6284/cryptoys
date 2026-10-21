@@ -195,7 +195,7 @@ private theorem some_idx {α : Type} (a : Array α) (i : Nat) (v : α)
   · rw [Array.getElem?_ge a (by omega)] at h
     cases h
 
-private theorem some_get {α : Type} (a : Array α) (i : Nat) (v : α)
+private theorem some_get_local {α : Type} (a : Array α) (i : Nat) (v : α)
     (h : a[i]? = some v) : a[i]'(some_idx a i v h) = v := by
   rw [Array.getElem?_eq_getElem (some_idx a i v h)] at h
   injection h
@@ -469,7 +469,7 @@ theorem pow_zero_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat) (ds : 
         rw [Array.getElem?_eq_getElem h1] at hop1
         injection hop1)
       (room_ops c1 ds.length (by simpa [hlen] using hfit1)).1
-      hUpD hUp (some_get _ _ _ h.upHeld) (some_get _ _ _ h.upHome) h7
+      hUpD hUp (some_get_local _ _ _ h.upHeld) (some_get_local _ _ _ h.upHome) h7
       (by simpa [ofNat_eq_natCast] using hps) (by simpa [ofNat_eq_natCast] using hpk)
       hn0 (by simpa [h.tier, embTier]) h.accLen
       (fit_of_pow moves t.n t.benchlen ds.length t.n hmov (pow_ge_n _ _))
@@ -801,10 +801,10 @@ theorem pow_live_at (b : Ecbs.Board) (t : Spec.Tier) (rhs acc : List Nat)
         rw [Array.getElem?_eq_getElem h0] at hop0
         injection hop0)
       (room_ops c0 ds.length (by simpa [hlen] using hfit0)).1
-      hUpD hUp (some_get _ _ _ h.upHeld) (some_get _ _ _ h.upHome) h7
+      hUpD hUp (some_get_local _ _ _ h.upHeld) (some_get_local _ _ _ h.upHome) h7
       (by simpa [ofNat_eq_natCast] using hps) (by simpa [ofNat_eq_natCast] using hpk)
-      hSpare hHomeSpare (some_get _ _ _ h.spareOff)
-      hSrc hHomeSrc (some_get _ _ _ hheld) (some_get _ _ _ hhome)
+      hSpare hHomeSpare (some_get_local _ _ _ h.spareOff)
+      hSrc hHomeSrc (some_get_local _ _ _ hheld) (some_get_local _ _ _ hhome)
       (by decide) hsrcU hsrcS
       hn0 (by simpa [h.tier, embTier]) h.accLen hfacLen
       (fit_of_pow moves t.n t.benchlen ds.length t.n hmov (pow_ge_n _ _))

@@ -22,7 +22,7 @@
     python3 proofs/doubledeal/check_axioms.py bs  # proofs/key_exchange/bs/lean
                                           # (BS Link 2: arithmetic, walk, check, exchange)
     python3 proofs/doubledeal/check_axioms.py ecbs  # proofs/key_exchange/ecbs/lean
-                                          # (ECBS Link 2 part 1: 11 exports covered)
+                                          # (ECBS Link 2: 13 exports covered)
 
 Runs `lake env lean Axioms.lean` in the package (after `lake build`) and parses
 the "'X' depends on axioms: [...]" reports. Allowed: propext, Classical.choice,

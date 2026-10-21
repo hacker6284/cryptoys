@@ -928,7 +928,7 @@ private theorem coeff_trit (xs : List Nat) (h : allTritList xs) (i : Nat) : coef
   · have hle : xs.length ≤ i := Nat.le_of_not_lt hi
     simp [List.getElem?_eq_none hle]
 
-private theorem mirror_trits {xs : List Nat} (h : allTritList xs) : allTritList (mirrorTrits xs) := by
+private theorem mirror_trits_local {xs : List Nat} (h : allTritList xs) : allTritList (mirrorTrits xs) := by
   rw [mirrorTrits_flip]
   intro z hz
   obtain ⟨a, ha, rfl⟩ := List.mem_map.mp hz
@@ -936,7 +936,7 @@ private theorem mirror_trits {xs : List Nat} (h : allTritList xs) : allTritList 
   unfold flipTrit
   split <;> omega
 
-private theorem fieldAdd_trits (n : Nat) (xs ys : List Nat)
+private theorem fieldAdd_trits_local (n : Nat) (xs ys : List Nat)
     (hx : allTritList xs) (hy : allTritList ys) : allTritList (fieldAdd n xs ys) := by
   intro z hz
   simp [fieldAdd, List.mem_map] at hz
@@ -1094,7 +1094,7 @@ theorem curve_white_beq (b : Ecbs.Board) (x3 x2 y2 : List Nat) (n moves : Nat)
       sudo_5Costs_5moves := Int.ofNat mvC } }
   have hsumL : sum.length = n := fieldAdd_len n x3 (mirrorTrits x2)
   have htriS : allTritList sum :=
-    fieldAdd_trits n x3 (mirrorTrits x2) ht3 (mirror_trits ht2)
+    fieldAdd_trits_local n x3 (mirrorTrits x2) ht3 (mirror_trits_local ht2)
   have h2HC : 2 < bC.sudo_5Board_4home.size := by
     simpa [bC, Array.size_set] using (addBoard_home_size b 2 h2H (embed sum) mvA ▸ h2H)
   have h2DC : 2 < bC.sudo_5Board_4held.size := by

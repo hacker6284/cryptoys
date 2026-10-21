@@ -56,7 +56,7 @@ theorem chord_bump (b : Ecbs.Board) (cOps : Nat)
   rw [putL_ofNat _ 3 (Int.ofNat (cOps + 1)) hops, ok_bind, pure_eq_ok]
   rfl
 
-private theorem idx_eq {α : Type} {a b : Array α} (h : a = b) (i : Nat)
+private theorem idx_eq_local {α : Type} {a b : Array α} (h : a = b) (i : Nat)
     (ha : i < a.size) : a[i] = b[i]'(h ▸ ha) := by
   cases h
   rfl
@@ -152,25 +152,25 @@ theorem chord_copy_add (b : Ecbs.Board) (baseX accX : List Nat)
   have h0D1 : 0 < b1.sudo_5Board_4held.size := by rw [hszD1]; decide
   have hheld1 : b1.sudo_5Board_4held[2]'h2D1 = true := by
     have hset := place_held_eq bB 2 h2H h2D baseX moves peak
-    have hget := idx_eq hset 2 (by rw [hset, Array.size_set]; exact h2D)
+    have hget := idx_eq_local hset 2 (by rw [hset, Array.size_set]; exact h2D)
     simp only [Array.getElem_set] at hget
     exact hget
   have hhome1 : b1.sudo_5Board_4home[2]'h2H1 = embed baseX := by
     have hset := place_home_eq bB 2 h2H h2D baseX moves peak
-    have hget := idx_eq hset 2 (by rw [hset, Array.size_set]; exact h2H)
+    have hget := idx_eq_local hset 2 (by rw [hset, Array.size_set]; exact h2H)
     simp only [Array.getElem_set] at hget
     exact hget
   have h0B : 0 < bB.sudo_5Board_4held.size := by rw [hszDB]; decide
   have h0HB : 0 < bB.sudo_5Board_4home.size := by rw [hszHB]; decide
   have h0t1 : b1.sudo_5Board_4held[0]'h0D1 = true := by
     have hset := place_held_eq bB 2 h2H h2D baseX moves peak
-    have hget := idx_eq hset 0 (by rw [hset, Array.size_set]; exact h0B)
+    have hget := idx_eq_local hset 0 (by rw [hset, Array.size_set]; exact h0B)
     have hne : (2 : Nat) ≠ 0 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget.trans h0tB
   have h0a1 : b1.sudo_5Board_4home[0]'h0H1 = embed accX := by
     have hset := place_home_eq bB 2 h2H h2D baseX moves peak
-    have hget := idx_eq hset 0 (by rw [hset, Array.size_set]; exact h0HB)
+    have hget := idx_eq_local hset 0 (by rw [hset, Array.size_set]; exact h0HB)
     have hne : (2 : Nat) ≠ 0 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget.trans h0aB
@@ -205,7 +205,7 @@ theorem chord_copy_add (b : Ecbs.Board) (baseX accX : List Nat)
     have hset : bA.sudo_5Board_4home =
         b1.sudo_5Board_4home.set ⟨2, h2H1⟩ (embed (fieldAdd n baseX (mirrorTrits accX))) := by
       simp [bA, addBoard, withMoves]
-    have hget := idx_eq hset 2 h
+    have hget := idx_eq_local hset 2 h
     simp only [Array.getElem_set, if_true] at hget
     simpa [hsub] using hget
   · intro h

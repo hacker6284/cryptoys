@@ -385,7 +385,7 @@ theorem add_on_bench (b : Ecbs.Board) (dst src : Nat) (lane ys xs : List Nat) (n
         simpa [hlenF] using List.take_length (fieldAdd n (lane.take n) xs)
       rw [htn, htake]
 
-private theorem fieldMul_trits (n k bench : Nat) (xs ys : List Nat)
+private theorem fieldMul_trits_local (n k bench : Nat) (xs ys : List Nat)
     (hspan : 2 * (n - 1) < bench) (hn : n ≤ bench) :
     allTritList (fieldMul n k bench xs ys) := by
   have hrep : allTritList (List.replicate bench 0) := by
@@ -469,9 +469,9 @@ theorem gap_add_on_sum (b : Ecbs.Board) (gap bot : Nat) (u v z lane : List Nat)
   let v2 := fieldMul n k bench v v
   let sum := fieldAdd n (fieldMul n k bench z u2) (fieldMul n k bench v v2)
   let v2z := fieldMul n k bench v2 z
-  have hu2 : allTritList u2 := fieldMul_trits n k bench u u hspan hnb
-  have hv2 : allTritList v2 := fieldMul_trits n k bench v v hspan hnb
-  have hzv : allTritList v2z := fieldMul_trits n k bench v2 z hspan hnb
+  have hu2 : allTritList u2 := fieldMul_trits_local n k bench u u hspan hnb
+  have hv2 : allTritList v2 := fieldMul_trits_local n k bench v v hspan hnb
+  have hzv : allTritList v2z := fieldMul_trits_local n k bench v2 z hspan hnb
   have hsumT : allTritList sum := by
     intro a ha
     simp only [sum, fieldAdd, List.mem_map] at ha

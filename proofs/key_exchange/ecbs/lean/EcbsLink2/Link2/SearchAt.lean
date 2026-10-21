@@ -48,7 +48,7 @@ private theorem some_idx {α : Type} (a : Array α) (i : Nat) (v : α)
   · rw [Array.getElem?_ge a (by omega)] at h
     cases h
 
-private theorem some_get {α : Type} (a : Array α) (i : Nat) (v : α)
+private theorem some_get_local {α : Type} (a : Array α) (i : Nat) (v : α)
     (h : a[i]? = some v) : a[i]'(some_idx a i v h) = v := by
   rw [Array.getElem?_eq_getElem (some_idx a i v h)] at h
   injection h
@@ -257,8 +257,8 @@ theorem search_prepared (b : Ecbs.Board) (t : Spec.Tier)
       hops0, hop0, hleft, hfitM, _hfitS, hfitC, _hfit0⟩ := h.pack
   have hG := some_idx _ _ _ h.gapHome
   have hGD := some_idx _ _ _ h.gapHeld
-  have harr := some_get _ _ _ h.gapHome
-  have hheld := some_get _ _ _ h.gapHeld
+  have harr := some_get_local _ _ _ h.gapHome
+  have hheld := some_get_local _ _ _ h.gapHeld
   have hfit1 : FitsLen (ctrl + 1) := FitsLen.of_le hfitC (by omega)
   have hpeg : pegCount gapXs ≤ t.n := peg_len t.n gapXs h.gapLen
   have hroom : t.n ≤ (t.n * t.n + 8 * t.n + 6 * t.benchlen) * left := by
@@ -477,8 +477,8 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
       hleft hg hy hfitM
   have hUp := some_idx _ _ _ hup
   have hUpD := some_idx _ _ _ hupd
-  have hUpA := some_get _ _ _ hup
-  have hUpH := some_get _ _ _ hupd
+  have hUpA := some_get_local _ _ _ hup
+  have hUpH := some_get_local _ _ _ hupd
   have hopsC : 0 < bC.sudo_5Board_4cost.sudo_5Costs_3ops.size := some_idx _ _ _ hopC
   have hopA : bC.sudo_5Board_4cost.sudo_5Costs_3ops[0]'(hopsC) = (c0 : Int) := by
     rw [Array.getElem?_eq_getElem hopsC] at hopC
@@ -489,7 +489,7 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
       (FitsLen.of_le hfit0 (by omega))
       (by simpa [htierC, embTier])
       hUpD hUp hUpH hUpA hUpD hUp hUpH hUpA
-      hspS hwide (some_get _ _ _ hsp) h7
+      hspS hwide (some_get_local _ _ _ hsp) h7
       (by decide) (by decide)
       hn0 (by simpa [htierC, embTier]) h.yLen h.yLen
       hroom.1
@@ -654,7 +654,7 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
     have h2' : searchBottom < bM.sudo_5Board_4home.size := by rw [hszHM]; exact h2
     have hget := hhomeM searchBottom h2 h2' (by decide)
     rw [Array.getElem?_eq_getElem h2', hget]
-    exact congrArg some (some_get _ _ _ hbot)
+    exact congrArg some (some_get_local _ _ _ hbot)
   have hlenSch : (school t.n y y (List.replicate t.benchlen 0) false).length = t.benchlen := by
     simpa [List.length_replicate] using
       school_length y y (List.replicate t.benchlen 0) false t.n
@@ -752,11 +752,11 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
       exact hbotd
     have hvG := value_held_refines bS searchGap (fieldMul t.n t.k t.benchlen y y) t.n
         (some_idx _ _ _ hheldS) (some_idx _ _ _ hgapS)
-        (some_get _ _ _ hheldS) (some_get _ _ _ hgapS)
+        (some_get_local _ _ _ hheldS) (some_get_local _ _ _ hgapS)
         hnS (Nat.le_of_eq hlenY.symm) hroom.1
     have hvB := value_held_refines bS searchBottom side t.n
         (some_idx _ _ _ hbotHeldS) (some_idx _ _ _ hbotS)
-        (some_get _ _ _ hbotHeldS) (some_get _ _ _ hbotS)
+        (some_get_local _ _ _ hbotHeldS) (some_get_local _ _ _ hbotS)
         hnS (Nat.le_of_eq h.sideLen.symm) hroom.1
     have htY : (fieldMul t.n t.k t.benchlen y y).take t.n =
         fieldMul t.n t.k t.benchlen y y := by
@@ -815,7 +815,7 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
           rw [Array.getElem?_eq_getElem h1', hget]
           have hval : bC.sudo_5Board_4home[searchUp]'(h1) =
               embed (rootY t.n t.k t.benchlen x) := by
-            exact (some_get _ _ _ hup).trans (congrArg embed h.yIs)
+            exact (some_get_local _ _ _ hup).trans (congrArg embed h.yIs)
           exact congrArg some hval
         upHeld := by
           rw [settle_held_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul]
@@ -836,7 +836,7 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
           have h0' : searchAcross < bM.sudo_5Board_4home.size := by rw [hszHM]; exact h0
           have hget := hhomeM searchAcross h0 h0' (by decide)
           rw [Array.getElem?_eq_getElem h0', hget]
-          exact congrArg some (some_get _ _ _ hax)
+          exact congrArg some (some_get_local _ _ _ hax)
         axHeld := by
           rw [settle_held_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul]
           rw [Array.getElem?_set_ne _ ⟨searchGap, hGD⟩ true
@@ -854,7 +854,7 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
           have h3' : searchBase < bM.sudo_5Board_4home.size := by rw [hszHM]; exact h3
           have hget := hhomeM searchBase h3 h3' (by decide)
           rw [Array.getElem?_eq_getElem h3', hget]
-          exact congrArg some (some_get _ _ _ hbx)
+          exact congrArg some (some_get_local _ _ _ hbx)
         bxHeld := by
           rw [settle_held_eq bM searchGap ⟨hGH, hGD⟩ lane t.n mvMul slides pkMul]
           rw [Array.getElem?_set_ne _ ⟨searchGap, hGD⟩ true
@@ -879,7 +879,7 @@ theorem search_check_at (b : Ecbs.Board) (t : Spec.Tier)
           have h4' : 4 < bM.sudo_5Board_4home.size := by rw [hszHM]; exact h4
           have hget := hhomeM 4 h4 h4' (by decide)
           rw [Array.getElem?_eq_getElem h4', hget]
-          exact congrArg some (some_get _ _ _ hbu) }
+          exact congrArg some (some_get_local _ _ _ hbu) }
   · rcases hctrlStep with ⟨ctrl0, hctrl0, hctrlC⟩
     refine
       { marker := by
@@ -972,8 +972,8 @@ private theorem clear_next (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves 
         b'.sudo_5Board_4held[j]? = some v) := by
   have hH := some_idx _ _ _ hhome
   have hD := some_idx _ _ _ hheld?
-  have harr := some_get _ _ _ hhome
-  have hheld := some_get _ _ _ hheld?
+  have harr := some_get_local _ _ _ hhome
+  have hheld := some_get_local _ _ _ hheld?
   have hm' : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) := by
     simpa [ofNat_eq_natCast] using hm
   have hcl := clear_held_refines b home xs moves hH hD hheld harr hm' hf hfit

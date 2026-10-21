@@ -16,7 +16,7 @@ open EcbsLink2.Spec
 def runMoves (moves : Nat) (baseX accX : List Nat) : Nat :=
   moves + pegCount baseX + pegCount accX
 
-private theorem tritAdd_le (a b : Nat) : tritAdd a b ≤ 2 := by
+private theorem tritAdd_le_local (a b : Nat) : tritAdd a b ≤ 2 := by
   have : (a + b) % 3 < 3 := Nat.mod_lt _ (by decide)
   unfold tritAdd
   omega
@@ -26,7 +26,7 @@ private theorem fieldSub_trits (n : Nat) (xs ys : List Nat) :
   intro z hz
   rw [fieldSub, fieldAdd] at hz
   rcases List.mem_map.mp hz with ⟨_, _, rfl⟩
-  exact tritAdd_le _ _
+  exact tritAdd_le_local _ _
 
 /-- `bumpOp` writes one ops cell. The frame `OpenLay` reads is unchanged. -/
 private theorem bumpKeep (b : Ecbs.Board) (i c : Nat)

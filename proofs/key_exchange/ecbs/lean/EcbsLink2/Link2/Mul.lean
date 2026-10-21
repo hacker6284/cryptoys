@@ -14,7 +14,7 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
-private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := by
+private theorem replicate_trits_local (k : Nat) : allTritList (List.replicate k 0) := by
   intro x hx
   have hx' : ¬ k = 0 ∧ x = 0 := by simpa [List.mem_replicate] using hx
   omega
@@ -67,7 +67,7 @@ theorem mulPipeline_spec (xs ys : List Nat) (w h r n k moves hole bench : Nat) (
       fieldMul n k bench xs ys ∧
     ∀ i, n ≤ i → i < bench →
       coeff (laneFold n (n - k) (school n xs ys (List.replicate bench 0) false)) i = 0 := by
-  have hrep : allTritList (List.replicate bench 0) := replicate_trits bench
+  have hrep : allTritList (List.replicate bench 0) := replicate_trits_local bench
   have hlen0 : (List.replicate bench 0).length = bench := List.length_replicate bench 0
   have hfs : FitsLen (moves + n * (n + 1)) :=
     FitsLen.of_le hff (Nat.le_add_right _ _)
@@ -512,7 +512,7 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
   rw [school_loop_refines xs ys (List.replicate bench 0) (moves + pegCount ys) n false bL
       _ _ hn0 (by rw [hlenx]; exact Nat.le_refl _) (by rw [hleny]; exact Nat.le_refl _)
       (by simp [List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL2 hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL2 hf hfi hfm]
   simp only [Prod.fst, Prod.snd]
   let sch := school n xs ys (List.replicate bench 0) false
   let mvF := moves + pegCount ys + schoolMoves xs ys n n
@@ -554,7 +554,7 @@ theorem mul_refines (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
       shape.hw0 shape.hh0 shape.hrR shape.hrP shape.hnE shape.hkLe shape.hgap
       (by
         have htri : allTritList sch := by
-          simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits _)
+          simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits_local _)
             (fun i hi => by
               rw [List.length_replicate]
               have : i + (n - 1) ≤ 2 * (n - 1) := by omega
@@ -1288,7 +1288,7 @@ theorem mul_no_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
   rw [school_loop_refines xs ys (List.replicate bench 0) moves n false bL
       _ _ hn0 (by rw [hlenx]; exact Nat.le_refl _) (by rw [hleny]; exact Nat.le_refl _)
       (by simp [List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL2 hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL2 hf hfi hfm]
   simp only [Prod.fst, Prod.snd]
   let sch := school n xs ys (List.replicate bench 0) false
   let mvF := moves + schoolMoves xs ys n n
@@ -1323,7 +1323,7 @@ theorem mul_no_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
       shape.hw0 shape.hh0 shape.hrR shape.hrP shape.hnE shape.hkLe shape.hgap
       (by
         have htri : allTritList sch := by
-          simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits _)
+          simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits_local _)
             (fun i hi => by
               rw [List.length_replicate]
               have : i + (n - 1) ≤ 2 * (n - 1) := by omega

@@ -2927,7 +2927,7 @@ private theorem redSlideBudget (slides0 doneLen n mMax tally slides pegY pegL pe
     rw [Nat.add_assoc, ← Nat.succ_mul]
   exact Nat.le_trans hjoin (Nat.le_of_eq hsucc)
 
-private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := by
+private theorem replicate_trits_local (k : Nat) : allTritList (List.replicate k 0) := by
   intro x hx
   simp [List.mem_replicate] at hx
   rcases hx with ⟨_, rfl⟩
@@ -3046,7 +3046,7 @@ theorem pegPack_tmax (c : PegCtx) (i : Nat) (h0 : 0 < i) (hle : i ≤ c.m) :
         ⟨d.hH, d.hD⟩]
     exact ih
 
-private theorem place_tmax (b : Ecbs.Board) (home : Nat)
+private theorem place_tmax_local (b : Ecbs.Board) (home : Nat)
     (hin : HomeIn b home)
     (xs : List Nat) (moves peak : Nat) :
     (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_9tally_max =

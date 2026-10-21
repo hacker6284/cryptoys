@@ -141,7 +141,7 @@ theorem scan_face (faces : List Nat) (i : Nat)
       obtain ⟨f, hnz, hst, hread⟩ := hD
       rw [pure_eq_ok, hst, hread]
 
-private theorem embed_set (xs : List Nat) (i v : Nat) (h : i < xs.length) :
+private theorem embed_set_local (xs : List Nat) (i v : Nat) (h : i < xs.length) :
     (embed xs).set ⟨i, by rw [size_embed]; exact h⟩ (Int.ofNat v) = embed (xs.set i v) := by
   apply Array.ext
   · simp [embed, size_embed, List.length_set]
@@ -174,7 +174,7 @@ theorem lay_die (cells : Nat) (acc : List Nat) (pair face : Nat)
   rw [keypad_first_refines face h1 h9, ok_bind]
   have hjA : 2 * pair < (embed acc).size := by rw [size_embed, hlen]; exact hix
   rw [putL_ofNat _ _ _ hjA, set_irrel _ _ _ (by rw [size_embed, hlen]; exact hix)]
-  rw [embed_set acc (2 * pair) (keypadFirst face) (by rw [hlen]; exact hix)]
+  rw [embed_set_local acc (2 * pair) (keypadFirst face) (by rw [hlen]; exact hix)]
   rw [ok_bind, addI_ofNat_one (2 * pair) hfit, ok_bind]
   by_cases h2 : 2 * pair + 1 < cells
   · have hdec : decide (Int.ofNat (2 * pair + 1) < Int.ofNat cells) = true :=
@@ -183,7 +183,7 @@ theorem lay_die (cells : Nat) (acc : List Nat) (pair face : Nat)
     have hj2 : 2 * pair + 1 < (embed (acc.set (2 * pair) (keypadFirst face))).size := by
       rw [size_embed, List.length_set, hlen]; exact h2
     rw [putL_ofNat _ _ _ hj2, set_irrel _ _ _ hj2]
-    rw [embed_set (acc.set (2 * pair) (keypadFirst face)) (2 * pair + 1)
+    rw [embed_set_local (acc.set (2 * pair) (keypadFirst face)) (2 * pair + 1)
       (keypadSecond face) (by rw [List.length_set, hlen]; exact h2)]
     unfold writePair
     rw [if_pos h2]

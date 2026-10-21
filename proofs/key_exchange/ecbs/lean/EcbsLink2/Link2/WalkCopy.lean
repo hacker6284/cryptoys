@@ -11,7 +11,7 @@ import EcbsLink2.SpecBase
 
 namespace EcbsLink2.Link2
 
-private theorem place_frame (b : Ecbs.Board) (home : Nat)
+private theorem place_frame_local (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) :
     FrameScalar b (placeBoard b home hH hD xs moves peak) ∧
@@ -245,10 +245,10 @@ theorem walk_copy_white (b : Ecbs.Board) (x y : List Nat) (n moves peak : Nat)
         (place_ctrl_eq b 0 h0H h0D x moves peak),
       (place_slides_eq b1 1 h1H1 h1D1 y mv1 pk1).trans
         (place_slides_eq b 0 h0H h0D x moves peak),
-      FrameScalar.trans (place_frame b 0 h0H h0D x moves peak).1
-        (place_frame b1 1 h1H1 h1D1 y mv1 pk1).1,
-      ((place_frame b1 1 h1H1 h1D1 y mv1 pk1).2).trans
-        (place_frame b 0 h0H h0D x moves peak).2⟩
+      FrameScalar.trans (place_frame_local b 0 h0H h0D x moves peak).1
+        (place_frame_local b1 1 h1H1 h1D1 y mv1 pk1).1,
+      ((place_frame_local b1 1 h1H1 h1D1 y mv1 pk1).2).trans
+        (place_frame_local b 0 h0H h0D x moves peak).2⟩
   · rw [show Ecbs.across = ((0 : Nat) : Int) from rfl,
         show Ecbs.base_across = ((3 : Nat) : Int) from rfl,
         show Ecbs.up = ((1 : Nat) : Int) from rfl,

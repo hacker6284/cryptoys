@@ -185,35 +185,35 @@ theorem suffix_ctrl_room (ctrl0 rem c : Nat)
     have hsub : (rem - k) - 1 = rem - (k + 1) := by omega
     simpa [hsub] using hnext
 
-private theorem fits_le (n : Nat) (h : n ≤ 9223372036854775807) : FitsLen n := by
+private theorem fits_le_local (n : Nat) (h : n ≤ 9223372036854775807) : FitsLen n := by
   simpa [FitsLen, i64MaxNat] using h
 
-private theorem demo_tierR : tierR Spec.demo = 2 := by
+private theorem demo_tierR_local : tierR Spec.demo = 2 := by
   simp [tierR, demo_rungs]
 
-private theorem toy_tierR : tierR Spec.toy = 4 := by
+private theorem toy_tierR_local : tierR Spec.toy = 4 := by
   simp [tierR, toy_rungs]
 
-private theorem hobby_tierR : tierR Spec.hobby = 5 := by
+private theorem hobby_tierR_local : tierR Spec.hobby = 5 := by
   simp [tierR, hobby_rungs]
 
-private theorem serious_tierR : tierR Spec.serious = 7 := by
+private theorem serious_tierR_local : tierR Spec.serious = 7 := by
   simp [tierR, serious_rungs]
 
 private theorem demo_row : rowRoom Spec.demo = 6 := by
-  rw [rowRoom, tallyOrigin, demo_tierR]
+  rw [rowRoom, tallyOrigin, demo_tierR_local]
   simp [Spec.demo]
 
 private theorem toy_row : rowRoom Spec.toy = 18 := by
-  rw [rowRoom, tallyOrigin, toy_tierR]
+  rw [rowRoom, tallyOrigin, toy_tierR_local]
   simp [Spec.toy]
 
 private theorem hobby_row : rowRoom Spec.hobby = 57 := by
-  rw [rowRoom, tallyOrigin, hobby_tierR]
+  rw [rowRoom, tallyOrigin, hobby_tierR_local]
   simp [Spec.hobby]
 
 private theorem serious_row : rowRoom Spec.serious = 175 := by
-  rw [rowRoom, tallyOrigin, serious_tierR]
+  rw [rowRoom, tallyOrigin, serious_tierR_local]
   simp [Spec.serious]
 
 /-- One cell past a Demo key still fits an i64. `cells + 1` is that extra cell. -/
@@ -224,10 +224,10 @@ theorem demo_walk_room :
       FitsLen ((Spec.demo.cells + 1) * cellOpsCharge Spec.demo) := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
-  rw [demo_tierR, demo_row]
+  rw [demo_tierR_local, demo_row]
   simp [Spec.demo]
-  refine ⟨fits_le _ (by decide), fits_le _ (by decide), fits_le _ (by decide),
-    fits_le _ (by decide)⟩
+  refine ⟨fits_le_local _ (by decide), fits_le_local _ (by decide), fits_le_local _ (by decide),
+    fits_le_local _ (by decide)⟩
 
 /-- One cell past a Toy key still fits an i64. -/
 theorem toy_walk_room :
@@ -237,10 +237,10 @@ theorem toy_walk_room :
       FitsLen ((Spec.toy.cells + 1) * cellOpsCharge Spec.toy) := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
-  rw [toy_tierR, toy_row]
+  rw [toy_tierR_local, toy_row]
   simp [Spec.toy]
-  refine ⟨fits_le _ (by decide), fits_le _ (by decide), fits_le _ (by decide),
-    fits_le _ (by decide)⟩
+  refine ⟨fits_le_local _ (by decide), fits_le_local _ (by decide), fits_le_local _ (by decide),
+    fits_le_local _ (by decide)⟩
 
 /-- One cell past a Hobby key still fits an i64. -/
 theorem hobby_walk_room :
@@ -250,10 +250,10 @@ theorem hobby_walk_room :
       FitsLen ((Spec.hobby.cells + 1) * cellOpsCharge Spec.hobby) := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
-  rw [hobby_tierR, hobby_row]
+  rw [hobby_tierR_local, hobby_row]
   simp [Spec.hobby]
-  refine ⟨fits_le _ (by decide), fits_le _ (by decide), fits_le _ (by decide),
-    fits_le _ (by decide)⟩
+  refine ⟨fits_le_local _ (by decide), fits_le_local _ (by decide), fits_le_local _ (by decide),
+    fits_le_local _ (by decide)⟩
 
 /-- One cell past a Serious key still fits an i64. -/
 theorem serious_walk_room :
@@ -263,85 +263,85 @@ theorem serious_walk_room :
       FitsLen ((Spec.serious.cells + 1) * cellOpsCharge Spec.serious) := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
-  rw [serious_tierR, serious_row]
+  rw [serious_tierR_local, serious_row]
   simp [Spec.serious]
-  refine ⟨fits_le _ (by decide), fits_le _ (by decide), fits_le _ (by decide),
-    fits_le _ (by decide)⟩
+  refine ⟨fits_le_local _ (by decide), fits_le_local _ (by decide), fits_le_local _ (by decide),
+    fits_le_local _ (by decide)⟩
 
 theorem demo_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.demo.n) :
     FitsLen (mv + walkCharge Spec.demo * (Spec.demo.cells + 1)) := by
   have hcap : 4 * Spec.demo.n + walkCharge Spec.demo * (Spec.demo.cells + 1) ≤
       9223372036854775807 := by
     unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
-    rw [demo_tierR, demo_row]
+    rw [demo_tierR_local, demo_row]
     simp [Spec.demo]
     decide
-  exact fits_le _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+  exact fits_le_local _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
 
 theorem demo_seat_ctrl :
     FitsLen (tierR Spec.demo + cellCtrlCharge Spec.demo * (Spec.demo.cells + 1)) := by
   have hcap : tierR Spec.demo + cellCtrlCharge Spec.demo * (Spec.demo.cells + 1) ≤
       9223372036854775807 := by
     unfold cellCtrlCharge
-    rw [demo_tierR, demo_row]
+    rw [demo_tierR_local, demo_row]
     simp [Spec.demo]
-  exact fits_le _ hcap
+  exact fits_le_local _ hcap
 
 theorem toy_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.toy.n) :
     FitsLen (mv + walkCharge Spec.toy * (Spec.toy.cells + 1)) := by
   have hcap : 4 * Spec.toy.n + walkCharge Spec.toy * (Spec.toy.cells + 1) ≤
       9223372036854775807 := by
     unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
-    rw [toy_tierR, toy_row]
+    rw [toy_tierR_local, toy_row]
     simp [Spec.toy]
     decide
-  exact fits_le _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+  exact fits_le_local _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
 
 theorem toy_seat_ctrl :
     FitsLen (tierR Spec.toy + cellCtrlCharge Spec.toy * (Spec.toy.cells + 1)) := by
   have hcap : tierR Spec.toy + cellCtrlCharge Spec.toy * (Spec.toy.cells + 1) ≤
       9223372036854775807 := by
     unfold cellCtrlCharge
-    rw [toy_tierR, toy_row]
+    rw [toy_tierR_local, toy_row]
     simp [Spec.toy]
-  exact fits_le _ hcap
+  exact fits_le_local _ hcap
 
 theorem hobby_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.hobby.n) :
     FitsLen (mv + walkCharge Spec.hobby * (Spec.hobby.cells + 1)) := by
   have hcap : 4 * Spec.hobby.n + walkCharge Spec.hobby * (Spec.hobby.cells + 1) ≤
       9223372036854775807 := by
     unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
-    rw [hobby_tierR, hobby_row]
+    rw [hobby_tierR_local, hobby_row]
     simp [Spec.hobby]
     decide
-  exact fits_le _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+  exact fits_le_local _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
 
 theorem hobby_seat_ctrl :
     FitsLen (tierR Spec.hobby + cellCtrlCharge Spec.hobby * (Spec.hobby.cells + 1)) := by
   have hcap : tierR Spec.hobby + cellCtrlCharge Spec.hobby * (Spec.hobby.cells + 1) ≤
       9223372036854775807 := by
     unfold cellCtrlCharge
-    rw [hobby_tierR, hobby_row]
+    rw [hobby_tierR_local, hobby_row]
     simp [Spec.hobby]
-  exact fits_le _ hcap
+  exact fits_le_local _ hcap
 
 theorem serious_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.serious.n) :
     FitsLen (mv + walkCharge Spec.serious * (Spec.serious.cells + 1)) := by
   have hcap : 4 * Spec.serious.n + walkCharge Spec.serious * (Spec.serious.cells + 1) ≤
       9223372036854775807 := by
     unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
-    rw [serious_tierR, serious_row]
+    rw [serious_tierR_local, serious_row]
     simp [Spec.serious]
     decide
-  exact fits_le _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+  exact fits_le_local _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
 
 theorem serious_seat_ctrl :
     FitsLen (tierR Spec.serious + cellCtrlCharge Spec.serious * (Spec.serious.cells + 1)) := by
   have hcap : tierR Spec.serious + cellCtrlCharge Spec.serious * (Spec.serious.cells + 1) ≤
       9223372036854775807 := by
     unfold cellCtrlCharge
-    rw [serious_tierR, serious_row]
+    rw [serious_tierR_local, serious_row]
     simp [Spec.serious]
-  exact fits_le _ hcap
+  exact fits_le_local _ hcap
 
 end EcbsLink2.Link2

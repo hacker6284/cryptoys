@@ -13,7 +13,7 @@ open MegaDreifach.Link2
 open Ecbs
 open EcbsLink2.Spec
 
-private theorem idx_eq {α : Type} {a b : Array α} (h : a = b) (i : Nat)
+private theorem idx_eq_local {α : Type} {a b : Array α} (h : a = b) (i : Nat)
     (ha : i < a.size) : a[i] = b[i]'(h ▸ ha) := by
   cases h
   rfl
@@ -145,13 +145,13 @@ theorem held_keep
   have hjF : j < (upFeed a).sudo_5Board_4held.size := by
     rw [upFeed_held a, a.hszDOn]; exact hj
   have hF : (upFeed a).sudo_5Board_4held[j]'hjF = v :=
-    (idx_eq (upFeed_held a) j hjF).trans
+    (idx_eq_local (upFeed_held a) j hjF).trans
       (get_irrel _ j (by rw [a.hszDOn]; exact hj) ((upFeed_held a) ▸ hjF) h)
   have heqS := settle_held_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1
   have hsetS := set_idx_ne (upFeed a).sudo_5Board_4held 0 j (upD a) true v hz.symm hjF hF
   have hjS : j < (upSettled a).sudo_5Board_4held.size := by rw [up_held_size a]; exact hj
   have hS : (upSettled a).sudo_5Board_4held[j]'hjS = v :=
-    (idx_eq heqS j hjS).trans
+    (idx_eq_local heqS j hjS).trans
       (get_irrel _ j (by rw [Array.size_set]; exact hjF) (heqS ▸ hjS) hsetS)
   have hcube := cube_off_held (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
       (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)
@@ -161,12 +161,12 @@ theorem held_keep
     rw [upBoard, hcube]
   have hjU : j < (upBoard a).sudo_5Board_4held.size := by rw [hUB, Array.size_set]; exact hjS
   have hU : (upBoard a).sudo_5Board_4held[j]'hjU = v :=
-    (idx_eq hUB j hjU).trans
+    (idx_eq_local hUB j hjU).trans
       (get_irrel _ j (by rw [Array.size_set]; exact hjS) (hUB ▸ hjU) hsetC)
   have hflag : (upFlag a).sudo_5Board_4held = (upBoard a).sudo_5Board_4held := rfl
   have hjG : j < (upFlag a).sudo_5Board_4held.size := by rw [hflag]; exact hjU
   have hG : (upFlag a).sudo_5Board_4held[j]'hjG = v :=
-    (idx_eq hflag j hjG).trans (get_irrel _ j hjU (hflag ▸ hjG) hU)
+    (idx_eq_local hflag j hjG).trans (get_irrel _ j hjU (hflag ▸ hjG) hU)
   have heqF := settle_held_eq (upFlag a) 1 ⟨upFlagH a, upFlag1 a⟩
       (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)
   have hsetF := set_idx_ne (upFlag a).sudo_5Board_4held 1 j (upFlag1 a) true v ho.symm hjG hG
@@ -174,7 +174,7 @@ theorem held_keep
   have hOut : (frobeniusOut a).sudo_5Board_4held =
       (upFlag a).sudo_5Board_4held.set ⟨1, upFlag1 a⟩ true := by
     rw [frobeniusOut]; exact heqF
-  exact (idx_eq hOut j hjO).trans
+  exact (idx_eq_local hOut j hjO).trans
     (get_irrel _ j (by rw [Array.size_set]; exact hjG) (hOut ▸ hjO) hsetF)
 
 theorem home_keep
@@ -185,14 +185,14 @@ theorem home_keep
   have hjF : j < (upFeed a).sudo_5Board_4home.size := by
     rw [upFeed_home a, a.hszHOn]; exact hj
   have hF : (upFeed a).sudo_5Board_4home[j]'hjF = v :=
-    (idx_eq (upFeed_home a) j hjF).trans
+    (idx_eq_local (upFeed_home a) j hjF).trans
       (get_irrel _ j (by rw [a.hszHOn]; exact hj) ((upFeed_home a) ▸ hjF) h)
   have heqS := settle_home_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1
   have hsetS := set_idx_ne (upFeed a).sudo_5Board_4home 0 j (upH a)
       (embed (a.laneX.take n)) v hz.symm hjF hF
   have hjS : j < (upSettled a).sudo_5Board_4home.size := by rw [up_home_size a]; exact hj
   have hS : (upSettled a).sudo_5Board_4home[j]'hjS = v :=
-    (idx_eq heqS j hjS).trans
+    (idx_eq_local heqS j hjS).trans
       (get_irrel _ j (by rw [Array.size_set]; exact hjF) (heqS ▸ hjS) hsetS)
   have hcube := cube_off_home (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
       (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)
@@ -202,12 +202,12 @@ theorem home_keep
     rw [upBoard, hcube]
   have hjU : j < (upBoard a).sudo_5Board_4home.size := by rw [hUB, Array.size_set]; exact hjS
   have hU : (upBoard a).sudo_5Board_4home[j]'hjU = v :=
-    (idx_eq hUB j hjU).trans
+    (idx_eq_local hUB j hjU).trans
       (get_irrel _ j (by rw [Array.size_set]; exact hjS) (hUB ▸ hjU) hsetC)
   have hflag : (upFlag a).sudo_5Board_4home = (upBoard a).sudo_5Board_4home := rfl
   have hjG : j < (upFlag a).sudo_5Board_4home.size := by rw [hflag]; exact hjU
   have hG : (upFlag a).sudo_5Board_4home[j]'hjG = v :=
-    (idx_eq hflag j hjG).trans (get_irrel _ j hjU (hflag ▸ hjG) hU)
+    (idx_eq_local hflag j hjG).trans (get_irrel _ j hjU (hflag ▸ hjG) hU)
   have heqF := settle_home_eq (upFlag a) 1 ⟨upFlagH a, upFlag1 a⟩
       (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)
   have hsetF := set_idx_ne (upFlag a).sudo_5Board_4home 1 j (upFlagH a)
@@ -217,7 +217,7 @@ theorem home_keep
       (upFlag a).sudo_5Board_4home.set ⟨1, upFlagH a⟩
         (embed ((upLane n k bench y).take n)) := by
     rw [frobeniusOut]; exact heqF
-  exact (idx_eq hOut j hjO).trans
+  exact (idx_eq_local hOut j hjO).trans
     (get_irrel _ j (by rw [Array.size_set]; exact hjG) (hOut ▸ hjO) hsetF)
 
 theorem ops_keep
@@ -228,13 +228,13 @@ theorem ops_keep
   have hjF : j < (upFeed a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     rw [upFeed_ops a]; exact hj
   have hF : (upFeed a).sudo_5Board_4cost.sudo_5Costs_3ops[j]'hjF = v :=
-    (idx_eq (upFeed_ops a) j hjF).trans
+    (idx_eq_local (upFeed_ops a) j hjF).trans
       (get_irrel _ j hj ((upFeed_ops a) ▸ hjF) h)
   have heqS := settle_ops (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1
   have hjS : j < (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     rw [upSettled, heqS]; exact hjF
   have hS : (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops[j]'hjS = v :=
-    (idx_eq heqS j hjS).trans (get_irrel _ j hjF (heqS ▸ hjS) hF)
+    (idx_eq_local heqS j hjS).trans (get_irrel _ j hjF (heqS ▸ hjS) hF)
   have hcube := cube_off_ops (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
       (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)
   have hsetC := set_idx_ne (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops 1 j (up_ops_lt a)
@@ -246,13 +246,13 @@ theorem ops_keep
   have hjU : j < (upBoard a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     rw [hUB, Array.size_set]; exact hjS
   have hU : (upBoard a).sudo_5Board_4cost.sudo_5Costs_3ops[j]'hjU = v :=
-    (idx_eq hUB j hjU).trans
+    (idx_eq_local hUB j hjU).trans
       (get_irrel _ j (by rw [Array.size_set]; exact hjS) (hUB ▸ hjU) hsetC)
   have hflag : (upFlag a).sudo_5Board_4cost.sudo_5Costs_3ops =
       (upBoard a).sudo_5Board_4cost.sudo_5Costs_3ops := rfl
   have hjG : j < (upFlag a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by rw [hflag]; exact hjU
   have hG : (upFlag a).sudo_5Board_4cost.sudo_5Costs_3ops[j]'hjG = v :=
-    (idx_eq hflag j hjG).trans (get_irrel _ j hjU (hflag ▸ hjG) hU)
+    (idx_eq_local hflag j hjG).trans (get_irrel _ j hjU (hflag ▸ hjG) hU)
   have heqF := settle_ops (upFlag a) 1 ⟨upFlagH a, upFlag1 a⟩
       (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)
   have hjO : j < (frobeniusOut a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
@@ -260,7 +260,7 @@ theorem ops_keep
   have hOut : (frobeniusOut a).sudo_5Board_4cost.sudo_5Costs_3ops =
       (upFlag a).sudo_5Board_4cost.sudo_5Costs_3ops := by
     rw [frobeniusOut]; exact heqF
-  exact (idx_eq hOut j hjO).trans (get_irrel _ j hjG (hOut ▸ hjO) hG)
+  exact (idx_eq_local hOut j hjO).trans (get_irrel _ j hjG (hOut ▸ hjO) hG)
 
 theorem out_held0
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
@@ -271,7 +271,7 @@ theorem out_held0
     rw [Array.size_set]; exact upD a
   have hset := Array.getElem_set_eq (upFeed a).sudo_5Board_4held ⟨0, upD a⟩ true rfl hszSet
   have hS : (upSettled a).sudo_5Board_4held[0]'hjS = true :=
-    (idx_eq heqS 0 hjS).trans (get_irrel _ 0 hszSet (heqS ▸ hjS) hset)
+    (idx_eq_local heqS 0 hjS).trans (get_irrel _ 0 hszSet (heqS ▸ hjS) hset)
   have hcube := cube_off_held (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
       (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)
   have hsetC := set_idx_ne (upSettled a).sudo_5Board_4held 1 0 (up1D a) false true (by decide) hjS hS
@@ -279,12 +279,12 @@ theorem out_held0
       (upSettled a).sudo_5Board_4held.set ⟨1, up1D a⟩ false := by rw [upBoard, hcube]
   have hjU : 0 < (upBoard a).sudo_5Board_4held.size := by rw [hUB, Array.size_set]; exact hjS
   have hU : (upBoard a).sudo_5Board_4held[0]'hjU = true :=
-    (idx_eq hUB 0 hjU).trans
+    (idx_eq_local hUB 0 hjU).trans
       (get_irrel _ 0 (by rw [Array.size_set]; exact hjS) (hUB ▸ hjU) hsetC)
   have hflag : (upFlag a).sudo_5Board_4held = (upBoard a).sudo_5Board_4held := rfl
   have hjG : 0 < (upFlag a).sudo_5Board_4held.size := by rw [hflag]; exact hjU
   have hG : (upFlag a).sudo_5Board_4held[0]'hjG = true :=
-    (idx_eq hflag 0 hjG).trans (get_irrel _ 0 hjU (hflag ▸ hjG) hU)
+    (idx_eq_local hflag 0 hjG).trans (get_irrel _ 0 hjU (hflag ▸ hjG) hU)
   have heqF := settle_held_eq (upFlag a) 1 ⟨upFlagH a, upFlag1 a⟩
       (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)
   have hsetF := set_idx_ne (upFlag a).sudo_5Board_4held 1 0 (upFlag1 a) true true (by decide) hjG hG
@@ -292,7 +292,7 @@ theorem out_held0
   have hOut : (frobeniusOut a).sudo_5Board_4held =
       (upFlag a).sudo_5Board_4held.set ⟨1, upFlag1 a⟩ true := by
     rw [frobeniusOut]; exact heqF
-  exact (idx_eq hOut 0 hjO).trans
+  exact (idx_eq_local hOut 0 hjO).trans
     (get_irrel _ 0 (by rw [Array.size_set]; exact hjG) (hOut ▸ hjO) hsetF)
 
 theorem out_home0
@@ -304,7 +304,7 @@ theorem out_home0
   have hjG : 0 < (upFlag a).sudo_5Board_4home.size := by
     rw [hflag, up_board_home_size a]; decide
   have hG : (upFlag a).sudo_5Board_4home[0]'hjG = embed (fieldCube n k bench x) :=
-    (idx_eq hflag 0 hjG).trans
+    (idx_eq_local hflag 0 hjG).trans
       (get_irrel _ 0 (by rw [up_board_home_size a]; decide) (hflag ▸ hjG) hU0)
   have heqF := settle_home_eq (upFlag a) 1 ⟨upFlagH a, upFlag1 a⟩
       (upLane n k bench y) n (upMv2 a) (upSl a) (upPk2 a)
@@ -315,7 +315,7 @@ theorem out_home0
       (upFlag a).sudo_5Board_4home.set ⟨1, upFlagH a⟩
         (embed ((upLane n k bench y).take n)) := by
     rw [frobeniusOut]; exact heqF
-  exact (idx_eq hOut 0 hjO).trans
+  exact (idx_eq_local hOut 0 hjO).trans
     (get_irrel _ 0 (by rw [Array.size_set]; exact hjG) (hOut ▸ hjO) hsetF)
 
 theorem out_moves
@@ -454,18 +454,18 @@ theorem b1_skip
   have hopsA : a.b1On.sudo_5Board_4cost.sudo_5Costs_3ops =
       known.sudo_5Board_4cost.sudo_5Costs_3ops := by rw [heq]
   refine ⟨?_, ?_, ?_, ?_, ?_⟩
-  · exact (idx_eq (hheldA.trans hheldK) 2 h2a).trans
+  · exact (idx_eq_local (hheldA.trans hheldK) 2 h2a).trans
       (get_irrel _ 2 (by rw [Array.size_set]; exact h2b)
         ((hheldA.trans hheldK) ▸ h2a) hset2)
-  · exact (idx_eq (hheldA.trans hheldK) 3 h3aD).trans
+  · exact (idx_eq_local (hheldA.trans hheldK) 3 h3aD).trans
       (get_irrel _ 3 (by rw [Array.size_set]; exact h3b)
         ((hheldA.trans hheldK) ▸ h3aD) hset3)
-  · exact (idx_eq (hhomeA.trans hhomeK) 3 h3aH).trans
+  · exact (idx_eq_local (hhomeA.trans hhomeK) 3 h3aH).trans
       (get_irrel _ 3 (by rw [Array.size_set]; exact h3H)
         ((hhomeA.trans hhomeK) ▸ h3aH) hsetH)
   · rw [heq, hopsK, Array.size_set]; exact hops3
   · intro h3
-    exact (idx_eq (hopsA.trans hopsK) 3 h3).trans
+    exact (idx_eq_local (hopsA.trans hopsK) 3 h3).trans
       (get_irrel _ 3 (by rw [Array.size_set]; exact hops3)
         ((hopsA.trans hopsK) ▸ h3) hsetO)
 

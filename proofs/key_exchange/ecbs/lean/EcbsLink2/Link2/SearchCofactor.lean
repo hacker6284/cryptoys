@@ -32,7 +32,7 @@ private theorem some_idx {α : Type} (a : Array α) (i : Nat) (v : α)
   · rw [Array.getElem?_ge a (by omega)] at h
     cases h
 
-private theorem some_get {α : Type} (a : Array α) (i : Nat) (v : α)
+private theorem some_get_local {α : Type} (a : Array α) (i : Nat) (v : α)
     (h : a[i]? = some v) : a[i]'(some_idx a i v h) = v := by
   rw [Array.getElem?_eq_getElem (some_idx a i v h)] at h
   injection h
@@ -135,7 +135,7 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
   have hfA : FitsLen ax.length := by rw [haxL]; exact hf
   have hfY : FitsLen y.length := by rw [hy]; simpa [y] using hf
   have hclearG := clear_held_refines b searchGap gapXs moves hG hGD
-      (some_get _ _ _ hgapD) (some_get _ _ _ hgap) hmvI hfG hfits.1
+      (some_get_local _ _ _ hgapD) (some_get_local _ _ _ hgap) hmvI hfG hfits.1
   let b1 := { b with
     sudo_5Board_4home := b.sudo_5Board_4home.set ⟨searchGap, hG⟩ #[]
     sudo_5Board_4held := b.sudo_5Board_4held.set ⟨searchGap, hGD⟩ false
@@ -157,7 +157,7 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
       (moves + pegCount gapXs : Int) := by
     simp [b1, ofNat_eq_natCast]
   have hclearB := clear_held_refines b1 searchBottom side (moves + pegCount gapXs)
-      hB1 hBD1 (some_get _ _ _ hbotD1) (some_get _ _ _ hbot1) hmv1 hfS hfits.2.1
+      hB1 hBD1 (some_get_local _ _ _ hbotD1) (some_get_local _ _ _ hbot1) hmv1 hfS hfits.2.1
   let b2 := { b1 with
     sudo_5Board_4home := b1.sudo_5Board_4home.set ⟨searchBottom, hB1⟩ #[]
     sudo_5Board_4held := b1.sudo_5Board_4held.set ⟨searchBottom, hBD1⟩ false
@@ -186,7 +186,7 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
     simp [b2, ofNat_eq_natCast]
   have hclearA := clear_held_refines b2 searchAcross ax
       (moves + pegCount gapXs + pegCount side) hA2 hAD2
-      (some_get _ _ _ haxD2) (some_get _ _ _ hax2) hmv2 hfA hfits.2.2
+      (some_get_local _ _ _ haxD2) (some_get_local _ _ _ hax2) hmv2 hfA hfits.2.2
   let b3 := { b2 with
     sudo_5Board_4home := b2.sudo_5Board_4home.set ⟨searchAcross, hA2⟩ #[]
     sudo_5Board_4held := b2.sudo_5Board_4held.set ⟨searchAcross, hAD2⟩ false
@@ -258,13 +258,13 @@ theorem cofactor_seat (b : Board) (t : Spec.Tier) (x ax bx : List Nat)
     rw [Array.getElem?_eq_getElem (by rw [Array.size_set]; exact hAD2)]
     simp [Array.getElem_set]
   have hempty : b3.sudo_5Board_4held[4] = false := by
-    have hget := some_get _ _ _ hbu3
+    have hget := some_get_local _ _ _ hbu3
     simpa [h4D] using hget
   have hsrc : b3.sudo_5Board_4held[searchUp] = true := by
-    have hget := some_get _ _ _ hupD3
+    have hget := some_get_local _ _ _ hupD3
     simpa [h1D] using hget
   have harr : b3.sudo_5Board_4home[searchUp] = embed y := by
-    have hget := some_get _ _ _ hup3
+    have hget := some_get_local _ _ _ hup3
     simpa [h1H] using hget
   have hmv3I : b3.sudo_5Board_4cost.sudo_5Costs_5moves =
       (moves + pegCount gapXs + pegCount side + pegCount ax : Int) := by

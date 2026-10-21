@@ -54,7 +54,7 @@ private theorem coeff_set_same (xs : List Nat) (i v : Nat) (hi : i < xs.length) 
   have hi' : i < (xs.set i v).length := by rw [List.length_set]; exact hi
   rw [coeff_get _ _ hi', List.getElem_set_self]
 
-private theorem coeff_set_ne (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
+private theorem coeff_set_ne_local (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
     coeff (xs.set i v) j = coeff xs j := by
   have hj' : j < (xs.set i v).length := by rw [List.length_set]; exact hj
   rw [coeff_get _ _ hj', List.getElem_set, if_neg hne, ← coeff_get xs j hj]
@@ -95,7 +95,7 @@ private theorem combAt_cell_zero (xs : List Nat) (bench i : Nat) (h3 : 3 * i < b
       have hne : 3 * k ≠ 3 * i := by
         intro h
         exact Nat.ne_of_lt hk' (Nat.eq_of_mul_eq_mul_left (by decide : 0 < 3) h)
-      rw [coeff_set_ne _ _ _ _ hlen hne]
+      rw [coeff_set_ne_local _ _ _ _ hlen hne]
       exact combAt_cell_zero xs bench i h3 k hk0
 
 /-- Hole `3*i` of the comb is `v[i]`, once step `i` has run and no later step shares that hole. -/
@@ -120,7 +120,7 @@ private theorem combAt_cell (xs : List Nat) (bench i : Nat) (h3 : 3 * i < bench)
       · have hne : 3 * m ≠ 3 * i := by
           intro h
           exact Nat.ne_of_lt hlt (Nat.eq_of_mul_eq_mul_left (by decide : 0 < 3) h).symm
-        rw [coeff_set_ne _ _ _ _ hlen hne]
+        rw [coeff_set_ne_local _ _ _ _ hlen hne]
         exact combAt_cell xs bench i h3 m hlt
       · have heq : i = m := by omega
         subst heq
@@ -132,12 +132,12 @@ theorem comb_cell (xs : List Nat) (bench n i : Nat) (hi : i < n) (h3 : 3 * i < b
   rw [combStrip_eq]
   exact combAt_cell xs bench i h3 n hi
 
-private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := by
+private theorem replicate_trits_local (k : Nat) : allTritList (List.replicate k 0) := by
   intro x hx
   have hx' : ¬ k = 0 ∧ x = 0 := by simpa [List.mem_replicate] using hx
   omega
 
-private theorem coeff_le (xs : List Nat) (h : allTritList xs) (i : Nat) : coeff xs i ≤ 2 := by
+private theorem coeff_le_local (xs : List Nat) (h : allTritList xs) (i : Nat) : coeff xs i ≤ 2 := by
   by_cases hi : i < xs.length
   · rw [coeff_get xs i hi]
     exact h _ (List.getElem_mem hi)
@@ -160,7 +160,7 @@ private theorem allTritList_set {xs : List Nat} (h : allTritList xs) {i v : Nat}
 
 private theorem combAt_trits (xs : List Nat) (bench n : Nat) (hxs : allTritList xs)
     (hspan : 3 * (n - 1) < bench) : ∀ k, k ≤ n → allTritList (combAt xs bench k)
-  | 0, _ => replicate_trits bench
+  | 0, _ => replicate_trits_local bench
   | k + 1, hk => by
     have hn : 0 < n := by omega
     have hidx : 3 * k < bench := by
@@ -173,7 +173,7 @@ private theorem combAt_trits (xs : List Nat) (bench n : Nat) (hxs : allTritList 
     · simp only [h0, ite_true]
       exact hprev
     · simp only [h0, ite_false]
-      exact allTritList_set hprev (by rw [combAt_length]; exact hidx) (coeff_le xs hxs k)
+      exact allTritList_set hprev (by rw [combAt_length]; exact hidx) (coeff_le_local xs hxs k)
 
 /-- Combing writes coefficients of `xs`, each at most `2`, into a zero strip. -/
 theorem combStrip_trits (xs : List Nat) (n bench : Nat)

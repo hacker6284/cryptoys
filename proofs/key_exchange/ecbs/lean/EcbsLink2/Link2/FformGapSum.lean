@@ -12,7 +12,7 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
-private theorem idx_eq {α : Type} {a b : Array α} (h : a = b) (i : Nat)
+private theorem idx_eq_local {α : Type} {a b : Array α} (h : a = b) (i : Nat)
     (ha : i < a.size) : a[i] = b[i]'(h ▸ ha) := by
   cases h
   rfl
@@ -409,16 +409,16 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
     exact hGH
   have hHeldGS : bS.sudo_5Board_4held[gap]'(hGapD) = true := by
     have hset := settle_held_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) gap hGapD
+    have hget := idx_eq_local (hheldS0.trans hset) gap hGapD
     rw [Array.getElem_set_ne (h := Ne.symm hneGB)] at hget
     have hGU : gap < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hGD
-    exact (hget.trans (idx_eq hheldU gap hGU)).trans hHeldG
+    exact (hget.trans (idx_eq_local hheldU gap hGU)).trans hHeldG
   have hHomeGS : bS.sudo_5Board_4home[gap]'(hGapH) = embed u2z := by
     have hset := settle_home_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) gap hGapH
+    have hget := idx_eq_local (hhomeS.trans hset) gap hGapH
     rw [Array.getElem_set_ne (h := Ne.symm hneGB)] at hget
     have hGU : gap < bU.sudo_5Board_4home.size := by rw [hhomeU]; exact hGH
-    exact (hget.trans (idx_eq hhomeU gap hGU)).trans hArrG
+    exact (hget.trans (idx_eq_local hhomeU gap hGU)).trans hArrG
   have hAccD : across < bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU bot hinS lane n moves slides peak, Array.size_set, hheldU]
     exact hAD
@@ -427,16 +427,16 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
     exact hAH
   have hHeldAS : bS.sudo_5Board_4held[across]'(hAccD) = true := by
     have hset := settle_held_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) across hAccD
+    have hget := idx_eq_local (hheldS0.trans hset) across hAccD
     rw [Array.getElem_set_ne (h := Ne.symm hneAB)] at hget
     have hAU : across < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hAD
-    exact (hget.trans (idx_eq hheldU across hAU)).trans hHeldA
+    exact (hget.trans (idx_eq_local hheldU across hAU)).trans hHeldA
   have hHomeAS : bS.sudo_5Board_4home[across]'(hAccH) = embed v := by
     have hset := settle_home_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) across hAccH
+    have hget := idx_eq_local (hhomeS.trans hset) across hAccH
     rw [Array.getElem_set_ne (h := Ne.symm hneAB)] at hget
     have hAU : across < bU.sudo_5Board_4home.size := by rw [hhomeU]; exact hAH
-    exact (hget.trans (idx_eq hhomeU across hAU)).trans hArrA
+    exact (hget.trans (idx_eq_local hhomeU across hAU)).trans hArrA
   have hSpD : sp < bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU bot hinS lane n moves slides peak, Array.size_set, hheldU]
     exact hSD
@@ -445,16 +445,16 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
     exact hSH
   have hHeldSS : bS.sudo_5Board_4held[sp]'(hSpD) = true := by
     have hset := settle_held_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) sp hSpD
+    have hget := idx_eq_local (hheldS0.trans hset) sp hSpD
     rw [Array.getElem_set_ne (h := Ne.symm hneSB)] at hget
     have hSU : sp < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hSD
-    exact (hget.trans (idx_eq hheldU sp hSU)).trans hHeldS
+    exact (hget.trans (idx_eq_local hheldU sp hSU)).trans hHeldS
   have hHomeSS : bS.sudo_5Board_4home[sp]'(hSpH) = embed v2 := by
     have hset := settle_home_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) sp hSpH
+    have hget := idx_eq_local (hhomeS.trans hset) sp hSpH
     rw [Array.getElem_set_ne (h := Ne.symm hneSB)] at hget
     have hSU : sp < bU.sudo_5Board_4home.size := by rw [hhomeU]; exact hSH
-    exact (hget.trans (idx_eq hhomeU sp hSU)).trans hArrS
+    exact (hget.trans (idx_eq_local hhomeU sp hSU)).trans hArrS
   have hBotD : bot < bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU bot hinS lane n moves slides peak, Array.size_set, hheldU]
     exact hBD
@@ -463,12 +463,12 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
     exact hBH
   have hHeldBS : bS.sudo_5Board_4held[bot]'(hBotD) = true := by
     have hset := settle_held_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) bot hBotD
+    have hget := idx_eq_local (hheldS0.trans hset) bot hBotD
     rw [hget]
     simp [Array.getElem_set]
   have hHomeBS : bS.sudo_5Board_4home[bot]'(hBotH) = embed (lane.take n) := by
     have hset := settle_home_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) bot hBotH
+    have hget := idx_eq_local (hhomeS.trans hset) bot hBotH
     rw [hget]
     simp [Array.getElem_set]
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
@@ -684,24 +684,24 @@ theorem gap_sum_on_v2z (b : Ecbs.Board) (gap across sp bot : Nat)
       exact hj'
     have hEq := hlay.homeK j hneG hneS hjS hj'
     have hset := settle_home_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) j hjS
+    have hget := idx_eq_local (hhomeS.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneB)] at hget
     have hjU : j < bU.sudo_5Board_4home.size := by
       rw [hhomeU]
       exact hj
-    exact hEq.trans (hget.trans (idx_eq hhomeU j hjU))
+    exact hEq.trans (hget.trans (idx_eq_local hhomeU j hjU))
   · intro j hneG hneS hneB hj hj'
     have hjS : j < bS.sudo_5Board_4held.size := by
       rw [hlay.szD] at hj'
       exact hj'
     have hEq := hlay.heldK j hneG hneS hjS hj'
     have hset := settle_held_eq bU bot hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) j hjS
+    have hget := idx_eq_local (hheldS0.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneB)] at hget
     have hjU : j < bU.sudo_5Board_4held.size := by
       rw [hheldU]
       exact hj
-    exact hEq.trans (hget.trans (idx_eq hheldU j hjU))
+    exact hEq.trans (hget.trans (idx_eq_local hheldU j hjU))
   · intro i hi hii
     have hiiS : i < sch.length := by
       rwa [hlenR, ← hschLen] at hii

@@ -71,7 +71,7 @@ def fformY3Red (n k bench : Nat) (y2 u v z : List Nat) : List Nat :=
   let z3 := fformZ3 n k bench v z
   fieldAdd n (fformMir n k bench g u) (fieldMul n k bench y2 z3)
 
-private theorem fieldMul_trits (n k bench : Nat) (xs ys : List Nat)
+private theorem fieldMul_trits_local (n k bench : Nat) (xs ys : List Nat)
     (hspan : 2 * (n - 1) < bench) (hn : n ≤ bench) :
     allTritList (fieldMul n k bench xs ys) := by
   have hrep : allTritList (List.replicate bench 0) := by
@@ -91,7 +91,7 @@ private theorem fieldMul_trits (n k bench : Nat) (xs ys : List Nat)
     (school n xs ys (List.replicate bench 0) false) hsch (Nat.sub_le _ _) (by rw [hlen]; exact hn)
   simpa [fieldMul, laneFold] using allTritList_take hfold n
 
-private theorem fieldAdd_trits (n : Nat) (xs ys : List Nat) : allTritList (fieldAdd n xs ys) := by
+private theorem fieldAdd_trits_local (n : Nat) (xs ys : List Nat) : allTritList (fieldAdd n xs ys) := by
   intro x hx
   simp only [fieldAdd, List.mem_map] at hx
   rcases hx with ⟨_, _, rfl⟩
@@ -109,9 +109,9 @@ theorem fformGap_order (n k bench : Nat) (u v z : List Nat)
         (fieldMul n k bench (fieldMul n k bench v v) z) := by
   unfold fformGap fformLeft fformCube fformRight fformU2 fformV2
   rw [fieldMul_comm n k bench z (fieldMul n k bench u u) hz
-      (fieldMul_trits n k bench u u hspan hn)]
+      (fieldMul_trits_local n k bench u u hspan hn)]
   rw [fieldMul_comm n k bench v (fieldMul n k bench v v) hv
-      (fieldMul_trits n k bench v v hspan hn)]
+      (fieldMul_trits_local n k bench v v hspan hn)]
 
 /-- `X₃ = v F + x₂ Z₃`. The card multiplies the gap by the run, which is the
     same product as the run times the gap. -/
@@ -124,7 +124,7 @@ theorem fformX3_order (n k bench : Nat) (x2 u v z : List Nat)
   unfold fformX3
   have hg : allTritList (fformGap n k bench u v z) := by
     unfold fformGap
-    exact fieldAdd_trits _ _ _
+    exact fieldAdd_trits_local _ _ _
   rw [fieldMul_comm n k bench (fformGap n k bench u v z) v hg hv]
 
 /-- The card's new bottom is SPEC.md §3 R7's `v · (v²Z)`. -/
@@ -148,7 +148,7 @@ theorem fformGap_spec (n k bench : Nat) (u v z : List Nat)
     (hu : allTritList u) (hv : allTritList v) (hz : allTritList z)
     (hspan : 2 * (n - 1) < bench) (hn : n ≤ bench) :
     fformGap n k bench u v z = fformF n k bench u v z := by
-  have hv2 : allTritList (fieldMul n k bench v v) := fieldMul_trits n k bench v v hspan hn
+  have hv2 : allTritList (fieldMul n k bench v v) := fieldMul_trits_local n k bench v v hspan hn
   rw [fformGap_order n k bench u v z hu hv hz hspan hn]
   dsimp only [fformF]
   rw [fieldMul_right_add n k bench (fieldMul n k bench v v) v z hv2 hv hz hn,
@@ -172,17 +172,17 @@ theorem fformY3_spec (n k bench : Nat) (y2 u v z : List Nat)
   dsimp only [fformY3]
   have hg : allTritList (fformGap n k bench u v z) := by
     unfold fformGap
-    exact fieldAdd_trits _ _ _
+    exact fieldAdd_trits_local _ _ _
   have hz3 : allTritList (fformZ3 n k bench v z) := by
     unfold fformZ3 fformRight fformV2
-    exact fieldMul_trits n k bench v _ hspan hn
+    exact fieldMul_trits_local n k bench v _ hspan hn
   rw [fformMir_mul n k bench (fformGap n k bench u v z) u hg hu,
     fformMir_mul n k bench y2 (fformZ3 n k bench v z) hy2 hz3,
     fieldMul_comm n k bench (fformGap n k bench u v z) u hg hu]
   have hmu : allTritList (fieldMul n k bench u (fformGap n k bench u v z)) :=
-    fieldMul_trits n k bench u _ hspan hn
+    fieldMul_trits_local n k bench u _ hspan hn
   have hmy : allTritList (fieldMul n k bench y2 (fformZ3 n k bench v z)) :=
-    fieldMul_trits n k bench y2 _ hspan hn
+    fieldMul_trits_local n k bench y2 _ hspan hn
   rw [← mirrorTrits_fieldAdd n _ _ hmu hmy,
     fformGap_spec n k bench u v z hu hv hz hspan hn,
     fformZ3_spec n k bench v z]
@@ -196,22 +196,22 @@ theorem fformY3Red_spec (n k bench : Nat) (y2 u v z : List Nat)
   dsimp only [fformY3Red, fformUp]
   have hg : allTritList (fformGap n k bench u v z) := by
     unfold fformGap
-    exact fieldAdd_trits _ _ _
+    exact fieldAdd_trits_local _ _ _
   have hz3 : allTritList (fformZ3 n k bench v z) := by
     unfold fformZ3 fformRight fformV2
-    exact fieldMul_trits n k bench v _ hspan hn
+    exact fieldMul_trits_local n k bench v _ hspan hn
   have hbot : allTritList (fformBottom n k bench v z) := by
     rw [← fformZ3_spec]
     exact hz3
   have hmy : allTritList (fieldMul n k bench y2 (fformZ3 n k bench v z)) :=
-    fieldMul_trits n k bench y2 _ hspan hn
+    fieldMul_trits_local n k bench y2 _ hspan hn
   rw [fformMir_mul n k bench (fformGap n k bench u v z) u hg hu,
     fieldMul_comm n k bench (fformGap n k bench u v z) u hg hu,
     fformGap_spec n k bench u v z hu hv hz hspan hn,
     fformZ3_spec n k bench v z,
     fieldMul_mirror_left n k bench y2 (fformBottom n k bench v z) hy2 hbot]
   have hmu : allTritList (fieldMul n k bench u (fformF n k bench u v z)) :=
-    fieldMul_trits n k bench u _ hspan hn
+    fieldMul_trits_local n k bench u _ hspan hn
   have hmirP : allTritList (mirrorTrits (fieldMul n k bench y2 (fformBottom n k bench v z))) := by
     rw [mirrorTrits_map]
     intro a ha

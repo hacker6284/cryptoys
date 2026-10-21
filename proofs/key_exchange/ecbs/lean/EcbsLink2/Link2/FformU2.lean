@@ -32,7 +32,7 @@ def u2zMoveCap (y y2 z lane : List Nat) (mirror : Bool)
 def u2zSlideCap (y lane : List Nat) (n slides : Nat) : Nat :=
   riseSlideCount y lane n slides + 2 * n + 2 * n
 
-private theorem fits_le {a b : Nat} (h : FitsLen b) (hle : a ≤ b) : FitsLen a :=
+private theorem fits_le_local {a b : Nat} (h : FitsLen b) (hle : a ≤ b) : FitsLen a :=
   FitsLen.of_le h hle
 
 /-- Square the rise the board just wrote. `cOps` is the ops cell on the board
@@ -205,7 +205,7 @@ theorem rise_gap_u2 (b : Ecbs.Board) (dst first second seat gap : Nat)
   have htakeLen : (laneR.take n).length = n := by
     rw [List.length_take, Nat.min_eq_left carry.nle]
   have hpegR : FitsLen (2 * pegCount (laneR.take n)) :=
-    fits_le hSquare (by
+    fits_le_local hSquare (by
       have hp := pegCount_le (laneR.take n)
       rw [htakeLen] at hp
       omega)
@@ -216,16 +216,16 @@ theorem rise_gap_u2 (b : Ecbs.Board) (dst first second seat gap : Nat)
     have hp := pegCount_le (laneR.take n)
     rwa [htakeLen] at hp
   have hfitMsR : FitsLen (movesR + 2 * pegCount (laneR.take n)) :=
-    fits_le hSquare (by omega)
+    fits_le_local hSquare (by omega)
   have hfitPR : FitsLen (movesR + 2 * pegCount (laneR.take n) + pegCount u) :=
-    fits_le hSquare (by omega)
+    fits_le_local hSquare (by omega)
   have hfmR : FitsLen (movesR + 2 * pegCount (laneR.take n) + pegCount u + n * (n + 1)) :=
-    fits_le hSquare (by omega)
+    fits_le_local hSquare (by omega)
   have hfoldR : FitsLen (movesR + 2 * pegCount (laneR.take n) + pegCount u +
       n * (n + 1) + 3 * (bench - n)) :=
-    fits_le hSquare (by omega)
+    fits_le_local hSquare (by omega)
   have hfitSsR : FitsLen (slidesR + 2 * pegCount (laneR.take n)) :=
-    fits_le hSlide (by omega)
+    fits_le_local hSlide (by omega)
   have hmvCast : bR.sudo_5Board_4cost.sudo_5Costs_5moves = (movesR : Int) := by
     simpa [movesR, riseMoveCount, ofNat_eq_natCast] using hmvR
   have hslCast : bR.sudo_5Board_4cost.sudo_5Costs_6slides = (slidesR : Int) := by
@@ -521,18 +521,18 @@ theorem rise_gap_u2z (b : Ecbs.Board) (dst first second seat gap : Nat)
     simp only [slides2]
     omega
   have hpeg2 : FitsLen (2 * pegCount (lane2.take n)) :=
-    fits_le hNext (by omega)
+    fits_le_local hNext (by omega)
   have hfitM2z : FitsLen (moves2 + 2 * pegCount (lane2.take n)) :=
-    fits_le hNext (by omega)
+    fits_le_local hNext (by omega)
   have hfm2 : FitsLen (moves2 + 2 * pegCount (lane2.take n) + n * (n + 1)) :=
-    fits_le hNext (by omega)
+    fits_le_local hNext (by omega)
   have hfold2 : FitsLen (moves2 + 2 * pegCount (lane2.take n) + n * (n + 1) +
       3 * (bench - n)) :=
-    fits_le hNext (by
+    fits_le_local hNext (by
       have hpt' := hpt
       omega)
   have hfitS2 : FitsLen (slides2 + 2 * pegCount (lane2.take n)) :=
-    fits_le hSlideZ (by omega)
+    fits_le_local hSlideZ (by omega)
   have hmvCast : b2.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat moves2 := by
     simpa [moves2] using hmv2
   have hslCast : b2.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat slides2 := by

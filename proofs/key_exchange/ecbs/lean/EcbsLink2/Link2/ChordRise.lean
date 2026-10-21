@@ -28,12 +28,12 @@ theorem mirrorTrits_allTrit {xs : List Nat} (h : allTritList xs) : allTritList (
 theorem mirror_length (xs : List Nat) : (mirrorTrits xs).length = xs.length := by
   rw [mirrorTrits_flip, List.length_map]
 
-private theorem idx_eq {α : Type} {a b : Array α} (h : a = b) (i : Nat)
+private theorem idx_eq_local {α : Type} {a b : Array α} (h : a = b) (i : Nat)
     (ha : i < a.size) : a[i] = b[i]'(h ▸ ha) := by
   cases h
   rfl
 
-private theorem place_flag (b : Ecbs.Board) (home : Nat)
+private theorem place_flag_local (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) :
     (placeBoard b home hH hD xs moves peak).sudo_5Board_9marker_on =
@@ -66,7 +66,7 @@ private theorem place_same (b : Ecbs.Board) (home : Nat)
   dsimp only
   split <;> exact ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
-private theorem place_row (b : Ecbs.Board) (home : Nat)
+private theorem place_row_local (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) :
     (placeBoard b home hH hD xs moves peak).sudo_5Board_3row = b.sudo_5Board_3row := by
@@ -74,7 +74,7 @@ private theorem place_row (b : Ecbs.Board) (home : Nat)
   dsimp only
   split <;> rfl
 
-private theorem place_stay (b : Ecbs.Board) (home : Nat)
+private theorem place_stay_local (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) (h3 : home ≠ 3) (h4 : home ≠ 4) :
     TailStay b (placeBoard b home hH hD xs moves peak) := by
@@ -97,7 +97,7 @@ private theorem add_stay (b : Ecbs.Board) (home : Nat)
   · unfold homeD
     rw [Array.getElem?_set_ne _ _ _ (by simpa using h4)]
 
-private theorem place_high (b : Ecbs.Board) (home : Nat)
+private theorem place_high_local (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (hD : home < b.sudo_5Board_4held.size)
     (xs : List Nat) (moves peak : Nat) :
     (placeBoard b home hH hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_15control_highest =
@@ -113,7 +113,7 @@ private theorem place_home_at (b : Ecbs.Board)
     (placeBoard b 6 hH hD xs moves peak).sudo_5Board_4home[i]'(by
       rw [place_home_eq, Array.size_set]; exact hi) = b.sudo_5Board_4home[i] := by
   have hset := place_home_eq b 6 hH hD xs moves peak
-  have hget := idx_eq hset i (by rw [hset, Array.size_set]; exact hi)
+  have hget := idx_eq_local hset i (by rw [hset, Array.size_set]; exact hi)
   simp only [Array.getElem_set, hne, if_false] at hget
   exact hget
 
@@ -124,7 +124,7 @@ private theorem place_held_at (b : Ecbs.Board)
     (placeBoard b 6 hH hD xs moves peak).sudo_5Board_4held[i]'(by
       rw [place_held_eq, Array.size_set]; exact hi) = b.sudo_5Board_4held[i] := by
   have hset := place_held_eq b 6 hH hD xs moves peak
-  have hget := idx_eq hset i (by rw [hset, Array.size_set]; exact hi)
+  have hget := idx_eq_local hset i (by rw [hset, Array.size_set]; exact hi)
   simp only [Array.getElem_set, hne, if_false] at hget
   exact hget
 
@@ -209,7 +209,7 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
     have hset : bR.sudo_5Board_4home =
         b.sudo_5Board_4home.set ⟨6, h6H⟩ (embed (fieldAdd n ySrc (mirrorTrits accY))) := by
       simp [bR, addBoard, withMoves]
-    have hget := idx_eq hset 6 h
+    have hget := idx_eq_local hset 6 h
     simp only [Array.getElem_set, if_true] at hget
     simpa [hsub] using hget
   · intro h
@@ -220,7 +220,7 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
     have hset : bR.sudo_5Board_4home =
         b.sudo_5Board_4home.set ⟨6, h6H⟩ (embed (fieldAdd n ySrc (mirrorTrits accY))) := by
       simp [bR, addBoard, withMoves]
-    have hget := idx_eq hset 1 h
+    have hget := idx_eq_local hset 1 h
     have hne : (6 : Nat) ≠ 1 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget.trans (h1a h1H)
@@ -232,7 +232,7 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
     have hset : bR.sudo_5Board_4home =
         b.sudo_5Board_4home.set ⟨6, h6H⟩ (embed (fieldAdd n ySrc (mirrorTrits accY))) := by
       simp [bR, addBoard, withMoves]
-    have hget := idx_eq hset 4 h
+    have hget := idx_eq_local hset 4 h
     have hne : (6 : Nat) ≠ 4 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget.trans (h4a h4H)
@@ -257,7 +257,7 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
         b.sudo_5Board_4home.set ⟨6, h6H⟩ (embed (fieldAdd n ySrc (mirrorTrits accY))) := by
       simp [bR, addBoard, withMoves]
     have h0 : 0 < b.sudo_5Board_4home.size := by rw [hszH]; decide
-    have hget := idx_eq hset 0 (by rw [hset, Array.size_set]; exact h0)
+    have hget := idx_eq_local hset 0 (by rw [hset, Array.size_set]; exact h0)
     have hne : (6 : Nat) ≠ 0 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget
@@ -265,13 +265,13 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
     have hheld : bR.sudo_5Board_4held = b.sudo_5Board_4held := by
       simp [bR, addBoard, withMoves]
     have h0 : 0 < b.sudo_5Board_4held.size := by rw [hszD]; decide
-    exact idx_eq hheld 0 (by rw [hheld]; exact h0)
+    exact idx_eq_local hheld 0 (by rw [hheld]; exact h0)
   · intro h
     have hset : bR.sudo_5Board_4home =
         b.sudo_5Board_4home.set ⟨6, h6H⟩ (embed (fieldAdd n ySrc (mirrorTrits accY))) := by
       simp [bR, addBoard, withMoves]
     have h2 : 2 < b.sudo_5Board_4home.size := by rw [hszH]; decide
-    have hget := idx_eq hset 2 (by rw [hset, Array.size_set]; exact h2)
+    have hget := idx_eq_local hset 2 (by rw [hset, Array.size_set]; exact h2)
     have hne : (6 : Nat) ≠ 2 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget
@@ -279,13 +279,13 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
     have hheld : bR.sudo_5Board_4held = b.sudo_5Board_4held := by
       simp [bR, addBoard, withMoves]
     have h2 : 2 < b.sudo_5Board_4held.size := by rw [hszD]; decide
-    exact idx_eq hheld 2 (by rw [hheld]; exact h2)
+    exact idx_eq_local hheld 2 (by rw [hheld]; exact h2)
   · intro h
     have hset : bR.sudo_5Board_4home =
         b.sudo_5Board_4home.set ⟨6, h6H⟩ (embed (fieldAdd n ySrc (mirrorTrits accY))) := by
       simp [bR, addBoard, withMoves]
     have h5 : 5 < b.sudo_5Board_4home.size := by rw [hszH]; decide
-    have hget := idx_eq hset 5 (by rw [hset, Array.size_set]; exact h5)
+    have hget := idx_eq_local hset 5 (by rw [hset, Array.size_set]; exact h5)
     have hne : (6 : Nat) ≠ 5 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget
@@ -293,7 +293,7 @@ theorem rise_add (b : Ecbs.Board) (ySrc accY baseY : List Nat) (n moves : Nat)
     have hheld : bR.sudo_5Board_4held = b.sudo_5Board_4held := by
       simp [bR, addBoard, withMoves]
     have h5 : 5 < b.sudo_5Board_4held.size := by rw [hszD]; decide
-    exact idx_eq hheld 5 (by rw [hheld]; exact h5)
+    exact idx_eq_local hheld 5 (by rw [hheld]; exact h5)
   · simp [bR, addBoard, withMoves]
   · simp [bR, addBoard, withMoves]
   · simp [bR, addBoard, withMoves]
@@ -364,38 +364,38 @@ theorem place_spare (b : Ecbs.Board) (ys accY baseY : List Nat) (moves peak : Na
   refine ⟨hszH1, hszD1, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [place_tier_eq]
   · exact place_moves_eq b 6 h6H h6D ys moves peak
-  · exact place_flag b 6 h6H h6D ys moves peak
+  · exact place_flag_local b 6 h6H h6D ys moves peak
   · intro h
     have hset := place_home_eq b 6 h6H h6D ys moves peak
-    have hget := idx_eq hset 6 h
+    have hget := idx_eq_local hset 6 h
     simp only [Array.getElem_set, if_true] at hget
     exact hget
   · intro h
     have hset := place_held_eq b 6 h6H h6D ys moves peak
-    have hget := idx_eq hset 6 h
+    have hget := idx_eq_local hset 6 h
     simp only [Array.getElem_set, if_true] at hget
     exact hget
   · intro h
     have hset := place_home_eq b 6 h6H h6D ys moves peak
-    have hget := idx_eq hset 1 (by rw [hset, Array.size_set]; exact h1HB)
+    have hget := idx_eq_local hset 1 (by rw [hset, Array.size_set]; exact h1HB)
     have hne : (6 : Nat) ≠ 1 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget.trans h1a
   · intro h
     have hset := place_held_eq b 6 h6H h6D ys moves peak
-    have hget := idx_eq hset 1 (by rw [hset, Array.size_set]; exact h1B)
+    have hget := idx_eq_local hset 1 (by rw [hset, Array.size_set]; exact h1B)
     have hne : (6 : Nat) ≠ 1 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget.trans h1t
   · intro h
     have hset := place_home_eq b 6 h6H h6D ys moves peak
-    have hget := idx_eq hset 4 (by rw [hset, Array.size_set]; exact h4HB)
+    have hget := idx_eq_local hset 4 (by rw [hset, Array.size_set]; exact h4HB)
     have hne : (6 : Nat) ≠ 4 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget.trans h4a
   · intro h
     have hset := place_held_eq b 6 h6H h6D ys moves peak
-    have hget := idx_eq hset 4 (by rw [hset, Array.size_set]; exact h4B)
+    have hget := idx_eq_local hset 4 (by rw [hset, Array.size_set]; exact h4B)
     have hne : (6 : Nat) ≠ 4 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     exact hget.trans h4t
@@ -531,9 +531,9 @@ theorem chord_rise_white (b : Ecbs.Board) (baseY accY : List Nat)
   · exact hstR.trans (place_same b 6 h6H h6D baseY moves peak).2.2.2.2.2.2.2.2.2.2
   · have hpk := place_peak_nat b 6 h6H h6D baseY moves peak hpeak
     exact ⟨_, hpkR.trans hpk⟩
-  · exact hhiR.trans (place_high b 6 h6H h6D baseY moves peak)
-  · exact TailStay.trans (place_stay b 6 h6H h6D baseY moves peak (by decide) (by decide)) hstayR
-  · exact hrowA.trans (place_row b 6 h6H h6D baseY moves peak)
+  · exact hhiR.trans (place_high_local b 6 h6H h6D baseY moves peak)
+  · exact TailStay.trans (place_stay_local b 6 h6H h6D baseY moves peak (by decide) (by decide)) hstayR
+  · exact hrowA.trans (place_row_local b 6 h6H h6D baseY moves peak)
 
 /-- Red rise. The spare becomes the negated base up minus the accumulator up. -/
 theorem chord_rise_red (b : Ecbs.Board) (baseY accY : List Nat)
@@ -671,10 +671,10 @@ theorem chord_rise_red (b : Ecbs.Board) (baseY accY : List Nat)
   · exact hstR.trans (place_same b 6 h6H h6D (mirrorTrits baseY) moves peak).2.2.2.2.2.2.2.2.2.2
   · have hpk := place_peak_nat b 6 h6H h6D (mirrorTrits baseY) moves peak hpeak
     exact ⟨_, hpkR.trans hpk⟩
-  · exact hhiR.trans (place_high b 6 h6H h6D (mirrorTrits baseY) moves peak)
+  · exact hhiR.trans (place_high_local b 6 h6H h6D (mirrorTrits baseY) moves peak)
   · exact TailStay.trans
-      (place_stay b 6 h6H h6D (mirrorTrits baseY) moves peak (by decide) (by decide)) hstayR
-  · exact hrowA.trans (place_row b 6 h6H h6D (mirrorTrits baseY) moves peak)
+      (place_stay_local b 6 h6H h6D (mirrorTrits baseY) moves peak (by decide) (by decide)) hstayR
+  · exact hrowA.trans (place_row_local b 6 h6H h6D (mirrorTrits baseY) moves peak)
 
 /-- The rise, white or red. `red` mirrors the base up before the subtraction. -/
 theorem chord_rise (b : Ecbs.Board) (red : Bool) (baseY accY : List Nat)

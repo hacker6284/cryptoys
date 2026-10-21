@@ -89,7 +89,7 @@ private theorem prod_len (n k bench : Nat) (p xP zP : List Nat) (hb : n ≤ benc
     (fieldMul n k bench (fieldCube n k bench p) (fieldCube n k bench zP)).length = n := by
   rw [hmul, fieldCube_length n k bench xP hb]
 
-private theorem prod_trits (n k bench : Nat) (p xP zP : List Nat)
+private theorem prod_trits_local (n k bench : Nat) (p xP zP : List Nat)
     (hx : allTritList xP) (hspan : 3 * (n - 1) < bench) (hk : k ≤ n)
     (hmul : fieldMul n k bench (fieldCube n k bench p) (fieldCube n k bench zP) =
         fieldCube n k bench xP) :
@@ -146,8 +146,8 @@ theorem zero_zbench
   have hxLen := prod_len t.n t.k t.benchlen px xP zP hnb hxMul
   have hyLen := prod_len t.n t.k t.benchlen py yP zP hnb hyMul
   have hzLen := fieldCube_length t.n t.k t.benchlen zP hnb
-  have hxTri := prod_trits t.n t.k t.benchlen px xP zP hxT h3span hsh.k_le hxMul
-  have hyTri := prod_trits t.n t.k t.benchlen py yP zP hyT h3span hsh.k_le hyMul
+  have hxTri := prod_trits_local t.n t.k t.benchlen px xP zP hxT h3span hsh.k_le hxMul
+  have hyTri := prod_trits_local t.n t.k t.benchlen py yP zP hyT h3span hsh.k_le hyMul
   have hzTri := fieldCube_trits t.n t.k t.benchlen zP hzT h3span hsh.k_le
   have hxHome : ∀ h : 0 < bZ.sudo_5Board_4home.size,
       bZ.sudo_5Board_4home[0] = embed

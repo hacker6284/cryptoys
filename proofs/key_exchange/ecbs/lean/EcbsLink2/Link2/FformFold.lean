@@ -26,7 +26,7 @@ private theorem fold_peak_out (b : Ecbs.Board) (sch : List Nat) (n k mv peak : N
   dsimp only
   split <;> simp [hno, ofNat_eq_natCast]
 
-private theorem fold_peak_rise (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
+private theorem fold_peak_rise_local (b : Ecbs.Board) (sch : List Nat) (n k mv peak : Nat) :
     (ontoFoldBoard b sch n k mv peak).sudo_5Board_4cost.sudo_5Costs_4peak =
       Int.ofNat (raisedPeak peak (countHeld b.sudo_5Board_4held 7)) := by
   unfold ontoFoldBoard peakBoard
@@ -283,7 +283,7 @@ theorem nocopy_else_field (b : Ecbs.Board) (dst first second : Nat)
     exact hOk
   · simpa [sch, pad] using ontoFoldBoard_bench bFold sch n k mvN peak
   · simpa [sch, pad] using zero_school_mul n k bench xs ys
-  · rw [fold_peak_rise bFold sch n k mvN peak, hheldB]
+  · rw [fold_peak_rise_local bFold sch n k mvN peak, hheldB]
     exact ofNat_eq_natCast _
   · rw [fold_strict_out bFold sch n k mvN peak, hstrictB]
   · rw [fold_hole_out bFold sch n k mvN peak, hholeB]

@@ -106,14 +106,14 @@ private theorem withMoves_withMoves (b : Ecbs.Board) (m₁ m₂ : Int) :
   unfold withMoves
   rfl
 
-private theorem flipTrit_le {c : Nat} (h : c ≤ 2) : flipTrit c ≤ 2 := by
+private theorem flipTrit_le_local {c : Nat} (h : c ≤ 2) : flipTrit c ≤ 2 := by
   have : c = 0 ∨ c = 1 ∨ c = 2 := by omega
   rcases this with h0 | h1 | h2
   · simp [flipTrit, h0]
   · simp [flipTrit, h1]
   · simp [flipTrit, h2]
 
-private theorem tritAdd_le (a b : Nat) : tritAdd a b ≤ 2 := by
+private theorem tritAdd_le_local (a b : Nat) : tritAdd a b ≤ 2 := by
   unfold tritAdd
   have : (a + b) % 3 < 3 := Nat.mod_lt _ (by decide)
   omega
@@ -152,7 +152,7 @@ private theorem schoolStep_trits {xs strip : List Nat} (hs : allTritList strip)
       | inl h => exact absurd h hz
       | inr h => exact h
     simp only [hz, ite_false]
-    exact allTritList_set hs hlt (tritAdd_le _ _)
+    exact allTritList_set hs hlt (tritAdd_le_local _ _)
 
 theorem laidCount_le (a : List Nat) (k : Nat) : laidCount a k ≤ k := by
   induction k with
@@ -230,7 +230,7 @@ private theorem layDo_nz (xs strip : List Nat) (i j moves : Nat) (mir : Bool) (b
   · simp only [hmIr, ite_true]
     rw [flip_refines _ hd, ok_bind, addI_ofNat i j hfi, ok_bind, ok_bind,
       atL_embed strip (i + j) hidx, ok_bind,
-      addI_ofNat _ _ (lay_sum_fit _ _ hcell (flipTrit_le hd)), ok_bind,
+      addI_ofNat _ _ (lay_sum_fit _ _ hcell (flipTrit_le_local hd)), ok_bind,
       modI_three, ok_bind, embed_put strip (i + j) _ hidx, ok_bind, hm,
       addI_ofNat_one moves hfm, ok_bind, pure_eq_ok]
     simp [schoolStep, layCell, coeff_get xs j hj, coeff_get strip (i + j) hidx, hz, hmIr,

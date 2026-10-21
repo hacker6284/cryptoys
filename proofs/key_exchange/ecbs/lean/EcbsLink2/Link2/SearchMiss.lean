@@ -19,7 +19,7 @@ private theorem some_idx {α : Type} (a : Array α) (i : Nat) (v : α)
   · rw [Array.getElem?_ge a (by omega)] at h
     cases h
 
-private theorem some_get {α : Type} (a : Array α) (i : Nat) (v : α)
+private theorem some_get_local {α : Type} (a : Array α) (i : Nat) (v : α)
     (h : a[i]? = some v) : a[i]'(some_idx a i v h) = v := by
   rw [Array.getElem?_eq_getElem (some_idx a i v h)] at h
   injection h
@@ -94,8 +94,8 @@ private theorem clear_one (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves :
       (∀ j, home ≠ j → b'.sudo_5Board_4held[j]? = b.sudo_5Board_4held[j]?) := by
   have hH := some_idx _ _ _ hhome
   have hD := some_idx _ _ _ hheld?
-  have harr := some_get _ _ _ hhome
-  have hheld := some_get _ _ _ hheld?
+  have harr := some_get_local _ _ _ hhome
+  have hheld := some_get_local _ _ _ hheld?
   have hm' : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int) := by
     simpa [ofNat_eq_natCast] using hm
   have hcl := clear_held_refines b home xs moves hH hD hheld harr hm' hf hfit

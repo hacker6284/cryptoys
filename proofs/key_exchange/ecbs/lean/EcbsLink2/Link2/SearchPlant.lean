@@ -102,7 +102,7 @@ private theorem some_idx {α : Type} (a : Array α) (i : Nat) (v : α)
   · rw [Array.getElem?_ge a (by omega)] at h
     cases h
 
-private theorem some_get {α : Type} (a : Array α) (i : Nat) (v : α)
+private theorem some_get_local {α : Type} (a : Array α) (i : Nat) (v : α)
     (h : a[i]? = some v) : a[i]'(some_idx a i v h) = v := by
   rw [Array.getElem?_eq_getElem (some_idx a i v h)] at h
   injection h
@@ -175,7 +175,7 @@ theorem search_plant (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   have hpeg := peg_le t.n x hx
   have hH : 3 < b.sudo_5Board_4home.size := by rw [h.szH]; decide
   have hD : 3 < b.sudo_5Board_4held.size := by rw [h.szD]; decide
-  have hempty : b.sudo_5Board_4held[3] = false := some_get _ _ _ h.baseOff
+  have hempty : b.sudo_5Board_4held[3] = false := some_get_local _ _ _ h.baseOff
   have h7 : 7 ≤ b.sudo_5Board_4held.size := by rw [h.szD]; decide
   have hn : b.sudo_5Board_1t.sudo_4Tier_1n = (x.length : Int) := by
     rw [h.tier, hx]
@@ -240,9 +240,9 @@ theorem search_copy (b : Ecbs.Board) (t : Spec.Tier) (holesLeft : Nat)
   have hHs : 3 < bP.sudo_5Board_4home.size := by rw [hszH]; decide
   have hDs : 3 < bP.sudo_5Board_4held.size := by rw [hszD]; decide
   have h7 : 7 ≤ bP.sudo_5Board_4held.size := by rw [hszD]; decide
-  have hempty : bP.sudo_5Board_4held[2] = false := some_get _ _ _ hbot
-  have hsrc : bP.sudo_5Board_4held[3] = true := some_get _ _ _ hheld
-  have harr : bP.sudo_5Board_4home[3] = embed x := some_get _ _ _ hhome
+  have hempty : bP.sudo_5Board_4held[2] = false := some_get_local _ _ _ hbot
+  have hsrc : bP.sudo_5Board_4held[3] = true := some_get_local _ _ _ hheld
+  have harr : bP.sudo_5Board_4home[3] = embed x := some_get_local _ _ _ hhome
   have hn : bP.sudo_5Board_1t.sudo_4Tier_1n = (x.length : Int) := by
     rw [htier, hx]
     simp [embTier, ofNat_eq_natCast]

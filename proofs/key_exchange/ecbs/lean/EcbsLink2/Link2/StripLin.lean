@@ -45,11 +45,11 @@ theorem stripAdd_zero (xs : List Nat) (ht : allTritList xs) :
       omega
     simp [List.getElem_replicate, tritAdd, Nat.mod_eq_of_lt hx]
 
-private theorem coeff_set_eq (xs : List Nat) (i v : Nat) (hi : i < xs.length) :
+private theorem coeff_set_eq_local (xs : List Nat) (i v : Nat) (hi : i < xs.length) :
     coeff (xs.set i v) i = v := by
   rw [coeff_eq_get _ i (by rw [List.length_set]; exact hi), List.getElem_set_self]
 
-private theorem coeff_set_ne (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
+private theorem coeff_set_ne_local (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
     coeff (xs.set i v) j = coeff xs j := by
   have hj' : j < (xs.set i v).length := by rw [List.length_set]; exact hj
   rw [coeff_eq_get _ j hj', List.getElem_set, if_neg hne, ← coeff_eq_get xs j hj]
@@ -76,10 +76,10 @@ theorem stripAdd_set (xs ys : List Nat) (i v w : Nat)
     rw [stripAdd_get (xs.set i v) (ys.set i w) j (by rw [List.length_set]; exact hj)]
     by_cases hji : j = i
     · subst hji
-      rw [coeff_set_eq xs j v hi, coeff_set_eq ys j w (by rw [hlen]; exact hi),
+      rw [coeff_set_eq_local xs j v hi, coeff_set_eq_local ys j w (by rw [hlen]; exact hi),
         List.getElem_set_self]
     · have hne : i ≠ j := Ne.symm hji
-      rw [coeff_set_ne xs i v j hj hne, coeff_set_ne ys i w j (by rw [hlen]; exact hj) hne,
+      rw [coeff_set_ne_local xs i v j hj hne, coeff_set_ne_local ys i w j (by rw [hlen]; exact hj) hne,
         List.getElem_set_ne hne, stripAdd_get xs ys j hj]
 
 theorem lay_strip (xs ys : List Nat) (idx d : Nat)
@@ -262,11 +262,11 @@ theorem stripAdd_addAt (xs ys : List Nat) (j c : Nat)
         coeff_eq_get _ j hjs, stripAdd_get xs ys j hj, tritAdd_left,
         stripAdd_get (xs.set j (tritAdd (coeff xs j) c)) ys j
           (by rw [List.length_set]; exact hj),
-        coeff_set_eq xs j _ hj]
+        coeff_set_eq_local xs j _ hj]
     · have hne : j ≠ i := Ne.symm h
       rw [List.getElem_set_ne hne, stripAdd_get xs ys i hi0,
         stripAdd_get (xs.set j _) ys i (by rw [List.length_set]; exact hi0),
-        coeff_set_ne xs j _ i hi0 hne]
+        coeff_set_ne_local xs j _ i hi0 hne]
 
 /-- Folding a sum whose second summand is empty at this high hole moves only
     the first summand's peg. -/

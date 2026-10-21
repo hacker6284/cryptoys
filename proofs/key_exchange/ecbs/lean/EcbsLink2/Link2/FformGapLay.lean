@@ -12,7 +12,7 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
-private theorem idx_eq {α : Type} {a b : Array α} (h : a = b) (i : Nat)
+private theorem idx_eq_local {α : Type} {a b : Array α} (h : a = b) (i : Nat)
     (ha : i < a.size) : a[i] = b[i]'(h ▸ ha) := by
   cases h
   rfl
@@ -164,12 +164,12 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
     exact hH
   have hHeldUp : bS.sudo_5Board_4held[up]'(hUpD) = true := by
     have hset := settle_held_eq bU up hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) up hUpD
+    have hget := idx_eq_local (hheldS0.trans hset) up hUpD
     rw [hget]
     simp [Array.getElem_set]
   have hHomeUp : bS.sudo_5Board_4home[up]'(hUpH) = embed u := by
     have hset := settle_home_eq bU up hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) up hUpH
+    have hget := idx_eq_local (hhomeS.trans hset) up hUpH
     rw [hget]
     simp [Array.getElem_set]
     rw [htake]
@@ -181,10 +181,10 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
     exact hSpHome
   have h6E : bS.sudo_5Board_4held[6]'(h6D) = false := by
     have hset := settle_held_eq bU up hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) 6 h6D
+    have hget := idx_eq_local (hheldS0.trans hset) 6 h6D
     rw [Array.getElem_set_ne (h := hne6)] at hget
     have h6U : 6 < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hSpH
-    exact (hget.trans (idx_eq hheldU 6 h6U)).trans hSpE
+    exact (hget.trans (idx_eq_local hheldU 6 h6U)).trans hSpE
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU up hinS lane n moves slides peak, Array.size_set, hheldU]
     exact h7
@@ -345,13 +345,13 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
       exact hj'
     have hEqS := hhomeK j hne6 hjS hj'
     have hset := settle_home_eq bU up hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) j hjS
+    have hget := idx_eq_local (hhomeS.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneU)] at hget
     have hjU : j < bU.sudo_5Board_4home.size := by
       rw [hhomeU]
       exact hj
     have hBU : bU.sudo_5Board_4home[j]'hjU = b.sudo_5Board_4home[j]'hj :=
-      idx_eq hhomeU j hjU
+      idx_eq_local hhomeU j hjU
     exact hEqS.trans (hget.trans hBU)
   · intro j hneU hne6 hj hj'
     have hjS : j < bS.sudo_5Board_4held.size := by
@@ -359,13 +359,13 @@ theorem gap_u2 (b : Ecbs.Board) (dst up : Nat) (u lane : List Nat)
       exact hj'
     have hEqS := hheldK j hne6 hjS hj'
     have hset := settle_held_eq bU up hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) j hjS
+    have hget := idx_eq_local (hheldS0.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneU)] at hget
     have hjU : j < bU.sudo_5Board_4held.size := by
       rw [hheldU]
       exact hj
     have hBU : bU.sudo_5Board_4held[j]'hjU = b.sudo_5Board_4held[j]'hj :=
-      idx_eq hheldU j hjU
+      idx_eq_local hheldU j hjU
     exact hEqS.trans (hget.trans hBU)
   · intro h
     exact (idx_irrel).trans hHomeUpOut
@@ -517,12 +517,12 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
     exact hG
   have hHeldG : bS.sudo_5Board_4held[gap]'(hGapD) = true := by
     have hset := settle_held_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) gap hGapD
+    have hget := idx_eq_local (hheldS0.trans hset) gap hGapD
     rw [hget]
     simp [Array.getElem_set]
   have hHomeG : bS.sudo_5Board_4home[gap]'(hGapH) = embed u2 := by
     have hset := settle_home_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) gap hGapH
+    have hget := idx_eq_local (hhomeS.trans hset) gap hGapH
     rw [hget]
     simp [Array.getElem_set]
     rw [htake]
@@ -534,16 +534,16 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
     exact hBH
   have hHeldBot : bS.sudo_5Board_4held[bot]'(hBotD) = true := by
     have hset := settle_held_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) bot hBotD
+    have hget := idx_eq_local (hheldS0.trans hset) bot hBotD
     rw [Array.getElem_set_ne (h := Ne.symm hne)] at hget
     have hBU : bot < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hBD
-    exact (hget.trans (idx_eq hheldU bot hBU)).trans hHeldB
+    exact (hget.trans (idx_eq_local hheldU bot hBU)).trans hHeldB
   have hHomeBot : bS.sudo_5Board_4home[bot]'(hBotH) = embed z := by
     have hset := settle_home_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) bot hBotH
+    have hget := idx_eq_local (hhomeS.trans hset) bot hBotH
     rw [Array.getElem_set_ne (h := Ne.symm hne)] at hget
     have hBU : bot < bU.sudo_5Board_4home.size := by rw [hhomeU]; exact hBH
-    exact (hget.trans (idx_eq hhomeU bot hBU)).trans hArrB
+    exact (hget.trans (idx_eq_local hhomeU bot hBU)).trans hArrB
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU gap hinS lane n moves slides peak, Array.size_set, hheldU]
     exact h7
@@ -572,10 +572,10 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
     exact hSpH
   have h6E : bS.sudo_5Board_4held[6]'(h6D) = false := by
     have hset := settle_held_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) 6 h6D
+    have hget := idx_eq_local (hheldS0.trans hset) 6 h6D
     rw [Array.getElem_set_ne (h := hneG6)] at hget
     have h6U : 6 < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hSpH
-    exact (hget.trans (idx_eq hheldU 6 h6U)).trans hSpE
+    exact (hget.trans (idx_eq_local hheldU 6 h6U)).trans hSpE
   obtain ⟨b', hok, hbench, hmul, hpk, hst, hho, hopsEq, hszH, hheldK,
       hon', hto', hmk', htier', hix, hctrl, hmx, hmv', hsl', hsec, hszHome, hhomeJ⟩ :=
     nocopy_else_field bS gap bot gap z u2
@@ -695,24 +695,24 @@ theorem gap_u2z (b : Ecbs.Board) (gap bot : Nat) (u2 z lane : List Nat)
       exact hj'
     have hEq := hhomeJ j hne hjS hj'
     have hset := settle_home_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) j hjS
+    have hget := idx_eq_local (hhomeS.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hne)] at hget
     have hjU : j < bU.sudo_5Board_4home.size := by
       rw [hhomeU]
       exact hj
-    exact hEq.trans (hget.trans (idx_eq hhomeU j hjU))
+    exact hEq.trans (hget.trans (idx_eq_local hhomeU j hjU))
   · intro j hne hj hj'
     have hjS : j < bS.sudo_5Board_4held.size := by
       rw [hszH] at hj'
       exact hj'
     have hEq := hheldK j hne hjS hj'
     have hset := settle_held_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) j hjS
+    have hget := idx_eq_local (hheldS0.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hne)] at hget
     have hjU : j < bU.sudo_5Board_4held.size := by
       rw [hheldU]
       exact hj
-    exact hEq.trans (hget.trans (idx_eq hheldU j hjU))
+    exact hEq.trans (hget.trans (idx_eq_local hheldU j hjU))
 
 /-- Square the run into the spare. The bench holds the previous gap value and
     is aimed at the gap, so `mulElse` settles that value into the gap home.
@@ -865,17 +865,17 @@ theorem gap_v2 (b : Ecbs.Board) (dst gap across : Nat) (v lane : List Nat)
     exact hAH
   have hHeldA' : bS.sudo_5Board_4held[across]'(hAccD) = true := by
     have hset := settle_held_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) across hAccD
+    have hget := idx_eq_local (hheldS0.trans hset) across hAccD
     rw [Array.getElem_set_ne (h := hne)] at hget
     have hAU : across < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hAD
-    exact (hget.trans (idx_eq hheldU across hAU)).trans hHeldA
+    exact (hget.trans (idx_eq_local hheldU across hAU)).trans hHeldA
   have hHomeA : bS.sudo_5Board_4home[across]'(hAccH) = embed v := by
     have hset := settle_home_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) across hAccH
+    have hget := idx_eq_local (hhomeS.trans hset) across hAccH
     rw [Array.getElem_set_ne (h := hne)] at hget
     have hAU : across < bU.sudo_5Board_4home.size := by rw [hhomeU]; exact hAH
     rw [hget]
-    exact (idx_eq hhomeU across hAU).trans hArrA
+    exact (idx_eq_local hhomeU across hAU).trans hArrA
   have h6D : 6 < bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU gap hinS lane n moves slides peak, Array.size_set, hheldU]
     exact hSpH
@@ -884,10 +884,10 @@ theorem gap_v2 (b : Ecbs.Board) (dst gap across : Nat) (v lane : List Nat)
     exact hSpHome
   have h6E : bS.sudo_5Board_4held[6]'(h6D) = false := by
     have hset := settle_held_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) 6 h6D
+    have hget := idx_eq_local (hheldS0.trans hset) 6 h6D
     rw [Array.getElem_set_ne (h := hneG6)] at hget
     have h6U : 6 < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hSpH
-    exact (hget.trans (idx_eq hheldU 6 h6U)).trans hSpE
+    exact (hget.trans (idx_eq_local hheldU 6 h6U)).trans hSpE
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU gap hinS lane n moves slides peak, Array.size_set, hheldU]
     exact h7
@@ -995,12 +995,12 @@ theorem gap_v2 (b : Ecbs.Board) (dst gap across : Nat) (v lane : List Nat)
     exact hG
   have hHeldGS : bS.sudo_5Board_4held[gap]'(hGapD) = true := by
     have hset := settle_held_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) gap hGapD
+    have hget := idx_eq_local (hheldS0.trans hset) gap hGapD
     rw [hget]
     simp [Array.getElem_set]
   have hHomeGS : bS.sudo_5Board_4home[gap]'(hGapH) = embed (lane.take n) := by
     have hset := settle_home_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) gap hGapH
+    have hget := idx_eq_local (hhomeS.trans hset) gap hGapH
     rw [hget]
     simp [Array.getElem_set]
   have hGapD' : gap < b'.sudo_5Board_4held.size := by
@@ -1060,24 +1060,24 @@ theorem gap_v2 (b : Ecbs.Board) (dst gap across : Nat) (v lane : List Nat)
       exact hj'
     have hEqS := hhome j hne6 hjS hj'
     have hset := settle_home_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) j hjS
+    have hget := idx_eq_local (hhomeS.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneG)] at hget
     have hjU : j < bU.sudo_5Board_4home.size := by
       rw [hhomeU]
       exact hj
-    exact hEqS.trans (hget.trans (idx_eq hhomeU j hjU))
+    exact hEqS.trans (hget.trans (idx_eq_local hhomeU j hjU))
   · intro j hneG hne6 hj hj'
     have hjS : j < bS.sudo_5Board_4held.size := by
       rw [hszH] at hj'
       exact hj'
     have hEqS := hheldK j hne6 hjS hj'
     have hset := settle_held_eq bU gap hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) j hjS
+    have hget := idx_eq_local (hheldS0.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneG)] at hget
     have hjU : j < bU.sudo_5Board_4held.size := by
       rw [hheldU]
       exact hj
-    exact hEqS.trans (hget.trans (idx_eq hheldU j hjU))
+    exact hEqS.trans (hget.trans (idx_eq_local hheldU j hjU))
 
 /-- The squared run times the bottom. The bench holds `v²` and is aimed at the
     spare, so that square is settled into the spare. The gap home this call
@@ -1251,12 +1251,12 @@ theorem gap_v2z (b : Ecbs.Board) (sp bot gap : Nat) (v2 z lane gHome : List Nat)
     exact hS
   have hHeldS : bS.sudo_5Board_4held[sp]'(hSpD) = true := by
     have hset := settle_held_eq bU sp hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) sp hSpD
+    have hget := idx_eq_local (hheldS0.trans hset) sp hSpD
     rw [hget]
     simp [Array.getElem_set]
   have hHomeS : bS.sudo_5Board_4home[sp]'(hSpH) = embed v2 := by
     have hset := settle_home_eq bU sp hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) sp hSpH
+    have hget := idx_eq_local (hhomeS.trans hset) sp hSpH
     rw [hget]
     simp [Array.getElem_set]
     rw [htake]
@@ -1268,16 +1268,16 @@ theorem gap_v2z (b : Ecbs.Board) (sp bot gap : Nat) (v2 z lane gHome : List Nat)
     exact hBH
   have hHeldBot : bS.sudo_5Board_4held[bot]'(hBotD) = true := by
     have hset := settle_held_eq bU sp hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) bot hBotD
+    have hget := idx_eq_local (hheldS0.trans hset) bot hBotD
     rw [Array.getElem_set_ne (h := hne)] at hget
     have hBU : bot < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hBD
-    exact (hget.trans (idx_eq hheldU bot hBU)).trans hHeldB
+    exact (hget.trans (idx_eq_local hheldU bot hBU)).trans hHeldB
   have hHomeBot : bS.sudo_5Board_4home[bot]'(hBotH) = embed z := by
     have hset := settle_home_eq bU sp hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) bot hBotH
+    have hget := idx_eq_local (hhomeS.trans hset) bot hBotH
     rw [Array.getElem_set_ne (h := hne)] at hget
     have hBU : bot < bU.sudo_5Board_4home.size := by rw [hhomeU]; exact hBH
-    exact (hget.trans (idx_eq hhomeU bot hBU)).trans hArrB
+    exact (hget.trans (idx_eq_local hhomeU bot hBU)).trans hArrB
   have h7S : 7 ≤ bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU sp hinS lane n moves slides peak, Array.size_set, hheldU]
     exact h7
@@ -1351,16 +1351,16 @@ theorem gap_v2z (b : Ecbs.Board) (sp bot gap : Nat) (v2 z lane gHome : List Nat)
     exact hGH
   have hHeldGS : bS.sudo_5Board_4held[gap]'(hGapDS) = true := by
     have hset := settle_held_eq bU sp hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) gap hGapDS
+    have hget := idx_eq_local (hheldS0.trans hset) gap hGapDS
     rw [Array.getElem_set_ne (h := Ne.symm hneGS)] at hget
     have hGU : gap < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hGD
-    exact (hget.trans (idx_eq hheldU gap hGU)).trans hHeldG
+    exact (hget.trans (idx_eq_local hheldU gap hGU)).trans hHeldG
   have hHomeGS : bS.sudo_5Board_4home[gap]'(hGapHS) = embed gHome := by
     have hset := settle_home_eq bU sp hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) gap hGapHS
+    have hget := idx_eq_local (hhomeS.trans hset) gap hGapHS
     rw [Array.getElem_set_ne (h := Ne.symm hneGS)] at hget
     have hGU : gap < bU.sudo_5Board_4home.size := by rw [hhomeU]; exact hGH
-    exact (hget.trans (idx_eq hhomeU gap hGU)).trans hArrG
+    exact (hget.trans (idx_eq_local hhomeU gap hGU)).trans hArrG
   have hGapD' : gap < b'.sudo_5Board_4held.size := by
     rw [hszH]; exact hGapDS
   have hGapH' : gap < b'.sudo_5Board_4home.size := by
@@ -1458,24 +1458,24 @@ theorem gap_v2z (b : Ecbs.Board) (sp bot gap : Nat) (v2 z lane gHome : List Nat)
       exact hj'
     have hEq := hhomeK j hneBot hjS hj'
     have hset := settle_home_eq bU sp hinS lane n moves slides peak
-    have hget := idx_eq (hhomeS.trans hset) j hjS
+    have hget := idx_eq_local (hhomeS.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneSp)] at hget
     have hjU : j < bU.sudo_5Board_4home.size := by
       rw [hhomeU]
       exact hj
-    exact hEq.trans (hget.trans (idx_eq hhomeU j hjU))
+    exact hEq.trans (hget.trans (idx_eq_local hhomeU j hjU))
   · intro j hneBot hneSp hj hj'
     have hjS : j < bS.sudo_5Board_4held.size := by
       rw [hszH] at hj'
       exact hj'
     have hEq := hheldK j hneBot hjS hj'
     have hset := settle_held_eq bU sp hinS lane n moves slides peak
-    have hget := idx_eq (hheldS0.trans hset) j hjS
+    have hget := idx_eq_local (hheldS0.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneSp)] at hget
     have hjU : j < bU.sudo_5Board_4held.size := by
       rw [hheldU]
       exact hj
-    exact hEq.trans (hget.trans (idx_eq hheldU j hjU))
+    exact hEq.trans (hget.trans (idx_eq_local hheldU j hjU))
   · intro i hi hii
     have hiiS : i < schZ.length := by
       rwa [hlenR, ← hschLen] at hii

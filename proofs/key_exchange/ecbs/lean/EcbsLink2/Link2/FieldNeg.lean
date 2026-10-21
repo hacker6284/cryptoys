@@ -20,7 +20,7 @@ theorem trit_double (a : Nat) (ha : a ≤ 2) : tritAdd a a = flipTrit a := by
   have ha3 : a = 0 ∨ a = 1 ∨ a = 2 := by omega
   rcases ha3 with rfl | rfl | rfl <;> simp [tritAdd, flipTrit]
 
-private theorem coeff_le {xs : List Nat} (h : allTritList xs) (i : Nat) : coeff xs i ≤ 2 := by
+private theorem coeff_le_local {xs : List Nat} (h : allTritList xs) (i : Nat) : coeff xs i ≤ 2 := by
   by_cases hi : i < xs.length
   · rw [coeff_eq_get xs i hi]
     exact h _ (List.getElem_mem hi)
@@ -28,7 +28,7 @@ private theorem coeff_le {xs : List Nat} (h : allTritList xs) (i : Nat) : coeff 
     rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (Nat.le_of_not_gt hi)]
     simp
 
-private theorem coeff_ge (xs : List Nat) (t : Nat) (h : xs.length ≤ t) : coeff xs t = 0 := by
+private theorem coeff_ge_local (xs : List Nat) (t : Nat) (h : xs.length ≤ t) : coeff xs t = 0 := by
   unfold coeff
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none h]
   simp
@@ -38,8 +38,8 @@ theorem mirror_coeff (xs : List Nat) (t : Nat) :
   rw [mirrorTrits_map]
   by_cases ht : t < xs.length
   · rw [coeff_eq_get _ t (by simp; exact ht), List.getElem_map, coeff_eq_get xs t ht]
-  · rw [coeff_ge _ t (by simp; exact Nat.le_of_not_gt ht),
-      coeff_ge xs t (Nat.le_of_not_gt ht), flipTrit]
+  · rw [coeff_ge_local _ t (by simp; exact Nat.le_of_not_gt ht),
+      coeff_ge_local xs t (Nat.le_of_not_gt ht), flipTrit]
     simp
 
 theorem fieldAdd_trits (n : Nat) (xs ys : List Nat) : allTritList (fieldAdd n xs ys) := by
@@ -62,7 +62,7 @@ theorem fieldAdd_mirror (n : Nat) (xs : List Nat) (ht : allTritList xs) :
   · intro i hi _
     simp only [fieldAdd, zeroPeg, List.getElem_map, List.getElem_range, List.getElem_replicate]
     rw [mirror_coeff]
-    exact trit_add_flip _ (coeff_le ht i)
+    exact trit_add_flip _ (coeff_le_local ht i)
 
 /-- Twice a trit list is its colour flip. In this basis `2 = −1`. -/
 theorem fieldAdd_double (n : Nat) (xs : List Nat) (ht : allTritList xs)

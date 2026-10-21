@@ -429,32 +429,32 @@ theorem frob_fits (t : Spec.Tier) (done left moves slides ctrl ops peakS hole : 
   refine ⟨by simpa [Nat.add_assoc] using hMove, by simpa [hslideEq] using hSlide, hCtrl,
     hOps.1, hStrict, hHole, hOps.2, hChordM, by simpa [hslideEq] using hChordS, hChordC⟩
 
-private theorem demo_tierR : tierR Spec.demo = 2 := by
+private theorem demo_tierR_local : tierR Spec.demo = 2 := by
   simp [tierR, demo_rungs]
 
-private theorem toy_tierR : tierR Spec.toy = 4 := by
+private theorem toy_tierR_local : tierR Spec.toy = 4 := by
   simp [tierR, toy_rungs]
 
-private theorem hobby_tierR : tierR Spec.hobby = 5 := by
+private theorem hobby_tierR_local : tierR Spec.hobby = 5 := by
   simp [tierR, hobby_rungs]
 
-private theorem serious_tierR : tierR Spec.serious = 7 := by
+private theorem serious_tierR_local : tierR Spec.serious = 7 := by
   simp [tierR, serious_rungs]
 
 private theorem demo_row : rowRoom Spec.demo = 6 := by
-  rw [rowRoom, tallyOrigin, demo_tierR]
+  rw [rowRoom, tallyOrigin, demo_tierR_local]
   simp [Spec.demo]
 
 private theorem toy_row : rowRoom Spec.toy = 18 := by
-  rw [rowRoom, tallyOrigin, toy_tierR]
+  rw [rowRoom, tallyOrigin, toy_tierR_local]
   simp [Spec.toy]
 
 private theorem hobby_row : rowRoom Spec.hobby = 57 := by
-  rw [rowRoom, tallyOrigin, hobby_tierR]
+  rw [rowRoom, tallyOrigin, hobby_tierR_local]
   simp [Spec.hobby]
 
 private theorem serious_row : rowRoom Spec.serious = 175 := by
-  rw [rowRoom, tallyOrigin, serious_tierR]
+  rw [rowRoom, tallyOrigin, serious_tierR_local]
   simp [Spec.serious]
 
 /-- Demo's extra `+ 2` on ops, the Frobenius move and slide overhead, four
@@ -471,7 +471,7 @@ theorem demo_walk_span :
       4 < Spec.demo.script := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap rungCharge mulCharge pegCharge rungSlideCharge
-  rw [demo_tierR, demo_row]
+  rw [demo_tierR_local, demo_row]
   simp only [Spec.demo]
   decide
 
@@ -486,7 +486,7 @@ theorem toy_walk_span :
       4 < Spec.toy.script := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap rungCharge mulCharge pegCharge rungSlideCharge
-  rw [toy_tierR, toy_row]
+  rw [toy_tierR_local, toy_row]
   simp only [Spec.toy]
   decide
 
@@ -502,7 +502,7 @@ theorem hobby_walk_span :
       4 < Spec.hobby.script := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap rungCharge mulCharge pegCharge rungSlideCharge
-  rw [hobby_tierR, hobby_row]
+  rw [hobby_tierR_local, hobby_row]
   simp only [Spec.hobby]
   decide
 
@@ -518,7 +518,7 @@ theorem serious_walk_span :
       4 < Spec.serious.script := by
   unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
     tailMoveCap tailSlideCap rungCharge mulCharge pegCharge rungSlideCharge
-  rw [serious_tierR, serious_row]
+  rw [serious_tierR_local, serious_row]
   simp only [Spec.serious]
   decide
 

@@ -16,7 +16,7 @@ private theorem trit_le (a b : Nat) : tritAdd a b ≤ 2 := by
   unfold tritAdd
   exact Nat.le_sub_one_of_lt (Nat.mod_lt _ (by decide))
 
-private theorem tritList_set (xs : List Nat) (h : allTritList xs) (i v : Nat)
+private theorem tritList_set_local (xs : List Nat) (h : allTritList xs) (i v : Nat)
     (hv : v ≤ 2) : allTritList (xs.set i v) := by
   intro x hx
   rw [List.mem_iff_getElem] at hx
@@ -46,11 +46,11 @@ private theorem foldHigh_keeps (n gap e : Nat) (strip : List Nat)
   · simp only [hif, ite_false]
     let cleared := strip.set e 0
     have hcleared : allTritList cleared :=
-      tritList_set strip hs e 0 (Nat.zero_le 2)
+      tritList_set_local strip hs e 0 (Nat.zero_le 2)
     let once := cleared.set (e - n) (tritAdd (coeff cleared (e - n)) (coeff strip e))
     have honce : allTritList once :=
-      tritList_set cleared hcleared (e - n) _ (trit_le _ _)
-    exact tritList_set once honce (e - gap) _ (trit_le _ _)
+      tritList_set_local cleared hcleared (e - n) _ (trit_le _ _)
+    exact tritList_set_local once honce (e - gap) _ (trit_le _ _)
 
 private theorem foldrHigh_len (n gap : Nat) (ds : List Nat) (xs : List Nat) :
     (ds.foldr (fun d st => foldHigh n gap (n + d) st) xs).length = xs.length := by

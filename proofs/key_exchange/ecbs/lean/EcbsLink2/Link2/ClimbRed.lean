@@ -13,7 +13,7 @@ open EcbsLink2.Spec
 
 attribute [local irreducible] bumpOp
 
-private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := by
+private theorem replicate_trits_local (k : Nat) : allTritList (List.replicate k 0) := by
   intro x hx
   simp [List.mem_replicate] at hx
   rcases hx with ⟨_, rfl⟩
@@ -181,7 +181,7 @@ theorem red_cube_mul {done rest : List Nat} {r : Nat} {b : Ecbs.Board}
   have hnleL : c.n ≤ L.length := by rw [hlenL]; exact c.n_le
   have hfitL : FitsLen L.length := by rw [hlenL]; exact c.hfitB
   have htriL : allTritList (L.take c.n) := by
-    have hrep : allTritList (List.replicate c.bench 0) := replicate_trits c.bench
+    have hrep : allTritList (List.replicate c.bench 0) := replicate_trits_local c.bench
     have hwide : ∀ i, i < c.n → i + (c.n - 1) < (List.replicate c.bench 0).length := by
       intro i hi
       rw [List.length_replicate]

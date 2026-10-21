@@ -283,7 +283,7 @@ private theorem nat_beq_false (a b : Nat) (h : a ≠ b) :
     rw [← ofNat_eq_natCast a, ← ofNat_eq_natCast b] at hEq
     exact hEq))
 
-private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := by
+private theorem replicate_trits_local (k : Nat) : allTritList (List.replicate k 0) := by
   intro x hx
   have hx' : ¬ k = 0 ∧ x = 0 := by simpa [List.mem_replicate] using hx
   omega
@@ -553,7 +553,7 @@ theorem mul_tail_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
       (by rw [hlenx]; exact Nat.le_refl _)
       (by rw [hleny]; exact Nat.le_refl _)
       (by simp [size_embed, List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL hf hfi hfm]
 
 /-- The settled nocopy tail does not read the marker flag. -/
 theorem mul_tail_flag (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
@@ -650,7 +650,7 @@ theorem mul_tail_flag (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Na
   have h7W : 7 ≤ bW.sudo_5Board_4held.size := by
     simpa [bW, mulPrep_held_size] using h7
   have htri : allTritList sch := by
-    simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits _)
+    simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits_local _)
       (fun i hi => by
         rw [List.length_replicate]
         have : i + (n - 1) ≤ 2 * (n - 1) := by omega
@@ -781,7 +781,7 @@ theorem mul_off_after (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Na
       (by rw [hlenx]; exact Nat.le_refl _)
       (by rw [hleny]; exact Nat.le_refl _)
       (by simp [size_embed, List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL hf hfi hfm]
   rw [bind_ok_id]
 
 /-- Marker on and lifted, bench off. The emitted nocopy `mul` is `mulAfter`
@@ -941,7 +941,7 @@ theorem mul_down_after (b : Ecbs.Board) (dst first second : Nat) (xs ys : List N
       (by rw [hlenx]; exact Nat.le_refl _)
       (by rw [hleny]; exact Nat.le_refl _)
       (by simp [size_embed, List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL hf hfi hfm]
   rw [bind_ok_id]
 
 /-- A nocopy multiply with the marker lifted is `mulNoOffBoard` of the board
@@ -1071,7 +1071,7 @@ theorem mul_down_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
   have h7W : 7 ≤ bW.sudo_5Board_4held.size := by
     simpa [bW, bPrep, mulPrep_held_size, bFeed, bumpOp, feed, markerDownFeed] using h7
   have htri : allTritList sch := by
-    simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits _)
+    simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits_local _)
       (fun i hi => by
         rw [List.length_replicate]
         have : i + (n - 1) ≤ 2 * (n - 1) := by omega
@@ -1252,7 +1252,7 @@ theorem mul_up_after (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat
       (by rw [hlenx]; exact Nat.le_refl _)
       (by rw [hleny]; exact Nat.le_refl _)
       (by simp [size_embed, List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL hf hfi hfm]
   rw [bind_ok_id]
 
 /-- A nocopy multiply with the marker already seated is `mulNoOffBoard` of the board
@@ -1383,7 +1383,7 @@ theorem mul_up_eq (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Nat)
   have h7W : 7 ≤ bW.sudo_5Board_4held.size := by
     simpa [bW, bPrep, mulPrep_held_size, bFeed, bumpOp, feed, markerUpFeed] using h7
   have htri : allTritList sch := by
-    simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits _)
+    simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits_local _)
       (fun i hi => by
         rw [List.length_replicate]
         have : i + (n - 1) ≤ 2 * (n - 1) := by omega

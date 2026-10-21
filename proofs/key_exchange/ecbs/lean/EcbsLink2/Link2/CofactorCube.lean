@@ -25,7 +25,7 @@ private theorem shape_n_pos (n w h r : Nat)
   have hprod : 2 ≤ w * h := Nat.mul_le_mul hw1 hh
   omega
 
-private theorem script_one (script : Nat) (h : 2 ≤ script) : 1 < script := by
+private theorem script_one_local (script : Nat) (h : 2 ≤ script) : 1 < script := by
   omega
 
 private theorem mv2_le (mv1 pegX moves n bench spent yPeg : Nat)
@@ -413,7 +413,7 @@ noncomputable def cofactorDown (b : Board) (t : Spec.Tier) (x y : List Nat)
       holeN cOps ctrl mx t.script :=
   down_across b x y t.w t.h t.r t.n t.k moves slides pk peakS holeN cOps ctrl mx
       t.script hszH hszD hops hx hy hxt hyt hmk hoff (by rw [hmark]; decide) hc hmx
-      (by simp [hT, embTier]) (script_one t.script hsh.script_ge) hfitD hfitU hop1 hfitC
+      (by simp [hT, embTier]) (script_one_local t.script hsh.script_ge) hfitD hfitU hop1 hfitC
       hheld0 hhome0 hheld1 hhome1
       (by simp [hT, embTier]) (by simp [hT, embTier]) (by simp [hT, embTier])
       (by simp [hT, embTier]) (by simp [hT, embTier]) (by simp [hT, embTier])

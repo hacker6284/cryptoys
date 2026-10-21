@@ -39,7 +39,7 @@ theorem settle_marker_comm (c : Ecbs.Board) (m ctrl mx home : Nat)
       apply cost_ext <;> simp [markerSeat]
     all_goals simp [markerSeat]
 
-private theorem get_eq_of_array {α : Type} {a b : Array α} (h : a = b) (i : Nat)
+private theorem get_eq_of_array_local {α : Type} {a b : Array α} (h : a = b) (i : Nat)
     (ha : i < a.size) : a[i] = b[i]'(h ▸ ha) := by
   cases h
   rfl
@@ -112,7 +112,7 @@ def powMulOff (bReady : Ecbs.Board) (spare peakS : Nat)
 
 attribute [local irreducible] settleBoard
 
-private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := by
+private theorem replicate_trits_local (k : Nat) : allTritList (List.replicate k 0) := by
   intro x hx
   have hx' : ¬ k = 0 ∧ x = 0 := by simpa [List.mem_replicate] using hx
   omega
@@ -263,7 +263,7 @@ theorem pow_mul_live (b : Ecbs.Board) (up spare : Nat) (lane cube factor : List 
     lhs
     rw [hReady]
   have hop0S : bS.sudo_5Board_4cost.sudo_5Costs_3ops[0]'hopsS = (cOps : Int) := by
-    have hget := get_eq_of_array (settle_ops b up ⟨hH, hD⟩ lane n moves slides peak) 0 hopsS
+    have hget := get_eq_of_array_local (settle_ops b up ⟨hH, hD⟩ lane n moves slides peak) 0 hopsS
     exact hget.trans hop0
   let hFu : up < bS.sudo_5Board_4held.size :=
     settle_held_lt b up ⟨hH, hD⟩ lane n moves slides peak
@@ -411,7 +411,7 @@ theorem pow_mul_live (b : Ecbs.Board) (up spare : Nat) (lane cube factor : List 
       (by rw [hlenx]; exact Nat.le_refl _)
       (by rw [hfac]; exact Nat.le_refl _)
       (by simp [size_embed, List.length_replicate]; exact hspan)
-      hcubeT (replicate_trits _) hmL hf hfi hfm]
+      hcubeT (replicate_trits_local _) hmL hf hfi hfm]
   rw [bind_ok_id]
   let sch := school n cube factor (List.replicate bench 0) false
   let mvW := mvSet + schoolMoves cube factor n n
@@ -479,7 +479,7 @@ theorem pow_mul_live (b : Ecbs.Board) (up spare : Nat) (lane cube factor : List 
     simpa [bReady, markerSeat, bumpOp] using h7S
   have htri : allTritList sch := by
     simpa [sch] using school_trits cube factor (List.replicate bench 0) false n
-      (replicate_trits _) (fun i hi => by
+      (replicate_trits_local _) (fun i hi => by
         rw [List.length_replicate]
         have : i + (n - 1) ≤ 2 * (n - 1) := by omega
         exact Nat.lt_of_le_of_lt this hspan)

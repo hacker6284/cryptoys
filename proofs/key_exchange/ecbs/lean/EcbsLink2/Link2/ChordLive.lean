@@ -46,7 +46,7 @@ private theorem fieldSub_trits (n : Nat) (xs ys : List Nat) :
     Nat.mod_lt _ (by decide)
   omega
 
-private theorem mirror_trits (xs : List Nat) (h : allTritList xs) :
+private theorem mirror_trits_local (xs : List Nat) (h : allTritList xs) :
     allTritList (mirrorTrits xs) := by
   intro z hz
   rw [mirrorTrits] at hz
@@ -75,7 +75,7 @@ private theorem inv_trits (t : Spec.Tier) (xs inv : List Nat) (sat : TierSat t)
   · rw [hans]
     exact invGap_trits t xs sat hsh hpos hx htri
   · rw [hans]
-    exact mirror_trits _ (invGap_trits t xs sat hsh hpos hx htri)
+    exact mirror_trits_local _ (invGap_trits t xs sat hsh hpos hx htri)
 
 /-- A live white or red cell. The five rooms are the climb plus the tail.
     `chord_add_demo` returns the new point, and `walkStep` is Spec `chordAdd`

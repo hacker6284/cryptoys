@@ -31,7 +31,7 @@ private theorem spare_neq_first (first : Nat) (h : first ≠ 6) :
     rw [← ofNat_eq_natCast 6] at hEq
     exact hEq.symm))
 
-private theorem replicate_trits (k : Nat) : allTritList (List.replicate k 0) := by
+private theorem replicate_trits_local (k : Nat) : allTritList (List.replicate k 0) := by
   intro x hx
   have hx' : ¬ k = 0 ∧ x = 0 := by simpa [List.mem_replicate] using hx
   omega
@@ -408,7 +408,7 @@ theorem mul_copy_tail (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Na
       (by rw [hlenx]; exact Nat.le_refl _)
       (by rw [hleny]; exact Nat.le_refl _)
       (by simp [List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL hf hfi hfm]
   have hLoop : bL = mulCopyLoop b ((dst : Nat) : Int) strip ys moves peak peakS hH hD := by
     rw [← hBLdef]
     subst hPB
@@ -535,7 +535,7 @@ theorem mul_copy_flag (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Na
     simpa [bW, bL] using (mulCopyLoop_held_size b ((dst : Nat) : Int) strip ys moves peak peakS
       hH hD).symm ▸ h7
   have htri : allTritList sch := by
-    simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits _)
+    simpa [sch] using school_trits xs ys (List.replicate bench 0) false n (replicate_trits_local _)
       (fun i hi => by
         rw [List.length_replicate]
         have : i + (n - 1) ≤ 2 * (n - 1) := by omega
@@ -557,7 +557,7 @@ theorem mul_copy_flag (b : Ecbs.Board) (dst first second : Nat) (xs ys : List Na
 theorem fieldMul_span_trits (n k bench : Nat) (xs ys : List Nat)
     (hspan : 2 * (n - 1) < bench) (hn : n ≤ bench) :
     allTritList (fieldMul n k bench xs ys) := by
-  have hrep : allTritList (List.replicate bench 0) := replicate_trits bench
+  have hrep : allTritList (List.replicate bench 0) := replicate_trits_local bench
   have hwide : ∀ i, i < n → i + (n - 1) < (List.replicate bench 0).length := by
     intro i hi
     rw [List.length_replicate]
@@ -756,7 +756,7 @@ theorem mul_copy_off_after (b : Ecbs.Board) (dst first second : Nat) (xs ys : Li
       (by rw [hlenx]; exact Nat.le_refl _)
       (by rw [hleny]; exact Nat.le_refl _)
       (by simp [List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL hf hfi hfm]
   rw [bind_ok_id]
   have hLoop : bL = mulCopyLoop b0 ((dst : Nat) : Int) strip ys moves peak peakS hH hD := by
     rw [← hBLdef]
@@ -986,7 +986,7 @@ theorem mul_copy_up_after (b : Ecbs.Board) (dst first second : Nat) (xs ys : Lis
       (by rw [hlenx]; exact Nat.le_refl _)
       (by rw [hleny]; exact Nat.le_refl _)
       (by simp [List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL hf hfi hfm]
   rw [bind_ok_id]
   have hLoop : bL = mulCopyLoop b0 ((dst : Nat) : Int) strip ys moves peak peakS hH hD := by
     rw [← hBLdef]
@@ -1204,7 +1204,7 @@ theorem mul_copy_down_after (b : Ecbs.Board) (dst first second : Nat) (xs ys : L
       (by rw [hlenx]; exact Nat.le_refl _)
       (by rw [hleny]; exact Nat.le_refl _)
       (by simp [List.length_replicate]; exact hspan)
-      hxsT (replicate_trits _) hmL hf hfi hfm]
+      hxsT (replicate_trits_local _) hmL hf hfi hfm]
   rw [bind_ok_id]
   have hLoop : bL = mulCopyLoop b0 ((dst : Nat) : Int) strip ys moves peak peakS hH hD := by
     rw [← hBLdef]

@@ -60,7 +60,7 @@ theorem mirrorTrits_map (xs : List Nat) : mirrorTrits xs = xs.map flipTrit := by
   unfold mirrorTrits flipTrit
   rfl
 
-private theorem coeff_le {xs : List Nat} (h : allTritList xs) (i : Nat) : coeff xs i ≤ 2 := by
+private theorem coeff_le_local {xs : List Nat} (h : allTritList xs) (i : Nat) : coeff xs i ≤ 2 := by
   by_cases hi : i < xs.length
   · rw [coeff_eq_get xs i hi]
     exact h _ (List.getElem_mem hi)
@@ -68,16 +68,16 @@ private theorem coeff_le {xs : List Nat} (h : allTritList xs) (i : Nat) : coeff 
     rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none (Nat.le_of_not_gt hi)]
     simp
 
-private theorem coeff_ge (xs : List Nat) (t : Nat) (h : xs.length ≤ t) : coeff xs t = 0 := by
+private theorem coeff_ge_local (xs : List Nat) (t : Nat) (h : xs.length ≤ t) : coeff xs t = 0 := by
   unfold coeff
   rw [List.getD_eq_getElem?_getD, List.getElem?_eq_none h]
   simp
 
-private theorem coeff_replicate_zero (bench t : Nat) :
+private theorem coeff_replicate_zero_local (bench t : Nat) :
     coeff (List.replicate bench 0) t = 0 := by
   by_cases ht : t < bench
   · rw [coeff_eq_get _ t (by simpa using ht), List.getElem_replicate]
-  · exact coeff_ge _ t (by simpa using Nat.le_of_not_gt ht)
+  · exact coeff_ge_local _ t (by simpa using Nat.le_of_not_gt ht)
 
 private theorem list_set_ge {α : Type} (xs : List α) (i : Nat) (a : α) (h : xs.length ≤ i) :
     xs.set i a = xs := by
@@ -100,7 +100,7 @@ private theorem coeff_set_same (xs : List Nat) (i v : Nat) (hi : i < xs.length) 
   have hi' : i < (xs.set i v).length := by rw [List.length_set]; exact hi
   rw [coeff_eq_get _ i hi', List.getElem_set_self]
 
-private theorem coeff_set_ne (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
+private theorem coeff_set_ne_local (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
     coeff (xs.set i v) j = coeff xs j := by
   have hj' : j < (xs.set i v).length := by rw [List.length_set]; exact hj
   rw [coeff_eq_get _ j hj', List.getElem_set, if_neg hne, ← coeff_eq_get xs j hj]
@@ -163,19 +163,19 @@ private theorem schoolStep_coeff (a st : List Nat) (i j t : Nat) (mir : Bool)
         · have hne : i + j ≠ t := by
             intro h
             exact ht h.symm
-          rw [coeff_set_ne _ _ _ _ htl hne]
+          rw [coeff_set_ne_local _ _ _ _ htl hne]
           have hmiss : ¬ (t = i + j ∧ t < st.length) := by
             intro h
             exact ht h.1
           rw [if_neg hmiss]
         · have hlenS : (st.set (i + j) (tritAdd (coeff st (i + j)) (laidTrit (coeff a j) mir))).length =
               st.length := by rw [List.length_set]
-          rw [coeff_ge _ t (by rw [hlenS]; exact Nat.le_of_not_gt htl)]
+          rw [coeff_ge_local _ t (by rw [hlenS]; exact Nat.le_of_not_gt htl)]
           have hmiss : ¬ (t = i + j ∧ t < st.length) := by
             intro h
             exact htl h.2
           rw [if_neg hmiss]
-          exact (coeff_ge st t (Nat.le_of_not_gt htl)).symm
+          exact (coeff_ge_local st t (Nat.le_of_not_gt htl)).symm
     · rw [list_set_ge _ _ _ (Nat.le_of_not_gt hidx)]
       have hmiss : ¬ (t = i + j ∧ t < st.length) := by
         intro h
@@ -282,7 +282,7 @@ private theorem schoolAt_coeff (x y st : List Nat) (n i t : Nat)
     rw [hif, tritAdd_zero_right _ hc]
   · rw [if_neg hz, schoolRow_eq_rowAt, mir_of_false]
     rw [rowAt_coeff x st i n t (decide (coeff y i = 2)) hc]
-    have hlay := laid_tritMul (coeff y i) (coeff x (t - i)) (coeff_le hy i) hz
+    have hlay := laid_tritMul (coeff y i) (coeff x (t - i)) (coeff_le_local hy i) hz
     by_cases hcond : i ≤ t ∧ t - i < n ∧ t < st.length
     · rw [if_pos hcond, hlay, if_pos hcond]
     · rw [if_neg hcond, if_neg hcond, tritAdd_zero_right _ hc]
@@ -304,8 +304,8 @@ private theorem schoolAt_coeff_mir (x y st : List Nat) (n i t : Nat)
     rw [hif, tritAdd_zero_right _ hc]
   · rw [if_neg hz, schoolRow_eq_rowAt]
     rw [rowAt_coeff x st i n t (decide (coeff y i = 2) != true) hc]
-    have hd : coeff x (t - i) ≤ 2 := coeff_le hx (t - i)
-    have hlay := laid_mirror (coeff y i) (coeff x (t - i)) (coeff_le hy i) hd hz
+    have hd : coeff x (t - i) ≤ 2 := coeff_le_local hx (t - i)
+    have hlay := laid_mirror (coeff y i) (coeff x (t - i)) (coeff_le_local hy i) hd hz
     by_cases hcond : i ≤ t ∧ t - i < n ∧ t < st.length
     · rw [if_pos hcond, hlay, if_pos hcond]
     · rw [if_neg hcond, if_neg hcond, tritAdd_zero_right _ hc]
@@ -322,7 +322,7 @@ private theorem schoolDown_coeff_le (x y : List Nat) (n bench k t : Nat)
     coeff (schoolDown x y false n (List.replicate bench 0) k) t ≤ 2 := by
   induction k generalizing t with
   | zero =>
-    rw [schoolDown, coeff_replicate_zero]
+    rw [schoolDown, coeff_replicate_zero_local]
     decide
     | succ k ih =>
     rw [schoolDown]
@@ -356,14 +356,14 @@ theorem fieldAdd_at (n : Nat) (xs ys : List Nat) (i : Nat) (hi : i < n) :
   rw [coeff_eq_get _ i hlen]
   simp [fieldAdd, List.getElem_map, List.getElem_range, hi]
 
-private theorem stripAdd_coeff (xs ys : List Nat) (i : Nat) (hlen : ys.length = xs.length) :
+private theorem stripAdd_coeff_local (xs ys : List Nat) (i : Nat) (hlen : ys.length = xs.length) :
     coeff (stripAdd xs ys) i = tritAdd (coeff xs i) (coeff ys i) := by
   by_cases hi : i < xs.length
   · rw [coeff_eq_get (stripAdd xs ys) i (by rw [stripAdd_length]; exact hi),
       stripAdd_get xs ys i hi]
-  · rw [coeff_ge _ i (by rw [stripAdd_length]; exact Nat.le_of_not_gt hi),
-      coeff_ge xs i (Nat.le_of_not_gt hi),
-      coeff_ge ys i (by rw [hlen]; exact Nat.le_of_not_gt hi), tritAdd]
+  · rw [coeff_ge_local _ i (by rw [stripAdd_length]; exact Nat.le_of_not_gt hi),
+      coeff_ge_local xs i (Nat.le_of_not_gt hi),
+      coeff_ge_local ys i (by rw [hlen]; exact Nat.le_of_not_gt hi), tritAdd]
 
 private theorem coeff_ext {xs ys : List Nat} (hlen : xs.length = ys.length)
     (hc : ∀ t, coeff xs t = coeff ys t) : xs = ys := by
@@ -383,7 +383,7 @@ private theorem schoolDown_add_coeff (x y z : List Nat) (n bench k t : Nat)
   induction k generalizing t with
   | zero =>
     rw [schoolDown, schoolDown, schoolDown]
-    simp [coeff_replicate_zero, tritAdd]
+    simp [coeff_replicate_zero_local, tritAdd]
   | succ k ih =>
     have hiN : n - (k + 1) < n := by omega
     have hk' : k ≤ n := by omega
@@ -412,9 +412,9 @@ private theorem schoolDown_add_coeff (x y z : List Nat) (n bench k t : Nat)
     rw [hlenS, hlenY, hlenZ, ih t hk', fieldAdd_at n y z (n - (k + 1)) hiN]
     by_cases hcond : n - (k + 1) ≤ t ∧ t - (n - (k + 1)) < n ∧ t < bench
     · rw [if_pos hcond, if_pos hcond, if_pos hcond]
-      have hdx : coeff x (t - (n - (k + 1))) ≤ 2 := coeff_le hx _
-      have hy2 : coeff y (n - (k + 1)) ≤ 2 := coeff_le hy _
-      have hz2 : coeff z (n - (k + 1)) ≤ 2 := coeff_le hz _
+      have hdx : coeff x (t - (n - (k + 1))) ≤ 2 := coeff_le_local hx _
+      have hy2 : coeff y (n - (k + 1)) ≤ 2 := coeff_le_local hy _
+      have hz2 : coeff z (n - (k + 1)) ≤ 2 := coeff_le_local hz _
       rw [tritMul_add_left (coeff y (n - (k + 1))) (coeff z (n - (k + 1)))
           (coeff x (t - (n - (k + 1)))) hy2 hz2 hdx]
       exact trit_diamond
@@ -442,9 +442,9 @@ private theorem school_right_add (n bench : Nat) (x y z : List Nat)
     have hlen : (schoolDown x z false n (List.replicate bench 0) n).length =
         (schoolDown x y false n (List.replicate bench 0) n).length := by
       simp [schoolDown_len]
-    rw [stripAdd_coeff _ _ t hlen]
+    rw [stripAdd_coeff_local _ _ t hlen]
 
-private theorem tritList_set (xs : List Nat) (h : allTritList xs) (i v : Nat)
+private theorem tritList_set_local (xs : List Nat) (h : allTritList xs) (i v : Nat)
     (hv : v ≤ 2) : allTritList (xs.set i v) := by
   intro x hx
   rw [List.mem_iff_getElem] at hx
@@ -471,11 +471,11 @@ private theorem foldHigh_trits (n gap e : Nat) (strip : List Nat) (hs : allTritL
   · simpa [hif] using hs
   · simp only [hif, ite_false]
     let cleared := strip.set e 0
-    have hcleared : allTritList cleared := tritList_set strip hs e 0 (Nat.zero_le 2)
+    have hcleared : allTritList cleared := tritList_set_local strip hs e 0 (Nat.zero_le 2)
     let once := cleared.set (e - n) (tritAdd (coeff cleared (e - n)) (coeff strip e))
     have honce : allTritList once :=
-      tritList_set cleared hcleared (e - n) _ (tritAdd_le _ _)
-    exact tritList_set once honce (e - gap) _ (tritAdd_le _ _)
+      tritList_set_local cleared hcleared (e - n) _ (tritAdd_le _ _)
+    exact tritList_set_local once honce (e - gap) _ (tritAdd_le _ _)
 
 private theorem foldr_len (n gap : Nat) (ds : List Nat) (xs : List Nat) :
     (ds.foldr (fun d st => foldHigh n gap (n + d) st) xs).length = xs.length := by
@@ -534,8 +534,8 @@ private theorem foldForm_zero (n gap e : Nat) (xs : List Nat) (ht : allTritList 
       simpa [hx0] using set_same xs e he
     · exact list_set_ge xs e 0 (Nat.le_of_not_gt he)
   rw [h0]
-  rw [tritAdd_zero_right _ (coeff_le ht (e - n)), set_coeff_id xs (e - n)]
-  rw [tritAdd_zero_right _ (coeff_le ht (e - gap)), set_coeff_id xs (e - gap)]
+  rw [tritAdd_zero_right _ (coeff_le_local ht (e - n)), set_coeff_id xs (e - n)]
+  rw [tritAdd_zero_right _ (coeff_le_local ht (e - gap)), set_coeff_id xs (e - gap)]
 
 private theorem foldHigh_form (n gap e : Nat) (xs : List Nat) (ht : allTritList xs)
     (hge : ¬ e < n) : foldHigh n gap e xs = foldForm n gap e xs := by
@@ -580,7 +580,7 @@ private theorem foldForm_lin (n gap e : Nat) (xs ys : List Nat)
   have hp1 : e - n < xs.length := by omega
   have hp2 : e - gap < xs.length := by omega
   unfold foldForm
-  rw [stripAdd_coeff xs ys e hlen, strip_set0 xs ys e he hlen]
+  rw [stripAdd_coeff_local xs ys e hlen, strip_set0 xs ys e he hlen]
   have hlen0 : (ys.set e 0).length = (xs.set e 0).length := by simp [List.length_set, hlen]
   have hp1s : e - n < (xs.set e 0).length := by simpa [List.length_set] using hp1
   rw [addBoth (xs.set e 0) (ys.set e 0) (e - n) (coeff xs e) (coeff ys e) hp1s hlen0]
@@ -606,10 +606,10 @@ private theorem foldHigh_lin (n gap e : Nat) (xs ys : List Nat)
     · rw [foldHigh_form n gap e xs htx hlt, foldHigh_form n gap e ys hty hlt,
         foldHigh_form n gap e (stripAdd xs ys) (stripAdd_trits xs ys) hlt]
       exact foldForm_lin n gap e xs ys he hlen
-    · have hcx : coeff xs e = 0 := coeff_ge xs e (Nat.le_of_not_gt he)
-      have hcy : coeff ys e = 0 := coeff_ge ys e (by rw [hlen]; exact Nat.le_of_not_gt he)
+    · have hcx : coeff xs e = 0 := coeff_ge_local xs e (Nat.le_of_not_gt he)
+      have hcy : coeff ys e = 0 := coeff_ge_local ys e (by rw [hlen]; exact Nat.le_of_not_gt he)
       have hcs : coeff (stripAdd xs ys) e = 0 :=
-        coeff_ge _ e (by rw [stripAdd_length]; exact Nat.le_of_not_gt he)
+        coeff_ge_local _ e (by rw [stripAdd_length]; exact Nat.le_of_not_gt he)
       simp [foldHigh, hcx, hcy, hcs]
 
 private theorem foldrHigh_add (n gap : Nat) (ds : List Nat) (xs ys : List Nat)
@@ -647,8 +647,8 @@ theorem fieldAdd_assoc (n : Nat) (a b c : List Nat) :
     by_cases ht : t < n
     · rw [fieldAdd_at n (fieldAdd n a b) c t ht, fieldAdd_at n a b t ht,
         fieldAdd_at n a (fieldAdd n b c) t ht, fieldAdd_at n b c t ht, tritAdd_assoc]
-    · rw [coeff_ge _ t (by simp [fieldAdd, List.length_map, List.length_range]; omega),
-        coeff_ge _ t (by simp [fieldAdd, List.length_map, List.length_range]; omega)]
+    · rw [coeff_ge_local _ t (by simp [fieldAdd, List.length_map, List.length_range]; omega),
+        coeff_ge_local _ t (by simp [fieldAdd, List.length_map, List.length_range]; omega)]
 
 private theorem fieldAdd_take_left (n : Nat) (xs ys : List Nat) (hn : n ≤ xs.length) :
     fieldAdd n (xs.take n) ys = fieldAdd n xs ys := by
@@ -695,8 +695,8 @@ private theorem map_flip_coeff (xs : List Nat) (t : Nat) :
     coeff (xs.map flipTrit) t = flipTrit (coeff xs t) := by
   by_cases ht : t < xs.length
   · rw [coeff_eq_get _ t (by simp; exact ht), List.getElem_map, coeff_eq_get xs t ht]
-  · rw [coeff_ge _ t (by simp; exact Nat.le_of_not_gt ht),
-      coeff_ge xs t (Nat.le_of_not_gt ht), flipTrit]
+  · rw [coeff_ge_local _ t (by simp; exact Nat.le_of_not_gt ht),
+      coeff_ge_local xs t (Nat.le_of_not_gt ht), flipTrit]
     simp
 
 private theorem schoolDown_mirror_coeff (x y : List Nat) (n bench k t : Nat)
@@ -706,7 +706,7 @@ private theorem schoolDown_mirror_coeff (x y : List Nat) (n bench k t : Nat)
   induction k generalizing t with
   | zero =>
     rw [schoolDown, schoolDown]
-    simp [coeff_replicate_zero, flipTrit]
+    simp [coeff_replicate_zero_local, flipTrit]
   | succ k ih =>
     have hYLe := schoolDown_coeff_le x y n bench k t hy
     have hMLe : coeff (schoolDown x y true n (List.replicate bench 0) k) t ≤ 2 := by
@@ -724,8 +724,8 @@ private theorem schoolDown_mirror_coeff (x y : List Nat) (n bench k t : Nat)
     rw [hlenM, hlen, ih t]
     by_cases hcond : n - (k + 1) ≤ t ∧ t - (n - (k + 1)) < n ∧ t < bench
     · rw [if_pos hcond, if_pos hcond]
-      have hdx : coeff x (t - (n - (k + 1))) ≤ 2 := coeff_le hx _
-      have hy2 : coeff y (n - (k + 1)) ≤ 2 := coeff_le hy _
+      have hdx : coeff x (t - (n - (k + 1))) ≤ 2 := coeff_le_local hx _
+      have hy2 : coeff y (n - (k + 1)) ≤ 2 := coeff_le_local hy _
       have hprod : tritMul (coeff y (n - (k + 1)))
           (coeff x (t - (n - (k + 1)))) ≤ 2 := tritMul_le _ _ hy2 hdx
       rw [flipTrit_add
@@ -753,7 +753,7 @@ private theorem schoolDown_flip_coeff (x y : List Nat) (n bench k t : Nat)
   induction k generalizing t with
   | zero =>
     rw [schoolDown, schoolDown]
-    simp [coeff_replicate_zero, flipTrit]
+    simp [coeff_replicate_zero_local, flipTrit]
   | succ k ih =>
     have hYLe := schoolDown_coeff_le x y n bench k t hy
     have hMLe : coeff (schoolDown (mirrorTrits x) y false n (List.replicate bench 0) k) t ≤ 2 := by
@@ -772,8 +772,8 @@ private theorem schoolDown_flip_coeff (x y : List Nat) (n bench k t : Nat)
     rw [hlenM, hlen, ih t, mirrorTrits_map, map_flip_coeff]
     by_cases hcond : n - (k + 1) ≤ t ∧ t - (n - (k + 1)) < n ∧ t < bench
     · rw [if_pos hcond, if_pos hcond]
-      have hdx : coeff x (t - (n - (k + 1))) ≤ 2 := coeff_le hx _
-      have hy2 : coeff y (n - (k + 1)) ≤ 2 := coeff_le hy _
+      have hdx : coeff x (t - (n - (k + 1))) ≤ 2 := coeff_le_local hx _
+      have hy2 : coeff y (n - (k + 1)) ≤ 2 := coeff_le_local hy _
       rw [← flipTrit_mul (coeff y (n - (k + 1))) (coeff x (t - (n - (k + 1)))) hy2 hdx]
       exact (flipTrit_add
         (coeff (schoolDown x y false n (List.replicate bench 0) k) t)
@@ -810,15 +810,15 @@ private theorem map_flip_trits (xs : List Nat) : allTritList (xs.map flipTrit) :
 
 private theorem foldForm_flip (n gap e : Nat) (xs : List Nat) (ht : allTritList xs) :
     foldForm n gap e (xs.map flipTrit) = (foldForm n gap e xs).map flipTrit := by
-  have hc : coeff xs e ≤ 2 := coeff_le ht e
+  have hc : coeff xs e ≤ 2 := coeff_le_local ht e
   let xs0 := xs.set e 0
-  have ht0 : allTritList xs0 := tritList_set xs ht e 0 (Nat.zero_le 2)
+  have ht0 : allTritList xs0 := tritList_set_local xs ht e 0 (Nat.zero_le 2)
   let p1 := e - n
   let p2 := e - gap
   let v1 := tritAdd (coeff xs0 p1) (coeff xs e)
   have hv1 : v1 ≤ 2 := tritAdd_le _ _
   let xs1 := xs0.set p1 v1
-  have ht1 : allTritList xs1 := tritList_set xs0 ht0 p1 v1 hv1
+  have ht1 : allTritList xs1 := tritList_set_local xs0 ht0 p1 v1 hv1
   let v2 := tritAdd (coeff xs1 p2) (coeff xs e)
   have hxs : foldForm n gap e xs = xs1.set p2 v2 := by
     unfold foldForm
@@ -834,10 +834,10 @@ private theorem foldForm_flip (n gap e : Nat) (xs : List Nat) (ht : allTritList 
     rw [map_flip_coeff]
   rw [hxs, hys, map_set_flip xs1 p2 v2]
   have hv2 : flipTrit v2 = tritAdd (flipTrit (coeff xs1 p2)) (flipTrit (coeff xs e)) :=
-    flipTrit_add _ _ (coeff_le ht1 p2) hc
+    flipTrit_add _ _ (coeff_le_local ht1 p2) hc
   rw [hv2, ← map_flip_coeff xs1 p2, map_set_flip xs0 p1 v1]
   have hv1f : flipTrit v1 = tritAdd (flipTrit (coeff xs0 p1)) (flipTrit (coeff xs e)) :=
-    flipTrit_add _ _ (coeff_le ht0 p1) hc
+    flipTrit_add _ _ (coeff_le_local ht0 p1) hc
   rw [hv1f, ← map_flip_coeff xs0 p1, map_set_flip xs e 0]
   rw [show flipTrit 0 = 0 by simp [flipTrit]]
 
@@ -882,11 +882,11 @@ theorem mirrorTrits_fieldAdd (n : Nat) (xs ys : List Nat)
   · intro t
     by_cases ht : t < n
     · rw [mirrorTrits_map, map_flip_coeff, fieldAdd_at n xs ys t ht,
-        flipTrit_add _ _ (coeff_le hx t) (coeff_le hy t),
+        flipTrit_add _ _ (coeff_le_local hx t) (coeff_le_local hy t),
         fieldAdd_at n (mirrorTrits xs) (mirrorTrits ys) t ht,
         mirrorTrits_map, mirrorTrits_map, map_flip_coeff, map_flip_coeff]
-    · rw [coeff_ge _ t (by simp [mirrorTrits, fieldAdd, List.length_map, List.length_range]; omega),
-        coeff_ge _ t (by simp [fieldAdd, List.length_map, List.length_range]; omega)]
+    · rw [coeff_ge_local _ t (by simp [mirrorTrits, fieldAdd, List.length_map, List.length_range]; omega),
+        coeff_ge_local _ t (by simp [fieldAdd, List.length_map, List.length_range]; omega)]
 
 theorem mirrorTrits_invol (xs : List Nat) (ht : allTritList xs) :
     mirrorTrits (mirrorTrits xs) = xs := by

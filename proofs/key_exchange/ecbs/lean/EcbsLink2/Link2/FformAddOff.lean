@@ -273,7 +273,7 @@ theorem add_off (b : Ecbs.Board) (dst src : Nat) (ys xs : List Nat) (n moves : N
         b.sudo_5Board_4home := rfl
     rw [Array.set_congr_arr hhome hHw (embed (fieldAdd n ys xs))]
 
-private theorem fieldMul_trits (n k bench : Nat) (xs ys : List Nat)
+private theorem fieldMul_trits_local (n k bench : Nat) (xs ys : List Nat)
     (hspan : 2 * (n - 1) < bench) (hn : n ≤ bench) :
     allTritList (fieldMul n k bench xs ys) := by
   have hrep : allTritList (List.replicate bench 0) := by
@@ -303,19 +303,19 @@ theorem gap_fform (n k bench : Nat) (u v z : List Nat)
           (fieldMul n k bench v (fieldMul n k bench v v)))
         (fieldMul n k bench (fieldMul n k bench v v) z) =
       fformF n k bench u v z := by
-  have hv2 : allTritList (fieldMul n k bench v v) := fieldMul_trits n k bench v v hspan hn
+  have hv2 : allTritList (fieldMul n k bench v v) := fieldMul_trits_local n k bench v v hspan hn
   dsimp only [fformF]
   rw [fieldMul_comm n k bench v (fieldMul n k bench v v) hv hv2]
   rw [fieldAdd_assoc]
   rw [← fieldMul_right_add n k bench (fieldMul n k bench v v) v z hv2 hv hz hn]
 
-private theorem fieldAdd_trits (n : Nat) (xs ys : List Nat) : allTritList (fieldAdd n xs ys) := by
+private theorem fieldAdd_trits_local (n : Nat) (xs ys : List Nat) : allTritList (fieldAdd n xs ys) := by
   intro a ha
   simp only [fieldAdd, List.mem_map] at ha
   rcases ha with ⟨_, _, rfl⟩
   exact tritAdd_le _ _
 
-private theorem fieldMul_len (n k bench : Nat) (xs ys : List Nat) (hn : n ≤ bench) :
+private theorem fieldMul_len_local (n k bench : Nat) (xs ys : List Nat) (hn : n ≤ bench) :
     (fieldMul n k bench xs ys).length = n := by
   unfold fieldMul
   rw [List.length_take]
@@ -354,10 +354,10 @@ theorem gap_add_f (b : Ecbs.Board) (dst src : Nat) (u v z : List Nat)
   intro u2 v2 sum v2z harrD harrS
   have hlenS : sum.length = n := by
     simp [sum, fieldAdd, List.length_map, List.length_range]
-  have hlenZ : v2z.length = n := fieldMul_len n k bench v2 z hnb
+  have hlenZ : v2z.length = n := fieldMul_len_local n k bench v2 z hnb
   have htriS : allTritList sum := by
-    simpa [sum] using fieldAdd_trits n _ _
-  have htriZ : allTritList v2z := fieldMul_trits n k bench v2 z hspan hnb
+    simpa [sum] using fieldAdd_trits_local n _ _
+  have htriZ : allTritList v2z := fieldMul_trits_local n k bench v2 z hspan hnb
   have h := add_off b dst src sum v2z n moves hHd hDd hHs hDs hheldD harrD hheldS harrS
     hn hlenZ hlenS hpos htriS htriZ hm hfit
   have hsum : fieldAdd n sum v2z = fformF n k bench u v z := by

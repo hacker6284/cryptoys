@@ -12,7 +12,7 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
-private theorem mirror_trits (y : List Nat) : allTritList (mirrorTrits y) := by
+private theorem mirror_trits_local (y : List Nat) : allTritList (mirrorTrits y) := by
   intro a ha
   simp only [mirrorTrits, List.mem_map] at ha
   rcases ha with ⟨c, _, rfl⟩
@@ -30,7 +30,7 @@ private theorem mirror_len (y : List Nat) (n : Nat) (hlen : y.length = n) :
     (mirrorTrits y).length = n := by
   simp [mirrorTrits, List.length_map, hlen]
 
-private theorem idx_eq {α : Type} {a b : Array α} (h : a = b) (i : Nat)
+private theorem idx_eq_local {α : Type} {a b : Array α} (h : a = b) (i : Nat)
     (ha : i < a.size) : a[i] = b[i]'(h ▸ ha) := by
   cases h
   rfl
@@ -253,16 +253,16 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
     exact hD
   have hHeldD : bS.sudo_5Board_4held[dst]'(hDD) = true := by
     have hset := settle_held_eq bU seat hinS lane n mvM slides peak
-    have hget := idx_eq (hheldS0.trans hset) dst hDD
+    have hget := idx_eq_local (hheldS0.trans hset) dst hDD
     rw [Array.getElem_set_ne (h := hseat)] at hget
     have hszU : dst < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hD
-    exact (hget.trans (idx_eq hheldU dst hszU)).trans hheld
+    exact (hget.trans (idx_eq_local hheldU dst hszU)).trans hheld
   have hHomeD : bS.sudo_5Board_4home[dst]'(hHD) = embed (mirrorTrits x) := by
     have hset := settle_home_eq bU seat hinS lane n mvM slides peak
-    have hget := idx_eq (hhomeS.trans hset) dst hHD
+    have hget := idx_eq_local (hhomeS.trans hset) dst hHD
     rw [Array.getElem_set_ne (h := hseat)] at hget
     have hszU : dst < bU.sudo_5Board_4home.size := by rw [hhomeU, Array.size_set]; exact hH
-    rw [hget, idx_eq hhomeU dst hszU]
+    rw [hget, idx_eq_local hhomeU dst hszU]
     simp [Array.getElem_set]
   have hF' : first < bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
@@ -273,17 +273,17 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
     exact hHomeF
   have hHF' : bS.sudo_5Board_4held[first]'(hF') = true := by
     have hset := settle_held_eq bU seat hinS lane n mvM slides peak
-    have hget := idx_eq (hheldS0.trans hset) first hF'
+    have hget := idx_eq_local (hheldS0.trans hset) first hF'
     rw [Array.getElem_set_ne (h := hneSeatF)] at hget
     have hszU : first < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hF
-    exact (hget.trans (idx_eq hheldU first hszU)).trans hHF
+    exact (hget.trans (idx_eq_local hheldU first hszU)).trans hHF
   have hArr' : bS.sudo_5Board_4home[first]'(hHomeF') = embed x2 := by
     have hset := settle_home_eq bU seat hinS lane n mvM slides peak
-    have hget := idx_eq (hhomeS.trans hset) first hHomeF'
+    have hget := idx_eq_local (hhomeS.trans hset) first hHomeF'
     rw [Array.getElem_set_ne (h := hneSeatF)] at hget
     have hszU : first < bU.sudo_5Board_4home.size := by
       rw [hhomeU, Array.size_set]; exact hHomeF
-    rw [hget, idx_eq hhomeU first hszU, Array.getElem_set_ne (h := hneD1)]
+    rw [hget, idx_eq_local hhomeU first hszU, Array.getElem_set_ne (h := hneD1)]
     exact hArr
   have hS' : second < bS.sudo_5Board_4held.size := by
     rw [hheldS0, settle_held_eq bU seat hinS lane n mvM slides peak, Array.size_set, hheldU]
@@ -296,12 +296,12 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
     rw [← htake, List.length_take, Nat.min_eq_left hnle]
   have hHS' : bS.sudo_5Board_4held[second]'(hS') = true := by
     have hset := settle_held_eq bU seat hinS lane n mvM slides peak
-    have hget := idx_eq (hheldS0.trans hset) second hS'
+    have hget := idx_eq_local (hheldS0.trans hset) second hS'
     simp only [Array.getElem_set, hseatEq, if_true] at hget
     exact hget
   have hYs' : bS.sudo_5Board_4home[second]'(hHomeS') = embed z := by
     have hset := settle_home_eq bU seat hinS lane n mvM slides peak
-    have hget := idx_eq (hhomeS.trans hset) second hHomeS'
+    have hget := idx_eq_local (hhomeS.trans hset) second hHomeS'
     simp only [Array.getElem_set, hseatEq, if_true] at hget
     rw [htake] at hget
     exact hget
@@ -314,10 +314,10 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
     exact hSpHome
   have hSpE' : bS.sudo_5Board_4held[6]'(hSpH') = false := by
     have hset := settle_held_eq bU seat hinS lane n mvM slides peak
-    have hget := idx_eq (hheldS0.trans hset) 6 hSpH'
+    have hget := idx_eq_local (hheldS0.trans hset) 6 hSpH'
     rw [Array.getElem_set_ne (h := hneSeat6)] at hget
     have hszU : 6 < bU.sudo_5Board_4held.size := by rw [hheldU]; exact hSpH
-    exact (hget.trans (idx_eq hheldU 6 hszU)).trans hSpE
+    exact (hget.trans (idx_eq_local hheldU 6 hszU)).trans hSpE
   have hcostS : bS.sudo_5Board_4cost =
       (settleBoard bU seat hHU hDU lane n mvM slides peak).sudo_5Board_4cost :=
     hcostS0
@@ -368,7 +368,7 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
       hoffS hblS hDD hHD hHeldD hHomeD hF' hHomeF' hHF' hArr' hS' hHomeS' hHS' hYs'
       hSpH' hSpHome' hSpE' h7S hneD1 hneD2 hne6D hne6F hne6S hpos hnb hnS
       (mirror_len x n hlen) hlen2 hlenz hf hmovesS hslidesS hpeakSboard hstrictS
-      hspan (mirror_trits x) hx2 hfi hfitM hfitS hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap
+      hspan (mirror_trits_local x) hx2 hfi hfitM hfitS hfm hholeS hw0 hh0 hrR hrP hnE hkLe hgap
       hwS hhS hrS hkS hsm hnsm hfitB hfold
   have hmkS : bS.sudo_5Board_9marker_on = true := by
     simp [bS, markerOn]
@@ -427,12 +427,12 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
       exact hj'
     have hEqS := hhome j hneD hne6 hjS hj'
     have hset := settle_home_eq bU seat hinS lane n mvM slides peak
-    have hget := idx_eq (hhomeS.trans hset) j hjS
+    have hget := idx_eq_local (hhomeS.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneSeat)] at hget
     have hjU : j < bU.sudo_5Board_4home.size := by
       rw [hhomeU, Array.size_set]
       exact hj
-    have hraw := idx_eq hhomeU j hjU
+    have hraw := idx_eq_local hhomeU j hjU
     have hBU : bU.sudo_5Board_4home[j]'hjU = b.sudo_5Board_4home[j]'hj := by
       rw [Array.getElem_set_ne (h := Ne.symm hneD)] at hraw
       exact hraw
@@ -443,12 +443,12 @@ theorem run_on_bench (b : Ecbs.Board) (dst first second seat : Nat)
       exact hj'
     have hEqS := hheldK j hneD hne6 hjS hj'
     have hset := settle_held_eq bU seat hinS lane n mvM slides peak
-    have hget := idx_eq (hheldS0.trans hset) j hjS
+    have hget := idx_eq_local (hheldS0.trans hset) j hjS
     rw [Array.getElem_set_ne (h := Ne.symm hneSeat)] at hget
     have hjU : j < bU.sudo_5Board_4held.size := by
       rw [hheldU]
       exact hj
-    exact hEqS.trans (hget.trans (idx_eq hheldU j hjU))
+    exact hEqS.trans (hget.trans (idx_eq_local hheldU j hjU))
   · intro h2
     exact (hhome second (Ne.symm hneD2) hne6S hHomeS' h2).trans hYs'
   · intro h2

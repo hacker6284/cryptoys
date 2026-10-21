@@ -120,7 +120,7 @@ private theorem flag_ops
   rw [upFlag, upBoard, cube_off_ops, Array.size_set]
   exact up_ops_lt a
 
-private theorem cell_eq_of {α : Type} {a b : Array α} (h : a = b) {i : Nat}
+private theorem cell_eq_of_local {α : Type} {a b : Array α} (h : a = b) {i : Nat}
     {ha : i < a.size} {hb : i < b.size} {v : α}
     (hv : b[i]'hb = v) : a[i]'ha = v := by
   subst h
@@ -147,7 +147,7 @@ private theorem flag_op1
     rw [Array.size_set]; exact up_ops_lt a
   have hget := Array.getElem_set_eq (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops
     ⟨1, up_ops_lt a⟩ (Int.ofNat ((cOps + 1) + 1)) rfl hsz
-  exact (cell_eq_of harr hget).trans (congrArg Int.ofNat (by omega))
+  exact (cell_eq_of_local harr hget).trans (congrArg Int.ofNat (by omega))
 
 private theorem flag_strict
     (a : DownAcross b x y n k w h r bench cg pk moves slides holeN cOps ctrl mx script) :
@@ -167,7 +167,7 @@ private theorem flag_hole
   exact cube_off_hole (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
     (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)
 
-private theorem idx_eq {α : Type} {a b : Array α} (h : a = b) (i : Nat)
+private theorem idx_eq_local {α : Type} {a b : Array α} (h : a = b) (i : Nat)
     (ha : i < a.size) : a[i] = b[i]'(h ▸ ha) := by
   cases h
   rfl
@@ -182,24 +182,24 @@ theorem bottom_held
   have hszC : 2 < (cubeOffBoard (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
       (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)).sudo_5Board_4held.size := by
     rw [hcube, Array.size_set, up_held_size]; decide
-  have hget := idx_eq hcube 2 hszC
+  have hget := idx_eq_local hcube 2 hszC
   have hne : (1 : Nat) ≠ 2 := by decide
   simp only [Array.getElem_set, hne] at hget
   have hszS : 2 < (upSettled a).sudo_5Board_4held.size := by rw [up_held_size]; decide
   have hsettle := settle_held_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1
-  have hgetS := idx_eq hsettle 2 hszS
+  have hgetS := idx_eq_local hsettle 2 hszS
   have hne0 : (0 : Nat) ≠ 2 := by decide
   simp only [Array.getElem_set, hne0] at hgetS
   have hszF : 2 < (upFeed a).sudo_5Board_4held.size := by
     rw [upFeed_held]; rw [a.hszDOn]; decide
-  have hgetF := idx_eq (upFeed_held a) 2 hszF
+  have hgetF := idx_eq_local (upFeed_held a) 2 hszF
   have hflag : (upFlag a).sudo_5Board_4held = (upBoard a).sudo_5Board_4held := rfl
   have hboard : (upBoard a).sudo_5Board_4held =
       (cubeOffBoard (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
         (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)).sudo_5Board_4held := by
     rw [upBoard]
-  have hgetFlag := idx_eq hflag 2 (flag2D a)
-  have hgetBoard := idx_eq hboard 2 (by rw [up_board_held_size]; decide)
+  have hgetFlag := idx_eq_local hflag 2 (flag2D a)
+  have hgetBoard := idx_eq_local hboard 2 (by rw [up_board_held_size]; decide)
   exact hgetFlag.symm.trans (hgetBoard.trans (hget.trans (hgetS.trans (hgetF.trans hheld))))
 
 /-- Home 2 stays the bottom the across cube left. -/
@@ -213,24 +213,24 @@ theorem bottom_home
   have hszC : 2 < (cubeOffBoard (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
       (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)).sudo_5Board_4home.size := by
     rw [hcube, Array.size_set, up_home_size]; decide
-  have hget := idx_eq hcube 2 hszC
+  have hget := idx_eq_local hcube 2 hszC
   have hne : (1 : Nat) ≠ 2 := by decide
   simp only [Array.getElem_set, hne] at hget
   have hszS : 2 < (upSettled a).sudo_5Board_4home.size := by rw [up_home_size]; decide
   have hsettle := settle_home_eq (upFeed a) 0 ⟨upH a, upD a⟩ a.laneX n a.mv1 slides a.pk1
-  have hgetS := idx_eq hsettle 2 hszS
+  have hgetS := idx_eq_local hsettle 2 hszS
   have hne0 : (0 : Nat) ≠ 2 := by decide
   simp only [Array.getElem_set, hne0] at hgetS
   have hszF : 2 < (upFeed a).sudo_5Board_4home.size := by
     rw [upFeed_home]; rw [a.hszHOn]; decide
-  have hgetF := idx_eq (upFeed_home a) 2 hszF
+  have hgetF := idx_eq_local (upFeed_home a) 2 hszF
   have hflag : (upFlag a).sudo_5Board_4home = (upBoard a).sudo_5Board_4home := rfl
   have hboard : (upBoard a).sudo_5Board_4home =
       (cubeOffBoard (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
         (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)).sudo_5Board_4home := by
     rw [upBoard]
-  have hgetFlag := idx_eq hflag 2 (flag2H a)
-  have hgetBoard := idx_eq hboard 2 (by rw [up_board_home_size]; decide)
+  have hgetFlag := idx_eq_local hflag 2 (flag2H a)
+  have hgetBoard := idx_eq_local hboard 2 (by rw [up_board_home_size]; decide)
   exact hgetFlag.symm.trans (hgetBoard.trans (hget.trans (hgetS.trans (hgetF.trans hhome))))
 
 /-- The bottom cube. The bench still holds the cubed up and is aimed at up.

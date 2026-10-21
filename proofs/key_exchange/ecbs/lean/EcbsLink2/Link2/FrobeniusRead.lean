@@ -11,7 +11,7 @@ namespace EcbsLink2.Link2
 open MegaDreifach.Link2
 open EcbsLink2.Spec
 
-private theorem idx_eq {α : Type} {a b : Array α} (h : a = b) (i : Nat)
+private theorem idx_eq_local {α : Type} {a b : Array α} (h : a = b) (i : Nat)
     (ha : i < a.size) : a[i] = b[i]'(h ▸ ha) := by
   cases h
   rfl
@@ -145,7 +145,7 @@ theorem up_slide
       Ecbs.cube (upSettled a) ((1 : Nat) : Int) ((1 : Nat) : Int) := by
   have h7 : 7 ≤ (upFeed a).sudo_5Board_4held.size := by rw [upFeed_held a]; exact a.h7On
   have hempty : (upFeed a).sudo_5Board_4held[0] = false := by
-    have hget := idx_eq (upFeed_held a) 0 (upD a)
+    have hget := idx_eq_local (upFeed_held a) 0 (upD a)
     exact hget.trans a.hemptyOn
   have hn : (upFeed a).sudo_5Board_1t.sudo_4Tier_1n = (n : Int) := by
     rw [upFeed_tier a]; exact a.hnOn
@@ -158,7 +158,7 @@ theorem up_slide
   have hops : 1 < (upFeed a).sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     rw [upFeed_ops a]; exact a.hopsOn
   have hop1 : (upFeed a).sudo_5Board_4cost.sudo_5Costs_3ops[1] = ((cOps + 1 : Nat) : Int) := by
-    have hget := idx_eq (upFeed_ops a) 1 hops
+    have hget := idx_eq_local (upFeed_ops a) 1 hops
     exact hget.trans a.hopOn
   have hpeg : FitsLen (2 * pegCount (a.laneX.take n)) := by
     rw [← a.hpegDef]; exact a.hpegFit
@@ -229,11 +229,11 @@ theorem up_held1
     (upSettled a).sudo_5Board_4held[1]'(by rw [up_held_size a]; decide) = true := by
   have hsz : 1 < (upSettled a).sudo_5Board_4held.size := by rw [up_held_size a]; decide
   have heq := settle_held_eq (upFeed a) 0 ⟨(upH a), (upD a)⟩ a.laneX n a.mv1 slides a.pk1
-  have hget := idx_eq heq 1 hsz
+  have hget := idx_eq_local heq 1 hsz
   have hne : (0 : Nat) ≠ 1 := by decide
   simp only [Array.getElem_set, hne] at hget
   have hsrc : (upFeed a).sudo_5Board_4held[1]'(by rw [upFeed_held a]; exact a.h1DOn) = true := by
-    have h2 := idx_eq (upFeed_held a) 1 (by rw [upFeed_held a]; exact a.h1DOn)
+    have h2 := idx_eq_local (upFeed_held a) 1 (by rw [upFeed_held a]; exact a.h1DOn)
     exact h2.trans a.hheld1On
   exact hget.trans hsrc
 
@@ -242,11 +242,11 @@ theorem up_home1
     (upSettled a).sudo_5Board_4home[1]'(by rw [up_home_size a]; decide) = embed y := by
   have hsz : 1 < (upSettled a).sudo_5Board_4home.size := by rw [up_home_size a]; decide
   have heq := settle_home_eq (upFeed a) 0 ⟨(upH a), (upD a)⟩ a.laneX n a.mv1 slides a.pk1
-  have hget := idx_eq heq 1 hsz
+  have hget := idx_eq_local heq 1 hsz
   have hne : (0 : Nat) ≠ 1 := by decide
   simp only [Array.getElem_set, hne] at hget
   have hsrc : (upFeed a).sudo_5Board_4home[1]'(by rw [upFeed_home a]; exact a.h1HOn) = embed y := by
-    have h2 := idx_eq (upFeed_home a) 1 (by rw [upFeed_home a]; exact a.h1HOn)
+    have h2 := idx_eq_local (upFeed_home a) 1 (by rw [upFeed_home a]; exact a.h1HOn)
     exact h2.trans a.hhome1On
   exact hget.trans hsrc
 
@@ -295,10 +295,10 @@ theorem up_ops1
     (upSettled a).sudo_5Board_4cost.sudo_5Costs_3ops[1]'(up_ops_lt a) =
       ((cOps + 1 : Nat) : Int) := by
   have heq := settle_ops (upFeed a) 0 ⟨(upH a), (upD a)⟩ a.laneX n a.mv1 slides a.pk1
-  have hget := idx_eq heq 1 (up_ops_lt a)
+  have hget := idx_eq_local heq 1 (up_ops_lt a)
   have hsrc : (upFeed a).sudo_5Board_4cost.sudo_5Costs_3ops[1]'(by
       rw [upFeed_ops a]; exact a.hopsOn) = ((cOps + 1 : Nat) : Int) := by
-    have h2 := idx_eq (upFeed_ops a) 1 (by rw [upFeed_ops a]; exact a.hopsOn)
+    have h2 := idx_eq_local (upFeed_ops a) 1 (by rw [upFeed_ops a]; exact a.hopsOn)
     exact h2.trans a.hopOn
   exact hget.trans hsrc
 
@@ -463,15 +463,15 @@ theorem up_board_empty
   have hszC : 1 < (cubeOffBoard (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
       (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)).sudo_5Board_4held.size := by
     rw [hheld, Array.size_set]; exact up1D a
-  have hget := idx_eq hheld 1 hszC
+  have hget := idx_eq_local hheld 1 hszC
   simp only [Array.getElem_set] at hget
   have hflag : (upFlag a).sudo_5Board_4held = (upBoard a).sudo_5Board_4held := rfl
   have hboard : (upBoard a).sudo_5Board_4held =
       (cubeOffBoard (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
         (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)).sudo_5Board_4held := by
     rw [upBoard]
-  have hgetF := idx_eq hflag 1 (upFlag1 a)
-  have hgetB := idx_eq hboard 1 (by rw [up_board_held_size]; decide)
+  have hgetF := idx_eq_local hflag 1 (upFlag1 a)
+  have hgetB := idx_eq_local hboard 1 (by rw [up_board_held_size]; decide)
   exact hgetF.symm.trans (hgetB.trans hget)
 
 /-- Closing settle of the up cube. The up home becomes the field cube; the bench goes off. -/
@@ -518,11 +518,11 @@ theorem up_home0
   have hsz : 0 < (cubeOffBoard (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
       (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)).sudo_5Board_4home.size := by
     rw [hcube, Array.size_set]; exact h0S
-  have hget := idx_eq hcube 0 hsz
+  have hget := idx_eq_local hcube 0 hsz
   have hne : (1 : Nat) ≠ 0 := by decide
   simp only [Array.getElem_set, hne, if_false] at hget
   have hset := settle_home_eq (upFeed a) 0 ⟨(upH a), (upD a)⟩ a.laneX n a.mv1 slides a.pk1
-  have hget0 := idx_eq hset 0 (by rw [hset, Array.size_set]; exact upH a)
+  have hget0 := idx_eq_local hset 0 (by rw [hset, Array.size_set]; exact upH a)
   simp only [Array.getElem_set, if_true] at hget0
   have htake : embed (List.take n a.laneX) = embed (fieldCube n k bench x) :=
     congrArg embed a.htakeX
@@ -530,7 +530,7 @@ theorem up_home0
   have hboard : (upBoard a).sudo_5Board_4home =
       (cubeOffBoard (upSettled a) 1 1 y n k (upMv a) a.hole1 bench (upPk a) a.peakS1
         (cOps + 1) (up_ops_lt a) (up1D a) (up1H a)).sudo_5Board_4home := by rw [upBoard]
-  have hgetB := idx_eq hboard 0 (by rw [up_board_home_size a]; decide)
+  have hgetB := idx_eq_local hboard 0 (by rw [up_board_home_size a]; decide)
   exact hgetB.trans (hget.trans hget0')
 
 /-- `frobenius_affine` with the marker lifted. Across is cubed, up is cubed with that
@@ -583,17 +583,17 @@ theorem frobenius_affine_marker
   · intro h0
     have hsetH := settle_home_eq (upFlag a) 1 ⟨(upFlagH a), (upFlag1 a)⟩ (upLane n k bench y) n
       (upMv2 a) (upSl a) (upPk2 a)
-    have hget := idx_eq hsetH 0 h0
+    have hget := idx_eq_local hsetH 0 h0
     have hne : (1 : Nat) ≠ 0 := by decide
     simp only [Array.getElem_set, hne, if_false] at hget
     have hflag : (upFlag a).sudo_5Board_4home = (upBoard a).sudo_5Board_4home := rfl
     have h0U : 0 < (upBoard a).sudo_5Board_4home.size := by rw [up_board_home_size a]; decide
-    have hgetU := idx_eq hflag 0 (by rw [hflag]; exact h0U)
+    have hgetU := idx_eq_local hflag 0 (by rw [hflag]; exact h0U)
     exact hget.trans (hgetU.trans (up_home0 a))
   · intro h1
     have hsetH := settle_home_eq (upFlag a) 1 ⟨(upFlagH a), (upFlag1 a)⟩ (upLane n k bench y) n
       (upMv2 a) (upSl a) (upPk2 a)
-    have hget := idx_eq hsetH 1 h1
+    have hget := idx_eq_local hsetH 1 h1
     simp only [Array.getElem_set, if_true] at hget
     rw [upLane_take] at hget
     exact hget

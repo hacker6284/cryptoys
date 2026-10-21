@@ -121,7 +121,7 @@ theorem addOnto_on (bench src : List Nat) (n : Nat) (hn : n ≤ bench.length) :
       fieldAdd n (bench.take n) (mirrorTrits src) := by
   simpa using addOnto_field bench src n true hn
 
-private theorem tritAdd_le (a b : Nat) : tritAdd a b ≤ 2 := by
+private theorem tritAdd_le_local (a b : Nat) : tritAdd a b ≤ 2 := by
   have : (a + b) % 3 < 3 := Nat.mod_lt _ (by decide)
   unfold tritAdd
   omega
@@ -129,7 +129,7 @@ private theorem tritAdd_le (a b : Nat) : tritAdd a b ≤ 2 := by
 theorem fieldAdd_span_trits (n : Nat) (xs ys : List Nat) : allTritList (fieldAdd n xs ys) := by
   intro x hx
   rcases List.mem_map.mp hx with ⟨_, _, rfl⟩
-  exact tritAdd_le _ _
+  exact tritAdd_le_local _ _
 
 /-- The emitted loop body. `v` is the source home, closed over as in `benchAddEmit`. -/
 def benchAddStep (v : Array Int) (toV : Int) (mirror : Bool) (σ : Int × Ecbs.Board) :

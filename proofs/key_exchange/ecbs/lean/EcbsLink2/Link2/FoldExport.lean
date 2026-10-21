@@ -1,0 +1,463 @@
+/-
+  `fold` and `fold_key` on the four shipped tiers. The two loops are
+  `Spec.foldKey`: each source row is added into the destination row in
+  GF(3), reading the original across, and the result is the
+  `keeprows * w` prefix. Moves on the board `fold_key` returns are the
+  incoming count plus one per nonzero cell that row drops. Demo is
+  unconditional. The fold does not invert, so `FieldOk` is not a
+  hypothesis. Proof-only. Not a security claim.
+-/
+import EcbsLink2.Link2.OpenBoard
+import EcbsLink2.Link2.FoldKey
+
+namespace EcbsLink2.Link2
+
+open MegaDreifach.Link2
+open Ecbs
+open EcbsLink2.Spec
+
+private theorem withMoves_eq (b : Ecbs.Board) (m : Int) :
+    (withMoves b m).sudo_5Board_4cost.sudo_5Costs_5moves = m := by
+  unfold withMoves
+  rfl
+
+private theorem withMoves_withMoves (b : Ecbs.Board) (m₁ m₂ : Int) :
+    withMoves (withMoves b m₁) m₂ = withMoves b m₂ := by
+  unfold withMoves
+  rfl
+
+private theorem withMoves_id (b : Ecbs.Board) {m : Int}
+    (hm : b.sudo_5Board_4cost.sudo_5Costs_5moves = m) :
+    withMoves b m = b := by
+  rw [← hm]
+  unfold withMoves
+  rfl
+
+private theorem set_irrel {α : Type} (a : Array α) (i : Nat) (h₁ h₂ : i < a.size) (v : α) :
+    a.set ⟨i, h₁⟩ v = a.set ⟨i, h₂⟩ v := by
+  have : (⟨i, h₁⟩ : Fin a.size) = ⟨i, h₂⟩ := Fin.ext rfl
+  simp [this]
+
+private theorem trits_of_all (xs : List Nat) (h : allTritList xs) :
+    ∀ i (hi : i < xs.length), xs[i] ≤ 2 := by
+  intro i hi
+  exact h _ (List.getElem_mem hi)
+
+private theorem getD_of (xs : List Nat) (i : Nat) (hi : i < xs.length) :
+    xs.getD i 0 = xs[i] := by
+  simp [List.getD, hi]
+
+def colBump (w : Nat) (x : List Nat) (src c : Nat) : Nat :=
+  if h : src * w + c < x.length then
+    if x[src * w + c] = 0 then 0 else 1
+  else
+    0
+
+private theorem colBump_le (w : Nat) (x : List Nat) (src c : Nat) : colBump w x src c ≤ 1 := by
+  unfold colBump
+  split
+  · split <;> decide
+  · decide
+
+def foldBumpAt (w : Nat) (x : List Nat) (src : Nat) : Nat → Nat
+  | 0 => 0
+  | k + 1 => foldBumpAt w x src k + colBump w x src k
+
+private theorem foldBumpAt_le (w : Nat) (x : List Nat) (src c : Nat) :
+    foldBumpAt w x src c ≤ c := by
+  induction c with
+  | zero => simp [foldBumpAt]
+  | succ c ih =>
+    rw [foldBumpAt]
+    have := colBump_le w x src c
+    omega
+
+def foldColAt (w : Nat) (x : List Nat) (src dst : Nat) (out : List Nat) : Nat → List Nat
+  | 0 => out
+  | k + 1 => dropCol w x src dst k (foldColAt w x src dst out k)
+
+private theorem foldColAt_eq_aux (w src dst k : Nat) (x out : List Nat) :
+    foldColAt w x src dst out k =
+      (List.range k).foldl (fun o c => dropCol w x src dst c o) out := by
+  induction k generalizing out with
+  | zero => simp [foldColAt]
+  | succ k ih =>
+    rw [foldColAt, List.range_succ, List.foldl_append, ih]
+    simp [List.foldl_cons, List.foldl_nil]
+
+private theorem foldColAt_eq (w src dst : Nat) (x out : List Nat) :
+    foldColAt w x src dst out w =
+      (List.range w).foldl (fun o c => dropCol w x src dst c o) out :=
+  foldColAt_eq_aux w src dst w x out
+
+private theorem foldColAt_row (w src dst : Nat) (x out : List Nat) :
+    foldColAt w x src dst out w = dropRow w x src dst out := by
+  rw [foldColAt_eq]
+  rfl
+
+def foldBumpRows (w : Nat) (x srcs : List Nat) : Nat → Nat
+  | 0 => 0
+  | k + 1 => foldBumpRows w x srcs k + foldBumpAt w x (srcs.getD k 0) w
+
+private theorem foldBumpRows_le (w : Nat) (x srcs : List Nat) (k : Nat) :
+    foldBumpRows w x srcs k ≤ k * w := by
+  induction k with
+  | zero => simp [foldBumpRows]
+  | succ k ih =>
+    rw [foldBumpRows, Nat.succ_mul]
+    have := foldBumpAt_le w x (srcs.getD k 0) w
+    omega
+
+def foldPairAt (w : Nat) (x srcs dsts : List Nat) : Nat → List Nat
+  | 0 => x
+  | k + 1 => dropRow w x (srcs.getD k 0) (dsts.getD k 0) (foldPairAt w x srcs dsts k)
+
+private theorem foldPairAt_rows (w : Nat) (x srcs dsts : List Nat) (k : Nat)
+    (hk : k ≤ srcs.length) (hlen : srcs.length = dsts.length) :
+    foldPairAt w x srcs dsts k = foldRows w x ((srcs.zip dsts).take k) := by
+  induction k generalizing x with
+  | zero => simp [foldPairAt, foldRows]
+  | succ k ih =>
+    have hk' : k < srcs.length := by omega
+    have hk2 : k < dsts.length := by rw [← hlen]; exact hk'
+    have htake : (srcs.zip dsts).take (k + 1) =
+        (srcs.zip dsts).take k ++ [(srcs[k], dsts[k])] := by
+      rw [List.take_succ]
+      have hz : k < (srcs.zip dsts).length := by
+        rw [List.length_zip]
+        omega
+      simp [List.getElem?_eq_getElem hz, List.getElem_zip]
+    unfold foldPairAt
+    rw [getD_of srcs k hk', getD_of dsts k hk2, ih x (by omega), htake]
+    unfold foldRows
+    simp [List.foldl_append, List.foldl_cons, List.foldl_nil]
+
+private theorem dropCol_length (w src dst c : Nat) (x out : List Nat) :
+    (dropCol w x src dst c out).length = out.length := by
+  unfold dropCol
+  dsimp
+  split
+  · split <;> simp [List.length_set]
+  · rfl
+
+private theorem dropCol_hi (w src dst c : Nat) (x out : List Nat)
+    (hix : ¬ src * w + c < x.length) :
+    dropCol w x src dst c out = out := by
+  unfold dropCol
+  rw [dif_neg hix]
+
+private theorem dropCol_zero (w src dst c : Nat) (x out : List Nat)
+    (hix : src * w + c < x.length) (hz : x[src * w + c] = 0) :
+    dropCol w x src dst c out = out := by
+  unfold dropCol
+  rw [dif_pos hix]
+  simp [hz]
+
+private theorem dropCol_of (w src dst c : Nat) (x out : List Nat)
+    (hix : src * w + c < x.length) (hj : dst * w + c < out.length)
+    (hnz : x[src * w + c] ≠ 0) :
+    dropCol w x src dst c out =
+      out.set (dst * w + c) ((out[dst * w + c] + x[src * w + c]) % 3) := by
+  unfold dropCol add3
+  rw [dif_pos hix]
+  simp [hnz, List.getD, hj]
+
+private theorem trits_set (out : List Nat) (j v : Nat) (hj : j < out.length)
+    (hot : ∀ i (hi : i < out.length), out[i] ≤ 2) (hv : v ≤ 2) :
+    ∀ i (hi : i < out.length), (out.set j v)[i]'(by simp [List.length_set]; exact hi) ≤ 2 := by
+  intro i hi
+  have _ : j < out.length := hj
+  rw [List.getElem_set]
+  split
+  · exact hv
+  · exact hot i hi
+
+private theorem dropCol_trits (w src dst c : Nat) (x out : List Nat)
+    (hj : dst * w + c < out.length)
+    (hot : ∀ i (hi : i < out.length), out[i] ≤ 2) :
+    ∀ i (hi : i < out.length),
+      (dropCol w x src dst c out)[i]'(by rw [dropCol_length]; exact hi) ≤ 2 := by
+  intro i hi
+  by_cases hix : src * w + c < x.length
+  · by_cases hz : x[src * w + c] = 0
+    · simpa [dropCol_zero w src dst c x out hix hz] using hot i hi
+    · have hlist := dropCol_of w src dst c x out hix hj hz
+      have hv : (out[dst * w + c] + x[src * w + c]) % 3 ≤ 2 := by
+        have := Nat.mod_lt (out[dst * w + c] + x[src * w + c]) (by decide : 0 < 3)
+        omega
+      simpa [hlist] using trits_set out (dst * w + c)
+        ((out[dst * w + c] + x[src * w + c]) % 3) hj hot hv i hi
+  · simpa [dropCol_hi w src dst c x out hix] using hot i hi
+
+private theorem not_gt_last {i w : Nat} (hi : i < w) :
+    ¬ Int.ofNat i > Int.ofNat (w - 1) := by
+  rw [ofNat_eq_natCast, ofNat_eq_natCast]
+  omega
+
+/-- Move bump. Irreducible in the fold proofs so a record update is not copied
+    into every field of the board. -/
+def foldMove (b : Ecbs.Board) (m : Int) : Ecbs.Board :=
+  { b with sudo_5Board_4cost := { b.sudo_5Board_4cost with sudo_5Costs_5moves := m } }
+
+private theorem foldMove_moves (b : Ecbs.Board) (m : Int) :
+    (foldMove b m).sudo_5Board_4cost.sudo_5Costs_5moves = m := by
+  unfold foldMove
+  rfl
+
+private theorem foldMove_comp (b : Ecbs.Board) (m₁ m₂ : Int) :
+    foldMove (foldMove b m₁) m₂ = foldMove b m₂ := by
+  unfold foldMove
+  rfl
+
+private theorem foldMove_withMoves (b : Ecbs.Board) (m : Int) :
+    foldMove b m = withMoves b m := by
+  unfold foldMove withMoves
+  rfl
+
+section
+
+attribute [local irreducible] foldMove
+
+/-- One column of the emitted inner loop. -/
+def foldColBody (t : Ecbs.Tier) (x out : Array Int) (b : Ecbs.Board) (p c : Int) :
+    Except SudoRt.Trap (SudoRt.Flow (Array Int × Ecbs.Board) (Array Int × Ecbs.Board)) := do
+  let src ← SudoRt.atL t.sudo_4Tier_7foldsrc p
+  let i0 ← SudoRt.mulI src t.sudo_4Tier_1w
+  let i ← SudoRt.addI i0 c
+  let dst ← SudoRt.atL t.sudo_4Tier_7folddst p
+  let j0 ← SudoRt.mulI dst t.sudo_4Tier_1w
+  let j ← SudoRt.addI j0 c
+  let hot ← (if decide (i < t.sudo_4Tier_1n) then do
+      let xv ← SudoRt.atL x i
+      pure (!(SudoRt.SEq.beq xv (0 : Int)))
+    else
+      pure false)
+  if hot then
+    do
+      let cur ← SudoRt.atL out j
+      let xv ← SudoRt.atL x i
+      let sum ← SudoRt.addI cur xv
+      let m ← SudoRt.modI sum (3 : Int)
+      let out ← SudoRt.putL out j m
+      let mv ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_5moves (1 : Int)
+      pure (SudoRt.Flow.cont (out, foldMove b mv))
+  else
+    pure (SudoRt.Flow.cont (out, b))
+
+theorem foldColBody_at (t : Ecbs.Tier) (x out : List Nat) (b0 : Ecbs.Board)
+    (srcs dsts : List Nat) (pN cN srcN dstN n w mv : Nat)
+    (htn : t.sudo_4Tier_1n = Int.ofNat n)
+    (htw : t.sudo_4Tier_1w = Int.ofNat w)
+    (hsrcA : t.sudo_4Tier_7foldsrc = embed srcs)
+    (hdstA : t.sudo_4Tier_7folddst = embed dsts)
+    (hp : pN < srcs.length) (hp2 : pN < dsts.length)
+    (hsrc : srcs[pN] = srcN) (hdst : dsts[pN] = dstN)
+    (hx : x.length = n) (ho : out.length = n)
+    (hxt : ∀ i (hi : i < x.length), x[i] ≤ 2)
+    (hot : ∀ i (hi : i < out.length), out[i] ≤ 2)
+    (hc : cN < w)
+    (hsw : FitsLen (srcN * w + w)) (hdw : FitsLen (dstN * w + w))
+    (hjN : (dstN + 1) * w ≤ n)
+    (hfit : FitsLen (mv + 1)) :
+    foldColBody t (embed x) (embed out) (withMoves b0 (Int.ofNat mv))
+        (Int.ofNat pN) (Int.ofNat cN) =
+      .ok (SudoRt.Flow.cont
+        (embed (dropCol w x srcN dstN cN out),
+          withMoves b0 (Int.ofNat (mv + colBump w x srcN cN)))) := by
+  rw [← foldMove_withMoves]
+  unfold foldColBody
+  rw [hsrcA, hdstA, htw, htn]
+  rw [atL_embed srcs pN hp, ok_bind, hsrc]
+  rw [mulI_ofNat srcN w (FitsLen.of_le hsw (Nat.le_add_right _ _)), ok_bind]
+  rw [addI_ofNat (srcN * w) cN (FitsLen.of_le hsw (by omega)), ok_bind]
+  rw [atL_embed dsts pN hp2, ok_bind, hdst]
+  rw [mulI_ofNat dstN w (FitsLen.of_le hdw (Nat.le_add_right _ _)), ok_bind]
+  rw [addI_ofNat (dstN * w) cN (FitsLen.of_le hdw (by omega)), ok_bind]
+  have hj : dstN * w + cN < out.length := by
+    rw [ho]
+    have hltw : dstN * w + cN < (dstN + 1) * w := by
+      rw [Nat.succ_mul]
+      omega
+    omega
+  by_cases hlt : srcN * w + cN < n
+  · have hix : srcN * w + cN < x.length := by rw [hx]; exact hlt
+    have hdec : decide (Int.ofNat (srcN * w + cN) < Int.ofNat n) = true :=
+      decide_eq_true (Int.ofNat_lt.mpr hlt)
+    rw [if_pos hdec, atL_embed x (srcN * w + cN) hix, ok_bind, sEq_int]
+    by_cases hz : x[srcN * w + cN] = 0
+    · rw [hz, decide_eq_true (by rfl : Int.ofNat 0 = (0 : Int)), Bool.not_true, pure_eq_ok, ok_bind]
+      rw [if_neg (by decide : ¬ ((false : Bool) = true)), pure_eq_ok]
+      have hskip := dropCol_zero w srcN dstN cN x out hix hz
+      have hbump : colBump w x srcN cN = 0 := by
+        unfold colBump
+        rw [dif_pos hix, hz, if_pos rfl]
+      rw [hskip, hbump, Nat.add_zero, foldMove_withMoves]
+    · have hne : ¬ Int.ofNat (x[srcN * w + cN]) = 0 := by
+        intro h
+        exact hz (Int.ofNat.inj h)
+      rw [decide_eq_false hne, Bool.not_false, pure_eq_ok, ok_bind]
+      rw [if_pos (rfl : true = true)]
+      rw [atL_embed out (dstN * w + cN) hj, ok_bind]
+      rw [ok_bind]
+      have hsum : FitsLen (out[dstN * w + cN] + x[srcN * w + cN]) :=
+        fits_small (by
+          have ho2 := hot _ hj
+          have hx2 := hxt _ hix
+          omega)
+      rw [addI_ofNat _ _ hsum, ok_bind]
+      rw [show (3 : Int) = Int.ofNat 3 from rfl, modI_ofNat _ (by decide), ok_bind]
+      have hjA : dstN * w + cN < (embed out).size := by rw [size_embed]; exact hj
+      rw [putL_ofNat _ _ _ hjA, set_irrel _ _ _ (by rw [size_embed]; exact hj)]
+      rw [embed_set out (dstN * w + cN) ((out[dstN * w + cN] + x[srcN * w + cN]) % 3) hj]
+      rw [ok_bind, foldMove_moves, addI_ofNat_one mv hfit, ok_bind, pure_eq_ok, foldMove_comp]
+      have hlist := dropCol_of w srcN dstN cN x out hix hj hz
+      have hbump : colBump w x srcN cN = 1 := by
+        unfold colBump
+        rw [dif_pos hix, if_neg hz]
+      rw [hlist, hbump, foldMove_withMoves]
+  · have hge : ¬ Int.ofNat (srcN * w + cN) < Int.ofNat n := fun h => hlt (Int.ofNat_lt.mp h)
+    rw [if_neg (by simpa [decide_eq_false hge] : ¬ (decide
+        (Int.ofNat (srcN * w + cN) < Int.ofNat n) = true))]
+    rw [pure_eq_ok, ok_bind, if_neg (by decide : ¬ ((false : Bool) = true)), pure_eq_ok]
+    have hix : ¬ srcN * w + cN < x.length := by rw [hx]; exact hlt
+    have hskip := dropCol_hi w srcN dstN cN x out hix
+    have hbump : colBump w x srcN cN = 0 := by
+      unfold colBump
+      rw [dif_neg hix]
+    rw [hskip, hbump, Nat.add_zero, foldMove_withMoves]
+
+def foldColAfter (σ : Int × (Array Int × Ecbs.Board)) :
+    Except SudoRt.Trap (SudoRt.Flow (Array Int × Ecbs.Board) (Array Int × Ecbs.Board)) := do
+  pure (SudoRt.Flow.cont σ.2)
+
+def foldColStep (t : Ecbs.Tier) (x : Array Int) (p toV : Int)
+    (σ : Int × (Array Int × Ecbs.Board)) :
+    Except SudoRt.Trap
+      (SudoRt.Flow (Int × (Array Int × Ecbs.Board)) (Array Int × Ecbs.Board)) := do
+  let c := σ.1
+  let out := σ.2.1
+  let b := σ.2.2
+  if c > toV then
+    pure (SudoRt.Flow.brk (c, (out, b)))
+  else
+    match ← foldColBody t x out b p c with
+    | .ret r => pure (SudoRt.Flow.ret r)
+    | .brk fs => pure (SudoRt.Flow.brk (c, fs))
+    | .cont fs => do
+        if c == toV then
+          pure (SudoRt.Flow.brk (c, fs))
+        else
+          let i' ← SudoRt.addI c (1 : Int)
+          pure (SudoRt.Flow.cont (i', fs))
+
+private theorem row_inv_step (t : Ecbs.Tier) (x : List Nat) (b0 : Ecbs.Board)
+    (srcs dsts : List Nat) (pN srcN dstN n w mv0 : Nat) (out0 : List Nat)
+    (htn : t.sudo_4Tier_1n = Int.ofNat n) (htw : t.sudo_4Tier_1w = Int.ofNat w)
+    (hsrcA : t.sudo_4Tier_7foldsrc = embed srcs)
+    (hdstA : t.sudo_4Tier_7folddst = embed dsts)
+    (hp : pN < srcs.length) (hp2 : pN < dsts.length)
+    (hsrc : srcs[pN] = srcN) (hdst : dsts[pN] = dstN)
+    (hx : x.length = n) (ho0 : out0.length = n)
+    (hxt : ∀ i (hi : i < x.length), x[i] ≤ 2)
+    (hsw : FitsLen (srcN * w + w)) (hdw : FitsLen (dstN * w + w))
+    (hjN : (dstN + 1) * w ≤ n)
+    (hroom : FitsLen (mv0 + w))
+    (c : Nat) (st : Array Int × Ecbs.Board)
+    (hc : c < w)
+    (hI : ∃ out mv,
+      st.1 = embed out ∧ st.2 = withMoves b0 (Int.ofNat mv) ∧
+      out = foldColAt w x srcN dstN out0 c ∧
+      mv = mv0 + foldBumpAt w x srcN c ∧
+      out.length = n ∧ (∀ i (hi : i < out.length), out[i] ≤ 2)) :
+    ∃ st',
+      (∃ out mv,
+        st'.1 = embed out ∧ st'.2 = withMoves b0 (Int.ofNat mv) ∧
+        out = foldColAt w x srcN dstN out0 (c + 1) ∧
+        mv = mv0 + foldBumpAt w x srcN (c + 1) ∧
+        out.length = n ∧ (∀ i (hi : i < out.length), out[i] ≤ 2)) ∧
+      foldColStep t (embed x) (Int.ofNat pN) (Int.ofNat (w - 1))
+          (Int.ofNat c, st) =
+        if c = w - 1 then .ok (SudoRt.Flow.brk (Int.ofNat c, st'))
+        else .ok (SudoRt.Flow.cont (Int.ofNat (c + 1), st')) := by
+  obtain ⟨out, mv, harr, hb, hpref, hmv, hlen, htrit⟩ := hI
+  have hfit : FitsLen (mv + 1) := by
+    apply FitsLen.of_le hroom
+    rw [hmv]
+    have := foldBumpAt_le w x srcN c
+    omega
+  have hbody := foldColBody_at t x out b0 srcs dsts pN c srcN dstN n w mv
+    htn htw hsrcA hdstA hp hp2 hsrc hdst hx hlen hxt htrit hc hsw hdw hjN hfit
+  have hpair : st = (embed out, withMoves b0 (Int.ofNat mv)) := Prod.ext harr hb
+  refine ⟨(embed (dropCol w x srcN dstN c out),
+      withMoves b0 (Int.ofNat (mv + colBump w x srcN c))), ?_, ?_⟩
+  · refine ⟨dropCol w x srcN dstN c out, mv + colBump w x srcN c, rfl, rfl, ?_, ?_, ?_, ?_⟩
+    · rw [foldColAt, hpref]
+    · rw [foldBumpAt, hmv, Nat.add_assoc]
+    · rw [dropCol_length, hlen]
+    · intro i hi
+      have hj : dstN * w + c < out.length := by
+        rw [hlen]
+        have hltw : dstN * w + c < (dstN + 1) * w := by
+          rw [Nat.succ_mul]
+          omega
+        omega
+      simpa [dropCol_length] using dropCol_trits w srcN dstN c x out hj htrit i
+        (by rw [dropCol_length] at hi; exact hi)
+  · rw [hpair]
+    unfold foldColStep
+    conv => lhs; zeta
+    have hng := not_gt_last hc
+    rw [if_neg hng, hbody, ok_bind]
+    have hfi : FitsLen (c + 1) :=
+      FitsLen.of_le hroom (Nat.le_trans (Nat.succ_le_of_lt hc) (Nat.le_add_left w mv0))
+    simpa using asc_tail (w - 1) c hfi
+      (embed (dropCol w x srcN dstN c out),
+        withMoves b0 (Int.ofNat (mv + colBump w x srcN c)))
+
+/-- One source row: columns `0 .. w - 1`. -/
+theorem foldRow_at (t : Ecbs.Tier) (x : List Nat) (b0 : Ecbs.Board)
+    (srcs dsts : List Nat) (pN srcN dstN n w mv0 : Nat) (out0 : List Nat)
+    (htn : t.sudo_4Tier_1n = Int.ofNat n) (htw : t.sudo_4Tier_1w = Int.ofNat w)
+    (hsrcA : t.sudo_4Tier_7foldsrc = embed srcs)
+    (hdstA : t.sudo_4Tier_7folddst = embed dsts)
+    (hp : pN < srcs.length) (hp2 : pN < dsts.length)
+    (hsrc : srcs[pN] = srcN) (hdst : dsts[pN] = dstN)
+    (hx : x.length = n) (ho0 : out0.length = n)
+    (hxt : ∀ i (hi : i < x.length), x[i] ≤ 2)
+    (hot0 : ∀ i (hi : i < out0.length), out0[i] ≤ 2)
+    (hsw : FitsLen (srcN * w + w)) (hdw : FitsLen (dstN * w + w))
+    (hjN : (dstN + 1) * w ≤ n) (hw : 0 < w) (hwFit : FitsLen w)
+    (hroom : FitsLen (mv0 + w)) :
+    (do
+        let toV ← SudoRt.subI (Int.ofNat w) (1 : Int)
+        let fuel := if (0 : Int) > toV then 1 else (toV - 0).natAbs + 1
+        SudoRt.runLoopOn (Int.ofNat 0, (embed out0, withMoves b0 (Int.ofNat mv0))) fuel
+          (foldColStep t (embed x) (Int.ofNat pN) toV)
+          foldColAfter (fun r => pure (SudoRt.Flow.ret r))) =
+      .ok (SudoRt.Flow.cont
+        (embed (dropRow w x srcN dstN out0),
+          withMoves b0 (Int.ofNat (mv0 + foldBumpAt w x srcN w)))) := by
+  rw [subI_ofNat_one w hw hwFit, ok_bind, fuelRange_eq]
+  refine asc_goal
+      (fun c st => ∃ out mv,
+        st.1 = embed out ∧ st.2 = withMoves b0 (Int.ofNat mv) ∧
+        out = foldColAt w x srcN dstN out0 c ∧
+        mv = mv0 + foldBumpAt w x srcN c ∧
+        out.length = n ∧ (∀ i (hi : i < out.length), out[i] ≤ 2))
+      (Nat.zero_le (w - 1)) ?_ ?_ ?_
+  · refine ⟨out0, mv0, rfl, rfl, rfl, by simp [foldBumpAt], ho0, hot0⟩
+  · intro c st _ hc hI
+    have hlt : c < w := by omega
+    obtain ⟨st', hinv, hstep⟩ := row_inv_step t x b0 srcs dsts pN srcN dstN n w mv0
+      out0 htn htw hsrcA hdstA hp hp2 hsrc hdst hx ho0 hxt hsw hdw hjN hroom c st hlt hI
+    exact ⟨st', hinv, hstep⟩
+  · intro st hI
+    obtain ⟨out, mv, harr, hb, hpref, hmv, _, _⟩ := hI
+    have hst : st = (embed out, withMoves b0 (Int.ofNat mv)) := Prod.ext harr hb
+    have hw1 : w - 1 + 1 = w := by omega
+    unfold foldColAfter
+    rw [pure_eq_ok, hst, hpref, hw1, foldColAt_row, hmv, hw1]
+
+end
+
+end EcbsLink2.Link2

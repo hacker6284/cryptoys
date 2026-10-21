@@ -288,3 +288,4 @@ import EcbsLink2.Link2.LoopCongr
 import EcbsLink2.Link2.BasePointEq
 import EcbsLink2.Link2.EmittedHole
 import EcbsLink2.Link2.HitChord
+import EcbsLink2.Link2.FoldExport

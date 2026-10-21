@@ -861,4 +861,19 @@ private theorem genAfter_eq (cells : Nat) (arr0 : Array Int) (pair : Int) :
           simp only [bind_assoc]
         · rfl
 
+/-- The emitted face loop, with the three-multiplication lay, is `dieGo`. -/
+private theorem emitted_die
+    (faces : List Nat) (cells : Nat) (arr : Array Int) (pair next : Int) :
+    (do
+        let toV ← SudoRt.subI (SudoRt.listLen (embed faces)) (1 : Int)
+        let fuel := if next > toV then 1 else (toV - next).natAbs + 1
+        let r ← SudoRt.runLoopOn (next, ((0 : Int), next)) fuel
+          (faceStep (embed faces) toV) (genAfter (Int.ofNat cells) arr pair)
+          (fun r => pure (SudoRt.Flow.ret r))
+        pure r) =
+      dieGo faces cells arr pair next := by
+  rw [listLen_embed, genAfter_eq cells arr pair]
+  unfold dieGo
+  rfl
+
 end EcbsLink2.Link2

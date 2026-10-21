@@ -435,6 +435,78 @@ private theorem pow_loop_from {α : Type} (n i : Nat) (strip : Array Int) (b : B
       rw [← hfr]
       exact ih (i + 1) b' hi1 hnext
 
+private theorem bind_assoc {α β γ : Type} (m : Except SudoRt.Trap α)
+    (f : α → Except SudoRt.Trap β) (g : β → Except SudoRt.Trap γ) :
+    ((m >>= f) >>= g) = (m >>= fun a => f a >>= g) := by
+  cases m <;> rfl
+
+private theorem bind_assoc' {α β γ : Type} (m : Except SudoRt.Trap α)
+    (f : α → Except SudoRt.Trap β) (g : β → Except SudoRt.Trap γ) :
+    (m >>= fun a => f a >>= g) = ((m >>= f) >>= g) := by
+  cases m <;> rfl
+
+/-- A loop whose `after` binds a continuation is the loop that returns the
+    state, then that continuation. `onRet` is dead. -/
+private theorem run_bind {σ ρ α β : Type} (s0 : σ) (fuel : Nat)
+    (step : σ → Except SudoRt.Trap (SudoRt.Flow σ ρ))
+    (thin : σ → Except SudoRt.Trap α) (k : α → Except SudoRt.Trap β)
+    (onRet : ρ → Except SudoRt.Trap β) (onRetA : ρ → Except SudoRt.Trap α)
+    (onRetId : ρ → Except SudoRt.Trap σ)
+    (hno : ∀ s r, step s ≠ .ok (SudoRt.Flow.ret r)) :
+    SudoRt.runLoopOn s0 fuel step (fun s => thin s >>= k) onRet =
+      ((SudoRt.runLoopOn s0 fuel step thin onRetA) >>= k) := by
+  rw [runLoopOn_after_split s0 fuel step (fun s => thin s >>= k) onRet onRetId hno]
+  rw [bind_assoc' (SudoRt.runLoopOn s0 fuel step (fun s => pure s) onRetId) thin k]
+  rw [← runLoopOn_after_split s0 fuel step thin onRetA onRetId hno]
+
+theorem emittedStrip_val (n : Nat) (hn : 2 ≤ n) (hfit : FitsLen n) :
+    emittedStrip n = .ok (embed (rootStrip n)) := by
+  rw [emittedStrip, root_strip_loop n hn hfit, ← rootStrip_eq n hn]
+
+/-- The strip loop inside one search index, continuation included, is
+    `emittedStrip` bound into that continuation. -/
+theorem strip_block {α : Type} (n : Nat) (strip0 : Array Int)
+    (k : Array Int → Except SudoRt.Trap α)
+    (onRet : Int × Board → Except SudoRt.Trap α)
+    (hn : 2 ≤ n) (hfit : FitsLen n) (h0 : strip0 = Array.mkArray n (0 : Int)) :
+    (do
+        let toV ← SudoRt.subI (Int.ofNat n) (2 : Int)
+        let fuel := fuelRange (0 : Int) toV
+        SudoRt.runLoopOn ((0 : Int), strip0) fuel (emittedStripStep toV)
+          (fun σ => do
+            let ix ← SudoRt.subI (Int.ofNat n) (2 : Int)
+            let strip ← SudoRt.putL σ.2 ix (1 : Int)
+            k strip)
+          onRet) =
+      (emittedStrip n >>= k) := by
+  have hk : ∀ σ : Int × Array Int,
+      (do
+          let ix ← SudoRt.subI (Int.ofNat n) (2 : Int)
+          let strip ← SudoRt.putL σ.2 ix (1 : Int)
+          k strip) =
+        ((SudoRt.subI (Int.ofNat n) (2 : Int) >>= fun ix =>
+            SudoRt.putL σ.2 ix (1 : Int)) >>= k) := by
+    intro σ
+    simp only [bind_assoc']
+  have hsub : SudoRt.subI (Int.ofNat n) (2 : Int) = .ok (Int.ofNat (n - 2)) := by
+    rw [show (2 : Int) = Int.ofNat 2 from rfl]
+    exact subI_ofNat n 2 hfit (by omega)
+  simp only [hk]
+  conv =>
+    lhs
+    pattern SudoRt.subI _ _
+    rw [hsub]
+  simp only [ok_bind]
+  rw [show (0 : Int) = Int.ofNat 0 from rfl, h0]
+  rw [run_bind (Int.ofNat 0, Array.mkArray n (0 : Int))
+      (fuelRange (Int.ofNat 0) (Int.ofNat (n - 2)))
+      (emittedStripStep (Int.ofNat (n - 2)))
+      (fun σ => SudoRt.subI (Int.ofNat n) (2 : Int) >>= fun ix => SudoRt.putL σ.2 ix (1 : Int))
+      k onRet (fun _ => pure (Array.mkArray n (0 : Int)))
+      (fun _ => pure (Int.ofNat 0, Array.mkArray n (0 : Int)))
+      (fun s r => emittedStripStep_noret _ s r)]
+  rw [emitted_strip_loop n]
+
 /-- The emitted power loop is `powRun` of the root digits. -/
 theorem emitted_pow_loop {α : Type} (n : Nat) (strip : Array Int) (b : Board)
     (k : Board → Except SudoRt.Trap α)
@@ -449,5 +521,22 @@ theorem emitted_pow_loop {α : Type} (n : Nat) (strip : Array Int) (b : Board)
   have hdrop0 : (rootDigits n).drop 0 = rootDigits n := by simp
   rw [← hdrop0]
   exact pow_loop_from n 0 strip b k onRet hn (by omega) hfit hstrip
+
+/-- The emitted power loop, continuation included, is `powRun` of the root digits. -/
+theorem pow_block {α : Type} (n : Nat) (strip : Array Int) (b0 : Board)
+    (k : Board → Except SudoRt.Trap α)
+    (onRet : Int × Board → Except SudoRt.Trap α)
+    (hn : 2 ≤ n) (hfit : FitsLen n) (hstrip : strip = embed (rootStrip n)) :
+    (do
+        let toV ← SudoRt.subI (Int.ofNat n) (2 : Int)
+        let fuel := fuelRange (0 : Int) toV
+        SudoRt.runLoopOn ((0 : Int), b0) fuel (emittedPowStep strip toV)
+          (fun σ => k σ.2) onRet) =
+      (powRun b0 (rootDigits n) >>= k) := by
+  have hsub := subI_ofNat n 2 hfit (by omega)
+  rw [show (2 : Int) = Int.ofNat 2 from rfl, hsub, ok_bind]
+  rw [show (0 : Int) = Int.ofNat 0 from rfl]
+  dsimp only
+  exact emitted_pow_loop n strip b0 k onRet hn hfit hstrip
 
 end EcbsLink2.Link2

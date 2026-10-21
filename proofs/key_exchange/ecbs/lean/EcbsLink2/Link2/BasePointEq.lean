@@ -565,10 +565,9 @@ private theorem back_hit (b : Board) (found : Int) :
 /-- The walk text after the first four `key_grid_moves`. -/
 def emittedTail (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
   do
-    let wrwr := (#[(1 : Int), (2 : Int), (1 : Int), (2 : Int)] : Array (Int))
     if ((b).sudo_5Board_1t).sudo_4Tier_4demo then
       do
-        let _io1445 ← walk_chord b wrwr
+        let _io1445 ← walk_chord b cofactorWalkCells
         let ⟨_ret1446, _iw01447⟩ := _io1445
         let b := _iw01447
         let _sudo_h0 := _ret1446
@@ -606,7 +605,7 @@ def emittedTail (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
             pure (found, b)
     else
       do
-        let _io1462 ← walk_fform b wrwr
+        let _io1462 ← walk_fform b cofactorWalkCells
         let ⟨_ret1463, _iw01464⟩ := _io1462
         let b := _iw01464
         let _sudo_h1 := _ret1463

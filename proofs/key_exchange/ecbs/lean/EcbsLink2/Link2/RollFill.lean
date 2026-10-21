@@ -990,4 +990,263 @@ private theorem emitted_attempt
   exact emitted_pairs faces cells attempt next 0 (List.replicate cells 0) h9
     (List.length_replicate _ _) hfitF hfitC
 
+/-- The emitted attempt step: the index test, one fresh fill, then the next attempt. -/
+private def emitAttempt (faces : List Nat) (cells : Nat) (toV : Int)
+    (σ : Int × Int) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Int) (Option Rolled)) := do
+  let attempt := σ.1
+  let next := σ.2
+  if attempt > toV then
+    pure (SudoRt.Flow.brk (attempt, next))
+  else
+    match ← (do
+      let arr ← SudoRt.filledL (Int.ofNat cells) (0 : Int)
+      let sum ← SudoRt.addI (Int.ofNat cells) (1 : Int)
+      let half ← SudoRt.divI sum (2 : Int)
+      let toP ← SudoRt.subI half (1 : Int)
+      let fuel :=
+        if Int.ofNat 0 > toP then 1 else (toP - Int.ofNat 0).natAbs + 1
+      let r ← SudoRt.runLoopOn (Int.ofNat 0, (next, arr)) fuel
+        (emitStep faces cells toP) (pairAfter attempt)
+        (fun r => pure (SudoRt.Flow.ret r))
+      pure r) with
+    | .ret r => pure (SudoRt.Flow.ret r)
+    | .brk fs => pure (SudoRt.Flow.brk (attempt, fs))
+    | .cont fs => do
+        if attempt == toV then
+          pure (SudoRt.Flow.brk (attempt, fs))
+        else
+          let i' ← SudoRt.addI attempt 1
+          pure (SudoRt.Flow.cont (i', fs))
+
+private theorem emitAttempt_eq (faces : List Nat) (cells : Nat) (toV : Int) :
+    emitAttempt faces cells toV = attemptBody faces cells toV := by
+  unfold emitAttempt attemptBody
+  simp only [emitStep_fun]
+
+/-- Attempts from 1 through `faces.length + 1`, in the emitted shape. -/
+private theorem roll_emit
+    (faces : List Nat) (cells : Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitC : FitsLen (cells + 1)) (hfitL : FitsLen (faces.length + 1)) :
+    (do
+        let lim ← SudoRt.addI (SudoRt.listLen (embed faces)) (1 : Int)
+        let fuel :=
+          if Int.ofNat 1 > lim then 1 else (lim - Int.ofNat 1).natAbs + 1
+        let r ← SudoRt.runLoopOn (Int.ofNat 1, Int.ofNat 0) fuel
+          (emitAttempt faces cells lim)
+          (fun _ => pure (none : Option Rolled))
+          (fun r => pure r)
+        pure r) =
+      .ok (rolledOf (rollKey cells faces)) := by
+  simp only [emitAttempt_eq]
+  exact roll_from faces cells h9 hfitC hfitL
+
+private theorem faceStep_flat (faces : Array Int) (toV : Int) :
+    faceStep faces toV = (fun σ =>
+      if σ.1 > toV then
+        pure (SudoRt.Flow.brk (σ.1, σ.2.1, σ.2.2))
+      else do
+        let body ← (do
+          let got ← SudoRt.atL faces σ.1
+          let nxt ← SudoRt.addI σ.1 (Int.ofNat 1)
+          let ge ← (if decide (got ≥ Int.ofNat 0) = true then
+            pure (decide (got ≤ (9 : Int))) else pure false)
+          SudoRt.sudoAssert ge 1216
+          if (!SudoRt.SEq.beq got (Int.ofNat 0)) = true then
+            pure (SudoRt.Flow.brk (got, nxt))
+          else
+            pure (SudoRt.Flow.cont (got, nxt)))
+        match body with
+        | .ret r => pure (SudoRt.Flow.ret r)
+        | .brk fs => pure (SudoRt.Flow.brk (σ.1, fs))
+        | .cont fs =>
+          if (σ.1 == toV) = true then pure (SudoRt.Flow.brk (σ.1, fs))
+          else do
+            let i' ← SudoRt.addI σ.1 (Int.ofNat 1)
+            pure (SudoRt.Flow.cont (i', fs))) := by
+  unfold faceStep faceBody
+  funext σ
+  rfl
+
+private theorem face_printed (faces : List Nat) (toV : Int) :
+    (fun σ =>
+      if σ.fst > toV then pure (SudoRt.Flow.brk (σ.fst, σ.snd.fst, σ.snd.snd))
+      else do
+        let __do_lift ← (do
+          let _t1768 ← SudoRt.atL (embed faces) σ.fst
+          let _t1769 ← SudoRt.addI σ.fst (Int.ofNat 1)
+          let _t1771 ←
+            (if decide (_t1768 ≥ Int.ofNat 0) = true then pure (decide (_t1768 ≤ 9))
+              else pure false)
+          SudoRt.sudoAssert _t1771 1216
+          if (!SudoRt.SEq.beq _t1768 (Int.ofNat 0)) = true then
+            pure (SudoRt.Flow.brk (_t1768, _t1769))
+          else
+            pure (SudoRt.Flow.cont (_t1768, _t1769)))
+        match __do_lift with
+        | .ret r => pure (SudoRt.Flow.ret r)
+        | .brk _fs => pure (SudoRt.Flow.brk (σ.fst, _fs))
+        | .cont _fs =>
+          if (σ.fst == toV) = true then pure (SudoRt.Flow.brk (σ.fst, _fs))
+          else do
+            let i' ← SudoRt.addI σ.fst (Int.ofNat 1)
+            pure (SudoRt.Flow.cont (i', _fs))) =
+      faceStep (embed faces) toV := by
+  rw [faceStep_flat]
+
+private theorem pairAfter_gen (rolls : Int) :
+    pairAfter rolls = fun σ =>
+      let next := σ.2.1
+      let _sp1798 := σ.2.2
+      let cells := _sp1798
+      (do
+        let _t1796 ← Ecbs.is_empty cells
+        if !_t1796 then
+          do
+            pure (SudoRt.Flow.ret (ρ := Option Rolled)
+              (some ({
+                sudo_6Rolled_5cells := cells
+                sudo_6Rolled_4used := next
+                sudo_6Rolled_5rolls := rolls } : Rolled)))
+        else
+          do
+            pure (SudoRt.Flow.cont (ρ := Option Rolled) next)) := by
+  unfold pairAfter
+  funext σ
+  rfl
+
+/-- The zeta-normal attempt step of `Ecbs.roll_key`, before it is recognized. -/
+private def genAttempt (faces : List Nat) (cells : Nat) (toV : Int) (σ : Int × Int) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Int) (Option Rolled)) :=
+  if σ.fst > toV then pure (SudoRt.Flow.brk (σ.fst, σ.snd))
+  else do
+    let loop ← (do
+      let arr ← SudoRt.filledL (Int.ofNat cells) (Int.ofNat 0)
+      let sum ← SudoRt.addI (Int.ofNat cells) (Int.ofNat 1)
+      let half ← SudoRt.divI sum 2
+      let toP ← SudoRt.subI half (Int.ofNat 1)
+      SudoRt.runLoopOn (Int.ofNat 0, σ.snd, arr)
+        (if Int.ofNat 0 > toP then 1 else (toP - Int.ofNat 0).natAbs + 1)
+        (fun τ =>
+          if τ.fst > toP then pure (SudoRt.Flow.brk (τ.fst, τ.snd.fst, τ.snd.snd))
+          else do
+            let scan ← (do
+              let faceTo ← SudoRt.subI (Int.ofNat faces.length) (Int.ofNat 1)
+              SudoRt.runLoopOn (τ.snd.fst, Int.ofNat 0, τ.snd.fst)
+                (if τ.snd.fst > faceTo then 1 else (faceTo - τ.snd.fst).natAbs + 1)
+                (faceStep (embed faces) faceTo)
+                (genAfter (Int.ofNat cells) τ.snd.snd τ.fst)
+                (fun r => pure (SudoRt.Flow.ret r)))
+            match scan with
+            | .ret r => pure (SudoRt.Flow.ret r)
+            | .brk fs => pure (SudoRt.Flow.brk (τ.fst, fs))
+            | .cont fs =>
+              if (τ.fst == toP) = true then pure (SudoRt.Flow.brk (τ.fst, fs))
+              else do
+                let i' ← SudoRt.addI τ.fst (Int.ofNat 1)
+                pure (SudoRt.Flow.cont (i', fs)))
+        (pairAfter σ.fst)
+        (fun r => pure (SudoRt.Flow.ret r)))
+    match loop with
+    | .ret r => pure (SudoRt.Flow.ret r)
+    | .brk fs => pure (SudoRt.Flow.brk (σ.fst, fs))
+    | .cont fs =>
+      if (σ.fst == toV) = true then pure (SudoRt.Flow.brk (σ.fst, fs))
+      else do
+        let i' ← SudoRt.addI σ.fst (Int.ofNat 1)
+        pure (SudoRt.Flow.cont (i', fs))
+
+private theorem genAttempt_eq (faces : List Nat) (cells : Nat) :
+    genAttempt faces cells = emitAttempt faces cells := by
+  funext toV σ
+  unfold genAttempt emitAttempt emitStep
+  simp only [bind_pure]
+  rw [listLen_embed]
+  rfl
+
+/-- `Ecbs.roll_key` is the attempt loop, hence `Spec.rollKey`. No inversion. -/
+private theorem roll_key_loop
+    (t : Ecbs.Tier) (faces : List Nat) (cells : Nat)
+    (hc : t.sudo_4Tier_5cells = Int.ofNat cells)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitC : FitsLen (cells + 1)) (hfitL : FitsLen (faces.length + 1)) :
+    Ecbs.roll_key t (embed faces) = .ok (rolledOf (rollKey cells faces)) := by
+  unfold Ecbs.roll_key
+  simp only [bind_pure]
+  conv => lhs; zeta
+  rw [hc, listLen_embed]
+  rw [show (1 : Int) = Int.ofNat 1 from rfl, show (0 : Int) = Int.ofNat 0 from rfl]
+  conv =>
+    lhs
+    pattern (SudoRt.runLoopOn _ _ _ _ _)
+    arg 3
+    change (genAttempt faces cells _t1801)
+  simp only [genAttempt_eq, emitAttempt_eq]
+  rw [addI_ofNat faces.length 1 hfitL, ok_bind, fuelRange_eq]
+  have hfitF : FitsLen faces.length := FitsLen.of_le hfitL (Nat.le_succ _)
+  exact roll_loop_at faces cells (faces.length + 1) 1 0 h9 hfitF hfitC hfitL rfl
+
+def rolledMatch (cells : Nat) (faces : List Nat) : Option Rolled :=
+  match rollKey cells faces with
+  | none => none
+  | some (cs, used, rolls) => some {
+      sudo_6Rolled_5cells := embed cs
+      sudo_6Rolled_4used := Int.ofNat used
+      sudo_6Rolled_5rolls := Int.ofNat rolls }
+
+private theorem rolledMatch_eq (cells : Nat) (faces : List Nat) :
+    rolledOf (rollKey cells faces) = rolledMatch cells faces := by
+  simp [rolledOf, rolledMatch]
+
+/-- `roll_key` is `Spec.rollKey`. A face outside `0 .. 9` is assert 1216.
+    The roll does not invert. -/
+theorem roll_key_refines
+    (t : Ecbs.Tier) (faces : List Nat) (cells : Nat)
+    (hc : t.sudo_4Tier_5cells = Int.ofNat cells)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitC : FitsLen (cells + 1)) (hfitL : FitsLen (faces.length + 1)) :
+    Ecbs.roll_key t (embed faces) = .ok (rolledMatch cells faces) := by
+  rw [roll_key_loop t faces cells hc h9 hfitC hfitL, rolledMatch_eq]
+
+theorem demo_roll_key (faces : List Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitL : FitsLen (faces.length + 1)) :
+    Ecbs.roll_key Ecbs.demo_tier (embed faces) =
+      .ok (rolledMatch demo.cells faces) := by
+  have hc : Ecbs.demo_tier.sudo_4Tier_5cells = Int.ofNat demo.cells := by
+    rw [← demo_emb]; rfl
+  exact roll_key_refines Ecbs.demo_tier faces demo.cells hc h9
+    (fits_small (by decide)) hfitL
+
+theorem toy_roll_key (faces : List Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitL : FitsLen (faces.length + 1)) :
+    Ecbs.roll_key Ecbs.toy_tier (embed faces) =
+      .ok (rolledMatch toy.cells faces) := by
+  have hc : Ecbs.toy_tier.sudo_4Tier_5cells = Int.ofNat toy.cells := by
+    rw [← toy_emb]; rfl
+  exact roll_key_refines Ecbs.toy_tier faces toy.cells hc h9
+    (fits_small (by decide)) hfitL
+
+theorem hobby_roll_key (faces : List Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitL : FitsLen (faces.length + 1)) :
+    Ecbs.roll_key Ecbs.hobby_tier (embed faces) =
+      .ok (rolledMatch hobby.cells faces) := by
+  have hc : Ecbs.hobby_tier.sudo_4Tier_5cells = Int.ofNat hobby.cells := by
+    rw [← hobby_emb]; rfl
+  exact roll_key_refines Ecbs.hobby_tier faces hobby.cells hc h9
+    (fits_small (by decide)) hfitL
+
+theorem serious_roll_key (faces : List Nat)
+    (h9 : ∀ j (hj : j < faces.length), faces[j] ≤ 9)
+    (hfitL : FitsLen (faces.length + 1)) :
+    Ecbs.roll_key Ecbs.serious_tier (embed faces) =
+      .ok (rolledMatch serious.cells faces) := by
+  have hc : Ecbs.serious_tier.sudo_4Tier_5cells = Int.ofNat serious.cells := by
+    rw [← serious_emb]; rfl
+  exact roll_key_refines Ecbs.serious_tier faces serious.cells hc h9
+    (fits_small (by decide)) hfitL
+
 end EcbsLink2.Link2

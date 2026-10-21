@@ -1,16 +1,13 @@
 /-
-  `walk_key` on the four shipped tiers. `new_board` and the two base puts
-  are `baseBoard`, with the move and peak counters named. Demo walks by
-  `walk_chord`. Toy, Hobby, and Serious walk by `walk_fform` and take
-  `FieldOk`. `TierRoom` and `fformScript` are the tier's own facts.
+  The two base puts that `walk_key` starts with. `new_board` then those puts
+  is `baseBoard`, with the move and peak counters named. This file does not
+  tie `walk_key`: the restatement that pasted `walk_chord` or `walk_fform`
+  back onto the export was not a refinement.
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.OpenBoard
 import EcbsLink2.Link2.BoardBuild
 import EcbsLink2.Link2.Place
-import EcbsLink2.Link2.WalkKeyDemo
-import EcbsLink2.Link2.WalkScope
-import EcbsLink2.Link2.FformTierRoom
 import EcbsLink2.Link2.Basic
 
 namespace EcbsLink2.Link2
@@ -97,112 +94,5 @@ theorem key_seated (t : Spec.Tier) (hOk : BoardOk t) (x y : List Nat)
   · simp [baseBoard]
   · simp [baseBoard, putAcross, builtBoard, midBoard, placed, blankOf]
   · simp [baseBoard, putAcross, built_ctrl_eq]
-
-/-- Demo's `walk_key` is `walk_chord` on that seated board. -/
-theorem demo_walk_key (x y : List Nat) (cells : Array Int)
-    (hx : x.length = demo.n) (hy : y.length = demo.n) :
-    walk_key (embTier demo) cells { sudo_5Point_1x := embed x, sudo_5Point_1y := embed y } =
-      (do
-          let r ← (do
-            let r ← walk_chord (baseBoard demo x y) cells
-            let live := r.1.1
-            let ok := r.1.2
-            let b := r.2
-            let flag ← (if live then pure ok else pure false)
-            pure (flag, b))
-          match r with
-          | (flag, b) =>
-            if !flag then
-              pure (none : Option Point)
-            else
-              do
-                let p ← point_of b across up
-                pure (some p)) ∧
-      (baseBoard demo x y).sudo_5Board_4cost.sudo_5Costs_5moves =
-        Int.ofNat (pegCount x + pegCount y) ∧
-      (baseBoard demo x y).sudo_5Board_4cost.sudo_5Costs_4peak = 2 ∧
-      (baseBoard demo x y).sudo_5Board_4cost.sudo_5Costs_6slides = 0 ∧
-      (baseBoard demo x y).sudo_5Board_4cost.sudo_5Costs_4ctrl =
-        Int.ofNat (tierR demo) := by
-  have hkey := key_seated demo demo_board x y hx hy
-  have hdemo : (baseBoard demo x y).sudo_5Board_1t.sudo_4Tier_4demo = true := by
-    simp [baseBoard, putAcross, built_tier_eq, embTier, demo]
-  refine ⟨?_, hkey.2.1, hkey.2.2.1, hkey.2.2.2.1, hkey.2.2.2.2⟩
-  unfold walk_key
-  conv => lhs; zeta
-  rw [show ({ sudo_5Point_1x := embed x, sudo_5Point_1y := embed y } :
-        Point).sudo_5Point_1x = embed x from rfl]
-  rw [show ({ sudo_5Point_1x := embed x, sudo_5Point_1y := embed y } :
-        Point).sudo_5Point_1y = embed y from rfl]
-  rw [new_board_refines demo demo_board, ok_bind,
-    key_put_across demo demo_board x hx, ok_bind,
-    key_put_up demo demo_board x y hx hy, ok_bind,
-    walk_and_finish_demo (baseBoard demo x y) cells hdemo]
-
-/-- Toy, Hobby, and Serious. `FieldOk` is the open cell. The rooms and the
-    script bound are the tier's. -/
-theorem fform_walk_key (t : Spec.Tier) (hF : FieldOk t)
-    (hship : t = toy ∨ t = hobby ∨ t = serious)
-    (x y baseX px : List Nat) (cells : Array Int)
-    (hx : x.length = t.n) (hy : y.length = t.n)
-    (ht : allTritList (affineRun t.n t.k t.benchlen baseX px))
-    (hlen : (affineRun t.n t.k t.benchlen baseX px).length = t.n) :
-    walk_key (embTier t) cells { sudo_5Point_1x := embed x, sudo_5Point_1y := embed y } =
-      (do
-          let r ← (do
-            let r ← walk_fform (baseBoard t x y) cells
-            let live := r.1.1
-            let ok := r.1.2
-            let b := r.2
-            let flag ← (if live then pure ok else pure false)
-            if !flag then
-              pure (false, b)
-            else
-              do
-                let b ← finish b
-                pure (true, b))
-          match r with
-          | (flag, b) =>
-            if !flag then
-              pure (none : Option Point)
-            else
-              do
-                let p ← point_of b across up
-                pure (some p)) ∧
-      (baseBoard t x y).sudo_5Board_4cost.sudo_5Costs_5moves =
-        Int.ofNat (pegCount x + pegCount y) ∧
-      (baseBoard t x y).sudo_5Board_4cost.sudo_5Costs_4peak = 2 ∧
-      (baseBoard t x y).sudo_5Board_4cost.sudo_5Costs_6slides = 0 ∧
-      (baseBoard t x y).sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (tierR t) ∧
-      TierRoom t ∧ fformScript < t.script ∧
-      ¬ RunNonUnit t.n t.k t.benchlen baseX px := by
-  have hOk : BoardOk t := by
-    rcases hship with rfl | rfl | rfl
-    · exact toy_board
-    · exact hobby_board
-    · exact serious_board
-  have hkey := key_seated t hOk x y hx hy
-  have hdemo : (baseBoard t x y).sudo_5Board_1t.sudo_4Tier_4demo = false := by
-    rcases hship with rfl | rfl | rfl
-    · simp [baseBoard, putAcross, built_tier_eq, embTier, toy]
-    · simp [baseBoard, putAcross, built_tier_eq, embTier, hobby]
-    · simp [baseBoard, putAcross, built_tier_eq, embTier, serious]
-  have hroom : TierRoom t := tier_room t hship
-  have hscript : fformScript < t.script := by
-    rcases hship with rfl | rfl | rfl
-    · exact toy_script_fform
-    · exact hobby_script_fform
-    · exact serious_script_fform
-  refine ⟨?_, hkey.2.1, hkey.2.2.1, hkey.2.2.2.1, hkey.2.2.2.2, hroom, hscript,
-    walk_key_field t hF baseX px ht hlen⟩
-  unfold walk_key
-  conv => lhs; zeta
-  rw [show ({ sudo_5Point_1x := embed x, sudo_5Point_1y := embed y } :
-        Point).sudo_5Point_1x = embed x from rfl]
-  rw [show ({ sudo_5Point_1x := embed x, sudo_5Point_1y := embed y } :
-        Point).sudo_5Point_1y = embed y from rfl]
-  rw [new_board_refines t hOk, ok_bind, key_put_across t hOk x hx, ok_bind,
-    key_put_up t hOk x y hx hy, ok_bind,
-    walk_and_finish_fform (baseBoard t x y) cells hdemo]
 
 end EcbsLink2.Link2

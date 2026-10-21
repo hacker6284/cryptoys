@@ -3,7 +3,9 @@
   base homes. A non-positive hole is assert 1527. An error from `base_point`
   (assert 963 when the search misses, assert 972 or 975 when the cofactor
   walk fails) is the same error. Demo's spec point is the published pair,
-  and a demo board walks by `walk_chord`.
+  and a demo board walks by `walk_chord`. `base_point_of_spec` is an internal
+  lemma: it assumes the homes are already the spec point, so it does not tie
+  the export.
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.WalkScope
@@ -54,9 +56,11 @@ theorem base_point_of_point (t : Ecbs.Tier) (b0 b : Ecbs.Board) (j : Int)
   rw [sudoAssert_bool 1527 rfl, ok_bind]
   rw [point_of_eq b Ecbs.base_across Ecbs.base_up vx vy hx hy, ok_bind, pure_eq_ok]
 
-/-- The same point on both sides. Homes 3 and 4 are the seated point, so
-    `value` is not a premise. -/
-theorem base_point_of_spec (t : Spec.Tier) (b0 b : Ecbs.Board) (j : Int)
+/-- Internal lemma, not an export. Homes 3 and 4 are already the spec point,
+    and `base_point` has already returned that board, so `value` is not a
+    premise. The hypothesis `basePoint t = some (x, y)` is the same fact the
+    conclusion repeats. -/
+private theorem base_point_of_spec (t : Spec.Tier) (b0 b : Ecbs.Board) (j : Int)
     (x y : List Nat)
     (hN : Ecbs.new_board (embTier t) = .ok b0)
     (hB : Ecbs.base_point b0 = .ok (j, b))

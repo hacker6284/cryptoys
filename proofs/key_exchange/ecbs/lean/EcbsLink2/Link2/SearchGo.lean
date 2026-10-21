@@ -34,9 +34,10 @@ def searchReadyDo (b0 : Ecbs.Board) (t : Spec.Tier) (j : Nat) :
       pure ({ b with sudo_5Board_9marker_on := true }))
     powRun b (rootDigits t.n)
 
-/-- Hit test, then either stop or empty the five homes. -/
-def searchBody (b0 : Ecbs.Board) (t : Spec.Tier) (j : Nat) (found : Int) :
-    Except SudoRt.Trap (SudoRt.Flow (Ecbs.Board × Int) Empty) :=
+/-- Hit test, then either stop or empty the five homes. `ρ` is the loop's
+    return payload. The body never returns, so every `ρ` is the same step. -/
+def searchBody {ρ : Type} (b0 : Ecbs.Board) (t : Spec.Tier) (j : Nat) (found : Int) :
+    Except SudoRt.Trap (SudoRt.Flow (Ecbs.Board × Int) ρ) :=
   do
     let b ← searchReadyDo b0 t j
     let r ← searchCheck b
@@ -46,9 +47,11 @@ def searchBody (b0 : Ecbs.Board) (t : Spec.Tier) (j : Nat) (found : Int) :
       let b ← searchMiss r.2
       pure (SudoRt.Flow.cont (b, found))
 
-/-- One index of the emitted search. The last index breaks; a hit breaks early. -/
-def searchStep (t : Spec.Tier) (toN : Nat) (σ : Int × (Ecbs.Board × Int)) :
-    Except SudoRt.Trap (SudoRt.Flow (Int × (Ecbs.Board × Int)) Empty) :=
+/-- One index of the emitted search. The last index breaks; a hit breaks early.
+    `ρ` matches the emitted loop: the card stamps `Int × Board`, and a proof
+    that the return arm is dead instantiates `Empty`. -/
+def searchStep {ρ : Type} (t : Spec.Tier) (toN : Nat) (σ : Int × (Ecbs.Board × Int)) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × (Ecbs.Board × Int)) ρ) :=
   if σ.1 > Int.ofNat toN then
     pure (SudoRt.Flow.brk σ)
   else
@@ -99,7 +102,7 @@ theorem search_step_miss (b0 : Ecbs.Board) (t : Spec.Tier)
     (hsl0 : b0.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl0)
     (hc0 : b0.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t)) :
     ∃ bM,
-      searchStep t toN (Int.ofNat i, (b0, 0)) =
+      searchStep (ρ := Empty) t toN (Int.ofNat i, (b0, 0)) =
         (if i = toN then .ok (SudoRt.Flow.brk (Int.ofNat i, (bM, 0)))
           else .ok (SudoRt.Flow.cont (Int.ofNat (i + 1), (bM, 0)))) ∧
         PlantAt bM t (holesLeft - 1) ∧
@@ -130,7 +133,7 @@ theorem search_step_miss (b0 : Ecbs.Board) (t : Spec.Tier)
     unfold searchReadyDo at hdo
     rw [hready, ok_bind, hck', ok_bind] at hdo
     exact hdo
-  have hbody : searchBody b0 t i 0 = .ok (SudoRt.Flow.cont (bM, 0)) := by
+  have hbody : searchBody (ρ := Empty) b0 t i 0 = .ok (SudoRt.Flow.cont (bM, 0)) := by
     unfold searchBody searchReadyDo
     rw [hready, ok_bind, hck', ok_bind]
     have hne : ¬ ((false : Bool) = true) := by decide
@@ -150,7 +153,7 @@ theorem search_loop_miss {α : Type} (b0 : Ecbs.Board) (t : Spec.Tier)
     (hmiss : ∀ i, 1 ≤ i → i < t.n → rootHit t.n t.k t.benchlen (basisPeg t.n i) = false) :
     SudoRt.runLoopOn (Int.ofNat 1, (b0, (0 : Int)))
         (fuelRange (Int.ofNat 1) (Int.ofNat (t.n - 1)))
-        (searchStep t (t.n - 1)) (searchJoin k) (fun r => nomatch r) =
+        (searchStep (ρ := Empty) t (t.n - 1)) (searchJoin k) (fun r => nomatch r) =
       .error { kind := "AssertFailed", detail := s!"line {963}" } ∧
       basePoint t = none := by
   have hle : 1 ≤ t.n - 1 := by omega
@@ -160,7 +163,7 @@ theorem search_loop_miss {α : Type} (b0 : Ecbs.Board) (t : Spec.Tier)
       ∀ k, 1 ≤ k → k < i → rootHit t.n t.k t.benchlen (basisPeg t.n k) = false
   have hloop : SudoRt.runLoopOn (Int.ofNat 1, (b0, (0 : Int)))
       (fuelRange (Int.ofNat 1) (Int.ofNat (t.n - 1)))
-      (searchStep t (t.n - 1)) (searchJoin k) (fun r => nomatch r) =
+      (searchStep (ρ := Empty) t (t.n - 1)) (searchJoin k) (fun r => nomatch r) =
       .error { kind := "AssertFailed", detail := s!"line {963}" } :=
     asc_goal (α := Ecbs.Board × Int) (ρ := Empty) Inv (fromN := 1) (toN := t.n - 1)
     (s0 := (b0, (0 : Int))) (hle := hle)
@@ -224,7 +227,7 @@ theorem search_step_hit (b0 : Ecbs.Board) (t : Spec.Tier)
     (hsl0 : b0.sudo_5Board_4cost.sudo_5Costs_6slides = Int.ofNat sl0)
     (hc0 : b0.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + tierR t)) :
     ∃ bH,
-      searchStep t toN (Int.ofNat i, (b0, 0)) =
+      searchStep (ρ := Empty) t toN (Int.ofNat i, (b0, 0)) =
         .ok (SudoRt.Flow.brk (Int.ofNat i, (bH, Int.ofNat i))) ∧
         HitAt bH t (basisPeg t.n i) (rootStrip t.n) (basisPeg t.n i) := by
   have hpos : 0 < holesLeft := hp.holesPos
@@ -256,7 +259,7 @@ theorem search_loop_hit {α : Type} (b0 : Ecbs.Board) (t : Spec.Tier)
       0 < j ∧ j < t.n ∧
         SudoRt.runLoopOn (Int.ofNat 1, (b0, (0 : Int)))
           (fuelRange (Int.ofNat 1) (Int.ofNat (t.n - 1)))
-          (searchStep t (t.n - 1)) (searchJoin k) (fun r => nomatch r) =
+          (searchStep (ρ := Empty) t (t.n - 1)) (searchJoin k) (fun r => nomatch r) =
           k b (Int.ofNat j) ∧
         HitAt b t (basisPeg t.n j) (rootStrip t.n) (basisPeg t.n j) ∧
         (∀ i, 1 ≤ i → i < j → rootHit t.n t.k t.benchlen (basisPeg t.n i) = false) ∧
@@ -276,7 +279,7 @@ theorem search_loop_hit {α : Type} (b0 : Ecbs.Board) (t : Spec.Tier)
       rootHit t.n t.k t.benchlen (basisPeg t.n i) = true ∧
       ∀ q, 1 ≤ q → q < i → rootHit t.n t.k t.benchlen (basisPeg t.n q) = false
   obtain ⟨j, s, hj1, hj2, hs, heq⟩ :=
-    asc_brk_inv (searchStep t (t.n - 1)) (searchJoin k) (fun r => nomatch r)
+    asc_brk_inv (searchStep (ρ := Empty) t (t.n - 1)) (searchJoin k) (fun r => nomatch r)
       Inv Done 1 (t.n - 1) hle
       (by
         intro i s hi1 hi2 hI

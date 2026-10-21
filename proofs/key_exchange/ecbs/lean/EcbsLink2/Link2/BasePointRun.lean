@@ -44,7 +44,7 @@ theorem base_point_miss {α : Type} (b0 : Board) (t : Spec.Tier)
       rootHit t.n t.k t.benchlen (basisPeg t.n i) = false) :
     SudoRt.runLoopOn (Int.ofNat 1, (b0, (0 : Int)))
         (fuelRange (Int.ofNat 1) (Int.ofNat (t.n - 1)))
-        (searchStep t (t.n - 1)) (searchJoin k) (fun r => nomatch r) =
+        (searchStep (ρ := Empty) t (t.n - 1)) (searchJoin k) (fun r => nomatch r) =
       .error { kind := "AssertFailed", detail := s!"line {963}" } ∧
       basePoint t = none :=
   search_loop_miss b0 t k hp hOk hsh sat hn3 hctrl hmiss

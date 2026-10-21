@@ -285,4 +285,5 @@ import EcbsLink2.Link2.FinishClear
 import EcbsLink2.Link2.BasePointRun
 import EcbsLink2.Link2.LoopCongr
 import EcbsLink2.Link2.BasePointEq
+import EcbsLink2.Link2.EmittedHole
 import EcbsLink2.Link2.HitChord

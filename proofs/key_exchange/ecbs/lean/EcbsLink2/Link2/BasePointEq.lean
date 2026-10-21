@@ -109,42 +109,10 @@ def basePointAfter (σ : Int × (Board × Int)) : Except SudoRt.Trap (Int × Boa
               let b := _io1478
               pure (found, b)
 
-/-- One index of the emitted search. `n` and `toV` are the bounds
-`base_point` closes over. -/
-def emittedHole (n toV : Int) (σ : Int × (Board × Int)) :
-    Except SudoRt.Trap (SudoRt.Flow (Int × (Board × Int)) (Int × Board)) :=
-    let j := σ.1
-    let b := σ.2.1
-    let _sp1479 := σ.2.2
-    let found := _sp1479
-    do
-      if j > toV then
-        pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (j, (b, found)))
-      else
-        match ← ((do
-  let _t1384 ← SudoRt.filledL n (0 : Int)
-  let x := _t1384
-  let _ix1385 := j
-  let _t1386 ← SudoRt.putL x _ix1385 (1 : Int)
-  let x := _t1386
-  let _io1387 ← put b base_across x
-  let b := _io1387
-  let _io1388 ← curve_side b base_across bottom
-  let b := _io1388
-  let _io1389 ← mul b gap bottom bottom true false false
-  let b := _io1389
-  let _io1390 ← settle b
-  let b := _io1390
-  let _io1391 ← white0 b up
-  let b := _io1391
-  let _t1392 ← SudoRt.filledL n (0 : Int)
-  let strip := _t1392
-  let _t1398 ← SudoRt.subI n (2 : Int)
-  let _fromV := (0 : Int)
-  let toV := _t1398
-  let fuel : Nat := fuelRange _fromV toV
-  let _init1434 := (_fromV, strip)
-  let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1434 fuel (fun σ =>
+/-- The strip loop the card emits inside one search index.
+    `ρ` is the search flow's return, which this loop never uses. -/
+def emittedStripStep (toV : Int) (σ : Int × Array Int) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Array Int) (Int × Board)) :=
     let i := σ.1
     let strip := σ.2
     do
@@ -169,23 +137,12 @@ def emittedHole (n toV : Int) (σ : Int × (Board × Int)) :
               pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, _fs))
             else do
               let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (i', _fs))) (fun σ =>
-    let strip := σ.2
-    do
-      let _t1399 ← SudoRt.subI n (2 : Int)
-      let _ix1400 := _t1399
-      let _t1401 ← SudoRt.putL strip _ix1400 (1 : Int)
-      let strip := _t1401
-      let _io1402 ← put b across strip
-      let b := _io1402
-      let _t1403 := ({ b with sudo_5Board_9marker_on := true } : Board)
-      let b := _t1403
-      let _t1419 ← SudoRt.subI n (2 : Int)
-      let _fromV := (0 : Int)
-      let toV := _t1419
-      let fuel : Nat := fuelRange _fromV toV
-      let _init1433 := (_fromV, b)
-      let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1433 fuel (fun σ =>
+              pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (i', _fs))
+
+/-- One digit of the card's power loop. `strip` is the root strip
+    just planted in `across`. -/
+def emittedPowStep (strip : Array Int) (toV : Int) (σ : Int × Board) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Board) (Int × Board)) :=
     let i := σ.1
     let b := σ.2
     do
@@ -235,7 +192,60 @@ def emittedHole (n toV : Int) (σ : Int × (Board × Int)) :
               pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (i, _fs))
             else do
               let i' ← SudoRt.addI i (1 : Int)
-              pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (i', _fs))) (fun σ =>
+              pure (SudoRt.Flow.cont (ρ := (Int) × (Board)) (i', _fs))
+
+/-- One index of the emitted search. `n` and `toV` are the bounds
+`base_point` closes over. -/
+def emittedHole (n toV : Int) (σ : Int × (Board × Int)) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × (Board × Int)) (Int × Board)) :=
+    let j := σ.1
+    let b := σ.2.1
+    let _sp1479 := σ.2.2
+    let found := _sp1479
+    do
+      if j > toV then
+        pure (SudoRt.Flow.brk (ρ := (Int) × (Board)) (j, (b, found)))
+      else
+        match ← ((do
+  let _t1384 ← SudoRt.filledL n (0 : Int)
+  let x := _t1384
+  let _ix1385 := j
+  let _t1386 ← SudoRt.putL x _ix1385 (1 : Int)
+  let x := _t1386
+  let _io1387 ← put b base_across x
+  let b := _io1387
+  let _io1388 ← curve_side b base_across bottom
+  let b := _io1388
+  let _io1389 ← mul b gap bottom bottom true false false
+  let b := _io1389
+  let _io1390 ← settle b
+  let b := _io1390
+  let _io1391 ← white0 b up
+  let b := _io1391
+  let _t1392 ← SudoRt.filledL n (0 : Int)
+  let strip := _t1392
+  let _t1398 ← SudoRt.subI n (2 : Int)
+  let _fromV := (0 : Int)
+  let toV := _t1398
+  let fuel : Nat := fuelRange _fromV toV
+  let _init1434 := (_fromV, strip)
+  let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1434 fuel (emittedStripStep toV) (fun σ =>
+    let strip := σ.2
+    do
+      let _t1399 ← SudoRt.subI n (2 : Int)
+      let _ix1400 := _t1399
+      let _t1401 ← SudoRt.putL strip _ix1400 (1 : Int)
+      let strip := _t1401
+      let _io1402 ← put b across strip
+      let b := _io1402
+      let _t1403 := ({ b with sudo_5Board_9marker_on := true } : Board)
+      let b := _t1403
+      let _t1419 ← SudoRt.subI n (2 : Int)
+      let _fromV := (0 : Int)
+      let toV := _t1419
+      let fuel : Nat := fuelRange _fromV toV
+      let _init1433 := (_fromV, b)
+      let _out ← (SudoRt.runLoopOn (ρ := (Int) × (Board)) _init1433 fuel (emittedPowStep strip toV) (fun σ =>
     let b := σ.2
     do
       let _io1420 ← marker_lift b
@@ -294,7 +304,7 @@ def basePointBlocks (b : Board) : Except SudoRt.Trap (Int × Board) :=
 
 theorem base_point_eq_blocks (b : Board) :
     base_point b = basePointBlocks b := by
-  unfold basePointBlocks emittedHole basePointAfter
+  unfold basePointBlocks emittedHole emittedStripStep emittedPowStep basePointAfter
   rfl
 
 private theorem except_bind_assoc {α β γ : Type} (m : Except SudoRt.Trap α)

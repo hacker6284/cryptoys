@@ -9,6 +9,7 @@
 import EcbsLink2.Link2.WalkScope
 import EcbsLink2.Link2.DemoPoint
 import EcbsLink2.Link2.Basic
+import EcbsLink2.Link2.Board
 
 namespace EcbsLink2.Link2
 
@@ -53,18 +54,25 @@ theorem base_point_of_point (t : Ecbs.Tier) (b0 b : Ecbs.Board) (j : Int)
   rw [sudoAssert_bool 1527 rfl, ok_bind]
   rw [point_of_eq b Ecbs.base_across Ecbs.base_up vx vy hx hy, ok_bind, pure_eq_ok]
 
-/-- The same point on both sides, once `base_point` has seated it. -/
+/-- The same point on both sides. Homes 3 and 4 are the seated point, so
+    `value` is not a premise. -/
 theorem base_point_of_spec (t : Spec.Tier) (b0 b : Ecbs.Board) (j : Int)
     (x y : List Nat)
     (hN : Ecbs.new_board (embTier t) = .ok b0)
     (hB : Ecbs.base_point b0 = .ok (j, b))
     (hj : 0 < j)
-    (hx : Ecbs.value b Ecbs.base_across = .ok (embed x))
-    (hy : Ecbs.value b Ecbs.base_up = .ok (embed y))
+    (h3H : 3 < b.sudo_5Board_4home.size) (h4H : 4 < b.sudo_5Board_4home.size)
+    (h3D : 3 < b.sudo_5Board_4held.size) (h4D : 4 < b.sudo_5Board_4held.size)
+    (h3 : b.sudo_5Board_4home[3] = embed x) (h4 : b.sudo_5Board_4home[4] = embed y)
+    (hd3 : b.sudo_5Board_4held[3] = true) (hd4 : b.sudo_5Board_4held[4] = true)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = Int.ofNat t.n)
+    (hxlen : x.length = t.n) (hylen : y.length = t.n) (hf : FitsLen t.n)
     (hspec : basePoint t = some (x, y)) :
     Ecbs.base_point_of (embTier t) =
         .ok { sudo_5Point_1x := embed x, sudo_5Point_1y := embed y } ∧
       basePoint t = some (x, y) := by
+  obtain ⟨hx, hy⟩ := seated_homes b x y t.n h3H h4H h3D h4D h3 h4 hd3 hd4 hn
+    hxlen hylen hf
   exact ⟨base_point_of_point (embTier t) b0 b j (embed x) (embed y)
     hN hB hj hx hy, hspec⟩
 

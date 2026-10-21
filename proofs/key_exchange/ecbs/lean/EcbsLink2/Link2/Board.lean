@@ -232,4 +232,25 @@ theorem band_traps (b : Ecbs.Board) (home : Nat)
     simp only [Bool.false_eq_true, if_false, error_bind]
     exact ⟨_, rfl, rfl⟩
 
+/-- Homes 3 and 4 hold the point, so `value` of `base_across` and `base_up`
+    is that point. `xs.take n` is `xs` once the length is `n`. -/
+theorem seated_homes (b : Ecbs.Board) (x y : List Nat) (n : Nat)
+    (h3H : 3 < b.sudo_5Board_4home.size) (h4H : 4 < b.sudo_5Board_4home.size)
+    (h3D : 3 < b.sudo_5Board_4held.size) (h4D : 4 < b.sudo_5Board_4held.size)
+    (h3 : b.sudo_5Board_4home[3] = embed x) (h4 : b.sudo_5Board_4home[4] = embed y)
+    (hd3 : b.sudo_5Board_4held[3] = true) (hd4 : b.sudo_5Board_4held[4] = true)
+    (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
+    (hxlen : x.length = n) (hylen : y.length = n) (hf : FitsLen n) :
+    Ecbs.value b Ecbs.base_across = .ok (embed x) ∧
+      Ecbs.value b Ecbs.base_up = .ok (embed y) := by
+  have hv3 := value_held_refines b 3 x n h3D h3H hd3 h3 hn (by omega) hf
+  have hv4 := value_held_refines b 4 y n h4D h4H hd4 h4 hn (by omega) hf
+  have hx : x.take n = x := by rw [← hxlen, List.take_length]
+  have hy : y.take n = y := by rw [← hylen, List.take_length]
+  rw [hx] at hv3
+  rw [hy] at hv4
+  rw [← ofNat_eq_natCast 3] at hv3
+  rw [← ofNat_eq_natCast 4] at hv4
+  exact ⟨hv3, hv4⟩
+
 end EcbsLink2.Link2

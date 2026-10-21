@@ -385,7 +385,9 @@ theorem point_back_of_lay (t : Spec.Tier) (b : Board) (px py baseX baseY : List 
       (∀ h : 3 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[3] = embed px) ∧
       (∀ h : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4] = embed py) ∧
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = (#[] : Array Int)) ∧
-      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = (#[] : Array Int)) := by
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = (#[] : Array Int)) ∧
+      (∀ h : 3 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[3] = true) ∧
+      (∀ h : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4] = true) := by
   have hroom := cofactor_suffix_room t hship
   have hback := cofactor_back_room t hship
   let roomM := perHole t.n t.benchlen * t.n + 5 * t.n +
@@ -419,7 +421,7 @@ theorem point_back_of_lay (t : Spec.Tier) (b : Board) (px py baseX baseY : List 
     FitsLen.of_le hback.2 (by simpa [roomS] using hsl4)
   have hslides := back_slide_le sl (pegCount px) (pegCount py) t.n hpegPx hpegPy
   have hfitN : FitsLen t.n := FitsLen.of_le hfit6 hparts.2.2.2.2.2.2
-  obtain ⟨b', hdo, h3, h4, h0, h1, _, _, _, _⟩ :=
+  obtain ⟨b', hdo, h3, h4, h0, h1, hD3, hD4, _, _⟩ :=
     point_back b px py baseX baseY mv sl pk lay.bench lay.szH lay.szD
       (lay.held0 (by rw [lay.szD]; decide)) h0a
       (lay.held1 (by rw [lay.szD]; decide)) h1a
@@ -436,7 +438,7 @@ theorem point_back_of_lay (t : Spec.Tier) (b : Board) (px py baseX baseY : List 
       (FitsLen.of_le hfit4 hslides.1)
       (FitsLen.of_le hfit6 hparts.2.2.2.1)
       (FitsLen.of_le hfit4 hslides.2)
-  exact ⟨b', hdo, h3, h4, h0, h1⟩
+  exact ⟨b', hdo, h3, h4, h0, h1, hD3, hD4⟩
 
 private theorem point_eq (ax ay px py : List Nat)
     (h : (true, (ax, ay)) = (true, (px, py))) : ax = px ∧ ay = py := by

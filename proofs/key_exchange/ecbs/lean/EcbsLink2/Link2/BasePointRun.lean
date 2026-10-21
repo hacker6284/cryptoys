@@ -230,7 +230,7 @@ theorem base_point_run (t : Spec.Tier) (b : Board) (x y px py : List Nat)
     h0 (by rw [hlay.szH]; decide)
   have h1a : bW.sudo_5Board_4home[1]'(by rw [hlay.szH]; decide) = embed py :=
     h1 (by rw [hlay.szH]; decide)
-  obtain ⟨b', hback, h3, h4, hempty0, hempty1⟩ :=
+  obtain ⟨b', hback, h3, h4, hempty0, hempty1, _, _⟩ :=
     demo_point_back t bW px py x y mv sl found hlay h0a h1a hflag hship
       hpx hpy hx hy hmvLe hslLe
   exact ⟨b', hback, h3, h4, hempty0, hempty1⟩

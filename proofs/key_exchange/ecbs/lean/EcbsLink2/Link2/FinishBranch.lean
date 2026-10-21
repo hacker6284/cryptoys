@@ -93,11 +93,13 @@ theorem demo_point_back (t : Spec.Tier) (b : Board) (px py baseX baseY : List Na
       (∀ h : 3 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[3] = embed px) ∧
       (∀ h : 4 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[4] = embed py) ∧
       (∀ h : 0 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[0] = (#[] : Array Int)) ∧
-      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = (#[] : Array Int)) := by
+      (∀ h : 1 < b'.sudo_5Board_4home.size, b'.sudo_5Board_4home[1] = (#[] : Array Int)) ∧
+      (∀ h : 3 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[3] = true) ∧
+      (∀ h : 4 < b'.sudo_5Board_4held.size, b'.sudo_5Board_4held[4] = true) := by
   rw [demo_skips_finish b found hdemo]
-  obtain ⟨b', hdo, h3, h4, h0, h1⟩ :=
+  obtain ⟨b', hdo, h3, h4, h0, h1, hD3, hD4⟩ :=
     point_back_of_lay t b px py baseX baseY mv0 sl0 lay h0a h1a hship
       hpx hpy hbx hby hmv0 hsl0
-  exact ⟨b', pair_ok b b' found hdo, h3, h4, h0, h1⟩
+  exact ⟨b', pair_ok b b' found hdo, h3, h4, h0, h1, hD3, hD4⟩
 
 end EcbsLink2.Link2

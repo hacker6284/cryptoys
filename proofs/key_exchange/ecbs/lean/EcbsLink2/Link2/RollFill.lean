@@ -803,4 +803,62 @@ private theorem mulI_skip {α : Type} (a b : Int) (f : Int → Except SudoRt.Tra
   | ok _ =>
     simp [ok_bind]
 
+/-- The emitted three-multiplication lay is the one multiplication in `dieAfter`. -/
+private def genAfter (cellsI : Int) (arr0 : Array Int) (pair : Int)
+    (σ : Int × (Int × Int)) :
+    Except SudoRt.Trap (SudoRt.Flow (Int × Array Int) (Option Rolled)) :=
+  let face := σ.2.1
+  let _sp1791 := σ.2.2
+  let next := _sp1791
+  do
+    if SudoRt.SEq.beq face (0 : Int) then
+      do
+        pure (SudoRt.Flow.ret (ρ := Option Rolled) (none : Option Rolled))
+    else
+      do
+        let _t1778 ← SudoRt.mulI (2 : Int) pair
+        let _ix1779 := _t1778
+        let _t1780 ← Ecbs.keypad_first face
+        let _t1781 ← SudoRt.putL arr0 _ix1779 _t1780
+        let cells := _t1781
+        let _t1782 ← SudoRt.mulI (2 : Int) pair
+        let _t1783 ← SudoRt.addI _t1782 (1 : Int)
+        if decide (_t1783 < cellsI) then
+          do
+            let _t1785 ← SudoRt.mulI (2 : Int) pair
+            let _t1786 ← SudoRt.addI _t1785 (1 : Int)
+            let _ix1787 := _t1786
+            let _t1788 ← Ecbs.keypad_second face
+            let _t1789 ← SudoRt.putL cells _ix1787 _t1788
+            let cells := _t1789
+            pure (SudoRt.Flow.cont (ρ := Option Rolled) (next, cells))
+        else
+          do
+            pure (SudoRt.Flow.cont (ρ := Option Rolled) (next, cells))
+
+private theorem genAfter_eq (cells : Nat) (arr0 : Array Int) (pair : Int) :
+    genAfter (Int.ofNat cells) arr0 pair = dieAfter cells arr0 pair := by
+  funext σ
+  unfold genAfter dieAfter
+  rw [show (2 : Int) = Int.ofNat 2 from rfl]
+  cases hface : SudoRt.SEq.beq σ.2.1 (0 : Int) with
+  | true =>
+    simp [hface, pure_eq_ok]
+  | false =>
+    simp [hface, pure_eq_ok]
+    cases hmul : SudoRt.mulI (Int.ofNat 2) pair with
+    | error _ =>
+      simp [hmul, error_bind]
+    | ok v =>
+      simp [hmul, ok_bind, pure_eq_ok]
+      cases hadd : SudoRt.addI v (1 : Int) with
+      | error _ =>
+        simp [hadd, error_bind]
+      | ok j =>
+        simp [hadd, ok_bind, pure_eq_ok]
+        split
+        · rw [← bind_assoc, ← bind_assoc, ← bind_assoc]
+          simp only [bind_assoc]
+        · rfl
+
 end EcbsLink2.Link2

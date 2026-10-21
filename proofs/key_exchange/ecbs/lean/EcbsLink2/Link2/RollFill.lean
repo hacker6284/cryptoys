@@ -876,4 +876,35 @@ private theorem emitted_die
   unfold dieGo
   rfl
 
+/-- One emitted pair, with the face loop inlined, is `pairBody`. -/
+private theorem pair_emit
+    (faces : List Nat) (cells : Nat) (toV : Int)
+    (σ : Int × (Int × Array Int)) :
+    (do
+        let pair := σ.1
+        let next := σ.2.1
+        let arr := σ.2.2
+        if pair > toV then
+          pure (SudoRt.Flow.brk (pair, (next, arr)))
+        else
+          match ← (do
+            let toV ← SudoRt.subI (SudoRt.listLen (embed faces)) (1 : Int)
+            let fuel := if next > toV then 1 else (toV - next).natAbs + 1
+            let r ← SudoRt.runLoopOn (next, ((0 : Int), next)) fuel
+              (faceStep (embed faces) toV) (genAfter (Int.ofNat cells) arr pair)
+              (fun r => pure (SudoRt.Flow.ret r))
+            pure r) with
+          | .ret r => pure (SudoRt.Flow.ret r)
+          | .brk fs => pure (SudoRt.Flow.brk (pair, fs))
+          | .cont fs => do
+              if pair == toV then
+                pure (SudoRt.Flow.brk (pair, fs))
+              else
+                let i' ← SudoRt.addI pair 1
+                pure (SudoRt.Flow.cont (i', fs))) =
+      pairBody faces cells toV σ := by
+  unfold pairBody
+  conv => lhs; zeta
+  rw [emitted_die]
+
 end EcbsLink2.Link2

@@ -141,4 +141,58 @@ theorem scan_face (faces : List Nat) (i : Nat)
       obtain ⟨f, hnz, hst, hread⟩ := hD
       rw [pure_eq_ok, hst, hread]
 
+private theorem embed_set (xs : List Nat) (i v : Nat) (h : i < xs.length) :
+    (embed xs).set ⟨i, by rw [size_embed]; exact h⟩ (Int.ofNat v) = embed (xs.set i v) := by
+  apply Array.ext
+  · simp [embed, size_embed, List.length_set]
+  · intro j _ _
+    simp [embed, Array.getElem_set, List.getElem_set]
+
+private theorem set_irrel {α : Type} (a : Array α) (i : Nat) (h₁ h₂ : i < a.size) (v : α) :
+    a.set ⟨i, h₁⟩ v = a.set ⟨i, h₂⟩ v := by
+  have : (⟨i, h₁⟩ : Fin a.size) = ⟨i, h₂⟩ := Fin.ext rfl
+  simp [this]
+
+/-- One die, faces `1 .. 9`, written into the pair of cells. -/
+theorem lay_die (cells : Nat) (acc : List Nat) (pair face : Nat)
+    (h1 : 1 ≤ face) (h9 : face ≤ 9) (hlen : acc.length = cells)
+    (hix : 2 * pair < cells) (hfit : FitsLen (2 * pair + 1)) :
+    (do
+        let ix ← SudoRt.mulI (Int.ofNat 2) (Int.ofNat pair)
+        let d ← Ecbs.keypad_first (Int.ofNat face)
+        let acc ← SudoRt.putL (embed acc) ix d
+        let j ← SudoRt.addI ix (1 : Int)
+        if decide (j < Int.ofNat cells) then
+          let d2 ← Ecbs.keypad_second (Int.ofNat face)
+          SudoRt.putL acc j d2
+        else
+          pure acc) =
+      .ok (embed (writePair cells acc pair face)) := by
+  have hmul : FitsLen (2 * pair) := FitsLen.of_le hfit (Nat.le_succ _)
+  rw [mulI_ofNat 2 pair hmul, ok_bind]
+  rw [show Int.ofNat face = (face : Int) from by rw [ofNat_eq_natCast]]
+  rw [keypad_first_refines face h1 h9, ok_bind]
+  have hjA : 2 * pair < (embed acc).size := by rw [size_embed, hlen]; exact hix
+  rw [putL_ofNat _ _ _ hjA, set_irrel _ _ _ (by rw [size_embed, hlen]; exact hix)]
+  rw [embed_set acc (2 * pair) (keypadFirst face) (by rw [hlen]; exact hix)]
+  rw [ok_bind, addI_ofNat_one (2 * pair) hfit, ok_bind]
+  by_cases h2 : 2 * pair + 1 < cells
+  · have hdec : decide (Int.ofNat (2 * pair + 1) < Int.ofNat cells) = true :=
+      decide_eq_true (Int.ofNat_lt.mpr h2)
+    rw [if_pos hdec, keypad_second_refines face h1 h9, ok_bind]
+    have hj2 : 2 * pair + 1 < (embed (acc.set (2 * pair) (keypadFirst face))).size := by
+      rw [size_embed, List.length_set, hlen]; exact h2
+    rw [putL_ofNat _ _ _ hj2, set_irrel _ _ _ hj2]
+    rw [embed_set (acc.set (2 * pair) (keypadFirst face)) (2 * pair + 1)
+      (keypadSecond face) (by rw [List.length_set, hlen]; exact h2)]
+    unfold writePair
+    rw [if_pos h2]
+  · have hdec : decide (Int.ofNat (2 * pair + 1) < Int.ofNat cells) = false :=
+      decide_eq_false (fun h => h2 (Int.ofNat_lt.mp h))
+    rw [if_neg (by rw [hdec]; decide : ¬ (decide
+        (Int.ofNat (2 * pair + 1) < Int.ofNat cells) = true))]
+    rw [pure_eq_ok]
+    unfold writePair
+    rw [if_neg h2]
+
 end EcbsLink2.Link2

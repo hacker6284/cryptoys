@@ -472,9 +472,10 @@ def foldPairStep (t : Ecbs.Tier) (x : Array Int) (toV : Int)
     match ← (do
         let toC ← SudoRt.subI t.sudo_4Tier_1w (1 : Int)
         let fuel := if (0 : Int) > toC then 1 else (toC - 0).natAbs + 1
-        SudoRt.runLoopOn (Int.ofNat 0, (out, b)) fuel
+        let row ← SudoRt.runLoopOn (Int.ofNat 0, (out, b)) fuel
           (foldColStep t x p toC) foldColAfter
-          (fun r => pure (SudoRt.Flow.ret r))) with
+          (fun r => pure (SudoRt.Flow.ret r))
+        pure row) with
     | .ret r => pure (SudoRt.Flow.ret r)
     | .brk fs => pure (SudoRt.Flow.brk (p, fs))
     | .cont fs => do
@@ -606,7 +607,9 @@ theorem foldPairs_at (t : Ecbs.Tier) (x : List Nat) (b0 : Ecbs.Board)
       conv => lhs; zeta
       rw [htw]
       have hng := not_gt_last hlt
-      rw [if_neg hng, hrow, ok_bind]
+      rw [if_neg hng]
+      simp only [bind_pure]
+      rw [hrow, ok_bind]
       have hfi : FitsLen (p + 1) := FitsLen.of_le hlenFit (Nat.succ_le_of_lt hlt)
       simpa using asc_tail (srcs.length - 1) p hfi
         (embed (dropRow w x (srcs[p]) (dsts[p]) out),
@@ -628,5 +631,158 @@ theorem foldPairs_at (t : Ecbs.Tier) (x : List Nat) (b0 : Ecbs.Board)
     rw [hzip]
 
 end
+
+/-- `fold_key` after the across read is the row loop. -/
+theorem fold_key_loop (b : Ecbs.Board) (t : Ecbs.Tier) (xs : List Nat)
+    (htr : b.sudo_5Board_1t = t)
+    (hval : Ecbs.value b across = .ok (embed xs)) :
+    Ecbs.fold_key b =
+      (do
+        let toV ← SudoRt.subI (SudoRt.listLen t.sudo_4Tier_7foldsrc) (1 : Int)
+        let fuel := if (0 : Int) > toV then 1 else (toV - 0).natAbs + 1
+        let row ← SudoRt.runLoopOn ((0 : Int), (embed xs, b)) fuel
+          (foldPairStep t (embed xs) toV) (foldTail t) (fun r => pure r)
+        pure row) := by
+  unfold Ecbs.fold_key
+  rw [hval, ok_bind, htr]
+  conv =>
+    lhs
+    zeta
+  conv =>
+    rhs
+    unfold foldPairStep foldTail foldColStep foldColBody foldMove
+    zeta
+  rfl
+
+private theorem occ_home0 :
+    countHeld ((Array.mkArray 8 false).set ⟨0, by simp [Array.size_mkArray]⟩ true) 7 = 1 := by
+  decide
+
+private theorem put_occ0 (t : Spec.Tier) :
+    countHeld ((builtBoard t).sudo_5Board_4held.set ⟨0, heldIx t 0 (by decide)⟩ true) 7 = 1 := by
+  simpa [heldIx, ← built_held_arr] using occ_home0
+
+private theorem built_held0 (t : Spec.Tier) :
+    (builtBoard t).sudo_5Board_4held[0]'(heldIx t 0 (by decide)) = false := by
+  simp [built_held_arr, Array.getElem_mkArray]
+
+/-- The fresh board with the key in across. Peak stays 1. -/
+def putFold (t : Spec.Tier) (x : List Nat) : Ecbs.Board :=
+  let b := builtBoard t
+  { b with
+    sudo_5Board_4home := b.sudo_5Board_4home.set ⟨0, homeIx t 0 (by decide)⟩ (embed x)
+    sudo_5Board_4held := b.sudo_5Board_4held.set ⟨0, heldIx t 0 (by decide)⟩ true
+    sudo_5Board_4cost := { b.sudo_5Board_4cost with
+      sudo_5Costs_5moves := Int.ofNat (pegCount x) } }
+
+private theorem putFold_place (t : Spec.Tier) (x : List Nat) :
+    placeBoard (builtBoard t) 0 (homeIx t 0 (by decide)) (heldIx t 0 (by decide)) x 0 1 =
+      putFold t x := by
+  have hge : ¬ 1 < countHeld
+      ((builtBoard t).sudo_5Board_4held.set ⟨0, heldIx t 0 (by decide)⟩ true) 7 := by
+    rw [put_occ0]
+    decide
+  rw [place_stay (builtBoard t) 0 (homeIx t 0 (by decide)) (heldIx t 0 (by decide)) x 0 1 hge]
+  simp [putFold, Nat.zero_add]
+
+private theorem fold_put (t : Spec.Tier) (hOk : BoardOk t) (x : List Nat)
+    (hx : x.length = t.n) :
+    put (builtBoard t) across (embed x) = .ok (putFold t x) := by
+  have hput := put_refines (builtBoard t) 0 x 0 1
+    (homeIx t 0 (by decide)) (heldIx t 0 (by decide))
+    (by rw [built_szD]; decide) (built_held0 t)
+    (by rw [built_tier_eq, hx]; rfl)
+    (by rw [hx]; exact FitsLen.of_le (fits_of hOk.fits_n) (by omega))
+    (built_moves0 t) (built_peak1 t)
+    (by
+      have hfn : FitsLen t.n := FitsLen.of_le (fits_of hOk.fits_n) (by omega)
+      exact FitsLen.of_le hfn (by rw [← hx, Nat.zero_add]; exact pegCount_le x))
+  unfold across
+  erw [hput]
+  rw [putFold_place]
+
+/-- `fold_key` on a board whose across holds `x` is `Spec.foldKey`, and the
+    move counter grows by one for each nonzero cell the rows drop. -/
+theorem fold_key_refines (t : Spec.Tier) (b : Ecbs.Board) (x : List Nat) (mv : Nat)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
+    (htr : b.sudo_5Board_1t = embTier t)
+    (hval : value b across = .ok (embed x))
+    (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = Int.ofNat mv)
+    (hx : x.length = t.n) (htrit : allTritList x)
+    (hroom : FitsLen (mv + t.foldsrc.length * t.w)) :
+    fold_key b =
+      .ok (embed (foldKey t x),
+        withMoves b (Int.ofNat (mv + foldBumpRows t.w x t.foldsrc t.foldsrc.length))) := by
+  have hFold : FoldOk t := by
+    rcases hship with rfl | rfl | rfl | rfl
+    · exact demo_fold
+    · exact toy_fold
+    · exact hobby_fold
+    · exact serious_fold
+  have hpos : 0 < t.foldsrc.length := by
+    rcases hship with rfl | rfl | rfl | rfl <;> decide
+  have hlenFit : FitsLen t.foldsrc.length := by
+    rcases hship with rfl | rfl | rfl | rfl <;> exact fits_small (by decide)
+  have hwFit : FitsLen t.w := by
+    rcases hship with rfl | rfl | rfl | rfl <;> exact fits_small (by decide)
+  have hkeepFit : FitsLen (t.keeprows * t.w) :=
+    FitsLen.of_le (fits_of hFold.fits_keep) (Nat.le_succ _)
+  rw [fold_key_loop b (embTier t) x htr hval]
+  simp only [bind_pure]
+  rw [show (embTier t).sudo_4Tier_7foldsrc = embed t.foldsrc from rfl]
+  rw [← withMoves_id b hmv]
+  rw [show (0 : Int) = Int.ofNat 0 from rfl]
+  have hpairs := foldPairs_at (embTier t) x b t.foldsrc t.folddst t.n t.w t.keeprows mv
+    rfl rfl rfl rfl rfl hFold.same hpos hx (trits_of_all x htrit)
+    (fun i hi => fits_of (hFold.fits_src _ (List.getElem_mem hi)))
+    (fun i hi => fits_of (hFold.fits_dst _ (List.getElem_mem hi)))
+    (fun i hi => hFold.dst _ (List.getElem_mem hi))
+    hFold.w_pos hwFit hlenFit hFold.keep hkeepFit hroom
+  simpa [foldKey] using hpairs
+
+/-- `fold` on a shipped tier is `Spec.foldKey`. -/
+theorem fold_refines (t : Spec.Tier) (x : List Nat)
+    (hship : t = demo ∨ t = toy ∨ t = hobby ∨ t = serious)
+    (hx : x.length = t.n) (htrit : allTritList x) :
+    fold (embTier t) (embed x) = .ok (embed (foldKey t x)) := by
+  have hOk : BoardOk t := by
+    rcases hship with rfl | rfl | rfl | rfl
+    · exact demo_board
+    · exact toy_board
+    · exact hobby_board
+    · exact serious_board
+  have hput := fold_put t hOk x hx
+  have hroom : FitsLen (pegCount x + t.foldsrc.length * t.w) := by
+    have hpeg := pegCount_le x
+    rw [hx] at hpeg
+    have hbound : t.n + t.foldsrc.length * t.w ≤ 4 * t.n + 8 := by
+      rcases hship with rfl | rfl | rfl | rfl <;> decide
+    exact FitsLen.of_le (fits_of hOk.fits_n) (by omega)
+  have hkey := fold_key_refines t (putFold t x) x (pegCount x) hship
+    (by simp [putFold, built_tier_eq])
+    (by
+      have hv := value_held_refines (putFold t x) 0 x t.n
+        (by rw [putFold]; simp [Array.size_set, built_szD])
+        (by rw [putFold]; simp [Array.size_set, built_szH])
+        (by simp [putFold, Array.getElem_set])
+        (by simp [putFold, Array.getElem_set])
+        (by rw [putFold, built_tier_eq]; rfl)
+        (by rw [hx]; exact Nat.le_refl _)
+        (by exact FitsLen.of_le (fits_of hOk.fits_n) (by omega))
+      unfold across at hv
+      erw [hv]
+      rw [← hx, List.take_length])
+    (by simp [putFold])
+    hx htrit hroom
+  unfold fold
+  conv => lhs; zeta
+  rw [new_board_refines t hOk, ok_bind, hput, ok_bind, hkey, ok_bind]
+  dsimp
+  rw [pure_eq_ok]
+
+/-- Demo's `fold` is `Spec.foldKey`. -/
+theorem demo_fold_refines (x : List Nat) (hx : x.length = demo.n) (htrit : allTritList x) :
+    fold (embTier demo) (embed x) = .ok (embed (foldKey demo x)) :=
+  fold_refines demo x (Or.inl rfl) hx htrit
 
 end EcbsLink2.Link2

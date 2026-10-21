@@ -427,4 +427,345 @@ theorem base_point_back (b : Board) (found : Int) :
       afterWalk b found :=
   walk_back b found
 
+/-- The four colours `base_point` hands to the cofactor walk. -/
+def cofactorWalkCells : Array Int :=
+  #[(1 : Int), (2 : Int), (1 : Int), (2 : Int)]
+
+/-- Demo: `walk_chord`, assert 972, four `key_grid_moves`, then `afterWalk`. -/
+def demoWalk (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
+  do
+    let r ← walk_chord b cofactorWalkCells
+    let ⟨ret, bw⟩ := r
+    let b := bw
+    let ⟨live, ok⟩ := ret
+    let flag ← (if live then (do pure ok) else pure false)
+    let _ ← SudoRt.sudoAssert flag 972
+    let b ← gridAdd b
+    afterWalk b found
+
+/-- Toy, Hobby, and Serious: `walk_fform`, assert 975, four `key_grid_moves`,
+    then `afterWalk`. -/
+def fformWalk (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
+  do
+    let r ← walk_fform b cofactorWalkCells
+    let ⟨ret, bw⟩ := r
+    let b := bw
+    let ⟨live, ok⟩ := ret
+    let flag ← (if live then (do pure ok) else pure false)
+    let _ ← SudoRt.sudoAssert flag 975
+    let b ← gridAdd b
+    afterWalk b found
+
+/-- Assert 963, seat the root, add four key-grid moves, then the walk arm. -/
+def pointJoin (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
+  do
+    let _ ← SudoRt.sudoAssert (decide (found > (0 : Int))) 963
+    let b ← cofactorSeat b
+    let b ← gridAdd b
+    if b.sudo_5Board_1t.sudo_4Tier_4demo then
+      demoWalk b found
+    else
+      fformWalk b found
+
+private theorem seat_hit {α : Type} (b : Board) (k : Board → Except SudoRt.Trap α) :
+    (do
+        let _io1438 ← clear b gap
+        let b := _io1438
+        let _io1439 ← clear b bottom
+        let b := _io1439
+        let _io1440 ← clear b across
+        let b := _io1440
+        let _io1441 ← move_band b base_up up
+        let b := _io1441
+        k b) =
+      (cofactorSeat b >>= k) := by
+  rw [seat_lets, seat_prefix]
+
+private theorem grid_hit {α : Type} (b : Board) (k : Board → Except SudoRt.Trap α) :
+    (do
+        let m ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_14key_grid_moves (4 : Int)
+        let c := ({ b.sudo_5Board_4cost with
+          sudo_5Costs_14key_grid_moves := m } : Costs)
+        let b2 := ({ b with sudo_5Board_4cost := c } : Board)
+        let b := b2
+        k b) =
+      (gridAdd b >>= k) :=
+  grid_prefix b k
+
+private theorem back_lets (b : Board) (found : Int) :
+    (if (!(b.sudo_5Board_1t.sudo_4Tier_4demo)) then
+        (do
+            let io ← finish b
+            let b := io
+            let io ← clear b base_across
+            let b := io
+            let io ← clear b base_up
+            let b := io
+            let io ← move_band b base_across across
+            let b := io
+            let io ← move_band b base_up up
+            let b := io
+            pure (found, b))
+      else
+        (do
+            let io ← clear b base_across
+            let b := io
+            let io ← clear b base_up
+            let b := io
+            let io ← move_band b base_across across
+            let b := io
+            let io ← move_band b base_up up
+            let b := io
+            pure (found, b))) =
+      (if (!(b.sudo_5Board_1t.sudo_4Tier_4demo)) then
+          (do
+              let b ← finish b
+              let b ← clear b base_across
+              let b ← clear b base_up
+              let b ← move_band b base_across across
+              let b ← move_band b base_up up
+              pure (found, b))
+        else
+          (do
+              let b ← clear b base_across
+              let b ← clear b base_up
+              let b ← move_band b base_across across
+              let b ← move_band b base_up up
+              pure (found, b))) := by
+  rfl
+
+private theorem back_hit (b : Board) (found : Int) :
+    (if (!(b.sudo_5Board_1t.sudo_4Tier_4demo)) then
+        (do
+            let io ← finish b
+            let b := io
+            let io ← clear b base_across
+            let b := io
+            let io ← clear b base_up
+            let b := io
+            let io ← move_band b base_across across
+            let b := io
+            let io ← move_band b base_up up
+            let b := io
+            pure (found, b))
+      else
+        (do
+            let io ← clear b base_across
+            let b := io
+            let io ← clear b base_up
+            let b := io
+            let io ← move_band b base_across across
+            let b := io
+            let io ← move_band b base_up up
+            let b := io
+            pure (found, b))) =
+      afterWalk b found := by
+  rw [back_lets, walk_back]
+
+/-- The join with the seat packaged, and the emitted walk text left in place. -/
+def emittedJoin (b : Board) (found : Int) : Except SudoRt.Trap (Int × Board) :=
+  do
+    let _as1437 ← SudoRt.sudoAssert (decide (found > (0 : Int))) 963
+    let b ← cofactorSeat b
+    let _t1442 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
+    let _t1443 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1442 } : Costs)
+    let _t1444 := ({ b with sudo_5Board_4cost := _t1443 } : Board)
+    let b := _t1444
+    let wrwr := (#[(1 : Int), (2 : Int), (1 : Int), (2 : Int)] : Array (Int))
+    if ((b).sudo_5Board_1t).sudo_4Tier_4demo then
+      do
+        let _io1445 ← walk_chord b wrwr
+        let ⟨_ret1446, _iw01447⟩ := _io1445
+        let b := _iw01447
+        let _sudo_h0 := _ret1446
+        let ⟨live, ok⟩ := _sudo_h0
+        let _t1448 ← (if live then (do
+  pure ok) else pure false)
+        let _as1449 ← SudoRt.sudoAssert _t1448 972
+        let _t1450 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
+        let _t1451 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1450 } : Costs)
+        let _t1452 := ({ b with sudo_5Board_4cost := _t1451 } : Board)
+        let b := _t1452
+        if (!( ((b).sudo_5Board_1t).sudo_4Tier_4demo )) then
+          do
+            let _io1453 ← finish b
+            let b := _io1453
+            let _io1454 ← clear b base_across
+            let b := _io1454
+            let _io1455 ← clear b base_up
+            let b := _io1455
+            let _io1456 ← move_band b base_across across
+            let b := _io1456
+            let _io1457 ← move_band b base_up up
+            let b := _io1457
+            pure (found, b)
+        else
+          do
+            let _io1458 ← clear b base_across
+            let b := _io1458
+            let _io1459 ← clear b base_up
+            let b := _io1459
+            let _io1460 ← move_band b base_across across
+            let b := _io1460
+            let _io1461 ← move_band b base_up up
+            let b := _io1461
+            pure (found, b)
+    else
+      do
+        let _io1462 ← walk_fform b wrwr
+        let ⟨_ret1463, _iw01464⟩ := _io1462
+        let b := _iw01464
+        let _sudo_h1 := _ret1463
+        let ⟨live, ok⟩ := _sudo_h1
+        let _t1465 ← (if live then (do
+  pure ok) else pure false)
+        let _as1466 ← SudoRt.sudoAssert _t1465 975
+        let _t1467 ← SudoRt.addI ((b).sudo_5Board_4cost).sudo_5Costs_14key_grid_moves (4 : Int)
+        let _t1468 := ({ (b).sudo_5Board_4cost with sudo_5Costs_14key_grid_moves := _t1467 } : Costs)
+        let _t1469 := ({ b with sudo_5Board_4cost := _t1468 } : Board)
+        let b := _t1469
+        if (!( ((b).sudo_5Board_1t).sudo_4Tier_4demo )) then
+          do
+            let _io1470 ← finish b
+            let b := _io1470
+            let _io1471 ← clear b base_across
+            let b := _io1471
+            let _io1472 ← clear b base_up
+            let b := _io1472
+            let _io1473 ← move_band b base_across across
+            let b := _io1473
+            let _io1474 ← move_band b base_up up
+            let b := _io1474
+            pure (found, b)
+        else
+          do
+            let _io1475 ← clear b base_across
+            let b := _io1475
+            let _io1476 ← clear b base_up
+            let b := _io1476
+            let _io1477 ← move_band b base_across across
+            let b := _io1477
+            let _io1478 ← move_band b base_up up
+            let b := _io1478
+            pure (found, b)
+
+/-- Four `key_grid_moves`, then the emitted `if`. That `if` is `afterWalk`. -/
+private theorem grid_then_back (b : Board) (found : Int) :
+    (do
+        let m ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_14key_grid_moves (4 : Int)
+        let c := ({ b.sudo_5Board_4cost with
+          sudo_5Costs_14key_grid_moves := m } : Costs)
+        let b2 := ({ b with sudo_5Board_4cost := c } : Board)
+        let b := b2
+        if (!(b.sudo_5Board_1t.sudo_4Tier_4demo)) then
+          (do
+              let io ← finish b
+              let b := io
+              let io ← clear b base_across
+              let b := io
+              let io ← clear b base_up
+              let b := io
+              let io ← move_band b base_across across
+              let b := io
+              let io ← move_band b base_up up
+              let b := io
+              pure (found, b))
+        else
+          (do
+              let io ← clear b base_across
+              let b := io
+              let io ← clear b base_up
+              let b := io
+              let io ← move_band b base_across across
+              let b := io
+              let io ← move_band b base_up up
+              let b := io
+              pure (found, b))) =
+      (do
+          let b ← gridAdd b
+          afterWalk b found) := by
+  rw [grid_prefix b (fun b =>
+    if (!(b.sudo_5Board_1t.sudo_4Tier_4demo)) then
+      (do
+          let io ← finish b
+          let b := io
+          let io ← clear b base_across
+          let b := io
+          let io ← clear b base_up
+          let b := io
+          let io ← move_band b base_across across
+          let b := io
+          let io ← move_band b base_up up
+          let b := io
+          pure (found, b))
+    else
+      (do
+          let io ← clear b base_across
+          let b := io
+          let io ← clear b base_up
+          let b := io
+          let io ← move_band b base_across across
+          let b := io
+          let io ← move_band b base_up up
+          let b := io
+          pure (found, b)))]
+  exact congrArg (fun f => gridAdd b >>= f) (funext (fun b => back_hit b found))
+
+/-- The search join is the seat, then the emitted walk text. -/
+theorem base_point_after_seat (σ : Int × (Board × Int)) :
+    basePointAfter σ = emittedJoin σ.2.1 σ.2.2 := by
+  unfold basePointAfter
+  conv =>
+    lhs
+    pattern (clear _ gap >>= fun _ => _)
+    rw [seat_hit]
+  unfold emittedJoin
+  rfl
+
+/-- `gridAdd` adds four to `key_grid_moves` and leaves every other field. -/
+theorem gridAdd_key (b : Board) :
+    gridAdd b =
+      (do
+        let m ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_14key_grid_moves (4 : Int)
+        pure ({ b with
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_14key_grid_moves := m } } : Board)) := by
+  unfold gridAdd
+  rfl
+
+/-- On a board whose demo flag is false, those four moves are followed by
+    `finish` and the move back. -/
+theorem grid_back_finish (b : Board) (found : Int)
+    (hdemo : b.sudo_5Board_1t.sudo_4Tier_4demo = false) :
+    (gridAdd b >>= fun b' => afterWalk b' found) =
+      (gridAdd b >>= fun b' => finishBackPair b' found) := by
+  unfold gridAdd
+  cases hm : SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_14key_grid_moves (4 : Int) with
+  | error _ =>
+    simp [hm, error_bind]
+  | ok m =>
+    simp only [hm, ok_bind, pure_eq_ok]
+    exact tier_runs_finish
+      ({ b with sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_14key_grid_moves := m } }) found hdemo
+
+/-- Assert 975, four `key_grid_moves`, `finish`, then the move back.
+    `b` is the board `walk_fform` returned, and its demo flag is false. -/
+theorem fform_tail_finish (b : Board) (found : Int) (live ok : Bool)
+    (hdemo : b.sudo_5Board_1t.sudo_4Tier_4demo = false) :
+    (do
+        let flag ← (if live then (do pure ok) else pure false)
+        let _ ← SudoRt.sudoAssert flag 975
+        let b ← gridAdd b
+        afterWalk b found) =
+      (do
+        let flag ← (if live then (do pure ok) else pure false)
+        let _ ← SudoRt.sudoAssert flag 975
+        let b ← gridAdd b
+        finishBackPair b found) := by
+  conv =>
+    lhs
+    pattern (gridAdd b >>= fun b' => afterWalk b' found)
+    rw [grid_back_finish b found hdemo]
+
 end EcbsLink2.Link2

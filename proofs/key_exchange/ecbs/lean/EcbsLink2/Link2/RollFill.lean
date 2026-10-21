@@ -755,4 +755,52 @@ private theorem roll_from
   rw [roll_loop_at faces cells (faces.length + 1) 1 0 h9 hfitF hfitC hfitL rfl]
   rfl
 
+/-- The emitted face step is `faceStep`. -/
+private theorem faceStep_gen (faces : Array Int) (toV : Int) :
+    faceStep faces toV = fun σ =>
+      let f := σ.1
+      let face := σ.2.1
+      let _sp := σ.2.2
+      let next := _sp
+      (do
+        if f > toV then
+          pure (SudoRt.Flow.brk (ρ := Option Rolled) (f, (face, next)))
+        else
+          match ← ((do
+            let _t1768 ← SudoRt.atL faces f
+            let face := _t1768
+            let _t1769 ← SudoRt.addI f (1 : Int)
+            let next := _t1769
+            let _t1771 ← (if decide (face ≥ (0 : Int)) then (do
+              pure (decide (face ≤ (9 : Int)))) else pure false)
+            let _as1773 ← SudoRt.sudoAssert _t1771 1216
+            if !(SudoRt.SEq.beq face (0 : Int)) then
+              do
+                pure (SudoRt.Flow.brk (ρ := Option Rolled) (face, next))
+            else
+              do
+                pure (SudoRt.Flow.cont (ρ := Option Rolled) (face, next))) :
+              Except SudoRt.Trap (SudoRt.Flow (Int × Int) (Option Rolled))) with
+          | .ret r => pure (SudoRt.Flow.ret (ρ := Option Rolled) r)
+          | .brk _fs => pure (SudoRt.Flow.brk (ρ := Option Rolled) (f, _fs))
+          | .cont _fs => do
+              if f == toV then
+                pure (SudoRt.Flow.brk (ρ := Option Rolled) (f, _fs))
+              else do
+                let i' ← SudoRt.addI f (1 : Int)
+                pure (SudoRt.Flow.cont (ρ := Option Rolled) (i', _fs))) := by
+  unfold faceStep faceBody
+  funext σ
+  rfl
+
+/-- A second `mulI` of the same arguments is the first result, or the same trap. -/
+private theorem mulI_skip {α : Type} (a b : Int) (f : Int → Except SudoRt.Trap α) :
+    (SudoRt.mulI a b >>= fun _x => SudoRt.mulI a b >>= f) =
+      (SudoRt.mulI a b >>= f) := by
+  cases h : SudoRt.mulI a b with
+  | error _ =>
+    simp [error_bind]
+  | ok _ =>
+    simp [ok_bind]
+
 end EcbsLink2.Link2

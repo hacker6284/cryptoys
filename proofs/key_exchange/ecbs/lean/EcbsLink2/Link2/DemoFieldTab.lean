@@ -19,6 +19,7 @@ structure DemoRow where
   ans : List Nat
   white : Bool
 
+-- <generated rowOk>
 /-- The four kernel steps behind `specInv_white_7` / `specInv_mirror_7`. -/
 def rowOk (r : DemoRow) : Bool :=
   (invRung 7 5 20 r.x r.x 1 2 false == (r.g1, 3)) &&
@@ -33,6 +34,7 @@ def rowOk (r : DemoRow) : Bool :=
 /-- Zero is not a `FieldOk` input. Every other row must pass `rowOk`. -/
 def checked (r : DemoRow) : Bool :=
   (r.x == [0, 0, 0, 0, 0, 0, 0]) || rowOk r
+-- </generated rowOk>
 
 def demoChecked (rs : List DemoRow) : Bool :=
   rs.all checked
@@ -86,8 +88,5 @@ theorem expected_tri (a b c d e f g : Nat)
     rcases hf' with rfl | rfl | rfl <;>
     rcases hg' with rfl | rfl | rfl <;>
     decide
-
-theorem row_x_irrel (xs : List DemoRow) (j : Nat) (h1 h2 : j < xs.length) :
-    (xs[j]'h1).x = (xs[j]'h2).x := rfl
 
 end EcbsLink2.Link2

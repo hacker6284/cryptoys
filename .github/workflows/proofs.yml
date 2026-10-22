@@ -89,6 +89,8 @@ jobs:
       # tens of minutes.
       - name: ECBS vectors rebuild byte-identically from ecbs.sudo
         run: proofs/key_exchange/ecbs/vectors/regen.sh --check
+      - name: ECBS Demo climb table rebuilds byte-identically
+        run: cd proofs/key_exchange/ecbs/lean && python3 demo_field_table.py && git diff --exit-code EcbsLink2/Link2/
       - name: ECBS vectors agree with PARI/GP
         run: |
           python3 -m venv "$RUNNER_TEMP/pari"

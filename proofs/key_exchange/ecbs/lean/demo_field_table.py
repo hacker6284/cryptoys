@@ -2,7 +2,7 @@
 """Regenerate the Demo climb table.
 
 Each length-7 trit list is one `DemoRow`: the two rung gaps, the cubed gap,
-and the answer `specInv` returns. Lean decides the rows in bands of 27.
+and the answer `specInv` returns. Lean decides the rows in bands of 9.
 This script only proposes the numbers. `rowOk` in `DemoFieldTab.lean` is
 the check. Proof-only. Not a security claim.
 """
@@ -332,7 +332,45 @@ namespace EcbsLink2.Link2
     print(f"wrote {COUNT} rows, {nb} bands")
 
 
+TAB_BEGIN = "-- <generated rowOk>\n"
+TAB_END = "-- </generated rowOk>\n"
+
+
+def row_ok_block():
+    """`rowOk` / `checked` in DemoFieldTab.lean, from `N`, `K`, and `BENCH`."""
+    zeros = ", ".join(["0"] * N)
+    return (
+        f"{TAB_BEGIN}"
+        "/-- The four kernel steps behind `specInv_white_7` / `specInv_mirror_7`. -/\n"
+        "def rowOk (r : DemoRow) : Bool :=\n"
+        f"  (invRung {N} {K} {BENCH} r.x r.x 1 2 false == (r.g1, 3)) &&\n"
+        f"    (invRung {N} {K} {BENCH} r.x r.g1 3 1 true == (r.g2, 3)) &&\n"
+        f"      (fieldCube {N} {K} {BENCH} r.g2 == r.gap) &&\n"
+        "        (if r.white then\n"
+        f"          (fieldMul {N} {K} {BENCH} r.gap r.x == whiteHole0 {N}) && (r.gap == r.ans)\n"
+        "        else\n"
+        f"          (fieldMul {N} {K} {BENCH} r.gap r.x == (2 :: List.replicate {N - 1} 0)) &&\n"
+        "            (mirrorTrits r.gap == r.ans))\n"
+        "\n"
+        "/-- Zero is not a `FieldOk` input. Every other row must pass `rowOk`. -/\n"
+        "def checked (r : DemoRow) : Bool :=\n"
+        f"  (r.x == [{zeros}]) || rowOk r\n"
+        f"{TAB_END}"
+    )
+
+
+def write_tab():
+    path = OUT / "DemoFieldTab.lean"
+    text = path.read_text()
+    if TAB_BEGIN not in text or TAB_END not in text:
+        raise SystemExit("DemoFieldTab.lean is missing the generated rowOk markers")
+    pre, rest = text.split(TAB_BEGIN, 1)
+    _, post = rest.split(TAB_END, 1)
+    path.write_text(pre + row_ok_block() + post)
+
+
 def main():
+    write_tab()
     check_against_old()
     rows = []
     for n in range(COUNT):

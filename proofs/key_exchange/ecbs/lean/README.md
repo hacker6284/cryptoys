@@ -30,6 +30,7 @@ python3 ../../../doubledeal/security/checks/scan_sorry.py --root . --exclude Gen
 ```
 
 No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeds: 3027 theorems, axioms `propext`, `Classical.choice`, `Quot.sound` only. The largest file is `EcbsLink2/Link2/ClimbEmit.lean`, compile peak (VmHWM) 1749256 kB. No `maxHeartbeats` or `maxRecDepth` option is set. The 2 GB per-file cap and that clean build are checked by the weekly workflow [`.github/workflows/ecbs-link2-mem.yml`](../../../../.github/workflows/ecbs-link2-mem.yml) (`workflow_dispatch` and a Monday schedule), not by the pull-request `ecbs-lean` job.
+The `mem-check` label on a pull request starts that run, and a later push reruns it while the label is still present.
 
 ## Generated Lean
 

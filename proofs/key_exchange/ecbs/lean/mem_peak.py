@@ -6,7 +6,7 @@ olean cache for those modules), then builds under `ulimit -v 7000000`. Each
 `lean` process is wrapped so its peak resident set (Linux `ru_maxrss`, the
 VmHWM in kB) is recorded. The run fails if any module exceeds 2097152 kB.
 
-Not part of pull-request or push CI. The weekly workflow
+Not part of push CI or ordinary pull requests. The workflow
 `.github/workflows/ecbs-link2-mem.yml` runs this script.
 """
 import fcntl

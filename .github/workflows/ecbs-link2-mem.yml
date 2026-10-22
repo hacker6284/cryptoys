@@ -12,6 +12,10 @@ on:
   pull_request:
     types: [labeled, synchronize]
 
+concurrency:
+  group: ecbs-link2-mem-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -28,10 +32,6 @@ jobs:
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v5
-        with:
-          # pull_request otherwise checks out the merge commit.
-          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
       # Install elan only. No build and no GitHub olean/Mathlib cache: the
       # script below deletes EcbsLink2 oleans and builds them from source.
       - uses: leanprover/lean-action@v1

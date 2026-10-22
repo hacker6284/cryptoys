@@ -224,10 +224,13 @@ import EcbsLink2.Link2.FformAddSplit
 import EcbsLink2.Link2.FformAddCell
 import EcbsLink2.Link2.WalkFformCase
 import EcbsLink2.Link2.FieldOk
+import EcbsLink2.Link2.DemoFieldTab
+import EcbsLink2.Link2.DemoFieldRows
 import EcbsLink2.Link2.DemoField1
 import EcbsLink2.Link2.DemoField2
 import EcbsLink2.Link2.DemoField3
 import EcbsLink2.Link2.DemoField4
+import EcbsLink2.Link2.DemoFieldJoin
 import EcbsLink2.Link2.DemoFieldOk
 import EcbsLink2.Link2.FformAtPack
 import EcbsLink2.Link2.FformZeroAt

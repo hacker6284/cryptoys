@@ -41,9 +41,11 @@ python3 ../../../doubledeal/check_axioms.py ecbs # every EcbsLink2 theorem: prop
 python3 ../../../doubledeal/security/checks/scan_sorry.py --root . --exclude Generated
 ```
 
-No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeds: 20909 theorems, axioms `propext`, `Classical.choice`, and `Quot.sound` only. The largest file is `EcbsLink2/Link2/ChordTailPoint.lean`, compile peak (VmHWM) 1652544 kB, from [ecbs-link2-mem run 39802661445](https://github.com/hacker6284/cryptoys/actions/runs/39802661445). No `maxHeartbeats` or `maxRecDepth` option is set. The 2 GB per-file cap and that clean build are checked by [`.github/workflows/ecbs-link2-mem.yml`](../../../../.github/workflows/ecbs-link2-mem.yml) (Mondays, `workflow_dispatch`, or the `mem-check` label on a PR, rerun on each push while labelled), not by the pull-request `ecbs-lean` job.
+No `sorry`, no `native_decide`, no `axiom`. Tier names and the four tiers' `BoardOk` / `GridOk` / `FoldOk` facts use `decide` and `decide!` (kernel evaluation, no extra axiom), split per tier. A clean `lake build EcbsLink2` under `ulimit -v 7000000` succeeds: 9630 theorems, axioms `propext`, `Classical.choice`, and `Quot.sound` only. On [ecbs-link2-mem run 39802661445](https://github.com/hacker6284/cryptoys/actions/runs/39802661445), before this climb table, the largest file was `EcbsLink2/Link2/ChordTailPoint.lean` at 1652544 kB. A 9-row band of the table decides at about 1036888 kB. No `maxHeartbeats` or `maxRecDepth` option is set. The 2 GB per-file cap and that clean build are checked by [`.github/workflows/ecbs-link2-mem.yml`](../../../../.github/workflows/ecbs-link2-mem.yml) (Mondays, `workflow_dispatch`, or the `mem-check` label on a PR, rerun on each push while labelled), not by the pull-request `ecbs-lean` job.
 
-`DemoField*`, `InvertWalk`, `Chord*` / `Cofactor*` / `Bottom*`, `BasePointOf`, and `WalkKeyExport` support exports that are not covered yet and are staged for option B.
+`DemoField*`, `InvertWalk`, `Chord*` / `Cofactor*` / `Bottom*`, `BasePointOf`, and `WalkKeyExport` support exports that are not covered yet and are staged for option B. They stay in this development; this is not a split.
+
+`Fform*Pack` (`FformAtPack`, `FformLivePack`, `FformYPack`, `FformZPack`, `FformZeroPack`) and `Fform*Zero*` (`FformZero`, `FformZeroAt`, `FformZeroLay`, `FformZeroProj`, `FformYZero`, `FformZZero`) are clone families. The y proof and the z proof repeat one argument with the bench slot changed. Sharing them is later work.
 
 ## Generated Lean
 

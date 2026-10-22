@@ -4,8 +4,6 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.WalkScope
-import EcbsLink2.Link2.WalkFformCase
-import EcbsLink2.Link2.FieldOk
 import EcbsLink2.Link2.Basic
 
 namespace EcbsLink2.Link2
@@ -42,13 +40,5 @@ theorem walk_key_demo_chord (cells : Array Int) (x y : Array Int)
   conv => lhs; zeta
   rw [hN, ok_bind, h1, ok_bind, h2, ok_bind]
   rw [walk_and_finish_demo b2 cells hdemo]
-
-/-- Toy, Hobby, and Serious take `FieldOk`. A trit run of length `n` is then
-    not the old `RunNonUnit` cell. -/
-theorem walk_key_field (t : Spec.Tier) (hF : FieldOk t) (baseX px : List Nat)
-    (ht : allTritList (affineRun t.n t.k t.benchlen baseX px))
-    (hlen : (affineRun t.n t.k t.benchlen baseX px).length = t.n) :
-    ¬ RunNonUnit t.n t.k t.benchlen baseX px :=
-  runNonUnit_field t hF baseX px ht hlen
 
 end EcbsLink2.Link2

@@ -1,17 +1,33 @@
 name: ecbs-link2-mem
 
 # Per-module memory of a cache-free EcbsLink2 build. Heavy checks stay out of
-# pull_request and push CI; the PR gate remains `ecbs-lean` in proofs.yml.
+# push CI and ordinary pull requests; the PR gate remains `ecbs-lean` in
+# proofs.yml. The `mem-check` label starts this job on a pull request: the
+# labeled event must be that label, and synchronize reruns it while the label
+# is still present.
 on:
   workflow_dispatch:
   schedule:
     - cron: "23 5 * * 1"  # Mondays 05:23 UTC
+  pull_request:
+    types: [labeled, synchronize]
+
+concurrency:
+  group: ecbs-link2-mem-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   ecbs-link2-mem:
+    if: |
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (
+        contains(github.event.pull_request.labels.*.name, 'mem-check') &&
+        (github.event.action != 'labeled' || github.event.label.name == 'mem-check')
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 360
     steps:

@@ -169,7 +169,7 @@ theorem red_final_ge
     parked_clear_unparked h hM hS hge hm hT hhome hxLen hxT
   obtain ⟨bClear, bIdle, hrunI, hframe, hbenchE, hbonE, htoE, hmarkE, _hlenE, ht0E,
       hparkE, _hhighE, htierE, hladE, hnrE, _htmaxE, h5H, h5D, h6H, h6D, h7E, h5f, h6f,
-      hkeep, ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, hslots, hpieceM, hpieceS⟩ :=
+      hkeep, ⟨ps, hps⟩, ⟨hnat, hhn⟩, _hrowIdle, _hctrlIdle, hδ, hslots, hpieceM, hpieceS, hside, hquiet⟩ :=
     parked_clear_ge h hM hS hge hm hT hhome
   have hboards : withPark bClearU rowP ctrlP fromH ridxH = bClear := by
     have hjoin := hclearProg.symm.trans hrunI
@@ -276,13 +276,28 @@ theorem red_final_ge
     obtain ⟨sl, slC, hsl, hslC, hle⟩ := hpieceS
     refine ⟨sl, slC, hsl, ?_, hle⟩
     simpa [hP] using hslC
+  have hsideP : SideKeep bClearP base := by
+    have hH : bClearP.sudo_5Board_4home = bIdle.sudo_5Board_4home := by
+      rw [hP, hframe, withPark_home]
+    have hD : bClearP.sudo_5Board_4held = bIdle.sudo_5Board_4held := by
+      rw [hP, hframe, withPark_held]
+    exact side_arrays hside hH hD
+  have hquietP : QuietKeep bClearP base := by
+    have hH : bClearP.sudo_5Board_4home = bIdle.sudo_5Board_4home := by
+      rw [hP, hframe, withPark_home]
+    have hD : bClearP.sudo_5Board_4held = bIdle.sudo_5Board_4held := by
+      rw [hP, hframe, withPark_held]
+    exact quiet_of hquiet (congrArg Array.size hH) (congrArg Array.size hD)
+      (by rw [hP, hframe, withPark_tier])
+      (by rw [hP, hframe, withPark_ix])
+      (by rw [hP, hframe, withPark_mx])
   have hpack :=
     red_unparked_delta h hM hS
       hm hT hhome hxLen hxT
       bClearP bClearU bCube bRed rowP ctrlP fromH ridxH rfl
       hδP hslotsP hmarkP htierP hcubeU hredU hrel
       hbonP htoP hbenchP h5HP h5DP h6HP h6DP h7P h5fP h6fP hkeepP hopsP hc1P
-      hpkP hholeP htrits hpieceMP hpieceSP
+      hpkP hholeP htrits hpieceMP hpieceSP hsideP hquietP
   let b' := withPark bRed rowP ctrlP fromH ridxH
   have hprog :
       (do
@@ -449,7 +464,9 @@ theorem red_final_ge
         simpa [Int.toNat_ofNat] using hlt
       · have hle : hole ≤ s.high := by
           have hhi : hole < s.t0 := h.holeBelow
-          have htop : s.high = s.t0 + s.tally - 1 := h.highTop hm
+          have htop : s.t0 + s.tally - 1 ≤ s.high := by
+            rw [h.highTop]
+            exact Nat.le_max_right _ _
           omega
         rw [hhighM]
         simpa [Int.toNat_ofNat] using hle
@@ -528,7 +545,8 @@ theorem red_final_ge
       simpa [hgap, fieldCube, List.take_take] using htri
     · intro hpos
       rw [ht0M, htall, hhighM]
-      exact Nat.le_of_eq (h.highTop (htall.symm ▸ hpos)).symm
+      rw [h.highTop]
+      exact Nat.le_max_right _ _
     · rw [htall]
       exact h.shape.peg.fitRow
     · rw [htall]
@@ -571,22 +589,20 @@ theorem red_final_ge
       (by rw [htierB]; exact h.shape.tierCg)
       (by rw [htierB]; exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
-      hpark' hpeg'
+      hpark' hpeg' (side_arrays hpack.side hhomeB hheldB)
+      (quiet_of hpack.quiet
+        (congrArg Array.size hhomeB) (congrArg Array.size hheldB)
+        rfl rfl rfl)
   have htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    obtain ⟨tmax, htm, hnote⟩ := h.tmaxLt
-    refine ⟨tmax, ?_, ?_⟩
-    · rw [withPark_tmax, htmaxR, htm]
-    · intro hpos
-      have hlt := hnote (by rw [← htall]; exact hpos)
-      rw [htall]
-      exact hlt
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    obtain ⟨tmax, htm⟩ := h.tmaxLt
+    refine ⟨tmax, ?_⟩
+    rw [withPark_tmax, htmaxR, htm]
   have hK := climbInvKCore_succ h hinv hδR hCap hshape h.holeBelow htmax rfl
   exact ⟨b', hprog, hK, hTight⟩
 
 /-- A projection `withPark` leaves alone is the same on any two frames. -/
-private theorem park_kept {α : Type} (f : Ecbs.Board → α)
+private theorem park_kept_local {α : Type} (f : Ecbs.Board → α)
     (hf : ∀ (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int),
       f (withPark b row ctrl fromHole ridx) = f b)
     {b1 b2 : Ecbs.Board} {r1 r2 : Array Int} {c1 c2 f1 f2 i1 i2 : Int}
@@ -602,73 +618,73 @@ theorem withPark_transfer {b1 b2 : Ecbs.Board}
     (h : withPark b1 r1 c1 f1 i1 = withPark b2 r1 c1 f1 i1) :
     withPark b1 r2 c2 f2 i2 = withPark b2 r2 c2 f2 i2 := by
   apply board_ext
-  · exact park_kept (fun bd => bd.sudo_5Board_1t)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_1t)
       (fun b row ctrl fromHole ridx => withPark_tier b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_4home)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_4home)
       (fun b row ctrl fromHole ridx => withPark_home b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_4held)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_4held)
       (fun b row ctrl fromHole ridx => withPark_held b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_8bench_on)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_8bench_on)
       (fun b row ctrl fromHole ridx => withPark_on b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_8bench_to)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_8bench_to)
       (fun b row ctrl fromHole ridx => withPark_to b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_5bench)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_5bench)
       (fun b row ctrl fromHole ridx => withPark_bench b row ctrl fromHole ridx) h
   · apply cost_ext
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_5moves)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_5moves)
         (fun b row ctrl fromHole ridx => withPark_moves b row ctrl fromHole ridx) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_6slides)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_6slides)
         (fun b row ctrl fromHole ridx => withPark_slides b row ctrl fromHole ridx) h
     · rw [withPark_ctrl, withPark_ctrl]
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_5calls)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_5calls)
         (fun _ _ _ _ _ => rfl) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_13stale_cleared)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_13stale_cleared)
         (fun _ _ _ _ _ => rfl) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_14key_grid_moves)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_14key_grid_moves)
         (fun _ _ _ _ _ => rfl) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_12ladder_moves)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_12ladder_moves)
         (fun _ _ _ _ _ => rfl) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_4peak)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_4peak)
         (fun b row ctrl fromHole ridx => withPark_peak b row ctrl fromHole ridx) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_11peak_strict)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_11peak_strict)
         (fun b row ctrl fromHole ridx => withPark_strict b row ctrl fromHole ridx) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole)
         (fun b row ctrl fromHole ridx => withPark_hole b row ctrl fromHole ridx) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_15control_highest)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_15control_highest)
         (fun b row ctrl fromHole ridx => withPark_high b row ctrl fromHole ridx) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max)
         (fun _ _ _ _ _ => rfl) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_9tally_max)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_9tally_max)
         (fun b row ctrl fromHole ridx => withPark_tmax b row ctrl fromHole ridx) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_14moves_by_phase)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_14moves_by_phase)
         (fun _ _ _ _ _ => rfl) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_13peak_by_phase)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_13peak_by_phase)
         (fun _ _ _ _ _ => rfl) h
-    · exact park_kept (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_3ops)
+    · exact park_kept_local (fun bd => bd.sudo_5Board_4cost.sudo_5Costs_3ops)
         (fun b row ctrl fromHole ridx => withPark_ops b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_5phase) (fun _ _ _ _ _ => rfl) h
-  · exact park_kept (fun bd => bd.sudo_5Board_8phase_m0) (fun _ _ _ _ _ => rfl) h
-  · exact park_kept (fun bd => bd.sudo_5Board_8phase_pk) (fun _ _ _ _ _ => rfl) h
+  · exact park_kept_local (fun bd => bd.sudo_5Board_5phase) (fun _ _ _ _ _ => rfl) h
+  · exact park_kept_local (fun bd => bd.sudo_5Board_8phase_m0) (fun _ _ _ _ _ => rfl) h
+  · exact park_kept_local (fun bd => bd.sudo_5Board_8phase_pk) (fun _ _ _ _ _ => rfl) h
   · rw [withPark_row, withPark_row]
-  · exact park_kept (fun bd => bd.sudo_5Board_10phase_hole) (fun _ _ _ _ _ => rfl) h
-  · exact park_kept (fun bd => bd.sudo_5Board_12calling_hole) (fun _ _ _ _ _ => rfl) h
-  · exact park_kept (fun bd => bd.sudo_5Board_7ladder0)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_10phase_hole) (fun _ _ _ _ _ => rfl) h
+  · exact park_kept_local (fun bd => bd.sudo_5Board_12calling_hole) (fun _ _ _ _ _ => rfl) h
+  · exact park_kept_local (fun bd => bd.sudo_5Board_7ladder0)
       (fun b row ctrl fromHole ridx => withPark_ladder b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_6nrungs)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_6nrungs)
       (fun b row ctrl fromHole ridx => withPark_nrungs b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_9park_hole)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_9park_hole)
       (fun b row ctrl fromHole ridx => withPark_park b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_6tally0)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_6tally0)
       (fun b row ctrl fromHole ridx => withPark_tally0 b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_6marker) (fun _ _ _ _ _ => rfl) h
+  · exact park_kept_local (fun bd => bd.sudo_5Board_6marker) (fun _ _ _ _ _ => rfl) h
   · rw [withPark_from, withPark_from]
-  · exact park_kept (fun bd => bd.sudo_5Board_9tally_len)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_9tally_len)
       (fun b row ctrl fromHole ridx => withPark_len b row ctrl fromHole ridx) h
-  · exact park_kept (fun bd => bd.sudo_5Board_9marker_on)
+  · exact park_kept_local (fun bd => bd.sudo_5Board_9marker_on)
       (fun b row ctrl fromHole ridx => withPark_marker b row ctrl fromHole ridx) h
   · rw [withPark_ridx, withPark_ridx]
-  · exact park_kept (fun bd => bd.sudo_5Board_6ladder) (fun _ _ _ _ _ => rfl) h
-  · exact park_kept (fun bd => bd.sudo_5Board_3log) (fun _ _ _ _ _ => rfl) h
+  · exact park_kept_local (fun bd => bd.sudo_5Board_6ladder) (fun _ _ _ _ _ => rfl) h
+  · exact park_kept_local (fun bd => bd.sudo_5Board_3log) (fun _ _ _ _ _ => rfl) h
 
 /-- Two runs of copy, the peg loop, the gap mul, and clear on the same entry
     board are the same clear. The copies agree by `Except.ok.inj`; the peg

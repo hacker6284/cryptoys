@@ -364,7 +364,7 @@ def byteCheckStep (line : Nat) (xs : Array Int) (toV : Int) (i : Int) :
         let ok ← (if (decide (b ≥ (0 : Int))) then (do
           let b2 ← SudoRt.atL xs i
           pure (decide (b2 ≤ (255 : Int)))) else pure false)
-        let u ← SudoRt.sudoAssert ok line
+        let _u ← SudoRt.sudoAssert ok line
         pure (SudoRt.Flow.cont (ρ := Array Int) ())) :
         Except SudoRt.Trap (SudoRt.Flow Unit (Array Int))) with
     | .ret r => pure (SudoRt.Flow.ret (ρ := Array Int) r)

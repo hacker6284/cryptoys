@@ -171,14 +171,14 @@ private theorem red_open_body (b : Ecbs.Board) (rung m : Nat) (x : Int)
 
 /-- Idle final white rung. The emitted nest is the clear. -/
 theorem dispatch_idle_white_final (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hF : fromHole < 0) (hwhite : rung ≠ 2) (hlast : last = true) :
+    (last : Bool) (_hF : fromHole < 0) (hwhite : rung ≠ 2) (hlast : last = true) :
     climbRung b rung last x m = progWhiteFinal b rung m := by
   rw [hlast]
   exact white_final_body b rung m x hwhite
 
 /-- Idle non-final white rung. The emitted nest is the clear, then the double. -/
 theorem dispatch_idle_white_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hF : fromHole < 0) (hwhite : rung ≠ 2) (hlast : last = false) :
+    (last : Bool) (_hF : fromHole < 0) (hwhite : rung ≠ 2) (hlast : last = false) :
     climbRung b rung last x m = progWhiteOpen b rung m := by
   rw [hlast]
   exact white_open_body b rung m x hwhite
@@ -186,7 +186,7 @@ theorem dispatch_idle_white_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : I
 /-- Idle non-final red rung. The emitted nest doubles, cubes, multiplies, and
     lays one peg. -/
 theorem dispatch_idle_red_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hF : fromHole < 0) (hr : rung = 2) (hlast : last = false) :
+    (last : Bool) (_hF : fromHole < 0) (hr : rung = 2) (hlast : last = false) :
     climbRung b rung last x m = progRedOpen b rung m x := by
   rw [hlast]
   exact red_open_body b rung m x hr
@@ -194,35 +194,35 @@ theorem dispatch_idle_red_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int
 /-- Idle final red rung. The emitted nest cubes and multiplies, and does not
     double or lay the extra peg. -/
 theorem dispatch_idle_red_final (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hF : fromHole < 0) (hr : rung = 2) (hlast : last = true) :
+    (last : Bool) (_hF : fromHole < 0) (hr : rung = 2) (hlast : last = true) :
     climbRung b rung last x m = progRedFinal b m x := by
   rw [hlast]
   exact red_final_body b rung m x hr
 
 /-- Parked final white rung. Same emitted nest as the idle final white rung. -/
 theorem dispatch_park_white_final (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hge : 0 ≤ fromHole) (hwhite : rung ≠ 2) (hlast : last = true) :
+    (last : Bool) (_hge : 0 ≤ fromHole) (hwhite : rung ≠ 2) (hlast : last = true) :
     climbRung b rung last x m = progWhiteFinal b rung m := by
   rw [hlast]
   exact white_final_body b rung m x hwhite
 
 /-- Parked non-final white rung. -/
 theorem dispatch_park_white_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hge : 0 ≤ fromHole) (hwhite : rung ≠ 2) (hlast : last = false) :
+    (last : Bool) (_hge : 0 ≤ fromHole) (hwhite : rung ≠ 2) (hlast : last = false) :
     climbRung b rung last x m = progWhiteOpen b rung m := by
   rw [hlast]
   exact white_open_body b rung m x hwhite
 
 /-- Parked final red rung. -/
 theorem dispatch_park_red_final (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hge : 0 ≤ fromHole) (hr : rung = 2) (hlast : last = true) :
+    (last : Bool) (_hge : 0 ≤ fromHole) (hr : rung = 2) (hlast : last = true) :
     climbRung b rung last x m = progRedFinal b m x := by
   rw [hlast]
   exact red_final_body b rung m x hr
 
 /-- Parked non-final red rung. -/
 theorem dispatch_park_red_open (b : Ecbs.Board) (rung m : Nat) (x fromHole : Int)
-    (last : Bool) (hge : 0 ≤ fromHole) (hr : rung = 2) (hlast : last = false) :
+    (last : Bool) (_hge : 0 ≤ fromHole) (hr : rung = 2) (hlast : last = false) :
     climbRung b rung last x m = progRedOpen b rung m x := by
   rw [hlast]
   exact red_open_body b rung m x hr
@@ -339,10 +339,7 @@ theorem climb_step_home
       ClimbShape b' (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty)
         rest base ∧
       (∃ tmax : Nat,
-        b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-          (0 < (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty).tally →
-            tmax < 2 * (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx)
-              rest.isEmpty).tally)) := by
+        b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) := by
   have hT : s.tally ≤ base.mMax := h.tally_le hCap
   rcases Classical.em (s.fromHole < 0) with hF | hnge
   · rcases Classical.em (r = 2) with hr | hwhite
@@ -628,16 +625,16 @@ theorem copy_band_settle
     (hspare : b.sudo_5Board_4held[6] = false)
     (hn : b.sudo_5Board_1t.sudo_4Tier_1n = (n : Int))
     (hlen : n ≤ xs.length) (hf : FitsLen n)
-    (hpos : 0 < xs.length) (hfitL : FitsLen xs.length)
-    (hzero : ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0)
+    (_hpos : 0 < xs.length) (_hfitL : FitsLen xs.length)
+    (_hzero : ∀ i, n ≤ i → ∀ hi : i < xs.length, xs[i] = 0)
     (hmv : b.sudo_5Board_4cost.sudo_5Costs_5moves = (moves : Int))
     (hpk : b.sudo_5Board_4cost.sudo_5Costs_4peak = Int.ofNat peak)
-    (hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
+    (_hsl : b.sudo_5Board_4cost.sudo_5Costs_6slides = (slides : Int))
     (hfitC : FitsLen (moves + pegCount (xs.take n)))
     (hfitCS : FitsLen (moves + 2 * pegCount (xs.take n) + pegCount (xs.take n)))
-    (hpeg : FitsLen (2 * pegCount (xs.take n)))
-    (hfitM : FitsLen (moves + 2 * pegCount (xs.take n)))
-    (hfitS : FitsLen (slides + 2 * pegCount (xs.take n))) :
+    (_hpeg : FitsLen (2 * pegCount (xs.take n)))
+    (_hfitM : FitsLen (moves + 2 * pegCount (xs.take n)))
+    (_hfitS : FitsLen (slides + 2 * pegCount (xs.take n))) :
     let g := xs.take n
     let bS := settleBoard b 5 h5H h5D xs n moves slides peak
     let pkS := raisedPeak peak (countHeld (b.sudo_5Board_4held.set ⟨5, h5D⟩ true) 7)
@@ -1162,7 +1159,9 @@ theorem climb_step_bench_of
     ∃ b',
       climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' ∧
       ClimbInvK (done ++ [r]) rest b'
-        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base := by
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   let xs := s.gap.take s.n ++ List.replicate (s.benchlen - s.n) 0
   obtain ⟨moves, slides, peak, hmv, hsl, hpk, hbench, hslide⟩ := slideGap_run h hon
   have h5H : 5 < b.sudo_5Board_4home.size :=
@@ -1227,10 +1226,12 @@ theorem climb_step_bench_of
     (by simpa [bS, slS, pegs, ofNat_eq_natCast] using hslS)
     (by simpa [bS, pkS] using hpkS)
     rfl rfl hpegs hpkLe (by simpa [bS] using hops)
+    (by simpa [bS] using settle_strict_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak)
+    (by simpa [bS] using settle_hole_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak)
   have hmod : modelRung sH base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty =
       modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty := by
     simp [sH, modelRung]
-  refine ⟨b', hprog, ?_⟩
+  refine ⟨b', hprog, ?_, hδL.opsSize⟩
   have hmoveCarry : ∃ (mv mv' : Nat),
       b.sudo_5Board_4cost.sudo_5Costs_5moves = (mv : Int) ∧
       b'.sudo_5Board_4cost.sudo_5Costs_5moves = (mv' : Int) ∧
@@ -1302,7 +1303,9 @@ theorem climb_step
     ∃ b',
       climbRung b r rest.isEmpty ((base.xHome : Nat) : Int) s.tally = .ok b' ∧
       ClimbInvK (done ++ [r]) rest b'
-        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base := by
+        (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty) base ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   cases hon : s.onBench
   · obtain ⟨b', hprog, hinv, hδ, hshape, htmax⟩ :=
       climb_step_home h.toCore (moveHeadroom_of_cons h) (slideHeadroom_of_cons h)
@@ -1310,7 +1313,7 @@ theorem climb_step
     refine ⟨b', hprog, climbInvK_succ h hinv hδ.delta
       (moveCarry_off hδ s.onBench hon) (slideCarry_off hδ s.onBench hon)
       (opsCarry_off hδ s.onBench hon)
-      hCap hshape h.holeBelow htmax rfl⟩
+      hCap hshape h.holeBelow htmax rfl, hδ.delta.opsSize⟩
   · exact climb_step_bench_of h hon hm hParkAt hCap hxLen hxT
       (fun _ hs => climbRung_slide h hon hm hs)
 
@@ -1337,7 +1340,9 @@ theorem climb_refines_emit
       ClimbInvK rs [] b' s' base ∧
       (s'.gap, s'.tally) =
         invClimb s0.n s0.k s0.benchlen base.x (s0.gap, s0.tally) rs ∧
-      s'.tally ≤ base.mMax := by
+      s'.tally ≤ base.mMax ∧
+      b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+        b0.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
   let hole : ClimbModel → Nat → Bool → Nat :=
     fun s _ _ => climbAt base.ladder0 base.R s.ridx
   have hmain : ∀ (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel),
@@ -1348,19 +1353,21 @@ theorem climb_refines_emit
       ∃ b' s',
         climbEmit (climbStepBoard ((base.xHome : Nat) : Int)) b rest = .ok b' ∧
         s' = modelClimb s base.x hole rest ∧
-        ClimbInvK (done ++ rest) [] b' s' base := by
+        ClimbInvK (done ++ rest) [] b' s' base ∧
+        b'.sudo_5Board_4cost.sudo_5Costs_3ops.size =
+          b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
     intro done rest
     induction rest generalizing done with
     | nil =>
       intro b s _hrs h _hPark _hm
-      exact ⟨b, s, by simp [climbEmit], rfl, by simpa using h⟩
+      exact ⟨b, s, by simp [climbEmit], rfl, by simpa using h, rfl⟩
     | cons r rest ih =>
       intro b s hrs h hPark hm
       have hCap1 := hCap done (r :: rest) hrs
       have htall : b.sudo_5Board_9tally_len.toNat = s.tally := by
         rw [h.inv.len]
         exact Int.toNat_ofNat s.tally
-      obtain ⟨b1, hprog, hK⟩ := climb_step h hm hPark hCap1 hxLen hxT
+      obtain ⟨b1, hprog, hK, hsz1⟩ := climb_step h hm hPark hCap1 hxLen hxT
       have hprog' : climbStepBoard ((base.xHome : Nat) : Int) b r rest.isEmpty = .ok b1 := by
         simpa [climbStepBoard, htall] using hprog
       have hPark1 : (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx)
@@ -1372,16 +1379,16 @@ theorem climb_refines_emit
         exact Nat.lt_of_lt_of_le hm (tallyAfter_ge s.tally r rest.isEmpty)
       have hrs1 : rs = (done ++ [r]) ++ rest := by
         simp [hrs, List.append_assoc]
-      obtain ⟨b', s', hfold, hs', hK'⟩ := ih (done ++ [r]) b1
+      obtain ⟨b', s', hfold, hs', hK', hsz'⟩ := ih (done ++ [r]) b1
         (modelRung s base.x r (climbAt base.ladder0 base.R s.ridx) rest.isEmpty)
         hrs1 hK hPark1 hm1
-      refine ⟨b', s', ?_, ?_, ?_⟩
+      refine ⟨b', s', ?_, ?_, ?_, hsz'.trans hsz1⟩
       · rw [climbEmit, hprog', ok_bind]
         exact hfold
       · simp [modelClimb, hole, hs']
       · simpa [List.append_assoc] using hK'
-  obtain ⟨b', s', hfold, hs', hK⟩ := hmain [] rs b0 s0 (by simp) h0 hPark hm
-  refine ⟨b', s', hfold, hs', hK, ?_, hK.tally_le (hCap rs [] (by simp))⟩
+  obtain ⟨b', s', hfold, hs', hK, hsz⟩ := hmain [] rs b0 s0 (by simp) h0 hPark hm
+  refine ⟨b', s', hfold, hs', hK, ?_, hK.tally_le (hCap rs [] (by simp)), hsz⟩
   rw [hs']
   exact modelClimb_spec s0 base.x hole rs
 
@@ -1418,7 +1425,16 @@ theorem unpark_after_climb
         b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole ∧
       bU.sudo_5Board_9tally_len = b.sudo_5Board_9tally_len ∧
       bU.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        b.sudo_5Board_4cost.sudo_5Costs_15control_highest := by
+        b.sudo_5Board_4cost.sudo_5Costs_15control_highest ∧
+      bU.sudo_5Board_6marker = b.sudo_5Board_6marker ∧
+      bU.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+        b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max ∧
+      bU.sudo_5Board_6ladder = b.sudo_5Board_6ladder ∧
+      bU.sudo_5Board_7ladder0 = b.sudo_5Board_7ladder0 ∧
+      bU.sudo_5Board_6nrungs = b.sudo_5Board_6nrungs ∧
+      bU.sudo_5Board_9park_hole = b.sudo_5Board_9park_hole ∧
+      bU.sudo_5Board_4cost.sudo_5Costs_9tally_max =
+        b.sudo_5Board_4cost.sudo_5Costs_9tally_max := by
   obtain ⟨colour, hcell⟩ := h.shape.park.parkHeld hge
   have hsrc := h.shape.park.srcOk hge
   let src := s.fromHole.toNat
@@ -1435,7 +1451,7 @@ theorem unpark_after_climb
   have hrun := unpark_rung_back b src s.parkAt colour s.high base.control s.ctrl
     hFrom h.inv.park hRowS hRowP hColour h.shape.tierC hsrc.2.1 h.inv.high
     hsrc.2.2.1 h.inv.ctrl h.shape.park.fit2
-  refine ⟨_, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨_, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   all_goals rfl
 
 end EcbsLink2.Link2

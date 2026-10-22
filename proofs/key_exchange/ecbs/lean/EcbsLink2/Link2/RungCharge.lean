@@ -4,6 +4,7 @@
   Proof-only. Not a security claim.
 -/
 import EcbsLink2.Link2.Invert
+import EcbsLink2.Link2.RowHome
 
 namespace EcbsLink2.Link2
 
@@ -34,8 +35,8 @@ def rungSlideCharge (n m : Nat) : Nat :=
 def rungOpCharge (m : Nat) : Nat :=
   m + 3
 
-theorem mulCharge_ge (n bench : Nat) (moves : Nat) (xs ys : List Nat) (k : Nat)
-    (hn : n ≤ bench) (hp : pegCount (ys.take n) ≤ n) :
+theorem mulCharge_ge (n bench : Nat) (moves : Nat) (_xs ys : List Nat) (_k : Nat)
+    (_hn : n ≤ bench) (hp : pegCount (ys.take n) ≤ n) :
     moves + 2 * pegCount (ys.take n) + n * (n + 1) + 3 * (bench - n) ≤
       moves + mulCharge n bench := by
   unfold mulCharge
@@ -352,6 +353,12 @@ theorem tallyAfter_ge (tally rung : Nat) (last : Bool) :
   unfold tallyAfter
   by_cases hL : last <;> by_cases hR : rung = 2 <;> simp [hL, hR] <;> omega
 
+theorem tallyAfter_steps (tally colour : Nat) (last : Bool) :
+    tallyAfter tally colour last =
+      if last then tally else if colour = 2 then 2 * tally + 1 else 2 * tally := by
+  unfold tallyAfter
+  by_cases hL : last <;> by_cases hR : colour = 2 <;> simp [hL, hR]
+
 theorem paintOnes_get_before (xs : List Nat) (start k j : Nat)
     (hj : j < start) (hlen : j < xs.length) :
     (paintOnes xs start k)[j]'(by rw [paintOnes_length]; exact hlen) = xs[j] := by
@@ -546,6 +553,14 @@ def climbTallyPrefix (tally : Nat) : List Nat → List Nat → Nat
 theorem climbTallyPrefix_nil (tally : Nat) (rest : List Nat) :
     climbTallyPrefix tally [] rest = tally := rfl
 
+theorem climbTallyPrefix_ge (tally : Nat) (done rest : List Nat) :
+    tally ≤ climbTallyPrefix tally done rest := by
+  induction done generalizing tally with
+  | nil => exact Nat.le_refl _
+  | cons r done ih =>
+    simp only [climbTallyPrefix]
+    exact Nat.le_trans (tallyAfter_ge tally r ((done ++ rest).isEmpty)) (ih _)
+
 theorem climbTallyPrefix_snoc (tally : Nat) (done rest : List Nat) (r : Nat) :
     climbTallyPrefix tally (done ++ [r]) rest =
       tallyAfter (climbTallyPrefix tally done (r :: rest)) r rest.isEmpty := by
@@ -679,7 +694,13 @@ structure ClimbBudget where
   slides0 : Nat
   ops0 : Nat
   peak0 : Nat
+  /-- `peak_strict` on the board the climb starts from. -/
+  peakS0 : Nat
   tally0 : Nat
+  /-- The climb starts on a positive tally. Entry writes one white peg first. -/
+  tallyPos : 0 < tally0
+  /-- `control_highest` at that entry, before the tally pegs raise it. -/
+  high0 : Nat
   R : Nat
   mMax : Nat
   mMax_le : mMax ≤ (tally0 + 1) * 2 ^ R
@@ -710,6 +731,31 @@ structure ClimbBudget where
       for each shipped tier. -/
   fitControl : FitsLen (control + 1)
   ladder0 : Nat
+  /-- Homes 0, 1, and 4. The climb writes the gap and the spare; these three
+      stay the lists the walk had when the climb started. -/
+  side0 : List Nat
+  side1 : List Nat
+  side4 : List Nat
+  held0 : Bool
+  held1 : Bool
+  held4 : Bool
+  /-- Home 3. The walk puts the base there and holds it. A fresh board leaves
+      it empty. A rung does not write index 3. -/
+  base3 : List Nat
+  held3 : Bool
+  /-- The tier record, the script-marker index, and its maximum at the start
+      of the climb. A rung does not write them. -/
+  tierSnap : Ecbs.Tier
+  markSnap : Int
+  mxSnap : Int
+  /-- The ladder as `new_board` painted it. A rung parks one colour out of it
+      and puts that colour back. `rowHome_clear` needs the blank tail. -/
+  baseRow : List Nat
+  baseLen : baseRow.length = control
+  /-- The park hole, the cell after the last rung, is empty. -/
+  basePark : baseRow.getD (ladder0 + R) 0 = 0
+  /-- Every hole at and after the tally origin is empty. -/
+  baseZero : ∀ j, ladder0 + R + 1 ≤ j → baseRow.getD j 0 = 0
 
 /-- One rung's counter growth: at most one `rungCharge` of the current tally,
     one slide charge, `mMax + 3` on every ops slot, and a peak that is
@@ -734,6 +780,16 @@ structure RungDelta (b b' : Ecbs.Board) (base : ClimbBudget) (m : Nat) : Prop wh
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     b'.sudo_5Board_4cost.sudo_5Costs_4peak = (pk' : Int) ∧
     pk' ≤ max pk 7
+  /-- `peak_strict` moves by `raisedPeak` against at most seven held homes. -/
+  strict : ∃ (ps ps' : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) ∧
+    b'.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps' : Int) ∧
+    ps' ≤ max ps 7
+  /-- The bench hole moves by `raisedHole` against a top at most `bench`. -/
+  hole : ∃ (h h' : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int) ∧
+    b'.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h' : Int) ∧
+    h' ≤ max h base.bench
 
 /-- `RungDelta` plus the tight conjuncts `mv' + 2 · n ≤ mv + rungCharge` and
     the same for slides. The loose fields are unchanged. Bench composition
@@ -765,7 +821,7 @@ theorem climbAt_ge (L R i : Nat) (hi : i < R) : L ≤ climbAt L R i := by
   unfold climbAt
   omega
 
-theorem climbAt_pred (L R i : Nat) (hi : i + 1 < R) :
+theorem climbAt_pred (L R i : Nat) (_hi : i + 1 < R) :
     climbAt L R (i + 1) = climbAt L R i - 1 := by
   unfold climbAt
   omega
@@ -775,7 +831,7 @@ theorem climbAt_end (L R i : Nat) (hL : 0 < L) (hi : i + 1 = R) :
   unfold climbAt
   omega
 
-theorem climbAt_ne_sum (L R i park : Nat) (hL : 0 < L) (hi : i ≤ R) (hp : park = L + R) :
+theorem climbAt_ne_sum (L R i park : Nat) (hL : 0 < L) (_hi : i ≤ R) (hp : park = L + R) :
     climbAt L R i ≠ park := by
   intro h
   unfold climbAt at h
@@ -858,6 +914,319 @@ structure PegRead (b : Ecbs.Board) (s : ClimbModel) (base : ClimbBudget) : Prop 
   fitBn : FitsLen s.benchlen
   fit3 : FitsLen (3 * (s.n - 1))
 
+/-- Homes 0, 1, 3, and 4, which a climb does not write. Home 3 is the base. -/
+structure SideKeep (b : Ecbs.Board) (base : ClimbBudget) : Prop where
+  h0H : 0 < b.sudo_5Board_4home.size
+  h0D : 0 < b.sudo_5Board_4held.size
+  h1H : 1 < b.sudo_5Board_4home.size
+  h1D : 1 < b.sudo_5Board_4held.size
+  h4H : 4 < b.sudo_5Board_4home.size
+  h4D : 4 < b.sudo_5Board_4held.size
+  h3H : 3 < b.sudo_5Board_4home.size
+  h3D : 3 < b.sudo_5Board_4held.size
+  home0 : b.sudo_5Board_4home[0]'h0H = embed base.side0
+  held0 : b.sudo_5Board_4held[0]'h0D = base.held0
+  home1 : b.sudo_5Board_4home[1]'h1H = embed base.side1
+  held1 : b.sudo_5Board_4held[1]'h1D = base.held1
+  home4 : b.sudo_5Board_4home[4]'h4H = embed base.side4
+  held4 : b.sudo_5Board_4held[4]'h4D = base.held4
+  home3 : b.sudo_5Board_4home[3]'h3H = embed base.base3
+  held3 : b.sudo_5Board_4held[3]'h3D = base.held3
+
+private theorem side_cell {α : Type} {a b : Array α} (h : a = b) {i : Nat}
+    {ha : i < a.size} {hb : i < b.size} {v : α}
+    (hv : b[i]'hb = v) : a[i]'ha = v := by
+  subst h
+  have : (⟨i, ha⟩ : Fin a.size) = ⟨i, hb⟩ := Fin.ext rfl
+  simpa [this] using hv
+
+/-- Same home array and held array, so homes 0, 1, 3, and 4 stay. -/
+theorem side_arrays {b b' : Ecbs.Board} {base : ClimbBudget}
+    (h : SideKeep b base)
+    (hH : b'.sudo_5Board_4home = b.sudo_5Board_4home)
+    (hD : b'.sudo_5Board_4held = b.sudo_5Board_4held) :
+    SideKeep b' base := by
+  refine
+    { h0H := by rw [hH]; exact h.h0H
+      h0D := by rw [hD]; exact h.h0D
+      h1H := by rw [hH]; exact h.h1H
+      h1D := by rw [hD]; exact h.h1D
+      h4H := by rw [hH]; exact h.h4H
+      h4D := by rw [hD]; exact h.h4D
+      h3H := by rw [hH]; exact h.h3H
+      h3D := by rw [hD]; exact h.h3D
+      home0 := side_cell hH h.home0
+      held0 := side_cell hD h.held0
+      home1 := side_cell hH h.home1
+      held1 := side_cell hD h.held1
+      home4 := side_cell hH h.home4
+      held4 := side_cell hD h.held4
+      home3 := side_cell hH h.home3
+      held3 := side_cell hD h.held3 }
+
+/-- The side cells of `b'`, including home 3, are the side cells of `b`. -/
+theorem side_copy {b b' : Ecbs.Board} {base : ClimbBudget}
+    (h : SideKeep b base)
+    (h0H : 0 < b'.sudo_5Board_4home.size)
+    (h0D : 0 < b'.sudo_5Board_4held.size)
+    (h1H : 1 < b'.sudo_5Board_4home.size)
+    (h1D : 1 < b'.sudo_5Board_4held.size)
+    (h4H : 4 < b'.sudo_5Board_4home.size)
+    (h4D : 4 < b'.sudo_5Board_4held.size)
+    (h3H : 3 < b'.sudo_5Board_4home.size)
+    (h3D : 3 < b'.sudo_5Board_4held.size)
+    (e0 : b'.sudo_5Board_4home[0]'h0H = b.sudo_5Board_4home[0]'h.h0H)
+    (d0 : b'.sudo_5Board_4held[0]'h0D = b.sudo_5Board_4held[0]'h.h0D)
+    (e1 : b'.sudo_5Board_4home[1]'h1H = b.sudo_5Board_4home[1]'h.h1H)
+    (d1 : b'.sudo_5Board_4held[1]'h1D = b.sudo_5Board_4held[1]'h.h1D)
+    (e4 : b'.sudo_5Board_4home[4]'h4H = b.sudo_5Board_4home[4]'h.h4H)
+    (d4 : b'.sudo_5Board_4held[4]'h4D = b.sudo_5Board_4held[4]'h.h4D)
+    (e3 : b'.sudo_5Board_4home[3]'h3H = b.sudo_5Board_4home[3]'h.h3H)
+    (d3 : b'.sudo_5Board_4held[3]'h3D = b.sudo_5Board_4held[3]'h.h3D) :
+    SideKeep b' base :=
+  { h0H := h0H
+    h0D := h0D
+    h1H := h1H
+    h1D := h1D
+    h4H := h4H
+    h4D := h4D
+    h3H := h3H
+    h3D := h3D
+    home0 := e0.trans h.home0
+    held0 := d0.trans h.held0
+    home1 := e1.trans h.home1
+    held1 := d1.trans h.held1
+    home4 := e4.trans h.home4
+    held4 := d4.trans h.held4
+    home3 := e3.trans h.home3
+    held3 := d3.trans h.held3 }
+
+/-- Writing one home other than 0, 1, 3, or 4 leaves those cells. -/
+theorem side_set {b : Ecbs.Board} {base : ClimbBudget}
+    (h : SideKeep b base) (i : Nat)
+    (hiH : i < b.sudo_5Board_4home.size) (hiD : i < b.sudo_5Board_4held.size)
+    (hne0 : i ≠ 0) (hne1 : i ≠ 1) (hne4 : i ≠ 4) (hne3 : i ≠ 3)
+    (arr : Array Int) (flag : Bool) :
+    SideKeep
+      { b with
+        sudo_5Board_4home := b.sudo_5Board_4home.set ⟨i, hiH⟩ arr
+        sudo_5Board_4held := b.sudo_5Board_4held.set ⟨i, hiD⟩ flag }
+      base := by
+  let b' := { b with
+    sudo_5Board_4home := b.sudo_5Board_4home.set ⟨i, hiH⟩ arr
+    sudo_5Board_4held := b.sudo_5Board_4held.set ⟨i, hiD⟩ flag }
+  have h0H : 0 < b'.sudo_5Board_4home.size := by
+    simp [b', Array.size_set]; exact h.h0H
+  have h0D : 0 < b'.sudo_5Board_4held.size := by
+    simp [b', Array.size_set]; exact h.h0D
+  have h1H : 1 < b'.sudo_5Board_4home.size := by
+    simp [b', Array.size_set]; exact h.h1H
+  have h1D : 1 < b'.sudo_5Board_4held.size := by
+    simp [b', Array.size_set]; exact h.h1D
+  have h4H : 4 < b'.sudo_5Board_4home.size := by
+    simp [b', Array.size_set]; exact h.h4H
+  have h4D : 4 < b'.sudo_5Board_4held.size := by
+    simp [b', Array.size_set]; exact h.h4D
+  have h3H : 3 < b'.sudo_5Board_4home.size := by
+    simp [b', Array.size_set]; exact h.h3H
+  have h3D : 3 < b'.sudo_5Board_4held.size := by
+    simp [b', Array.size_set]; exact h.h3D
+  refine
+    { h0H := h0H
+      h0D := h0D
+      h1H := h1H
+      h1D := h1D
+      h4H := h4H
+      h4D := h4D
+      h3H := h3H
+      h3D := h3D
+      home0 := by
+        have hne : (⟨i, hiH⟩ : Fin _).1 ≠ 0 := hne0
+        have hget := Array.getElem_set_ne b.sudo_5Board_4home ⟨i, hiH⟩ arr
+          (by simp [b', Array.size_set]; exact h.h0H) hne
+        simpa [b'] using hget.trans h.home0
+      held0 := by
+        have hne : (⟨i, hiD⟩ : Fin _).1 ≠ 0 := hne0
+        have hget := Array.getElem_set_ne b.sudo_5Board_4held ⟨i, hiD⟩ flag
+          (by simp [b', Array.size_set]; exact h.h0D) hne
+        simpa [b'] using hget.trans h.held0
+      home1 := by
+        have hne : (⟨i, hiH⟩ : Fin _).1 ≠ 1 := hne1
+        have hget := Array.getElem_set_ne b.sudo_5Board_4home ⟨i, hiH⟩ arr
+          (by simp [b', Array.size_set]; exact h.h1H) hne
+        simpa [b'] using hget.trans h.home1
+      held1 := by
+        have hne : (⟨i, hiD⟩ : Fin _).1 ≠ 1 := hne1
+        have hget := Array.getElem_set_ne b.sudo_5Board_4held ⟨i, hiD⟩ flag
+          (by simp [b', Array.size_set]; exact h.h1D) hne
+        simpa [b'] using hget.trans h.held1
+      home4 := by
+        have hne : (⟨i, hiH⟩ : Fin _).1 ≠ 4 := hne4
+        have hget := Array.getElem_set_ne b.sudo_5Board_4home ⟨i, hiH⟩ arr
+          (by simp [b', Array.size_set]; exact h.h4H) hne
+        simpa [b'] using hget.trans h.home4
+      held4 := by
+        have hne : (⟨i, hiD⟩ : Fin _).1 ≠ 4 := hne4
+        have hget := Array.getElem_set_ne b.sudo_5Board_4held ⟨i, hiD⟩ flag
+          (by simp [b', Array.size_set]; exact h.h4D) hne
+        simpa [b'] using hget.trans h.held4
+      home3 := by
+        have hne : (⟨i, hiH⟩ : Fin _).1 ≠ 3 := hne3
+        have hget := Array.getElem_set_ne b.sudo_5Board_4home ⟨i, hiH⟩ arr
+          (by simp [b', Array.size_set]; exact h.h3H) hne
+        simpa [b'] using hget.trans h.home3
+      held3 := by
+        have hne : (⟨i, hiD⟩ : Fin _).1 ≠ 3 := hne3
+        have hget := Array.getElem_set_ne b.sudo_5Board_4held ⟨i, hiD⟩ flag
+          (by simp [b', Array.size_set]; exact h.h3D) hne
+        simpa [b'] using hget.trans h.held3 }
+
+theorem side_withTally {b : Ecbs.Board} {base : ClimbBudget}
+    (h : SideKeep b base) (row : Array Int) (len ctrl high tmax : Int) :
+    SideKeep (withTally b row len ctrl high tmax) base :=
+  side_arrays h (withTally_home b row len ctrl high tmax)
+    (withTally_held b row len ctrl high tmax)
+
+theorem side_withPark {b : Ecbs.Board} {base : ClimbBudget}
+    (h : SideKeep b base) (row : Array Int) (ctrl fromHole ridx : Int) :
+    SideKeep (withPark b row ctrl fromHole ridx) base :=
+  side_arrays h (withPark_home b row ctrl fromHole ridx)
+    (withPark_held b row ctrl fromHole ridx)
+
+theorem side_clear {b : Ecbs.Board} {base : ClimbBudget}
+    (h : SideKeep b base) (home : Nat) (xs : List Nat) (moves : Nat)
+    (hin : HomeIn b home)
+    (hne0 : home ≠ 0) (hne1 : home ≠ 1) (hne4 : home ≠ 4) (hne3 : home ≠ 3) :
+    SideKeep (clearHeldBoard b home xs moves hin.hH hin.hD) base := by
+  have hH : (clearHeldBoard b home xs moves hin.hH hin.hD).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨home, hin.hH⟩ #[] := by
+    simp [clearHeldBoard]
+  have hD : (clearHeldBoard b home xs moves hin.hH hin.hD).sudo_5Board_4held =
+      b.sudo_5Board_4held.set ⟨home, hin.hD⟩ false := by
+    simp [clearHeldBoard]
+  exact side_arrays (side_set h home hin.hH hin.hD hne0 hne1 hne4 hne3 #[] false) hH hD
+
+theorem side_place {b : Ecbs.Board} {base : ClimbBudget}
+    (h : SideKeep b base) (home : Nat)
+    (hin : HomeIn b home) (xs : List Nat) (moves peak : Nat)
+    (hne0 : home ≠ 0) (hne1 : home ≠ 1) (hne4 : home ≠ 4) (hne3 : home ≠ 3) :
+    SideKeep (placeBoard b home hin.hH hin.hD xs moves peak) base := by
+  have hH : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨home, hin.hH⟩ (embed xs) := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hD : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4held =
+      b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  exact side_arrays (side_set h home hin.hH hin.hD hne0 hne1 hne4 hne3 (embed xs) true) hH hD
+
+theorem side_settle {b : Ecbs.Board} {base : ClimbBudget}
+    (h : SideKeep b base) (home : Nat)
+    (hin : HomeIn b home) (xs : List Nat) (n moves slides peak : Nat)
+    (hne0 : home ≠ 0) (hne1 : home ≠ 1) (hne4 : home ≠ 4) (hne3 : home ≠ 3) :
+    SideKeep (settleBoard b home hin.hH hin.hD xs n moves slides peak) base := by
+  have hH := settle_home_eq b home hin xs n moves slides peak
+  have hD := settle_held_eq b home hin xs n moves slides peak
+  exact side_arrays
+    (side_set h home hin.hH hin.hD hne0 hne1 hne4 hne3 (embed (xs.take n)) true) hH hD
+
+/-- Size 8, the tier record, the script-marker index, and its maximum.
+    The climb writes homes and counters. These four stay the entry values. -/
+structure QuietKeep (b : Ecbs.Board) (base : ClimbBudget) : Prop where
+  szH : b.sudo_5Board_4home.size = 8
+  szD : b.sudo_5Board_4held.size = 8
+  tier : b.sudo_5Board_1t = base.tierSnap
+  marker : b.sudo_5Board_6marker = base.markSnap
+  mx : b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max = base.mxSnap
+
+theorem quiet_of {b b' : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base)
+    (hszH : b'.sudo_5Board_4home.size = b.sudo_5Board_4home.size)
+    (hszD : b'.sudo_5Board_4held.size = b.sudo_5Board_4held.size)
+    (ht : b'.sudo_5Board_1t = b.sudo_5Board_1t)
+    (hm : b'.sudo_5Board_6marker = b.sudo_5Board_6marker)
+    (hx : b'.sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) :
+    QuietKeep b' base :=
+  { szH := hszH.trans h.szH
+    szD := hszD.trans h.szD
+    tier := ht.trans h.tier
+    marker := hm.trans h.marker
+    mx := hx.trans h.mx }
+
+theorem quiet_withTally {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (row : Array Int) (len ctrl high tmax : Int) :
+    QuietKeep (withTally b row len ctrl high tmax) base :=
+  quiet_of h
+    (congrArg Array.size (withTally_home b row len ctrl high tmax))
+    (congrArg Array.size (withTally_held b row len ctrl high tmax))
+    (withTally_tier b row len ctrl high tmax)
+    (withTally_ix b row len ctrl high tmax)
+    (withTally_mx b row len ctrl high tmax)
+
+theorem quiet_withPark {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (row : Array Int) (ctrl fromHole ridx : Int) :
+    QuietKeep (withPark b row ctrl fromHole ridx) base :=
+  quiet_of h
+    (congrArg Array.size (withPark_home b row ctrl fromHole ridx))
+    (congrArg Array.size (withPark_held b row ctrl fromHole ridx))
+    (withPark_tier b row ctrl fromHole ridx)
+    (withPark_ix b row ctrl fromHole ridx)
+    (withPark_mx b row ctrl fromHole ridx)
+
+theorem quiet_clear {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (home : Nat) (xs : List Nat) (moves : Nat)
+    (hin : HomeIn b home) :
+    QuietKeep (clearHeldBoard b home xs moves hin.hH hin.hD) base := by
+  refine quiet_of h ?_ ?_ rfl rfl rfl
+  · simp [clearHeldBoard, Array.size_set, h.szH]
+  · simp [clearHeldBoard, Array.size_set, h.szD]
+
+theorem quiet_place {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (home : Nat)
+    (hin : HomeIn b home) (xs : List Nat) (moves peak : Nat) :
+    QuietKeep (placeBoard b home hin.hH hin.hD xs moves peak) base := by
+  have hH : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4home =
+      b.sudo_5Board_4home.set ⟨home, hin.hH⟩ (embed xs) := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hD : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4held =
+      b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have ht : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_1t =
+      b.sudo_5Board_1t := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hm : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_6marker =
+      b.sudo_5Board_6marker := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  have hx : (placeBoard b home hin.hH hin.hD xs moves peak).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+    unfold placeBoard
+    dsimp only
+    split <;> rfl
+  exact quiet_of h (by rw [hH, Array.size_set]) (by rw [hD, Array.size_set]) ht hm hx
+
+theorem quiet_settle {b : Ecbs.Board} {base : ClimbBudget}
+    (h : QuietKeep b base) (home : Nat)
+    (hin : HomeIn b home) (xs : List Nat) (n moves slides peak : Nat) :
+    QuietKeep (settleBoard b home hin.hH hin.hD xs n moves slides peak) base := by
+  refine quiet_of h ?_ ?_ ?_ ?_ ?_
+  · rw [settle_home_eq b home hin xs n moves slides peak, Array.size_set, h.szH]
+  · rw [settle_held_eq b home hin xs n moves slides peak, Array.size_set, h.szD]
+  · exact settle_tier_eq b home hin xs n moves slides peak
+  · exact settle_ix_eq b home hin xs n moves slides peak
+  · exact settle_mx_eq b home hin xs n moves slides peak
+
 /-- What one rung reads off the board, beyond the gap polynomial and the counters.
     The spare (home 6) is empty. When the gap sits on the bench, home 5 is clear.
     When it sits in the home, the bench is off. The input home stays held. The
@@ -896,6 +1265,8 @@ structure ClimbShape (b : Ecbs.Board) (s : ClimbModel) (rest : List Nat)
   n_eq : s.n = base.w * base.h - 1
   k_le : s.k ≤ s.n
   gap_eq : s.n - s.k = base.w * base.r
+  side : SideKeep b base
+  quiet : QuietKeep b base
   park : ParkRead b s rest base
   peg : PegRead b s base
 
@@ -930,8 +1301,19 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   peak : ∃ (pk : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     pk ≤ max base.peak0 7
-  /-- The recorded high is the last peg of the current tally. -/
-  highTop : 0 < s.tally → s.high = s.t0 + s.tally - 1
+  /-- `peak_strict` stays under `max` of the value the climb started from and 7. -/
+  strictLe : ∃ (ps : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) ∧
+    ps ≤ max base.peakS0 7
+  /-- The bench hole stays at most the bench. It starts there and each rung
+      raises it only by a top index at most `bench`. -/
+  holeLe : ∃ (h : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int) ∧
+    h ≤ base.bench
+  /-- The recorded high is the entry mark until the tally grows past it,
+      then the last peg of the current tally. `0 < base.tally0` keeps the
+      tally positive, so the zero branch of `highMark` is not this state. -/
+  highTop : s.high = max base.high0 (s.t0 + s.tally - 1)
   /-- Park and the climb hole sit strictly before the tally. A rung's writes
       there do not reach the empty tail. -/
   parkBelow : s.parkAt < s.t0
@@ -951,10 +1333,13 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   openZero : 2 ≤ rest.length → ∀ k, k < s.tally →
     ∀ (hix : s.t0 + s.tally + k < s.row.length),
       s.row[s.t0 + s.tally + k]'hix = 0
-  /-- `tally_max` is a natural below twice the current length. -/
+  /-- `tally_max` is some natural. A rung records `max` of that value and the
+      new length. No export reads this field. `walk_key` returns a point.
+      `receive_check` returns `Checked`, and that refinement has to name
+      `tally_max` exactly rather than as a natural. This invariant is only
+      the climb's own note. -/
   tmaxLt : ∃ tmax : Nat,
-    b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-      (0 < s.tally → tmax < 2 * s.tally)
+    b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)
   /-- The control counter stays within `ctrl0` plus one `rungCtrl` step per
       finished rung. -/
   ctrlLe : s.ctrl ≤ base.ctrl0 + done.length * (3 * base.mMax + 5)
@@ -963,6 +1348,17 @@ structure ClimbInvK (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
       successor parks the hole it just read, and the ladder steps down. -/
   srcAbove : 0 ≤ s.fromHole →
     climbAt base.ladder0 base.R s.ridx < s.fromHole.toNat
+  /-- The park hole is the cell after the ladder, and the tally starts after that. -/
+  parkEq : s.parkAt = base.ladder0 + base.R
+  origin : s.t0 = base.ladder0 + base.R + 1
+  /-- A parked source is a climb hole, not the park hole. -/
+  fromNePark : 0 ≤ s.fromHole → s.fromHole.toNat ≠ s.parkAt
+  /-- Below the origin the row is `base.baseRow`, with at most one rung parked.
+      `rowHome_rung` is the step. -/
+  rowHome : RowHome s.row base.baseRow s.parkAt s.fromHole s.t0
+  /-- Holes at and after the current tally are empty. A rung writes only inside
+      the length it leaves, so this tail stays empty. -/
+  blankTail : ∀ j, s.t0 + s.tally ≤ j → ∀ hj : j < s.row.length, s.row[j]'hj = 0
 
 /-- `ClimbInvK` without the absolute move and slide bounds. A bench-start rung
     slides `2 · pegs` onto the counter before the home program, so those two
@@ -983,7 +1379,13 @@ structure ClimbInvKCore (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
   peak : ∃ (pk : Nat),
     b.sudo_5Board_4cost.sudo_5Costs_4peak = (pk : Int) ∧
     pk ≤ max base.peak0 7
-  highTop : 0 < s.tally → s.high = s.t0 + s.tally - 1
+  strictLe : ∃ (ps : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (ps : Int) ∧
+    ps ≤ max base.peakS0 7
+  holeLe : ∃ (h : Nat),
+    b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (h : Int) ∧
+    h ≤ base.bench
+  highTop : s.high = max base.high0 (s.t0 + s.tally - 1)
   parkBelow : s.parkAt < s.t0
   holeBelow : climbAt base.ladder0 base.R s.ridx < s.t0
   fromBelow : 0 ≤ s.fromHole → s.fromHole.toNat < s.t0
@@ -996,11 +1398,15 @@ structure ClimbInvKCore (done rest : List Nat) (b : Ecbs.Board) (s : ClimbModel)
     ∀ (hix : s.t0 + s.tally + k < s.row.length),
       s.row[s.t0 + s.tally + k]'hix = 0
   tmaxLt : ∃ tmax : Nat,
-    b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-      (0 < s.tally → tmax < 2 * s.tally)
+    b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)
   ctrlLe : s.ctrl ≤ base.ctrl0 + done.length * (3 * base.mMax + 5)
   srcAbove : 0 ≤ s.fromHole →
     climbAt base.ladder0 base.R s.ridx < s.fromHole.toNat
+  parkEq : s.parkAt = base.ladder0 + base.R
+  origin : s.t0 = base.ladder0 + base.R + 1
+  fromNePark : 0 ≤ s.fromHole → s.fromHole.toNat ≠ s.parkAt
+  rowHome : RowHome s.row base.baseRow s.parkAt s.fromHole s.t0
+  blankTail : ∀ j, s.t0 + s.tally ≤ j → ∀ hj : j < s.row.length, s.row[j]'hj = 0
 
 theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
     {base : ClimbBudget} (h : ClimbInvK done rest b s base) :
@@ -1018,6 +1424,8 @@ theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel
       refine ⟨c, hc, ?_⟩
       cases hs : s.onBench <;> simp [hs] at hle <;> omega
     peak := h.peak
+    strictLe := h.strictLe
+    holeLe := h.holeLe
     highTop := h.highTop
     parkBelow := h.parkBelow
     holeBelow := h.holeBelow
@@ -1029,7 +1437,12 @@ theorem ClimbInvK.toCore {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel
     openZero := h.openZero
     tmaxLt := h.tmaxLt
     ctrlLe := h.ctrlLe
-    srcAbove := h.srcAbove }
+    srcAbove := h.srcAbove
+    parkEq := h.parkEq
+    origin := h.origin
+    fromNePark := h.fromNePark
+    rowHome := h.rowHome
+    blankTail := h.blankTail }
 
 theorem ClimbInvKCore.tally_le {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel}
     {base : ClimbBudget} (h : ClimbInvKCore done rest b s base)
@@ -1161,44 +1574,53 @@ theorem ClimbInvK.moves_fit {done rest : List Nat} {b : Ecbs.Board} {s : ClimbMo
   exact ⟨mv, heq, rung_budget_fit base.moves0 done.length base.R
     (rungCharge base.n base.bench base.mMax) mv hk hle base.fitM⟩
 
-/-- `rungHigh` keeps "high = last peg of the tally" as the length grows. -/
-private theorem modelRung_highTop (s : ClimbModel) (x : List Nat) (rung hole : Nat)
-    (last : Bool) (hTop : 0 < s.tally → s.high = s.t0 + s.tally - 1) :
-    0 < (modelRung s x rung hole last).tally →
-      (modelRung s x rung hole last).high =
-        (modelRung s x rung hole last).t0 +
-          (modelRung s x rung hole last).tally - 1 := by
-  intro hpos
+/-- A rung keeps `high = max high0 (last tally peg)`. The tally is already
+    positive, so doubling it stays positive and the new hole is past the old end. -/
+private theorem modelRung_highTop (s : ClimbModel) (x : List Nat) (rung hole h0 : Nat)
+    (last : Bool) (hm : 0 < s.tally)
+    (hTop : s.high = max h0 (s.t0 + s.tally - 1)) :
+    (modelRung s x rung hole last).high =
+      max h0 ((modelRung s x rung hole last).t0 +
+        (modelRung s x rung hole last).tally - 1) := by
   have ht : (modelRung s x rung hole last).tally = tallyAfter s.tally rung last :=
     modelRung_tally s x rung hole last
   have hh : (modelRung s x rung hole last).high =
       rungHigh s.high s.t0 s.tally rung last := by
     simp [modelRung]
-  have h0 : (modelRung s x rung hole last).t0 = s.t0 := by
+  have h0t : (modelRung s x rung hole last).t0 = s.t0 := by
     simp [modelRung]
-  rw [ht] at hpos
-  rw [hh, h0, ht]
+  rw [hh, h0t, ht, hTop]
   by_cases hL : last
   · have hta : tallyAfter s.tally rung last = s.tally := by
       simp [tallyAfter, hL]
-    have hhi : rungHigh s.high s.t0 s.tally rung last = s.high := by
+    have hhi : rungHigh (max h0 (s.t0 + s.tally - 1)) s.t0 s.tally rung last =
+        max h0 (s.t0 + s.tally - 1) := by
       simp [rungHigh, hL]
-    rw [hta] at hpos
     rw [hhi, hta]
-    exact hTop hpos
   · by_cases hR : rung = 2
     · have hta : tallyAfter s.tally rung last = 2 * s.tally + 1 := by
         simp [tallyAfter, hL, hR]
-      have hhi : rungHigh s.high s.t0 s.tally rung last = s.t0 + 2 * s.tally := by
+      have hhi : rungHigh (max h0 (s.t0 + s.tally - 1)) s.t0 s.tally rung last =
+          max (max h0 (s.t0 + s.tally - 1)) (s.t0 + 2 * s.tally) := by
         simp [rungHigh, hL, hR]
-      rw [hhi, hta]
-      omega
+      have hle : s.t0 + s.tally - 1 ≤ s.t0 + 2 * s.tally := by omega
+      have hmax : max (max h0 (s.t0 + s.tally - 1)) (s.t0 + 2 * s.tally) =
+          max h0 (s.t0 + 2 * s.tally) := by
+        rw [Nat.max_assoc]
+        exact congrArg (max h0) (Nat.max_eq_right hle)
+      have hend : s.t0 + (2 * s.tally + 1) - 1 = s.t0 + 2 * s.tally := by omega
+      rw [hhi, hta, hmax, hend]
     · have hta : tallyAfter s.tally rung last = 2 * s.tally := by
         simp [tallyAfter, hL, hR]
-      have hhi : rungHigh s.high s.t0 s.tally rung last =
-          s.t0 + 2 * s.tally - 1 := by
+      have hhi : rungHigh (max h0 (s.t0 + s.tally - 1)) s.t0 s.tally rung last =
+          max (max h0 (s.t0 + s.tally - 1)) (s.t0 + 2 * s.tally - 1) := by
         simp [rungHigh, hL, hR]
-      rw [hhi, hta]
+      have hle : s.t0 + s.tally - 1 ≤ s.t0 + 2 * s.tally - 1 := by omega
+      have hmax : max (max h0 (s.t0 + s.tally - 1)) (s.t0 + 2 * s.tally - 1) =
+          max h0 (s.t0 + 2 * s.tally - 1) := by
+        rw [Nat.max_assoc]
+        exact congrArg (max h0) (Nat.max_eq_right hle)
+      rw [hhi, hta, hmax]
 
 /-- Holes at or past the new tally are not written by the rung. Park, the climb
     hole, and an unpark source all sit before `t0`. -/
@@ -1390,6 +1812,44 @@ theorem rungRow_red_below_ge
     simp [List.getElem_set, hne]
   exact hset.trans (hone.trans (hback.trans (hred.trans hAp)))
 
+/-- One rung keeps `RowHome`. The colour parked is the painted peg at that hole. -/
+theorem rowHome_carry
+    {done rest : List Nat} {r : Nat} {b : Ecbs.Board} {s : ClimbModel}
+    {base : ClimbBudget} {x : List Nat} {hole : Nat}
+    (h : ClimbInvKCore done (r :: rest) b s base)
+    (hAt : hole = climbAt base.ladder0 base.R s.ridx) :
+    RowHome (modelRung s x r hole rest.isEmpty).row base.baseRow
+      (modelRung s x r hole rest.isEmpty).parkAt
+      (modelRung s x r hole rest.isEmpty).fromHole
+      (modelRung s x r hole rest.isEmpty).t0 := by
+  have hhole : hole < s.t0 := by rw [hAt]; exact h.holeBelow
+  have hlen : hole < s.row.length := by
+    have hfit := h.tailFit
+    omega
+  have hpainted : hole < base.baseRow.length := by rw [← h.rowHome.len]; exact hlen
+  have hne : hole ≠ s.parkAt := by
+    have hpn := h.shape.park.parkNe
+    simpa [hAt] using hpn
+  have hfromNe : 0 ≤ s.fromHole → s.fromHole.toNat ≠ hole := by
+    intro hF
+    have hlt := h.srcAbove hF
+    rw [← hAt] at hlt
+    omega
+  have hpair := h.shape.park.nextRung r rest rfl
+  have hr : s.row[hole]'hlen = r := by simpa [hAt] using hpair.1
+  have hbelow := h.rowHome.below hole hhole hlen
+  have hread : s.row[hole]'hlen = base.baseRow[hole]'hpainted := by
+    by_cases hF : 0 ≤ s.fromHole
+    · have hneF : hole ≠ s.fromHole.toNat := fun h => hfromNe hF h.symm
+      simp [hF, hneF, hne] at hbelow
+      exact hbelow
+    · simp [hF] at hbelow
+      exact hbelow
+  have hcol : r = base.baseRow[hole]'hpainted := hr.symm.trans hread
+  have hhome := rowHome_rung s.row base.baseRow s.parkAt hole r s.fromHole s.t0 s.tally
+    rest.isEmpty h.rowHome h.parkBelow hne hfromNe h.fromNePark hpainted hcol
+  simpa [modelRung] using hhome
+
 /-- One rung preserves the non-cost fields of `ClimbInvKCore`. The absolute
     move and slide bounds are rebuilt by the caller from `RungDelta`. -/
 theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
@@ -1401,12 +1861,11 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     (hshape : ClimbShape b' (modelRung s x r hole rest.isEmpty) rest base)
     (hhole : hole < s.t0)
     (htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < (modelRung s x r hole rest.isEmpty).tally →
-          tmax < 2 * (modelRung s x r hole rest.isEmpty).tally))
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
     (hAt : hole = climbAt base.ladder0 base.R s.ridx) :
     ClimbInvKCore (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
   have hT := h.tally_le hCap
+  have hnePark : hole ≠ s.parkAt := by simpa [hAt] using h.shape.park.parkNe
   refine
     { inv := hinv
       idx := ?_
@@ -1417,7 +1876,14 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       shape := hshape
       ops := ?_
       peak := ?_
-      highTop := modelRung_highTop s x r hole rest.isEmpty h.highTop
+      strictLe := ?_
+      holeLe := ?_
+      highTop := by
+        have hmt : 0 < s.tally :=
+          Nat.lt_of_lt_of_le base.tallyPos (by
+            rw [h.htally0]
+            exact climbTallyPrefix_ge base.tally0 done (r :: rest))
+        exact modelRung_highTop s x r hole base.high0 rest.isEmpty hmt h.highTop
       parkBelow := ?_
       holeBelow := ?_
       fromBelow := ?_
@@ -1428,7 +1894,28 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       openZero := ?_
       tmaxLt := htmax
       ctrlLe := ?_
-      srcAbove := ?_ }
+      srcAbove := ?_
+      parkEq := by simp [modelRung, h.parkEq]
+      origin := by simp [modelRung, h.origin]
+      fromNePark := by
+        intro _hF
+        simpa [modelRung] using hnePark
+      rowHome := rowHome_carry h hAt
+      blankTail := by
+        intro j hj hix
+        have hnew : s.t0 + tallyAfter s.tally r rest.isEmpty ≤ j := by
+          simpa [modelRung, invRung_tally] using hj
+        have hold : s.t0 + s.tally ≤ j :=
+          Nat.le_trans (Nat.add_le_add_left (tallyAfter_ge s.tally r rest.isEmpty) s.t0) hnew
+        have hlen0 : j < s.row.length := by simpa [modelRung, rungRow_length] using hix
+        have hzero := h.blankTail j hold hlen0
+        have hfrom : s.fromHole < 0 ∨ s.fromHole.toNat < s.t0 := by
+          by_cases hF : 0 ≤ s.fromHole
+          · exact Or.inr (h.fromBelow hF)
+          · exact Or.inl (by omega)
+        have hrow := rungRow_past s.row s.fromHole s.parkAt hole s.t0 s.tally r j
+          rest.isEmpty h.parkBelow (by rw [hAt]; exact h.holeBelow) hfrom hnew hlen0
+        simpa [modelRung] using hrow.trans hzero }
   · simp [modelRung, h.idx, List.length_append]
   · simp [modelRung, h.hn]
   · simp [modelRung, h.hbench]
@@ -1452,6 +1939,15 @@ theorem climbInvKCore_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     obtain ⟨pk0, hb0, hbound⟩ := h.peak
     have hpk : pk = pk0 := ofNat_inj_nat (hb.symm.trans hb0)
     refine ⟨pk', hb', peak_carry base.peak0 pk pk' (by rw [hpk]; exact hbound) hle⟩
+  · obtain ⟨ps, ps', hb, hb', hle⟩ := hδ.strict
+    obtain ⟨ps0, hb0, hbound⟩ := h.strictLe
+    have hps : ps = ps0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨ps', hb', peak_carry base.peakS0 ps ps' (by rw [hps]; exact hbound) hle⟩
+  · obtain ⟨ho, ho', hb, hb', hle⟩ := hδ.hole
+    obtain ⟨ho0, hb0, hbound⟩ := h.holeLe
+    have heq : ho = ho0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨ho', hb', ?_⟩
+    exact Nat.le_trans hle (Nat.max_le.mpr ⟨by rw [heq]; exact hbound, Nat.le_refl _⟩)
   · have hp : (modelRung s x r hole rest.isEmpty).parkAt = s.parkAt := by
       simp [modelRung]
     have ht0 : (modelRung s x r hole rest.isEmpty).t0 = s.t0 := by
@@ -1692,12 +2188,11 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     (hshape : ClimbShape b' (modelRung s x r hole rest.isEmpty) rest base)
     (hhole : hole < s.t0)
     (htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < (modelRung s x r hole rest.isEmpty).tally →
-          tmax < 2 * (modelRung s x r hole rest.isEmpty).tally))
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
     (hAt : hole = climbAt base.ladder0 base.R s.ridx) :
     ClimbInvK (done ++ [r]) rest b' (modelRung s x r hole rest.isEmpty) base := by
   have hT := h.tally_le hCap
+  have hnePark : hole ≠ s.parkAt := by simpa [hAt] using h.shape.park.parkNe
   have hm : rungCharge base.n base.bench s.tally ≤
       rungCharge base.n base.bench base.mMax :=
     rungCharge_mono base.n base.bench s.tally base.mMax hT
@@ -1715,7 +2210,14 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       slides := ?_
       ops := ?_
       peak := ?_
-      highTop := modelRung_highTop s x r hole rest.isEmpty h.highTop
+      strictLe := ?_
+      holeLe := ?_
+      highTop := by
+        have hmt : 0 < s.tally :=
+          Nat.lt_of_lt_of_le base.tallyPos (by
+            rw [h.htally0]
+            exact climbTallyPrefix_ge base.tally0 done (r :: rest))
+        exact modelRung_highTop s x r hole base.high0 rest.isEmpty hmt h.highTop
       parkBelow := ?_
       holeBelow := ?_
       fromBelow := ?_
@@ -1726,7 +2228,28 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
       openZero := ?_
       tmaxLt := htmax
       ctrlLe := ?_
-      srcAbove := ?_ }
+      srcAbove := ?_
+      parkEq := by simp [modelRung, h.parkEq]
+      origin := by simp [modelRung, h.origin]
+      fromNePark := by
+        intro _hF
+        simpa [modelRung] using hnePark
+      rowHome := rowHome_carry h.toCore hAt
+      blankTail := by
+        intro j hj hix
+        have hnew : s.t0 + tallyAfter s.tally r rest.isEmpty ≤ j := by
+          simpa [modelRung, invRung_tally] using hj
+        have hold : s.t0 + s.tally ≤ j :=
+          Nat.le_trans (Nat.add_le_add_left (tallyAfter_ge s.tally r rest.isEmpty) s.t0) hnew
+        have hlen0 : j < s.row.length := by simpa [modelRung, rungRow_length] using hix
+        have hzero := h.blankTail j hold hlen0
+        have hfrom : s.fromHole < 0 ∨ s.fromHole.toNat < s.t0 := by
+          by_cases hF : 0 ≤ s.fromHole
+          · exact Or.inr (h.fromBelow hF)
+          · exact Or.inl (by omega)
+        have hrow := rungRow_past s.row s.fromHole s.parkAt hole s.t0 s.tally r j
+          rest.isEmpty h.parkBelow (by rw [hAt]; exact h.holeBelow) hfrom hnew hlen0
+        simpa [modelRung] using hrow.trans hzero }
   · simp [modelRung, h.idx, List.length_append]
   · simp [modelRung, h.hn]
   · simp [modelRung, h.hbench]
@@ -1844,6 +2367,15 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
     obtain ⟨pk0, hb0, hbound⟩ := h.peak
     have hpk : pk = pk0 := ofNat_inj_nat (hb.symm.trans hb0)
     refine ⟨pk', hb', peak_carry base.peak0 pk pk' (by rw [hpk]; exact hbound) hle⟩
+  · obtain ⟨ps, ps', hb, hb', hle⟩ := hδ.strict
+    obtain ⟨ps0, hb0, hbound⟩ := h.strictLe
+    have hps : ps = ps0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨ps', hb', peak_carry base.peakS0 ps ps' (by rw [hps]; exact hbound) hle⟩
+  · obtain ⟨ho, ho', hb, hb', hle⟩ := hδ.hole
+    obtain ⟨ho0, hb0, hbound⟩ := h.holeLe
+    have heq : ho = ho0 := ofNat_inj_nat (hb.symm.trans hb0)
+    refine ⟨ho', hb', ?_⟩
+    exact Nat.le_trans hle (Nat.max_le.mpr ⟨by rw [heq]; exact hbound, Nat.le_refl _⟩)
   · have hp : (modelRung s x r hole rest.isEmpty).parkAt = s.parkAt := by
       simp [modelRung]
     have ht0 : (modelRung s x r hole rest.isEmpty).t0 = s.t0 := by
@@ -2052,5 +2584,30 @@ theorem climbInvK_succ {done rest : List Nat} {r : Nat} {b b' : Ecbs.Board}
         omega
     simpa [Int.toNat_ofNat] using hdec
 
+/-- Unpark, then empty the current tally. The row is the painted ladder.
+    At the end of the ladder the current tally is the final one, so this is
+    `rowHome_clear` on that board. -/
+theorem climb_row_cleared
+    {done rest : List Nat} {b : Ecbs.Board} {s : ClimbModel} {base : ClimbBudget}
+    (h : ClimbInvK done rest b s base) :
+    paintZero (unparkList s.row s.fromHole s.parkAt) s.t0 s.tally = base.baseRow := by
+  have hroom : s.t0 + s.tally ≤ s.row.length :=
+    Nat.le_trans (Nat.add_le_add_left h.finalLe s.t0) h.tailFit
+  have hzero : ∀ j (hj : s.t0 ≤ j) (hp : j < base.baseRow.length),
+      base.baseRow[j]'hp = 0 := by
+    intro j hj hp
+    have hge : base.ladder0 + base.R + 1 ≤ j := by rw [← h.origin]; exact hj
+    have hd := base.baseZero j hge
+    unfold List.getD at hd
+    rw [List.get?_eq_getElem?, List.getElem?_eq_getElem hp] at hd
+    simpa using hd
+  have hpark0 : base.baseRow[s.parkAt]'h.rowHome.parkLt = 0 := by
+    have hd := base.basePark
+    rw [← h.parkEq] at hd
+    unfold List.getD at hd
+    rw [List.get?_eq_getElem?, List.getElem?_eq_getElem h.rowHome.parkLt] at hd
+    simpa using hd
+  exact rowHome_clear s.row base.baseRow s.parkAt s.fromHole s.t0 s.tally
+    h.rowHome h.parkBelow h.fromBelow h.fromNePark hpark0 hzero h.blankTail hroom
 
 end EcbsLink2.Link2

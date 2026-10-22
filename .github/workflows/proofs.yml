@@ -447,11 +447,9 @@ jobs:
         run: python3 proofs/doubledeal/check_axioms.py bs
 
   ecbs-lean:
-    # ECBS Link 2 part 1. 11 exports covered: tier, phase_names, op_names,
-    # new_board, coordinate, place, band, curve_test, invert_number, multiply,
-    # cube_number. 8 not covered (part 2, cursor/ecbs-link2-part2): call_in,
-    # roll_key, exchange, receive_check, make_certificate, base_point_of,
-    # walk_key, fold. Scope: proofs/key_exchange/ecbs/lean/README.md.
+    # ECBS Link 2. 13 exports covered: part 1's 11 plus fold and roll_key.
+    # 6 not covered: call_in, exchange, receive_check, make_certificate,
+    # base_point_of, walk_key. Scope: proofs/key_exchange/ecbs/lean/README.md.
     # Largest file: EcbsLink2/Link2/ClimbEmit.lean, about 1.74 GB.
     runs-on: ubuntu-latest
     steps:

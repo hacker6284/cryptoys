@@ -5,6 +5,7 @@
 -/
 import EcbsLink2.Link2.Place
 import EcbsLink2.Link2.Lists
+import EcbsLink2.Link2.TailStay
 
 namespace EcbsLink2.Link2
 
@@ -371,6 +372,23 @@ theorem bumpOp_ops (b : Ecbs.Board) (i cOps : Nat)
     (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops =
       b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨i, hops⟩ (Int.ofNat (cOps + 1)) := rfl
 
+/-- A bump writes one cell. The array keeps its length. -/
+theorem bumpOp_len (b : Ecbs.Board) (i cOps : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
+    (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := by
+  simp [bumpOp, Array.size_set]
+
+/-- A bump of slot `i` leaves every other ops slot. Slot 0 is `op_mul` and
+    slot 1 is `op_cube`, so a multiply does not change the cube counter. -/
+theorem bumpOp_other (b : Ecbs.Board) (i cOps j : Nat)
+    (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size)
+    (hj : j < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) (hne : i ≠ j) :
+    (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_3ops[j]'(by
+        simp [bumpOp, Array.size_set]; exact hj) =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops[j]'hj := by
+  simp [bumpOp, Array.getElem_set_ne, hne]
+
 theorem bumpOp_moves (b : Ecbs.Board) (i cOps : Nat)
     (hops : i < b.sudo_5Board_4cost.sudo_5Costs_3ops.size) :
     (bumpOp b i cOps hops).sudo_5Board_4cost.sudo_5Costs_5moves =
@@ -545,6 +563,26 @@ theorem settle_tier_eq (b : Ecbs.Board) (home : Nat)
   · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
   · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
 
+/-- `settle` does not move the script marker. -/
+theorem settle_ix_eq (b : Ecbs.Board) (home : Nat)
+    (hin : HomeIn b home)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_6marker =
+      b.sudo_5Board_6marker := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+
+/-- `settle` does not change the script-marker maximum. -/
+theorem settle_mx_eq (b : Ecbs.Board) (home : Nat)
+    (hin : HomeIn b home)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+
 theorem settle_moves_eq (b : Ecbs.Board) (home : Nat)
     (hin : HomeIn b home)
     (xs : List Nat) (n moves slides peak : Nat) :
@@ -571,6 +609,31 @@ theorem settle_tally_eq (b : Ecbs.Board) (home : Nat)
   by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
   · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
   · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+
+theorem settle_row_stay (b : Ecbs.Board) (home : Nat)
+    (hin : HomeIn b home)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    (settleBoard b home hin.hH hin.hD xs n moves slides peak).sudo_5Board_3row =
+      b.sudo_5Board_3row := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+
+/-- Settle writes the home, the moves, the slides, and sometimes the peak.
+    The ladder, the park, and the tally stay. -/
+theorem settle_frame (b : Ecbs.Board) (home : Nat)
+    (hin : HomeIn b home)
+    (xs : List Nat) (n moves slides peak : Nat) :
+    FrameScalar b (settleBoard b home hin.hH hin.hD xs n moves slides peak) := by
+  by_cases hpk : peak < countHeld (b.sudo_5Board_4held.set ⟨home, hin.hD⟩ true) 7
+  · rw [settle_peak b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+    exact
+      { ladder := rfl, l0 := rfl, nr := rfl, park := rfl, fromH := rfl, ridx := rfl
+        tlen := rfl, t0 := rfl, tmax := rfl }
+  · rw [settle_keep b home ⟨hin.hH, hin.hD⟩ xs n moves slides peak hpk]
+    exact
+      { ladder := rfl, l0 := rfl, nr := rfl, park := rfl, fromH := rfl, ridx := rfl
+        tlen := rfl, t0 := rfl, tmax := rfl }
 
 theorem settle_ctrl_eq (b : Ecbs.Board) (home : Nat)
     (hin : HomeIn b home)
@@ -681,6 +744,13 @@ theorem withTally_bench (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax :
 theorem withTally_tier (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
     (withTally b row len ctrl high tmax).sudo_5Board_1t = b.sudo_5Board_1t := rfl
 
+theorem withTally_ix (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_6marker = b.sudo_5Board_6marker := rfl
+
+theorem withTally_mx (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
+    (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := rfl
+
 theorem withTally_moves (b : Ecbs.Board) (row : Array Int) (len ctrl high tmax : Int) :
     (withTally b row len ctrl high tmax).sudo_5Board_4cost.sudo_5Costs_5moves =
       b.sudo_5Board_4cost.sudo_5Costs_5moves := rfl
@@ -777,6 +847,13 @@ theorem withPark_bench (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : 
 
 theorem withPark_tier (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
     (withPark b row ctrl fromHole ridx).sudo_5Board_1t = b.sudo_5Board_1t := rfl
+
+theorem withPark_ix (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_6marker = b.sudo_5Board_6marker := rfl
+
+theorem withPark_mx (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
+    (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_17script_marker_max =
+      b.sudo_5Board_4cost.sudo_5Costs_17script_marker_max := rfl
 
 theorem withPark_moves (b : Ecbs.Board) (row : Array Int) (ctrl fromHole ridx : Int) :
     (withPark b row ctrl fromHole ridx).sudo_5Board_4cost.sudo_5Costs_5moves =

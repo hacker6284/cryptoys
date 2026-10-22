@@ -35,11 +35,11 @@ theorem climb_ix_lt (t : Spec.Tier) (h : BoardOk t) (k : Nat) (hk : k < tierR t)
   have hL := h.ladder
   omega
 
-theorem climb_before_origin (t : Spec.Tier) (k : Nat) (hk : k < tierR t) :
+theorem climb_before_origin (t : Spec.Tier) (k : Nat) (_hk : k < tierR t) :
     climbIx t k ≠ tallyOrigin t := by
   unfold climbIx
   unfold tallyOrigin
-  unfold tierR at hk ⊢
+  unfold tierR at _hk ⊢
   omega
 
 theorem climb_head_ix (t : Spec.Tier) :
@@ -164,7 +164,7 @@ theorem entry_ladderTail (t : Spec.Tier) (h : BoardOk t)
     exact entry_colour_ne t k hkR
 
 /-- The board `tally_start` returns on the gap copy. -/
-def tallyBoard (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (hR : 0 < tierR t) :
+def tallyBoard (t : Spec.Tier) (xs : List Nat) (sat : TierSat t) (_hR : 0 < tierR t) :
     Ecbs.Board :=
   { gapBoard t xs with
     sudo_5Board_3row := (gapBoard t xs).sudo_5Board_3row.set

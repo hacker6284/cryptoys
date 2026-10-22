@@ -73,7 +73,7 @@ private theorem spareFits
 
 /-- Square the across on the cube board and settle that square into the spare.
     The conjuncts are what `curve_suffix` reads. -/
-theorem curve_spare_step (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
+theorem curve_spare_step (t : Spec.Tier) (lay : FieldLay t) (_sat : TierSat t)
     (b : Ecbs.Board) (x y : List Nat)
     (pkC peakC holeC mvC slC : Nat)
     (hx : x.length = t.n) (hxt : allTritList x)
@@ -82,11 +82,11 @@ theorem curve_spare_step (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
     (hto : b.sudo_5Board_8bench_to = Ecbs.bottom)
     (hszH : b.sudo_5Board_4home.size = 8) (hszD : b.sudo_5Board_4held.size = 8)
     (hheld2 : ∀ (h : 2 < b.sudo_5Board_4held.size), b.sudo_5Board_4held[2] = false)
-    (hhome2 : ∀ (h : 2 < b.sudo_5Board_4home.size), b.sudo_5Board_4home[2] = (#[] : Array Int))
+    (_hhome2 : ∀ (h : 2 < b.sudo_5Board_4home.size), b.sudo_5Board_4home[2] = (#[] : Array Int))
     (hheld3 : ∀ (h : 3 < b.sudo_5Board_4held.size), b.sudo_5Board_4held[3] = true)
     (hhome3 : ∀ (h : 3 < b.sudo_5Board_4home.size), b.sudo_5Board_4home[3] = embed x)
-    (hheld4 : ∀ (h : 4 < b.sudo_5Board_4held.size), b.sudo_5Board_4held[4] = true)
-    (hhome4 : ∀ (h : 4 < b.sudo_5Board_4home.size), b.sudo_5Board_4home[4] = embed y)
+    (_hheld4 : ∀ (h : 4 < b.sudo_5Board_4held.size), b.sudo_5Board_4held[4] = true)
+    (_hhome4 : ∀ (h : 4 < b.sudo_5Board_4home.size), b.sudo_5Board_4home[4] = embed y)
     (hheld5 : ∀ (h : 5 < b.sudo_5Board_4held.size), b.sudo_5Board_4held[5] = true)
     (hhome5 : ∀ (h : 5 < b.sudo_5Board_4home.size),
       b.sudo_5Board_4home[5] = embed (fieldMul t.n t.k t.benchlen y y))
@@ -201,7 +201,7 @@ theorem curve_spare_step (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
       rw [show cLane.length = bench from by simpa [cLane, n, k, bench] using hlen]
       exact hfB) hmov hsl hpk hps hf2c hfMc hfSc hops0 (hop0 hops0) hf2 (by simpa [n] using hx) hxt (by rw [hT]; rfl) (by rw [hT]; rfl) (by rw [hT]; rfl) (by rw [hT]; rfl) (by rw [hT]; rfl) hhole lay.board.n_pos lay.mul_span hfSpan hfB hfC hfM hfFold ⟨lay.w_pos, lay.h_pos, lay.r_lt, lay.r_pos, lay.n_eq, lay.k_le, lay.gap_eq⟩ lay.small lay.n_small
   obtain ⟨bM, hmulOk, honM, htoM, htakeX, hhome2M, hbenchX, hhighX, hmovM, hslM, htM,
-      hh6M, hh2M, _hheldFr, hhomeFr, hszHM, hszDM, hpkEx⟩ := hmul
+      hh6M, hh2M, _hheldFr, hhomeFr, hszHM, hszDM, hpkEx, _, _, _, _, _, _, _⟩ := hmul
   obtain ⟨pkM, hpkM⟩ := hpkEx
   have h6HM : 6 < bM.sudo_5Board_4home.size := by rw [hszHM, hszH]; decide
   have h6DM : 6 < bM.sudo_5Board_4held.size := by rw [hszDM, hszD]; decide
@@ -240,7 +240,8 @@ theorem curve_spare_step (t : Spec.Tier) (lay : FieldLay t) (sat : TierSat t)
       hmovMul hslMul hpkM
       hf2s hfSet hfSl
       htakeSq
-  obtain ⟨bS, hsetOk, _hoff, hhome6, hheld6S, hhomeK, hheldK, hmovS, htS, hszHS, hszDS⟩ := hset
+  obtain ⟨bS, hsetOk, _hoff, hhome6, hheld6S, hhomeK, hheldK, hmovS, htS, hszHS, hszDS,
+      _, _, _, _, _, _, _, _, _⟩ := hset
   have h2HS : 2 < bS.sudo_5Board_4home.size := by rw [hszHS, hszHM, hszH]; decide
   have h2DS : 2 < bS.sudo_5Board_4held.size := by rw [hszDS, hszDM, hszD]; decide
   have h5HS : 5 < bS.sudo_5Board_4home.size := by rw [hszHS, hszHM, hszH]; decide

@@ -235,17 +235,25 @@ theorem rungDelta_cost {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
     (hops : b2.sudo_5Board_4cost.sudo_5Costs_3ops =
       b1.sudo_5Board_4cost.sudo_5Costs_3ops)
     (hpk : b2.sudo_5Board_4cost.sudo_5Costs_4peak =
-      b1.sudo_5Board_4cost.sudo_5Costs_4peak) :
+      b1.sudo_5Board_4cost.sudo_5Costs_4peak)
+    (hstrict : b2.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b1.sudo_5Board_4cost.sudo_5Costs_11peak_strict)
+    (hhole : b2.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b1.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) :
     RungDelta b b2 base m := by
   obtain ⟨mv, mv', hb, hb', hle⟩ := h.moves
   obtain ⟨sl, sl', sb, sb', sle⟩ := h.slides
   obtain ⟨pk, pk', pb, pb', ple⟩ := h.peak
+  obtain ⟨ps, ps', sbS, sbS', sleS⟩ := h.strict
+  obtain ⟨ho, ho', hbH, hbH', hleH⟩ := h.hole
   refine
     { moves := ⟨mv, mv', hb, hmv.trans hb', hle⟩
       slides := ⟨sl, sl', sb, hsl.trans sb', sle⟩
       opsSize := by rw [hops, h.opsSize]
       ops := ?_
-      peak := ⟨pk, pk', pb, hpk.trans pb', ple⟩ }
+      peak := ⟨pk, pk', pb, hpk.trans pb', ple⟩
+      strict := ⟨ps, ps', sbS, hstrict.trans sbS', sleS⟩
+      hole := ⟨ho, ho', hbH, hhole.trans hbH', hleH⟩ }
   intro i hi
   obtain ⟨c, c', hc, hc', hle⟩ := h.ops i hi
   refine ⟨c, c', hc, ?_, hle⟩
@@ -261,9 +269,13 @@ theorem rungTight_cost {b b1 b2 : Ecbs.Board} {base : ClimbBudget} {m : Nat}
     (hops : b2.sudo_5Board_4cost.sudo_5Costs_3ops =
       b1.sudo_5Board_4cost.sudo_5Costs_3ops)
     (hpk : b2.sudo_5Board_4cost.sudo_5Costs_4peak =
-      b1.sudo_5Board_4cost.sudo_5Costs_4peak) :
+      b1.sudo_5Board_4cost.sudo_5Costs_4peak)
+    (hstrict : b2.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b1.sudo_5Board_4cost.sudo_5Costs_11peak_strict)
+    (hhole : b2.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b1.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) :
     RungDeltaTight b b2 base m := by
-  refine ⟨rungDelta_cost h.delta hmv hsl hops hpk, ?_, ?_, ?_⟩
+  refine ⟨rungDelta_cost h.delta hmv hsl hops hpk hstrict hhole, ?_, ?_, ?_⟩
   · obtain ⟨mv, mv', hb, hb', hle⟩ := h.moveTight
     exact ⟨mv, mv', hb, hmv.trans hb', hle⟩
   · obtain ⟨sl, sl', sb, sb', sle⟩ := h.slideTight
@@ -1013,7 +1025,7 @@ theorem gap_clear_emit
           b.sudo_5Board_4cost.sudo_5Costs_6slides = (sl : Int) ∧
           bClear.sudo_5Board_4cost.sudo_5Costs_6slides = (slC : Int) ∧
           slC ≤ sl + s.tally * (2 * base.n))) ∧
-      ∃ (c : PegCtx) (bMul : Ecbs.Board),
+      (∃ (c : PegCtx) (bMul : Ecbs.Board),
         Ecbs.clear bMul ((5 : Nat) : Int) = .ok bClear ∧
         Ecbs.mul (pegBoard c c.m) ((5 : Nat) : Int) ((5 : Nat) : Int) ((6 : Nat) : Int)
             false false false = .ok bMul ∧
@@ -1024,7 +1036,9 @@ theorem gap_clear_emit
         c.t0 = s.t0 ∧
         c.g = s.gap ∧ c.n = s.n ∧ c.k = s.k ∧ c.bench = s.benchlen ∧ c.src = 6 ∧
         ∃ bPark, Ecbs.park_rung b (r : Int) = .ok bPark ∧
-          Ecbs.copy_band bPark ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok c.b0 := by
+          Ecbs.copy_band bPark ((6 : Nat) : Int) ((5 : Nat) : Int) false = .ok c.b0) ∧
+      SideKeep bClear base ∧
+      QuietKeep bClear base := by
   let hole := climbAt base.ladder0 base.R s.ridx
   obtain ⟨c, bMul, hmul, hrow, hctrl, hfromB, hridxB, hlenB, hrow0, hctrl0, hmT, ht0c,
       hfrom, hridx, hlen0, hlive⟩ := parked_gap_mul h hM hS hF hm hT hhome
@@ -1242,8 +1256,58 @@ theorem gap_clear_emit
   have hpre : ys.take c.n = cubeTimes c.n c.k c.bench c.g c.m := by
     rw [hys]
     exact cubeBenchIter_prefix c.n c.k c.bench c.g c.hlenx c.m
+  have hsidePark : SideKeep bPark0 base :=
+    side_arrays h.shape.side hhomeEq hheldEq
+  have hsidePlace := side_place hsidePark 6 ⟨h6H, h6D⟩ s.gap mv pk
+    (by decide) (by decide) (by decide) (by decide)
+  have hsideB0 : SideKeep c.b0 base :=
+    side_arrays hsidePlace
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hplace)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hplace)
+  have hsidePeg : SideKeep (pegBoard c c.m) base :=
+    side_pegBoard c hsideB0 (by rw [hsrc]; decide) (by rw [hsrc]; decide)
+      (by rw [hsrc]; decide) (by rw [hsrc]; decide)
+  have hsideMul0 := side_mulLive hsidePeg 5 6 c.g ys
+    ⟨c.n, c.k, moves, slides, holeM, c.bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩
+    (by decide) (by decide) (by decide) (by decide)
+  have hsideMul : SideKeep bMul base :=
+    side_arrays hsideMul0
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hnamed)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hnamed)
+  have hsideClear : SideKeep bClear base :=
+    side_clear hsideMul 5 c.g mvM ⟨h5H, h5D⟩ (by decide) (by decide) (by decide)
+      (by decide)
+  have hquietPark : QuietKeep bPark0 base := by
+    refine quiet_of h.shape.quiet ?_ ?_ ?_ ?_ ?_
+    · rw [hPK]; simp [parkKeepBoard]
+    · rw [hPK]; simp [parkKeepBoard]
+    · rw [hPK]; simp [parkKeepBoard]
+    · rw [hPK]; simp [parkKeepBoard]
+    · rw [hPK]; simp [parkKeepBoard]
+  have hquietPlace := quiet_place hquietPark 6 ⟨h6H, h6D⟩ s.gap mv pk
+  have hquietB0 : QuietKeep c.b0 base :=
+    quiet_of hquietPlace
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hplace))
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hplace))
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_1t) hplace)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_6marker) hplace)
+      (congrArg (fun bd : Ecbs.Board =>
+        bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) hplace)
+  have hquietPeg : QuietKeep (pegBoard c c.m) base := quiet_pegBoard c hquietB0
+  have hquietMul0 := quiet_mulLive hquietPeg 5 6 c.g ys
+    ⟨c.n, c.k, moves, slides, holeM, c.bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩
+  have hquietMul : QuietKeep bMul base :=
+    quiet_of hquietMul0
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4home) hnamed))
+      (congrArg Array.size (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_4held) hnamed))
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_1t) hnamed)
+      (congrArg (fun bd : Ecbs.Board => bd.sudo_5Board_6marker) hnamed)
+      (congrArg (fun bd : Ecbs.Board =>
+        bd.sudo_5Board_4cost.sudo_5Costs_17script_marker_max) hnamed)
+  have hquietClear : QuietKeep bClear base :=
+    quiet_clear hquietMul 5 c.g mvM ⟨h5H, h5D⟩
   refine ⟨bClear, hrun, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_,
-      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [hC.1, hrow, hrow0, ht0c, hmT]
   · rw [hC.2.2.2.2.2.2.2.1, hctrl, hctrl0, hmT]
   · rw [hC.2.1, hfromB, hfrom]
@@ -1527,6 +1591,36 @@ theorem gap_clear_emit
       have hraw := clear_peak_copy bMul 5 c.g mvM ⟨h5H, h5D⟩
       simp only [bClear] at hraw
       exact hraw.trans hpkM
+    obtain ⟨ps0, hpsB, _⟩ := h.strictLe
+    have hparkS : bPark0.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+      rw [hPK]; simp [parkKeepBoard]
+    have hplaceS : c.b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+        bPark0.sudo_5Board_4cost.sudo_5Costs_11peak_strict := by
+      rw [hplace]
+      unfold placeBoard
+      dsimp only
+      split <;> rfl
+    have hps0 : c.peakS0 = ps0 := by
+      apply natCast_inj
+      calc
+        (c.peakS0 : Int) = c.b0.sudo_5Board_4cost.sudo_5Costs_11peak_strict := c.hpeakS0.symm
+        _ = bPark0.sudo_5Board_4cost.sudo_5Costs_11peak_strict := hplaceS
+        _ = b.sudo_5Board_4cost.sudo_5Costs_11peak_strict := hparkS
+        _ = (ps0 : Int) := hpsB
+    have hpegLe : peakS ≤ max ps0 7 := by
+      rw [hps]
+      have hB := (pegPack c c.m c.hm (Nat.le_refl _)).hpeakSB
+      rwa [hps0] at hB
+    let psOut := raisedPeak peakS
+      (countHeld (settleBoard (pegBoard c c.m) 6 hH hD ys c.n moves slides peak).sudo_5Board_4held 7)
+    have hpsOut : bClear.sudo_5Board_4cost.sudo_5Costs_11peak_strict = (psOut : Int) := by
+      have hS := mul_live_strict (pegBoard c c.m) 5 6 c.g ys
+        ⟨c.n, c.k, moves, slides, holeM, c.bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩
+      have hCeq := (clear_fixed bMul 5 c.g mvM ⟨h5H, h5D⟩).2.2.2.2.2.1
+      simpa [psOut, ofNat_eq_natCast] using hCeq.trans (hnamed.symm ▸ hS)
+    have hpsLe : psOut ≤ max ps0 7 :=
+      peak_carry ps0 peakS psOut hpegLe (raisedPeak_carry peakS _ (countHeld_seven _))
     have hopsEq : c.b0.sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops := by
       have hopsPlace := place_ops_delta bPark0 6 ⟨h6H, h6D⟩ s.gap mv pk
@@ -1611,13 +1705,56 @@ theorem gap_clear_emit
       bClear.sudo_5Board_4cost.sudo_5Costs_3ops
       s.tally c0 c1 h0e h1e hc0 hc1 hNat h0peg h1peg hpeg1 hpNe hszArr
       hmulArr hclrArr
+    obtain ⟨ho0, hho0, _⟩ := h.holeLe
+    have hparkH : bPark0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+      rw [hPK]; simp [parkKeepBoard]
+    have hplaceH : c.b0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        bPark0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := by
+      rw [hplace]
+      unfold placeBoard
+      dsimp only
+      split <;> rfl
+    have hin0 : c.hole0 = ho0 := by
+      apply natCast_inj
+      calc
+        (c.hole0 : Int) = c.b0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := c.hHole0.symm
+        _ = bPark0.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := hplaceH
+        _ = b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole := hparkH
+        _ = (ho0 : Int) := hho0
+    let dpeg := pegPack c c.m c.hm (Nat.le_refl _)
+    let schH := school c.n c.g (ys.take c.n) (List.replicate c.bench 0) false
+    let hoOut := raisedHole dpeg.hole (topIdx schH)
+    have htopH : topIdx schH ≤ c.bench := by
+      have hlen : schH.length = c.bench := by
+        simpa [schH, List.length_replicate] using
+          school_length c.g (ys.take c.n) (List.replicate c.bench 0) false c.n
+      exact Nat.le_trans (topIdx_len schH) (Nat.le_of_eq hlen)
+    have hhoStep : hoOut ≤ max c.hole0 c.bench :=
+      hole_carry c.bench c.hole0 dpeg.hole hoOut dpeg.hholeB
+        (hole_raise_le dpeg.hole (topIdx schH) c.bench htopH)
+    have hbenchH : c.bench = base.bench := hbch.trans h.hbench
+    have hhoCap : hoOut ≤ max ho0 base.bench := by
+      rw [← hin0, ← hbenchH]
+      exact hhoStep
+    have hhoMul : bMul.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+        Int.ofNat (raisedHole dpeg.hole (topIdx schH)) := by
+      have hlive := mulLive_hole (pegBoard c c.m) 5 6 c.g ys
+        ⟨c.n, c.k, moves, slides, holeM, c.bench, peak, peakS, cOps, hops⟩ ⟨hH, hD⟩
+      rw [hnamed]
+      simpa [schH, hho, ofNat_eq_natCast] using hlive
+    have hhoClear : bClear.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole = (hoOut : Int) := by
+      have hCeq := (clear_fixed bMul 5 c.g mvM ⟨h5H, h5D⟩).2.2.2.2.2.2
+      simpa [hoOut] using hCeq.trans hhoMul
     refine ⟨?_, hslots, ?_, ?_⟩
     · refine
         { moves := ⟨mv, mvM + pegCount c.g, ?_, hmvC, hmoveLe⟩
           slides := ⟨sl, slides + 2 * pegCount (ys.take c.n), ?_, hslC, hslideLe⟩
           opsSize := hbump.1
           ops := ?_
-          peak := ⟨pk, pkN, ?_, hpkC, hpkLe⟩ }
+          peak := ⟨pk, pkN, ?_, hpkC, hpkLe⟩
+          strict := ⟨ps0, psOut, hpsB, hpsOut, hpsLe⟩
+          hole := ⟨ho0, hoOut, hho0, hhoClear, hhoCap⟩ }
       · rw [hmvId]; exact hmvE
       · rw [hslId]; exact hslE
       · intro i hi
@@ -1628,6 +1765,8 @@ theorem gap_clear_emit
         hslC, hpieceS⟩
   · exact ⟨c, bMul, hClear, hmul, hrow0, hctrl0, hmT, ht0c, hg, hn, hk, hbch, hsrc,
       ⟨bPark, hpark, hcopy⟩⟩
+  · exact hsideClear
+  · exact hquietClear
 
 /-- Idle final white rung. The park hole is the cell after the ladder
     (`ladder0 + R`). The emitted park-through-clear is the `ClimbInvK`
@@ -1671,7 +1810,7 @@ theorem white_final_k
   rcases hAll with ⟨hrun, hrowE, hctrlE, hfromE, hridxE, hlenE, ht0E, hparkE,
       hhighE, hmarkE, hbonE, htoE, hbenchE, htierE, hladE, hnrE, htmaxE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, htrits, hopsE, hc1E, hpkSE,
-      hholeE, hδs, _hctx⟩
+      hholeE, hδs, _hctx, hside, hquiet⟩
   obtain ⟨hδ, hslots, hpieceM, hpieceS⟩ := hδs
   have hFrom : s.fromHole = -1 := h.shape.park.fromIdle hF
   have hMod := model_final_white s base.x r hole hwhite hF
@@ -1802,7 +1941,9 @@ theorem white_final_k
         simpa [Int.toNat_ofNat] using hlt
       · have hle : hole ≤ s.high := by
           have hhi : hole < s.t0 := hh
-          have htop : s.high = s.t0 + s.tally - 1 := h.highTop hm
+          have htop : s.t0 + s.tally - 1 ≤ s.high := by
+            rw [h.highTop]
+            exact Nat.le_max_right _ _
           omega
         rw [hhighM]
         simpa [Int.toNat_ofNat] using hle
@@ -1857,10 +1998,8 @@ theorem white_final_k
     · rw [hgap]; exact htrits
     · intro hpos
       rw [ht0M, htall, hhighM]
-      have htop : s.high = s.t0 + s.tally - 1 := h.highTop (by
-        rw [htall] at hpos
-        exact hpos)
-      omega
+      rw [h.highTop]
+      exact Nat.le_max_right _ _
     · rw [ht0M, htall]; exact h.shape.peg.fitRow
     · rw [htall]; exact h.shape.peg.fitTall
     · rw [hctrlM, htall]; exact hfits.2.2
@@ -1893,16 +2032,11 @@ theorem white_final_k
       (by rw [htierE]; exact h.shape.tierCg)
       (by rw [htierE]; exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
-      hpark' hpeg'
+      hpark' hpeg' hside hquiet
   have htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    obtain ⟨tmax, htm, hnote⟩ := h.tmaxLt
-    refine ⟨tmax, by rw [htmaxE, htm], ?_⟩
-    intro hpos
-    have hlt := hnote (by rw [← htall]; exact hpos)
-    rw [htall]
-    exact hlt
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    obtain ⟨tmax, htm⟩ := h.tmaxLt
+    exact ⟨tmax, by rw [htmaxE, htm]⟩
   have hK := climbInvKCore_succ h hinv hδ hCap hshape hh htmax rfl
   exact ⟨b', hrun, hK, rungTight_of_clear hδ hpieceM hpieceS
     (opsTight_of_clear hδ hT hslots)⟩
@@ -1955,7 +2089,7 @@ theorem white_open_k
   rcases hAll with ⟨hrun, hrowE, hctrlE, hfromE, hridxE, hlenE, ht0E, hparkE,
       hhighE, hmarkE, hbonE, htoE, hbenchE, htierE, hladE, hnrE, htmaxE,
       h5H, h5D, h6H, h6D, h7E, h5f, h6f, hkeep, htrits, hopsE, hc1E, hpkSE,
-      hholeE, hδs, _hctx⟩
+      hholeE, hδs, _hctx, hside, hquiet⟩
   obtain ⟨hδ, hslots, hpieceM, hpieceS⟩ := hδs
   have hFrom : s.fromHole = -1 := h.shape.park.fromIdle hF
   have hMod := model_open_white s base.x r hole hwhite hF
@@ -1966,9 +2100,10 @@ theorem white_open_k
     | nil => exact absurd rfl hrest
     | cons _ _ => simp
   have hRoom : s.t0 + 2 * s.tally ≤ base.control := h.openRoom hge
-  have hHighEq : s.high = s.t0 + s.tally - 1 := h.highTop hm
-  obtain ⟨tmax0, hMax, hNote0⟩ := h.tmaxLt
-  have hNote : tmax0 < 2 * s.tally := hNote0 hm
+  have hHighEq : s.t0 + s.tally - 1 ≤ s.high := by
+    rw [h.highTop]
+    exact Nat.le_max_right _ _
+  obtain ⟨tmax0, hMax⟩ := h.tmaxLt
   have hdone2 : done.length + 2 ≤ base.R := by
     have hk := h.kLe
     simp [h.idx, List.length_append, List.length_cons] at hk
@@ -2026,16 +2161,16 @@ theorem white_open_k
     rw [htierE]
     exact h.shape.tierC
   have hhighC : bClear.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-      ((s.t0 + s.tally - 1 : Nat) : Int) := by
-    rw [hhighE, hHighEq]
+      (s.high : Int) := by
+    exact hhighE
   have hmaxC : bClear.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax0 : Int) :=
     htmaxE.trans hMax
   have htally := tally_double_refines bClear xs s.t0 s.tally (s.ctrl + 2 + s.tally)
-    (s.t0 + s.tally - 1) base.control tmax0 hm hlenE ht0E hRow
+    s.high base.control tmax0 hm hlenE ht0E hRow
     (by
       simp [xs, parked, paintRed_length, afterPark_length, h.shape.rowLen]
       exact hRoom)
-    hRed hZero hctrlN hhighC rfl hctrlE hRoom hFitI hfitC hFitM hmaxC hNote
+    hRed hZero hctrlN hhighC hHighEq hctrlE hRoom hFitI hfitC hFitM hmaxC
   let wide := paintOnes (paintOnes xs s.t0 s.tally) (s.t0 + s.tally) s.tally
   let b' :=
     { bClear with
@@ -2043,8 +2178,9 @@ theorem white_open_k
       sudo_5Board_9tally_len := Int.ofNat (2 * s.tally)
       sudo_5Board_4cost := { bClear.sudo_5Board_4cost with
         sudo_5Costs_4ctrl := Int.ofNat (s.ctrl + 2 + s.tally + 2 * s.tally)
-        sudo_5Costs_15control_highest := ((s.t0 + 2 * s.tally - 1 : Nat) : Int)
-        sudo_5Costs_9tally_max := Int.ofNat (2 * s.tally) } }
+        sudo_5Costs_15control_highest :=
+          ((max s.high (s.t0 + 2 * s.tally - 1) : Nat) : Int)
+        sudo_5Costs_9tally_max := ((max tmax0 (2 * s.tally) : Nat) : Int) } }
   have htallyW : Ecbs.tally_double bClear = .ok b' := by
     simpa [b', wide, xs] using htally
   have hprog :
@@ -2078,7 +2214,7 @@ theorem white_open_k
   have hctrlNat : s.ctrl + 2 + s.tally + 2 * s.tally = s'.ctrl := by
     rw [hctrlM]
     omega
-  have hhighNat : s.t0 + 2 * s.tally - 1 = s'.high := by
+  have hhighNat : max s.high (s.t0 + 2 * s.tally - 1) = s'.high := by
     rw [hhighM]
   have hinv : ClimbInv b' s' := by
     refine
@@ -2101,7 +2237,7 @@ theorem white_open_k
           Int.ofNat (s.ctrl + 2 + s.tally + 2 * s.tally) by simp [b'], hctrlNat]
       rfl
     · rw [show b'.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-          ((s.t0 + 2 * s.tally - 1 : Nat) : Int) by simp [b'], hhighNat]
+          ((max s.high (s.t0 + 2 * s.tally - 1) : Nat) : Int) by simp [b'], hhighNat]
     · rw [show b'.sudo_5Board_6tally0 = bClear.sudo_5Board_6tally0 by simp [b'], ht0E, ht0M]
     · have hwide : wide =
           paintOnes (paintOnes (paintRed (afterPark s.row s.fromHole s.parkAt hole r)
@@ -2211,7 +2347,8 @@ theorem white_open_k
         simpa [Int.toNat_ofNat] using hlt
       · rw [hhighM]
         have hhi : hole < s.t0 := h.holeBelow
-        simpa [Int.toNat_ofNat] using (by omega : hole ≤ s.t0 + 2 * s.tally - 1)
+        have hle : hole ≤ s.t0 + 2 * s.tally - 1 := by omega
+        simpa [Int.toNat_ofNat] using Nat.le_trans hle (Nat.le_max_right _ _)
       · have hne : hole ≠ climbAt base.ladder0 base.R (s.ridx + 1) := hStep.2.2
         rw [← hridxM] at hne
         simpa [Int.toNat_ofNat] using hne
@@ -2336,9 +2473,9 @@ theorem white_open_k
         fitN := ?_
         fitBn := ?_
         fit3 := ?_ }
-    · intro hpos
+    · intro _
       rw [ht0M, htall, hhighM]
-      omega
+      exact Nat.le_max_right _ _
     · rw [ht0M, htall]
       exact hFitI
     · rw [htall]
@@ -2400,8 +2537,11 @@ theorem white_open_k
         exact h.shape.tierC)
       (by rw [hlenRow]; exact h.shape.rowLen)
       hpark' hpeg'
+      (side_arrays hside rfl rfl)
+      (quiet_of hquiet rfl rfl rfl rfl rfl)
   have hδ' : RungDelta b b' base s.tally :=
     rungDelta_cost hδ (by simp [b']) (by simp [b']) (by simp [b']) (by simp [b'])
+      (by simp [b']) (by simp [b'])
   have hClearTight := rungTight_of_clear hδ hpieceM hpieceS
     (opsTight_of_clear hδ hT hslots)
   have hTight : RungDeltaTight b b' base s.tally := by
@@ -2419,12 +2559,8 @@ theorem white_open_k
       refine ⟨c, c', hc, ?_, hle⟩
       simpa [b'] using hc'
   have htmax : ∃ tmax : Nat,
-      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) ∧
-        (0 < s'.tally → tmax < 2 * s'.tally) := by
-    refine ⟨2 * s.tally, by simp [b'], ?_⟩
-    intro hpos
-    rw [htall]
-    omega
+      b'.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
+    refine ⟨max tmax0 (2 * s.tally), by simp [b']⟩
   have hK := climbInvKCore_succ h (by simpa [hempty] using hinv) hδ' hCap
     (by simpa [hempty] using hshape) h.holeBelow (by simpa [hempty] using htmax) rfl
   exact ⟨b', hprog, by simpa [hempty] using hK, by simpa [hempty] using hTight⟩

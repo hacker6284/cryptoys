@@ -175,7 +175,11 @@ theorem rungDelta_of_slide
     (hslAdd : slS = sl + 2 * pegs)
     (hpegs : pegs ≤ base.n)
     (hpkLe : pkS ≤ max pk 7)
-    (hops : bS.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops) :
+    (hops : bS.sudo_5Board_4cost.sudo_5Costs_3ops = b.sudo_5Board_4cost.sudo_5Costs_3ops)
+    (hstrictS : bS.sudo_5Board_4cost.sudo_5Costs_11peak_strict =
+      b.sudo_5Board_4cost.sudo_5Costs_11peak_strict)
+    (hholeS : bS.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole =
+      b.sudo_5Board_4cost.sudo_5Costs_14max_bench_hole) :
     RungDelta b b' base m := by
   have hpeg2 : 2 * pegs ≤ 2 * base.n := Nat.mul_le_mul_left 2 hpegs
   refine
@@ -183,7 +187,9 @@ theorem rungDelta_of_slide
       slides := ?_
       opsSize := ?_
       ops := ?_
-      peak := ?_ }
+      peak := ?_
+      strict := ?_
+      hole := ?_ }
   · obtain ⟨mv0, mv', hb, hb', hle⟩ := hδ.moveTight
     have h0 : mv0 = mvS := ofNat_inj_nat (hb.symm.trans hmvS)
     refine ⟨mv, mv', hmv, hb', ?_⟩
@@ -212,5 +218,9 @@ theorem rungDelta_of_slide
   · obtain ⟨pk0, pk', hb, hb', hle⟩ := hδ.delta.peak
     have h0 : pk0 = pkS := ofNat_inj_nat (hb.symm.trans hpkS)
     refine ⟨pk, pk', hpk, hb', bench_peak pk pkS pk' hpkLe (by simpa [h0] using hle)⟩
+  · obtain ⟨ps0, ps', hb, hb', hle⟩ := hδ.delta.strict
+    refine ⟨ps0, ps', hstrictS.symm.trans hb, hb', hle⟩
+  · obtain ⟨ho, ho', hb, hb', hle⟩ := hδ.delta.hole
+    refine ⟨ho, ho', hholeS.symm.trans hb, hb', hle⟩
 
 end EcbsLink2.Link2

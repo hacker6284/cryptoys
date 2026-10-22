@@ -257,7 +257,7 @@ private theorem up_at0 (t : Spec.Tier) (xs ys : List Nat)
   simp [boardUp, boardAcross, built_held, built_home, Array.getElem_set, Array.getElem_mkArray]
 
 private theorem up_at1 (t : Spec.Tier) (xs ys : List Nat)
-    (hD : 1 < (boardUp t xs ys).sudo_5Board_4held.size)
+    (_hD : 1 < (boardUp t xs ys).sudo_5Board_4held.size)
     (hH : 1 < (boardUp t xs ys).sudo_5Board_4home.size) :
     (boardUp t xs ys).sudo_5Board_4held[1] = true ∧
     (boardUp t xs ys).sudo_5Board_4home[1] = embed ys := by

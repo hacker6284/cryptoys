@@ -141,7 +141,7 @@ private theorem addI_two (m : Nat) (h : FitsLen (m + 2)) :
     SudoRt.addI (Int.ofNat m) (2 : Int) = .ok (Int.ofNat (m + 2)) := by
   rw [show (2 : Int) = Int.ofNat 2 from rfl, addI_ofNat m 2 h]
 
-private theorem fits_le (n : Nat) (h : n ≤ 10000000) : FitsLen n := by
+private theorem fits_le_local (n : Nat) (h : n ≤ 10000000) : FitsLen n := by
   unfold FitsLen i64MaxNat
   omega
 
@@ -155,13 +155,13 @@ private theorem withMoves_withMoves (b : Ecbs.Board) (m₁ m₂ : Int) :
   unfold withMoves
   rfl
 
-private theorem tritAdd_le (a b : Nat) : tritAdd a b ≤ 2 := by
+private theorem tritAdd_le_local (a b : Nat) : tritAdd a b ≤ 2 := by
   unfold tritAdd
   have : (a + b) % 3 < 3 := Nat.mod_lt _ (by decide)
   omega
 
 private theorem trit_set {xs : List Nat} (hs : allTritList xs) {i v : Nat}
-    (hi : i < xs.length) (hv : v ≤ 2) : allTritList (xs.set i v) := by
+    (_hi : i < xs.length) (hv : v ≤ 2) : allTritList (xs.set i v) := by
   intro x hx
   rw [List.mem_iff_getElem] at hx
   obtain ⟨j, hj, rfl⟩ := hx
@@ -187,13 +187,13 @@ private theorem foldHigh_trits {strip : List Nat} (hs : allTritList strip) (n ga
     have hd1 : e - n < (strip.set e 0).length := by rw [hlen1]; omega
     have cleared := trit_set hs he (by decide : (0 : Nat) ≤ 2)
     have onceT := trit_set cleared hd1
-      (tritAdd_le (coeff (strip.set e 0) (e - n)) (coeff strip e))
+      (tritAdd_le_local (coeff (strip.set e 0) (e - n)) (coeff strip e))
     have hlen2 : ((strip.set e 0).set (e - n) (tritAdd (coeff (strip.set e 0) (e - n)) (coeff strip e))).length =
         strip.length := by rw [List.length_set, hlen1]
     have hd2 : e - gap < ((strip.set e 0).set (e - n)
         (tritAdd (coeff (strip.set e 0) (e - n)) (coeff strip e))).length := by
       rw [hlen2]; omega
-    exact trit_set onceT hd2 (tritAdd_le _ (coeff strip e))
+    exact trit_set onceT hd2 (tritAdd_le_local _ (coeff strip e))
 
 private theorem lay_image (xs : List Nat) (j c : Nat) (hj : j < xs.length)
     (hc : c ≤ 2) (hcell : coeff xs j ≤ 2) :
@@ -337,7 +337,7 @@ private theorem foldPeg_nz (xs : List Nat) (w h r n k e m : Nat) (b : Ecbs.Board
   rw [show ((xs.set e 0)[e - n] + xs[e]) % 3 =
       tritAdd (coeff (xs.set e 0) (e - n)) xs[e] from by
     rw [coeff_get (xs.set e 0) (e - n) hd1, tritAdd]]
-  have once := trit_set hcleared hd1 (tritAdd_le (coeff (xs.set e 0) (e - n)) xs[e])
+  have once := trit_set hcleared hd1 (tritAdd_le_local (coeff (xs.set e 0) (e - n)) xs[e])
   have hlen2 : ((xs.set e 0).set (e - n) (tritAdd (coeff (xs.set e 0) (e - n)) xs[e])).length =
       xs.length := by rw [List.length_set, List.length_set]
   have hd2 : e - (n - k) < ((xs.set e 0).set (e - n)
@@ -759,7 +759,7 @@ theorem fold_loop_refines (xs : List Nat) (w h r n k moves : Nat) (b : Ecbs.Boar
     unfold foldLoop
     rw [listLen_embed]
     have hpos : 0 < xs.length := Nat.lt_of_lt_of_le (Nat.zero_lt_of_lt hlt) (Nat.le_refl _)
-    have hfitL : FitsLen xs.length := fits_le _ (by have := hsm.2.2.2; omega)
+    have hfitL : FitsLen xs.length := fits_le_local _ (by have := hsm.2.2.2; omega)
     rw [subI_ofNat_one xs.length hpos hfitL, ok_bind]
     have hfrom : n ≤ xs.length - 1 := by omega
     have hfuel :
@@ -870,7 +870,7 @@ theorem fold_loop_refines (xs : List Nat) (w h r n k moves : Nat) (b : Ecbs.Boar
         Nat.add_zero, withMoves_id b hm]
       exact toPure_eq_ok (b, embed xs)
     · have hpos : 0 < xs.length := Nat.pos_of_ne_zero h0
-      have hfitL : FitsLen xs.length := fits_le _ (by have := hsm.2.2.2; omega)
+      have hfitL : FitsLen xs.length := fits_le_local _ (by have := hsm.2.2.2; omega)
       rw [subI_ofNat_one xs.length hpos hfitL, ok_bind]
       have hfrom : xs.length - 1 < n := by omega
       have hltI : Int.ofNat (xs.length - 1) < Int.ofNat n := (ofNat_lt_iff _ _).mpr hfrom
@@ -956,7 +956,7 @@ private theorem coeff_set_same (xs : List Nat) (i v : Nat) (hi : i < xs.length) 
   have hi' : i < (xs.set i v).length := by rw [List.length_set]; exact hi
   rw [coeff_get _ _ hi', List.getElem_set_self]
 
-private theorem coeff_set_ne (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
+private theorem coeff_set_ne_local (xs : List Nat) (i v j : Nat) (hj : j < xs.length) (hne : i ≠ j) :
     coeff (xs.set i v) j = coeff xs j := by
   have hj' : j < (xs.set i v).length := by rw [List.length_set]; exact hj
   rw [coeff_get _ _ hj', List.getElem_set, if_neg hne, ← coeff_get xs j hj]
@@ -973,9 +973,9 @@ private theorem foldHigh_above (n gap e i : Nat) (strip : List Nat)
       have hne1 : e ≠ i := Nat.ne_of_lt hgt
       have hne2 : e - n ≠ i := by omega
       have hne3 : e - gap ≠ i := by omega
-      rw [coeff_set_ne _ (e - gap) _ i (by rw [List.length_set, List.length_set]; exact hi) hne3,
-        coeff_set_ne _ (e - n) _ i (by rw [List.length_set]; exact hi) hne2,
-        coeff_set_ne _ e 0 i hi hne1]
+      rw [coeff_set_ne_local _ (e - gap) _ i (by rw [List.length_set, List.length_set]; exact hi) hne3,
+        coeff_set_ne_local _ (e - n) _ i (by rw [List.length_set]; exact hi) hne2,
+        coeff_set_ne_local _ e 0 i hi hne1]
 
 /-- A high peg is cleared, and both images sit strictly below it when `n` and the gap are positive. -/
 private theorem foldHigh_clear (n gap e : Nat) (strip : List Nat)
@@ -988,8 +988,8 @@ private theorem foldHigh_clear (n gap e : Nat) (strip : List Nat)
     simp only [hz, hlt, false_or, ite_false]
     have hne2 : e - n ≠ e := by omega
     have hne3 : e - gap ≠ e := by omega
-    rw [coeff_set_ne _ (e - gap) _ e (by rw [List.length_set, List.length_set]; exact he) hne3,
-      coeff_set_ne _ (e - n) _ e (by rw [List.length_set]; exact he) hne2,
+    rw [coeff_set_ne_local _ (e - gap) _ e (by rw [List.length_set, List.length_set]; exact he) hne3,
+      coeff_set_ne_local _ (e - n) _ e (by rw [List.length_set]; exact he) hne2,
       coeff_set_same _ e 0 he]
 
 private theorem foldDown_cleared (n gap : Nat) (strip : List Nat)

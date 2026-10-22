@@ -162,7 +162,7 @@ private theorem list_set_same (xs : List Nat) (i v : Nat) (hi : i < xs.length) (
     · simp [List.getElem_set_ne (Ne.symm h)]
 
 theorem addPrefix_succ (n i : Nat) (dst src : List Nat)
-    (hi : i < n) (hd : dst.length = n) (hs : src.length = n) :
+    (hi : i < n) (_hd : dst.length = n) (_hs : src.length = n) :
     addPrefix n (i + 1) dst src =
       (addPrefix n i dst src).set i (tritAdd (coeff dst i) (flipTrit (coeff src i))) := by
   have hlen : (addPrefix n i dst src).length = n := addPrefix_length n i dst src
@@ -217,7 +217,7 @@ theorem fieldAdd_zipWith (xs ys : List Nat) (h : xs.length = ys.length) :
       coeff_eq_get ys i (by simp [List.length_zipWith, h] at hi2; omega)]
 
 theorem addPrefix_done (n : Nat) (dst src : List Nat)
-    (hd : dst.length = n) (hs : src.length = n) :
+    (_hd : dst.length = n) (_hs : src.length = n) :
     addPrefix n n dst src = fieldAdd n dst (mirrorTrits src) := by
   apply List.ext_getElem
   · simp [addPrefix_length, fieldAdd, List.length_map, List.length_range]
@@ -296,6 +296,11 @@ def addBoard (b : Ecbs.Board) (home : Nat)
     (hH : home < b.sudo_5Board_4home.size) (arr : Array Int) (mv : Nat) : Ecbs.Board :=
   { withMoves b (Int.ofNat mv) with
       sudo_5Board_4home := b.sudo_5Board_4home.set ⟨home, hH⟩ arr }
+
+theorem addBoard_row (b : Ecbs.Board) (home : Nat)
+    (hH : home < b.sudo_5Board_4home.size) (arr : Array Int) (mv : Nat) :
+    (addBoard b home hH arr mv).sudo_5Board_3row = b.sudo_5Board_3row := by
+  simp [addBoard, withMoves]
 
 /-- `mirror = true`: destination becomes `fieldAdd dst (mirrorTrits src)`, which is
     `zipWith tritAdd` on equal lengths. Moves grow by `pegCount src`. -/

@@ -435,6 +435,28 @@ theorem tally_note_keep (b : Ecbs.Board) (len tmax : Nat)
   rw [hngt]
   simp only [Bool.false_eq_true, if_false, pure_eq_ok]
 
+/-- `tally_note` records `max` of the old maximum and the new length.
+    This counter is not a Spec result. -/
+theorem tally_note_mark (b : Ecbs.Board) (len tmax : Nat)
+    (hlen : b.sudo_5Board_9tally_len = (len : Int))
+    (hmax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) :
+    Ecbs.tally_note b =
+      .ok { b with
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_9tally_max := ((max tmax len : Nat) : Int) } } := by
+  by_cases hlt : tmax < len
+  · have hrun := tally_note_raise b len tmax hlen hmax hlt
+    rw [hrun]
+    simp [Nat.max_eq_right (Nat.le_of_lt hlt), ofNat_eq_natCast]
+  · have hle : len ≤ tmax := Nat.le_of_not_gt hlt
+    have hrun := tally_note_keep b len tmax hlen hmax hle
+    rw [hrun]
+    apply congrArg Except.ok
+    apply board_ext <;> try rfl
+    apply cost_ext <;> try rfl
+    rw [Nat.max_eq_left hle]
+    exact hmax
+
 /-- `tally_start` lays one white peg at `tally0`. The hole is above the recorded high,
     and the new length `1` beats `tally_max`. -/
 theorem tally_start_raise (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
@@ -472,6 +494,119 @@ theorem tally_start_raise (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
   have hlen1 : (1 : Int) = ((1 : Nat) : Int) := rfl
   rw [tally_note_raise _ 1 tmax hlen1 (by simpa using hMax) hNote, ok_bind, pure_eq_ok]
   simp [hrow]
+
+/-- `tally_start` when the recorded high is already at or above the origin and
+    `tally_max` already records a positive length. The white peg is written.
+    The high and the maximum stay. -/
+theorem tally_start_again (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
+    (hLen0 : b.sudo_5Board_9tally_len = 0)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 < b.sudo_5Board_3row.size)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 ≤ high)
+    (hFitT : FitsLen t0)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitC : FitsLen (ctrl + 1))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
+    (hNote : 1 ≤ tmax) :
+    Ecbs.tally_start b =
+      .ok { b with
+        sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0, hrow⟩ (1 : Int)
+        sudo_5Board_9tally_len := 1
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } } := by
+  unfold Ecbs.tally_start
+  rw [hLen0, sudoAssertEq_int rfl 344, ok_bind]
+  have hrow0 : t0 + 0 < b.sudo_5Board_3row.size := by simpa using hrow
+  conv =>
+    pattern (Ecbs.tally_put b (0 : Int) (1 : Int))
+    rw [show (0 : Int) = ((0 : Nat) : Int) from rfl, show (1 : Int) = ((1 : Nat) : Int) from rfl]
+  rw [tally_put_keep b t0 0 1 high control hT0 hrow0 hCtrlN (by simpa using hic)
+      hHigh (by simpa using hle) (by simpa using hFitT), ok_bind]
+  conv => zeta
+  dsimp only
+  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hFitC, ok_bind]
+  have hlen1 : (1 : Int) = ((1 : Nat) : Int) := rfl
+  rw [tally_note_keep _ 1 tmax hlen1 (by simpa using hMax) hNote, ok_bind, pure_eq_ok]
+  simp [hrow]
+
+/-- `tally_start` when the recorded high is already at or above the origin.
+    The white peg is written and the high stays. `tally_max` becomes `max` of
+    the old maximum and `1`, whether or not that maximum was already positive.
+    Nothing downstream of a finished cell reads `1 ≤ tally_max`. -/
+theorem tally_start_high (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
+    (hLen0 : b.sudo_5Board_9tally_len = 0)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 < b.sudo_5Board_3row.size)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 ≤ high)
+    (hFitT : FitsLen t0)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitC : FitsLen (ctrl + 1))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) :
+    Ecbs.tally_start b =
+      .ok { b with
+        sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0, hrow⟩ (1 : Int)
+        sudo_5Board_9tally_len := 1
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_15control_highest := (high : Int)
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1)
+          sudo_5Costs_9tally_max := ((max tmax 1 : Nat) : Int) } } := by
+  unfold Ecbs.tally_start
+  rw [hLen0, sudoAssertEq_int rfl 344, ok_bind]
+  have hrow0 : t0 + 0 < b.sudo_5Board_3row.size := by simpa using hrow
+  conv =>
+    pattern (Ecbs.tally_put b (0 : Int) (1 : Int))
+    rw [show (0 : Int) = ((0 : Nat) : Int) from rfl, show (1 : Int) = ((1 : Nat) : Int) from rfl]
+  rw [tally_put_keep b t0 0 1 high control hT0 hrow0 hCtrlN (by simpa using hic)
+      hHigh (by simpa using hle) (by simpa using hFitT), ok_bind]
+  conv => zeta
+  dsimp only
+  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hFitC, ok_bind]
+  have hlen1 : (1 : Int) = ((1 : Nat) : Int) := rfl
+  rw [tally_note_mark _ 1 tmax hlen1 (by simpa using hMax), ok_bind, pure_eq_ok]
+  apply congrArg Except.ok
+  apply board_ext <;> try rfl
+  apply cost_ext <;> try rfl
+  · exact hHigh
+
+/-- `tally_start` records `max` of the entry high and the origin, and `max` of
+    the old `tally_max` and `1`. The first cell raises both. A later cell keeps
+    the high. The maximum moves to `max` of the old value and `1`. -/
+theorem tally_start_mark (b : Ecbs.Board) (t0 high control ctrl tmax : Nat)
+    (hLen0 : b.sudo_5Board_9tally_len = 0)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 < b.sudo_5Board_3row.size)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hFitT : FitsLen t0)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitC : FitsLen (ctrl + 1))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
+    (hCase : (high < t0 ∧ tmax = 0) ∨ t0 ≤ high) :
+    Ecbs.tally_start b =
+      .ok { b with
+        sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0, hrow⟩ (1 : Int)
+        sudo_5Board_9tally_len := 1
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_15control_highest := ((max high t0 : Nat) : Int)
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1)
+          sudo_5Costs_9tally_max := ((max tmax 1 : Nat) : Int) } } := by
+  rcases hCase with ⟨hgt, hzero⟩ | hle
+  · have hnote : tmax < 1 := by omega
+    have hrun := tally_start_raise b t0 high control ctrl tmax
+      hLen0 hT0 hrow hCtrlN hic hHigh hgt hFitT hCtrl hFitC hMax hnote
+    rw [hrun]
+    simp [Nat.max_eq_right (Nat.le_of_lt hgt), Nat.max_eq_right (Nat.le_of_lt hnote),
+      ofNat_eq_natCast]
+  · rw [tally_start_high b t0 high control ctrl tmax
+      hLen0 hT0 hrow hCtrlN hic hHigh hle hFitT hCtrl hFitC hMax]
+    simp [Nat.max_eq_left hle]
 
 /-- `tally_add_one` lays one more white peg just past the tally. That hole is above
     the recorded high, and the new length beats `tally_max`. -/
@@ -517,6 +652,178 @@ theorem tally_add_one_raise (b : Ecbs.Board) (t0 len high control ctrl tmax : Na
   rw [tally_note_raise _ (len + 1) tmax rfl (by simpa using hMax) hNote, ok_bind, pure_eq_ok]
   simp [ofNat_eq_natCast]
 
+/-- `tally_add_one` when the new hole does not beat the recorded high. -/
+theorem tally_add_one_keep (b : Ecbs.Board) (t0 len high control ctrl tmax : Nat)
+    (hLen : b.sudo_5Board_9tally_len = (len : Int))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 + len < b.sudo_5Board_3row.size)
+    (hZero : b.sudo_5Board_3row[t0 + len] = 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + len < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 + len ≤ high)
+    (hFitI : FitsLen (t0 + len))
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitC : FitsLen (ctrl + 1))
+    (hFitL : FitsLen (len + 1))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
+    (hNote : tmax < len + 1) :
+    Ecbs.tally_add_one b =
+      .ok { b with
+        sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0 + len, hrow⟩ (1 : Int)
+        sudo_5Board_9tally_len := Int.ofNat (len + 1)
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1)
+          sudo_5Costs_9tally_max := Int.ofNat (len + 1) } } := by
+  unfold Ecbs.tally_add_one
+  conv =>
+    lhs
+    rw [hLen, hT0]
+  conv => zeta
+  rw [← ofNat_eq_natCast t0, ← ofNat_eq_natCast len, addI_ofNat t0 len hFitI, ok_bind]
+  rw [atL_ofNat _ (t0 + len) hrow, hZero, ok_bind]
+  rw [sudoAssertEq_int rfl 367, ok_bind]
+  conv =>
+    pattern (Ecbs.tally_put b (Int.ofNat len) (1 : Int))
+    rw [ofNat_eq_natCast len, show (1 : Int) = ((1 : Nat) : Int) from rfl]
+  rw [tally_put_keep b t0 len 1 high control hT0 hrow hCtrlN hic hHigh hle hFitI, ok_bind]
+  conv => zeta
+  dsimp only
+  rw [hLen, ← ofNat_eq_natCast len, addI_ofNat_one len hFitL, ok_bind]
+  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hFitC, ok_bind]
+  rw [tally_note_raise _ (len + 1) tmax rfl (by simpa using hMax) hNote, ok_bind, pure_eq_ok]
+  simp [ofNat_eq_natCast, hHigh]
+
+/-- `tally_add_one` when the hole beats the high and the length does not beat `tally_max`. -/
+theorem tally_add_one_raise_stay (b : Ecbs.Board) (t0 len high control ctrl tmax : Nat)
+    (hLen : b.sudo_5Board_9tally_len = (len : Int))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 + len < b.sudo_5Board_3row.size)
+    (hZero : b.sudo_5Board_3row[t0 + len] = 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + len < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hgt : high < t0 + len)
+    (hFitI : FitsLen (t0 + len))
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitC : FitsLen (ctrl + 1))
+    (hFitL : FitsLen (len + 1))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
+    (hStay : len + 1 ≤ tmax) :
+    Ecbs.tally_add_one b =
+      .ok { b with
+        sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0 + len, hrow⟩ (1 : Int)
+        sudo_5Board_9tally_len := Int.ofNat (len + 1)
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_15control_highest := ((t0 + len : Nat) : Int)
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } } := by
+  unfold Ecbs.tally_add_one
+  conv =>
+    lhs
+    rw [hLen, hT0]
+  conv => zeta
+  rw [← ofNat_eq_natCast t0, ← ofNat_eq_natCast len, addI_ofNat t0 len hFitI, ok_bind]
+  rw [← ofNat_eq_natCast (t0 + len), atL_ofNat _ (t0 + len) hrow, hZero, ok_bind]
+  rw [sudoAssertEq_int rfl 367, ok_bind]
+  conv =>
+    pattern (Ecbs.tally_put b (Int.ofNat len) (1 : Int))
+    rw [ofNat_eq_natCast len, show (1 : Int) = ((1 : Nat) : Int) from rfl]
+  rw [tally_put_raise b t0 len 1 high control hT0 hrow hCtrlN hic hHigh hgt hFitI, ok_bind]
+  conv => zeta
+  dsimp only
+  rw [hLen, ← ofNat_eq_natCast len, addI_ofNat_one len hFitL, ok_bind]
+  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hFitC, ok_bind]
+  rw [tally_note_keep _ (len + 1) tmax rfl (by simpa using hMax) hStay, ok_bind, pure_eq_ok]
+  simp [ofNat_eq_natCast]
+
+/-- `tally_add_one` when neither the hole nor the length beats its recorded mark. -/
+theorem tally_add_one_keep_stay (b : Ecbs.Board) (t0 len high control ctrl tmax : Nat)
+    (hLen : b.sudo_5Board_9tally_len = (len : Int))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 + len < b.sudo_5Board_3row.size)
+    (hZero : b.sudo_5Board_3row[t0 + len] = 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + len < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 + len ≤ high)
+    (hFitI : FitsLen (t0 + len))
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitC : FitsLen (ctrl + 1))
+    (hFitL : FitsLen (len + 1))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
+    (hStay : len + 1 ≤ tmax) :
+    Ecbs.tally_add_one b =
+      .ok { b with
+        sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0 + len, hrow⟩ (1 : Int)
+        sudo_5Board_9tally_len := Int.ofNat (len + 1)
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } } := by
+  unfold Ecbs.tally_add_one
+  conv =>
+    lhs
+    rw [hLen, hT0]
+  conv => zeta
+  rw [← ofNat_eq_natCast t0, ← ofNat_eq_natCast len, addI_ofNat t0 len hFitI, ok_bind]
+  rw [atL_ofNat _ (t0 + len) hrow, hZero, ok_bind]
+  rw [sudoAssertEq_int rfl 367, ok_bind]
+  conv =>
+    pattern (Ecbs.tally_put b (Int.ofNat len) (1 : Int))
+    rw [ofNat_eq_natCast len, show (1 : Int) = ((1 : Nat) : Int) from rfl]
+  rw [tally_put_keep b t0 len 1 high control hT0 hrow hCtrlN hic hHigh hle hFitI, ok_bind]
+  conv => zeta
+  dsimp only
+  rw [hLen, ← ofNat_eq_natCast len, addI_ofNat_one len hFitL, ok_bind]
+  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hFitC, ok_bind]
+  rw [tally_note_keep _ (len + 1) tmax rfl (by simpa using hMax) hStay, ok_bind, pure_eq_ok]
+  simp [ofNat_eq_natCast, hHigh]
+
+/-- The new peg records the high and `tally_max` when it beats them, and keeps
+    each mark otherwise. `tally_max` is not a Spec result. -/
+theorem tally_add_one_mark (b : Ecbs.Board) (t0 len high control ctrl tmax : Nat)
+    (hLen : b.sudo_5Board_9tally_len = (len : Int))
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hrow : t0 + len < b.sudo_5Board_3row.size)
+    (hZero : b.sudo_5Board_3row[t0 + len] = 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + len < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hFitI : FitsLen (t0 + len))
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hFitC : FitsLen (ctrl + 1))
+    (hFitL : FitsLen (len + 1))
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) :
+    Ecbs.tally_add_one b =
+      .ok { b with
+        sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0 + len, hrow⟩ (1 : Int)
+        sudo_5Board_9tally_len := Int.ofNat (len + 1)
+        sudo_5Board_4cost := { b.sudo_5Board_4cost with
+          sudo_5Costs_15control_highest := ((max high (t0 + len) : Nat) : Int)
+          sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1)
+          sudo_5Costs_9tally_max := ((max tmax (len + 1) : Nat) : Int) } } := by
+  by_cases hnote : tmax < len + 1
+  · by_cases hlt : high < t0 + len
+    · have hrun := tally_add_one_raise b t0 len high control ctrl tmax
+        hLen hT0 hrow hZero hCtrlN hic hHigh hlt hFitI hCtrl hFitC hFitL hMax hnote
+      rw [hrun]
+      simp [Nat.max_eq_right (Nat.le_of_lt hlt), Nat.max_eq_right (Nat.le_of_lt hnote),
+        ofNat_eq_natCast]
+    · have hle : t0 + len ≤ high := Nat.le_of_not_gt hlt
+      have hrun := tally_add_one_keep b t0 len high control ctrl tmax
+        hLen hT0 hrow hZero hCtrlN hic hHigh hle hFitI hCtrl hFitC hFitL hMax hnote
+      rw [hrun]
+      simp [Nat.max_eq_left hle, Nat.max_eq_right (Nat.le_of_lt hnote), hHigh, ofNat_eq_natCast]
+  · have hstay : len + 1 ≤ tmax := Nat.le_of_not_gt hnote
+    by_cases hlt : high < t0 + len
+    · have hrun := tally_add_one_raise_stay b t0 len high control ctrl tmax
+        hLen hT0 hrow hZero hCtrlN hic hHigh hlt hFitI hCtrl hFitC hFitL hMax hstay
+      rw [hrun]
+      simp [Nat.max_eq_right (Nat.le_of_lt hlt), Nat.max_eq_left hstay, hMax, ofNat_eq_natCast]
+    · have hle : t0 + len ≤ high := Nat.le_of_not_gt hlt
+      have hrun := tally_add_one_keep_stay b t0 len high control ctrl tmax
+        hLen hT0 hrow hZero hCtrlN hic hHigh hle hFitI hCtrl hFitC hFitL hMax hstay
+      rw [hrun]
+      simp [Nat.max_eq_left hle, Nat.max_eq_left hstay, hHigh, hMax, ofNat_eq_natCast]
+
 /-- `tally_add_one` writes one hole at `t0 + len`, then the length, the counter,
     the recorded high, and `tally_max`. It does not read the park hole. A parked
     counter that starts `2` above the unparked counter finishes `2` above the
@@ -532,12 +839,10 @@ theorem tally_add_one_withPark
     (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
     (hic : t0 + len < control)
     (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
-    (hgt : high < t0 + len)
     (hFitI : FitsLen (t0 + len))
     (hFitCP : FitsLen (ctrl + 2 + 1))
     (hFitL : FitsLen (len + 1))
-    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
-    (hNote : tmax < len + 1) :
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) :
     Ecbs.tally_add_one
         (withPark b rowP (((ctrl + 2 : Nat) : Int)) fromHole ridx) =
       .ok (withPark
@@ -545,9 +850,9 @@ theorem tally_add_one_withPark
             sudo_5Board_3row := b.sudo_5Board_3row.set ⟨t0 + len, hrow⟩ (1 : Int)
             sudo_5Board_9tally_len := Int.ofNat (len + 1)
             sudo_5Board_4cost := { b.sudo_5Board_4cost with
-              sudo_5Costs_15control_highest := ((t0 + len : Nat) : Int)
+              sudo_5Costs_15control_highest := ((max high (t0 + len) : Nat) : Int)
               sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1)
-              sudo_5Costs_9tally_max := Int.ofNat (len + 1) } }
+              sudo_5Costs_9tally_max := ((max tmax (len + 1) : Nat) : Int) } }
         (rowP.set ⟨t0 + len, hrowP⟩ (1 : Int))
         (Int.ofNat (ctrl + 2 + 1))
         fromHole ridx) := by
@@ -572,8 +877,8 @@ theorem tally_add_one_withPark
     simp [bP, withPark, ctrlP, ofNat_eq_natCast]
   have hMaxP : bP.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
     simpa [bP, withPark] using hMax
-  have hrunP := tally_add_one_raise bP t0 len high control (ctrl + 2) tmax
-    hLenP hT0P hixP hZeroEq hCtrlNP hic hHighP hgt hFitI hCtrlP hFitCP hFitL hMaxP hNote
+  have hrunP := tally_add_one_mark bP t0 len high control (ctrl + 2) tmax
+    hLenP hT0P hixP hZeroEq hCtrlNP hic hHighP hFitI hCtrlP hFitCP hFitL hMaxP
   rw [show withPark b rowP (((ctrl + 2 : Nat) : Int)) fromHole ridx = bP from rfl]
   rw [hrunP]
   apply congrArg Except.ok
@@ -742,7 +1047,7 @@ theorem tally_whiten_loop {β}
     (hRed : ∀ j (hj : j < m), xs[t0 + j]'(by omega) = 2)
     (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
     (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
-    (hTop : high = t0 + m - 1)
+    (hTop : t0 + m - 1 ≤ high)
     (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
     (hIn : t0 + m ≤ control)
     (hfit : FitsLen (t0 + m))
@@ -865,6 +1170,59 @@ theorem tally_lay_white (b : Ecbs.Board) (xs : List Nat) (t0 j ctrl high control
       simp [embed, Array.getElem_set, List.getElem_set, ofNat_eq_natCast]
   rw [array_set_congr hRow, hset]
 
+/-- Lay one white peg in an empty tally hole that does not beat the recorded high. -/
+theorem tally_lay_keep (b : Ecbs.Board) (xs : List Nat) (t0 j ctrl high control : Nat)
+    (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
+    (hRow : b.sudo_5Board_3row = embed xs)
+    (hAt : t0 + j < xs.length)
+    (hCell : xs[t0 + j] = 0)
+    (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
+    (hic : t0 + j < control)
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hle : t0 + j ≤ high)
+    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (ctrl : Int))
+    (hfit : FitsLen (t0 + j))
+    (hfitC : FitsLen (ctrl + 1)) :
+    (do
+        let ix ← SudoRt.addI b.sudo_5Board_6tally0 (Int.ofNat j)
+        let c ← SudoRt.atL b.sudo_5Board_3row ix
+        let _ ← SudoRt.sudoAssertEq c (Int.ofNat 0) 359
+        let b ← Ecbs.tally_put b (Int.ofNat j) (1 : Int)
+        let ctrl ← SudoRt.addI b.sudo_5Board_4cost.sudo_5Costs_4ctrl (1 : Int)
+        pure (SudoRt.Flow.cont (ρ := Ecbs.Board)
+          ({ b with
+            sudo_5Board_4cost := { b.sudo_5Board_4cost with
+              sudo_5Costs_4ctrl := ctrl } } : Ecbs.Board))) =
+      .ok (SudoRt.Flow.cont (ρ := Ecbs.Board)
+        { b with
+          sudo_5Board_3row := embed (xs.set (t0 + j) 1)
+          sudo_5Board_4cost := { b.sudo_5Board_4cost with
+            sudo_5Costs_4ctrl := Int.ofNat (ctrl + 1) } }) := by
+  conv =>
+    lhs
+    rw [hT0, hRow, ← ofNat_eq_natCast t0]
+  rw [addI_ofNat t0 j hfit, ok_bind]
+  have hsz : t0 + j < (embed xs).size := by rw [size_embed]; exact hAt
+  rw [atL_ofNat _ (t0 + j) hsz, ok_bind]
+  have hget : (embed xs)[t0 + j] = (0 : Int) := by
+    simp [embed, Array.getElem_mk, List.getElem_map, hCell]
+  rw [hget, show (0 : Int) = Int.ofNat 0 from rfl, sudoAssertEq_int rfl 359, ok_bind]
+  conv =>
+    pattern (Ecbs.tally_put b (Int.ofNat j) (1 : Int))
+    rw [ofNat_eq_natCast j, show (1 : Int) = ((1 : Nat) : Int) from rfl]
+  rw [tally_put_keep b t0 j 1 high control hT0
+      (by rw [hRow, size_embed]; exact hAt) hCtrlN hic hHigh hle hfit, ok_bind]
+  conv => zeta
+  dsimp only
+  rw [hCtrl, ← ofNat_eq_natCast ctrl, addI_ofNat_one ctrl hfitC, ok_bind, pure_eq_ok]
+  have hset (ha : t0 + j < (embed xs).size) :
+      (embed xs).set ⟨t0 + j, ha⟩ ((1 : Nat) : Int) = embed (xs.set (t0 + j) 1) := by
+    apply Array.ext
+    · simp [embed, size_embed, List.length_set]
+    · intro i hi hi'
+      simp [embed, Array.getElem_set, List.getElem_set, ofNat_eq_natCast]
+  rw [array_set_congr hRow, hset]
+
 /-- Replace the control row, the ctrl counter, and the recorded high. -/
 def touchGrow (b : Ecbs.Board) (row : Array Int) (ctrl high : Int) : Ecbs.Board :=
   { b with
@@ -908,7 +1266,7 @@ def layStep (toV : Int) (σ : Int × Ecbs.Board) :
             pure (SudoRt.Flow.cont (ρ := Ecbs.Board) (j', fs))
 
 theorem tally_lay_loop {β}
-    (b : Ecbs.Board) (ys : List Nat) (t0 m c0 control : Nat)
+    (b : Ecbs.Board) (ys : List Nat) (t0 m c0 high control : Nat)
     (after : Int × Ecbs.Board → Except SudoRt.Trap β)
     (onRet : Ecbs.Board → Except SudoRt.Trap β)
     (hm : 0 < m)
@@ -917,7 +1275,8 @@ theorem tally_lay_loop {β}
     (hRoom : t0 + 2 * m ≤ ys.length)
     (hZero : ∀ k (hk : k < m), ys[t0 + m + k]'(by omega) = 0)
     (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
-    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = ((t0 + m - 1 : Nat) : Int))
+    (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
+    (hGe : t0 + m - 1 ≤ high)
     (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c0 : Int))
     (hIn : t0 + 2 * m ≤ control)
     (hfit : FitsLen (t0 + 2 * m))
@@ -929,19 +1288,19 @@ theorem tally_lay_loop {β}
       after onRet =
     after (Int.ofNat (2 * m - 1),
       touchGrow b (embed (paintOnes ys (t0 + m) m))
-        (Int.ofNat (c0 + m)) ((t0 + 2 * m - 1 : Nat) : Int)) := by
+        (Int.ofNat (c0 + m)) ((max high (t0 + 2 * m - 1) : Nat) : Int)) := by
   have hCtrlI : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := hCtrlN
   refine asc_goal (fromN := m) (toN := 2 * m - 1)
     (fun i s => s = touchGrow b (embed (paintOnes ys (t0 + m) (i - m)))
-        (Int.ofNat (c0 + (i - m))) ((t0 + i - 1 : Nat) : Int))
+        (Int.ofNat (c0 + (i - m))) ((max high (t0 + i - 1) : Nat) : Int))
     (by omega) ?_ ?_ ?_
   · change b = touchGrow b (embed (paintOnes ys (t0 + m) (m - m)))
-      (Int.ofNat (c0 + (m - m))) ((t0 + m - 1 : Nat) : Int)
+      (Int.ofNat (c0 + (m - m))) ((max high (t0 + m - 1) : Nat) : Int)
     rw [show m - m = 0 by omega, show paintOnes ys (t0 + m) 0 = ys from rfl,
-      show c0 + 0 = c0 by omega]
+      show c0 + 0 = c0 by omega, Nat.max_eq_left hGe]
     have hC : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat c0 := by
       rw [hCtrl, ← ofNat_eq_natCast]
-    exact (touch_grow_id b (embed ys) (Int.ofNat c0) ((t0 + m - 1 : Nat) : Int)
+    exact (touch_grow_id b (embed ys) (Int.ofNat c0) (high : Int)
       hRow hC hHigh).symm
   · intro i s hlo hi hI
     have him : i < 2 * m := by omega
@@ -964,7 +1323,7 @@ theorem tally_lay_loop {β}
     have hCN : s.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
       rw [hI]; exact hCtrlI
     have hHi : s.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-        ((t0 + i - 1 : Nat) : Int) := by rw [hI]; rfl
+        ((max high (t0 + i - 1) : Nat) : Int) := by rw [hI]; rfl
     have hCt : s.sudo_5Board_4cost.sudo_5Costs_4ctrl = Int.ofNat (c0 + (i - m)) := by
       rw [hI]; rfl
     unfold layStep
@@ -974,33 +1333,76 @@ theorem tally_lay_loop {β}
         exact absurd hgt' (not_gt_cast (by omega : i ≤ 2 * m - 1))
     · have hAtP : t0 + i < (paintOnes ys (t0 + m) (i - m)).length := by
         rw [paintOnes_length]; exact hAt
-      have hmark := tally_lay_white s (paintOnes ys (t0 + m) (i - m)) t0 i
-          (c0 + (i - m)) (t0 + i - 1) control
-          hT hRw hAtP hcell hCN (by omega) hHi (by omega) hCt hfi hfc
-      rw [hmark, ok_bind]
-      dsimp only
       have hpaint : (paintOnes ys (t0 + m) (i - m)).set (t0 + i) 1 =
           paintOnes ys (t0 + m) (i - m + 1) := by
         rw [show t0 + i = (t0 + m) + (i - m) by omega]
         rfl
       have hsub : i - m + 1 = i + 1 - m := by omega
-      have htouch :
-          ({ s with
-              sudo_5Board_3row := embed ((paintOnes ys (t0 + m) (i - m)).set (t0 + i) 1)
-              sudo_5Board_4cost := { s.sudo_5Board_4cost with
-                sudo_5Costs_15control_highest := ((t0 + i : Nat) : Int)
-                sudo_5Costs_4ctrl := Int.ofNat (c0 + (i - m) + 1) } }) =
-            touchGrow b (embed (paintOnes ys (t0 + m) (i + 1 - m)))
-              (Int.ofNat (c0 + (i + 1 - m))) ((t0 + (i + 1) - 1 : Nat) : Int) := by
-        rw [hI, hpaint, hsub]
-        rw [show c0 + (i - m) + 1 = c0 + (i + 1 - m) by omega]
-        rw [show t0 + (i + 1) - 1 = t0 + i by omega]
-        rfl
-      rw [htouch]
-      refine ⟨touchGrow b (embed (paintOnes ys (t0 + m) (i + 1 - m)))
-          (Int.ofNat (c0 + (i + 1 - m))) ((t0 + (i + 1) - 1 : Nat) : Int), rfl, ?_⟩
-      simp only [pure_eq_ok]
-      exact asc_tail (2 * m - 1) i hft _
+      have hnext : max high (t0 + (i + 1) - 1) = max high (t0 + i) := by omega
+      by_cases hlt : max high (t0 + i - 1) < t0 + i
+      · have hmark := tally_lay_white s (paintOnes ys (t0 + m) (i - m)) t0 i
+            (c0 + (i - m)) (max high (t0 + i - 1)) control
+            hT hRw hAtP hcell hCN (by omega)
+            hHi hlt hCt hfi hfc
+        rw [hmark, ok_bind]
+        dsimp only
+        have hraised : max high (t0 + i) = t0 + i := by
+          have hhi : high < t0 + i :=
+            Nat.lt_of_le_of_lt (Nat.le_max_left high (t0 + i - 1)) hlt
+          exact Nat.max_eq_right (Nat.le_of_lt hhi)
+        have htouch :
+            ({ s with
+                sudo_5Board_3row := embed ((paintOnes ys (t0 + m) (i - m)).set (t0 + i) 1)
+                sudo_5Board_4cost := { s.sudo_5Board_4cost with
+                  sudo_5Costs_15control_highest := ((t0 + i : Nat) : Int)
+                  sudo_5Costs_4ctrl := Int.ofNat (c0 + (i - m) + 1) } }) =
+              touchGrow b (embed (paintOnes ys (t0 + m) (i + 1 - m)))
+                (Int.ofNat (c0 + (i + 1 - m)))
+                ((max high (t0 + (i + 1) - 1) : Nat) : Int) := by
+          rw [hI, hpaint, hsub, hnext, hraised]
+          rw [show c0 + (i - m) + 1 = c0 + (i + 1 - m) by omega]
+          rfl
+        rw [htouch]
+        refine ⟨touchGrow b (embed (paintOnes ys (t0 + m) (i + 1 - m)))
+            (Int.ofNat (c0 + (i + 1 - m)))
+            ((max high (t0 + (i + 1) - 1) : Nat) : Int), rfl, ?_⟩
+        simp only [pure_eq_ok]
+        exact asc_tail (2 * m - 1) i hft _
+      · have hleH : t0 + i ≤ max high (t0 + i - 1) := Nat.le_of_not_gt hlt
+        have hhi : t0 + i ≤ high := by
+          by_cases hch : high ≤ t0 + i - 1
+          · have hmx : max high (t0 + i - 1) = t0 + i - 1 := Nat.max_eq_right hch
+            omega
+          · have hmx : max high (t0 + i - 1) = high :=
+              Nat.max_eq_left (Nat.le_of_not_le hch)
+            rw [hmx] at hleH
+            exact hleH
+        have hstay : max high (t0 + i) = max high (t0 + i - 1) := by
+          rw [Nat.max_eq_left hhi, Nat.max_eq_left (by omega)]
+        have hmark := tally_lay_keep s (paintOnes ys (t0 + m) (i - m)) t0 i
+            (c0 + (i - m)) (max high (t0 + i - 1)) control
+            hT hRw hAtP hcell hCN (by omega)
+            hHi hleH hCt hfi hfc
+        rw [hmark, ok_bind]
+        dsimp only
+        have htouch :
+            ({ s with
+                sudo_5Board_3row := embed ((paintOnes ys (t0 + m) (i - m)).set (t0 + i) 1)
+                sudo_5Board_4cost := { s.sudo_5Board_4cost with
+                  sudo_5Costs_4ctrl := Int.ofNat (c0 + (i - m) + 1) } }) =
+              touchGrow b (embed (paintOnes ys (t0 + m) (i + 1 - m)))
+                (Int.ofNat (c0 + (i + 1 - m)))
+                ((max high (t0 + (i + 1) - 1) : Nat) : Int) := by
+          rw [hI, hpaint, hsub]
+          rw [show c0 + (i - m) + 1 = c0 + (i + 1 - m) by omega]
+          rw [hnext, hstay]
+          rfl
+        rw [htouch]
+        refine ⟨touchGrow b (embed (paintOnes ys (t0 + m) (i + 1 - m)))
+            (Int.ofNat (c0 + (i + 1 - m)))
+            ((max high (t0 + (i + 1) - 1) : Nat) : Int), rfl, ?_⟩
+        simp only [pure_eq_ok]
+        exact asc_tail (2 * m - 1) i hft _
   · intro s hI
     have hm1 : 2 * m - 1 + 1 = 2 * m := by omega
     rw [hI, hm1, show 2 * m - m = m by omega]
@@ -1019,22 +1421,21 @@ theorem tally_double_refines (b : Ecbs.Board) (xs : List Nat)
     (hZero : ∀ k (hk : k < m), xs[t0 + m + k]'(by omega) = 0)
     (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
     (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
-    (hTop : high = t0 + m - 1)
+    (hTop : t0 + m - 1 ≤ high)
     (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c0 : Int))
     (hIn : t0 + 2 * m ≤ control)
     (hfit : FitsLen (t0 + 2 * m))
     (hfitC : FitsLen (c0 + 2 * m))
     (hfitM : FitsLen (2 * m))
-    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
-    (hNote : tmax < 2 * m) :
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) :
     Ecbs.tally_double b =
       .ok { b with
         sudo_5Board_3row := embed (paintOnes (paintOnes xs t0 m) (t0 + m) m)
         sudo_5Board_9tally_len := Int.ofNat (2 * m)
         sudo_5Board_4cost := { b.sudo_5Board_4cost with
           sudo_5Costs_4ctrl := Int.ofNat (c0 + 2 * m)
-          sudo_5Costs_15control_highest := ((t0 + 2 * m - 1 : Nat) : Int)
-          sudo_5Costs_9tally_max := Int.ofNat (2 * m) } } := by
+          sudo_5Costs_15control_highest := ((max high (t0 + 2 * m - 1) : Nat) : Int)
+          sudo_5Costs_9tally_max := ((max tmax (2 * m) : Nat) : Int) } } := by
   unfold Ecbs.tally_double
   conv =>
     lhs
@@ -1077,18 +1478,17 @@ theorem tally_double_refines (b : Ecbs.Board) (xs : List Nat)
     exact hZero k hk
   have hCtrlW : bW.sudo_5Board_1t.sudo_4Tier_7control = (control : Int) := by
     simp [bW, touchRow, hCtrlN]
-  have hHighW : bW.sudo_5Board_4cost.sudo_5Costs_15control_highest =
-      ((t0 + m - 1 : Nat) : Int) := by
-    simp [bW, touchRow, hHigh, hTop, ofNat_eq_natCast]
+  have hHighW : bW.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int) := by
+    simp [bW, touchRow, hHigh]
   have hCtW : bW.sudo_5Board_4cost.sudo_5Costs_4ctrl = ((c0 + m : Nat) : Int) := by
     simp [bW, touchRow, ofNat_eq_natCast]
-  rw [tally_lay_loop bW (paintOnes xs t0 m) t0 m (c0 + m) control _ _ hm
-      hT0W hRowW (by rw [paintOnes_length]; exact hRoom) hZeroW hCtrlW hHighW hCtW
+  rw [tally_lay_loop bW (paintOnes xs t0 m) t0 m (c0 + m) high control _ _ hm
+      hT0W hRowW (by rw [paintOnes_length]; exact hRoom) hZeroW hCtrlW hHighW hTop hCtW
       hIn hfit (FitsLen.of_le hfitC (by omega)) hfitM]
   dsimp only
   rw [ok_bind]
   let bG := touchGrow bW (embed (paintOnes (paintOnes xs t0 m) (t0 + m) m))
-      (Int.ofNat (c0 + m + m)) ((t0 + 2 * m - 1 : Nat) : Int)
+      (Int.ofNat (c0 + m + m)) ((max high (t0 + 2 * m - 1) : Nat) : Int)
   let bL : Ecbs.Board := { bG with sudo_5Board_9tally_len := Int.ofNat (2 * m) }
   conv =>
     pattern (Ecbs.tally_note _)
@@ -1097,7 +1497,7 @@ theorem tally_double_refines (b : Ecbs.Board) (xs : List Nat)
     simp [bL, ofNat_eq_natCast]
   have hmax : bL.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int) := by
     simp [bL, bG, touchGrow, bW, touchRow, hMax]
-  rw [tally_note_raise bL (2 * m) tmax hlen hmax hNote, ok_bind, pure_eq_ok]
+  rw [tally_note_mark bL (2 * m) tmax hlen hmax, ok_bind, pure_eq_ok]
   have hc : c0 + m + m = c0 + 2 * m := by omega
   simp [bL, bG, touchGrow, bW, touchRow, ofNat_eq_natCast, hc]
 
@@ -1116,21 +1516,20 @@ theorem tally_double_withPark
     (hT0 : b.sudo_5Board_6tally0 = (t0 : Int))
     (hRoom : t0 + 2 * m ≤ xs.length)
     (hRoomP : t0 + 2 * m ≤ xsP.length)
-    (hRed : ∀ j (hj : j < m), xs[t0 + j]'(by omega) = 2)
+    (_hRed : ∀ j (hj : j < m), xs[t0 + j]'(by omega) = 2)
     (hRedP : ∀ j (hj : j < m), xsP[t0 + j]'(by omega) = 2)
-    (hZero : ∀ k (hk : k < m), xs[t0 + m + k]'(by omega) = 0)
+    (_hZero : ∀ k (hk : k < m), xs[t0 + m + k]'(by omega) = 0)
     (hZeroP : ∀ k (hk : k < m), xsP[t0 + m + k]'(by omega) = 0)
     (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
     (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
-    (hTop : high = t0 + m - 1)
-    (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c0 : Int))
+    (hTop : t0 + m - 1 ≤ high)
+    (_hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c0 : Int))
     (hIn : t0 + 2 * m ≤ control)
     (hfit : FitsLen (t0 + 2 * m))
-    (hfitC : FitsLen (c0 + 2 * m))
+    (_hfitC : FitsLen (c0 + 2 * m))
     (hfitCP : FitsLen (c0 + 2 + 2 * m))
     (hfitM : FitsLen (2 * m))
-    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
-    (hNote : tmax < 2 * m) :
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) :
     Ecbs.tally_double
         (withPark b (embed xsP) (((c0 + 2 : Nat) : Int)) fromHole ridx) =
       .ok (withPark
@@ -1139,8 +1538,8 @@ theorem tally_double_withPark
             sudo_5Board_9tally_len := Int.ofNat (2 * m)
             sudo_5Board_4cost := { b.sudo_5Board_4cost with
               sudo_5Costs_4ctrl := Int.ofNat (c0 + 2 * m)
-              sudo_5Costs_15control_highest := ((t0 + 2 * m - 1 : Nat) : Int)
-              sudo_5Costs_9tally_max := Int.ofNat (2 * m) } }
+              sudo_5Costs_15control_highest := ((max high (t0 + 2 * m - 1) : Nat) : Int)
+              sudo_5Costs_9tally_max := ((max tmax (2 * m) : Nat) : Int) } }
         (embed (paintOnes (paintOnes xsP t0 m) (t0 + m) m))
         (Int.ofNat (c0 + 2 + 2 * m))
         fromHole ridx) := by
@@ -1163,7 +1562,7 @@ theorem tally_double_withPark
     simpa [bP, withPark] using hMax
   have hrunP := tally_double_refines bP xsP t0 m (c0 + 2) high control tmax hm
     hLenP hT0P hRowP hRoomP hRedP hZeroP hCtrlNP hHighP hTop hCtrlP hIn hfit
-    hfitCP hfitM hMaxP hNote
+    hfitCP hfitM hMaxP
   rw [show withPark b (embed xsP) (((c0 + 2 : Nat) : Int)) fromHole ridx = bP from rfl]
   rw [hrunP]
   apply congrArg Except.ok
@@ -1462,7 +1861,7 @@ theorem cube_tally_peg (b : Ecbs.Board) (dst src : Nat) (xs : List Nat)
       b'.sudo_5Board_4cost.sudo_5Costs_3ops =
         b.sudo_5Board_4cost.sudo_5Costs_3ops.set ⟨1, hops⟩ (Int.ofNat (cOps + 1)) := by
   obtain ⟨b1, hb, hon, hto, hbench, hpre, hhi, hmov, hpeakR, hslides, ht, _hsz, hhome, hheld,
-      hmk, hrowEq, hop, htally, hhigh, hctrlB⟩ :=
+      hmk, hrowEq, hop, htally, hhigh, hctrlB, _hsc⟩ :=
     cube_refines b dst src xs w h r n k moves hole bench peak peakS cOps cg hmk hoff hops hop1 hfops hbl hcg hspan hF hHome hHF hArr h7 hn0 hn hlenx hf hmoves hpeak hpeakS hxsT h3 hfm ⟨shape.hw0, shape.hh0, shape.hrR, shape.hrP, shape.hnE, shape.hkLe, shape.hgap⟩ hwF hhF hrF hkF hHole hsm hnsm hfitB hfold
   rw [hb, ok_bind]
   have hT0' : b1.sudo_5Board_6tally0 = (t0 : Int) := by rw [htally]; exact hT0
@@ -1808,13 +2207,24 @@ theorem rungCtrl_inc (ctrl tally colour : Nat) (last parked : Bool) :
   by_cases hL : last <;> by_cases hP : parked <;> by_cases hR : colour = 2 <;>
     simp [hL, hP, hR] <;> omega
 
-/-- Recorded high after that rung. A final rung does not move it. A non-final
-    rung's double ends on the last new peg; a non-final red rung's extra peg
-    is one past that. -/
+/-- Recorded `control_highest` after one rung. A final rung writes no new tally
+    hole, so the mark stays. A non-final rung's highest new hole is the end of
+    the doubled segment, or one past it when the rung is red. `set_control`
+    keeps the recorded high when that hole does not beat it, so the mark is the
+    max of the previous high and the new hole.
+    This counter is not a Spec result. `walkStep`, `chordAdd`, and the inverse
+    polynomial do not read it. `walk_key` returns a point. `receive_check`
+    returns `Checked`, whose `control_highest` has to be named exactly.
+    The mark only feeds the cost field and the next rung's `set_control` test. -/
 def rungHigh (high t0 tally colour : Nat) (last : Bool) : Nat :=
   if last then high
-  else if colour = 2 then t0 + 2 * tally
-  else t0 + 2 * tally - 1
+  else if colour = 2 then max high (t0 + 2 * tally)
+  else max high (t0 + 2 * tally - 1)
+
+/-- The climb's recorded high. Before any tally peg it is the entry mark.
+    Afterwards it is the max of that mark and the last peg of the current tally. -/
+def highMark (h0 t0 tally : Nat) : Nat :=
+  if tally = 0 then h0 else max h0 (t0 + tally - 1)
 
 /-- Put a parked colour back, then lift `colour` from `hole` into the parking hole. -/
 def afterPark (row : List Nat) (fromHole : Int) (park hole colour : Nat) : List Nat :=
@@ -1918,9 +2328,9 @@ structure RowSeg (row : List Nat) (t0 tally : Nat) (finished : Bool) : Prop wher
 
 theorem paintRed_seg (row : List Nat) (t0 tally : Nat)
     (hroom : t0 + tally ≤ row.length)
-    (hwhite : ∀ j (hj : j < tally),
+    (_hwhite : ∀ j (hj : j < tally),
       row[t0 + j]'(Nat.lt_of_lt_of_le (Nat.add_lt_add_left hj t0) hroom) = 1)
-    (htail : ∀ j, tally ≤ j → ∀ (h : t0 + j < row.length), row[t0 + j]'h = 0) :
+    (_htail : ∀ j, tally ≤ j → ∀ (h : t0 + j < row.length), row[t0 + j]'h = 0) :
     RowSeg (paintRed row t0 tally) t0 tally true := by
   refine ⟨by rw [paintRed_length]; exact hroom, ?_, ?_⟩
   · intro j hj
@@ -2376,6 +2786,46 @@ theorem raisedPeak_carry (peak occ : Nat) (ho : occ ≤ 7) :
   · simp [h]
     exact Nat.le_max_left _ _
 
+/-- `raisedHole` against a top at most `cap` stays at most `max(hole, cap)`. -/
+theorem hole_raise_le (hole top cap : Nat) (ht : top ≤ cap) :
+    raisedHole hole top ≤ max hole cap := by
+  unfold raisedHole
+  by_cases h : hole < top
+  · simp [h]
+    exact Nat.le_trans ht (Nat.le_max_right hole cap)
+  · simp [h]
+    exact Nat.le_max_left _ _
+
+/-- A value already under the cap, raised only up to that cap, stays under it. -/
+theorem hole_under (cap a b : Nat) (ha : a ≤ cap) (hb : b ≤ max a cap) : b ≤ cap :=
+  Nat.le_trans hb (Nat.max_le.mpr ⟨ha, Nat.le_refl _⟩)
+
+/-- Two raises against the same cap compose. -/
+theorem hole_carry (cap a b c : Nat) (ha : b ≤ max a cap) (hb : c ≤ max b cap) :
+    c ≤ max a cap :=
+  Nat.le_trans hb (Nat.max_le.mpr ⟨ha, Nat.le_max_right _ _⟩)
+
+/-- The highest-hole scan never returns an index past the strip. -/
+theorem topIdx_len (xs : List Nat) : topIdx xs ≤ xs.length := by
+  unfold topIdx
+  suffices ∀ k t, k ≤ xs.length → t ≤ xs.length →
+      (List.range k).foldl (fun t i => if coeff xs i = 0 then t else i) t ≤ xs.length from
+    this xs.length 0 (Nat.le_refl _) (Nat.zero_le _)
+  intro k
+  induction k with
+  | zero =>
+    intro t _ ht
+    simpa using ht
+  | succ k ih =>
+    intro t hk ht
+    rw [List.range_succ, List.foldl_append]
+    have hpre := ih t (Nat.le_of_lt (Nat.lt_of_succ_le hk)) ht
+    simp only [List.foldl_cons, List.foldl_nil]
+    by_cases h0 : coeff xs k = 0
+    · simpa [h0] using hpre
+    · simp only [h0, ite_false]
+      exact Nat.le_of_lt (Nat.lt_of_succ_le hk)
+
 theorem countHeld_seven (held : Array Bool) : countHeld held 7 ≤ 7 := by
   have : ∀ i, countHeld held i ≤ i := by
     intro i
@@ -2434,6 +2884,11 @@ structure LivePeg (c : PegCtx) (i : Nat) where
   /-- Each peg raises peak against at most seven homes, so it stays under the
       cap the loop started with. -/
   hpeakB : peak ≤ max c.peak0 7
+  /-- The same cap for `peak_strict`. One peg raises it against at most seven
+      held homes. -/
+  hpeakSB : peakS ≤ max c.peakS0 7
+  /-- Each peg raises the bench hole by a comb top, which is at most `bench`. -/
+  hholeB : hole ≤ max c.hole0 c.bench
 
 theorem idx_get {α : Type} {a b : Array α} (h : a = b) (i : Nat) (ha : i < a.size) :
     a[i] = b[i]'(h ▸ ha) := by
@@ -2584,6 +3039,13 @@ def pegFromOff (c : PegCtx) : LivePeg c 1 where
     raisedPeak_carry c.peak0
       (countHeld (c.b0.sudo_5Board_4held.set ⟨c.src, c.hF⟩ false) 7)
       (countHeld_seven _)
+  hpeakSB :=
+    raisedPeak_carry c.peakS0
+      (countHeld c.b0.sudo_5Board_4held 7)
+      (countHeld_seven _)
+  hholeB :=
+    hole_raise_le c.hole0 (topIdx (combStrip c.n c.bench c.g)) c.bench
+      (Nat.le_trans (topIdx_len _) (by rw [combStrip_length]; exact Nat.le_refl _))
 
 def liveRowPr (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) :
     c.t0 + i <
@@ -2749,6 +3211,17 @@ def pegNext (c : PegCtx) {i : Nat} (d : LivePeg c i) (hi : i < c.m) : LivePeg c 
           (countHeld_seven _)))
       (raisedPeak_carry _ _
         (countHeld_seven _))
+  hpeakSB :=
+    peak_carry c.peakS0 d.peakS _
+      d.hpeakSB
+      (raisedPeak_carry d.peakS
+        (countHeld (settleBoard d.b c.src d.hH d.hD d.xs c.n d.moves d.slides d.peak).sudo_5Board_4held 7)
+        (countHeld_seven _))
+  hholeB :=
+    hole_carry c.bench c.hole0 d.hole _
+      d.hholeB
+      (hole_raise_le d.hole (topIdx (combStrip c.n c.bench (d.xs.take c.n))) c.bench
+        (Nat.le_trans (topIdx_len _) (by rw [combStrip_length]; exact Nat.le_refl _)))
 
 /-- After `i` steps. `i = 0` is the bench-off start; `i > 0` is `pegPack`. -/
 def pegPack (c : PegCtx) : ∀ i, 0 < i → i ≤ c.m → LivePeg c i
@@ -3218,6 +3691,13 @@ def clearHeldBoard (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
     sudo_5Board_4cost := { b.sudo_5Board_4cost with
       sudo_5Costs_5moves := Int.ofNat (moves + pegCount xs) } }
 
+/-- `clear` rewrites the home and the move counter. The ops array keeps its length. -/
+theorem clear_len (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
+    (hH : home < b.sudo_5Board_4home.size)
+    (hD : home < b.sudo_5Board_4held.size) :
+    (clearHeldBoard b home xs moves hH hD).sudo_5Board_4cost.sudo_5Costs_3ops.size =
+      b.sudo_5Board_4cost.sudo_5Costs_3ops.size := rfl
+
 theorem clearHeld_irrel (b : Ecbs.Board) (home : Nat) (xs : List Nat) (moves : Nat)
     (hH hH' : home < b.sudo_5Board_4home.size) (hD hD' : home < b.sudo_5Board_4held.size) :
     clearHeldBoard b home xs moves hH hD = clearHeldBoard b home xs moves hH' hD' := by
@@ -3244,12 +3724,12 @@ theorem clearHeld_withPark (b : Ecbs.Board) (row : Array Int) (ctrl fromHole rid
 def rungFinalBoard (b : Ecbs.Board) (hole park rung i ctrl : Nat)
     (hRowP : park < b.sudo_5Board_3row.size)
     (hRowH : hole < b.sudo_5Board_3row.size)
-    (g : List Nat) (moves peak : Nat)
-    (hHs : 6 < (parkKeepBoard b hole park rung i ctrl hRowP hRowH).sudo_5Board_4home.size)
-    (hDs : 6 < (parkKeepBoard b hole park rung i ctrl hRowP hRowH).sudo_5Board_4held.size)
+    (_g : List Nat) (_moves _peak : Nat)
+    (_hHs : 6 < (parkKeepBoard b hole park rung i ctrl hRowP hRowH).sudo_5Board_4home.size)
+    (_hDs : 6 < (parkKeepBoard b hole park rung i ctrl hRowP hRowH).sudo_5Board_4held.size)
     (c : PegCtx)
     (xs ys : List Nat)
-    (w h r n k mvs slides holeM bench pk pkS cOps : Nat)
+    (_w _h _r n k mvs slides holeM bench pk pkS cOps : Nat)
     (hH6 : 6 < (pegBoard c c.m).sudo_5Board_4home.size)
     (hD6 : 6 < (pegBoard c c.m).sudo_5Board_4held.size)
     (hops0 : 0 < (pegBoard c c.m).sudo_5Board_4cost.sudo_5Costs_3ops.size)
@@ -3277,7 +3757,7 @@ theorem rung_final_refines (b : Ecbs.Board) (holes : List Nat)
     (hRowP : park < b.sudo_5Board_3row.size)
     (hColour : b.sudo_5Board_3row[hole] = (rung : Int))
     (hZeroP : b.sudo_5Board_3row[park] = 0)
-    (hRung : rung ≠ 0) (hNotRed : rung ≠ 2)
+    (hRung : rung ≠ 0) (_hNotRed : rung ≠ 2)
     (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
     (hParkC : park < control)
     (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
@@ -3303,7 +3783,7 @@ theorem rung_final_refines (b : Ecbs.Board) (holes : List Nat)
     (hpeak : (parkKeepBoard b hole park rung i ctrl hRowP hRowH).sudo_5Board_4cost.sudo_5Costs_4peak =
       (peak : Int))
     (hfit : FitsLen (moves + pegCount g))
-    (c : PegCtx) (hSrc6 : c.src = 6)
+    (c : PegCtx) (_hSrc6 : c.src = 6)
     (hCopy : c.b0 = placeBoard (parkKeepBoard b hole park rung i ctrl hRowP hRowH)
       6 hHs hDs g moves peak)
     (rowXs : List Nat)
@@ -3829,7 +4309,7 @@ theorem parkKeep_row (b : Ecbs.Board) (xs : List Nat)
     (hRowP : park < b.sudo_5Board_3row.size)
     (hRowH : hole < b.sudo_5Board_3row.size)
     (hrow : b.sudo_5Board_3row = embed xs)
-    (hp : park < xs.length) (hh : hole < xs.length) :
+    (_hp : park < xs.length) (_hh : hole < xs.length) :
     (parkKeepBoard b hole park rung i ctrl hRowP hRowH).sudo_5Board_3row =
       embed ((xs.set park rung).set hole 0) := by
   apply Array.ext
@@ -3838,10 +4318,10 @@ theorem parkKeep_row (b : Ecbs.Board) (xs : List Nat)
   · intro j _hj1 _hj2
     by_cases hj : hole = j
     · simp [parkKeepBoard, hj, hrow, embed, Array.getElem_set, Array.getElem_mk,
-        List.getElem_set, ofNat_eq_natCast, hh]
+        List.getElem_set, ofNat_eq_natCast, _hh]
     · by_cases hpj : park = j
       · simp [parkKeepBoard, hj, hpj, hrow, embed, Array.getElem_set, Array.getElem_mk,
-          List.getElem_set, ofNat_eq_natCast, hp]
+          List.getElem_set, ofNat_eq_natCast, _hp]
       · simp [parkKeepBoard, hj, hpj, hrow, embed, Array.getElem_set, Array.getElem_mk,
           List.getElem_set, ofNat_eq_natCast]
 
@@ -3912,7 +4392,7 @@ theorem model_open_white_ge (s : ClimbModel) (x : List Nat) (rung hole : Nat)
       fieldMul s.n s.k s.benchlen s.gap
         (cubeTimes s.n s.k s.benchlen s.gap s.tally) ∧
     (modelRung s x rung hole false).ctrl = s.ctrl + 4 + 3 * s.tally ∧
-    (modelRung s x rung hole false).high = s.t0 + 2 * s.tally - 1 ∧
+    (modelRung s x rung hole false).high = max s.high (s.t0 + 2 * s.tally - 1) ∧
     (modelRung s x rung hole false).row =
       paintOnes (paintOnes (paintRed (afterPark s.row s.fromHole s.parkAt hole rung)
         s.t0 s.tally) s.t0 s.tally) (s.t0 + s.tally) s.tally ∧
@@ -3954,7 +4434,7 @@ theorem model_open_white (s : ClimbModel) (x : List Nat) (rung hole : Nat)
       fieldMul s.n s.k s.benchlen s.gap
         (cubeTimes s.n s.k s.benchlen s.gap s.tally) ∧
     (modelRung s x rung hole false).ctrl = s.ctrl + 2 + 3 * s.tally ∧
-    (modelRung s x rung hole false).high = s.t0 + 2 * s.tally - 1 ∧
+    (modelRung s x rung hole false).high = max s.high (s.t0 + 2 * s.tally - 1) ∧
     (modelRung s x rung hole false).row =
       paintOnes (paintOnes (paintRed (afterPark s.row s.fromHole s.parkAt hole rung)
         s.t0 s.tally) s.t0 s.tally) (s.t0 + s.tally) s.tally ∧
@@ -4035,7 +4515,7 @@ theorem model_open_red (s : ClimbModel) (x : List Nat) (rung hole : Nat)
           (fieldMul s.n s.k s.benchlen s.gap
             (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ∧
     (modelRung s x rung hole false).ctrl = s.ctrl + 2 + 3 * s.tally + 1 ∧
-    (modelRung s x rung hole false).high = s.t0 + 2 * s.tally ∧
+    (modelRung s x rung hole false).high = max s.high (s.t0 + 2 * s.tally) ∧
     (modelRung s x rung hole false).row =
       (paintOnes (paintOnes (paintRed (afterPark s.row s.fromHole s.parkAt hole rung)
         s.t0 s.tally) s.t0 s.tally) (s.t0 + s.tally) s.tally).set
@@ -4084,7 +4564,7 @@ theorem model_open_red_ge (s : ClimbModel) (x : List Nat) (rung hole : Nat)
           (fieldMul s.n s.k s.benchlen s.gap
             (cubeTimes s.n s.k s.benchlen s.gap s.tally))) ∧
     (modelRung s x rung hole false).ctrl = s.ctrl + 4 + 3 * s.tally + 1 ∧
-    (modelRung s x rung hole false).high = s.t0 + 2 * s.tally ∧
+    (modelRung s x rung hole false).high = max s.high (s.t0 + 2 * s.tally) ∧
     (modelRung s x rung hole false).row =
       (paintOnes (paintOnes (paintRed (afterPark s.row s.fromHole s.parkAt hole rung)
         s.t0 s.tally) s.t0 s.tally) (s.t0 + s.tally) s.tally).set
@@ -4304,14 +4784,13 @@ theorem rung_double_refines (step : Except SudoRt.Trap Ecbs.Board) (b : Ecbs.Boa
     (hZero : ∀ k (hk : k < m), xs[t0 + m + k]'(by omega) = 0)
     (hCtrlN : b.sudo_5Board_1t.sudo_4Tier_7control = (control : Int))
     (hHigh : b.sudo_5Board_4cost.sudo_5Costs_15control_highest = (high : Int))
-    (hTop : high = t0 + m - 1)
+    (hTop : t0 + m - 1 ≤ high)
     (hCtrl : b.sudo_5Board_4cost.sudo_5Costs_4ctrl = (c0 : Int))
     (hIn : t0 + 2 * m ≤ control)
     (hfit : FitsLen (t0 + 2 * m))
     (hfitC : FitsLen (c0 + 2 * m))
     (hfitM : FitsLen (2 * m))
-    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int))
-    (hNote : tmax < 2 * m) :
+    (hMax : b.sudo_5Board_4cost.sudo_5Costs_9tally_max = (tmax : Int)) :
     (do
         let b ← step
         Ecbs.tally_double b) =
@@ -4320,11 +4799,11 @@ theorem rung_double_refines (step : Except SudoRt.Trap Ecbs.Board) (b : Ecbs.Boa
         sudo_5Board_9tally_len := Int.ofNat (2 * m)
         sudo_5Board_4cost := { b.sudo_5Board_4cost with
           sudo_5Costs_4ctrl := Int.ofNat (c0 + 2 * m)
-          sudo_5Costs_15control_highest := ((t0 + 2 * m - 1 : Nat) : Int)
-          sudo_5Costs_9tally_max := Int.ofNat (2 * m) } } := by
+          sudo_5Costs_15control_highest := ((max high (t0 + 2 * m - 1) : Nat) : Int)
+          sudo_5Costs_9tally_max := ((max tmax (2 * m) : Nat) : Int) } } := by
   rw [hStep, ok_bind,
     tally_double_refines b xs t0 m c0 high control tmax hm hLen hT0 hRow hRoom hRed hZero
-      hCtrlN hHigh hTop hCtrl hIn hfit hfitC hfitM hMax hNote]
+      hCtrlN hHigh hTop hCtrl hIn hfit hfitC hfitM hMax]
 
 /-- The board `unpark` leaves when a colour is parked: that colour goes back to
     `src`, the parking hole is cleared, and the counter grows by two. -/

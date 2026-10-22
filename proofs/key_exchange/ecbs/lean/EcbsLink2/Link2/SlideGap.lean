@@ -975,6 +975,9 @@ theorem climbShape_slideGap {b : Ecbs.Board} {s : ClimbModel} {rest : List Nat}
       n_eq := h.n_eq
       k_le := h.k_le
       gap_eq := h.gap_eq
+      side := side_settle h.side 5 ⟨h5H, h5D⟩ xs s.n moves slides peak
+        (by decide) (by decide) (by decide) (by decide)
+      quiet := quiet_settle h.quiet 5 ⟨h5H, h5D⟩ xs s.n moves slides peak
       park := parkRead_slideGap h.park xs s.n moves slides peak h5H h5D
       peg := pegRead_slideGap h.peg xs s.n moves slides peak h5H h5D }
 
@@ -1038,6 +1041,16 @@ theorem climbCore_slideGap {done rest : List Nat} {b : Ecbs.Board}
         have hpk' : pk' ≤ max pk0 7 := by
           simpa [pk', hpkN] using hle
         exact peak_carry base.peak0 pk0 pk' hpkLe hpk'
+      strictLe := by
+        obtain ⟨ps, hps, hle⟩ := h.strictLe
+        refine ⟨ps, ?_, hle⟩
+        rw [settle_strict_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak]
+        exact hps
+      holeLe := by
+        obtain ⟨ho, hho, hle⟩ := h.holeLe
+        refine ⟨ho, ?_, hle⟩
+        rw [settle_hole_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak]
+        exact hho
       highTop := h.highTop
       parkBelow := h.parkBelow
       holeBelow := h.holeBelow
@@ -1048,11 +1061,16 @@ theorem climbCore_slideGap {done rest : List Nat} {b : Ecbs.Board}
       openRoom := h.openRoom
       openZero := h.openZero
       tmaxLt := by
-        obtain ⟨tmax, ht, hnote⟩ := h.tmaxLt
-        refine ⟨tmax, ?_, hnote⟩
+        obtain ⟨tmax, ht⟩ := h.tmaxLt
+        refine ⟨tmax, ?_⟩
         rw [settle_tmax_eq b 5 ⟨h5H, h5D⟩ xs s.n moves slides peak, ht]
       ctrlLe := h.ctrlLe
-      srcAbove := h.srcAbove }
+      srcAbove := h.srcAbove
+      parkEq := h.parkEq
+      origin := h.origin
+      fromNePark := h.fromNePark
+      rowHome := h.rowHome
+      blankTail := h.blankTail }
 
 /-- The padded bench list has length `bench` once `n ≤ bench`. -/
 theorem bench_pad_len (gap : List Nat) (n bench : Nat)

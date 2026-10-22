@@ -1,0 +1,347 @@
+/-
+  Room for a live suffix of `walk_chord`. One cell spends `walkCharge` moves
+  and one control charge. `chord_add_live_frame` asks for a further cell because
+  `fitRoom` and `fitCtrl` look past the cell just run. That further cell is the
+  next index of this suffix, not a spare hypothesis. The last index has
+  `cellsLeft = 1` and uses `chord_add_live`, which asks for one charge.
+  Proof-only. Not a security claim.
+-/
+import EcbsLink2.Link2.ChordNext
+import EcbsLink2.Link2.ClimbEmit
+
+namespace EcbsLink2.Link2
+
+open MegaDreifach.Link2
+open EcbsLink2.Spec
+
+/-- Moves one live chord can spend, including the rise's two homes.
+    `cellMoveCharge` covers the copy, the climb, and the tail. The rise's
+    pegs sit outside that envelope, at most `2 · n`. -/
+def walkCharge (t : Spec.Tier) : Nat :=
+  cellMoveCharge t + 2 * t.n
+
+/-- Cells still to run, including `i`, when the loop ends at `toN`. -/
+def cellsLeft (i toN : Nat) : Nat :=
+  toN - i + 1
+
+theorem walkCharge_split (t : Spec.Tier) :
+    cellMoveCharge t + 2 * t.n = walkCharge t := rfl
+
+theorem cellMove_le_walk (t : Spec.Tier) : cellMoveCharge t ≤ walkCharge t := by
+  unfold walkCharge
+  omega
+
+private theorem rem_mul (rem c : Nat) (h : 0 < rem) :
+    rem * c = (rem - 1) * c + c := by
+  have hsucc : rem - 1 + 1 = rem := Nat.sub_add_cancel h
+  calc rem * c = (rem - 1 + 1) * c := by rw [hsucc]
+    _ = (rem - 1) * c + c := by rw [Nat.succ_mul]
+
+private theorem fuel_mul (rem c : Nat) (h : 2 ≤ rem) :
+    (rem - 1 + 1) * c = rem * c := by
+  have hsucc : rem - 1 + 1 = rem := by omega
+  rw [hsucc]
+
+/-- The chord's move check, out of one `walkCharge`. -/
+theorem live_move_of_walk (t : Spec.Tier) (moves : Nat) (baseX accX : List Nat)
+    (hx : baseX.length = t.n) (hy : accX.length = t.n)
+    (h : FitsLen (moves + walkCharge t)) :
+    FitsLen (liveMoveRoom t moves baseX accX) := by
+  apply FitsLen.of_le h
+  have hlive := live_move_le t moves baseX accX hx hy
+  unfold walkCharge
+  omega
+
+theorem live_slide_of_cell (t : Spec.Tier) (slides : Nat)
+    (h : FitsLen (slides + cellSlideCharge t)) :
+    FitsLen (liveSlideRoom t slides) := by
+  rw [live_slide_eq]
+  exact h
+
+theorem live_ctrl_of_cell (t : Spec.Tier) (ctrl : Nat)
+    (h : FitsLen (ctrl + cellCtrlCharge t)) :
+    FitsLen (liveCtrlRoom t ctrl) := by
+  rw [live_ctrl_eq]
+  exact h
+
+theorem live_ops_of_cell (t : Spec.Tier) (ops : Nat)
+    (h : FitsLen (ops + cellOpsCharge t)) :
+    FitsLen (liveOpsRoom t ops) := by
+  rw [live_ops_eq]
+  exact h
+
+/-- One charge out of an envelope of `rem` charges. -/
+theorem charge_of_rem (a rem c : Nat) (hrem : 0 < rem)
+    (h : FitsLen (a + rem * c)) : FitsLen (a + c) := by
+  apply FitsLen.of_le h
+  have hsplit := rem_mul rem c hrem
+  omega
+
+/-- A non-final cell. `fuel = rem - 1` is the cells after this one, so the
+    frame's `(fuel + 1)` charges are exactly `rem`. -/
+theorem frame_fuel_move (t : Spec.Tier) (moves rem : Nat) (hrem : 2 ≤ rem)
+    (h : FitsLen (moves + rem * walkCharge t)) :
+    1 ≤ rem - 1 ∧ FitsLen (moves + ((rem - 1) + 1) * cellMoveCharge t) := by
+  refine ⟨by omega, ?_⟩
+  apply FitsLen.of_le h
+  have hmul : ((rem - 1) + 1) * cellMoveCharge t = rem * cellMoveCharge t :=
+    fuel_mul rem _ hrem
+  have hle : cellMoveCharge t ≤ walkCharge t := cellMove_le_walk t
+  have hprod : rem * cellMoveCharge t ≤ rem * walkCharge t :=
+    Nat.mul_le_mul_left rem hle
+  omega
+
+theorem frame_fuel_ctrl (ctrl rem : Nat) (c : Nat) (hrem : 2 ≤ rem)
+    (h : FitsLen (ctrl + rem * c)) :
+    1 ≤ rem - 1 ∧ FitsLen (ctrl + ((rem - 1) + 1) * c) := by
+  refine ⟨by omega, ?_⟩
+  apply FitsLen.of_le h
+  have hmul : ((rem - 1) + 1) * c = rem * c := fuel_mul rem c hrem
+  omega
+
+/-- After this cell the remaining `rem - 1` charges still fit. -/
+theorem move_room_succ (t : Spec.Tier) (moves moves' rem : Nat) (hrem : 0 < rem)
+    (hm : moves' ≤ moves + walkCharge t)
+    (h : FitsLen (moves + rem * walkCharge t)) :
+    FitsLen (moves' + (rem - 1) * walkCharge t) := by
+  apply FitsLen.of_le h
+  have hsplit := rem_mul rem (walkCharge t) hrem
+  omega
+
+theorem ctrl_room_succ (ctrl ctrl' rem c : Nat) (hrem : 0 < rem)
+    (hc : ctrl' ≤ ctrl + c)
+    (h : FitsLen (ctrl + rem * c)) :
+    FitsLen (ctrl' + (rem - 1) * c) := by
+  apply FitsLen.of_le h
+  have hsplit := rem_mul rem c hrem
+  omega
+
+theorem cellsLeft_pos (i toN : Nat) : 0 < cellsLeft i toN := by
+  unfold cellsLeft
+  omega
+
+theorem cellsLeft_last (i toN : Nat) (h : i = toN) : cellsLeft i toN = 1 := by
+  unfold cellsLeft
+  omega
+
+theorem cellsLeft_succ (i toN : Nat) (hi : i < toN) :
+    cellsLeft (i + 1) toN = cellsLeft i toN - 1 := by
+  unfold cellsLeft
+  omega
+
+/-- The frame's fuel is the cells strictly after `i`. -/
+theorem fuel_of_later (i toN : Nat) (hi : i < toN) :
+    1 ≤ toN - i ∧ toN - i = cellsLeft i toN - 1 := by
+  unfold cellsLeft
+  omega
+
+/-- A zero counter has the same room as the product. -/
+theorem walk_room_zero (k c : Nat) (h : FitsLen (k * c)) :
+    FitsLen (0 + k * c) := by
+  simpa using h
+
+/-- The rise slack is inside `walkCharge`, so one cell's move bound leaves the
+    rest of the suffix. -/
+theorem spend_walk (t : Spec.Tier) (moves moves' : Nat)
+    (hm : moves' ≤ moves + cellMoveCharge t + 2 * t.n) :
+    moves' ≤ moves + walkCharge t := by
+  unfold walkCharge
+  omega
+
+/-- Room at every index of a suffix, if each cell spends at most one charge.
+    `left k` is the cells still to run when `k` cells have already run. -/
+theorem suffix_move_room (t : Spec.Tier) (moves0 rem : Nat)
+    (spend : Nat → Nat) (h0 : spend 0 = moves0)
+    (hstep : ∀ k, k < rem → spend (k + 1) ≤ spend k + walkCharge t)
+    (h : FitsLen (moves0 + rem * walkCharge t)) :
+    ∀ k, k ≤ rem → FitsLen (spend k + (rem - k) * walkCharge t) := by
+  intro k hk
+  induction k with
+  | zero =>
+    simpa [h0] using h
+  | succ k ih =>
+    have hlt : k < rem := by omega
+    have ih' := ih (Nat.le_of_lt hlt)
+    have hnext := move_room_succ t (spend k) (spend (k + 1)) (rem - k)
+      (by omega) (hstep k hlt) ih'
+    have hsub : (rem - k) - 1 = rem - (k + 1) := by omega
+    simpa [hsub] using hnext
+
+/-- Same induction for the control counter. One cell spends one `cellCtrlCharge`. -/
+theorem suffix_ctrl_room (ctrl0 rem c : Nat)
+    (spend : Nat → Nat) (h0 : spend 0 = ctrl0)
+    (hstep : ∀ k, k < rem → spend (k + 1) ≤ spend k + c)
+    (h : FitsLen (ctrl0 + rem * c)) :
+    ∀ k, k ≤ rem → FitsLen (spend k + (rem - k) * c) := by
+  intro k hk
+  induction k with
+  | zero =>
+    simpa [h0] using h
+  | succ k ih =>
+    have hlt : k < rem := by omega
+    have ih' := ih (Nat.le_of_lt hlt)
+    have hnext := ctrl_room_succ (spend k) (spend (k + 1)) (rem - k) c
+      (by omega) (hstep k hlt) ih'
+    have hsub : (rem - k) - 1 = rem - (k + 1) := by omega
+    simpa [hsub] using hnext
+
+private theorem fits_le_local (n : Nat) (h : n ≤ 9223372036854775807) : FitsLen n := by
+  simpa [FitsLen, i64MaxNat] using h
+
+private theorem demo_tierR_local : tierR Spec.demo = 2 := by
+  simp [tierR, demo_rungs]
+
+private theorem toy_tierR_local : tierR Spec.toy = 4 := by
+  simp [tierR, toy_rungs]
+
+private theorem hobby_tierR_local : tierR Spec.hobby = 5 := by
+  simp [tierR, hobby_rungs]
+
+private theorem serious_tierR_local : tierR Spec.serious = 7 := by
+  simp [tierR, serious_rungs]
+
+private theorem demo_row : rowRoom Spec.demo = 6 := by
+  rw [rowRoom, tallyOrigin, demo_tierR_local]
+  simp [Spec.demo]
+
+private theorem toy_row : rowRoom Spec.toy = 18 := by
+  rw [rowRoom, tallyOrigin, toy_tierR_local]
+  simp [Spec.toy]
+
+private theorem hobby_row : rowRoom Spec.hobby = 57 := by
+  rw [rowRoom, tallyOrigin, hobby_tierR_local]
+  simp [Spec.hobby]
+
+private theorem serious_row : rowRoom Spec.serious = 175 := by
+  rw [rowRoom, tallyOrigin, serious_tierR_local]
+  simp [Spec.serious]
+
+/-- One cell past a Demo key still fits an i64. `cells + 1` is that extra cell. -/
+theorem demo_walk_room :
+    FitsLen ((Spec.demo.cells + 1) * walkCharge Spec.demo) ∧
+      FitsLen ((Spec.demo.cells + 1) * cellSlideCharge Spec.demo) ∧
+      FitsLen ((Spec.demo.cells + 1) * cellCtrlCharge Spec.demo) ∧
+      FitsLen ((Spec.demo.cells + 1) * cellOpsCharge Spec.demo) := by
+  unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  rw [demo_tierR_local, demo_row]
+  simp [Spec.demo]
+  refine ⟨fits_le_local _ (by decide), fits_le_local _ (by decide), fits_le_local _ (by decide),
+    fits_le_local _ (by decide)⟩
+
+/-- One cell past a Toy key still fits an i64. -/
+theorem toy_walk_room :
+    FitsLen ((Spec.toy.cells + 1) * walkCharge Spec.toy) ∧
+      FitsLen ((Spec.toy.cells + 1) * cellSlideCharge Spec.toy) ∧
+      FitsLen ((Spec.toy.cells + 1) * cellCtrlCharge Spec.toy) ∧
+      FitsLen ((Spec.toy.cells + 1) * cellOpsCharge Spec.toy) := by
+  unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  rw [toy_tierR_local, toy_row]
+  simp [Spec.toy]
+  refine ⟨fits_le_local _ (by decide), fits_le_local _ (by decide), fits_le_local _ (by decide),
+    fits_le_local _ (by decide)⟩
+
+/-- One cell past a Hobby key still fits an i64. -/
+theorem hobby_walk_room :
+    FitsLen ((Spec.hobby.cells + 1) * walkCharge Spec.hobby) ∧
+      FitsLen ((Spec.hobby.cells + 1) * cellSlideCharge Spec.hobby) ∧
+      FitsLen ((Spec.hobby.cells + 1) * cellCtrlCharge Spec.hobby) ∧
+      FitsLen ((Spec.hobby.cells + 1) * cellOpsCharge Spec.hobby) := by
+  unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  rw [hobby_tierR_local, hobby_row]
+  simp [Spec.hobby]
+  refine ⟨fits_le_local _ (by decide), fits_le_local _ (by decide), fits_le_local _ (by decide),
+    fits_le_local _ (by decide)⟩
+
+/-- One cell past a Serious key still fits an i64. -/
+theorem serious_walk_room :
+    FitsLen ((Spec.serious.cells + 1) * walkCharge Spec.serious) ∧
+      FitsLen ((Spec.serious.cells + 1) * cellSlideCharge Spec.serious) ∧
+      FitsLen ((Spec.serious.cells + 1) * cellCtrlCharge Spec.serious) ∧
+      FitsLen ((Spec.serious.cells + 1) * cellOpsCharge Spec.serious) := by
+  unfold walkCharge cellMoveCharge cellSlideCharge cellCtrlCharge cellOpsCharge
+    tailMoveCap tailSlideCap pegCharge rungCharge mulCharge rungSlideCharge
+  rw [serious_tierR_local, serious_row]
+  simp [Spec.serious]
+  refine ⟨fits_le_local _ (by decide), fits_le_local _ (by decide), fits_le_local _ (by decide),
+    fits_le_local _ (by decide)⟩
+
+theorem demo_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.demo.n) :
+    FitsLen (mv + walkCharge Spec.demo * (Spec.demo.cells + 1)) := by
+  have hcap : 4 * Spec.demo.n + walkCharge Spec.demo * (Spec.demo.cells + 1) ≤
+      9223372036854775807 := by
+    unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
+    rw [demo_tierR_local, demo_row]
+    simp [Spec.demo]
+    decide
+  exact fits_le_local _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+
+theorem demo_seat_ctrl :
+    FitsLen (tierR Spec.demo + cellCtrlCharge Spec.demo * (Spec.demo.cells + 1)) := by
+  have hcap : tierR Spec.demo + cellCtrlCharge Spec.demo * (Spec.demo.cells + 1) ≤
+      9223372036854775807 := by
+    unfold cellCtrlCharge
+    rw [demo_tierR_local, demo_row]
+    simp [Spec.demo]
+  exact fits_le_local _ hcap
+
+theorem toy_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.toy.n) :
+    FitsLen (mv + walkCharge Spec.toy * (Spec.toy.cells + 1)) := by
+  have hcap : 4 * Spec.toy.n + walkCharge Spec.toy * (Spec.toy.cells + 1) ≤
+      9223372036854775807 := by
+    unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
+    rw [toy_tierR_local, toy_row]
+    simp [Spec.toy]
+    decide
+  exact fits_le_local _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+
+theorem toy_seat_ctrl :
+    FitsLen (tierR Spec.toy + cellCtrlCharge Spec.toy * (Spec.toy.cells + 1)) := by
+  have hcap : tierR Spec.toy + cellCtrlCharge Spec.toy * (Spec.toy.cells + 1) ≤
+      9223372036854775807 := by
+    unfold cellCtrlCharge
+    rw [toy_tierR_local, toy_row]
+    simp [Spec.toy]
+  exact fits_le_local _ hcap
+
+theorem hobby_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.hobby.n) :
+    FitsLen (mv + walkCharge Spec.hobby * (Spec.hobby.cells + 1)) := by
+  have hcap : 4 * Spec.hobby.n + walkCharge Spec.hobby * (Spec.hobby.cells + 1) ≤
+      9223372036854775807 := by
+    unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
+    rw [hobby_tierR_local, hobby_row]
+    simp [Spec.hobby]
+    decide
+  exact fits_le_local _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+
+theorem hobby_seat_ctrl :
+    FitsLen (tierR Spec.hobby + cellCtrlCharge Spec.hobby * (Spec.hobby.cells + 1)) := by
+  have hcap : tierR Spec.hobby + cellCtrlCharge Spec.hobby * (Spec.hobby.cells + 1) ≤
+      9223372036854775807 := by
+    unfold cellCtrlCharge
+    rw [hobby_tierR_local, hobby_row]
+    simp [Spec.hobby]
+  exact fits_le_local _ hcap
+
+theorem serious_seat_move (mv : Nat) (hmv : mv ≤ 4 * Spec.serious.n) :
+    FitsLen (mv + walkCharge Spec.serious * (Spec.serious.cells + 1)) := by
+  have hcap : 4 * Spec.serious.n + walkCharge Spec.serious * (Spec.serious.cells + 1) ≤
+      9223372036854775807 := by
+    unfold walkCharge cellMoveCharge tailMoveCap pegCharge rungCharge mulCharge
+    rw [serious_tierR_local, serious_row]
+    simp [Spec.serious]
+    decide
+  exact fits_le_local _ (Nat.le_trans (Nat.add_le_add_right hmv _) hcap)
+
+theorem serious_seat_ctrl :
+    FitsLen (tierR Spec.serious + cellCtrlCharge Spec.serious * (Spec.serious.cells + 1)) := by
+  have hcap : tierR Spec.serious + cellCtrlCharge Spec.serious * (Spec.serious.cells + 1) ≤
+      9223372036854775807 := by
+    unfold cellCtrlCharge
+    rw [serious_tierR_local, serious_row]
+    simp [Spec.serious]
+  exact fits_le_local _ hcap
+
+end EcbsLink2.Link2
